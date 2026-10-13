@@ -51,7 +51,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **Scenario** | a low-altitude `example`-kind `Spec` that `refines`/`verifies` a Story | an altitude or a kind |
 | **NFR** | a `constraint` with a measurable `target`; the *flavor* (performance / security / …) lives on the section | a separate kind |
 | **Executable Spec** | an `example` that **has a verifier** (a delivery fact) | a readiness rung |
-| **capability / domain** | a **`Pack` grouping** and/or a designed-for Capability Map projection over high-altitude `behavior` Specs; no Capability Map is built, and its grouping is held open in `spec:consumers.spec-studio.lenses#question.capabilityGrouping` | a kind or an altitude |
+| **capability / domain** | a **`Pack` grouping** and/or a designed-for Capability Map projection over high-altitude `behavior` Specs; no Capability Map is built, and the Studio groups Specs by Pack and draws no capability tree (`spec:consumers.spec-studio.lenses#rule.packGrouping`) | a kind or an altitude |
 
 ## Sections  (→ `spec:model.spec-sections`)
 
@@ -258,9 +258,10 @@ delivery fact, workflow state, or graph state.
   revisit when `doc:`-target
   relations or pack-targeting arrive.
 - **"vault"** is Obsidian's word for a folder of linked notes, used by the `idea` captures in
-  `pack:obsidian-vault-v1` for a projection regenerated from the graph. Whether that projection
-  stands alone or is the Studio's local half is open (`spec:consumers.obsidian-vault`), and the
-  term waits on that ruling; a **term address** (`spec:model.term-addresses`) is a candidate too.
+  `pack:obsidian-vault-v1` for a projection regenerated from the graph. That projection stands
+  alone, beside the Studio and not as its local half (`spec:consumers.obsidian-vault`), and waits
+  for a reader, so the term stays unratified until it is built; a **term address**
+  (`spec:model.term-addresses`) is a candidate too.
 
 ## Term ledger  (locked / rejected / resolved)
 

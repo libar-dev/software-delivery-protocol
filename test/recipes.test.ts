@@ -4184,7 +4184,11 @@ describe("design references and the architecture taxonomy", () => {
     // none of its consumers' designs.
     expect(reader.specContext(readerId)?.deliveryFacts).toContain("implemented");
     expect(readerUnits.map((unit) => unit.file)).toContain("src/reader/reader.ts");
-    expect(dependents).toEqual(["spec:consumers.spec-studio", "spec:consumers.spec-studio.data"]);
+    expect(dependents).toEqual([
+      "spec:consumers.spec-studio",
+      "spec:consumers.spec-studio.data",
+      "spec:consumers.spec-studio.search",
+    ]);
     for (const id of dependents) {
       expect(asArray(rows.find((row) => row.id === id)?.buildsOn), id).toContainEqual({
         id: readerId,

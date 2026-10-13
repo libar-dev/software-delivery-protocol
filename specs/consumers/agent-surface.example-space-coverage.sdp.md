@@ -21,7 +21,7 @@ The original design rendered a coverage heatmap from each example space: which c
 ### Open questions
 - [non-blocking #combinationCoverage] Is coverage per slot value enough, or does a design pass need the combinations of two or more slots, as the original heatmap drew them?
   - decider: owner
-  - links: spec:consumers.spec-studio.verification-panels#question.coverageSource
+  - links: spec:consumers.spec-studio.verification-panels#ui.coverageGrid
   - provisional: the recipe reports per-slot literal-union values
 - [non-blocking #coverageShape] What reader field names and decoded slot and bound-point shapes, recipe parameters and result rows, eligible-example relation policy, and treatment of an unbound slot form the coverage contract?
   - decider: owner

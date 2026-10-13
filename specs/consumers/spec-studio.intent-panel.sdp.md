@@ -12,17 +12,10 @@ relations:
 ---
 # A composing panel on every page gathers scoped intent for an agent
 
+The change-proposal contract requires the commit whose graph the person read, and a generated page set carries no commit, so a proposal's base comes from the build stamp when one is present and from the person otherwise.
+
 ## Intent
 - outcome: Let a person gather the changes they want while they read, each bounded by a Spec, its neighbors, a Pack or one open question, and hand them to an agent that edits source.
-### Open questions
-- [non-blocking #proposalBase] The change-proposal contract requires the commit whose graph the person read, and a generated page set carries no commit; where does the panel get the proposal's base, and does it ask the person for a reason?
-  - decider: owner
-  - links: spec:consumers.intent-composition.proposal
-  - provisional: the base is the commit a present build stamp names, otherwise one the person supplies, and the person supplies one reason for the whole proposal; without a base and a reason the panel exports scoped intent as text, and the receiving agent writes the proposal against a known commit
-- [non-blocking #packScope] The change-proposal contract scopes a change by Spec ids and entry addresses only, while the panel gathers intent bounded by a Pack or a Spec's neighbors; does a Pack or neighbors scope expand to its member or neighbor Spec ids at hand-off, or does a later proposal schema admit Pack scopes?
-  - decider: owner
-  - links: spec:consumers.intent-composition.proposal
-  - provisional: the ready proposal contract stands; a Pack-scoped request expands to the member Spec ids read from that Pack at the proposal base, and a request that changes Pack membership or framing, or names an empty Pack, stays scoped-intent text
 
 ## Behavior
 - rule: The composing panel is visible on every page.
@@ -31,6 +24,8 @@ relations:
 - rule: Gathered intents persist in the browser's local storage, so refreshing a tab on a phone loses none.
 - rule: A composed intent names its scope by id or entry address, so the agent that receives it reads the same Spec, Pack, entry or question through the graph.
 - rule: The panel hands its gathered intents off as one change proposal, on the change-proposal contract, which the person copies as text or saves as a document. The page opens no pull request, because a static page holds no credentials; any pull request comes from the agent's ordinary source edit.
+- rule: [#proposalBase] A proposal's base is the commit a present build stamp names, otherwise one the person supplies, and the person gives one reason for the whole proposal; without a base and a reason the panel exports its intents as scoped-intent text, and the agent that receives them writes the proposal against a commit it knows.
+- rule: [#packScope] A request scoped to a Pack expands at hand-off to the member Spec ids that Pack holds at the proposal's base; a request that changes a Pack's membership or framing, or names an empty Pack, stays scoped-intent text, so the change-proposal contract keeps its Spec and entry scopes.
 
 ## UI
 - gatheredIntents: the intents gathered so far, headed with their count, each on one line naming its scope and the change it asks for, such as adding an example or changing a constraint's target.

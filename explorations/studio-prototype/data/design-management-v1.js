@@ -1,0 +1,4610 @@
+window.SDP_PROTOTYPE = {
+"design": {
+  "found": true,
+  "id": "pack:design-management-v1",
+  "title": "Design management",
+  "totals": {
+    "members": 24,
+    "unresolved": 0,
+    "heldBelowNextRung": 3,
+    "waitingForAuthor": 5,
+    "entries": 48,
+    "declarations": 17,
+    "openQuestions": 24,
+    "blockingQuestions": 3,
+    "withImplementations": 15,
+    "withReferences": 4,
+    "restsOn": 39,
+    "restedOnBy": 23,
+    "verifiedBy": 0,
+    "supersededBy": 0
+  },
+  "members": [
+    {
+      "id": "spec:decisions.pack-design-page",
+      "resolved": true,
+      "title": "The Design Review's Pack page presents the Pack's design",
+      "specKind": "decision",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [],
+      "implementedBy": [],
+      "referencedBy": [
+        {
+          "id": "impl:protocol.pack-design-page",
+          "file": "src/projections/design-review-pages.ts",
+          "line": 128,
+          "role": "renderer",
+          "component": {
+            "id": "component:protocol.projections",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.pack-design",
+      "resolved": true,
+      "title": "The Pack context carries the Pack's design",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [
+        {
+          "id": "spec:decisions.architectural-annotation",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.pack-design",
+          "file": "src/reader/reader.ts",
+          "line": 537,
+          "role": "reader",
+          "component": {
+            "id": "component:protocol.reader",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.design-review.pack-design-page",
+      "resolved": true,
+      "title": "A Pack page shows where the Pack's design stands",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [
+        {
+          "id": "spec:decisions.pack-design-page",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.pack-design-page",
+          "file": "src/projections/design-review-pages.ts",
+          "line": 128,
+          "role": "renderer",
+          "component": {
+            "id": "component:protocol.projections",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "referencedBy": [
+        {
+          "id": "impl:protocol.pack-design-sections",
+          "file": "src/projections/design-review-pack-sections.ts",
+          "line": 19,
+          "role": "renderer",
+          "component": {
+            "id": "component:protocol.projections",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:extraction.entry-locations",
+      "resolved": true,
+      "title": "The graph records where each addressable entry is written",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.entry-location-recipes",
+          "file": "test/recipes.test.ts",
+          "line": 5689,
+          "role": null,
+          "component": null
+        },
+        {
+          "id": "impl:protocol.entry-locations",
+          "file": "src/extract/derive.ts",
+          "line": 78,
+          "role": "extractor",
+          "component": {
+            "id": "component:protocol.extract",
+            "layer": "application",
+            "context": "protocol"
+          }
+        },
+        {
+          "id": "impl:protocol.reader",
+          "file": "src/reader/reader.ts",
+          "line": 725,
+          "role": "reader",
+          "component": {
+            "id": "component:protocol.reader",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "referencedBy": [
+        {
+          "id": "impl:protocol.pack-design",
+          "file": "src/reader/reader.ts",
+          "line": 537,
+          "role": "reader",
+          "component": {
+            "id": "component:protocol.reader",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.agent-surface.recipe-parameters",
+      "resolved": true,
+      "title": "Recipes take parameters as data and ship as runnable files",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [
+        {
+          "id": "spec:decisions.agent-front-door",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.build-artifacts",
+          "file": "src/cli/build-artifacts.ts",
+          "line": 177,
+          "role": "publisher",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        },
+        {
+          "id": "impl:protocol.query-params",
+          "file": "src/cli/q-command.ts",
+          "line": 179,
+          "role": "service",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        },
+        {
+          "id": "impl:protocol.recipe-parameters-catalog",
+          "file": "test/recipes.test.ts",
+          "line": 4241,
+          "role": null,
+          "component": null
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 3,
+        "enabled": 3
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.agent-surface.design-recipes",
+      "resolved": true,
+      "title": "Design work reads its answers from catalog recipes",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.design-recipes",
+          "file": "test/recipes.test.ts",
+          "line": 4528,
+          "role": null,
+          "component": null
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.agent-surface.example-space-coverage",
+      "resolved": true,
+      "title": "Example spaces report which values their examples cover",
+      "specKind": "behavior",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 2,
+        "blockingQuestions": 0
+      },
+      "questions": [
+        {
+          "key": "combinationCoverage",
+          "blocking": false,
+          "address": "spec:consumers.agent-surface.example-space-coverage#question.combinationCoverage",
+          "line": 22,
+          "question": "Is coverage per slot value enough, or does a design pass need the combinations of two or more slots, as the original heatmap drew them?"
+        },
+        {
+          "key": "coverageShape",
+          "blocking": false,
+          "address": "spec:consumers.agent-surface.example-space-coverage#question.coverageShape",
+          "line": 26,
+          "question": "What reader field names and decoded slot and bound-point shapes, recipe parameters and result rows, eligible-example relation policy, and treatment of an unbound slot form the coverage contract?"
+        }
+      ],
+      "decisions": [],
+      "implementedBy": [],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.engine-provenance",
+      "resolved": true,
+      "title": "The CLI names the engine that produced a result",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.build-artifacts",
+          "file": "src/cli/build-artifacts.ts",
+          "line": 177,
+          "role": "publisher",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        },
+        {
+          "id": "impl:protocol.engine-provenance-cli",
+          "file": "src/cli/sdp.ts",
+          "line": 193,
+          "role": "service",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.validate-watch",
+      "resolved": true,
+      "title": "Validation re-runs while an author edits carriers",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.validate-watch",
+          "file": "src/cli/validate-watch.ts",
+          "line": 474,
+          "role": "service",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.design-maturity",
+      "resolved": true,
+      "title": "What a Spec's design carries is derived, beside its readiness",
+      "specKind": "model",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 0
+      },
+      "questions": [
+        {
+          "key": "designColumnsSufficiency",
+          "blocking": false,
+          "address": "spec:model.design-maturity#question.designColumnsSufficiency",
+          "line": 20,
+          "question": "If the first adopter's design passes show that the design columns cannot distinguish settled design from intent alone, should this representation be revisited?"
+        }
+      ],
+      "decisions": [],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.pack-design",
+          "file": "src/reader/reader.ts",
+          "line": 537,
+          "role": "reader",
+          "component": {
+            "id": "component:protocol.reader",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.planned-architecture",
+      "resolved": true,
+      "title": "Components are designed ahead of their code",
+      "specKind": "model",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 3,
+        "blockingQuestions": 0
+      },
+      "questions": [
+        {
+          "key": "providerSelection",
+          "blocking": false,
+          "address": "spec:model.planned-architecture#question.providerSelection",
+          "line": 24,
+          "question": "The original kept apart the interface a unit requires, the providers that supply it, the provider a composition root selects and the one a test substitutes, for Fastify, Effect, Awilix and plain factories alike. Does a component design state these without naming a framework, and does any of them earn graph structure beyond `uses`?"
+        },
+        {
+          "key": "oneRuntimeOwner",
+          "blocking": false,
+          "address": "spec:model.planned-architecture#question.oneRuntimeOwner",
+          "line": 26,
+          "question": "Is the original's one-runtime-truth rule, one composition mechanism per application, a Protocol rule or a corpus's own architecture rule?"
+        },
+        {
+          "key": "comparisonShape",
+          "blocking": false,
+          "address": "spec:model.planned-architecture#question.comparisonShape",
+          "line": 28,
+          "question": "How is a component design selected, what value form does its `uses` entry take, and what rows does the realization comparison return for an unrealized design and for a layer, context or `uses` that differs?"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "spec:decisions.architectural-annotation",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [],
+      "referencedBy": [
+        {
+          "id": "impl:protocol.curation-recipe",
+          "file": "test/curation-recipes.test.ts",
+          "line": 32,
+          "role": null,
+          "component": null
+        }
+      ],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.open-question-fields",
+      "resolved": true,
+      "title": "An open question may name who decides it, its links, a provisional reading and a re-entry trigger",
+      "specKind": "rule",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 7,
+        "declarations": 1,
+        "openQuestions": 1,
+        "blockingQuestions": 0
+      },
+      "questions": [
+        {
+          "key": "droppedQuestionList",
+          "blocking": false,
+          "address": "spec:model.open-question-fields#question.droppedQuestionList",
+          "line": 27,
+          "question": "A non-static question text, blocking flag or spread in a TypeScript open-question list also drops the whole list, blocking questions included, and stays a warning; is every dropped question list an error?"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "spec:decisions.adopt-the-nouns",
+          "statedReadiness": "ready",
+          "resolved": true
+        },
+        {
+          "id": "spec:decisions.planning-truths-placement",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.authoring-grammar-recipes",
+          "file": "test/recipes.test.ts",
+          "line": 6307,
+          "role": null,
+          "component": null
+        },
+        {
+          "id": "impl:protocol.authoring-normalization",
+          "file": "src/extract/authoring-normalization.ts",
+          "line": 7,
+          "role": "codec",
+          "component": {
+            "id": "component:protocol.extract",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 2,
+        "enabled": 2
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.rule-keys",
+      "resolved": true,
+      "title": "A rule or flow entry may carry a key that addresses it",
+      "specKind": "rule",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 10,
+        "declarations": 6,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [
+        {
+          "id": "spec:decisions.checked-mentions",
+          "statedReadiness": "ready",
+          "resolved": true
+        },
+        {
+          "id": "spec:decisions.shipped-projections-frozen",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.authoring-grammar-recipes",
+          "file": "test/recipes.test.ts",
+          "line": 6307,
+          "role": null,
+          "component": null
+        },
+        {
+          "id": "impl:protocol.authoring-normalization",
+          "file": "src/extract/authoring-normalization.ts",
+          "line": 7,
+          "role": "codec",
+          "component": {
+            "id": "component:protocol.extract",
+            "layer": "application",
+            "context": "protocol"
+          }
+        },
+        {
+          "id": "impl:protocol.rule-exercises",
+          "file": "src/validate/validators.ts",
+          "line": 1484,
+          "role": "validator",
+          "component": {
+            "id": "component:protocol.validate",
+            "layer": "domain",
+            "context": "protocol"
+          }
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 2,
+        "enabled": 2
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.relation-reasons",
+      "resolved": true,
+      "title": "An authored relation may carry its reason",
+      "specKind": "rule",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 5,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [
+        {
+          "id": "spec:decisions.prose-ownership",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.authoring-grammar-recipes",
+          "file": "test/recipes.test.ts",
+          "line": 6307,
+          "role": null,
+          "component": null
+        },
+        {
+          "id": "impl:protocol.authoring-normalization",
+          "file": "src/extract/authoring-normalization.ts",
+          "line": 7,
+          "role": "codec",
+          "component": {
+            "id": "component:protocol.extract",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 2,
+        "enabled": 2
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.review-perspectives",
+      "resolved": true,
+      "title": "A Pack is read from a named perspective",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 4,
+        "declarations": 1,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.perspective-filter-recipe",
+          "file": "test/iteration-recipes.test.ts",
+          "line": 751,
+          "role": "projection",
+          "component": null
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.context-bundle",
+      "resolved": true,
+      "title": "A context bundle is composed per invocation within a stated budget",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 7,
+        "declarations": 3,
+        "openQuestions": 1,
+        "blockingQuestions": 0
+      },
+      "questions": [
+        {
+          "key": "declarationCut",
+          "blocking": false,
+          "address": "spec:consumers.context-bundle#question.declarationCut",
+          "line": 23,
+          "question": "No cut reduces a pinned declaration, so a Pack whose pinned declarations alone exceed the budget fits no bundle; may a caller ask the bundle to reduce pinned declarations to their entry addresses?"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "spec:decisions.agent-front-door",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.context-bundle-recipe",
+          "file": "test/iteration-recipes.test.ts",
+          "line": 763,
+          "role": "projection",
+          "component": null
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.design-diff",
+      "resolved": true,
+      "title": "Designs are compared between a base commit and the working tree at entry grain",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 8,
+        "declarations": 4,
+        "openQuestions": 0,
+        "blockingQuestions": 0
+      },
+      "questions": [],
+      "decisions": [],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.design-diff-recipe",
+          "file": "test/iteration-recipes.test.ts",
+          "line": 27,
+          "role": "projection",
+          "component": null
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.intent-composition.proposal",
+      "resolved": true,
+      "title": "A change proposal is addressed, based and checked before it lands",
+      "specKind": "contract",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 7,
+        "declarations": 2,
+        "openQuestions": 1,
+        "blockingQuestions": 0
+      },
+      "questions": [
+        {
+          "key": "memoRecipe",
+          "blocking": false,
+          "address": "spec:consumers.intent-composition.proposal#question.memoRecipe",
+          "line": 25,
+          "question": "Which catalog recipe renders a proposal as the Markdown memo a person reviews, so the Studio's composing panel and an agent hand off the same text?"
+        }
+      ],
+      "decisions": [],
+      "implementedBy": [
+        {
+          "id": "impl:protocol.proposal-schema-and-recipe",
+          "file": "test/iteration-recipes.test.ts",
+          "line": 1291,
+          "role": "contract",
+          "component": null
+        }
+      ],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.reference-projection",
+      "resolved": true,
+      "title": "A reference projection serves a reader outside the repository",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "statedNextRungFailures": [
+        {
+          "clauseId": "kind-evidence-present",
+          "description": "The kind's natural evidence is present (per-kind evidence table)."
+        }
+      ],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 2,
+        "blockingQuestions": 1
+      },
+      "questions": [
+        {
+          "key": "namedOutsideReader",
+          "blocking": true,
+          "address": "spec:consumers.reference-projection#question.namedOutsideReader",
+          "line": 17,
+          "question": "Does a human reader outside the repository need a reference projection the four shipped roots do not serve? The taxonomy row is not that reader."
+        },
+        {
+          "key": "referenceSource",
+          "blocking": false,
+          "address": "spec:consumers.reference-projection#question.referenceSource",
+          "line": 20,
+          "question": "Would the reference read pinned declarations, contract-kind Specs or `api:` code anchors, and does any of them hold enough to document an interface?"
+        }
+      ],
+      "decisions": [],
+      "implementedBy": [],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.structural-mermaid",
+      "resolved": true,
+      "title": "Mermaid diagrams can be rooted at code units",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "statedNextRungFailures": [
+        {
+          "clauseId": "kind-evidence-present",
+          "description": "The kind's natural evidence is present (per-kind evidence table)."
+        }
+      ],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 2,
+        "blockingQuestions": 1
+      },
+      "questions": [
+        {
+          "key": "namedStructuralReader",
+          "blocking": true,
+          "address": "spec:consumers.structural-mermaid#question.namedStructuralReader",
+          "line": 18,
+          "question": "Does a reader need diagrams rooted at code units, which census tables and Spec-rooted one-hop Mermaid do not serve?"
+        },
+        {
+          "key": "layerAndContext",
+          "blocking": false,
+          "address": "spec:consumers.structural-mermaid#question.layerAndContext",
+          "line": 21,
+          "question": "Would a component diagram group its nodes by context and order them by layer, and would that make it the architecture view the Studio's architecture lens draws?"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "spec:decisions.shipped-projections-frozen",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:validation.superseded-decision-signal",
+      "resolved": true,
+      "title": "A Spec shaped by a superseded decision warns",
+      "specKind": "rule",
+      "statedReadiness": "scoped",
+      "floorReached": "scoped",
+      "statedNextRung": "defined",
+      "statedNextRungFailures": [
+        {
+          "clauseId": "no-blocking-open-questions",
+          "description": "Spec has no blocking open question in intent.openQuestions."
+        }
+      ],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 3,
+        "blockingQuestions": 1
+      },
+      "questions": [
+        {
+          "key": "keptRecord",
+          "blocking": true,
+          "address": "spec:validation.superseded-decision-signal#question.keptRecord",
+          "line": 25,
+          "question": "Does a corpus keep a replaced decision whose text a reader still needs beside its `supersedes` edge?"
+        },
+        {
+          "key": "signalReach",
+          "blocking": false,
+          "address": "spec:validation.superseded-decision-signal#question.signalReach",
+          "line": 28,
+          "question": "Does the signal read only `decidedBy`, or also a `refines` or `dependsOn` that names a superseded decision?"
+        },
+        {
+          "key": "supersededChain",
+          "blocking": false,
+          "address": "spec:validation.superseded-decision-signal#question.supersededChain",
+          "line": 31,
+          "question": "When a superseding decision is itself superseded, does the warning name the decision at the end of the chain?"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "spec:decisions.planning-truths-placement",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:validation.architecture-constraints",
+      "resolved": true,
+      "title": "Declared architecture rules are checked against anchored structure",
+      "specKind": "rule",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 2,
+        "blockingQuestions": 0
+      },
+      "questions": [
+        {
+          "key": "ruleForms",
+          "blocking": false,
+          "address": "spec:validation.architecture-constraints#question.ruleForms",
+          "line": 23,
+          "question": "Do corpus rules need to require a component to state a layer or context, or check ports and routes that anchors do not carry, beyond the selected forbidden layer pairs and isolated contexts?"
+        },
+        {
+          "key": "walkInvocation",
+          "blocking": false,
+          "address": "spec:validation.architecture-constraints#question.walkInvocation",
+          "line": 26,
+          "question": "Which pure callable walk serves both the catalog recipe and a loaded corpus rule, and what rule-data and result shapes do they share?"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "spec:decisions.architectural-annotation",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:validation.corpus-rules",
+      "resolved": true,
+      "title": "Corpus-authored rules run on the one validation path",
+      "specKind": "behavior",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 3,
+        "blockingQuestions": 0
+      },
+      "questions": [
+        {
+          "key": "rulesRepresentation",
+          "blocking": false,
+          "address": "spec:validation.corpus-rules#question.rulesRepresentation",
+          "line": 27,
+          "question": "Does an operator-named rules file hold one async body returning findings or a module exporting named rule functions, how are parameters supplied, in what order do several files run, and does `sdp validate --watch` rerun them?"
+        },
+        {
+          "key": "findingCurrency",
+          "blocking": false,
+          "address": "spec:validation.corpus-rules#question.findingCurrency",
+          "line": 30,
+          "question": "What shape does a corpus finding take beside the one diagnostic currency, where does the report carry it, and does it reach `report`, the reader's `findings()` or the Design Review?"
+        },
+        {
+          "key": "ruleIsolation",
+          "blocking": false,
+          "address": "spec:validation.corpus-rules#question.ruleIsolation",
+          "line": 33,
+          "question": "Does the runner enforce that a rule reads only the graph and changes nothing, or are both obligations on the rule's author?"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "spec:decisions.architectural-annotation",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:observation.run-evidence",
+      "resolved": true,
+      "title": "CI run records are joined to verifiers in a view",
+      "specKind": "behavior",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 3,
+        "blockingQuestions": 0
+      },
+      "questions": [
+        {
+          "key": "freshness",
+          "blocking": false,
+          "address": "spec:observation.run-evidence#question.freshness",
+          "line": 25,
+          "question": "How does a view say a run is stale: by its commit against the commit being read, or by whether the bound files changed between the two?"
+        },
+        {
+          "key": "recipeContract",
+          "blocking": false,
+          "address": "spec:observation.run-evidence#question.recipeContract",
+          "line": 28,
+          "question": "Which parameter and result shapes, CTRF revision and run-commit field, corpus-commit input, input label, and file-path normalization rule define the run-evidence recipe, and how does it report a record that joins no test anchor, or missing commit or path information?"
+        },
+        {
+          "key": "studioRuns",
+          "blocking": false,
+          "address": "spec:observation.run-evidence#question.studioRuns",
+          "line": 31,
+          "question": "Should a later Studio phase admit run records beside the graph, and which input and reproducibility contracts would that require?"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "spec:decisions.binding-not-liveness",
+          "statedReadiness": "ready",
+          "resolved": true
+        }
+      ],
+      "implementedBy": [],
+      "referencedBy": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    }
+  ],
+  "boundary": {
+    "restsOn": [
+      {
+        "id": "spec:carrier.slot-notation",
+        "title": "Slot notation declares, binds, and refuses to guess",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.example-space-coverage"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.adopter-on-ramp",
+        "title": "An adopter learns graph homes, carrier grammar and shipped paths from the on-ramps",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.engine-provenance"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface",
+        "title": "Agents script a visible typed graph",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.agent-surface.recipe-parameters",
+              "spec:consumers.context-bundle"
+            ]
+          },
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:validation.corpus-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.address-and-cycle-recipes",
+        "title": "Address resolution and dependency cycles stay executable graph recipes",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.register-recipes",
+        "title": "Register questions stay executable graph recipes",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.agent-surface.design-recipes"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.authoring-on-ramp",
+        "title": "Authors move one Spec from intent to reviewed evidence",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.validate-watch"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.binding-language-views",
+        "title": "Views speak binding language, never the internal fact name",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.design-review.pack-design-page"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.derived-readiness-banner",
+        "title": "Derived readiness renders beside the stated rung and warns in one direction",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.design-review.pack-design-page"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.design-review",
+        "title": "Design Review renders graph context without becoming a gate",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.design-review.pack-design-page"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.edit-model",
+        "title": "Views compose scoped intent instead of patching canonical source",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.graph-first-planning",
+        "title": "The next body of work is planned from the graph, not from a prose index",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:validation.superseded-decision-signal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.intent-composition",
+        "title": "Composed intent hands off on one proposal shape",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.projections-model",
+        "title": "Projections fan out from one graph without becoming truth stores",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.review-perspectives",
+              "spec:consumers.design-diff",
+              "spec:consumers.reference-projection",
+              "spec:consumers.structural-mermaid"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.reader",
+        "title": "The reader bridges agent entry points to composable graph context",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.adopt-the-nouns",
+        "title": "Delivery nouns remain familiar without workflow gates",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.open-question-fields"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.agent-front-door",
+        "title": "The agent front door is one evaluation sink over the exported reader",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:consumers.agent-surface.recipe-parameters",
+              "spec:consumers.context-bundle"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.architectural-annotation",
+        "title": "Architectural significance is annotated where it is realized",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:consumers.pack-design",
+              "spec:model.planned-architecture",
+              "spec:validation.architecture-constraints",
+              "spec:validation.corpus-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.binding-not-liveness",
+        "title": "Bindings state existence, not liveness",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:observation.run-evidence"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.checked-mentions",
+        "title": "A Spec id written in prose is a checked mention",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.one-validation-path",
+        "title": "Validation follows one graph",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.validate-watch"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.planning-truths-placement",
+        "title": "Planning truths live in ruled graph homes",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:validation.superseded-decision-signal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.prose-ownership",
+        "title": "Prose belongs to typed graph owners",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.shipped-projections-frozen",
+        "title": "The shipped projections stay frozen",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:decisions.pack-design-page"
+            ]
+          },
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.rule-keys",
+              "spec:consumers.structural-mermaid"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.contract-declarations",
+        "title": "Pinned declarations give an adopter a derived module to typecheck",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.delivery-facts",
+        "title": "Resolving bindings confer direct delivery facts",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:observation.run-evidence"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.derive-graph",
+        "title": "Carrier reification derives the one graph",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:extraction.entry-locations"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.determinism",
+        "title": "Committed source derives byte-identical output",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:extraction.entry-locations",
+              "spec:consumers.engine-provenance",
+              "spec:consumers.design-diff"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.excludes",
+        "title": "Extraction exclusions are strict consumer input",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.validate-watch"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.executable-contracts",
+        "title": "The build derives step and space contracts from graph examples",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.example-space-coverage"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.pack-member-order",
+        "title": "A Pack node keeps its members in authored order",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.anchors",
+        "title": "Source anchors bind code without carrying intent",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.planned-architecture",
+              "spec:validation.architecture-constraints"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.core-model",
+        "title": "The Protocol models delivery with one enrichable Spec",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:model.design-maturity"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.open-question-keys",
+        "title": "An open question may carry a key that addresses it",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:model.open-question-fields"
+            ]
+          },
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:extraction.entry-locations",
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.relations",
+        "title": "Specs declare typed directed relations",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:model.relation-reasons"
+            ]
+          },
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:validation.superseded-decision-signal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.spec-sections",
+        "title": "Spec sections carry typed detail and direct verifier semantics",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.diagnostic-rendering",
+        "title": "One diagnostic currency, its location composed from structured fields",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:validation.corpus-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.next-rung-floor",
+        "title": "The floor names what blocks the floor's next rung",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.two-check-families",
+        "title": "Validation separates well-formedness from non-pretending",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:validation.corpus-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.warn-level-signals",
+        "title": "Missing connective evidence warns without failing",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:validation.superseded-decision-signal"
+            ]
+          }
+        ]
+      }
+    ],
+    "restedOnBy": [
+      {
+        "id": "spec:carrier.envelope-contract",
+        "title": "The Markdown envelope is explicit and bounded",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:carrier.gherkin-authoring",
+        "title": "Gherkin authoring enters the one graph",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:carrier.markdown-body-grammar",
+        "title": "The Markdown body accepts one closed form per section",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:carrier.prose-ownership-rule",
+        "title": "Every prose value has one typed owner",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.address-and-cycle-recipes",
+        "title": "Address resolution and dependency cycles stay executable graph recipes",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.recipe-parameters",
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.answer-shapes",
+        "title": "Recipe answers fit an agent's context and explain their misses",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.design-recipes"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.register-recipes",
+        "title": "Register questions stay executable graph recipes",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.authoring-on-ramp",
+        "title": "Authors move one Spec from intent to reviewed evidence",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.delivery-session-on-ramp",
+        "title": "Delivery sessions route work from current graph state",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.review-perspectives",
+              "spec:consumers.context-bundle",
+              "spec:consumers.design-diff",
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.graph-first-planning",
+        "title": "The next body of work is planned from the graph, not from a prose index",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.impact-graph.curation-assist",
+        "title": "File-level imports show where curation is missing",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.planned-architecture"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.obsidian-vault.bases",
+        "title": "A Pack's members and the standing queries are tables over the reader's values",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.obsidian-vault.iteration",
+        "title": "A design pass is followed and answered from the vault",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.data",
+        "title": "The Studio renders from the reader's values and embeds only what its script reads",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design",
+              "spec:extraction.entry-locations"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.intent-panel",
+        "title": "A composing panel on every page gathers scoped intent for an agent",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.lenses",
+        "title": "Four lenses read the graph as Packs, architecture, tests and evidence",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.pack-page",
+        "title": "A Pack page shows the Pack's design as one card per member",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design",
+              "spec:model.open-question-fields"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.sharing",
+        "title": "A Studio build is stamped and shared from a static host",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.engine-provenance"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.spec-page",
+        "title": "A Spec page shows one Spec in collapsible panels, in a fixed order",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design",
+              "spec:extraction.entry-locations",
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.spec-page.core",
+        "title": "A Spec page's core shows the whole Spec, with an anchor for every entry",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:extraction.entry-locations",
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.verification-panels",
+        "title": "The panels for examples, targets, verifiers and evidence",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.example-space-coverage",
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.term-addresses",
+        "title": "A Model term may carry a key that addresses it",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.prose-mentions",
+        "title": "Every Spec id written in prose resolves",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields"
+            ]
+          }
+        ]
+      }
+    ],
+    "verifiedBy": [],
+    "supersededBy": []
+  }
+},
+"context": {
+  "id": "pack:design-management-v1",
+  "title": "Design management",
+  "framing": "The design-management arc, in review order: the Pack page and the reader assembly it renders; entry locations, recipe parameters and shipped recipe files; the recipes used in design work; the engine build identity and the authoring watch loop. The remaining Specs capture promises of the original design across the model, consumers, validation and observation. Pack design shows each member's stated next rung, design columns and code bindings.",
+  "file": "specs/design-management.pack.sdp.md",
+  "modelRefs": [
+    "spec:model.design-maturity"
+  ],
+  "members": [
+    {
+      "id": "spec:decisions.pack-design-page",
+      "resolved": true,
+      "title": "The Design Review's Pack page presents the Pack's design",
+      "specKind": "decision",
+      "altitude": "feature",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [],
+      "file": "specs/decisions/pack-design-page.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": []
+      },
+      "implementations": [],
+      "references": [
+        {
+          "codeId": "impl:protocol.pack-design-page",
+          "claim": "anchored",
+          "label": "renders the Pack page from the Pack design",
+          "file": "src/projections/design-review-pages.ts",
+          "line": 128,
+          "role": "renderer",
+          "component": {
+            "id": "component:protocol.projections",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.pack-design",
+      "resolved": true,
+      "title": "The Pack context carries the Pack's design",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/pack-design.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": [
+          {
+            "id": "spec:decisions.architectural-annotation",
+            "title": "Architectural significance is annotated where it is realized",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.pack-design",
+          "claim": "anchored",
+          "label": "the Pack design helpers and the Pack context assembly they serve",
+          "file": "src/reader/reader.ts",
+          "line": 537,
+          "role": "reader",
+          "component": {
+            "id": "component:protocol.reader",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.design-review.pack-design-page",
+      "resolved": true,
+      "title": "A Pack page shows where the Pack's design stands",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/design-review.pack-design-page.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": [
+          {
+            "id": "spec:decisions.pack-design-page",
+            "title": "The Design Review's Pack page presents the Pack's design",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.pack-design-page",
+          "claim": "anchored",
+          "label": "renders the Pack page from the Pack design",
+          "file": "src/projections/design-review-pages.ts",
+          "line": 128,
+          "role": "renderer",
+          "component": {
+            "id": "component:protocol.projections",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "references": [
+        {
+          "codeId": "impl:protocol.pack-design-sections",
+          "claim": "anchored",
+          "label": "renders the Pack page's next-rung, boundary, question and code sections",
+          "file": "src/projections/design-review-pack-sections.ts",
+          "line": 19,
+          "role": "renderer",
+          "component": {
+            "id": "component:protocol.projections",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:extraction.entry-locations",
+      "resolved": true,
+      "title": "The graph records where each addressable entry is written",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/extraction/entry-locations.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": []
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.entry-location-recipes",
+          "claim": "anchored",
+          "label": "asserts realization of the entry lines the entry search and address resolution recipes return",
+          "file": "test/recipes.test.ts",
+          "line": 5689
+        },
+        {
+          "codeId": "impl:protocol.entry-locations",
+          "claim": "anchored",
+          "label": "builds the carrier entry location table",
+          "file": "src/extract/derive.ts",
+          "line": 78,
+          "role": "extractor",
+          "component": {
+            "id": "component:protocol.extract",
+            "layer": "application",
+            "context": "protocol"
+          }
+        },
+        {
+          "codeId": "impl:protocol.reader",
+          "claim": "anchored",
+          "label": "thin typed graph reader construction",
+          "file": "src/reader/reader.ts",
+          "line": 725,
+          "role": "reader",
+          "component": {
+            "id": "component:protocol.reader",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "references": [
+        {
+          "codeId": "impl:protocol.pack-design",
+          "claim": "anchored",
+          "label": "the Pack design helpers and the Pack context assembly they serve",
+          "file": "src/reader/reader.ts",
+          "line": 537,
+          "role": "reader",
+          "component": {
+            "id": "component:protocol.reader",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.agent-surface.recipe-parameters",
+      "resolved": true,
+      "title": "Recipes take parameters as data and ship as runnable files",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/agent-surface.recipe-parameters.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": [
+          {
+            "id": "spec:decisions.agent-front-door",
+            "title": "The agent front door is one evaluation sink over the exported reader",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.build-artifacts",
+          "claim": "anchored",
+          "label": "the build step that writes each catalog recipe to dist/recipes and records the build commit beside the CLI",
+          "file": "src/cli/build-artifacts.ts",
+          "line": 177,
+          "role": "publisher",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        },
+        {
+          "codeId": "impl:protocol.query-params",
+          "claim": "anchored",
+          "label": "reads --params as JSON data and injects it as the sink's fourth binding, params",
+          "file": "src/cli/q-command.ts",
+          "line": 179,
+          "role": "service",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        },
+        {
+          "codeId": "impl:protocol.recipe-parameters-catalog",
+          "claim": "anchored",
+          "label": "asserts realization of the catalog recipes that read their parameter from params",
+          "file": "test/recipes.test.ts",
+          "line": 4241
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 3,
+        "enabled": 3
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.agent-surface.design-recipes",
+      "resolved": true,
+      "title": "Design work reads its answers from catalog recipes",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/agent-surface.design-recipes.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": []
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.design-recipes",
+          "claim": "anchored",
+          "label": "asserts realization of the shipped design recipes",
+          "file": "test/recipes.test.ts",
+          "line": 4528
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.agent-surface.example-space-coverage",
+      "resolved": true,
+      "title": "Example spaces report which values their examples cover",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "defined",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [],
+      "file": "specs/consumers/agent-surface.example-space-coverage.sdp.md",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "Is coverage per slot value enough, or does a design pass need the combinations of two or more slots, as the original heatmap drew them?",
+            "blocking": false,
+            "key": "combinationCoverage",
+            "decider": "owner",
+            "links": [
+              "spec:consumers.spec-studio.verification-panels#ui.coverageGrid"
+            ],
+            "provisional": "the recipe reports per-slot literal-union values",
+            "line": 22
+          },
+          {
+            "index": 1,
+            "question": "What reader field names and decoded slot and bound-point shapes, recipe parameters and result rows, eligible-example relation policy, and treatment of an unbound slot form the coverage contract?",
+            "blocking": false,
+            "key": "coverageShape",
+            "decider": "owner",
+            "links": [
+              "spec:extraction.executable-contracts"
+            ],
+            "provisional": "the tests-lens design pass settles the decoded fields and the row shape and records them as keyed Design entries before implementation",
+            "line": 26
+          }
+        ],
+        "decisions": []
+      },
+      "implementations": [],
+      "references": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.engine-provenance",
+      "resolved": true,
+      "title": "The CLI names the engine that produced a result",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/engine-provenance.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": []
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.build-artifacts",
+          "claim": "anchored",
+          "label": "the build step that writes each catalog recipe to dist/recipes and records the build commit beside the CLI",
+          "file": "src/cli/build-artifacts.ts",
+          "line": 177,
+          "role": "publisher",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        },
+        {
+          "codeId": "impl:protocol.engine-provenance-cli",
+          "claim": "anchored",
+          "label": "prints sdp version and the commit parsed from the build-info file beside the compiled CLI",
+          "file": "src/cli/sdp.ts",
+          "line": 193,
+          "role": "service",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.validate-watch",
+      "resolved": true,
+      "title": "Validation re-runs while an author edits carriers",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/validate-watch.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": []
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.validate-watch",
+          "claim": "anchored",
+          "label": "watches carrier directories and coalesces events into a pending validation rerun",
+          "file": "src/cli/validate-watch.ts",
+          "line": 474,
+          "role": "service",
+          "component": {
+            "id": "component:protocol.cli",
+            "layer": "edge",
+            "context": "protocol"
+          }
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.design-maturity",
+      "resolved": true,
+      "title": "What a Spec's design carries is derived, beside its readiness",
+      "specKind": "model",
+      "altitude": "feature",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/model/design-maturity.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "If the first adopter's design passes show that the design columns cannot distinguish settled design from intent alone, should this representation be revisited?",
+            "blocking": false,
+            "key": "designColumnsSufficiency",
+            "decider": "owner",
+            "provisional": "derive what design a Spec carries beside readiness without a new rung, floor clause or delivery fact",
+            "line": 20
+          }
+        ],
+        "decisions": []
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.pack-design",
+          "claim": "anchored",
+          "label": "the Pack design helpers and the Pack context assembly they serve",
+          "file": "src/reader/reader.ts",
+          "line": 537,
+          "role": "reader",
+          "component": {
+            "id": "component:protocol.reader",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.planned-architecture",
+      "resolved": true,
+      "title": "Components are designed ahead of their code",
+      "specKind": "model",
+      "altitude": "feature",
+      "statedReadiness": "defined",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [],
+      "file": "specs/model/planned-architecture.sdp.md",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "The original kept apart the interface a unit requires, the providers that supply it, the provider a composition root selects and the one a test substitutes, for Fastify, Effect, Awilix and plain factories alike. Does a component design state these without naming a framework, and does any of them earn graph structure beyond `uses`?",
+            "blocking": false,
+            "key": "providerSelection",
+            "decider": "owner",
+            "line": 24
+          },
+          {
+            "index": 1,
+            "question": "Is the original's one-runtime-truth rule, one composition mechanism per application, a Protocol rule or a corpus's own architecture rule?",
+            "blocking": false,
+            "key": "oneRuntimeOwner",
+            "decider": "owner",
+            "line": 26
+          },
+          {
+            "index": 2,
+            "question": "How is a component design selected, what value form does its `uses` entry take, and what rows does the realization comparison return for an unrealized design and for a layer, context or `uses` that differs?",
+            "blocking": false,
+            "key": "comparisonShape",
+            "decider": "owner",
+            "provisional": "a Spec is a component design when its Design `id` value, bare or in the code span that opens it, is a `component:` id, as the curation report reads it",
+            "line": 28
+          }
+        ],
+        "decisions": [
+          {
+            "id": "spec:decisions.architectural-annotation",
+            "title": "Architectural significance is annotated where it is realized",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [],
+      "references": [
+        {
+          "codeId": "impl:protocol.curation-recipe",
+          "claim": "anchored",
+          "label": "asserts the curation report over external inferred imports",
+          "file": "test/curation-recipes.test.ts",
+          "line": 32
+        }
+      ],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.open-question-fields",
+      "resolved": true,
+      "title": "An open question may name who decides it, its links, a provisional reading and a re-entry trigger",
+      "specKind": "rule",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/model/open-question-fields.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 7,
+        "declarations": 1,
+        "blockingQuestions": 0,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "A non-static question text, blocking flag or spread in a TypeScript open-question list also drops the whole list, blocking questions included, and stays a warning; is every dropped question list an error?",
+            "blocking": false,
+            "key": "droppedQuestionList",
+            "decider": "owner",
+            "provisional": "only a failure under the four fields is an error",
+            "line": 27
+          }
+        ],
+        "decisions": [
+          {
+            "id": "spec:decisions.adopt-the-nouns",
+            "title": "Delivery nouns remain familiar without workflow gates",
+            "statedReadiness": "ready",
+            "resolved": true
+          },
+          {
+            "id": "spec:decisions.planning-truths-placement",
+            "title": "Planning truths live in ruled graph homes",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.authoring-grammar-recipes",
+          "claim": "anchored",
+          "label": "asserts the authoring grammar's realization in docs/agent-surface/recipes.md",
+          "file": "test/recipes.test.ts",
+          "line": 6307
+        },
+        {
+          "codeId": "impl:protocol.authoring-normalization",
+          "claim": "anchored",
+          "label": "normalizes rule markers and question fields after carrier reification",
+          "file": "src/extract/authoring-normalization.ts",
+          "line": 7,
+          "role": "codec",
+          "component": {
+            "id": "component:protocol.extract",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 2,
+        "enabled": 2
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.rule-keys",
+      "resolved": true,
+      "title": "A rule or flow entry may carry a key that addresses it",
+      "specKind": "rule",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/model/rule-keys.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 10,
+        "declarations": 6,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": [
+          {
+            "id": "spec:decisions.checked-mentions",
+            "title": "A Spec id written in prose is a checked mention",
+            "statedReadiness": "ready",
+            "resolved": true
+          },
+          {
+            "id": "spec:decisions.shipped-projections-frozen",
+            "title": "The shipped projections stay frozen",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.authoring-grammar-recipes",
+          "claim": "anchored",
+          "label": "asserts the authoring grammar's realization in docs/agent-surface/recipes.md",
+          "file": "test/recipes.test.ts",
+          "line": 6307
+        },
+        {
+          "codeId": "impl:protocol.authoring-normalization",
+          "claim": "anchored",
+          "label": "normalizes rule markers and question fields after carrier reification",
+          "file": "src/extract/authoring-normalization.ts",
+          "line": 7,
+          "role": "codec",
+          "component": {
+            "id": "component:protocol.extract",
+            "layer": "application",
+            "context": "protocol"
+          }
+        },
+        {
+          "codeId": "impl:protocol.rule-exercises",
+          "claim": "anchored",
+          "label": "checks the keys named by declared verifies relations",
+          "file": "src/validate/validators.ts",
+          "line": 1484,
+          "role": "validator",
+          "component": {
+            "id": "component:protocol.validate",
+            "layer": "domain",
+            "context": "protocol"
+          }
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 2,
+        "enabled": 2
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:model.relation-reasons",
+      "resolved": true,
+      "title": "An authored relation may carry its reason",
+      "specKind": "rule",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/model/relation-reasons.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 5,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": [
+          {
+            "id": "spec:decisions.prose-ownership",
+            "title": "Prose belongs to typed graph owners",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.authoring-grammar-recipes",
+          "claim": "anchored",
+          "label": "asserts the authoring grammar's realization in docs/agent-surface/recipes.md",
+          "file": "test/recipes.test.ts",
+          "line": 6307
+        },
+        {
+          "codeId": "impl:protocol.authoring-normalization",
+          "claim": "anchored",
+          "label": "normalizes rule markers and question fields after carrier reification",
+          "file": "src/extract/authoring-normalization.ts",
+          "line": 7,
+          "role": "codec",
+          "component": {
+            "id": "component:protocol.extract",
+            "layer": "application",
+            "context": "protocol"
+          }
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 2,
+        "enabled": 2
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.review-perspectives",
+      "resolved": true,
+      "title": "A Pack is read from a named perspective",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/review-perspectives.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 4,
+        "declarations": 1,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": []
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.perspective-filter-recipe",
+          "claim": "anchored",
+          "label": "realizes the perspective filter in the shipped recipe catalog",
+          "file": "test/iteration-recipes.test.ts",
+          "line": 751,
+          "role": "projection"
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.context-bundle",
+      "resolved": true,
+      "title": "A context bundle is composed per invocation within a stated budget",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/context-bundle.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 7,
+        "declarations": 3,
+        "blockingQuestions": 0,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "No cut reduces a pinned declaration, so a Pack whose pinned declarations alone exceed the budget fits no bundle; may a caller ask the bundle to reduce pinned declarations to their entry addresses?",
+            "blocking": false,
+            "key": "declarationCut",
+            "decider": "owner",
+            "provisional": "pinned declarations stay whole, and a caller narrows the scope to fewer members, such as one perspective's",
+            "line": 23
+          }
+        ],
+        "decisions": [
+          {
+            "id": "spec:decisions.agent-front-door",
+            "title": "The agent front door is one evaluation sink over the exported reader",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.context-bundle-recipe",
+          "claim": "anchored",
+          "label": "realizes the context bundle in the shipped recipe catalog",
+          "file": "test/iteration-recipes.test.ts",
+          "line": 763,
+          "role": "projection"
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.design-diff",
+      "resolved": true,
+      "title": "Designs are compared between a base commit and the working tree at entry grain",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/design-diff.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 8,
+        "declarations": 4,
+        "blockingQuestions": 0,
+        "openQuestions": [],
+        "decisions": []
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.design-diff-recipe",
+          "claim": "anchored",
+          "label": "realizes the design diff in the shipped recipe catalog",
+          "file": "test/iteration-recipes.test.ts",
+          "line": 27,
+          "role": "projection"
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.intent-composition.proposal",
+      "resolved": true,
+      "title": "A change proposal is addressed, based and checked before it lands",
+      "specKind": "contract",
+      "altitude": "story",
+      "statedReadiness": "ready",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [
+        "implemented",
+        "has-verifier"
+      ],
+      "file": "specs/consumers/intent-composition.proposal.sdp.md",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 7,
+        "declarations": 2,
+        "blockingQuestions": 0,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "Which catalog recipe renders a proposal as the Markdown memo a person reviews, so the Studio's composing panel and an agent hand off the same text?",
+            "blocking": false,
+            "key": "memoRecipe",
+            "decider": "owner",
+            "links": [
+              "spec:consumers.spec-studio.intent-panel"
+            ],
+            "provisional": "a person reviews the proposal's JSON beside the proposal check's rows",
+            "line": 25
+          }
+        ],
+        "decisions": []
+      },
+      "implementations": [
+        {
+          "codeId": "impl:protocol.proposal-schema-and-recipe",
+          "claim": "anchored",
+          "label": "realizes the shipped proposal schema and proposal check in the recipe catalog",
+          "file": "test/iteration-recipes.test.ts",
+          "line": 1291,
+          "role": "contract"
+        }
+      ],
+      "references": [],
+      "verifiers": {
+        "total": 1,
+        "enabled": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.reference-projection",
+      "resolved": true,
+      "title": "A reference projection serves a reader outside the repository",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "statedReadiness": "idea",
+      "derivedReadiness": "idea",
+      "deliveryFacts": [],
+      "file": "specs/consumers/reference-projection.sdp.md",
+      "statedNextRung": "scoped",
+      "statedNextRungFailures": [
+        {
+          "clauseId": "kind-evidence-present",
+          "description": "The kind's natural evidence is present (per-kind evidence table)."
+        }
+      ],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 1,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "Does a human reader outside the repository need a reference projection the four shipped roots do not serve? The taxonomy row is not that reader.",
+            "blocking": true,
+            "key": "namedOutsideReader",
+            "decider": "owner",
+            "trigger": "a named consumer outside the repository, with a way to measure that demand inside the arc that builds the projection",
+            "line": 17
+          },
+          {
+            "index": 1,
+            "question": "Would the reference read pinned declarations, contract-kind Specs or `api:` code anchors, and does any of them hold enough to document an interface?",
+            "blocking": false,
+            "key": "referenceSource",
+            "line": 20
+          }
+        ],
+        "decisions": []
+      },
+      "implementations": [],
+      "references": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:consumers.structural-mermaid",
+      "resolved": true,
+      "title": "Mermaid diagrams can be rooted at code units",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "statedReadiness": "idea",
+      "derivedReadiness": "idea",
+      "deliveryFacts": [],
+      "file": "specs/consumers/structural-mermaid.sdp.md",
+      "statedNextRung": "scoped",
+      "statedNextRungFailures": [
+        {
+          "clauseId": "kind-evidence-present",
+          "description": "The kind's natural evidence is present (per-kind evidence table)."
+        }
+      ],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 1,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "Does a reader need diagrams rooted at code units, which census tables and Spec-rooted one-hop Mermaid do not serve?",
+            "blocking": true,
+            "key": "namedStructuralReader",
+            "decider": "owner",
+            "trigger": "a named reader with that need, plus a decision that refines `spec:decisions.shipped-projections-frozen` for the affected Mermaid rendering or supersedes that ruling whole",
+            "line": 18
+          },
+          {
+            "index": 1,
+            "question": "Would a component diagram group its nodes by context and order them by layer, and would that make it the architecture view the Studio's architecture lens draws?",
+            "blocking": false,
+            "key": "layerAndContext",
+            "decider": "owner",
+            "links": [
+              "spec:consumers.spec-studio.lenses#question.architectureVocabulary"
+            ],
+            "provisional": "the diagram folds into the Studio's architecture lens when that lens is designed, rather than becoming a Mermaid root",
+            "line": 21
+          }
+        ],
+        "decisions": [
+          {
+            "id": "spec:decisions.shipped-projections-frozen",
+            "title": "The shipped projections stay frozen",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [],
+      "references": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:validation.superseded-decision-signal",
+      "resolved": true,
+      "title": "A Spec shaped by a superseded decision warns",
+      "specKind": "rule",
+      "altitude": "story",
+      "statedReadiness": "scoped",
+      "derivedReadiness": "scoped",
+      "deliveryFacts": [],
+      "file": "specs/validation/superseded-decision-signal.sdp.md",
+      "statedNextRung": "defined",
+      "statedNextRungFailures": [
+        {
+          "clauseId": "no-blocking-open-questions",
+          "description": "Spec has no blocking open question in intent.openQuestions."
+        }
+      ],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 1,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "Does a corpus keep a replaced decision whose text a reader still needs beside its `supersedes` edge?",
+            "blocking": true,
+            "key": "keptRecord",
+            "decider": "owner",
+            "trigger": "a corpus keeps a replaced decision record whose text a reader still needs",
+            "line": 25
+          },
+          {
+            "index": 1,
+            "question": "Does the signal read only `decidedBy`, or also a `refines` or `dependsOn` that names a superseded decision?",
+            "blocking": false,
+            "key": "signalReach",
+            "decider": "owner",
+            "provisional": "the signal reads `decidedBy` only",
+            "line": 28
+          },
+          {
+            "index": 2,
+            "question": "When a superseding decision is itself superseded, does the warning name the decision at the end of the chain?",
+            "blocking": false,
+            "key": "supersededChain",
+            "decider": "owner",
+            "line": 31
+          }
+        ],
+        "decisions": [
+          {
+            "id": "spec:decisions.planning-truths-placement",
+            "title": "Planning truths live in ruled graph homes",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [],
+      "references": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:validation.architecture-constraints",
+      "resolved": true,
+      "title": "Declared architecture rules are checked against anchored structure",
+      "specKind": "rule",
+      "altitude": "feature",
+      "statedReadiness": "defined",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [],
+      "file": "specs/validation/architecture-constraints.sdp.md",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "Do corpus rules need to require a component to state a layer or context, or check ports and routes that anchors do not carry, beyond the selected forbidden layer pairs and isolated contexts?",
+            "blocking": false,
+            "key": "ruleForms",
+            "decider": "owner",
+            "provisional": "the supplied walk checks forbidden layer pairs and isolated contexts; absent attributes are unclassified rather than breaches",
+            "line": 23
+          },
+          {
+            "index": 1,
+            "question": "Which pure callable walk serves both the catalog recipe and a loaded corpus rule, and what rule-data and result shapes do they share?",
+            "blocking": false,
+            "key": "walkInvocation",
+            "decider": "owner",
+            "provisional": "one pure walk takes `params.forbidden`, a list of `{ from, to }` layer pairs, and `params.isolated`, a list of context tokens whose components may have no `uses` edge into another context, either list possibly empty; it returns each forbidden edge as `{ from, to, fromComponent, toComponent, rule }` and lists unclassified edges apart; recipe 32's result stays as it is",
+            "line": 26
+          }
+        ],
+        "decisions": [
+          {
+            "id": "spec:decisions.architectural-annotation",
+            "title": "Architectural significance is annotated where it is realized",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [],
+      "references": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:validation.corpus-rules",
+      "resolved": true,
+      "title": "Corpus-authored rules run on the one validation path",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "statedReadiness": "defined",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [],
+      "file": "specs/validation/corpus-rules.sdp.md",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "Does an operator-named rules file hold one async body returning findings or a module exporting named rule functions, how are parameters supplied, in what order do several files run, and does `sdp validate --watch` rerun them?",
+            "blocking": false,
+            "key": "rulesRepresentation",
+            "decider": "owner",
+            "provisional": "one async body per file, given `g`, `graph`, `report` and `params`, with `params` from `sdp validate --params` and `{}` without it; files run in the order named, each to completion; a rule id is unique within its file; `sdp validate --watch` runs the same named rules each cycle",
+            "line": 27
+          },
+          {
+            "index": 1,
+            "question": "What shape does a corpus finding take beside the one diagnostic currency, where does the report carry it, and does it reach `report`, the reader's `findings()` or the Design Review?",
+            "blocking": false,
+            "key": "findingCurrency",
+            "decider": "owner",
+            "provisional": "the shared finding contract has a Protocol branch carrying `validatorId`, `family`, severity and message, and a corpus branch carrying the corpus, the rule id as `validatorId`, `subjectId`, severity and message and no family; `relatedId`, `path`, `file` and `line` stay optional on both branches; corpus findings are collected as `corpusFindings` in the same report and rendered under a corpus-labelled section with the existing location, severity, identifier and message composition; Protocol findings, the summary line and the Design Review stay unchanged, as the frozen-projections decision requires",
+            "line": 30
+          },
+          {
+            "index": 2,
+            "question": "Does the runner enforce that a rule reads only the graph and changes nothing, or are both obligations on the rule's author?",
+            "blocking": false,
+            "key": "ruleIsolation",
+            "decider": "owner",
+            "provisional": "changing nothing is a guarantee, with the Protocol's validators run first and each rule given a frozen or cloned graph; reading only the graph is the author's obligation, run with the trust `sdp q` asks and no sandbox",
+            "line": 33
+          }
+        ],
+        "decisions": [
+          {
+            "id": "spec:decisions.architectural-annotation",
+            "title": "Architectural significance is annotated where it is realized",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [],
+      "references": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    },
+    {
+      "id": "spec:observation.run-evidence",
+      "resolved": true,
+      "title": "CI run records are joined to verifiers in a view",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "statedReadiness": "defined",
+      "derivedReadiness": "ready",
+      "deliveryFacts": [],
+      "file": "specs/observation/run-evidence.sdp.md",
+      "statedNextRung": "ready",
+      "statedNextRungFailures": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "blockingQuestions": 0,
+        "openQuestions": [
+          {
+            "index": 0,
+            "question": "How does a view say a run is stale: by its commit against the commit being read, or by whether the bound files changed between the two?",
+            "blocking": false,
+            "key": "freshness",
+            "decider": "owner",
+            "provisional": "Display the run and source commit identifiers when they differ, as the differing-commit rule requires; whether freshness also follows changes to bound files remains open.",
+            "line": 25
+          },
+          {
+            "index": 1,
+            "question": "Which parameter and result shapes, CTRF revision and run-commit field, corpus-commit input, input label, and file-path normalization rule define the run-evidence recipe, and how does it report a record that joins no test anchor, or missing commit or path information?",
+            "blocking": false,
+            "key": "recipeContract",
+            "decider": "owner",
+            "provisional": "Records stay external, join only through the named test file, and confer no delivery fact; the ruled contract lands as keyed Design entries before the view is built.",
+            "line": 28
+          },
+          {
+            "index": 2,
+            "question": "Should a later Studio phase admit run records beside the graph, and which input and reproducibility contracts would that require?",
+            "blocking": false,
+            "key": "studioRuns",
+            "decider": "owner",
+            "provisional": "The Studio's first build stays graph-only; a later phase may admit named run records under its own input and reproducibility contract.",
+            "line": 31
+          }
+        ],
+        "decisions": [
+          {
+            "id": "spec:decisions.binding-not-liveness",
+            "title": "Bindings state existence, not liveness",
+            "statedReadiness": "ready",
+            "resolved": true
+          }
+        ]
+      },
+      "implementations": [],
+      "references": [],
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      }
+    }
+  ],
+  "verifierGaps": [
+    {
+      "id": "spec:consumers.agent-surface.example-space-coverage",
+      "statedReadiness": "defined",
+      "priority": false
+    },
+    {
+      "id": "spec:model.planned-architecture",
+      "statedReadiness": "defined",
+      "priority": false
+    },
+    {
+      "id": "spec:consumers.reference-projection",
+      "statedReadiness": "idea",
+      "priority": false
+    },
+    {
+      "id": "spec:consumers.structural-mermaid",
+      "statedReadiness": "idea",
+      "priority": false
+    },
+    {
+      "id": "spec:validation.superseded-decision-signal",
+      "statedReadiness": "scoped",
+      "priority": false
+    },
+    {
+      "id": "spec:validation.architecture-constraints",
+      "statedReadiness": "defined",
+      "priority": false
+    },
+    {
+      "id": "spec:validation.corpus-rules",
+      "statedReadiness": "defined",
+      "priority": false
+    },
+    {
+      "id": "spec:observation.run-evidence",
+      "statedReadiness": "defined",
+      "priority": false
+    }
+  ],
+  "boundary": {
+    "restsOn": [
+      {
+        "id": "spec:carrier.slot-notation",
+        "title": "Slot notation declares, binds, and refuses to guess",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.example-space-coverage"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.adopter-on-ramp",
+        "title": "An adopter learns graph homes, carrier grammar and shipped paths from the on-ramps",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.engine-provenance"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface",
+        "title": "Agents script a visible typed graph",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.agent-surface.recipe-parameters",
+              "spec:consumers.context-bundle"
+            ]
+          },
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:validation.corpus-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.address-and-cycle-recipes",
+        "title": "Address resolution and dependency cycles stay executable graph recipes",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.register-recipes",
+        "title": "Register questions stay executable graph recipes",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.agent-surface.design-recipes"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.authoring-on-ramp",
+        "title": "Authors move one Spec from intent to reviewed evidence",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.validate-watch"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.binding-language-views",
+        "title": "Views speak binding language, never the internal fact name",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.design-review.pack-design-page"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.derived-readiness-banner",
+        "title": "Derived readiness renders beside the stated rung and warns in one direction",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.design-review.pack-design-page"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.design-review",
+        "title": "Design Review renders graph context without becoming a gate",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.design-review.pack-design-page"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.edit-model",
+        "title": "Views compose scoped intent instead of patching canonical source",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.graph-first-planning",
+        "title": "The next body of work is planned from the graph, not from a prose index",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:validation.superseded-decision-signal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.intent-composition",
+        "title": "Composed intent hands off on one proposal shape",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.projections-model",
+        "title": "Projections fan out from one graph without becoming truth stores",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.review-perspectives",
+              "spec:consumers.design-diff",
+              "spec:consumers.reference-projection",
+              "spec:consumers.structural-mermaid"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.reader",
+        "title": "The reader bridges agent entry points to composable graph context",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.adopt-the-nouns",
+        "title": "Delivery nouns remain familiar without workflow gates",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.open-question-fields"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.agent-front-door",
+        "title": "The agent front door is one evaluation sink over the exported reader",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:consumers.agent-surface.recipe-parameters",
+              "spec:consumers.context-bundle"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.architectural-annotation",
+        "title": "Architectural significance is annotated where it is realized",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:consumers.pack-design",
+              "spec:model.planned-architecture",
+              "spec:validation.architecture-constraints",
+              "spec:validation.corpus-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.binding-not-liveness",
+        "title": "Bindings state existence, not liveness",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:observation.run-evidence"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.checked-mentions",
+        "title": "A Spec id written in prose is a checked mention",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.one-validation-path",
+        "title": "Validation follows one graph",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.validate-watch"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.planning-truths-placement",
+        "title": "Planning truths live in ruled graph homes",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:validation.superseded-decision-signal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.prose-ownership",
+        "title": "Prose belongs to typed graph owners",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:decisions.shipped-projections-frozen",
+        "title": "The shipped projections stay frozen",
+        "statedReadiness": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:decisions.pack-design-page"
+            ]
+          },
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:model.rule-keys",
+              "spec:consumers.structural-mermaid"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.contract-declarations",
+        "title": "Pinned declarations give an adopter a derived module to typecheck",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.delivery-facts",
+        "title": "Resolving bindings confer direct delivery facts",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:observation.run-evidence"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.derive-graph",
+        "title": "Carrier reification derives the one graph",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:extraction.entry-locations"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.determinism",
+        "title": "Committed source derives byte-identical output",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:extraction.entry-locations",
+              "spec:consumers.engine-provenance",
+              "spec:consumers.design-diff"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.excludes",
+        "title": "Extraction exclusions are strict consumer input",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.validate-watch"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.executable-contracts",
+        "title": "The build derives step and space contracts from graph examples",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.example-space-coverage"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:extraction.pack-member-order",
+        "title": "A Pack node keeps its members in authored order",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.anchors",
+        "title": "Source anchors bind code without carrying intent",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.planned-architecture",
+              "spec:validation.architecture-constraints"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.core-model",
+        "title": "The Protocol models delivery with one enrichable Spec",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:model.design-maturity"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.open-question-keys",
+        "title": "An open question may carry a key that addresses it",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:model.open-question-fields"
+            ]
+          },
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:extraction.entry-locations",
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.relations",
+        "title": "Specs declare typed directed relations",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:model.relation-reasons"
+            ]
+          },
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:validation.superseded-decision-signal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.spec-sections",
+        "title": "Spec sections carry typed detail and direct verifier semantics",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.diagnostic-rendering",
+        "title": "One diagnostic currency, its location composed from structured fields",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:validation.corpus-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.next-rung-floor",
+        "title": "The floor names what blocks the floor's next rung",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.two-check-families",
+        "title": "Validation separates well-formedness from non-pretending",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:validation.corpus-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.warn-level-signals",
+        "title": "Missing connective evidence warns without failing",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:validation.superseded-decision-signal"
+            ]
+          }
+        ]
+      }
+    ],
+    "restedOnBy": [
+      {
+        "id": "spec:carrier.envelope-contract",
+        "title": "The Markdown envelope is explicit and bounded",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:carrier.gherkin-authoring",
+        "title": "Gherkin authoring enters the one graph",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:carrier.markdown-body-grammar",
+        "title": "The Markdown body accepts one closed form per section",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:carrier.prose-ownership-rule",
+        "title": "Every prose value has one typed owner",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.address-and-cycle-recipes",
+        "title": "Address resolution and dependency cycles stay executable graph recipes",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.recipe-parameters",
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.answer-shapes",
+        "title": "Recipe answers fit an agent's context and explain their misses",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.design-recipes"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.agent-surface.register-recipes",
+        "title": "Register questions stay executable graph recipes",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.authoring-on-ramp",
+        "title": "Authors move one Spec from intent to reviewed evidence",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.delivery-session-on-ramp",
+        "title": "Delivery sessions route work from current graph state",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.review-perspectives",
+              "spec:consumers.context-bundle",
+              "spec:consumers.design-diff",
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.graph-first-planning",
+        "title": "The next body of work is planned from the graph, not from a prose index",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.impact-graph.curation-assist",
+        "title": "File-level imports show where curation is missing",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.planned-architecture"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.obsidian-vault.bases",
+        "title": "A Pack's members and the standing queries are tables over the reader's values",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.obsidian-vault.iteration",
+        "title": "A design pass is followed and answered from the vault",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.data",
+        "title": "The Studio renders from the reader's values and embeds only what its script reads",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design",
+              "spec:extraction.entry-locations"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.intent-panel",
+        "title": "A composing panel on every page gathers scoped intent for an agent",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.intent-composition.proposal"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.lenses",
+        "title": "Four lenses read the graph as Packs, architecture, tests and evidence",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.pack-page",
+        "title": "A Pack page shows the Pack's design as one card per member",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design",
+              "spec:model.open-question-fields"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.sharing",
+        "title": "A Studio build is stamped and shared from a static host",
+        "statedReadiness": "defined",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.engine-provenance"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.spec-page",
+        "title": "A Spec page shows one Spec in collapsible panels, in a fixed order",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.pack-design",
+              "spec:extraction.entry-locations",
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.spec-page.core",
+        "title": "A Spec page's core shows the whole Spec, with an anchor for every entry",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:extraction.entry-locations",
+              "spec:model.open-question-fields",
+              "spec:model.rule-keys",
+              "spec:model.relation-reasons"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:consumers.spec-studio.verification-panels",
+        "title": "The panels for examples, targets, verifiers and evidence",
+        "statedReadiness": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:consumers.agent-surface.example-space-coverage",
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:model.term-addresses",
+        "title": "A Model term may carry a key that addresses it",
+        "statedReadiness": "idea",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.rule-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spec:validation.prose-mentions",
+        "title": "Every Spec id written in prose resolves",
+        "statedReadiness": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:model.open-question-fields"
+            ]
+          }
+        ]
+      }
+    ],
+    "verifiedBy": [],
+    "supersededBy": []
+  },
+  "findings": []
+}
+};
