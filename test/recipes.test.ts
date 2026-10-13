@@ -4198,7 +4198,10 @@ describe("design references and the architecture taxonomy", () => {
     }
     expect(
       derived.graph.edges.filter(
-        (edge) => edge.type === "references" && dependents.includes(edge.to),
+        (edge) =>
+          edge.type === "references" &&
+          readerUnits.some((unit) => unit.id === edge.from) &&
+          dependents.includes(edge.to),
       ),
     ).toEqual([]);
     // A target with no `implemented` fact stays out of the column: the Studio depends on the

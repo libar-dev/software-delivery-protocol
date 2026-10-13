@@ -43,6 +43,9 @@ export function registerUnrealizedDesign<World>(
     "the component anchor for that design {anchor}": () => {
       // Given state is materialized by createWorld from the generated point.
     },
+    "that anchor states the layer {realizedLayer} and its member uses {realizedUses}": () => {
+      // Given state is materialized by createWorld from the generated point.
+    },
     "the realization comparison runs": async (execution) => {
       await invokeRunnableExample(execution);
     },
@@ -70,6 +73,8 @@ export function registerUnrealizedDesign<World>(
       plannedLayer: "domain",
       plannedUses: "component:probe.kernel",
       anchor: "is absent",
+      realizedLayer: "absent",
+      realizedUses: "",
     },
     ["componentId", "plannedLayer", "plannedUses", "anchor", "realizedLayer", "realizedUses"],
     adapters,

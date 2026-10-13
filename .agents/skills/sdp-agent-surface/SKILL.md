@@ -99,14 +99,15 @@ checkout: `exec` resolves dependency binaries, while this package does not link 
 own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated binary. Do not invoke a
 global `sdp` either.
 
-The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, and `sdp gherkin`.
-Each of them, like `sdp build` and `sdp validate`, first removes all four projection roots, so
+The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, `sdp gherkin`,
+and `sdp studio`.
+Each of them, like `sdp build` and `sdp validate`, first removes all five projection roots, so
 after one publisher runs only its own root is current
 (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
 In this source checkout, `npm run generate:self-hosting` and `npm run check:self-hosting` preserve
-and publish all four roots together. In check mode a prior tree must exist for each root; Design
-Review checks repeat-render determinism, while census, Mermaid and Gherkin also compare the prior
-tree's bytes with the current render.
+and publish all five roots together. In check mode a prior tree must exist for each root; Design
+Review checks repeat-render determinism, while census, Mermaid, Gherkin and Studio also compare
+the prior tree's bytes with the current render.
 
 The catalog of ready-made bodies is `docs/agent-surface/recipes.md` in the Protocol repository
 and `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an
@@ -144,6 +145,8 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Read a component and its reach                                 | component membership (recipe 12), uses fan-in and fan-out (recipe 13), structural neighborhood (recipe 14) |
 | Measure structural and projection coverage                     | census structural coverage (recipe 15), the projection-coverage upper bound (recipe 16)                    |
 | Read the architecture                                          | the architecture map (recipe 17), architecture crossings (recipe 32)                                       |
+| Check a corpus's architecture rules                            | the architecture walk (recipe 42)                                                                          |
+| Compare planned components with their realization              | planned against realized components (recipe 43)                                                            |
 | Weigh the decisions that shape it                              | the decision map (recipe 18), the decision register (recipe 31)                                            |
 | Reuse an architecture value                                    | roles, layers and contexts (recipe 28)                                                                     |
 | Find keyed rules no example exercises                          | rule coverage (recipe 34)                                                                                  |
@@ -220,6 +223,13 @@ To iterate on a design pass after pass:
 - Slimming candidates (recipe 39) and the curation report (recipe 40) read what the code now
   carries: pinned declarations an implemented, verified Spec may drop, and the files and
   components the anchors miss, from an imports file `sdp build --imports` writes.
+
+For corpus architecture, the architecture walk (recipe 42) reads forbidden layer pairs and
+isolated contexts from `params.forbidden` and `params.isolated`, with optional `params.severity`.
+Its `{ findings }` answer can run as a rules file under `sdp validate --rules`. Planned against
+realized components (recipe 43) compares component design Specs with their satisfying anchors,
+listing unrealized designs, differing fields and unreadable values. Neither recipe adds a Protocol
+validator. Follow `sdp-authoring` for rules-file invocation and per-file parameter order.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 

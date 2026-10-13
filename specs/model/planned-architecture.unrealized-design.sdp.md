@@ -2,7 +2,7 @@
 id: spec:model.planned-architecture.unrealized-design
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.planned-architecture
   verifies: spec:model.planned-architecture
@@ -16,6 +16,7 @@ relations:
 ```gwt
 Given a component design for {componentId: "component:probe.history"} that plans the layer {plannedLayer: "domain"} and uses {plannedUses: "component:probe.kernel"}
 Given the component anchor for that design {anchor: "is absent"}
+Given that anchor states the layer {realizedLayer: "absent"} and its member uses {realizedUses: ""}
 When the realization comparison runs
 Then the comparison lists {unrealized: 1} unrealized designs, {matching: 0} matching designs and {differing: 0} differing rows
 Then the differing fields are {fields: ""}

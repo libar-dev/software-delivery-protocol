@@ -331,6 +331,63 @@ describe("Studio page interactions", () => {
       "sdp-stamp",
     ]);
   });
+  it("names a question copy control with the full entry address and updates it", () => {
+    const defined = new Map<
+      string,
+      new () => FakeNode & {
+        connectedCallback(): void;
+        attributeChangedCallback(): void;
+      }
+    >();
+    class FakeNode {
+      ownerDocument = doc;
+      attributes = new Map<string, string>();
+      children: FakeNode[] = [];
+      parentNode?: FakeNode;
+      textContent = "";
+      append(node: FakeNode): void {
+        node.parentNode = this;
+        this.children.push(node);
+      }
+      getAttribute(name: string): string | null {
+        return this.attributes.get(name) ?? null;
+      }
+      setAttribute(name: string, value: string): void {
+        this.attributes.set(name, value);
+      }
+      querySelectorAll(): FakeNode[] {
+        return [];
+      }
+      addEventListener(): void {
+        /* No click is needed to inspect the accessible name. */
+      }
+    }
+    const doc = { createElement: () => new FakeNode() };
+    runInNewContext(readFileSync(new URL("../dist/studio/studio.js", import.meta.url), "utf8"), {
+      HTMLElement: FakeNode,
+      customElements: {
+        get: () => undefined,
+        define: (
+          name: string,
+          ctor: new () => FakeNode & {
+            connectedCallback(): void;
+            attributeChangedCallback(): void;
+          },
+        ) => defined.set(name, ctor),
+      },
+    });
+    const Copy = defined.get("sdp-copy");
+    if (!Copy) throw new Error("Copy element missing");
+    const copy = new Copy();
+    copy.setAttribute("text", "spec:probe.all#question.choice");
+    copy.connectedCallback();
+    const control = copy.children[0];
+    expect(control?.textContent).toBe("Copy");
+    expect(control?.getAttribute("aria-label")).toBe("Copy spec:probe.all#question.choice");
+    copy.setAttribute("text", "spec:probe.all#question.nextChoice");
+    copy.attributeChangedCallback();
+    expect(control?.getAttribute("aria-label")).toBe("Copy spec:probe.all#question.nextChoice");
+  });
   it("uses the navigation search input, announces the empty prompt and reveals paging progress", () => {
     const defined = new Map<string, new () => FakeNode & { connectedCallback(): void }>();
     const created: string[] = [];
