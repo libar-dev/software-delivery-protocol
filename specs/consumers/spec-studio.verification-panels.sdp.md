@@ -18,23 +18,14 @@ relations:
 ---
 # The panels for examples, targets, verifiers and evidence
 
+The graph records that a verifier binding exists and never a run, and a static page runs nothing, so the panels show bindings and no run result, and offer no run of an example. No Spec designs a source for build attestations, deployments or SBOMs, so each reads not tracked.
+
 ## Intent
 - outcome: Show on a Spec page how far each example, constraint target and verifier goes, and what runtime evidence exists, without stating more than the graph records.
-### Open questions
-- [non-blocking #runResults] The original shows each test's runner, whether it passed, its duration and its last run, and offers to run an example again; the graph records that a verifier binding exists and never a run, and a static page runs nothing. Does a panel show run results read from CI output when the Studio is built, or bindings only?
-  - decider: owner
-  - links: spec:observation.run-evidence
-  - provisional: The first Studio build shows bindings only; admitting run records in a later phase awaits an explicit input and reproducibility ruling.
-- [non-blocking #coverageSource] Is per-slot coverage sufficient for the Studio grid, or does it need the combinations still open in spec:consumers.agent-surface.example-space-coverage#question.combinationCoverage?
-  - decider: owner
-  - links: spec:consumers.agent-surface.example-space-coverage#question.combinationCoverage
-  - provisional: per-slot coverage for the grid; combinations wait for an adopter's design pass
-- [non-blocking #deliveryArtifacts] The original's evidence panel shows the last build with its SLSA attestation, the last deployment and a CycloneDX SBOM; no Spec designs a source for any of them. Does the Studio show them, and from which input?
-  - decider: owner
-  - provisional: each reads not tracked until a Spec designs its source
 
 ## Behavior
 - rule: An example card shows the example's verifier as a binding that exists, and the example as an Executable Spec when a test anchor binds it, never as a test that passed.
+- rule: [#bindingsOnly] A panel shows verifier bindings and no run result; run records join a panel only through `spec:observation.run-evidence`, under an input and reproducibility ruling of their own.
 - rule: [#evidenceNotTracked] The evidence panel shows only runtime evidence the graph records, and reads not tracked while no delivery fact records an observation.
 - rule: Each panel action gathers intent through the composing panel's contract.
 
@@ -45,6 +36,6 @@ The panels' parts in page order.
 - unwrittenExampleCard: an example with no given, when and then steps yet says so, and offers to compose intent proposing them.
 - constraintTarget: each constraint with its flavor and statement, its target drawn as a bar beside the number, and a measured value only when the graph records one, otherwise not tracked; moving the bar composes intent to change the target, and the new value shows on the page only while the intent waits in the composing panel.
 - unsetTarget: a constraint with no quantitative target says so, and offers to compose intent proposing one.
-- verifierList: each verifier with its id, its binding, and its recorded repository-relative file and line; no line is invented for a verifier the graph does not locate, and source navigation awaits `spec:consumers.spec-studio.spec-page#question.sourceLinks`.
-- coverageGrid: when the Spec owns an example space, the coverage `spec:consumers.agent-surface.example-space-coverage` reports, listing each literal value of each slot with the examples that bind it and listing a non-literal-union slot as not enumerable; an action composes intent proposing examples for missing values.
-- evidencePanel: runtime observation reads not tracked under the binding-language rule; build attestations, deployments and SBOMs show no payload while the graph has no designed record for them, and each reads not tracked instead.
+- verifierList: each verifier with its id, its binding, and its recorded repository-relative file and line as text, as `spec:consumers.spec-studio.spec-page#rule.sourceText` states; no line is invented for a verifier the graph does not locate.
+- coverageGrid: when the Spec owns an example space, the per-slot coverage `spec:consumers.agent-surface.example-space-coverage` reports, listing each literal value of each slot with the examples that bind it and listing a non-literal-union slot as not enumerable; combinations of slots join the grid only when a design pass asks for them; an action composes intent proposing examples for missing values.
+- evidencePanel: runtime observation reads not tracked under the binding-language rule; build attestations, deployments and SBOMs show no payload and each reads not tracked until a Spec designs its source.

@@ -16,10 +16,16 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 44 is EXECUTED** on its branch. A whole-corpus refresh: every Spec read against the
+> **plan 45 is EXECUTED** on `feature/design-at-scale-v0`, as PR 33. Design at the adopter's
+> scale: the adopter installs from a commit, the design-pass loop fits a large corpus
+> (`declarations: "addresses"`, recipe 41), corpus rules run under `sdp validate --rules` with
+> recipes 42 and 43, and the Spec Studio's phase 0 publishes static pages (`sdp studio`; plan 42
+> was its brief). The first adopter moved onto it in its own branch. The rulings were delegated
+> and await the owner's review; the plan lists them, the acceptance as measured, and what waits.
+> **plan 44 is EXECUTED**, merged as PR 32. A whole-corpus refresh: every Spec read against the
 > engine, the other Specs and the vocabulary, cross-family verified, and the findings fixed,
 > ruled on the owner's delegation, or homed as keyed questions with provisional answers for the
-> next arcs; the record is `reviews/26-whole-corpus-refresh.md`. Plan 42 follows it.
+> next arcs; the record is `reviews/26-whole-corpus-refresh.md`.
 > **plan 43 is EXECUTED**, merged as PR 31. Design iteration on a readable graph: answers
 > that fit (summaries, both next rungs, explained misses, the design backlog, repeatable
 > `--params`), the authoring grammar (rule keys, question fields, relation reasons), the iteration
@@ -27,9 +33,9 @@ code behavior into intent.
 > and slimming lessons; intent in `pack:design-iteration-v1`, recipes 33 to 40. The design pass's
 > rulings and `ready` statements were delegated by the owner and still await the owner's review;
 > the plan's last sections list them. Plan 42 follows it.
-> **plan 42 is DRAFTED**. The Spec Studio's phase 0, a read-only static view (`sdp studio`),
-> re-entered on the owner's rulings; intent in `pack:spec-studio-v1`. A design pass splits the
-> Studio's Specs for honest binding and prototypes the Pack page before any code.
+> **plan 42 is EXECUTED** as the Studio lane above. The Spec Studio's phase 0, a read-only
+> static view (`sdp studio`); intent in `pack:spec-studio-v1`. Its design pass split the Studio's
+> Specs for honest binding and prototyped the Pack page before the build.
 > **plan 41 is EXECUTED**. The design-management arc, intent in `pack:design-management-v1`: the
 > Design Review's Pack page shows a Pack's design (the Pack design page, MD-39), the graph
 > records entry lines, recipes take `--params` and ship under `dist/recipes/`, recipes 29 to 32
@@ -118,7 +124,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, the consumer pointers and discipline mapping (06), and the MVP acceptance of record (07); the core model, the one graph, validation & honesty and the consumer law dissolved into the `model.*`, `extraction.*`, `validation.*` and `consumers.*` Spec families; the historical MVP slice record lives in the slice-5 plan under `plans/` and in `examples/checkout-v1`, while forward roadmap intent lives in capture Specs — locate any of them with concept search (recipe 6) | to know *how* it is designed |
 | `docs/concept/DECISIONS.md` | **the lean decision registry** — ratified names, one-line glosses, carrying Specs, and the D1–D6 lookup; historical rationale lives in git, plans, and the Specs themselves | when resolving a decision name or following its canonical pointer |
-| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review, census, Mermaid and Gherkin) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `import` · `new spec` · `q`) · `import` (carrier conversion and import analysis) · `testing` (the registrar runtime exported through `./testing`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
+| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review, census, Mermaid, Gherkin and Studio) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `studio` · `import` · `new spec` · `q`) · `import` (carrier conversion and import analysis) · `testing` (the registrar runtime exported through `./testing`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
 | `examples/checkout-v1` | **the worked MVP example** (Markdown carriers; originally the TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `docs/lineage/` | restored historical design documents — the v0 concept set, verbatim with lineage headers; evidence for design reviews, never intended truth | when a review needs superseded design on the table rather than in git history |
@@ -157,11 +163,14 @@ pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready
 pnpm --silent sdp:q "$(cat dist/recipes/06-where-is-this-concept.js)" --params '{"term":"readiness floor"}'
 ```
 
-The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · import · new spec · q`.
+The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · studio · import · new spec · q`.
 `sdp validate --watch` re-runs that same validate path on carrier create, change, delete, or rename
 and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
-with `--check-clean`. The four projection publishers remain independent public verbs; repository
-generation/check scripts certify all four roots through the private projection-suite driver. The
+with `--check-clean`. `sdp validate --rules PATH [--params FORM]...` runs an operator-selected corpus
+rule, with each `--params` after its own `--rules`, corpus findings and failed files reported apart
+from Protocol findings, and rules reread on each watch cycle. The five projection publishers remain
+independent public verbs; repository
+generation/check scripts certify all five roots through the private projection-suite driver. The
 runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
 `sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
@@ -309,8 +318,8 @@ to run. Development is terminal-driven. Node ≥ 20 (Node 22 is installed); depe
 the committed `package-lock.json` (npm is the lockfile-native package manager; `pnpm` scripts also
 work, but never a bare `sdp`).
 
-The startup update script only refreshes dependencies (`npm ci`). It does **not** build, so on a
-fresh pod you must run `npm run build` before the `sdp` CLI (`dist/cli/sdp.js`) exists.
+`npm ci` builds the package through its `prepare` script. CI installs with `--ignore-scripts`
+and builds in `npm run check`. `npm run check:git-install` checks installation from a commit.
 
 Non-obvious gotcha: `npm test` refuses to run until the generated contracts exist and errors with
 "Generated contracts required by the selected test suite are missing." Build and generate first:

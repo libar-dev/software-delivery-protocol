@@ -5,11 +5,13 @@ import { renderDesignReview } from "../projections/design-review.js";
 import { createReader } from "../reader/reader.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
+import type { CorpusValidationReport, Finding } from "../validate/contracts.js";
 import { validateGraph } from "../validate/validators.js";
 import { removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import { runBuild } from "./build-command.js";
 import type { BuildHooks, BuildOutcome } from "./build-command.js";
+import { runCorpusRules } from "./corpus-rules.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
 
@@ -26,6 +28,17 @@ const validateSummaryAnchor = codeAnchor({
   role: "renderer",
 });
 void validateSummaryAnchor;
+
+function writeProtocolValidation(output: CliOutput, findings: readonly Finding[]): number {
+  for (const finding of findings) writeStderr(output, formatFinding(finding));
+  const errorCount = findings.filter((finding) => finding.severity === "error").length;
+  const warningCount = findings.length - errorCount;
+  writeStdout(
+    output,
+    `validate: ${String(errorCount)} errors · ${String(warningCount)} warnings (conformance + honesty over the one graph)\n`,
+  );
+  return errorCount;
+}
 
 export function runValidate(
   parsed: BuildArgs,
@@ -44,21 +57,65 @@ export function runValidate(
   try {
     const findings = runValidateGraph(build.graph).findings;
 
-    for (const finding of findings) {
-      writeStderr(output, formatFinding(finding));
-    }
-
-    const errorCount = findings.filter((finding) => finding.severity === "error").length;
-    const warningCount = findings.length - errorCount;
-    writeStdout(
-      output,
-      `validate: ${String(errorCount)} errors · ${String(warningCount)} warnings (conformance + honesty over the one graph)\n`,
-    );
+    const errorCount = writeProtocolValidation(output, findings);
 
     return { exitCode: errorCount > 0 ? 1 : 0, graph: build.graph };
   } catch (error) {
     const detail = error instanceof Error ? error.message : errorMessage(error);
     writeStderr(output, `sdp ${command}: ${detail}\n`);
+    return { exitCode: 1 };
+  }
+}
+
+export interface CorpusValidationOutcome extends BuildOutcome {
+  readonly report?: CorpusValidationReport;
+}
+
+/**
+ * @sdpAnchor impl:protocol.corpus-rules
+ * @sdpLabel runs copied rule bodies after Protocol validation and composes the separate corpus report, output and exit
+ * @sdpSatisfies spec:validation.corpus-rules
+ * @sdpComponent component:protocol.cli
+ * @sdpRole service
+ */
+
+/** The async validate branch; projection publishers keep the synchronous Protocol-only path. */
+export async function runValidateRules(
+  parsed: BuildArgs,
+  output: CliOutput,
+  hooks: ValidationViewHooks = {},
+): Promise<CorpusValidationOutcome> {
+  const build = runBuild(parsed, output, "validate", hooks);
+  if (build.graph === undefined) {
+    writeStdout(output, "corpus rules: not run, the graph did not derive\n");
+    return { ...build, exitCode: 1 };
+  }
+  try {
+    const protocol = (hooks.validateGraph ?? validateGraph)(build.graph);
+    const errors = writeProtocolValidation(output, protocol.findings);
+    const report = await runCorpusRules(build.graph, protocol, parsed.rules ?? []);
+    for (const { rulesFile } of parsed.rules ?? []) {
+      const failed = report.corpusFailures.find((row) => row.rulesFile === rulesFile);
+      if (failed !== undefined)
+        writeStderr(output, `corpus rules ${rulesFile} failed: ${failed.reason}\n`);
+      else {
+        writeStderr(output, `corpus rules ${rulesFile}\n`);
+        for (const finding of report.corpusFindings.filter((row) => row.rulesFile === rulesFile))
+          writeStderr(output, formatFinding(finding));
+      }
+    }
+    const corpusErrors = report.corpusFindings.filter((row) => row.severity === "error").length;
+    writeStdout(
+      output,
+      `corpus rules: ${String(corpusErrors)} errors · ${String(report.corpusFindings.length - corpusErrors)} warnings · ${String(report.corpusFailures.length)} of ${String(parsed.rules?.length ?? 0)} files failed (the corpus's own rules)\n`,
+    );
+    return {
+      graph: build.graph,
+      report,
+      exitCode: errors > 0 || corpusErrors > 0 || report.corpusFailures.length > 0 ? 1 : 0,
+    };
+  } catch (error) {
+    writeStderr(output, `sdp validate: ${errorMessage(error)}\n`);
     return { exitCode: 1 };
   }
 }

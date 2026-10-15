@@ -49,7 +49,7 @@ export const consumersSpecs = [
         catalogIndex:
           "the catalog opens with a table of every recipe, its number, name, parameters and a one-line use, before the contract; the build writes one file per body and none for the index.",
         wrapIdiom:
-          "to filter a shipped answer, the caller wraps the shipped body in an async arrow function inside its own body, `const answer = await (async () => { <shipped body> })();`, and returns a filtered value; the catalog shows the shell form and states that the caller's part must hold no shell expansion.",
+          "to filter a shipped answer, the caller wraps the shipped body in an async arrow function that takes `params`, inside its own body, `const answer = await (async (params) => { <shipped body> })({ <the recipe's own parameters> });`, and returns a filtered value, so the caller's own parameters never reach the recipe as names it does not take; the catalog shows the shell form and states that the caller's part must hold no shell expansion.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -1174,16 +1174,6 @@ export const consumersSpecs = [
       intent: {
         outcome:
           "Capture the intent of the next body of work as Specs below `ready`, so planning sessions derive backlog and readiness from the graph and plan files point to their carrying Specs.",
-        openQuestions: [
-          {
-            question: "Which Packs group the next bodies of work once each is commissioned?",
-            blocking: false,
-            key: "nextPacks",
-            decider: "owner",
-            provisional:
-              "a focused corpus-checks Pack holds corpus rules, architecture constraints and planned architecture; coverage and run evidence join the Spec Studio Pack only if they join its design",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -1294,16 +1284,19 @@ export const consumersSpecs = [
     file: "specs/consumers/adopter-on-ramp.sdp.md",
     title: "An adopter learns graph homes, carrier grammar and shipped paths from the on-ramps",
     narrative:
-      "The help names the on-ramps by path because an operator can reach the CLI without a package runner and still needs to find the shipped on-ramps and the law they cite.",
+      "The help names the on-ramps by path because an operator can reach the CLI without a package runner and still needs to find the shipped on-ramps and the law they cite. A commit pin lets an adopter take any reviewed revision without a registry release, and the package builds itself during that install, so a re-pin is one dependency edit rather than a rebuilt vendored tarball.",
     sections: {
       intent: {
         problem:
-          "An adopter that follows the shipped on-ramps cannot learn where a deferral, an unsettled fact, a ruling awaiting its owner, a statement a test checks, or a count belongs, so it invents tags of its own, hand-kept registers, and scripts that keep them true.",
+          "An adopter needs a repeatable commit install and stable recipe inputs. An adopter that follows the shipped on-ramps cannot learn where a deferral, an unsettled fact, a ruling awaiting its owner, a statement a test checks, or a count belongs, so it invents tags of its own, hand-kept registers, and scripts that keep them true.",
         outcome:
-          "Teach each ruled home in the shipped skills, one line each with its carrying Spec, so an adopter states those truths in the graph and not beside it.",
+          "Teach commit installation and stable recipe inputs in the README. Teach each ruled home in the shipped skills, one line each with its carrying Spec, so an adopter states those truths in the graph and not beside it.",
       },
       behavior: {
         rules: [
+          "An adopter can pin the package to a git commit, and the package's `prepare` script builds the CLI, subpath exports and shipped recipes before installation completes. While the package version is `0.0.0`, the installation guidance uses a commit pin rather than an npm prerelease.",
+          "The shipped README teaches a commit install with npm and pnpm, the source-qualified build approval each needs, and a check that the installed CLI's `sdp --version` names the pinned full commit, for a git clone or a hosted git archive install.",
+          "The upgrade guidance teaches a recipe caller to pass the recipe's subject as `--params` data and run the shipped recipe file, never to rewrite the recipe body.",
           "The authoring skill teaches a deferral as a blocking open question whose `trigger:` field names what brings the Spec back, plus `dependsOn` for a true precondition. Its blocking question holds the Spec below `defined` without an adopter-specific tag. Example children may still state `defined` once their bound points are complete and match the parent's example vocabulary when it has one; their `ready` waits until the parent states at least `defined`.",
           "It teaches an unsettled fact as a constraint Spec whose blocking open question names the check that would settle it. Specs bounded by it declare `constrainedBy`; they may state `defined` when their own floor clears, and their `ready` waits until the constraint states at least `defined`.",
           "It teaches a ruling that awaits its owner as a decision Spec below `ready`, with `decidedBy` from each Spec the ruling shapes.",
@@ -1314,7 +1307,10 @@ export const consumersSpecs = [
           "The skills teach and never check. No validator reads an adopter's own tags, and an adopter's own policy checks stay the adopter's.",
         ],
         ruleKeys: {
-          helpNamesOnRamps: "rules[6]",
+          commitInstall: "rules[0]",
+          installGuidance: "rules[1]",
+          recipeUpgrade: "rules[2]",
+          helpNamesOnRamps: "rules[9]",
         },
       },
     },
@@ -1327,7 +1323,8 @@ export const consumersSpecs = [
     readiness: "ready",
     file: "specs/consumers/agent-surface.register-recipes.sdp.md",
     title: "Register questions stay executable graph recipes",
-    narrative: null,
+    narrative:
+      "A corpus keeps registers of its own values, such as its limits, its error messages and its storage tables, as families of keyed Design entries whose keys share a prefix: `limit`, `error`, `table`. The key-family register lists one or more families across a scope each time it runs, so no one keeps those tables by hand. It reads Design and UI entries only. A rule or flow key names a law that an example exercises, and its text is a statement of law rather than a value two parties hold to. Rule coverage and entry search already list rule keys, the open-question register lists question keys, and a register that mixed laws with values would hide which rows are values.",
     sections: {
       intent: {
         problem:
@@ -1345,9 +1342,23 @@ export const consumersSpecs = [
           "Entry search gives an entry its address when one exists: `spec:<id>#<section>.<key>` for a `design` or `ui` key matching `^[a-z][A-Za-z0-9]*$` other than `description`, `spec:<id>#question.<key>` for the text of an open question that carries a key, and `spec:<id>#rule.<key>` for a keyed rule or flow; every other entry has `address: null`.",
           "Whole tokens are maximal runs of Unicode letters and digits, split at camelCase humps and compared without case; a multiword term matches only as a consecutive run in the same order inside one key or text.",
           "Pinned declarations reports each keyed Design entry whose value opens with a code span, giving the Spec, the key, and the span content as authored with the count of entries and of Specs, and parses no language inside the span.",
+          "The key-family register lists every keyed Design and UI entry whose key starts with one of the given prefixes, across the corpus, the members of one Pack, or a list of Specs, each with its Spec, section, key, value as the graph holds it, file and line, with no row cap.",
+          "The key-family register never lists a rule, flow or question key, or the `description` entry.",
           "Each body composes the reader and adds no reader join or CLI verb.",
           "The recipe check executes each catalog body as written, and the on-ramps point to the catalog for its contents.",
         ],
+        ruleKeys: {
+          keyFamily: "rules[8]",
+          familySections: "rules[9]",
+        },
+      },
+      design: {
+        familyRecipe:
+          'recipe 41, the key-family register, takes `params.prefixes`, a non-empty list of unique non-empty strings, each matched case-sensitively against the start of a key as authored, with `["finding", "impact"]` when absent, and at most one scope, `params.pack` or `params.specs`, reading the whole corpus with neither and a listed Spec once however often it is listed; a malformed prefix list, both scopes, or a Pack or Spec id that does not resolve returns `{ diagnostics: [{ parameter, problem }] }` and no register, `parameter` naming the parameter at fault and `specs` when both scopes are given. A Pack member that does not resolve returns a `pack` diagnostic naming that member, and no register.',
+        familyShape:
+          "`{ prefixes, scope, totals: { rows, specs, byPrefix }, rows }` is the register, where `scope` is `{ corpus: true }`, `{ pack }` or `{ specs }`, `totals.specs` counts the Specs with a row, and `byPrefix` maps each prefix, in the given order, to the count of rows it matches, a key that matches two prefixes counting under each.",
+        familyRow:
+          "`{ key, spec, section, value, file, line }` is one row, with `section` either `design` or `ui`, and `line` null when the location table records no line for the entry; rows sort by key, then Spec id, then section, in code-unit order.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -1411,41 +1422,26 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.components",
     specKind: "contract",
     altitude: "story",
-    readiness: "scoped",
+    readiness: "defined",
     title:
       "The Studio's custom elements each render one view in pages that load their script and supply graph data",
-    narrative: null,
+    narrative:
+      "The original's harness element has no subject in the graph, which holds example spaces, bound points and oracle bindings but no harness node, so its successor takes the Spec that owns an example space. No diagram renderer is chosen yet: the design that adds the first diagram names one within the custom-elements decision.",
     sections: {
       intent: {
         outcome:
           "Give the Studio a small set of custom elements that each render one view of the graph for a Studio page or an HTML report that can load the element script and supply its graph data.",
-        openQuestions: [
-          {
-            question:
-              "The original embeds interactive LikeC4 diagrams through an element that wraps LikeC4's own runtime; a LikeC4 export is designed-for and deferred, and the shipped Mermaid projection draws bounded one-hop Spec and Pack diagrams and never the whole graph. Which renderer draws a Studio diagram, and does that bound hold for it?",
-            blocking: false,
-            key: "embeddedDiagrams",
-            decider: "owner",
-            provisional:
-              "a later phase picks a renderer compatible with `spec:decisions.studio-web-components`, or a decision that refines it admits a framework runtime",
-          },
-          {
-            question:
-              "The original's harness element takes a harness id and keeps its coverage current as a person works it; the graph holds example spaces, bound points and oracle bindings, and has no harness node and no `harness:` namespace. What does the element take as its subject?",
-            blocking: false,
-            key: "harnessElement",
-            decider: "owner",
-            provisional:
-              "a later-phase element takes `spec-id` naming the Spec that owns the example space and renders that space's dimensions, its children's bound points and its expected-outcome oracle; coverage stays a report, never a verifier run or a delivery fact",
-          },
-        ],
       },
       behavior: {
         rules: [
           "Each element is self-contained and light on dependencies, and works in an HTML page that can load its script and supply its graph data.",
-          "Each element reads the one data object its page sets, as `spec:consumers.spec-studio.data` states. An element with a graph subject takes that subject's graph id in an attribute named by its Design entry; an element over accumulated intents has no single graph subject, and a renderer-specific subject waits for its named design question.",
+          "An element that renders a view of the graph reads the one data object its page sets, as `spec:consumers.spec-studio.data` states. An element with a graph subject takes that subject's graph id in an attribute named by its Design entry; an element over accumulated intents has no single graph subject.",
           "Every element's name starts with `sdp-`.",
+          "A diagram is drawn by a renderer that runs as a custom element under `spec:decisions.studio-web-components`, or by a framework runtime that a decision refining it admits; the design that adds the first diagram names the renderer and the bound on what one diagram draws.",
         ],
+        ruleKeys: {
+          diagramRenderer: "rules[3]",
+        },
       },
       design: {
         description: "The elements in the original's order, with their attributes.",
@@ -1455,10 +1451,10 @@ export const consumersSpecs = [
           "`sdp-trace-graph` with `spec-id`, `depth` and `highlight`: the Spec's relations drawn as SVG to the given depth, highlighting what `highlight` names, such as Specs with no verifier binding.",
         maturityMap:
           "`sdp-maturity-map` with `pack-id` and `group-by`: a Pack's members by readiness, grouped by the named field of the member values, such as kind or stated rung.",
-        harness:
-          "an interactive element over an example space; its name, subject attribute and coverage behavior await `spec:consumers.spec-studio.components#question.harnessElement`.",
+        exampleSpace:
+          "`sdp-example-space` with `spec-id`, naming the Spec that owns the example space: the space's dimensions, its children's bound points and its expected-outcome oracle binding; its coverage is a report, never a verifier run or a delivery fact.",
         diagramView:
-          "a diagram element whose renderer, name and subject attribute await `spec:consumers.spec-studio.components#question.embeddedDiagrams`.",
+          "a diagram element whose name and subject attribute the design that adds it names, under the diagram-renderer rule.",
         scenarioEditor:
           "`sdp-scenario-editor` with `spec-id` and `mode`: a given, when and then editor for one example, which in `propose` mode composes intent for a new one.",
         impactView: "`sdp-impact-view` with `spec-id`: a Spec's impact panel on its own.",
@@ -1475,43 +1471,42 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.data",
     specKind: "contract",
     altitude: "story",
-    readiness: "scoped",
-    title: "The Studio hydrates from the serialized graph and the reader's values",
-    narrative: null,
+    readiness: "ready",
+    title: "The Studio renders from the reader's values and embeds only what its script reads",
+    narrative:
+      "The build writes each value into the page's markup, so a page reads in full as HTML. Search is the exception: a browser refuses a fetch from a page opened through `file://`, so the search page carries its index inside it. On the first adopter's corpus that index is too large to repeat on every page, which is why search runs on a page of its own.",
     sections: {
       intent: {
         outcome:
-          "Give every Studio page its data as files the build writes beside it, so the page reads the graph the agent surface reads and derives nothing of its own.",
-        openQuestions: [
-          {
-            question:
-              "The original hydrates the Studio from AI slices beside the graph and the validation report; the context bundle is a catalog recipe composed on each invocation and never saved, so no Spec states a saved slice. Does the Studio's data hold a slice, and which Spec would state it?",
-            blocking: false,
-            key: "aiSlices",
-            decider: "owner",
-          },
-        ],
+          "Render every Studio page from the values the reader returns for the graph the agent surface reads, so a page derives nothing of its own and carries only the data its script needs.",
       },
       behavior: {
         rules: [
-          "The Studio hydrates from data files under `generated/spec-studio/data/`, written by the build that writes its pages.",
-          "Each data file holds values the graph serializes or the reader returns, and the page follows `spec:consumers.spec-studio`'s rule against recomputing graph joins, claims, delivery facts, readiness and floor failures.",
-          "A page embeds the data it reads in one `script` element of type `application/json` with the id `sdp-graph`, parses it once into `window.__sdp__.graph`, and every element on the page reads from that one object.",
+          "The build renders the index from `specs()`, `packs()`, `findings()` and each Spec's design columns, a Pack page from `packContext` and the Pack totals, a Spec page from `specContext`, and the search page from the search index; every page's rail renders the rail values. A page states no value the reader did not return, apart from counts the build takes of those values.",
+          "A page whose script reads data embeds it in one `script` element of type `application/json` with the id `sdp-data`, serialized as JSON with every `<` then written as the six characters `\\u003c`, so no text can close the element. The search page embeds the search index there; every other page embeds no data, because its values are in its markup.",
+          "The page set writes no data file of its own: an agent reads the graph through `sdp q`, and `sdp build` writes the serialized graph.",
+          "The Studio's data holds no context bundle or other AI slice: the context bundle is composed on each invocation and never saved, and a design pass composes one with its recipe when it needs it.",
         ],
+        ruleKeys: {
+          readerValues: "rules[0]",
+          embeddedData: "rules[1]",
+          noDataFiles: "rules[2]",
+          noSlices: "rules[3]",
+        },
       },
       design: {
-        graphFile:
-          "the serialized graph exactly as `sdp build` writes `generated/graph.json`, with its `schemaVersion`.",
-        reportFile: "the validation report, the findings the reader returns from `findings()`.",
-        specContexts:
-          "for each Spec, the reader's `specContext` value whole: descriptors, narrative, sections, `designColumns`, stated and derived readiness, `floorFailures`, the stated next rung with `statedNextRungFailures`, the floor's `nextRungFailures`, relations both ways with their reason and exercises when present, implementations, references, verifiers, the oracle binding when present, `entryLocations` and findings.",
-        packContexts:
-          "for each Pack, the reader's `packContext` value whole: framing, model references, members in authored order with each member's stated next rung, design columns and bindings, verifier gaps, boundary and findings.",
-        searchIndex:
-          "for each node, the fields the reader's `findByConcept` matches: id, title, anchor label, Pack framing, narrative and section content, so a search on the page matches what the concept entry matches.",
+        packTotals:
+          "`{ members: number; unresolved: number; heldBelowNextRung: number; waitingForAuthor: number; entries: number; declarations: number; openQuestions: number; blockingQuestions: number; withImplementations: number; withReferences: number; restsOn: number; restedOnBy: number; verifiedBy: number; supersededBy: number }`, the totals recipe 29 returns for the Pack, each counted as that recipe counts it.",
+        railValues:
+          "`{ packs: { id: string; title?: string; members: { id: string; title?: string; statedReadiness?: string; ownsExampleSpace: boolean }[] }[]; findings: { errors: number; warnings: number } }`, the values every page's rail renders: each Pack in id order with its members in authored order, a member owning an example space when its Spec context carries one, and the validation report's findings counted by severity.",
+        searchIndex: "`{ records: SearchRecord[] }`, one record per graph node, in id order.",
+        searchRecord:
+          '`{ id: string; nodeType: "Primitive" | "Pack" | "Anchor" | "CodeNode"; page: string | null; title?: string; label?: string; framing?: string; narrative?: string; sections?: Record<string, unknown>; file?: string; line?: number; specKind?: string; statedReadiness?: string; floorReached?: string | null; bindings: { edge: string; specId: string }[]; entries: SearchEntry[] }`: `title`, `label`, `framing`, `narrative` and `sections` exactly as the graph node holds them, the fields `findByConcept` reads; `page` the node\'s page path in the page set, null for an Anchor or a CodeNode; `file` and `line` as recorded; the kind and the two rungs on a Spec only, `floorReached` null when no rung derives; `bindings` the Specs an Anchor\'s or CodeNode\'s outgoing edges reach, with the edge type, and empty for any other node.',
+        searchEntry:
+          "`{ section: string; entry: string | null; key: string | null; address: string | null; line: number | null; text: string }`, one per value recipe 23's walk reaches in a Spec's narrative and sections, taken with no term: each string, and each value that is not a string under a key the author coins, as its JSON text; in that walk's order, with that recipe's entry path, coined key, address and line. A term matches an entry as that recipe matches it, a string by its key or text and any other value by its key only, so the entries a term matches are the rows recipe 23 returns for it.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.data.sdp.md",
   },
   {
@@ -1520,33 +1515,12 @@ export const consumersSpecs = [
     altitude: "story",
     readiness: "defined",
     title: "A composing panel on every page gathers scoped intent for an agent",
-    narrative: null,
+    narrative:
+      "The change-proposal contract requires the commit whose graph the person read, and a generated page set carries no commit, so a proposal's base comes from the build stamp when one is present and from the person otherwise.",
     sections: {
       intent: {
         outcome:
           "Let a person gather the changes they want while they read, each bounded by a Spec, its neighbors, a Pack or one open question, and hand them to an agent that edits source.",
-        openQuestions: [
-          {
-            question:
-              "The change-proposal contract requires the commit whose graph the person read, and a generated page set carries no commit; where does the panel get the proposal's base, and does it ask the person for a reason?",
-            blocking: false,
-            key: "proposalBase",
-            decider: "owner",
-            links: ["spec:consumers.intent-composition.proposal"],
-            provisional:
-              "the base is the commit a present build stamp names, otherwise one the person supplies, and the person supplies one reason for the whole proposal; without a base and a reason the panel exports scoped intent as text, and the receiving agent writes the proposal against a known commit",
-          },
-          {
-            question:
-              "The change-proposal contract scopes a change by Spec ids and entry addresses only, while the panel gathers intent bounded by a Pack or a Spec's neighbors; does a Pack or neighbors scope expand to its member or neighbor Spec ids at hand-off, or does a later proposal schema admit Pack scopes?",
-            blocking: false,
-            key: "packScope",
-            decider: "owner",
-            links: ["spec:consumers.intent-composition.proposal"],
-            provisional:
-              "the ready proposal contract stands; a Pack-scoped request expands to the member Spec ids read from that Pack at the proposal base, and a request that changes Pack membership or framing, or names an empty Pack, stays scoped-intent text",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -1556,11 +1530,17 @@ export const consumersSpecs = [
           "Gathered intents persist in the browser's local storage, so refreshing a tab on a phone loses none.",
           "A composed intent names its scope by id or entry address, so the agent that receives it reads the same Spec, Pack, entry or question through the graph.",
           "The panel hands its gathered intents off as one change proposal, on the change-proposal contract, which the person copies as text or saves as a document. The page opens no pull request, because a static page holds no credentials; any pull request comes from the agent's ordinary source edit.",
+          "A proposal's base is the commit a present build stamp names, otherwise one the person supplies, and the person gives one reason for the whole proposal; without a base and a reason the panel exports its intents as scoped-intent text, and the agent that receives them writes the proposal against a commit it knows.",
+          "A request scoped to a Pack expands at hand-off to the member Spec ids that Pack holds at the proposal's base; a request that changes a Pack's membership or framing, or names an empty Pack, stays scoped-intent text, so the change-proposal contract keeps its Spec and entry scopes.",
         ],
         exampleSpace: {
           given: ["the composing panel holds {gathered:number} gathered intents"],
           when: ["the person refreshes the tab"],
           then: ["the composing panel holds {kept:number} gathered intents"],
+        },
+        ruleKeys: {
+          proposalBase: "rules[6]",
+          packScope: "rules[7]",
         },
       },
       ui: {
@@ -1578,9 +1558,10 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.lenses",
     specKind: "behavior",
     altitude: "story",
-    readiness: "scoped",
+    readiness: "defined",
     title: "Four lenses read the graph as Packs, architecture, tests and evidence",
-    narrative: null,
+    narrative:
+      "A capability is read as a Pack, or as a projection over high-altitude behavior Specs that no view draws yet, so the Packs lens groups by Pack and draws no capability tree. A verifier binding states that a verifier exists, and pass and fail stay in CI, so the tests lens shows bindings and no run result.",
     sections: {
       intent: {
         outcome:
@@ -1588,56 +1569,37 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "A capability is a projection over high-altitude behavior Specs or a Pack grouping, and an arc's Pack is named for the capability it designs. Which grouping does the capability tree use, and which graph values supply it?",
-            blocking: false,
-            key: "capabilityGrouping",
-            decider: "owner",
-            provisional: "the Packs lens groups Specs by Pack, and no capability tree is drawn",
-          },
-          {
-            question:
               "The original's architecture lens draws runtime layers, ports and external systems beside components and their dependencies; `spec:decisions.architectural-annotation` gives a component anchor a layer and a bounded context and any code anchor a role, beside component membership and `uses`, and admits no port or external-system node. Does the lens group components by layer and context and draw only what those anchors hold?",
             blocking: false,
             key: "architectureVocabulary",
             links: ["spec:consumers.structural-mermaid#question.layerAndContext"],
-          },
-          {
-            question:
-              "The original's tests lens shows each test's last run result; a verifier binding states that a verifier exists, and pass and fail stay in CI, as `spec:decisions.binding-not-liveness` rules. Does the lens show run results read from CI output, or bindings only?",
-            blocking: false,
-            key: "testRunResults",
             decider: "owner",
-            links: ["spec:observation.run-evidence"],
             provisional:
-              "The first Studio build shows bindings only; admitting run records in a later phase awaits an explicit input and reproducibility ruling.",
-          },
-          {
-            question:
-              "The original's tests lens names the rules of a Spec that no test exercises; a rule may carry a key, an example's `verifies` may name the keys it exercises, and recipe 34 lists each keyed rule with its examples, while the graph cannot tell which examples exercise a rule with no key. Does the lens show keyed-rule coverage with the unkeyed rules counted apart, or name the uncovered Specs only?",
-            blocking: false,
-            key: "ruleCoverage",
-            decider: "owner",
-            links: ["spec:model.rule-keys"],
-            provisional:
-              "the tests lens lists each keyed rule with the examples recipe 34 reports and counts the unkeyed rules apart",
+              "the lens groups components by their recorded layer and context and draws only component membership and `uses` edges, with no port or external-system node",
           },
         ],
       },
       behavior: {
         rules: [
           "The Packs lens is the default landing page.",
+          "The Packs lens groups Specs by Pack and draws no capability tree.",
           "Clicking a component in the architecture lens opens its detail.",
+          "The tests lens shows verifier bindings and no run result; run records join it only through `spec:observation.run-evidence`, under an input and reproducibility ruling of their own.",
           "The evidence lens is read-only.",
         ],
+        ruleKeys: {
+          packGrouping: "rules[1]",
+          bindingsOnly: "rules[3]",
+        },
       },
       ui: {
         description: "The lenses in the order of the top navigation.",
         packsLens:
-          "a Spec-by-Spec tree grouped by Pack, with each Pack's members in authored order; any capability grouping awaits `spec:consumers.spec-studio.lenses#question.capabilityGrouping`.",
+          "a Spec-by-Spec tree grouped by Pack, with each Pack's members in authored order, which the index page holds.",
         architectureLens:
-          "the graph drawn as components and their dependencies, from component membership and `uses` edges, in an embedded interactive diagram whose renderer is the open question `spec:consumers.spec-studio.components#question.embeddedDiagrams`.",
+          "the graph drawn as components and their dependencies, from component membership and `uses` edges, in an embedded interactive diagram whose renderer follows `spec:consumers.spec-studio.components#rule.diagramRenderer`.",
         testsLens:
-          "a coverage view: for each Spec, its verifiers with their bindings, and the rules no example exercises.",
+          "a coverage view: for each Spec, its verifiers with their bindings, then each keyed rule with the examples recipe 34 reports as exercising it, with the unkeyed rules counted apart, because the graph cannot tell which examples exercise a rule with no key.",
         evidenceLens:
           "the graph-recorded evidence fields and absence labels `spec:consumers.spec-studio.verification-panels` states; while the graph records no observation or other evidence, each reads not tracked.",
       },
@@ -1649,31 +1611,15 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.responsive",
     specKind: "behavior",
     altitude: "story",
-    readiness: "scoped",
+    readiness: "defined",
     title: "The Studio reads on a phone as on a desktop",
-    narrative: null,
+    narrative:
+      "The curated graph's edges carry no confidence, and the impact graph's inferred imports stay outside it, so a compact diagram shortens by distance alone.",
     sections: {
       intent: {
         actor:
           "A person reviewing a design on a phone, including a pull request reviewer who holds only a link.",
         outcome: "Let a design be reviewed on a phone through the same pages a desktop shows.",
-        openQuestions: [
-          {
-            question:
-              "The curated graph's edges carry no confidence, and the impact graph's file-level inferred imports stay outside it; which details does a compact diagram presentation hide?",
-            blocking: false,
-            key: "summaryMode",
-            decider: "owner",
-            provisional: "a compact diagram drops relations past one hop",
-          },
-          {
-            question: "Which exact CSS viewport width switches the layout to one column?",
-            blocking: false,
-            key: "phoneBreakpoint",
-            decider: "owner",
-            provisional: "720 CSS pixels",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -1687,10 +1633,10 @@ export const consumersSpecs = [
       },
       ui: {
         singleColumn:
-          "every layout collapses to one column below the breakpoint settled by `spec:consumers.spec-studio.responsive#question.phoneBreakpoint`.",
+          "every layout collapses to one column below 720 CSS pixels of viewport width.",
         pinchZoom: "on a touch device, every diagram zooms with a pinch.",
         summaryMode:
-          "a compact diagram presentation for narrow screens, whose contents await `spec:consumers.spec-studio.responsive#question.summaryMode`; it assigns no confidence to an edge.",
+          "a compact diagram presentation for narrow screens that drops relations past one hop and assigns no confidence to an edge.",
       },
     },
     deliveryFacts: [],
@@ -1711,75 +1657,30 @@ export const consumersSpecs = [
           "Give a person reviewing a design one generated HTML workbench that explores the whole graph through lenses, shows each Spec and Pack in context, and turns a wanted change into scoped intent rather than an edit.",
         problem:
           "The generated Markdown Design Review offers no built-in search or filters, and navigation is through its links, so reviewers in the first adopter open carrier files alongside it.",
-        openQuestions: [
-          {
-            question:
-              "No Spec states phase 0's deliverables: the index, the Pack page, search and the `sdp studio` publisher with its flags, output root, invalidation, clean check and exit code. Which child Specs carry them, and do pull request previews join phase 0?",
-            blocking: false,
-            key: "phaseZeroSplit",
-            decider: "owner",
-            provisional:
-              "child Specs for the index, the Pack page, search and the publisher; the publisher's draft: `sdp studio [root] [--exclude PATH]... [--check-clean]` writes only `generated/spec-studio/` under the root, which defaults to the working directory, with each exclusion a root-relative path prefix; a run writes its page set to `generated/spec-studio.tmp/` and replaces the live root with it wholesale; every `sdp build` attempt invalidates the live and temporary Studio roots before extraction, and an unsuccessful Studio run removes any Studio root it cannot certify; under `--check-clean` it compares an independent twin with the current output, returns nonzero and removes divergent, missing or drifted output, and replaces certified output wholesale; it shows validation findings without withholding publication and returns the validation exit code; previews stay a later phase",
-          },
-          {
-            question:
-              "The Studio is built as a single-page application, while its data contract both writes data files, which a page opened through `file://` cannot fetch, and embeds each page's data; is the Studio one page or a static page set, and how does each page get its data with no request?",
-            blocking: false,
-            key: "pageModel",
-            decider: "owner",
-            links: ["spec:consumers.spec-studio.data"],
-            provisional:
-              "a static page set of an index page and one page per Pack and per Spec, each embedding the data it reads in one JSON script element, with its local assets; a standalone data file, if any, duplicates the embedded values for consumers outside the page",
-          },
-          {
-            question:
-              "The Studio shows only values the reader computes, while its pages need answers only catalog recipes compute, such as pinned declarations and keyed-rule coverage; may the Studio's build compose recipe answers over the same graph, and which?",
-            blocking: false,
-            key: "recipeValues",
-            decider: "owner",
-            links: ["spec:consumers.spec-studio.data"],
-            provisional:
-              "the build composes a recipe's answer over the same graph only when the Studio's design names that recipe, as recipe 24's pinned declarations and recipe 34's keyed-rule coverage; the page recomputes no join, and no context bundle is saved as Studio data",
-          },
-          {
-            question:
-              "The first build's acceptance names one adopter's corpus, a register id and a path in another repository; does phase 0 keep those five named tasks, or state a measure any corpus can run?",
-            blocking: false,
-            key: "acceptanceMeasure",
-            decider: "owner",
-            provisional: "keep the first adopter's five named tasks until phase 0 is accepted",
-          },
-        ],
       },
       behavior: {
         rules: [
           "The read-only Studio ships in the open-source package `@libar-dev/software-delivery-protocol`, beside the four shipped projections; hosted review, shared comments and hosted previews may later ship under `@libar-ai/`.",
           "The Studio is a projection of the one graph: its page set under `generated/spec-studio/` is regenerated from the graph, states no truth, and confers nothing back into the graph.",
-          "The Studio is a mostly static single-page application, buildable as an `index.html` page and its assets, and it needs no server.",
+          "The Studio is a static page set: an index page, a search page, and one page per Pack and per Spec, with their local assets. Its build renders each page whole, so a page needs no server, and every page but the search page reads without its script, which adds filtering, search and copying.",
           "The Studio works offline: the same files open from the file system through `file://` for local use and from any static host for sharing.",
           "The Studio is reproducible: one graph renders byte-identical files, and an asset whose filename embeds a hash of its content gets the same name from the same graph.",
           "The Studio is read-rich: everything the graph holds about a Spec or a Pack is explorable in it.",
           "The Studio is write-careful: it writes nothing to canonical source, and a change a person wants leaves it as scoped intent for an agent, as `spec:consumers.edit-model` states.",
           "The Studio never builds a second graph: every join, claim, delivery fact, derived readiness, floor failure and finding it shows is a value the reader computed when the Studio was built, and the page computes none of them again.",
+          "A page shows a catalog recipe's answer only when the Studio's design names that recipe, and the build composes the answer over the graph it derived; the page recomputes none of it.",
           "The Studio stands beside the shipped Design Review, census, Mermaid and Gherkin projections and re-specifies none of them, which `spec:decisions.shipped-projections-frozen` keeps as they are.",
         ],
-        exampleSpace: {
-          given: ["an extraction root whose graph holds a Pack and its member Specs"],
-          when: ["the Studio renders twice from freshly derived graphs of that root"],
-          then: [
-            "the page set holds the entry page {entryPage:string}",
-            "the two renders are byte-identical: {byteIdentical:boolean}",
-            "every carrier and source file under the root stays byte-identical: {rootUntouched:boolean}",
-          ],
-        },
         ruleKeys: {
+          staticPageSet: "rules[2]",
           noSecondGraph: "rules[7]",
+          recipeAnswers: "rules[8]",
         },
       },
       verification: {
         mode: "manual",
         criteria: [
-          "The Studio's first build is accepted when a person completes, from the Studio's page set and the files it links to, the five tasks the first adopter set over its history-view Pack (`libar-platform/docs/feedback/sdp-feedback-01.md`): find the history contract, locate OD-157, explain the aggregate dependency, find one declaration's type comparison, and say whether a paused-rebuild example has native-backend evidence. The first build reads no run evidence, so the last task passes when the person finds that the example requires the native backend tier and has a bound verifier, and reports that no run result is supplied.",
+          "The Studio's first build is accepted when a person completes, from the Studio's page set and the files it links to, the five tasks the first adopter set over its history-view Pack (`libar-platform/docs/feedback/sdp-feedback-01.md`): find the history contract, locate OD-157, explain the aggregate dependency, find one declaration's type comparison, and say whether a paused-rebuild example has native-backend evidence. The first build reads no run evidence, so the last task passes when the person finds that the example requires the native backend tier, reads whether a verifier is bound to it, and reports that no run result is supplied.",
         ],
       },
     },
@@ -1797,18 +1698,6 @@ export const consumersSpecs = [
       intent: {
         outcome:
           "Let a stakeholder open the Studio of a pull request from a link, and let its author know which graph and which build the stakeholder read.",
-        openQuestions: [
-          {
-            question:
-              "How does the shell read the publishing stamp while generated pages stay a function of the graph and a page opened through `file://` makes no request, which keys does the stamp hold, and which step publishes a preview?",
-            blocking: false,
-            key: "stampLoading",
-            decider: "owner",
-            links: ["spec:consumers.spec-studio#question.phaseZeroSplit"],
-            provisional:
-              "the shell reads `stamp.json` only when served over http or https, so a `file://` page makes no stamp request; its keys are `schemaVersion`, `corpusCommit`, `engine` and `builtAt`; publishing a preview and writing its stamp are the adopter's step, and the Studio build writes only its graph-derived page set",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -1816,11 +1705,15 @@ export const consumersSpecs = [
           "Each pull request can publish its Studio as a preview.",
           "A stakeholder opens the link, navigates the Studio and composes intent, and the pull request's author hands that intent to an agent that edits the source.",
           "The Studio's build writes no stamp, so every page and data file it writes stays a function of the graph alone. The publishing step that uploads a build writes one stamp file beside the page set, and the shell shows it as build context when it is present.",
+          "Publishing a preview and writing its stamp are a step the adopter runs, never the Studio's build; the shell reads the stamp as `spec:consumers.spec-studio.shell#rule.stamp` states.",
         ],
+        ruleKeys: {
+          publishingStep: "rules[4]",
+        },
       },
       design: {
         buildStamp:
-          "`stamp.json` beside the page set, written by the publishing step and never by the Studio's build, holding the graph's `schemaVersion`, the git commit the build came from or `unknown` for a local build, the engine `sdp --version` names, and the build time.",
+          "`{ schemaVersion: string; corpusCommit: string; engine: string; builtAt: string }` in `stamp.json` beside the page set, written by the publishing step and never by the Studio's build: the graph's `schemaVersion`, the git commit the build came from or `unknown` for a local build, the engine `sdp --version` names, and the build time as an ISO 8601 UTC timestamp.",
         previewPath: "a pull request's preview is served at `<host>/preview/<pr-number>/`.",
       },
     },
@@ -1831,72 +1724,64 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.shell",
     specKind: "behavior",
     altitude: "story",
-    readiness: "scoped",
+    readiness: "ready",
     title: "The Studio's shell frames every page with navigation, a rail and a canvas",
-    narrative: null,
+    narrative:
+      "The shell carries what every page shares, including the rules that keep a page readable: by keyboard, without color, on a phone and without its script. Recent edits stay out of it, because a page is a function of the graph alone and git holds the history.",
     sections: {
       intent: {
         outcome:
-          "Let a person move between lenses, Packs and Specs from any page, and find a Spec by what they remember of it.",
-        openQuestions: [
-          {
-            question:
-              "The original's left rail shows the current Pack's tree, its specs and then its harnesses; the graph has no harness node. Does the rail list harnesses, and from which graph value?",
-            blocking: false,
-            key: "railHarnesses",
-            decider: "owner",
-            provisional:
-              "the rail lists the current Pack's members that own an example space, each linked to its Spec page, and creates no harness identity",
-          },
-          {
-            question:
-              "The original's left rail lists recent edits; the graph carries only current state, git is the event log, and the shipped views are a function of the graph alone. Does the rail read recent edits from git when the Studio is built, or leave them out?",
-            blocking: false,
-            key: "recentEdits",
-            decider: "owner",
-            provisional:
-              "leave recent edits out, so a Studio page stays a function of the graph alone",
-          },
-          {
-            question:
-              "The original's search indexes tags; the Spec envelope is closed to `id`, `kind`, `altitude`, `readiness` and `relations` with the H1 as title, and no free-form tag vocabulary is admitted. What, if anything, does search index in place of tags?",
-            blocking: false,
-            key: "searchTags",
-            decider: "owner",
-            provisional:
-              "search matches what `findByConcept` matches, and indexing any further value needs the phase-0 search Spec's own contract",
-          },
-        ],
+          "Let a person move between the index, Packs and Specs from any page, find a Spec by what they remember of it, and read every page by keyboard, on a phone and without its script.",
       },
       behavior: {
         rules: [
-          "Every page has the same shell: a top navigation, a left rail and a main canvas.",
-          "Search is persistent on every page and uses the searchIndex data entry's scope; each result identifies its node type. A Spec result shows its stated rung beside the floor reached and opens its page; a Pack result opens its page without a readiness label; an Anchor or CodeNode result shows its recorded source location.",
+          "Every page has the same shell: a top navigation, a left rail and a main canvas, and it opens with a link that skips to the canvas.",
+          "A search field is on every page; `spec:consumers.spec-studio.search` states what it matches and how its results show.",
           "The rail's count of findings is the count of the validation report's findings, never a count the page derives.",
+          "The shell shows no recent edits and no other history: git holds it.",
+          "Served over http or https, the shell reads `stamp.json` beside the page set and, when it loads, shows the build context it names; a page opened through `file://` requests nothing and shows no stamp.",
+          "A stated rung shows as a badge that carries the rung's word, colored from a palette of four that stays distinct under color blindness; the floor reached shows beside it as words with no color of its own, and only the divergence banner adds a warning color, beside its words.",
+          "Every status a color marks is also written in words, so no reading depends on color.",
+          "Every link and control is reachable from the keyboard in reading order and shows where the focus is.",
+          "Prose runs no wider than about 80 characters, and a table wider than the canvas scrolls inside its own box, never the page.",
+          "Authored text renders as plain text with each inline code span as code, and no other Markdown is read. A mention the prose-mentions validator reads links to its target's page when the target resolves, and to the entry when the mention is an entry address.",
+          "The index, every Pack page and every Spec page read in full without their script: their collapsible parts are native disclosure elements, and only filtering, copying and the stamp need the script. The search page needs its script to match, and without it says so and links to the index.",
         ],
+        ruleKeys: {
+          noRecentEdits: "rules[3]",
+          stamp: "rules[4]",
+          rungBadge: "rules[5]",
+          wordsBesideColor: "rules[6]",
+          keyboard: "rules[7]",
+          lineLength: "rules[8]",
+          text: "rules[9]",
+          withoutScript: "rules[10]",
+        },
       },
       ui: {
         description: "The parts of the shell, top to bottom and left to right.",
         topNavigation:
-          "Packs, Architecture, Tests, Evidence and Search; a capability grouping awaits `spec:consumers.spec-studio.lenses#question.capabilityGrouping`.",
+          "the Studio's name linking to the index, then Packs, linking to the index's Packs section, then the search field; each lens page the page set holds adds its entry in the order `spec:consumers.spec-studio.lenses` gives.",
+        stampLine:
+          "at the end of the top navigation, the stamp's corpus commit, engine and build time, when the stamp loads.",
         leftRail:
-          "the current Pack's tree, its member Specs in authored order and the validation report's finding counts by severity; recent edits await `spec:consumers.spec-studio.shell#question.recentEdits`.",
+          "on a Pack page, the Pack's members in authored order, each linked to its card on the page; on a Spec page, each Pack the Spec belongs to with its members in authored order, each linked to its Spec page and the current one marked; on any other page, every Pack; then, on a Pack or Spec page, under an `Example spaces` heading shown only when there is one, each member of the rail's Packs that owns an example space, linked to its Spec page, with no harness named; then the validation report's finding counts by severity, linked to the index's findings.",
+        railOnPhone:
+          "below the phone breakpoint the rail follows the canvas, so a page opens on its content.",
         mainCanvas: "the page of the Spec or Pack selected in the rail or in a lens.",
-        search:
-          "matches the fields `spec:consumers.spec-studio.data#design.searchIndex` lists, with the same matching and ordering as `findByConcept`; results follow the search rule.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.shell.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.spec-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "scoped",
+    readiness: "defined",
     title: "A Spec page shows one Spec in collapsible panels, in a fixed order",
     narrative:
-      "The original runtime panel linked Fastify routes to Effect programs, showed what Effect layers provided and required, and recorded Awilix registrations and their lifetimes, beside ports and external systems. That representation is lineage evidence in `docs/lineage/v0-design/07-spec-studio-and-projections.md`, section 2.3, Section F. The current structural anchors record identity, component membership, uses, role, and a component's architectural layer and context; the question below asks whether a later runtime panel needs more.",
+      "The original runtime panel linked Fastify routes to Effect programs, showed what Effect layers provided and required, and recorded Awilix registrations and their lifetimes, beside ports and external systems. That representation is lineage evidence in `docs/lineage/v0-design/07-spec-studio-and-projections.md`, section 2.3, Section F. The current structural anchors record identity, component membership, uses, role, and a component's architectural layer and context; the question below asks whether a later runtime panel needs more.\n\nThe page shows only what the graph holds. The original header's owner, tags and last-verified time, its schema bindings and its `UI / Stories` section have no graph value behind them, so the page shows none of them.",
     sections: {
       intent: {
         outcome:
@@ -1904,95 +1789,42 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "The original header shows an owner, a capability, tags and a last-verified time; the envelope is closed to `id`, `kind`, `altitude`, `readiness` and `relations` with the H1 as title, a capability is a projection or a Pack, and a verifier binding never records when a test last ran. Which of the four does the header show, and from which graph value?",
-            blocking: false,
-            key: "headerFields",
-            decider: "owner",
-          },
-          {
-            question:
-              "The original pins one color for each of seven rungs: light grey for `sketch`, blue for `framed`, cyan for `specified`, green for `designed`, emerald for `bound`, indigo for `executable` and violet for `verified`; readiness has four rungs, idea through ready, and the floor reached renders beside the stated rung. Does the palette color the stated rung, the floor reached, or both?",
-            blocking: false,
-            key: "rungColors",
-            decider: "owner",
-          },
-          {
-            question:
-              "The original shows each open question's owner and the date it was added; an open question carries its text, whether it blocks, an optional key and the optional fields `decider`, `links`, `provisional` and `trigger`, where `decider` names who settles it as a corpus token rather than a person, and git, not the graph, records when its line was added. Which fields does the panel show, and does a date stay off a page that is a function of the graph?",
-            blocking: false,
-            key: "questionMetadata",
-            decider: "owner",
-            links: ["spec:model.open-question-fields"],
-            provisional:
-              "the panel shows every field the graph supplies, as the intent panel states, and no date",
-          },
-          {
-            question:
               "Does the runtime panel show more than the structural neighborhood of the Spec's implementation anchors?",
             blocking: false,
             key: "runtimeComposition",
-          },
-          {
-            question:
-              "The original's bindings panel lists schema bindings beside code and test bindings; anchors bind implementation code, tests and oracles, and no anchor binds a schema. Does a schema binding need a home?",
-            blocking: false,
-            key: "schemaBindings",
-          },
-          {
-            question:
-              "The original's page outline names a section `UI / Stories`, whose UI half the UI panel carries; the original never says what a story is. What is a story, and does the page show one?",
-            blocking: false,
-            key: "uiStories",
-          },
-          {
-            question:
-              "Panels name code units, components and anchors, and the architecture lens selects a component, yet no Studio page or data value designs a destination for them. Does each get a page, or show its id and recorded repository-relative file and line as text?",
-            blocking: true,
-            key: "sourceLinks",
             decider: "owner",
             provisional:
-              "no code-unit pages in phase 0; a code unit or anchor shows its id and recorded repository-relative file and line as text, with an action that copies file:line and no editor URI, absolute path or assumed source URL; source navigation waits for a separately designed source target, and a component's attributes, members and uses show in the architecture lens",
+              "the panel shows only the structural neighborhood the anchors record, until a reader asks for more of the runtime composition",
           },
         ],
       },
       behavior: {
         rules: [
           "Each panel collapses and expands on its own.",
-          "The header renders readiness as `spec:consumers.derived-readiness-banner` states: the stated rung beside the floor reached, with the divergence banner only in the dishonest direction.",
-          "The bindings panel speaks binding language as `spec:consumers.binding-language-views` states: each binding present or none, and the runtime observation not tracked.",
-          "Every Spec and Pack a panel names links to its page; how a code unit or anchor is reached awaits `spec:consumers.spec-studio.spec-page#question.sourceLinks`.",
-          "The design panel lists the `design` entries in authored order with their keys as code, and the UI panel lists the `ui` entries the same way, as `spec:decisions.authored-entry-order` rules for the Design Review.",
+          "The page's core, its header, sections, relations, bindings and findings, is the one `spec:consumers.spec-studio.spec-page.core` states, and the panels below add to it.",
+          "Every Spec and Pack a panel names links to its page. A code unit, component or anchor shows its id and its recorded repository-relative file and line as text, with an action that copies `file:line`; the page set holds no code-unit page and writes no editor URI, absolute path or assumed source URL, source navigation waits for a source target designed for it, and a component's attributes, members and uses show in the architecture lens.",
         ],
+        ruleKeys: {
+          sourceText: "rules[2]",
+        },
       },
       ui: {
-        description: "The panels in page order.",
-        header:
-          "the Spec's id, its stated readiness beside the floor reached, its stated next rung with the clauses that keep it below that rung, its altitude and kind; its title; its design columns; the Packs it belongs to; and its warning and error counts as pill badges; the header infers no promotion.",
-        readinessColors:
-          "a palette distinct under color blindness, with text beside every color; whether it colors the stated rung, floor reached or both awaits `spec:consumers.spec-studio.spec-page#question.rungColors`.",
-        intentPanel:
-          "the intent section as prose, then an open-questions panel headed with its count; each question shows its text, blocking flag, key and address when keyed, its decider, links, provisional reading and trigger when present, and its carrier line when recorded, with an action that composes intent scoped to it.",
+        description: "The panels the core does not hold, in page order.",
+        intentPanel: "beside each open question, an action that composes intent scoped to it.",
         behaviorPanel:
-          "rules and flows in authored order, a keyed entry with its rule address and the examples that exercise it as recipe 34 reports, followed by example cards laid out as `spec:consumers.spec-studio.verification-panels` states.",
+          "beside each keyed rule or flow, the examples that exercise it as recipe 34 reports, then example cards laid out as `spec:consumers.spec-studio.verification-panels` states.",
         constraintsPanel:
           "each constraint with its target, laid out as `spec:consumers.spec-studio.verification-panels` states.",
         designPanel:
-          "a diagram of the components that realize the Spec, from its implementation anchors' `component` and `uses` edges, drawn as SVG whose nodes show their id, source file and line, with their destination awaiting `spec:consumers.spec-studio.spec-page#question.sourceLinks`; below it, the `design` entries, then the decision records the Spec names by `decidedBy` with each decision's text inline.",
+          "a diagram of the components that realize the Spec, from its implementation anchors' `component` and `uses` edges, drawn as SVG whose nodes show their id, source file and line as the source-text rule states; below the design entries, the decision records the Spec names by `decidedBy`, each with its text inline.",
         runtimePanel:
           "the structural neighborhood of the Spec's implementation anchors: each anchor's component and the code units it uses, with file and line.",
-        bindingsPanel:
-          "implementation bindings, design references, verifier bindings and the expected-outcome oracle, each with its id and recorded repository-relative file and line, shown as text with an action that copies file:line, plus runtime observation reading not tracked; source navigation awaits `spec:consumers.spec-studio.spec-page#question.sourceLinks`.",
         verificationPanel:
           "the verifiers and the coverage of the example space, laid out as `spec:consumers.spec-studio.verification-panels` states.",
         evidencePanel:
           "the evidence fields and absence labels `spec:consumers.spec-studio.verification-panels` states, with no invented build, deployment, measurement or SBOM data.",
         impactPanel:
           "the upstream parents and downstream children, the Specs that depend on this one, the decision records it names, the tests that verify it, and the code its bindings reach.",
-        uiPanel: "the `ui` entries.",
-        relationsPanel:
-          "relations both ways, each with its type, claim, endpoint, resolution, reason and exercises when present; a resolving Spec endpoint links to its page.",
-        entryIds:
-          "every addressable keyed Design or UI entry, every keyed entry of the primary behavior owner and every keyed open question carries an HTML element id equal to its entry address suffix, the section and lower-camel key without the Spec id or `#`, so a link opens the entry on its page.",
       },
     },
     deliveryFacts: [],
@@ -2004,52 +1836,23 @@ export const consumersSpecs = [
     altitude: "story",
     readiness: "scoped",
     title: "The panels for examples, targets, verifiers and evidence",
-    narrative: null,
+    narrative:
+      "The graph records that a verifier binding exists and never a run, and a static page runs nothing, so the panels show bindings and no run result, and offer no run of an example. No Spec designs a source for build attestations, deployments or SBOMs, so each reads not tracked.",
     sections: {
       intent: {
         outcome:
           "Show on a Spec page how far each example, constraint target and verifier goes, and what runtime evidence exists, without stating more than the graph records.",
-        openQuestions: [
-          {
-            question:
-              "The original shows each test's runner, whether it passed, its duration and its last run, and offers to run an example again; the graph records that a verifier binding exists and never a run, and a static page runs nothing. Does a panel show run results read from CI output when the Studio is built, or bindings only?",
-            blocking: false,
-            key: "runResults",
-            decider: "owner",
-            links: ["spec:observation.run-evidence"],
-            provisional:
-              "The first Studio build shows bindings only; admitting run records in a later phase awaits an explicit input and reproducibility ruling.",
-          },
-          {
-            question:
-              "Is per-slot coverage sufficient for the Studio grid, or does it need the combinations still open in spec:consumers.agent-surface.example-space-coverage#question.combinationCoverage?",
-            blocking: false,
-            key: "coverageSource",
-            decider: "owner",
-            links: [
-              "spec:consumers.agent-surface.example-space-coverage#question.combinationCoverage",
-            ],
-            provisional:
-              "per-slot coverage for the grid; combinations wait for an adopter's design pass",
-          },
-          {
-            question:
-              "The original's evidence panel shows the last build with its SLSA attestation, the last deployment and a CycloneDX SBOM; no Spec designs a source for any of them. Does the Studio show them, and from which input?",
-            blocking: false,
-            key: "deliveryArtifacts",
-            decider: "owner",
-            provisional: "each reads not tracked until a Spec designs its source",
-          },
-        ],
       },
       behavior: {
         rules: [
           "An example card shows the example's verifier as a binding that exists, and the example as an Executable Spec when a test anchor binds it, never as a test that passed.",
+          "A panel shows verifier bindings and no run result; run records join a panel only through `spec:observation.run-evidence`, under an input and reproducibility ruling of their own.",
           "The evidence panel shows only runtime evidence the graph records, and reads not tracked while no delivery fact records an observation.",
           "Each panel action gathers intent through the composing panel's contract.",
         ],
         ruleKeys: {
-          evidenceNotTracked: "rules[1]",
+          bindingsOnly: "rules[1]",
+          evidenceNotTracked: "rules[2]",
         },
       },
       ui: {
@@ -2065,11 +1868,11 @@ export const consumersSpecs = [
         unsetTarget:
           "a constraint with no quantitative target says so, and offers to compose intent proposing one.",
         verifierList:
-          "each verifier with its id, its binding, and its recorded repository-relative file and line; no line is invented for a verifier the graph does not locate, and source navigation awaits `spec:consumers.spec-studio.spec-page#question.sourceLinks`.",
+          "each verifier with its id, its binding, and its recorded repository-relative file and line as text, as `spec:consumers.spec-studio.spec-page#rule.sourceText` states; no line is invented for a verifier the graph does not locate.",
         coverageGrid:
-          "when the Spec owns an example space, the coverage `spec:consumers.agent-surface.example-space-coverage` reports, listing each literal value of each slot with the examples that bind it and listing a non-literal-union slot as not enumerable; an action composes intent proposing examples for missing values.",
+          "when the Spec owns an example space, the per-slot coverage `spec:consumers.agent-surface.example-space-coverage` reports, listing each literal value of each slot with the examples that bind it and listing a non-literal-union slot as not enumerable; combinations of slots join the grid only when a design pass asks for them; an action composes intent proposing examples for missing values.",
         evidencePanel:
-          "runtime observation reads not tracked under the binding-language rule; build attestations, deployments and SBOMs show no payload while the graph has no designed record for them, and each reads not tracked instead.",
+          "runtime observation reads not tracked under the binding-language rule; build attestations, deployments and SBOMs show no payload and each reads not tracked until a Spec designs its source.",
       },
     },
     deliveryFacts: [],
@@ -2140,7 +1943,8 @@ export const consumersSpecs = [
     readiness: "ready",
     file: "specs/consumers/agent-surface.recipe-parameters.sdp.md",
     title: "Recipes take parameters as data and ship as runnable files",
-    narrative: null,
+    narrative:
+      "A body reads its parameters by name, so a name it does not read would be dropped without a word, and a recipe with a sample would answer for the sample: a misspelled name would look like a successful call. A recipe therefore answers a name it does not take with that name and the names it does take, and nothing else. A body cannot import and the reader holds no recipe metadata, so each body declares its own names in its first statement, and the recipe check holds that declaration to the catalog.",
     sections: {
       intent: {
         problem:
@@ -2154,8 +1958,22 @@ export const consumersSpecs = [
           "`--params` is repeatable in three forms: a JSON object, `@PATH` naming a file that holds one, and `KEY=@PATH` binding the JSON value in the file, of any type, to `params.KEY`, with `KEY` on the lower-camel grammar. Objects merge at the top level from left to right, and a key given twice by any form is refused before the body runs, with exit 1, one line on stderr and no output on stdout, so a recipe takes a large file such as a base graph beside its other parameters.",
           "The bindings `g`, `graph` and `report` keep their names and meaning beside `params`. The sink evaluates one operator-supplied body and adds no query vocabulary: a parameter is input to a body, never a verb.",
           "Every recipe reads its parameters under the names the catalog states. A parameter with a documented sample falls back to it when absent, so each body runs as written; a required input with no sample, such as a base graph, a proposal or an imports file, returns diagnostics when absent. Recipe 4 reads its changed files from `params.files`.",
+          "Each catalog body opens by declaring the parameter names it takes, in the order the catalog's index lists them, and checks `params` against that list before it reads anything else; a recipe that takes no parameter declares an empty list.",
+          "A recipe given a parameter name it does not take returns `{ unknownParams, accepts }` as its whole answer, and `sdp q` exits 0; it never answers for its sample, for an empty input or for the names it does take in that case.",
+          "The recipe check holds each body's declared names to the catalog's index and to the `params` names the body reads, and runs each body with a name it does not take.",
           "The package build writes each catalog body to `dist/recipes/<NN>-<slug>.js`, where `NN` is the two-digit recipe number and the slug is the recipe's heading in lower kebab case, and the package ships that directory. The catalog stays the one owner of the bodies; the files are derived, and the recipe test checks that each file equals its catalog body byte for byte.",
         ],
+        ruleKeys: {
+          declaredNames: "rules[4]",
+          unknownNames: "rules[5]",
+          namesChecked: "rules[6]",
+        },
+      },
+      design: {
+        acceptsPreamble:
+          "`const accepts = [...]; const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name)); if (unknownParams.length > 0) return { unknownParams, accepts };` opens every catalog body as three statements on three lines, with the recipe's names in the brackets as double-quoted strings.",
+        unknownAnswer:
+          "`{ unknownParams, accepts }` is the whole answer for a name a recipe does not take, where `unknownParams` lists every such name in the order `params` holds them, and `accepts` repeats the recipe's declared names.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -2207,8 +2025,13 @@ export const consumersSpecs = [
         rules: [
           "`sdp --version` prints one line, `sdp <version> (<commit>)`, and exits 0. The version is the package's own version; the commit is the full hash the build was made from, or `unknown` when the build could not read one; a build from a checkout with uncommitted changes names the commit checked out when it ran.",
           "The build records the commit in a file beside the compiled CLI, and the CLI reads that file; it never runs git at run time.",
+          "The build reads the commit from git first. When git gives no full commit, it reads the archive's substituted commit file; a full commit there names the archived revision, and an absent, unsubstituted or malformed file leaves the commit `unknown`.",
           "Neither the version nor the commit enters the graph, a projection or a generated contract, so a derived artifact stays a function of the corpus alone.",
         ],
+      },
+      design: {
+        archiveCommit:
+          "`.git-archive-commit` contains `$Format:%H$` in a checkout and is marked `export-subst` in `.gitattributes`, so git archives carry their full commit. The build reads the trimmed file only as a full Git object name, never as a command or an abbreviated hash.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -2232,9 +2055,10 @@ export const consumersSpecs = [
           "`sdp validate --watch [root]` installs its watcher first, then runs the same validate path `sdp validate` runs, from scratch, once at start and again after every carrier create, change, delete or rename under the root.",
           "A carrier ends in `.sdp.md`, `.sdp.gherkin` or `.sdp.ts`. The watcher ignores the directories discovery skips, the configured exclusion prefixes and every non-carrier path; a removed watched directory and an event with no filename each schedule a run because their affected carriers cannot be named.",
           "Events that arrive while a run is in progress coalesce into one pending run.",
-          "Findings print as `sdp validate` prints them and the process stays alive; an operator stop exits 0.",
+          "Findings print as `sdp validate` prints them and the process stays alive; operator SIGINT terminates the process with exit 0 even while a rules body is active, without waiting for it. No further rules file runs or output is written after the stop.",
           "`--watch` is a validate option only and cannot combine with `--check-clean`. It re-runs on carrier edits and never on source edits, so an author re-runs validation after editing an anchor.",
         ],
+        ruleKeys: { operatorStop: "rules[3]" },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -2261,7 +2085,7 @@ export const consumersSpecs = [
             blocking: false,
             key: "combinationCoverage",
             decider: "owner",
-            links: ["spec:consumers.spec-studio.verification-panels#question.coverageSource"],
+            links: ["spec:consumers.spec-studio.verification-panels#ui.coverageGrid"],
             provisional: "the recipe reports per-slot literal-union values",
           },
           {
@@ -2341,7 +2165,7 @@ export const consumersSpecs = [
     file: "specs/consumers/context-bundle.sdp.md",
     title: "A context bundle is composed per invocation within a stated budget",
     narrative:
-      "The original design precomputed graph slices for different reading scopes and a prompt bundle for one Spec. The Protocol keeps context bundle for the reading material of one design pass, composed on demand.\n\nThe first adopter's design passes assemble the same reading material by hand: the Pack design, member questions, dependency footing, pinned declarations and carrying Spec text where the graph answer falls short. Its perspectives read the same Pack for different concerns. The agent front door composes a bundle on each invocation; the bundle is never a committed answer in the graph's name. It builds on Pack design.",
+      "The original design precomputed graph slices for different reading scopes and a prompt bundle for one Spec. The Protocol keeps context bundle for the reading material of one design pass, composed on demand.\n\nThe first adopter's design passes assemble the same reading material by hand: the Pack design, member questions, dependency footing, pinned declarations and carrying Spec text where the graph answer falls short. Its perspectives read the same Pack for different concerns. The agent front door composes a bundle on each invocation; the bundle is never a committed answer in the graph's name. It builds on Pack design.\n\nAt an adopter's scale a bundle is mostly structure, so its shape is compact. Each member and each example row names its carrier file once. A cut entry without an entry address keeps only its line, since its row and its place in the bundle already name it. A question, a pinned value or a member example's steps appears in one place. Pinned declarations stay whole by default, because a builder and a test author hold to them. A caller whose scope still does not fit may let the bundle cut them to their entry addresses, and then reads each one in its Spec when the pass needs it. A partial bundle stays refused, because a bundle missing members would read as the whole scope.",
     sections: {
       intent: {
         actor: "An agent starting one design pass over a Pack or an ordered list of Specs.",
@@ -2349,17 +2173,6 @@ export const consumersSpecs = [
           "Each pass assembles the same reading material by running the same recipes and joining their answers by hand, and nothing bounds what it hands the model.",
         outcome:
           "Give an agent the reading material for one design pass in one composed slice of the graph within a stated budget, so no session hand-assembles it.",
-        openQuestions: [
-          {
-            question:
-              "No cut reduces a pinned declaration, so a Pack whose pinned declarations alone exceed the budget fits no bundle; may a caller ask the bundle to reduce pinned declarations to their entry addresses?",
-            blocking: false,
-            key: "declarationCut",
-            decider: "owner",
-            provisional:
-              "pinned declarations stay whole, and a caller narrows the scope to fewer members, such as one perspective's",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -2369,31 +2182,49 @@ export const consumersSpecs = [
           "With `pack`, a bundle may take `members`, an ordered subset of the Pack's member ids, which the perspective filter returns; it keeps the Pack's framing and boundary, lists only those members in that order, and states that it is a subset, so one filter implementation serves both recipes.",
           "A bundle for a Pack carries the Pack design assembly, its members in authored order with their design columns and its boundary, then each member's open questions with their addresses and lines, its dependency footing, its pinned declarations and its examples.",
           "The budget is a hard limit on a successful bundle, counted in UTF-16 code units, the `length` a recipe body reads, of the compact `JSON.stringify` of the value the recipe returns, its scope, budget and left-out statement included; `sdp q --json` prints a longer indented form, and the budget never measures printed text. The bundle also reports a token estimate labeled as an estimate, so no model's tokenizer binds the Protocol.",
-          "When the scope exceeds the budget, the bundle cuts in a fixed order: boundary rows down to their ids, member narrative, example step text, non-blocking questions, then remaining section values other than protected content. It never cuts member ids, the stated rung, the floor reached, the stated next rung, blocking questions, pinned declarations or entry addresses.",
+          "A bundle carries a member's open questions only in its `questions`, a pinned declaration's value only in its member's Design section, and an example's steps only in its own member row when the example is a member of the bundle; an example outside the bundle keeps its steps in the row of each member it refines or verifies.",
+          "When the scope exceeds the budget, the bundle cuts in a fixed order and stops at the first cut after which it fits: boundary rows down to their ids, footing rows down to their ids, member narrative, example step text, non-blocking question text, remaining section values other than pinned declarations, then, only when the caller allows it, pinned declarations down to their entry addresses. It never cuts member ids, the stated rung, the floor reached, the stated next rung, blocking questions or entry addresses, and it cuts nothing else.",
+          'A caller allows the last cut by passing `declarations: "addresses"`; without it, or with `declarations: "whole"`, pinned declarations stay whole, and any other value is a diagnostic result.',
           "When the protected content alone exceeds the budget after every permitted cut, the recipe returns a budget-exceeded result as data and no partial bundle: the requested scope, the budget, and the minimum count the protected content needs in the same unit; `sdp q` exits 0, because the result is the body's return and not a refusal.",
           "A bundle gives the file and line of an entry or a binding in place of a source excerpt, because the reader never reads source.",
           "A bundle states its scope, its budget and what it left out to stay within the budget, so a reader knows what to read in the Specs themselves.",
           "A bundle carries facts from the graph and no instructions of its own; the brief that tells an agent what to look for stays the corpus's own text.",
         ],
         ruleKeys: {
-          cutOrder: "rules[6]",
+          oneCopy: "rules[6]",
+          cutOrder: "rules[7]",
+          declarationAddresses: "rules[8]",
         },
       },
       design: {
         bundleRecipe:
-          "recipe 36, the context bundle, takes exactly one scope, `params.pack` or `params.specs`, an optional `params.members` beside `pack`, and `params.budget`, 100,000 code units by default; a missing, doubled or unknown scope returns `{ diagnostics }` and no bundle.",
+          'recipe 36, the context bundle, takes exactly one scope, `params.pack` or `params.specs`, an optional `params.members` beside `pack`, `params.budget`, 100,000 code units by default, and `params.declarations`, `"whole"` by default or `"addresses"`; a missing, doubled or unknown scope, or another `declarations` value, returns `{ diagnostics }` and no bundle.',
         bundleShape:
-          "`{ scope, budget, used, tokenEstimate: { value, method }, leftOut, pack, members, boundary }`, where `pack` is `{ id, title, framing }` for a Pack scope and null otherwise, and `tokenEstimate.method` reads `UTF-16 code units divided by four, an estimate`.",
+          "`{ scope, budget, declarations, used, tokenEstimate: { value, method }, leftOut, pack, members, boundary }`, where `declarations` is the mode in force, `pack` is `{ id, title, framing }` for a Pack scope and null otherwise, and `tokenEstimate.method` reads `UTF-16 code units divided by four, an estimate`.",
         memberShape:
-          "`{ id, title, specKind, altitude, statedReadiness, floorReached, statedNextRung, holds, narrative, sections, questions, footing, declarations, examples }`, with questions carrying their address, blocking flag, line and fields, footing as dependency footing (recipe 21) reports it, declarations as pinned declarations (recipe 24) report them, and examples with their stated rung, whether they are enabled and their steps. `holds` lists the member's stated-next-rung failures as the reader returns them, each with its `clauseId` and `description`, and with `targets` on a typed-dependency failure.",
+          "`{ id, file, title, specKind, altitude, statedReadiness, floorReached, statedNextRung, holds, narrative, sections, questions, footing, declarations, examples, design, decisions, implementedBy, referencedBy, verifiers }`, with `file` the member's carrier path; `sections` as the graph holds them, without `intent.openQuestions`; `questions` one row per open question in authored order, `{ index, question, blocking, key, address, line }` with its fields, `key` absent and `address` null when it has none; `footing` as dependency footing (recipe 21) reports it; `declarations` the keys of the member's pinned declarations in Design order; `design` the counts of entries, declarations, open questions and blocking questions; `decisions` the decisions its design columns name; `implementedBy` and `referencedBy` as `{ id, claim, file, line, role, component }`; and `verifiers` as `{ id, claim, enabled, file, line }`. `holds` lists the member's stated-next-rung failures as the reader returns them, each with its `clauseId` and `description`, and with `targets` on a typed-dependency failure.",
+        exampleRow:
+          "`{ id, member, file, statedReadiness, enabled, steps }` lists one example that refines or verifies the member, in id order, with `member` true and `steps` null when the example is itself a member of the bundle, its steps then sitting in its own member row.",
+        pointer:
+          "`{ line }` replaces a cut entry that has no entry address, `line` being the line the location table records for it, or null when it records none; the entry's Spec and file are those of the row that holds it, and its place in the bundle names its path. A cut entry whose text names other entry addresses becomes a list of them, led by its own address when it has one and otherwise ended by its pointer.",
         boundaryRows:
           "a Pack scope's boundary is the Pack design's; a Spec-list scope's boundary is every Spec outside the list one authored relation away from a listed Spec, in the same row shape.",
-        fifthCut:
-          "The fifth cut reduces an addressable entry to its entry address and another entry to `{ spec, path, file, line }`, with `line` null when not located. Other entry addresses in removed text stay beside that pointer, and non-blocking questions retain their pointers and links; pinned declarations and blocking questions stay whole.",
-        cutEverywhere:
-          "every cut removes the affected text from each place it appears in the bundle, `sections` included, and blocking questions, pinned declarations and entry addresses stay whole in each place.",
+        footingCut:
+          "`{ refines, dependsOn, constrainedBy, decidedBy }` replaces a member's footing at the footing cut, each a list of target ids in code-unit order, with a type that has no target left out.",
+        narrativeCut:
+          "The narrative cut replaces a member's narrative with the entry addresses written in it, in order of first appearance and joined by single spaces, or with null when it holds none.",
+        exampleCut:
+          "The example cut replaces each entry of a member's `behavior.examples`, and its `behavior.exampleSpace`, with its pointer, and each example row's `steps` that are not null with the pointer of that example's `behavior.examples`.",
+        questionCut:
+          "The question cut replaces each non-blocking question in `questions` with its address, or with its pointer when it has no key, and with `{ pointer, links }` when it has links, `pointer` being that address or pointer; blocking questions stay whole.",
+        sectionCut:
+          "The section cut replaces each section entry other than a pinned declaration with its entry address when it has one, and otherwise with its pointer.",
+        declarationCut:
+          "The declaration cut, taken only under `declarations: \"addresses\"`, replaces each pinned declaration in its member's Design section with its entry address, or with its pointer when its key has none; the member's `declarations` keeps the keys.",
+        leftOutLines:
+          "One fixed line per cut taken, in cut order, makes up `leftOut`: `Boundary details; ids kept per direction.`, `Footing details; ids kept per relation type.`, `Member narrative.`, `Example step text, including member sections and example-space vocabulary.`, `Non-blocking question text; addresses and links kept.`, `Section entry values other than pinned declarations; addresses and lines kept.` and `Pinned declaration text; entry addresses kept.`",
         budgetExceeded:
-          "`{ scope, budget, budgetExceeded: true, protectedLength, leftOut }` is the whole result when the protected content alone exceeds the budget, with `protectedLength` in the budget's unit.",
+          "`{ scope, budget, declarations, budgetExceeded: true, protectedLength, leftOut }` is the whole result when the protected content alone exceeds the budget after every permitted cut, with `protectedLength` in the budget's unit.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -2630,7 +2461,7 @@ export const consumersSpecs = [
     file: "specs/consumers/obsidian-vault.sdp.md",
     title: "An Obsidian vault lets a person iterate on designs from the one graph",
     narrative:
-      "The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio is designed for both a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view would let a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive; whether it is the Studio's local half is the question below.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. The prototype in `explorations/obsidian-vault/` wrote notes from dumped graph and reader values, with relations and checked mentions as wikilinks, entry addresses as block links, and Bases for Pack members and standing queries. Pack members could be read as a sortable table. The prototype joined relation lists and computed flat properties itself, and its dump renamed `statedNextRungFailures` to `nextRungFailures`; those shortcuts are evidence for the product design, not the reader's contract.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two builds of one graph are byte-identical, so no note names a commit or a time: a publishing step may write a stamp beside the vault, as the Studio's sharing rule does. Intent is still written only in the carriers.",
+      "The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio is designed for both a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view would let a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive. It is a projection of its own, not the Studio's local half: the Studio's page set serves a reader who holds a link, the vault serves a person who iterates in a notes app, and each has its own verb and root. It waits for a reader who asks for it once the Studio's page set exists.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. The prototype in `explorations/obsidian-vault/` wrote notes from dumped graph and reader values, with relations and checked mentions as wikilinks, entry addresses as block links, and Bases for Pack members and standing queries. Pack members could be read as a sortable table. The prototype joined relation lists and computed flat properties itself, and its dump renamed `statedNextRungFailures` to `nextRungFailures`; those shortcuts are evidence for the product design, not the reader's contract.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two builds of one graph are byte-identical, so no note names a commit or a time: a publishing step may write a stamp beside the vault, as the Studio's sharing rule does. Intent is still written only in the carriers.",
     sections: {
       intent: {
         actor:
@@ -2645,21 +2476,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Is the vault a projection of its own, or the Studio's local half beside the static page set a reviewer with only a link reads?",
-            blocking: true,
-            key: "studioRelation",
-            decider: "owner",
-            provisional:
-              "a projection of its own, written by its own verb under `generated/obsidian-vault/`, which the Studio's design pass may adopt as its local half",
-            links: ["spec:consumers.spec-studio"],
-          },
-          {
-            question:
               "Does the vault keep to the wikilinks and properties other notes tools read, or use Obsidian's Bases freely?",
             blocking: false,
             key: "otherNotesTools",
             provisional:
               "notes and links stay plain Markdown with wikilinks any such tool reads, and the Bases are Obsidian's alone",
+            decider: "owner",
           },
           {
             question:
@@ -2669,10 +2491,18 @@ export const consumersSpecs = [
             decider: "owner",
             provisional:
               "the generator owns only its generated note folders and Bases; Obsidian settings and authored intent notes sit outside that owned set, and a completed regeneration removes stale generated notes",
+            trigger: "a person asks for a vault beside the Studio's static page set",
           },
         ],
       },
-      behavior: {},
+      behavior: {
+        rules: [
+          "The vault is a projection of its own, written by its own verb under `generated/obsidian-vault/`, and no part of the Studio's page set.",
+        ],
+        ruleKeys: {
+          ownProjection: "rules[0]",
+        },
+      },
     },
     deliveryFacts: [],
   },
@@ -2881,6 +2711,337 @@ export const consumersSpecs = [
           "The skill links the Specs that own law and uses summaries for orientation; current graph data answers state questions and the carrying Specs answer intended truth.",
           "The skill carries one sheet that maps a delivery task to the recipe that answers it.",
         ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.spec-studio.index-page",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/spec-studio.index-page.sdp.md",
+    title: "The index says where the corpus stands and narrows every Spec",
+    narrative:
+      "A reader of a large design needs two ways in: by the task they came to do and by a word they remember. The index gives the first and links to search for the second, opens with a summary the build counts, and replaces one long table with a list a person narrows.",
+    sections: {
+      intent: {
+        outcome:
+          "Give a person one landing page that says where the corpus stands, routes them by task, lists every Pack with its members, and narrows every Spec by the coordinates and bindings they ask about.",
+      },
+      behavior: {
+        rules: [
+          "The page opens with a summary the build counts from reader values, each count in a sentence: the Specs and Packs; the Specs at each stated rung; the Specs stated above their floor; the open and blocking questions; the Specs with an implementation binding and with a verifier binding; and the findings by severity.",
+          "A short list then routes by task, in fixed words that quote nothing from the corpus: read a Pack's design, find a Spec, entry or file by a word, narrow the Specs, and read the findings; each route links to its place in the page set.",
+          "The Packs section lists every Pack in id order with its title and its members in authored order, each member with its stated rung beside its floor; it draws no capability tree.",
+          "The Specs section lists every Spec in id order, one row each: its title and id, kind and altitude, stated rung beside the floor reached, implementation binding and verifier binding as present or none, open and blocking questions, and its Packs.",
+          "Filters narrow the Specs section by kind, altitude, stated rung, floor reached, implementation binding, verifier binding and Pack; each filter takes one value or any, the filters combine, and the section says how many of its rows it shows. Without script every row shows.",
+          "The findings section lists the validation report's findings in its order, each with its severity in words, its validator id, its subject when it has one, linked to its page when it is a Spec or a Pack and as text otherwise, its message, and its recorded file and line as text.",
+        ],
+        ruleKeys: {
+          summary: "rules[0]",
+          taskRoutes: "rules[1]",
+          packsLens: "rules[2]",
+          specRows: "rules[3]",
+          filters: "rules[4]",
+          findings: "rules[5]",
+        },
+      },
+      ui: {
+        summary: "a short list of sentences under the page title, each with a count.",
+        taskRoutes:
+          "four links under a `Start here` heading: Read a Pack's design, Find a Spec, entry or file by a word, Narrow the Specs, Read the findings.",
+        packList:
+          "one closed disclosure per Pack, its summary line the Pack's title, id and member count, its body the members in authored order as links with their rung badges.",
+        specRow:
+          "one line per Spec: the title linked to its page, the id as code, the rung badge, then as plain text the kind, altitude, floor in words, the two binding values, the question counts and the Packs; the line wraps on a narrow screen.",
+        filterBar:
+          "one labelled select per filter above the Specs, each listing any and the values the rows hold, and a line saying how many of all rows show.",
+        sectionIds:
+          "the Packs, Specs and findings sections carry the element ids `packs`, `specs` and `findings`, which the top navigation, the rail and the task routes link to.",
+        findingsList: "one line per finding, the severity word first.",
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.spec-studio.pack-page",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/spec-studio.pack-page.sdp.md",
+    title: "A Pack page shows the Pack's design as one card per member",
+    narrative:
+      "The Markdown Pack page renders the Pack design as one wide member table, and the first adopter's reviewers read carrier files instead. This page renders the same assembly as a summary, then a card per member that a reviewer opens where they need the detail.",
+    sections: {
+      intent: {
+        outcome:
+          "Show where a Pack's design stands, member by member in reading order, on one page a reviewer scans quickly and opens where they need detail.",
+        openQuestions: [
+          {
+            key: "summaryFormat",
+            question: "Should the summary state its counts as sentences or as a table?",
+            blocking: false,
+            decider: "owner",
+            provisional: "Keep the counts as sentences.",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "The page opens with the Pack's title, its id and its carrier file as text with a copy action, then the summary; the framing follows as prose under the heading Framing, with the vocabulary references, linked.",
+          "The summary states each Pack total in one sentence that opens with its count: the members and the unresolved ones, the members held below their stated next rung and those waiting only for their author, the design entries and pinned declarations, the open and blocking questions, the members with an implementation binding and with a design reference, and the boundary in each direction.",
+          "The summary's held sentence links each held member to its card with its count of unmet clauses, and its waiting sentence names the members whose stated next rung waits only for their author's statement unless every member does; the page never presents a rung as approved.",
+          "The members follow in authored order, one closed card each. A card's summary line shows the member's position, title and kind, its stated rung beside the floor reached, its stated next rung with `nothing blocks` or how many of its clauses are unmet, its open and blocking questions, and its implementation and verifier bindings as present or none.",
+          "An open card shows the member's id, linked to its Spec page, then the parts the next five rules state, in their order.",
+          "A card lists each clause unmet for the member's stated next rung, with the targets the clause names and their stated rungs.",
+          "A card counts the member's design entries and pinned declarations, and links the decisions it names, each with its stated rung.",
+          "A card lists each open question with its blocking flag in words, its address when it is keyed, linked to the question on the Spec page, its recorded line, its text, and its decider, links, provisional reading and trigger when present.",
+          "A card lists each unit that implements the member and each that references it, by id, label, and recorded file and line as text with a copy action, with its role and its component's id, layer and context.",
+          "A card states the member's verifier binding as present or none and, when it has any, counts its verifiers and verifying examples, each beside how many are enabled.",
+          "An unresolved member's card says only that the manifest names an id the graph does not hold.",
+          "The boundary follows in four closed sections, Rests on, Rested on by, Verified by and Superseded by, each headed with its count. Each row shows the outside Spec, linked, its stated rung, its implementation binding as present or none, and the members it joins under each relation type; an empty section reads None.",
+          "Then come the members with no verifier binding, those stated `ready` first, under one sentence saying the graph records bindings and never runs, so no page shows a run result; then the findings that name the Pack.",
+          "`Open all` and `Close all` open or close every card and section at once, and opening the page at a card's fragment opens that card.",
+        ],
+        ruleKeys: {
+          header: "rules[0]",
+          summary: "rules[1]",
+          holds: "rules[2]",
+          memberCards: "rules[3]",
+          cardBody: "rules[4]",
+          cardHolds: "rules[5]",
+          cardDesign: "rules[6]",
+          cardQuestions: "rules[7]",
+          cardCode: "rules[8]",
+          cardVerifiers: "rules[9]",
+          boundary: "rules[11]",
+          openAll: "rules[13]",
+        },
+      },
+      ui: {
+        headerBlock:
+          "the title as the page heading; below it the id and the carrier file, each with a copy action; then the summary; then the framing under a `Framing` heading, and the vocabulary references.",
+        summaryList:
+          "the totals as a short list of sentences under a `Where the design stands` heading, each opening with its count, a zero written as No.",
+        memberCard:
+          "a disclosure whose element id is the member's Spec id; its summary line reads `<position>. <title>`, then the kind, the rung badge, the floor in words, the next rung in words unless the member states ready, the question counts and the two binding values, all but the badge as plain text, wrapping onto further lines on a narrow screen.",
+        cardBody:
+          "in order, the id link, the unmet clauses, the design counts and decisions, the open questions, the code, and the verifier binding.",
+        questionItem:
+          "the blocking flag in words; for a keyed question, `question.<key>` as a link to its address with a copy action for the full address; `line <n>` when recorded; the text; then each present field on its own labelled line.",
+        unitItem:
+          "the unit id as code, its label, `<file>:<line>` with a copy action, its role, and its component with layer and context.",
+        boundaryTable:
+          "four columns, Spec, stated rung, implementation binding and joined members, the last listing each relation type with its members.",
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.spec-studio.spec-page.core",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/spec-studio.spec-page.core.sdp.md",
+    title: "A Spec page's core shows the whole Spec, with an anchor for every entry",
+    narrative:
+      "The full Spec page adds panels to this core: diagrams, a runtime neighborhood, verification and evidence panels, impact, and actions that compose intent. The core shows what the Spec context holds, as text, so a reviewer with only a link reads the whole Spec and can cite any entry by its address.",
+    sections: {
+      intent: {
+        outcome:
+          "Show everything the graph holds about one Spec on one page that reads without script: its header, its sections in order with an anchor for every addressable entry, its relations both ways, its bindings and its findings.",
+      },
+      behavior: {
+        rules: [
+          "The header shows the title; the id with a copy action; the kind's display label and the altitude; the stated rung beside the floor reached on one line, with the divergence banner only in the dishonest direction; the stated next rung with `nothing blocks` or each unmet clause and its targets; the Packs the Spec belongs to, linked; its design columns; its findings by severity; and its carrier file as text with a copy action. It shows no owner, capability, tag or last-verified time: the envelope holds none, the Packs stand for a capability, and a binding never records a run.",
+          "A summary in words follows the header with what the header does not show: the open and blocking questions, and the implementation, verifier and oracle bindings as present or none. It repeats no rung the header shows.",
+          "The narrative comes next, then each section the Spec carries as a panel open by default, in the order intent, behavior, constraints, model, design, decision, verification, ui, with its entries in authored order. A section the Spec lacks is absent, and the page adds no section the graph does not hold. The narrative carries the element id `narrative` and each section panel `section.<name>`, such as `section.behavior`.",
+          "Every entry an entry address can name, a keyed Design or UI entry, a keyed rule or flow and a keyed open question, carries an element id equal to its address after the `#`, such as `design.<key>`, and shows its key and its recorded line.",
+          "Each open question shows its blocking flag in words, its key as code with a copy action for the full entry address when it has one, its text, its decider, its links, linked, its provisional reading and its trigger when present, and its recorded line. It shows no date: git records when a line changed.",
+          "A `gwt` or `gwt-vocabulary` fence shows as preformatted step text, as authored.",
+          "Relations show both ways, each with its type, its direction, its claim, the other endpoint, linked when it is a Spec or a Pack, whether it resolves, and its reason and the rule keys it exercises when present.",
+          "Bindings speak binding language. The implementation binding, design reference, verifier binding and expected-outcome oracle each read present or none, and list each unit, test anchor, example or oracle by id, label, and recorded file and line as text with a copy action; a unit adds its role and component, and an example verifier says whether it is enabled. Runtime observation reads not tracked, and run results read not recorded in the graph.",
+          "The findings that name the Spec close the page, each with its severity in words, its validator id and its message.",
+        ],
+        ruleKeys: {
+          header: "rules[0]",
+          summary: "rules[1]",
+          sections: "rules[2]",
+          entryIds: "rules[3]",
+          questions: "rules[4]",
+          relations: "rules[6]",
+          bindings: "rules[7]",
+          findings: "rules[8]",
+        },
+      },
+      ui: {
+        headerBlock:
+          "the title as the page heading; below it a line with the id, kind, altitude, the rung badge with the floor in words, and the next rung; then the Packs, the design columns, the finding counts and the carrier file.",
+        summaryLine: "one sentence under the header.",
+        sectionPanel:
+          "an open disclosure per section, headed with the section's name, and for Verification its mode.",
+        entryRow:
+          "an entry's key as code, its value, and `line <n>` when recorded, in a definition list.",
+        questionItem:
+          "the blocking flag in words, `question.<key>` as code when keyed, a copy action whose text and accessible name carry the full entry address, with no second code span of that address, the text, each present field on its own labelled line, and `line <n>` when recorded.",
+        relationsTable:
+          "five columns, relation and direction, other end, claim, reason, and exercised keys, with an unresolved endpoint marked in words.",
+        bindingsBlock:
+          "four labelled lines, each present or none with its items below it, then runtime observation and run results.",
+        findingsList: "one line per finding, the severity word first.",
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.spec-studio.search",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/spec-studio.search.sdp.md",
+    title: "Search finds a Spec, a Pack, an entry or a bound file by a word",
+    narrative:
+      "The first adopter asked to search entry keys, pinned declarations and file paths. A Spec's envelope holds no tags, so search reads what the graph holds: the fields concept search reads, which already include every pinned declaration, plus the keys authors coin and the files the graph records. The page matches with the reader's own code, so a term finds on the page what `findByConcept` finds through `sdp q`.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a person find a Spec, a Pack, a keyed entry or the code bound at a file by a word they remember of it, from any page and with no request.",
+      },
+      behavior: {
+        rules: [
+          "Search matches with the reader's concept matching, one implementation the package exports without Node dependencies and the page script bundles, so over the fields `findByConcept` reads, the page returns the nodes it returns, in its order.",
+          "Search also matches the keys authors coin, Design and UI keys, open question keys and rule keys, and a node's recorded file path; a node matched only through these follows every node `findByConcept` matches, in id order. It indexes nothing else.",
+          "A term matches where it appears in a field, without regard to case, as `findByConcept` matches; an empty term matches nothing.",
+          "The search field on any page opens the search page with the term in its fragment, `search.html#q=<term>`; the search page matches as the person types and keeps the term in its fragment, so a search is a link.",
+          "Each result names its node type in words. A Spec result shows its title, id, kind, and stated rung beside the floor reached, and opens its page; a Pack result shows its title and id and opens its page, with no readiness; an Anchor or CodeNode result shows its id, label, and recorded file and line as text with a copy action, and links each Spec its edges reach, with the edge type.",
+          "A Spec with a matching entry is a result. Under a Spec result, the page lists the Spec's entries the term matches, as `spec:consumers.spec-studio.data#design.searchEntry` states, in the index's order, each with its section, key and recorded line, linked to the entry's element id on the Spec page when it has an entry address, and otherwise to its section's element id, or to the narrative's.",
+          "The page shows fifty results at a time, with a control that shows the next fifty.",
+          "The search page reads only the index it embeds; it fetches nothing and joins nothing.",
+        ],
+        ruleKeys: {
+          oneMatcher: "rules[0]",
+          addedFields: "rules[1]",
+          searchPage: "rules[3]",
+          resultShape: "rules[4]",
+          entryHits: "rules[5]",
+        },
+      },
+      ui: {
+        searchField:
+          "a labelled text field and a Search button in the top navigation of every page.",
+        resultsHeader: "the term, how many nodes and entries match, and the fields searched.",
+        resultCard:
+          "one card per node, in result order: its node type in words, title and id, the fields that matched, and the Spec's rungs or the unit's location as the result rule states; then its entry hits.",
+        entryHit:
+          "one line per entry: its section, its key as code, its recorded line, and the text around the term, shortened.",
+        noMatch: "`No node matches` and the term, then the fields searched.",
+        needsScript:
+          "without script, the search page says that search needs it and links to the index.",
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.spec-studio.publisher",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/spec-studio.publisher.sdp.md",
+    title: "`sdp studio` publishes the Studio as one page set",
+    narrative:
+      "The Studio has its own verb and root beside the four shipped publishers, and is written the way they are. Its page set opens from the file system and uploads to a static host unchanged. The run adds no stamp, commit or time, so two runs over one graph write the same bytes, and a publishing step that wants build context writes its stamp beside the page set.",
+    sections: {
+      intent: {
+        outcome:
+          "Publish the Studio under its own root as one page set the graph alone determines, which opens through `file://` and uploads to a static host unchanged.",
+      },
+      behavior: {
+        rules: [
+          "`sdp studio [root] [--exclude PATH]... [--check-clean]` validates the graph and writes the Studio's page set to `<root>/generated/spec-studio/`; `root` defaults to the working directory, and each exclusion is a root-relative path prefix, as for the shipped publishers.",
+          "A run writes nothing outside its root, writes no stamp, and leaves every carrier and source file under the root byte-identical.",
+          "A run writes its page set to `generated/spec-studio.tmp/`, removes the prior root and renames the temporary into place, so no page of an earlier run survives a later one and no temporary survives a completed run.",
+          "Every command that enters the shared build, `sdp studio` among them, removes `generated/spec-studio/` and its temporary sibling before extraction, beside the four roots `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` names; a removal failure refuses the command before extraction.",
+          "`sdp studio --check-clean` renders an independent twin and refuses divergent renders, then compares the current root with the new render; missing or drifted output returns nonzero and is removed, and clean output is replaced wholesale with byte-identical content.",
+          "Findings never withhold the page set: a run over a graph with validation findings still publishes and returns the validation exit code, and each finding shows on the index, and also on its subject's page when its subject is a Spec or a Pack. A run whose extraction fails publishes nothing and returns nonzero.",
+          "The page set holds `index.html`, `search.html`, one `packs/<name>.html` per Pack, one `specs/<name>.html` per Spec, and `assets/studio.css` and `assets/studio.js`. `<name>` is the id after its namespace, with each uppercase ASCII letter written as `_` and its lowercase, so no two pages collide on a file system that ignores case.",
+          "Two runs over one graph write byte-identical files, and no file holds a time, a commit, an absolute path or a host name.",
+          "Every link a page writes stays inside the page set: it resolves to a page the run wrote and, with a fragment, to an element id that page carries, apart from the search page's term fragment `search.html#q=<term>`, which names no element. No page links a carrier or source file, an editor URI or an external address.",
+        ],
+        exampleSpace: {
+          given: [
+            'an extraction root holding {corpus:"a Pack and its member Specs"|"a Spec with a validation error"|"a carrier the extractor refuses"} and a stale Studio page {stalePage:string}',
+          ],
+          when: [
+            "the studio command runs twice at that root, with check-clean {checkClean:boolean}",
+          ],
+          then: [
+            "each run exits {exitCode:number}",
+            "the page set holds the entry page {entryPage:string}",
+            "the two runs wrote byte-identical files: {byteIdentical:boolean}",
+            "the stale page survives: {staleSurvives:boolean}",
+            "a temporary Studio sibling survives: {temporarySurvives:boolean}",
+            "every carrier and source file under the root stays byte-identical: {rootUntouched:boolean}",
+            "every link a page writes resolves inside the page set: {linksResolve:boolean}",
+          ],
+        },
+        ruleKeys: {
+          verb: "rules[0]",
+          ownRoot: "rules[1]",
+          wholesale: "rules[2]",
+          buildInvalidates: "rules[3]",
+          checkClean: "rules[4]",
+          findingsShown: "rules[5]",
+          pageSet: "rules[6]",
+          deterministic: "rules[7]",
+          linksResolve: "rules[8]",
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.spec-studio.page-elements",
+    specKind: "contract",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/spec-studio.page-elements.sdp.md",
+    title: "A few custom elements filter, search, open and copy on a rendered page",
+    narrative:
+      "The build renders every page whole, so these elements add behavior to markup that is already there rather than rendering views of their own. A browser refuses a module script on a page opened through `file://`, so they ship as one classic script.",
+    sections: {
+      intent: {
+        outcome:
+          "Give the Studio's pages their few interactions through custom elements that enhance markup the build wrote, so a page with its script filters, searches and copies, and every page but the search page still reads in full without it.",
+      },
+      behavior: {
+        rules: [
+          "The elements ship in one classic script, `assets/studio.js`, with no module syntax and nothing loaded at run time; the build bundles it from the package's source, with the concept matcher.",
+          "Each element enhances markup the build wrote and renders no graph value of its own, except that the search results element renders values from the search index its page embeds.",
+          "No element requests anything on a page opened through `file://`; the stamp element requests `stamp.json` only over http or https.",
+          "Every control an element adds is a native button, link, select or input with a text label, reachable from the keyboard in reading order.",
+          "An element that changes what a page shows says so in words in a polite live region, such as how many rows a filter shows.",
+        ],
+        ruleKeys: {
+          oneScript: "rules[0]",
+          enhanceOnly: "rules[1]",
+          noRequest: "rules[2]",
+          nativeControls: "rules[3]",
+          liveCounts: "rules[4]",
+        },
+      },
+      design: {
+        search:
+          "`sdp-search` with `page-root`, the relative path from its page to the page-set root: wraps the search field's form and, on submit, opens `<page-root>search.html#q=<term>` with the term percent-encoded.",
+        searchResults:
+          "`sdp-search-results`: on the search page, reads the index from the `sdp-data` element, matches the fragment's term and each term the person types, writes the results `spec:consumers.spec-studio.search` designs, and keeps the term in the fragment.",
+        filter:
+          '`sdp-filter`: wraps a hidden form of labelled `select` elements, each with `data-facet="<name>"` and an `any` option, and the rows marked `data-row`. On upgrade it shows the form, hides each row whose `data-<name>` differs from a chosen value, and writes `<shown> of <total> shown` in its `output` element; a row whose attribute holds several space-separated values, such as its Packs, matches when one of them equals the choice.',
+        expander:
+          "`sdp-expander`: adds `Open all` and `Close all` buttons for the `details` elements inside it, and on load and on each fragment change opens every `details` that holds the fragment's target and scrolls the target into view.",
+        copy: "`sdp-copy` with `text`: a `Copy` button whose accessible name includes the text; it copies the text to the clipboard and says `Copied`, and where the clipboard is unavailable it selects the text so the person can copy it.",
+        stamp:
+          "`sdp-stamp` with `page-root`: served over http or https, it requests `<page-root>stamp.json` and, when it loads, shows its corpus commit, engine and build time as text; otherwise it shows nothing.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],

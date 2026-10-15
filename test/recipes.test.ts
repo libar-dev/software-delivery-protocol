@@ -457,7 +457,9 @@ describe("the agent-surface recipe corpus", () => {
 
     // A parameter is data on `--params`, never source spliced into a body, and no recipe reads
     // the environment. The intro teaches exactly that and names no retired channel.
-    expect(introProse).toContain("Pass it as JSON data with `--params`, never by editing the body");
+    expect(introProse).toContain(
+      "Pass parameters as JSON data with `--params`, never by editing the body",
+    );
     expect(source).not.toContain("SDP_CHANGED_FILES_JSON");
     for (const recipe of recipes) {
       expect({ recipe: recipe.ordinal, env: recipe.body.includes("process.env") }).toEqual({
@@ -2049,6 +2051,133 @@ export const probe = spec({
 }
 
 describe("register recipe semantics", () => {
+  it("lists key families across the corpus in key, Spec and section order with the documented sample", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(41)));
+    expect(result.prefixes).toEqual(["finding", "impact"]);
+    expect(result.scope).toEqual({ corpus: true });
+    const rows = asArray(result.rows).map(asRecord);
+    expect(rows.length).toBeGreaterThan(0);
+    const tuples = rows.map(
+      (row) => `${String(row.key)}\0${String(row.spec)}\0${String(row.section)}`,
+    );
+    expect(tuples).toEqual([...tuples].sort());
+    const findingRows = rows.filter((row) => String(row.key).startsWith("finding"));
+    const impactRows = rows.filter((row) => String(row.key).startsWith("impact"));
+    expect(rows.slice(0, 2).map((row) => ({ key: row.key, spec: row.spec }))).toEqual([
+      { key: "findingIds", spec: "spec:carrier.sdp-import" },
+      { key: "findingIds", spec: "spec:extraction.executable-contracts" },
+    ]);
+    expect(result.totals).toEqual({
+      rows: rows.length,
+      specs: new Set(rows.map((row) => row.spec)).size,
+      byPrefix: { finding: findingRows.length, impact: impactRows.length },
+    });
+  });
+
+  it("lists Design and UI key families without a row cap, preserving values, lines and overlapping prefixes", async () => {
+    const extraction = markdownProbe("sdp-key-family-", {
+      "a.sdp.md": `---\nid: spec:probe.a\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# A\n\n## Intent\n- outcome: List keyed values.\n### Open questions\n- [non-blocking #limitQuestion] Who holds the limit?\n\n## Rule\n- [#limitRule] Hold the limit.\n\n## Design\nLimit description.\n${Array.from({ length: 30 }, (_, index) => `- limit${String(index).padStart(2, "0")}: Value ${String(index)}`).join("\n")}\n\n## UI\n- limit00: Visible limit\n`,
+      "b.sdp.md":
+        "---\nid: spec:probe.b\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# B\n## Intent\n- outcome: List keyed values.\n## Design\n- limit00: Another value\n- otherLimit: Case-sensitive value\n",
+      "p.pack.sdp.md": "---\nid: pack:probe.family\nspecs: [spec:probe.b]\n---\n# Family\n",
+    });
+    const query = (params: Record<string, unknown>) =>
+      runRecipe(recipeByOrdinal(41), params, extraction);
+    const result = asRecord(await query({ prefixes: ["limit", "limit0", "description"] }));
+    const rows = asArray(result.rows).map(asRecord);
+    expect(rows).toHaveLength(32);
+    expect(rows.slice(0, 3)).toEqual([
+      {
+        key: "limit00",
+        spec: "spec:probe.a",
+        section: "design",
+        value: "Value 0",
+        file: "a.sdp.md",
+        line: 20,
+      },
+      {
+        key: "limit00",
+        spec: "spec:probe.a",
+        section: "ui",
+        value: "Visible limit",
+        file: "a.sdp.md",
+        line: 52,
+      },
+      {
+        key: "limit00",
+        spec: "spec:probe.b",
+        section: "design",
+        value: "Another value",
+        file: "b.sdp.md",
+        line: 12,
+      },
+    ]);
+    for (const row of rows)
+      expect(row.line).toBe(
+        extraction.graph.locations?.find(
+          (at) => at.spec === row.spec && at.entry === `${String(row.section)}.${String(row.key)}`,
+        )?.line,
+      );
+    expect(result.totals).toEqual({
+      rows: 32,
+      specs: 2,
+      byPrefix: { limit: 32, limit0: 12, description: 0 },
+    });
+    expect(asRecord(await query({ prefixes: ["Limit"] })).rows).toEqual([]);
+    const pack = asRecord(await query({ prefixes: ["limit"], pack: "pack:probe.family" }));
+    expect(pack.scope).toEqual({ pack: "pack:probe.family" });
+    expect(asArray(pack.rows)).toEqual([rows[2]]);
+    const list = asRecord(
+      await query({ prefixes: ["limit"], specs: ["spec:probe.b", "spec:probe.b"] }),
+    );
+    expect(asArray(list.rows)).toEqual([rows[2]]);
+    const missingLocations = { ...extraction, graph: { ...extraction.graph, locations: [] } };
+    const unlocated = asRecord(
+      await runRecipe(
+        recipeByOrdinal(41),
+        { prefixes: ["limit"], specs: ["spec:probe.b"] },
+        missingLocations,
+      ),
+    );
+    expect(asArray(unlocated.rows).map(asRecord)[0]?.line).toBeNull();
+  });
+
+  it("diagnoses an unresolved Pack member without returning a partial register", async () => {
+    const extraction = markdownProbe("sdp-key-family-missing-", {
+      "a.sdp.md":
+        "---\nid: spec:probe.a\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# A\n## Intent\n- outcome: List keyed values.\n## Design\n- limitOne: One\n",
+      "p.pack.sdp.md":
+        "---\nid: pack:probe.family\nspecs: [spec:probe.a, spec:probe.missing]\n---\n# Family\n",
+    });
+    expect(
+      await runRecipe(
+        recipeByOrdinal(41),
+        { prefixes: ["limit"], pack: "pack:probe.family" },
+        extraction,
+      ),
+    ).toEqual({
+      diagnostics: [{ parameter: "pack", problem: "spec:probe.missing does not resolve." }],
+    });
+  });
+
+  it.each([
+    { prefixes: [] },
+    { prefixes: [""] },
+    { prefixes: ["a", "a"] },
+    { prefixes: "limit" },
+    { pack: "pack:absent" },
+    { specs: ["spec:absent"] },
+    { specs: "bad" },
+    { pack: "pack:self-hosting-v1", specs: [] },
+  ])("diagnoses malformed key-family parameters without a register: %j", async (params) => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(41), params));
+    expect(Object.keys(result)).toEqual(["diagnostics"]);
+    const diagnostics = asArray(result.diagnostics).map(asRecord);
+    expect(diagnostics.length).toBeGreaterThan(0);
+    expect(diagnostics[0]?.parameter).toBe(
+      "prefixes" in params ? "prefixes" : "specs" in params ? "specs" : "pack",
+    );
+  });
   it.each([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32])(
     "runs recipe %s as written in default output",
     async (ordinal) => {
@@ -4073,7 +4202,11 @@ describe("design references and the architecture taxonomy", () => {
     // none of its consumers' designs.
     expect(reader.specContext(readerId)?.deliveryFacts).toContain("implemented");
     expect(readerUnits.map((unit) => unit.file)).toContain("src/reader/reader.ts");
-    expect(dependents).toEqual(["spec:consumers.spec-studio", "spec:consumers.spec-studio.data"]);
+    expect(dependents).toEqual([
+      "spec:consumers.spec-studio",
+      "spec:consumers.spec-studio.data",
+      "spec:consumers.spec-studio.search",
+    ]);
     for (const id of dependents) {
       expect(asArray(rows.find((row) => row.id === id)?.buildsOn), id).toContainEqual({
         id: readerId,
@@ -4083,7 +4216,10 @@ describe("design references and the architecture taxonomy", () => {
     }
     expect(
       derived.graph.edges.filter(
-        (edge) => edge.type === "references" && dependents.includes(edge.to),
+        (edge) =>
+          edge.type === "references" &&
+          readerUnits.some((unit) => unit.id === edge.from) &&
+          dependents.includes(edge.to),
       ),
     ).toEqual([]);
     // A target with no `implemented` fact stays out of the column: the Studio depends on the
@@ -4301,6 +4437,64 @@ async function runShipped(
 }
 
 describe("recipe parameters and the shipped recipe files", () => {
+  it.each(recipes)(
+    "declares and checks only its indexed parameter names first: $ordinal",
+    (recipe) => {
+      const row = source
+        .split("\n")
+        .find((line) => line.startsWith(`| ${String(recipe.ordinal)} |`));
+      const accepts = (row?.split("|")[3]?.trim() ?? "none")
+        .split(/, | or /u)
+        .filter((name) => name !== "none");
+      expect(recipe.body.split("\n").slice(0, 3)).toEqual([
+        `const accepts = ${JSON.stringify(accepts).replaceAll(",", ", ")};`,
+        "const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));",
+        "if (unknownParams.length > 0) return { unknownParams, accepts };",
+      ]);
+      const read = [
+        ...new Set([...recipe.body.matchAll(/\bparams\.([A-Za-z]+)/gu)].map((match) => match[1])),
+      ];
+      expect([...accepts].sort()).toEqual(read.sort());
+    },
+  );
+
+  it.each(recipes)(
+    "returns only the unknown-name answer before reading recipe inputs: $ordinal",
+    async (recipe) => {
+      const row = source
+        .split("\n")
+        .find((line) => line.startsWith(`| ${String(recipe.ordinal)} |`));
+      const accepts = (row?.split("|")[3]?.trim() ?? "none")
+        .split(/, | or /u)
+        .filter((name) => name !== "none");
+      expect(await runRecipe(recipe, { zzUnknown: true })).toEqual({
+        unknownParams: ["zzUnknown"],
+        accepts,
+      });
+    },
+  );
+
+  it("diagnoses wrong subject names, mixed known names and ordered unknown names through shipped bodies", async () => {
+    const impact = recipeByOrdinal(4);
+    expect(await runRecipe(impact, { file: ["src/reader/index.ts"] })).toEqual({
+      unknownParams: ["file"],
+      accepts: ["files", "detail"],
+    });
+    const change = recipeByOrdinal(30);
+    const shipped = { ...change, body: shippedBody(change) };
+    expect(await runRecipe(shipped, { spec: "x" })).toEqual({
+      unknownParams: ["spec"],
+      accepts: ["specs"],
+    });
+    expect(
+      await runRecipe(shipped, {
+        specs: ["spec:validation.readiness-floor"],
+        zzUnknown: true,
+        spec: "x",
+      }),
+    ).toEqual({ unknownParams: ["zzUnknown", "spec"], accepts: ["specs"] });
+  });
+
   it("reads and names each parameter, with a fallback only when the contract supplies one", () => {
     const parameterized = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
 
@@ -4316,9 +4510,14 @@ describe("recipe parameters and the shipped recipe files", () => {
       for (const name of names) {
         const hasSample =
           recipe.ordinal !== 34 &&
-          !([35, 36, 37, 38].includes(recipe.ordinal) && !["budget", "detail"].includes(name)) &&
+          !(
+            [35, 36, 37, 38].includes(recipe.ordinal) &&
+            !["budget", "detail", "declarations"].includes(name)
+          ) &&
           !(recipe.ordinal === 39 && name === "pack") &&
-          !(recipe.ordinal === 40 && name === "imports");
+          !(recipe.ordinal === 40 && name === "imports") &&
+          !(recipe.ordinal === 41 && name !== "prefixes") &&
+          !(recipe.ordinal === 42 && name !== "severity");
         expect({
           recipe: recipe.ordinal,
           fallback: recipe.body.includes(`params.${name} ?? `),

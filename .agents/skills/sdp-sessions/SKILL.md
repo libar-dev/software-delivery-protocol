@@ -24,11 +24,11 @@ If the active pnpm binary cannot run this package-lock-based checkout, the equiv
 wrapper is `npm run --silent sdp:q -- '<body>'`. Never fall through to a global `sdp`.
 
 When a session needs human-readable output, the public publishers are `view`, `census`, `mermaid`,
-and `gherkin`. Each one's build first removes all four roots, so after one publisher runs only its
-own root is current. The repository's generate/check scripts preserve and publish all four roots
+`gherkin`, and `studio`. Each one's build first removes all five roots, so after one publisher runs
+only its own root is current. The repository's generate/check scripts preserve and publish all five roots
 together. In check mode a prior tree must exist for each root; Design Review checks repeat-render
-determinism, while census, Mermaid and Gherkin also compare the prior tree's bytes with the current
-render.
+determinism, while census, Mermaid, Gherkin and Studio also compare the prior tree's bytes with
+the current render.
 
 An adopter selects its root and exclusions through its installed package runner:
 
@@ -62,7 +62,9 @@ Resolve the target's blocking open questions and review the carrying Specs. The 
 register (recipe 20) lists every open question in the corpus when the neighbors matter too. A
 clear floor is evidence, not an automatic `ready` statement. Use pinned declarations (recipe 24)
 to list every signature, type, validator or table the target and its neighbors pin as a code span
-opening a keyed Design entry, so a test author and a builder working apart read one list. When the
+opening a keyed Design entry, so a test author and a builder working apart read one list. The
+key-family register (recipe 41) lists every Design and UI entry whose key starts with a prefix
+you give, such as `limit` or `error`, across the corpus, a Pack or a list of Specs. When the
 design is a Pack, read it with Pack design (recipe 29): per member, the stated next rung and what
 holds the member below it, the design columns, open questions with their lines, and the code that
 answers to it. Before changing a Spec, run design-change impact (recipe 30) for every Spec that
@@ -110,7 +112,12 @@ one value. Pass the mention audit the pairs your corpus means to leave as prose 
 they report apart from missing relations. To review a Pack's design as it stands, use Pack design (recipe 29); to review decisions,
 the decision register (recipe 31), with each decision's rung, supersession, refinement both ways
 with the reasons the relations state, and the Specs it shapes; to review dependency direction, architecture crossings (recipe 32), which reports the
-`uses` edges that cross a context or layer and refuses nothing. Review findings and gaps as data;
+`uses` edges that cross a context or layer and refuses nothing. For a corpus's own architecture
+rules, run the architecture walk (recipe 42), which reports forbidden layer pairs and isolated
+contexts, with unstated layers kept as unclassified. Planned against realized components
+(recipe 43) lists component designs whose anchors are absent or differ. A corpus may select the
+walk as a rules file under `sdp validate --rules`; follow `sdp-authoring` for per-file parameters
+and the separate corpus findings. Review findings and gaps as data;
 the review never becomes a workflow gate.
 
 Report a review as a numbered list, most severe first. Each item names one entry address or Spec

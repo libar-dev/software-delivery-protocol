@@ -1,3 +1,4 @@
+import { mergeParams } from "./params.js";
 import { readFileSync } from "node:fs";
 import { isatty } from "node:tty";
 import { inspect } from "node:util";
@@ -14,7 +15,7 @@ import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { resolveExtractionRoot } from "./build-args.js";
 import type { CliOutput } from "./output.js";
-import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
+import { errorMessage, formatFinding, oneLine, writeStderr, writeStdout } from "./output.js";
 
 /**
  * The agent front door (`spec:decisions.agent-front-door`): one evaluation sink over the same
@@ -139,43 +140,6 @@ function defaultReadStdin(): string {
   return readFileSync(0, "utf8");
 }
 
-/** Collapses an error message onto one line, so a refusal stays the one-line diagnostic. */
-function oneLine(message: string): string {
-  return message.replace(/\s+/gu, " ").trim();
-}
-
-/** How a refusal names a parsed JSON value that is not an object. */
-function jsonKind(value: unknown): string {
-  return value === null ? "null" : Array.isArray(value) ? "an array" : `a ${typeof value}`;
-}
-
-/** Inspect object-key tokens before JSON.parse discards repeated keys. Nested values stay opaque. */
-function repeatedTopLevelKey(source: string): string | undefined {
-  if (!source.trimStart().startsWith("{")) return undefined;
-  const keys = new Set<string>();
-  let depth = 0;
-  for (let index = 0; index < source.length; index++) {
-    const character = source[index];
-    if (character === '"') {
-      const start = index;
-      for (index++; index < source.length; index++) {
-        if (source[index] === "\\") index++;
-        else if (source[index] === '"') break;
-      }
-      if (depth !== 1) continue;
-      let next = index + 1;
-      while (/[ \t\r\n]/u.test(source[next] ?? "")) next++;
-      if (source[next] !== ":") continue;
-      const key: unknown = JSON.parse(source.slice(start, index + 1));
-      if (typeof key !== "string") continue;
-      if (keys.has(key)) return key;
-      keys.add(key);
-    } else if (character === "{" || character === "[") depth++;
-    else if (character === "}" || character === "]") depth--;
-  }
-  return undefined;
-}
-
 const queryParamsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.query-params"),
   label: "reads --params as JSON data and injects it as the sink's fourth binding, params",
@@ -184,80 +148,6 @@ const queryParamsAnchor = codeAnchor({
   role: "service",
 });
 void queryParamsAnchor;
-
-/**
- * `--params` carries a recipe's parameter as data, never as body source: a JSON object inline, or
- * `@PATH` naming a file that holds one, or `KEY=@PATH` binding any JSON value to one key.
- * Paths resolve from the working directory. Each input is read and parsed
- * here, before the graph derives, so a value that is not JSON, JSON that is not an object, or a
- * file that cannot be read refuses the invocation before the body could run.
- */
-function readParams(
-  value: string,
-  output: CliOutput,
-): { readonly params: Readonly<Record<string, unknown>> } | undefined {
-  let text = value;
-  let source = "--params";
-  let key: string | undefined;
-  // Inline JSON and @PATH are recognized first, so `=@` inside either is never read as a key.
-  const keyed = /^[ \t\r\n]*[{["]|^@/u.test(value) ? null : /^([^=]+)=@(.*)$/su.exec(value);
-  if (keyed !== null) {
-    key = keyed[1];
-    if (key === undefined || !/^[a-z][A-Za-z0-9]*$/u.test(key)) {
-      writeStderr(output, "sdp q: --params KEY=@PATH requires a lower-camel key.\n");
-      return undefined;
-    }
-  }
-
-  if (value.startsWith("@") || keyed !== null) {
-    const path = keyed === null ? value.slice(1) : (keyed[2] ?? "");
-
-    if (path === "") {
-      writeStderr(output, "sdp q: --params @PATH requires a path after @.\n");
-      return undefined;
-    }
-
-    source = `--params file ${JSON.stringify(path)}`;
-
-    try {
-      // A byte-order mark is not JSON text, though an editor may save one; it is dropped.
-      text = readFileSync(path, "utf8").replace(/^\uFEFF/u, "");
-    } catch (error) {
-      writeStderr(
-        output,
-        `sdp q: ${source} could not be read (${oneLine(errorMessage(error))}).\n`,
-      );
-      return undefined;
-    }
-  }
-
-  let parsed: unknown;
-
-  try {
-    if (key === undefined) {
-      const repeated = repeatedTopLevelKey(text);
-      if (repeated !== undefined) {
-        writeStderr(output, `sdp q: --params key ${JSON.stringify(repeated)} was given twice.\n`);
-        return undefined;
-      }
-    }
-    parsed = JSON.parse(text) as unknown;
-  } catch (error) {
-    writeStderr(output, `sdp q: ${source} is not valid JSON (${oneLine(errorMessage(error))}).\n`);
-    return undefined;
-  }
-
-  if (key !== undefined) {
-    return { params: { [key]: parsed } };
-  }
-
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    writeStderr(output, `sdp q: ${source} must be a JSON object, got ${jsonKind(parsed)}.\n`);
-    return undefined;
-  }
-
-  return { params: parsed as Readonly<Record<string, unknown>> };
-}
 
 export function parseQueryArgs(args: readonly string[], output: CliOutput): QueryArgs | undefined {
   let root: string | undefined;
@@ -359,23 +249,8 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
     return undefined;
   }
 
-  const params: Record<string, unknown> = {};
-  for (const value of rawParams) {
-    const supplied = readParams(value, output);
-    if (supplied === undefined) return undefined;
-    for (const [key, item] of Object.entries(supplied.params)) {
-      if (Object.hasOwn(params, key)) {
-        writeStderr(output, `sdp q: --params key ${JSON.stringify(key)} was given twice.\n`);
-        return undefined;
-      }
-      Object.defineProperty(params, key, {
-        value: item,
-        enumerable: true,
-        writable: true,
-        configurable: true,
-      });
-    }
-  }
+  const params = mergeParams(rawParams, output, "q");
+  if (params === undefined) return undefined;
 
   return { root: resolvedRoot, exclude, body, json, params };
 }

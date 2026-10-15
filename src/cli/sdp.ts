@@ -19,9 +19,11 @@ import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./outp
 import type { CliOutput } from "./output.js";
 import { parseQueryArgs, runQuery } from "./q-command.js";
 import type { QueryHooks } from "./q-command.js";
+import { runStudio } from "./studio-command.js";
+import type { StudioHooks } from "./studio-command.js";
 import { runValidateWatch } from "./validate-watch.js";
 import type { ValidateWatchHooks } from "./validate-watch.js";
-import { runValidate, runView } from "./validate-view-command.js";
+import { runValidate, runValidateRules, runView } from "./validate-view-command.js";
 
 /**
  * @sdpAnchor impl:protocol.adopter-help
@@ -35,11 +37,12 @@ Usage:
   sdp --help
   sdp --version
   sdp build [root] [--exclude PATH]... [--check-clean] [--imports PATH]
-  sdp validate [root] [--exclude PATH]... [--check-clean | --watch]
+  sdp validate [root] [--exclude PATH]... [--check-clean | --watch] [--rules PATH [--params FORM]...]...
   sdp view [root] [--exclude PATH]... [--check-clean]
   sdp census [root] [--exclude PATH]... [--check-clean]
   sdp mermaid [root] [--exclude PATH]... [--check-clean]
   sdp gherkin [root] [--exclude PATH]... [--check-clean]
+  sdp studio [root] [--exclude PATH]... [--check-clean]
   sdp import <path...> [--dry-run]
   sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME
   sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH | --params KEY=@PATH]... [--json]
@@ -67,7 +70,12 @@ Commands:
              projection; check errors describe the repo's conformance, not the artifact.
              --watch re-runs the same validate path on carrier create/change/delete/rename
              and stays alive after findings; operator stop (SIGINT) exits 0. --watch cannot
-             be combined with --check-clean.
+             be combined with --check-clean. --rules PATH runs an operator-selected JavaScript
+             async body with g, graph, report and params after the Protocol checks. Repeat --rules;
+             each --params belongs to the preceding file, with the q grammar: JSON, @PATH or
+             KEY=@PATH. Each file receives its own copies. Corpus findings print separately;
+             any corpus error or failed file exits 1. --watch rereads rules on each carrier cycle;
+             editing a rules file alone starts no cycle. --rules combines with --check-clean.
   view       validate, then generate the Design Review — the contextual read-only human view —
              into <root>/generated/design-review/ (rewritten wholesale). Findings remain data;
              exit code follows validate. --check-clean independently re-renders.
@@ -81,6 +89,9 @@ Commands:
              <root>/generated/gherkin/ as a separate wholesale tmp-to-rename projection. The
              pages are disposable and never use .sdp.gherkin. --check-clean independently
              re-renders and refuses when the published bytes differ from the current projection.
+  studio     validate, then publish static Studio pages into <root>/generated/spec-studio/.
+             Findings remain visible; exit code follows validate. --check-clean independently
+             re-renders and refuses missing or drifted output. Pages open through file://.
   import     Convert one or more *.sdp.ts files or recursively scanned roots to write-beside
              *.sdp.md documents. The TypeScript source is never deleted. --dry-run writes
              each would-be document to stdout, headed by its target path, without writing.
@@ -135,7 +146,8 @@ Agent skills and reference:
 /** Reads one file the package ships, by URL; `sdp --version` reads through it. */
 export type EngineFileReader = (url: URL) => string;
 
-interface CliHooks extends CensusHooks, MermaidHooks, GherkinViewHooks, ValidateWatchHooks {
+interface CliHooks
+  extends CensusHooks, MermaidHooks, GherkinViewHooks, ValidateWatchHooks, StudioHooks {
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
   readonly readEngineFile?: EngineFileReader;
@@ -199,8 +211,8 @@ export function readEngineProvenance(read: EngineFileReader = readShippedFile): 
  */
 
 /**
- * Every verb but `q` and `validate --watch` completes synchronously. `q` awaits an
- * operator-supplied async body; `validate --watch` stays open until abort. The dispatcher's return
+ * The query and corpus-rule branches await operator-supplied async bodies;
+ * `validate --watch` stays open until abort. Other branches complete synchronously. The dispatcher's return
  * type carries those asynchronous branches rather than making every caller of a synchronous verb
  * await a resolved promise.
  */
@@ -230,6 +242,7 @@ export function runSdpCli(
     command !== "census" &&
     command !== "mermaid" &&
     command !== "gherkin" &&
+    command !== "studio" &&
     command !== "import" &&
     command !== "new" &&
     command !== "q"
@@ -298,7 +311,9 @@ export function runSdpCli(
   if (command === "validate") {
     return parsed.watch
       ? runValidateWatch(parsed, output, hooks, hooks)
-      : runValidate(parsed, output, "validate", hooks).exitCode;
+      : parsed.rules === undefined
+        ? runValidate(parsed, output, "validate", hooks).exitCode
+        : runValidateRules(parsed, output, hooks).then((result) => result.exitCode);
   }
 
   if (command === "view") {
@@ -307,6 +322,10 @@ export function runSdpCli(
 
   if (command === "census") {
     return runCensus(parsed, output, hooks);
+  }
+
+  if (command === "studio") {
+    return runStudio(parsed, output, hooks);
   }
 
   return command === "mermaid"

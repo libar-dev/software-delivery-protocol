@@ -99,14 +99,15 @@ checkout: `exec` resolves dependency binaries, while this package does not link 
 own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated binary. Do not invoke a
 global `sdp` either.
 
-The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, and `sdp gherkin`.
-Each of them, like `sdp build` and `sdp validate`, first removes all four projection roots, so
+The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, `sdp gherkin`,
+and `sdp studio`.
+Each of them, like `sdp build` and `sdp validate`, first removes all five projection roots, so
 after one publisher runs only its own root is current
 (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
 In this source checkout, `npm run generate:self-hosting` and `npm run check:self-hosting` preserve
-and publish all four roots together. In check mode a prior tree must exist for each root; Design
-Review checks repeat-render determinism, while census, Mermaid and Gherkin also compare the prior
-tree's bytes with the current render.
+and publish all five roots together. In check mode a prior tree must exist for each root; Design
+Review checks repeat-render determinism, while census, Mermaid, Gherkin and Studio also compare
+the prior tree's bytes with the current render.
 
 The catalog of ready-made bodies is `docs/agent-surface/recipes.md` in the Protocol repository
 and `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an
@@ -125,33 +126,36 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 
 ### Which recipe answers a task
 
-| The task                                                | Run                                                                                                        |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Pick work to build                                      | the build backlog (recipe 1); the design backlog (recipe 33) for designed, unbuilt Specs                   |
-| Find code ahead of intent                               | the drift alarm (recipe 2)                                                                                 |
-| Read what a Spec guarantees and who verifies it         | Spec guarantees (recipe 3)                                                                                 |
-| Review a changeset                                      | changed-file impact (recipe 4), then the mention audit (recipe 22) over its scope                          |
-| Locate a term or a concept                              | concept search (recipe 6); entry search (recipe 23) for the entry and its line                             |
-| Check a Spec's stated next rung before a readiness edit | promotion preflight (recipe 9); the lower ladder (recipe 11) across the corpus                             |
-| Compare stated readiness with the floor                 | readiness divergence (recipe 7)                                                                            |
-| Read warnings, gaps and verifier health                 | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
-| Review a Pack                                           | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
-| List open questions                                     | the open-question register (recipe 20)                                                                     |
-| See what a Spec rests on                                | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
-| Change a Spec others rest on                            | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
-| Check addresses written outside the Specs               | address resolution (recipe 25)                                                                             |
-| List the signatures two parties share                   | pinned declarations (recipe 24)                                                                            |
-| Read a component and its reach                          | component membership (recipe 12), uses fan-in and fan-out (recipe 13), structural neighborhood (recipe 14) |
-| Measure structural and projection coverage              | census structural coverage (recipe 15), the projection-coverage upper bound (recipe 16)                    |
-| Read the architecture                                   | the architecture map (recipe 17), architecture crossings (recipe 32)                                       |
-| Weigh the decisions that shape it                       | the decision map (recipe 18), the decision register (recipe 31)                                            |
-| Reuse an architecture value                             | roles, layers and contexts (recipe 28)                                                                     |
-| Find keyed rules no example exercises                   | rule coverage (recipe 34)                                                                                  |
-| See what changed since a design pass                    | the design diff (recipe 35)                                                                                |
-| Compose a design pass's reading                         | the context bundle (recipe 36), the perspective filter (recipe 37)                                         |
-| Apply a change proposal                                 | the proposal check (recipe 38)                                                                             |
-| Slim a Spec its bound code now carries                  | slimming candidates (recipe 39)                                                                            |
-| Find files and components the anchors miss              | the curation report (recipe 40)                                                                            |
+| The task                                                       | Run                                                                                                        |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Pick work to build                                             | the build backlog (recipe 1); the design backlog (recipe 33) for designed, unbuilt Specs                   |
+| Find code ahead of intent                                      | the drift alarm (recipe 2)                                                                                 |
+| Read what a Spec guarantees and who verifies it                | Spec guarantees (recipe 3)                                                                                 |
+| Review a changeset                                             | changed-file impact (recipe 4), then the mention audit (recipe 22) over its scope                          |
+| Locate a term or a concept                                     | concept search (recipe 6); entry search (recipe 23) for the entry and its line                             |
+| Check a Spec's stated next rung before a readiness edit        | promotion preflight (recipe 9); the lower ladder (recipe 11) across the corpus                             |
+| Compare stated readiness with the floor                        | readiness divergence (recipe 7)                                                                            |
+| Read warnings, gaps and verifier health                        | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
+| Review a Pack                                                  | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
+| List open questions                                            | the open-question register (recipe 20)                                                                     |
+| See what a Spec rests on                                       | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
+| Change a Spec others rest on                                   | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
+| Check addresses written outside the Specs                      | address resolution (recipe 25)                                                                             |
+| List the signatures two parties share                          | pinned declarations (recipe 24)                                                                            |
+| Read a component and its reach                                 | component membership (recipe 12), uses fan-in and fan-out (recipe 13), structural neighborhood (recipe 14) |
+| Measure structural and projection coverage                     | census structural coverage (recipe 15), the projection-coverage upper bound (recipe 16)                    |
+| Read the architecture                                          | the architecture map (recipe 17), architecture crossings (recipe 32)                                       |
+| Check a corpus's architecture rules                            | the architecture walk (recipe 42)                                                                          |
+| Compare planned components with their realization              | planned against realized components (recipe 43)                                                            |
+| Weigh the decisions that shape it                              | the decision map (recipe 18), the decision register (recipe 31)                                            |
+| Reuse an architecture value                                    | roles, layers and contexts (recipe 28)                                                                     |
+| Find keyed rules no example exercises                          | rule coverage (recipe 34)                                                                                  |
+| See what changed since a design pass                           | the design diff (recipe 35)                                                                                |
+| Compose a design pass's reading                                | the context bundle (recipe 36), the perspective filter (recipe 37)                                         |
+| Apply a change proposal                                        | the proposal check (recipe 38)                                                                             |
+| Slim a Spec its bound code now carries                         | slimming candidates (recipe 39)                                                                            |
+| Find files and components the anchors miss                     | the curation report (recipe 40)                                                                            |
+| List a family of keyed values (limits, error messages, tables) | the key-family register (recipe 41)                                                                        |
 
 For structural questions, use component membership, uses fan-in and fan-out, structural
 neighborhood, census structural coverage, and the projection-coverage upper bound (recipes 12-16).
@@ -220,6 +224,13 @@ To iterate on a design pass after pass:
   carries: pinned declarations an implemented, verified Spec may drop, and the files and
   components the anchors miss, from an imports file `sdp build --imports` writes.
 
+For corpus architecture, the architecture walk (recipe 42) reads forbidden layer pairs and
+isolated contexts from `params.forbidden` and `params.isolated`, with optional `params.severity`.
+Its `{ findings }` answer can run as a rules file under `sdp validate --rules`. Planned against
+realized components (recipe 43) compares component design Specs with their satisfying anchors,
+listing unrealized designs, differing fields and unreadable values. Neither recipe adds a Protocol
+validator. Follow `sdp-authoring` for rules-file invocation and per-file parameter order.
+
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 
 ## The entry adapters
@@ -267,10 +278,12 @@ rows, and `leftOut` naming what `detail: true` adds (changed-file impact, recipe
 recipe 29; the design diff, recipe 35). To filter any shipped answer, run it inside your own body:
 
 ```sh
-pnpm --silent sdp:q "const answer = await (async () => { $(cat dist/recipes/29-pack-design.js) })(); return answer.members.filter((member) => member.blockingQuestions > 0)" --params '{"pack":"pack:design-iteration-v1"}' --json
+pnpm --silent sdp:q "const answer = await (async (params) => { $(cat dist/recipes/29-pack-design.js) })({ pack: params.pack }); return answer.members.filter((member) => member.blockingQuestions > 0)" --params '{"pack":"pack:design-iteration-v1"}' --json
 ```
 
-Keep your own part of such a body free of `$` and backticks, because the shell expands them.
+Pass the inner body only its recipe's parameters. An unknown parameter name replaces a shipped
+recipe's whole answer with `{ unknownParams, accepts }`, listing the unknown names and the names
+it takes. Keep your own part of such a body free of `$` and backticks, because the shell expands them.
 
 The graph is derived on every invocation, so a Spec you just authored is queryable immediately and
 no committed artifact answers in the graph's name. The sink writes nothing. It evaluates local

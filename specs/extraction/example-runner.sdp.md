@@ -17,6 +17,7 @@ relations:
 
 ## Behavior
 - rule: [#contractOrder] The core plans every contract step in authored order and runs it against the world the caller hands in; creating a fresh world per example is the adapter's lifecycle, never the core's.
+- rule: [#worldCleanup] Once the Vitest adapter creates a world, it awaits the optional `after` hook whether the steps pass or fail. A step failure stays the test's failure and an error from `after` is then discarded; when the steps pass, an error from `after` fails the test. A world factory that throws creates no world, so `after` does not run.
 - rule: [#oneHandlerPerStep] Duplicate step text within one example binds one handler, and every occurrence runs it; an occurrence that binds a slot to a different value is a conflicting re-binding, named at generation, and every occurrence runs with the first binding, because an example is one point.
 - rule: [#redStepNamesItself] A red step names itself before the assertion detail: the failure message leads with the step's natural reading — the Spec's own words with bound values inlined — and the original error is preserved, carried as `cause` when it cannot be re-messaged, and wrapped when the thrown value is not an error.
 - rule: A missing or stale step handler is a compile-time refusal rather than a silent skip: the bindings type covers every step and only the steps, so spec-side drift fails the typecheck instead of the run.

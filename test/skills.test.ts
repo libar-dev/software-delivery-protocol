@@ -304,6 +304,7 @@ describe("Protocol skill assets", () => {
         "mermaid",
         "new spec",
         "q",
+        "studio",
         "validate",
         "view",
       ].sort(),
@@ -600,8 +601,14 @@ const adopterClauses = [
   ["mention register source", /prose mentions from recipe 22/u],
   ["delta scope source", /a change's review scope from changed-file blast radius \(recipe 4\)/u],
   ["no quoted counts", /In prose, name the recipe and leave the number out/u],
-  ["checks only ruled homes", /sdp validate checks these homes and nothing your project adds/u],
-  ["adopter owns policy", /Keep a project policy,[^.]*as a script in your own repository/u],
+  ["operator-selected policy", /operator-selected rules file through sdp validate --rules PATH/u],
+  ["per-file policy parameters", /Each --params follows its own --rules/u],
+  [
+    "separate policy findings",
+    /Corpus findings name their rule and rules file and print apart from Protocol/u,
+  ],
+  ["policy failures", /any Protocol error, corpus error or failed rules file exits 1/u],
+  ["watch policy rereads", /each carrier cycle rereads the rules files/u],
   [
     "Constraints leading-prose exception",
     /A section may open with paragraphs, except Constraints, which takes its entries only/u,
@@ -762,6 +769,24 @@ describe("adopter rule meanings", () => {
     expect(sessions).toMatch(
       /They never authorize, block, scope, unlock, or advance delivery work/u,
     );
+  });
+});
+
+const readmeClauses = [
+  ["commit pin", /github:libar-dev\/software-delivery-protocol#<sha>/u],
+  ["npm script approval", /allowScripts/u],
+  ["npm git approval", /allow-git=root/u],
+  ["pnpm repository approval", /allowBuilds/u],
+  ["pnpm 10 exact approval", /onlyBuiltDependencies \(pnpm 10\)/u],
+  ["installed CLI check", /node_modules\/\.bin\/sdp --version/u],
+  ["recipe subject as params", /dist\/recipes\/25-address-resolution\.js\)" --params/u],
+] as const;
+
+describe("adopter install and upgrade guidance", () => {
+  it.each(readmeClauses)("the README teaches %s", (_clause, pattern) => {
+    const readme = readFileSync(join(repoRoot, "README.md"), "utf8");
+    // Keep underscores in executable paths while ignoring code spans and line wrapping.
+    expect(readme.replaceAll("`", "").replaceAll(/\s+/gu, " ")).toMatch(pattern);
   });
 });
 

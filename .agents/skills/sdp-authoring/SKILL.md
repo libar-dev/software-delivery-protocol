@@ -201,11 +201,25 @@ so it needs no extra tag, status key, or side table.
   passed; pass and fail stay in CI. Author no checked or verified status.
 - Derive a count, a register, or a review scope each time you need it: census counts from
   `sdp census`, open questions from recipe 20, one Spec's dependencies from recipe 21, prose
-  mentions from recipe 22, and a change's review scope from changed-file blast radius (recipe 4).
+  mentions from recipe 22, a family of Design and UI keys from the key-family register (recipe 41),
+  and a change's review scope from changed-file blast radius (recipe 4).
   In prose, name the recipe and leave the number out.
 
-`sdp validate` checks these homes and nothing your project adds. Keep a project policy, such as a
-required Design key or a naming rule, as a script in your own repository.
+Run a project policy, such as a required Design key or a naming rule, as an operator-selected
+rules file through `sdp validate --rules PATH [--params FORM]...`. The file is a local async
+JavaScript body with `g`, `graph`, `report` and `params`, returning `{ findings }`, as
+`spec:validation.corpus-rules` states. Each `--params` follows its own `--rules`; the query grammar
+admits JSON, `@PATH` and `KEY=@PATH`, and repeatable parameters merge within that file only:
+
+```sh
+pnpm exec sdp validate . --rules design/policy.js --params '{"requiredKey":"id"}' --rules node_modules/@libar-dev/software-delivery-protocol/dist/recipes/42-the-architecture-walk.js --params @design/architecture.json
+```
+
+Corpus findings name their rule and rules file and print apart from Protocol conformance and
+honesty findings. The corpus summary also counts failed files; any Protocol error, corpus error
+or failed rules file exits 1. Under `--watch`, each carrier cycle rereads the rules files, but a
+rules-file edit alone starts no cycle. The architecture walk is recipe 42; planned against
+realized components is recipe 43. These are corpus guidance, never Protocol validators.
 
 ### Say why a relation holds
 
@@ -501,10 +515,10 @@ coverage-unknown for the Markdown file. This repository binds its own skills exa
    The build emits one registrar per bindable example, named `<spec-id-path>.test.generated.ts`
    and placed beside the authored suite whose `specTest` anchor verifies that example; the Spec ID
    owns the filename, so one consolidated suite can bind many examples without collisions.
-   Repository generation also publishes the independent Design Review, census, Mermaid, and
-   Gherkin-shaped read roots. Use the repository generate/check scripts to certify the complete
-   projection suite; do not treat the Gherkin read root as an authored carrier. In an adopter,
-   each publisher leaves only its own root current, because every build first removes all four;
+   Repository generation also publishes the independent Design Review, census, Mermaid,
+   Gherkin-shaped read roots, and Studio pages. Use the repository generate/check scripts to certify
+   the complete projection suite; do not treat the Gherkin read root as an authored carrier. In an adopter,
+   each publisher leaves only its own root current, because every build first removes all five;
    run the publisher for the root you need to read.
 
 4. Author the oracle for the space and bind it with a top-level `specOracle` anchor whose `models`
