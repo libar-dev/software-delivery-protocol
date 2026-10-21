@@ -370,6 +370,12 @@ describe("Studio lenses", () => {
       "Architecture",
       "Tests",
       "Evidence",
+      "Queue",
+      "Questions",
+      "Decisions",
+      "Declarations",
+      "Backlog",
+      "Glossary",
     ]);
     const index = required(pages.find((p) => p.path === "index.html")).content;
     const packs = required(/<section id="packs">(.*?)<\/section>/u.exec(index)?.[1]);
@@ -901,53 +907,62 @@ it("documents the component and member fields recipe 17 adds", () => {
   ])
     expect(prose).toContain(`\`${name}\``);
 });
-it("evaluates each shipped recipe once for its assigned parameters and shares Pack totals", async () => {
-  const reader = fixture({
-    "parent.sdp.md": carrier(
-      "spec:probe.parent",
-      "behavior",
-      "{}",
-      "\n## Behavior\n- rule: Probe.\n",
-    ),
-    "pack.pack.sdp.md": "---\nid: pack:probe\nspecs: [spec:probe.parent]\n---\n# Probe Pack\n",
-  });
-  const calls: { number: number; params: unknown }[] = [];
-  const evaluate = bodyEvaluator.evaluateBodyWithReader;
-  const spy = vi
-    .spyOn(bodyEvaluator, "evaluateBodyWithReader")
-    .mockImplementation(async (source, input) => {
-      const value = await evaluate(source, input);
-      if (typeof value !== "function") throw new Error("Expected the recipe caller.");
-      const caller = value as (number: number, params: unknown) => Promise<unknown>;
-      return async (number: number, params: unknown) => {
-        calls.push({ number, params });
-        return caller(number, params);
-      };
+it.each([false, true])(
+  "evaluates each shipped recipe once for its assigned parameters and shares Pack totals, with base %s",
+  async (withBase) => {
+    const reader = fixture({
+      "parent.sdp.md": carrier(
+        "spec:probe.parent",
+        "behavior",
+        "{}",
+        "\n## Behavior\n- rule: Probe.\n",
+      ),
+      "pack.pack.sdp.md": "---\nid: pack:probe\nspecs: [spec:probe.parent]\n---\n# Probe Pack\n",
     });
-  try {
-    const report = validators.validateGraph(reader.graph);
-    const data = await createStudioData(reader, report);
-    expect(spy.mock.calls[0]?.[1].graph).toBe(reader.graph);
-    expect(spy.mock.calls[0]?.[1].report).toBe(report);
-    const expected = [
-      ...[17, 20, 24, 31, 33, 43, 44].map((number) => ({ number, params: {} })),
-      { number: 29, params: { pack: "pack:probe" } },
-      { number: 21, params: { spec: "spec:probe.parent" } },
-      { number: 30, params: { specs: ["spec:probe.parent"] } },
-      { number: 34, params: { spec: "spec:probe.parent" } },
-    ];
-    expect(calls).toEqual(expected);
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(data.packs[0]?.totals).toBe(
-      (data.recipes.packs.get("pack:probe") as { totals: unknown }).totals,
-    );
-    renderStudio(data);
-    renderStudio(data);
-    expect(calls).toEqual(expected);
-  } finally {
-    spy.mockRestore();
-  }
-});
+    const calls: { number: number; params: unknown }[] = [];
+    const evaluate = bodyEvaluator.evaluateBodyWithReader;
+    const spy = vi
+      .spyOn(bodyEvaluator, "evaluateBodyWithReader")
+      .mockImplementation(async (source, input) => {
+        const value = await evaluate(source, input);
+        if (typeof value !== "function") throw new Error("Expected the recipe caller.");
+        const caller = value as (number: number, params: unknown) => Promise<unknown>;
+        return async (number: number, params: unknown) => {
+          calls.push({ number, params });
+          return caller(number, params);
+        };
+      });
+    try {
+      const report = validators.validateGraph(reader.graph);
+      const data = await createStudioData(
+        reader,
+        report,
+        withBase ? { base: { graph: reader.graph, label: null }, runs: [] } : undefined,
+      );
+      expect(spy.mock.calls[0]?.[1].graph).toBe(reader.graph);
+      expect(spy.mock.calls[0]?.[1].report).toBe(report);
+      const expected = [
+        ...[17, 20, 24, 31, 33, 43, 44, 46, 51].map((number) => ({ number, params: {} })),
+        ...(withBase ? [{ number: 35, params: { base: reader.graph, detail: true } }] : []),
+        { number: 29, params: { pack: "pack:probe" } },
+        ...(withBase ? [{ number: 35, params: { base: reader.graph, pack: "pack:probe" } }] : []),
+        { number: 21, params: { spec: "spec:probe.parent" } },
+        { number: 30, params: { specs: ["spec:probe.parent"] } },
+        { number: 34, params: { spec: "spec:probe.parent" } },
+      ];
+      expect(calls).toEqual(expected);
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(data.packs[0]?.totals).toBe(
+        (data.recipes.packs.get("pack:probe") as { totals: unknown }).totals,
+      );
+      renderStudio(data);
+      renderStudio(data);
+      expect(calls).toEqual(expected);
+    } finally {
+      spy.mockRestore();
+    }
+  },
+);
 
 import { labelLines } from "../src/projections/studio/diagrams/index.js";
 it("keeps label lines bounded and orders member depths numerically with outside units last", () => {

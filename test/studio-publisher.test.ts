@@ -107,9 +107,15 @@ describe("Studio publication", () => {
       "architecture.html",
       "assets/studio.css",
       "assets/studio.js",
+      "backlog.html",
+      "decisions.html",
+      "declarations.html",
       "evidence.html",
+      "glossary.html",
       "index.html",
       "packs/probe.html",
+      "questions.html",
+      "queue.html",
       "search.html",
       "specs/probe.member.html",
       "tests.html",
@@ -315,7 +321,9 @@ describe("Studio publication", () => {
         studioAssets: c.assets,
       }),
     ).toBe(0);
-    expect(SDP_HELP_TEXT).toContain("sdp studio [root] [--exclude PATH]... [--check-clean]");
+    expect(SDP_HELP_TEXT).toContain(
+      "sdp studio [root] [--exclude PATH]... [--base PATH [--base-label TEXT]] [--check-clean]",
+    );
     expect(SDP_HELP_TEXT).toContain("generated/spec-studio/");
     expect(await runSdpCli(["studio", c.root, "--out", "elsewhere"], c.capture.output)).toBe(1);
     expect(await runSdpCli(["studio", c.root, "--watch"], c.capture.output)).toBe(1);

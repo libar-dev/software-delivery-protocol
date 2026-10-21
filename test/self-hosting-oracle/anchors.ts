@@ -21,6 +21,97 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.studio-registers-blocking-first",
+    nodeType: "Anchor",
+    file: "test/studio-s3.test.ts",
+    constant: "questionsAnchor",
+    site: "registerBlockingFirst(",
+  },
+  {
+    id: "test:protocol.studio-queue-dependency-first",
+    nodeType: "Anchor",
+    file: "test/studio-s3.test.ts",
+    constant: "queueAnchor",
+    site: "registerDependencyFirst(",
+  },
+  {
+    id: "test:protocol.studio-diff-changed-entry",
+    nodeType: "Anchor",
+    file: "test/studio-s3.test.ts",
+    constant: "diffAnchor",
+    site: "registerChangedEntry(",
+  },
+  {
+    id: "test:protocol.studio-glossary-same-word-twice",
+    nodeType: "Anchor",
+    file: "test/studio-s3.test.ts",
+    constant: "glossaryAnchor",
+    site: "registerSameWordTwice(",
+  },
+  {
+    id: "oracle:protocol.studio-registers",
+    nodeType: "Anchor",
+    file: "test/studio-s3.test.ts",
+    constant: "registersOracle",
+    site: "function expectedRegisters(",
+  },
+  {
+    id: "oracle:protocol.studio-owner-queue",
+    nodeType: "Anchor",
+    file: "test/studio-s3.test.ts",
+    constant: "queueOracle",
+    site: "function expectedQueue(",
+  },
+  {
+    id: "oracle:protocol.studio-diff-page",
+    nodeType: "Anchor",
+    file: "test/studio-s3.test.ts",
+    constant: "diffOracle",
+    site: "function expectedDiff(",
+  },
+  {
+    id: "oracle:protocol.studio-glossary-page",
+    nodeType: "Anchor",
+    file: "test/studio-s3.test.ts",
+    constant: "glossaryOracle",
+    site: "function expectedGlossary(",
+  },
+  {
+    id: "impl:protocol.studio-registers",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/registers-page.ts",
+    site: "export function questionsPage(",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-owner-queue",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/queue-page.ts",
+    site: "export function queuePage(",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-diff",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/diff-page.ts",
+    site: "export function diffPage(",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-glossary",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/glossary-page.ts",
+    site: "export function glossaryPage(",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-base-input",
+    nodeType: "CodeNode",
+    file: "src/cli/studio-inputs.ts",
+    site: "export function readStudioBase(",
+    role: "codec",
+  },
+  {
     id: "oracle:protocol.kind-evidence",
     nodeType: "Anchor",
     file: "test/self-hosting-validators.test.ts",
@@ -3607,6 +3698,38 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  [
+    "test:protocol.studio-registers-blocking-first",
+    "verifies",
+    "spec:consumers.spec-studio.registers.blocking-first",
+  ],
+  [
+    "test:protocol.studio-queue-dependency-first",
+    "verifies",
+    "spec:consumers.spec-studio.owner-queue.dependency-first",
+  ],
+  [
+    "test:protocol.studio-diff-changed-entry",
+    "verifies",
+    "spec:consumers.spec-studio.diff-page.changed-entry",
+  ],
+  [
+    "test:protocol.studio-glossary-same-word-twice",
+    "verifies",
+    "spec:consumers.spec-studio.glossary-page.same-word-twice",
+  ],
+  ["oracle:protocol.studio-registers", "models", "spec:consumers.spec-studio.registers"],
+  ["oracle:protocol.studio-owner-queue", "models", "spec:consumers.spec-studio.owner-queue"],
+  ["oracle:protocol.studio-diff-page", "models", "spec:consumers.spec-studio.diff-page"],
+  ["oracle:protocol.studio-glossary-page", "models", "spec:consumers.spec-studio.glossary-page"],
+  ["impl:protocol.studio-registers", "satisfies", "spec:consumers.spec-studio.registers"],
+  ["impl:protocol.studio-owner-queue", "references", "spec:consumers.spec-studio.owner-queue"],
+  ["impl:protocol.studio-diff", "satisfies", "spec:consumers.spec-studio.diff-page"],
+  ["impl:protocol.studio-glossary", "satisfies", "spec:consumers.spec-studio.glossary-page"],
+  ["impl:protocol.studio-base-input", "references", "spec:consumers.spec-studio.data.inputs"],
+  ["impl:protocol.studio-frame", "references", "spec:consumers.spec-studio.navigation"],
+  ["impl:protocol.studio-index-page", "references", "spec:consumers.spec-studio.navigation"],
+
   ["oracle:protocol.kind-evidence", "models", "spec:validation.kind-evidence"],
   ["oracle:protocol.open-question-fields", "models", "spec:model.open-question-fields"],
   ["oracle:protocol.slot-notation", "models", "spec:carrier.slot-notation"],
@@ -4950,6 +5073,12 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.studio-registers",
+  "impl:protocol.studio-owner-queue",
+  "impl:protocol.studio-diff",
+  "impl:protocol.studio-glossary",
+  "impl:protocol.studio-base-input",
+
   "impl:protocol.structural-self-binding",
   "impl:protocol.validator-probe-table",
   "impl:protocol.validator-self-testing",

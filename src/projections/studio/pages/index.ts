@@ -1,3 +1,7 @@
+import { questionsPage, decisionsPage, declarationsPage, backlogPage } from "./registers-page.js";
+import { queuePage } from "./queue-page.js";
+import { glossaryPage } from "./glossary-page.js";
+import { diffPage } from "./diff-page.js";
 import { architecturePage } from "./architecture-page.js";
 import { testsPage } from "./tests-page.js";
 import { evidencePage } from "./evidence-page.js";
@@ -20,6 +24,17 @@ export function renderStudio(data: StudioData): readonly StudioPage[] {
     { path: "tests.html", content: testsPage({ data, path: "tests.html" }) },
     { path: "evidence.html", content: evidencePage({ data, path: "evidence.html" }) },
     { path: "search.html", content: searchPage({ data, path: "search.html" }) },
+    ...(
+      [
+        ["questions.html", questionsPage],
+        ["decisions.html", decisionsPage],
+        ["declarations.html", declarationsPage],
+        ["backlog.html", backlogPage],
+        ["queue.html", queuePage],
+        ["glossary.html", glossaryPage],
+        ...(data.inputs.base === undefined ? [] : [["diff.html", diffPage] as const]),
+      ] as const
+    ).map(([path, render]) => ({ path, content: render({ data, path }) })),
     ...data.packs.map(({ context, totals }) => {
       const path = pagePath(context.id);
       if (path === null) throw new Error(`Pack has no Studio path: ${context.id}`);

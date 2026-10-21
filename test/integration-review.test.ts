@@ -7,15 +7,6 @@ import { expect, it } from "vitest";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-it("documents S3's hand-off for the already shipped Studio recipes 46 and 51", () => {
-  const source = readFileSync(join(root, "src/projections/studio/recipes.ts"), "utf8");
-  expect(source).toMatch(/\/\/ Recipes 46 and 51 ship; lane S3 adds them/);
-  for (const number of [46, 51]) {
-    const catalog = readFileSync(join(root, "docs/agent-surface/recipes.md"), "utf8");
-    expect(catalog).toMatch(new RegExp(`^## ${String(number)}\\. `, "mu"));
-  }
-});
-
 it("cites the carrying Specs for every marker form in the glossary", () => {
   const glossary = readFileSync(join(root, "CONTEXT.md"), "utf8");
   const marker = glossary.split("\n").find((line) => line.startsWith("| **marker** |"));

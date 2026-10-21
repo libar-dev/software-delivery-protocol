@@ -1150,9 +1150,11 @@ describe("the agent-surface recipe corpus", () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(13)));
     const rows = asArray(result.components).map(asRecord);
     const owners = new Map<string, string>(expectedMemberOfEdges);
-    const expectedUses = expectedUsesEdges
-      .map(([from, to]) => ({ from: owners.get(from) ?? from, to: owners.get(to) ?? to }))
-      .filter((edge) => edge.from !== edge.to);
+    // Recipe 13 retains uses within a component when it collapses member identities.
+    const expectedUses = expectedUsesEdges.map(([from, to]) => ({
+      from: owners.get(from) ?? from,
+      to: owners.get(to) ?? to,
+    }));
 
     expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual([...expectedComponentIds].sort());
 

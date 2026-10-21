@@ -1,3 +1,4 @@
+import { specChangeNote } from "./diff-page.js";
 import { SPEC_READINESS } from "../../../model/descriptors.js";
 import { SPEC_SECTION_NAMES } from "../../../model/sections.js";
 import type { SpecContext, RelationEnd } from "../../../reader/reader.js";
@@ -125,11 +126,27 @@ function sections(ctx: PageContext, spec: SpecContext): string {
         const questions = spec.designColumns.openQuestions;
         if (questions.length)
           body += `<h3>Open questions</h3><ul class="questions">${questions.map((q) => `<li${q.key === undefined ? "" : ` id="question.${escape(q.key)}"`}>${q.blocking ? "blocking" : "non-blocking"}${q.key === undefined ? "" : ` · ${code(`question.${q.key}`)}${copy(`${spec.id}#question.${q.key}`)}`}${lineLabel(q.line)} · ${text(ctx, q.question)}${questionFields(ctx, q, (v) => text(ctx, v))}</li>`).join("")}</ul>`;
+      } else if (name === "model") {
+        const model = spec.sections?.model;
+        body += `<dl>${Object.entries(model?.terms ?? {})
+          .map(([term, definition]) => {
+            const key = Object.keys(model?.termKeys ?? {}).find(
+              (k) => model?.termKeys?.[k] === term,
+            );
+            return entry(
+              ctx,
+              spec,
+              term,
+              definition,
+              key === undefined ? undefined : `term.${key}`,
+            );
+          })
+          .join("")}</dl>`;
       } else {
         if (name === "verification" && typeof record.mode === "string")
           title += ` · ${record.mode}`;
         body += `<dl>${Object.entries(record)
-          .filter(([key]) => key !== "description" && !(name === "model" && key === "termKeys"))
+          .filter(([key]) => key !== "description")
           .map(([key, value]) => {
             const address =
               (name === "design" || name === "ui") && /^[a-z][A-Za-z0-9]*$/u.test(key)
@@ -182,7 +199,7 @@ export function specPage(ctx: PageContext, spec: SpecContext): string {
   const divergence = dishonest
     ? `<p class="divergence">stated ${escape(spec.statedReadiness)} exceeds the floor ${escape(spec.derivedReadiness ?? "below idea")}.${firstUnmet === undefined ? "" : ` First unmet clause: ${code(firstUnmet.clauseId)} · ${escape(firstUnmet.description)}`}</p>`
     : "";
-  const header = `<header class="page-head"><h1>${codeSpans(spec.title ?? spec.id)}</h1><div class="ids"><span>${code(spec.id)}${copy(spec.id)}</span><span>${escape(spec.kindDisplayLabel ?? spec.specKind)} · ${escape(spec.altitude)}</span><span class="rungs">${rungLine(spec.statedReadiness, spec.derivedReadiness)}</span></div>${divergence}${holds(ctx, spec.statedNextRung, spec.statedNextRungFailures)}<p>Packs: ${spec.packs.length ? spec.packs.map((id) => link(ctx, id)).join(", ") : "none"}</p><p>Design: ${count(d.entries, "design entry", "design entries", false)} · ${count(d.declarations, "pinned declaration", "pinned declarations", false)} · ${count(d.decisions.length, "decision", "decisions", false)}</p><p><a href="#findings">Findings: ${count(findings.filter((f) => f.severity === "error").length, "error", "errors", false)}, ${count(findings.filter((f) => f.severity === "warning").length, "warning", "warnings", false)}</a></p><p>${code(spec.file)}${copy(spec.file)}</p></header>`;
+  const header = `<header class="page-head"><h1>${codeSpans(spec.title ?? spec.id)}</h1><div class="ids"><span>${code(spec.id)}${copy(spec.id)}</span><span>${escape(spec.kindDisplayLabel ?? spec.specKind)} · ${escape(spec.altitude)}</span><span class="rungs">${rungLine(spec.statedReadiness, spec.derivedReadiness)}</span></div>${specChangeNote(ctx, spec.id)}${divergence}${holds(ctx, spec.statedNextRung, spec.statedNextRungFailures)}<p>Packs: ${spec.packs.length ? spec.packs.map((id) => link(ctx, id)).join(", ") : "none"}</p><p>Design: ${count(d.entries, "design entry", "design entries", false)} · ${count(d.declarations, "pinned declaration", "pinned declarations", false)} · ${count(d.decisions.length, "decision", "decisions", false)}</p><p><a href="#findings">Findings: ${count(findings.filter((f) => f.severity === "error").length, "error", "errors", false)}, ${count(findings.filter((f) => f.severity === "warning").length, "warning", "warnings", false)}</a></p><p>${code(spec.file)}${copy(spec.file)}</p></header>`;
   const summary = `<p class="prose">${count(d.openQuestions.length, "open question")} and ${count(d.blockingQuestions, "blocking question", "blocking questions", false)}; implementation binding ${present(spec.implementations.length > 0)}, verifier binding ${present(spec.deliveryFacts.includes("has-verifier"))}, and expected-outcome oracle ${present(spec.oracle !== undefined)}.</p>`;
   return frame(
     ctx,
