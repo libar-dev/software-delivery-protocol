@@ -817,3 +817,56 @@ it("reads each owner question's provisional reading from its reader Spec and key
   expect(required(rows.find((row) => row.includes("No reading?")))).not.toContain("Provisional:");
   expect(JSON.stringify(queue)).toBe(before);
 });
+
+it("renders a keying proposal as one line per keyed entry and readable changed rule text", async () => {
+  const root = corpus({
+    "probe.sdp.md": carrier(
+      "spec:probe.keying",
+      "\n## Behavior\n- rule: First rule.\n- rule: Second rule.\n",
+    ),
+  });
+  const base = extract({ root }).graph;
+  const path = join(root, "probe.sdp.md");
+  writeFileSync(
+    path,
+    readFileSync(path, "utf8")
+      .replace("- rule: First rule.", "- rule: [#first] First rule.")
+      .replace("- rule: Second rule.", "- rule: [#second] Revised second rule."),
+  );
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: "Before keying" },
+    runs: [],
+  });
+  const html = main(content(renderStudio(data), "diff.html"));
+  const entries = [...html.matchAll(/<div class="entry">(.*?)<\/div>/gsu)].map((m) => m[1] ?? "");
+  expect(entries).toHaveLength(2);
+  expect(entries[0]).toBe(
+    "<p><code>rule.first</code> · keyed · Base: none · Now: <code>spec:probe.keying#rule.first</code></p>",
+  );
+  expect(entries[1]).toContain("<b>Base</b><p>Second rule.</p>");
+  expect(entries[1]).toContain("<b>Now</b><p>Revised second rule.</p>");
+  expect(entries[1]).not.toMatch(/<pre>|&quot;list&quot;|&quot;text&quot;/u);
+});
+
+it("renders changed list values as lists instead of raw JSON arrays", async () => {
+  const root = corpus({
+    "probe.sdp.md": carrier("spec:probe.lists").replace(
+      "- outcome: Read the design.",
+      "- outcome: Read the design.\n- risk: First risk.\n- risk: Second risk.",
+    ),
+  });
+  const base = extract({ root }).graph;
+  const path = join(root, "probe.sdp.md");
+  writeFileSync(path, readFileSync(path, "utf8").replace("Second risk.", "Changed risk `<script>`."));
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: null },
+    runs: [],
+  });
+  const html = main(content(renderStudio(data), "diff.html"));
+  expect(html).toContain(
+    '<ul class="plain-list"><li><pre>First risk.</pre></li><li><pre>Second risk.</pre></li></ul>',
+  );
+  expect(html).toContain("Changed risk `&lt;script&gt;`.");
+  expect(html).not.toContain("&quot;risks&quot;");
+  expect(html).not.toContain("<script>");
+});

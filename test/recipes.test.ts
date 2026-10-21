@@ -7278,3 +7278,74 @@ it("recipe 49 renders the panel memo from its catalog body and refuses a malform
     await runRecipe(recipeByOrdinal(49), { proposal: { ...proposal, reason: "two\nlines" } }),
   ).toEqual({ schemaProblems: [{ path: "$.reason", problem: "Expected one line." }], memo: null });
 });
+
+it("reports text-preserving rule and flow key changes apart from rewording", async () => {
+  const root = mkdtempSync(join(tmpdir(), "sdp-keying-diff-"));
+  const path = join(root, "probe.sdp.md");
+  const write = (rules: string) => {
+    writeFileSync(
+      path,
+      `---\nid: spec:probe.keying\nkind: behavior\naltitude: story\nreadiness: scoped\nrelations: {}\n---\n# Keying probe\n\n## Intent\n- outcome: Review key changes.\n\n## Behavior\n${rules}\n`,
+    );
+  };
+  try {
+    write("- rule: First rule.\n- rule: Second rule.\n- flow: [#oldFlow] One flow.");
+    const base = extract({ root }).graph;
+    write(
+      "- rule: [#first] First rule.\n- rule: [#second] Revised second rule.\n- flow: [#newFlow] One flow.",
+    );
+    const head = extract({ root });
+    const diff = await runRecipe(recipeByOrdinal(35), { base, detail: true }, head);
+    expect(asRecord(diff).specs).toEqual({
+      added: [],
+      removed: [],
+      changed: [
+        {
+          id: "spec:probe.keying",
+          parts: [
+            { part: "rule.first", change: "keyed", from: null, to: "spec:probe.keying#rule.first" },
+            {
+              part: "rule.newFlow",
+              change: "keyed",
+              from: "spec:probe.keying#rule.oldFlow",
+              to: "spec:probe.keying#rule.newFlow",
+            },
+            {
+              part: "rule.second",
+              change: "changed",
+              from: { list: "rules", text: "Second rule." },
+              to: { list: "rules", text: "Revised second rule." },
+            },
+          ],
+        },
+      ],
+    });
+    expect(await runRecipe(recipeByOrdinal(35), { base, detail: true }, head)).toEqual(diff);
+    write("- rule: First rule.\n- rule: [#second] Revised second rule.\n- flow: One flow.");
+    const unkeyed = await runRecipe(
+      recipeByOrdinal(35),
+      { base: head.graph, detail: true },
+      extract({ root }),
+    );
+    expect(asRecord(unkeyed).specs).toEqual({
+      added: [],
+      removed: [],
+      changed: [
+        {
+          id: "spec:probe.keying",
+          parts: [
+            { part: "rule.first", change: "keyed", from: "spec:probe.keying#rule.first", to: null },
+            {
+              part: "rule.newFlow",
+              change: "keyed",
+              from: "spec:probe.keying#rule.newFlow",
+              to: null,
+            },
+          ],
+        },
+      ],
+    });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

@@ -3102,23 +3102,9 @@ const partsOf = (node, value) => {
       if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
         ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
-      const { behavior, crossListOrder } = behaviorOf(content);
+      const { behavior } = behaviorOf(content);
       const { rules, flows, ruleKeys, ...rest } = behavior;
       if (Object.keys(rest).length) put(section, rest);
-      const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
-      if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
-      const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
-      const positions = new Map(Object.keys(keys).map((key, position) => [key, position]));
-      for (const [list, items] of [["rules", rules], ["flows", flows]]) {
-        const unkeyed = [];
-        let listPosition = 0;
-        (items ?? []).forEach((entry, index) => {
-          const key = entries.get(`${list}[${index}]`);
-          if (key === undefined) unkeyed.push(entry);
-          else parts.set(`rule.${key}`, { value: { list, text: entry }, position: positions.get(key), listPosition: listPosition++ });
-        });
-        if (unkeyed.length) put(`behavior.${list}`, items);
-      }
     } else if (section === "model") {
       const { terms, ...rest } = content;
       if (Object.keys(rest).length) put(section, rest);
@@ -3127,6 +3113,54 @@ const partsOf = (node, value) => {
   }
   return parts;
 };
+const rulesOf = (node) => {
+  const { behavior, crossListOrder } = behaviorOf(node.sections?.behavior ?? {});
+  const keys = unsupported.has("ruleKeys") ? {} : behavior.ruleKeys ?? {};
+  const paths = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
+  if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
+  return ["rules", "flows"].flatMap((list) => (behavior[list] ?? []).map((text, index) => {
+    const key = paths.get(`${list}[${index}]`) ?? null;
+    return { list, text, key, index, position: key === null ? index : Object.keys(keys).indexOf(key) };
+  }));
+};
+const ruleChanges = (id, a, b) => {
+  const usedA = new Set(), usedB = new Set(), pairs = [];
+  const match = (accept) => {
+    a.forEach((from, i) => {
+      if (usedA.has(i)) return;
+      const j = b.findIndex((to, j) => !usedB.has(j) && accept(from, to));
+      if (j < 0) return;
+      usedA.add(i); usedB.add(j); pairs.push([from, b[j]]);
+    });
+  };
+  // Text survives keying and reordering. Prefer the same key for repeated wording.
+  match((from, to) => from.text === to.text && from.key === to.key);
+  match((from, to) => from.text === to.text && from.list === to.list);
+  match((from, to) => from.text === to.text);
+  match((from, to) => from.key !== null && from.key === to.key);
+  // Remaining anonymous entries pair in list order, including an edit made while keying.
+  match((from, to) => from.list === to.list && (from.key === null || to.key === null));
+  a.forEach((from, i) => { if (!usedA.has(i)) pairs.push([from, null]); });
+  b.forEach((to, i) => { if (!usedB.has(i)) pairs.push([null, to]); });
+  const address = (entry) => entry?.key ? `${id}#rule.${entry.key}` : null;
+  const value = (entry) => entry === null ? null : { list: entry.list, text: entry.text };
+  return pairs.flatMap(([from, to]) => {
+    const entry = to ?? from, key = to?.key ?? from?.key ?? null;
+    const part = key === null ? `behavior.${entry.list}[${entry.index}]` : `rule.${key}`;
+    const peers = pairs.filter(([a, b]) => a !== null && b !== null && a.list === b.list &&
+      (from?.key === null ? a.list === from.list : a.key !== null && a.key === b.key && (!unordered.has(id) || a.list === from?.list)));
+    const position = (entry, side) => peers.filter((pair) => {
+      const other = pair[side];
+      return (entry.key === null || unordered.has(id) ? other.index < entry.index : other.position < entry.position);
+    }).length;
+    const change = from === null ? "added" : to === null ? "removed"
+      : from.text !== to.text ? "changed" : from.key !== to.key ? "keyed"
+      : from.list !== to.list || position(from, 0) !== position(to, 1) ? "moved" : null;
+    return change === null ? [] : [{ part, change,
+      from: change === "keyed" ? address(from) : value(from),
+      to: change === "keyed" ? address(to) : value(to) }];
+  });
+};
 const ids = [...new Set([...before.keys(), ...after.keys()])].filter((id) => allowed === null || allowed.has(id)).sort();
 const added = ids.filter((id) => !before.has(id));
 const removed = ids.filter((id) => !after.has(id));
@@ -3134,17 +3168,16 @@ const changed = [];
 for (const id of ids) {
   if (!before.has(id) || !after.has(id)) continue;
   const a = partsOf(before.get(id), base), b = partsOf(after.get(id), graph);
-  // Without order across rules and flows on one side, keyed entries compare by order within each list.
-  const order = unordered.has(id) ? "listPosition" : "position";
+  const parts = ruleChanges(id, rulesOf(before.get(id)), rulesOf(after.get(id)));
   if (unordered.has(id)) diagnostics.push({ part: "ruleOrder", id, problem: "One graph keeps no order across rules and flows; keyed entries compare within each list." });
-  const parts = [];
   for (const part of [...new Set([...a.keys(), ...b.keys()])].sort()) {
     const from = a.get(part), to = b.get(part);
-    const position = (entry) => part.startsWith("rule.") ? entry[order] : entry.position;
+    const position = (entry) => entry.position;
     const change = !from ? "added" : !to ? "removed" : !same(from.value, to.value) ? "changed"
       : position(from) !== position(to) ? "moved" : null;
     if (change !== null) parts.push({ part, change, from: from?.value ?? null, to: to?.value ?? null });
   }
+  parts.sort((a, b) => a.part < b.part ? -1 : a.part > b.part ? 1 : 0);
   if (parts.length) changed.push({ id, parts: detail === true ? parts : parts.map((entry) => entry.part) });
 }
 const delta = (a, b) => ({ added: [...new Set(b)].filter((id) => !a.includes(id)).sort(), removed: [...new Set(a)].filter((id) => !b.includes(id)).sort() });
@@ -3180,12 +3213,24 @@ return { base: { schemaVersion: base.schemaVersion, specs: ids.filter((id) => be
 ```
 
 `specs` reports declared intent. A part is an envelope field, narrative, section, relation target,
-or keyed Design, UI, question, rule or model term. A list with an unkeyed entry also compares as a whole, including its keyed entries, so an
-anonymous entry moving around a keyed one remains visible. A keyed entry
-with unchanged value and a different position among its section's keyed entries is `moved`.
-Keyed rule values include their owning list, `rules` or `flows`, so a rule becoming a flow changes
-its value at the same address. Changed values take precedence over order. Line changes and object property serialization order
+or keyed Design, UI, question, rule or model term. Rule and flow entries match first by exact
+text, preferring the same key for repeated wording, then by retained key. Remaining anonymous
+entries pair in list order, so adding a key while rewording reports one `changed` entry.
+Unchanged text with an added, removed or renamed key reports one `keyed` entry. Its `from` and
+`to` are the old and new addresses, with `null` meaning none. A text edit is `changed`; an
+unchanged entry that changes position or moves between rules and flows is `moved`. Other
+unkeyed collections compare as a whole. Line changes and object property serialization order
 alone do not change intent.
+
+For a probe whose two rules were keyed and whose second rule was also reworded, the detailed
+`specs.changed` answer is:
+
+```json
+[{ "id": "spec:probe.keying", "parts": [
+  { "part": "rule.first", "change": "keyed", "from": null, "to": "spec:probe.keying#rule.first" },
+  { "part": "rule.second", "change": "changed", "from": { "list": "rules", "text": "Second rule." }, "to": { "list": "rules", "text": "Revised second rule." } }
+] }]
+```
 
 `packs` reports membership additions, removals and relative order changes among retained members.
 `bindings` keeps anchor-derived changes apart, with added and removed ids for realizing units,

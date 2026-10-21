@@ -208,10 +208,10 @@ describe("iteration loop: design diff", () => {
             to: { list: "rules", text: "Edited first rule." },
           },
           {
-            part: "behavior.rules",
+            part: "behavior.rules[1]",
             change: "changed",
-            from: ["First rule.", "An unkeyed rule."],
-            to: ["Edited first rule.", "An edited unkeyed rule."],
+            from: { list: "rules", text: "An unkeyed rule." },
+            to: { list: "rules", text: "An edited unkeyed rule." },
           },
         ]),
       );
@@ -459,7 +459,7 @@ describe("iteration loop: design diff", () => {
       const diff = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
       expect(diff.specs.changed.find((row) => row.id === "spec:probe.a")?.parts).toContainEqual({
         part: "rule.first",
-        change: "changed",
+        change: "moved",
         from: { list: "rules", text: "First rule." },
         to: { list: "flows", text: "First rule." },
       });
@@ -673,10 +673,7 @@ describe("iteration loop: design diff", () => {
         later.specs.changed
           .find((row) => row.id === "spec:probe.a")
           ?.parts.map((row) => [row.part, row.change]),
-      ).toEqual([
-        ["behavior.rules", "changed"],
-        ["rule.first", "changed"],
-      ]);
+      ).toEqual([["rule.first", "changed"]]);
       const recheck = await runRecipe<ProposalCheck>(38, { base, proposal }, changed);
       expect(recheck.changes[0]?.scope.map((row) => row.moved)).toEqual([true, false, true]);
     });
@@ -709,7 +706,7 @@ describe("iteration loop: design diff", () => {
           "- rule: [#first] First rule.",
           "- rule: [#first] First rule.\n- rule: [#added] Added rule.",
         ),
-      ).toEqual({ "behavior.rules": "changed", "rule.added": "added" });
+      ).toEqual({ "rule.added": "added" });
       // A rule removed while two flows swap still shows both flows moved.
       expect(
         await partsOf(
@@ -717,7 +714,6 @@ describe("iteration loop: design diff", () => {
           "- flow: [#second] Second flow.\n- flow: [#last] Last flow.",
         ),
       ).toEqual({
-        "behavior.rules": "changed",
         "rule.first": "removed",
         "rule.last": "moved",
         "rule.second": "moved",
@@ -2109,7 +2105,7 @@ describe("iteration loop: example enablement", () => {
 });
 
 describe("iteration loop: anonymous collection order", () => {
-  it("compares whole mixed collections when an unkeyed entry moves around a keyed entry", async () => {
+  it("compares rule order by text and other anonymous collections as a whole", async () => {
     await withCorpus(async (root) => {
       edit(
         root,
@@ -2138,7 +2134,7 @@ describe("iteration loop: anonymous collection order", () => {
           parts: row.parts.map((part) => part.part),
         })),
       ).toEqual([
-        { id: "spec:probe.a", parts: ["behavior.rules"] },
+        { id: "spec:probe.a", parts: ["behavior.rules[0]"] },
         { id: "spec:probe.b", parts: ["intent.openQuestions"] },
       ]);
       const check = await runRecipe<ProposalCheck>(

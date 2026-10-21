@@ -2860,8 +2860,8 @@ export const consumersSpecs = [
           "Two graphs written by different engine versions are compared on what both carry; the result reports each side's schema version, and a difference is a diagnostic in the result, never a refusal.",
           "It reports the Specs added and removed, and for a Spec present in both graphs the changes to its title, kind, altitude, stated readiness, relations, narrative and each section.",
           "Inside the Design and UI sections, the open questions and any other section whose entries carry keys, it compares keyed entries by key and reports each as added, removed, changed in value or moved in order.",
-          "An unkeyed entry has no identity across the two graphs, neither its position nor its text, so it is compared as part of its whole section.",
-          "A keyed rule or flow compares with its owning list as part of its value, so a rule becoming a flow is changed; when one graph keeps no order across rules and flows, keyed entries compare by order within each list and a `ruleOrder` diagnostic names the Spec.",
+          "Rule and flow entries match first by unchanged text, preferring the same key for repeated wording, then by retained key; remaining entries with an unkeyed side pair in list order. Other unkeyed entries have no identity across the two graphs and compare as part of their whole section.",
+          "A rule or flow with unchanged text whose key was added, removed or changed is one `keyed` change naming its old and new address, or none; only a text change is `changed`. An unchanged entry moving between rules and flows is `moved`; when one graph keeps no order across rules and flows, keyed entries compare by order within each list and a `ruleOrder` diagnostic names the Spec.",
           "It reports changes to Pack membership and order, and to the code units, verifiers and delivery facts bound to each Spec, kept apart from the authored changes because they derive from anchors.",
           "A comparison states facts about the two graphs and confers nothing. It grants no approval, raises no staleness flag, moves no readiness and never records that a pass happened.",
         ],
@@ -2872,11 +2872,11 @@ export const consumersSpecs = [
         diffShape:
           "`{ base: { schemaVersion, specs }, head: { schemaVersion, specs }, diagnostics, totals, specs: { added: [id], removed: [id], changed }, packs, bindings, leftOut }`, where `totals` counts each list and `diagnostics` lists schema-version differences, parts outside the common schema, a Pack absent from both graphs, and Specs compared without order across rules and flows; `base.specs` and `head.specs` count the Specs of the comparison scope present on each side, the scope being every Spec or, with `pack`, the Pack's members in either graph, while the top-level `specs` object carries the change lists.",
         changedSpecRow:
-          "`{ id, parts: [part] }` in the summary and `{ id, parts: [{ part, change, from, to }] }` with `detail: true`; `change` is `added`, `removed`, `changed` or `moved`, and `from` and `to` carry the values on each side.",
+          "`{ id, parts: [part] }` in the summary and `{ id, parts: [{ part, change, from, to }] }` with `detail: true`; `change` is `added`, `removed`, `changed`, `moved` or `keyed`. For `keyed`, `from` and `to` carry the old and new entry addresses, `null` meaning none; other changes carry the values on each side, a rule or flow value as `{ list, text }`. A text change while adding a key is one `changed` entry.",
         diffParts:
-          "a part is `title`, `specKind`, `altitude`, `statedReadiness`, `narrative`, `relation.<type>:<target>`, a keyed entry as `design.<key>`, `ui.<key>`, `question.<key>`, `rule.<key>` or `term.<term>`, an unkeyed list as `behavior.rules`, `behavior.flows` or `intent.openQuestions`, and any other section as its name.",
+          "a part is `title`, `specKind`, `altitude`, `statedReadiness`, `narrative`, `relation.<type>:<target>`, a keyed entry as `design.<key>`, `ui.<key>`, `question.<key>`, `rule.<key>` or `term.<term>`, an unkeyed rule or flow as `behavior.rules[<index>]` or `behavior.flows[<index>]`, using its current index or its base index when removed, an unkeyed question list as `intent.openQuestions`, and any other section as its name.",
         movedEntry:
-          "a keyed entry whose value is unchanged and whose position among the keyed entries of its section changed is `moved`; an entry whose value changed is `changed` whatever its position.",
+          "a keyed entry whose value is unchanged and whose position among retained keyed entries of its section changed is `moved`; an entry whose value changed is `changed` whatever its position. For rules and flows, unchanged text with a different key takes `keyed` precedence, then a list change or relative order change among retained entries is `moved`; anonymous entries compare order within their list. Adding or removing a key alone moves no other entry.",
         packRows:
           "`packs` rows are `{ id, change, membersAdded, membersRemoved, reordered }` for each Pack added, removed or changed in membership or order.",
         bindingRows:
@@ -5903,7 +5903,7 @@ export const consumersSpecs = [
         rules: [
           "The page set holds `diff.html` only when the build was given a base graph; without one, no page, link or change note names a diff.",
           "The page opens by naming its input: the base graph, its label when the build was given one, its schema version and its Spec count beside the built graph's, and a sentence that the comparison reads the two graphs only.",
-          "The page renders recipe 35's answer with `detail: true` over the whole corpus, in sections in this order: the totals as sentences; the Specs added, linked; the Specs removed, as their ids in text, since no page holds them; the Specs changed, each linked, with each changed part, its change in words, and for a changed value the base value and the built value as text, one above the other; the Packs whose membership or order changed; the bindings changed, kept apart and headed as derived from anchors; and the diagnostics.",
+          "The page renders recipe 35's answer with `detail: true` over the whole corpus, in sections in this order: the totals as sentences; the Specs added, linked; the Specs removed, as their ids in text, since no page holds them; the Specs changed, each linked, with each changed part, its change in words, and for a changed value the base value and the built value as readable text blocks or lists, one above the other, never a raw JSON array; a keyed change is one line naming its old and new address or `none`; the Packs whose membership or order changed; the bindings changed, kept apart and headed as derived from anchors; and the diagnostics.",
           "Given a base graph, each changed Spec's page adds a line under its header that names the base input and lists the Spec's changed parts, linked to its row on the diff page, and each added Spec's page says it is new since the base.",
           "Given a base graph, each Pack page adds a `Changed since the base` section after its maturity map, from recipe 35's answer for that Pack, listing its changed and added members, linked, and its own membership change.",
           "The page and the change notes state differences between two graphs and confer nothing: no approval, staleness or readiness, and no record that a design pass happened.",
@@ -5932,7 +5932,7 @@ export const consumersSpecs = [
         baseLine:
           "`Compared with the base graph <label>, schema <version>, <n> Specs; the built graph has schema <version>, <m> Specs.`, the label left out when none was given.",
         changedSpec:
-          "the title linked, the id as code, then one row per part: the part as code, its change in words, and for a changed value two labelled blocks, `Base` and `Now`, holding the values as text; the block's element id is the Spec's id, which the Spec page's change note links to.",
+          "the title linked, the id as code, then one row per part: the part as code, its change in words, a `keyed` change as one line with `Base` and `Now` addresses or `none`, and for a changed value two labelled blocks, `Base` and `Now`, holding readable text or lists without a raw JSON array; the block's element id is the Spec's id, which the Spec page's change note links to.",
         bindingRow:
           "the Spec linked, then for implementing units, referencing units, enabled verifiers and delivery facts the ids added and removed, under the heading `Bindings, derived from anchors`.",
         changeNote:
