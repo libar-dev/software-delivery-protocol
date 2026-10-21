@@ -45,7 +45,7 @@ A rules file holds the body `sdp q` evaluates, so a rule tried through `sdp q` r
 - rule: [#neverMovesFloor] A corpus finding moves no readiness floor and reaches no other surface: not the report `sdp q` hands a body, not the reader, not the written graph, and not the Design Review or another projection.
 - rule: [#brokenRuleFails] A rules file that cannot be read or does not parse, a body that throws, or an answer that is not an object with a `findings` array of well-formed findings is a rule execution failure; `sdp validate` reports it in the corpus section and exits nonzero, so a broken rule never passes as a clean run. A failed file reports none of its findings, and the other files still run.
 - rule: [#watchReruns] `sdp validate --watch` with `--rules` reads and runs every named rules file afresh in each cycle, after the Protocol's validators, and a create, change, delete or rename of a named rules file starts a cycle as a carrier edit does, wherever the file lives, under a directory discovery skips such as `node_modules` included.
-- rule: [#watchedParams] Under `--watch`, each cycle after the first reads again every file a `--params @PATH` or `KEY=@PATH` after a `--rules` names, and an edit to such a file starts a cycle; a file that cannot be read or parsed then fails only the rules file it belongs to, for that cycle, while the first cycle's read refuses the command as `paramsFlag` states.
+- rule: [#watchedParams] Under `--watch`, each cycle after the first reads again every file a `--params @PATH` or `KEY=@PATH` after a `--rules` names, and an edit to such a file starts a cycle, wherever the file lives; a file that cannot be read or parsed then fails only the rules file it belongs to, for that cycle, while the first cycle's read refuses the command as `paramsFlag` states.
 - rule: [#recipesAsRules] Address resolution (recipe 25) and dependency cycles (recipe 26) answer with `findings` beside the rest of their answers, as the architecture walk (recipe 42), external registers (recipe 50) and entry citations (recipe 51) do, so a corpus names any of those shipped files as a rules file, or calls it through `recipes` from a rules file of its own.
 - rule: When the graph does not derive, no rules file runs, and the corpus summary line says so.
 
@@ -65,10 +65,12 @@ A rules file holds the body `sdp q` evaluates, so a rule tried through `sdp q` r
 ## Example space
 ```gwt-vocabulary
 Given a probe corpus the Protocol's validators find clean
-Given a first rules file that {first:"returns one error finding"|"returns one warning finding"|"returns a finding with no subject"|"empties the graph it receives"}
+Given a first rules file that {first:"returns one error finding"|"returns one warning finding"|"returns a finding with no subject"|"empties the graph it receives"|"is rewritten to return one error finding after the first cycle under --watch"|"reads a parameter file that gains a key after the first cycle under --watch"|"reads a parameter file that stops being JSON after the first cycle under --watch"}
 Given a second rules file that returns one warning when the graph it receives holds no node
 When the probe corpus is validated with the rules files named by --rules in that order
 Then the command exits {exitCode:number}
 Then the Protocol summary line reads {protocolSummary:string}
 Then the corpus summary line reads {corpusSummary:string}
+Then the second cycle's corpus summary line reads {corpusSummary:string}
+Then the watcher is still running after the second cycle: {running:boolean}
 ```

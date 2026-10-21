@@ -6,8 +6,10 @@ readiness: defined
 relations:
   refines: spec:consumers.agent-surface.address-and-cycle-recipes
   verifies:
-    target: spec:consumers.agent-surface.address-and-cycle-recipes
-    exercises: [addressFindings, findingsSeverity]
+    - target: spec:consumers.agent-surface.address-and-cycle-recipes
+      exercises: [addressFindings, findingsSeverity]
+    - target: spec:validation.corpus-rules
+      exercises: [recipesAsRules]
 ---
 # The shipped address-resolution file fails a rules run on an address that names no entry
 

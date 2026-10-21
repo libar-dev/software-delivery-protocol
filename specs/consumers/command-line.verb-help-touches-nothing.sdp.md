@@ -16,10 +16,11 @@ relations:
 - assumption: The world writes the extraction root and stale pages of the generate example, runs `sdp view --help` on it, checks that standard output holds the view's usage line and its paragraph from `sdp --help`, and that every stale page is still in place.
 
 ```gwt
-Given an extraction root holding one authored Spec and a stale page in each of the five projection roots
+Given an extraction root holding two authored Specs and {roots: "a stale page in each of the five projection roots"}
 When the command {command: "sdp view --help"} runs at that root
 Then the command exits {exitCode: 0}
 Then the stale pages survive: {staleSurvive: true}
-Then every projection root holds the current pages for that Spec: {current: false}
+Then the roots holding the current pages for those Specs are {currentRoots: ""}
+Then the absent projection roots are {absentRoots: ""}
 Then standard output opens with the line {firstLine: "Usage:"}
 ```

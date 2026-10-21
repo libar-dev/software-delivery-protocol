@@ -13,12 +13,13 @@ relations:
 
 ## Intent
 - outcome: Execute the all-roots verb over a root whose five projection roots each hold a stale page.
-- assumption: The world writes an extraction root of two story-altitude behavior Specs stating `idea`, each with an Intent outcome, the second declaring `refines` on the first, so the Protocol's validators report no finding, and plants one stale page in each of the five projection roots. It runs `sdp generate` on the root, then checks that no stale page survives and that each root's files equal the files its own publisher writes when run alone on a copy of the same root.
+- assumption: The world writes an extraction root of two story-altitude behavior Specs stating `idea`, each with an Intent outcome, the second declaring `refines` on the first, so the Protocol's validators report no finding, and plants one stale page in each of the five projection roots. It runs `sdp generate` on the root, then checks that no stale page survives and that each root's files equal the files its own publisher writes when run alone on a copy of the same root. A list of roots names each by its directory under `generated/`, in the verb's root order, joined by a comma and a space.
 
 ```gwt
-Given an extraction root holding one authored Spec and a stale page in each of the five projection roots
+Given an extraction root holding two authored Specs and {roots: "a stale page in each of the five projection roots"}
 When the command {command: "sdp generate"} runs at that root
 Then the command exits {exitCode: 0}
 Then the stale pages survive: {staleSurvive: false}
-Then every projection root holds the current pages for that Spec: {current: true}
+Then the roots holding the current pages for those Specs are {currentRoots: "design-review, census, mermaid, gherkin, spec-studio"}
+Then the absent projection roots are {absentRoots: ""}
 ```

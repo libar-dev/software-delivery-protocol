@@ -1761,14 +1761,14 @@ export const validationSpecs = [
           "A corpus finding moves no readiness floor and reaches no other surface: not the report `sdp q` hands a body, not the reader, not the written graph, and not the Design Review or another projection.",
           "A rules file that cannot be read or does not parse, a body that throws, or an answer that is not an object with a `findings` array of well-formed findings is a rule execution failure; `sdp validate` reports it in the corpus section and exits nonzero, so a broken rule never passes as a clean run. A failed file reports none of its findings, and the other files still run.",
           "`sdp validate --watch` with `--rules` reads and runs every named rules file afresh in each cycle, after the Protocol's validators, and a create, change, delete or rename of a named rules file starts a cycle as a carrier edit does, wherever the file lives, under a directory discovery skips such as `node_modules` included.",
-          "Under `--watch`, each cycle after the first reads again every file a `--params @PATH` or `KEY=@PATH` after a `--rules` names, and an edit to such a file starts a cycle; a file that cannot be read or parsed then fails only the rules file it belongs to, for that cycle, while the first cycle's read refuses the command as `paramsFlag` states.",
+          "Under `--watch`, each cycle after the first reads again every file a `--params @PATH` or `KEY=@PATH` after a `--rules` names, and an edit to such a file starts a cycle, wherever the file lives; a file that cannot be read or parsed then fails only the rules file it belongs to, for that cycle, while the first cycle's read refuses the command as `paramsFlag` states.",
           "Address resolution (recipe 25) and dependency cycles (recipe 26) answer with `findings` beside the rest of their answers, as the architecture walk (recipe 42), external registers (recipe 50) and entry citations (recipe 51) do, so a corpus names any of those shipped files as a rules file, or calls it through `recipes` from a rules file of its own.",
           "When the graph does not derive, no rules file runs, and the corpus summary line says so.",
         ],
         exampleSpace: {
           given: [
             "a probe corpus the Protocol's validators find clean",
-            'a first rules file that {first:"returns one error finding"|"returns one warning finding"|"returns a finding with no subject"|"empties the graph it receives"}',
+            'a first rules file that {first:"returns one error finding"|"returns one warning finding"|"returns a finding with no subject"|"empties the graph it receives"|"is rewritten to return one error finding after the first cycle under --watch"|"reads a parameter file that gains a key after the first cycle under --watch"|"reads a parameter file that stops being JSON after the first cycle under --watch"}',
             "a second rules file that returns one warning when the graph it receives holds no node",
           ],
           when: [
@@ -1778,6 +1778,8 @@ export const validationSpecs = [
             "the command exits {exitCode:number}",
             "the Protocol summary line reads {protocolSummary:string}",
             "the corpus summary line reads {corpusSummary:string}",
+            "the second cycle's corpus summary line reads {corpusSummary:string}",
+            "the watcher is still running after the second cycle: {running:boolean}",
           ],
         },
         ruleKeys: {
@@ -1931,6 +1933,116 @@ export const validationSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.corpus-rules.params-edit-starts-a-cycle",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.params-edit-starts-a-cycle.sdp.md",
+    title: "Editing a parameter file starts a cycle that reads the new parameters",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the watched-parameters rule on a parameter file, outside the probe root, that gains a key after the first cycle.",
+        assumptions: [
+          'The world writes the probe corpus of the error example, a parameter file outside the probe root holding `{ "one": 1 }`, a first rules file whose body returns one warning finding for each key of its `params`, named by `--rules` and followed by `--params @PATH` naming that file, and the second rules file of the copy example. It starts the watcher as the rules-edit example does and, after the first cycle, writes `{ "one": 1, "two": 2 }` to the parameter file, then reads the second cycle\'s corpus summary line and stops the watcher.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "reads a parameter file that gains a key after the first cycle under --watch"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the second cycle's corpus summary line reads {corpusSummary: \"corpus rules: 0 errors · 2 warnings · 0 of 2 files failed (the corpus's own rules)\"}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules.rules-edit-starts-a-cycle",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.rules-edit-starts-a-cycle.sdp.md",
+    title: "Rewriting a rules file under node_modules starts a cycle that runs the new body",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the watch rule on a rules file that lives under a directory discovery skips and is rewritten after the first cycle.",
+        assumptions: [
+          "The world writes the probe corpus of the error example, a first rules file under the probe root's `node_modules/probe/` whose body returns one warning finding, and the second rules file of the copy example. It starts `sdp validate --watch` on the probe root with the two files named by `--rules` in that order, waits for the first cycle, rewrites the first file to return one error finding in place of the warning, waits for the second cycle, reads its corpus summary line and stops the watcher.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "is rewritten to return one error finding after the first cycle under --watch"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the second cycle's corpus summary line reads {corpusSummary: \"corpus rules: 1 errors · 0 warnings · 0 of 2 files failed (the corpus's own rules)\"}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules.unreadable-params-fail-one-file",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.unreadable-params-fail-one-file.sdp.md",
+    title:
+      "A parameter file that stops being JSON fails only its own rules file, and the watcher runs on",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the watched-parameters rule on a parameter file that holds text that is not JSON after the first cycle.",
+        assumptions: [
+          "The world writes the probe corpus, parameter file and rules files of the parameter-edit example and starts the watcher as that example does. After the first cycle it writes text that is not JSON to the parameter file, waits for the second cycle, reads its corpus summary line and, on standard error, the line `corpus rules <path> failed: its parameters cannot be read (<cause>)` for the first file, then checks that the process is still running before it stops the watcher.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "reads a parameter file that stops being JSON after the first cycle under --watch"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the second cycle's corpus summary line reads {corpusSummary: \"corpus rules: 0 errors · 0 warnings · 1 of 2 files failed (the corpus's own rules)\"}",
+              "the watcher is still running after the second cycle: {running: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:validation.corpus-rules.warning-finding-informs",

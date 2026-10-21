@@ -711,7 +711,7 @@ export const consumersSpecs = [
           "A view run rewrites the view wholesale: no page written by an earlier run survives a later one, so a Spec that left the corpus leaves no page behind.",
           "Pages are written to a temporary sibling of the view directory, the previous directory is removed, and the temporary is renamed into place — one rename, so no half-written view is ever readable and no temporary survives a completed run.",
           "A run that cannot produce a current view removes the stale one instead of leaving it readable as current: an absent view is honest, a stale view is not.",
-          "Before extraction, the shared build removes `generated/design-review/`, `generated/census/`, `generated/mermaid/` and `generated/gherkin/`, each with its temporary sibling, so a run that fails before rendering leaves no view behind; a removal failure refuses the build before extraction. Every command that enters this build, including validate and its watch runs and the four publishers, has this invalidation effect, so a sibling root the command does not publish stays absent until a later publication.",
+          "Before extraction, the shared build removes `generated/design-review/`, `generated/census/`, `generated/mermaid/` and `generated/gherkin/`, each with its temporary sibling, so a run that fails before rendering leaves no view behind; a removal failure refuses the build before extraction. Every command that enters this build, including validate and its watch runs and every publisher, has this invalidation effect, so a sibling root the command does not publish stays absent until a later publication. The Studio's root is removed beside these four, as `spec:consumers.spec-studio.publisher#rule.buildInvalidates` states.",
           "Under `--check-clean` the view is rendered twice from the same graph and the run refuses when the two renders diverge, removing the view it could not certify.",
           "Findings never withhold the view. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.",
         ],
@@ -1464,7 +1464,7 @@ export const consumersSpecs = [
         outcome:
           "Execute the cycle findings by naming the shipped dependency-cycles file as a rules file over a corpus with one cycle.",
         assumptions: [
-          "The world writes a probe corpus of two story-altitude behavior Specs, each stating `idea` with an Intent outcome and each declaring `dependsOn` on the other, which the Protocol's validators find clean. It runs `sdp validate` on the probe root with `dist/recipes/26-dependency-cycles.js` named by `--rules` and no `--params`. The findings are the corpus findings the run prints, and the rule ids are their rule ids joined by a comma and a space.",
+          "The world writes a probe corpus of two story-altitude behavior Specs, each stating `idea` with an Intent outcome and each declaring `dependsOn` on the other, which the Protocol's validators find clean. It runs `sdp validate` on the probe root with `dist/recipes/26-dependency-cycles.js` named by `--rules` and no `--params`, which the addresses `none` names. The findings are the corpus findings the run prints, and the rule ids are their rule ids joined by a comma and a space.",
         ],
       },
       behavior: {
@@ -1472,6 +1472,7 @@ export const consumersSpecs = [
           {
             given: [
               'a probe corpus in which {corpus: "two Specs depend on each other through dependsOn"}',
+              'the caller passes the addresses {addresses: "none"}',
             ],
             when: [
               'the shipped {recipe: "dependency cycles"} file runs {invocation: "as a rules file named by sdp validate --rules"}',
@@ -1536,13 +1537,16 @@ export const consumersSpecs = [
         outcome:
           "Execute the cycle findings through `sdp q` over a chain, which reports no set and carries no finding.",
         assumptions: [
-          "The world writes the probe corpus of the unresolved-address example and runs `sdp q --json` on its root with the text of `dist/recipes/26-dependency-cycles.js` as the body. It reads the exit code, the answer's `findings` and the answer's keys, which are `totals`, `cycles` and `findings`.",
+          "The world writes the probe corpus of the unresolved-address example and runs `sdp q --json` on its root with the text of `dist/recipes/26-dependency-cycles.js` as the body and no `--params`, which the addresses `none` names. It reads the exit code, the answer's `findings` and the answer's keys, which are `totals`, `cycles` and `findings`.",
         ],
       },
       behavior: {
         examples: [
           {
-            given: ['a probe corpus in which {corpus: "one Spec depends on another"}'],
+            given: [
+              'a probe corpus in which {corpus: "one Spec depends on another"}',
+              'the caller passes the addresses {addresses: "none"}',
+            ],
             when: [
               'the shipped {recipe: "dependency cycles"} file runs {invocation: "through sdp q"}',
             ],
@@ -2191,7 +2195,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "`sdp validate --watch [root]` installs its watcher first, then runs the same validate path `sdp validate` runs, from scratch, once at start and again after every carrier create, change, delete or rename under the root.",
-          "A carrier ends in `.sdp.md`, `.sdp.gherkin` or `.sdp.ts`. The watcher ignores the directories discovery skips, the configured exclusion prefixes and every non-carrier path other than the rules files and parameter files `--rules` names, which it watches wherever they live, as `spec:validation.corpus-rules#rule.watchReruns` states; a removed watched directory and an event with no filename each schedule a run because their affected carriers cannot be named.",
+          "A carrier ends in `.sdp.md`, `.sdp.gherkin` or `.sdp.ts`. The watcher ignores the directories discovery skips, the configured exclusion prefixes and every non-carrier path other than the rules files and parameter files `--rules` names, which it watches wherever they live, as `spec:validation.corpus-rules#rule.watchReruns` and `spec:validation.corpus-rules#rule.watchedParams` state; a removed watched directory and an event with no filename each schedule a run because their affected carriers cannot be named.",
           "Events that arrive while a run is in progress coalesce into one pending run.",
           "Findings print as `sdp validate` prints them and the process stays alive; operator SIGINT terminates the process with exit 0 even while a rules body is active, without waiting for it. No further rules file runs or output is written after the stop.",
           "`--watch` is a validate option only and cannot combine with `--check-clean`. It re-runs on carrier edits and on edits to the files `--rules` names, and never on source edits, so an author re-runs validation after editing an anchor.",
@@ -2303,7 +2307,7 @@ export const consumersSpecs = [
     file: "specs/consumers/context-bundle.sdp.md",
     title: "A context bundle is composed per invocation within a stated budget",
     narrative:
-      "The original design precomputed graph slices for different reading scopes and a prompt bundle for one Spec. The Protocol keeps context bundle for the reading material of one design pass, composed on demand.\n\nThe first adopter's design passes assemble the same reading material by hand: the Pack design, member questions, dependency footing, pinned declarations and carrying Spec text where the graph answer falls short. Its perspectives read the same Pack for different concerns. The agent front door composes a bundle on each invocation; the bundle is never a committed answer in the graph's name. It builds on Pack design.\n\nAt an adopter's scale a bundle is mostly structure, so its shape is compact. Each member and each example row names its carrier file once. A cut entry without an entry address keeps only its line, since its row and its place in the bundle already name it. A question, a pinned value or a member example's steps appears in one place. Pinned declarations stay whole by default, because a builder and a test author hold to them. A caller whose scope still does not fit may let the bundle cut them to their entry addresses, and then reads each one in its Spec when the pass needs it. A partial bundle stays refused, because a bundle missing members would read as the whole scope.\n\nA scope can hold more design than one budget allows after every cut, as the first adopter's largest Packs do. A caller then reads the bundle in parts: the same bundle, split between members into ordered parts that each fit the budget, whose members together are the whole scope. In parts a cut is taken only when a member does not fit a part by itself, so a part keeps the design a single bundle would have cut. A member that exceeds the budget alone is named, and no part is returned.",
+      "The original design precomputed graph slices for different reading scopes and a prompt bundle for one Spec. The Protocol keeps context bundle for the reading material of one design pass, composed on demand.\n\nThe first adopter's design passes assemble the same reading material by hand: the Pack design, member questions, dependency footing, pinned declarations and carrying Spec text where the graph answer falls short. Its perspectives read the same Pack for different concerns. The agent front door composes a bundle on each invocation; the bundle is never a committed answer in the graph's name. It builds on Pack design.\n\nAt an adopter's scale a bundle is mostly structure, so its shape is compact. Each member and each example row names its carrier file once. A cut entry without an entry address keeps only its line, since its row and its place in the bundle already name it. A question, a pinned value or a member example's steps appears in one place. Pinned declarations stay whole by default, because a builder and a test author hold to them. A caller whose scope still does not fit may let the bundle cut them to their entry addresses, and then reads each one in its Spec when the pass needs it. A partial bundle stays refused, because a bundle missing members would read as the whole scope.\n\nA scope can hold more design than one budget allows after every cut, as the first adopter's largest Packs do. A caller then reads the bundle in parts: the same bundle, split between members into ordered parts that each fit the budget, whose members together are the whole scope. In parts a cut is taken only when an item, a member or the boundary, does not fit a part by itself, so a part keeps the design a single bundle would have cut. An item that exceeds the budget alone is named, and no part is returned.",
     sections: {
       intent: {
         actor: "An agent starting one design pass over a Pack or an ordered list of Specs.",
@@ -2329,7 +2333,7 @@ export const consumersSpecs = [
           "A bundle carries facts from the graph and no instructions of its own; the brief that tells an agent what to look for stays the corpus's own text.",
           "With `part`, the 1-based index of the part to return, a bundle comes in ordered parts, each within the budget, and the members of its parts, read in part order, are the bundle's members in order, each once.",
           "A part boundary falls between items and never inside one: the boundary is the first item and each member is one item, in the scope's order, and each part holds the longest run of items after the part before it that fits the budget.",
-          "In parts the bundle takes the fewest cuts of the cut order after which every item fits a part by itself, and every part takes those cuts and lists them in `leftOut`, so a part keeps all of a member that one cut bundle would have cut.",
+          "In parts the bundle tries the cut order one cut at a time, starting from no cut, splits the scope at each stage and takes the first stage at which every part fits the budget, each part measured whole in the shape it returns: its repeated fields, its `leftOut`, the boundary in part 1 and the final `part.of`; every part takes that stage's cuts and lists them in `leftOut`.",
           "Every part repeats the scope, the budget, the declaration mode, the cuts taken, its own place among the parts and, for a Pack scope, the Pack's id, title and framing, so each part reads on its own; only the first part carries the boundary.",
           "The split depends on the graph and on every parameter but `part`, so a caller that asks for each part in turn over one graph reads one bundle.",
           "When an item alone exceeds the budget after every permitted cut, the recipe returns a budget-exceeded result that names each such item with its length and returns no part, and `sdp q` exits 0.",
@@ -2389,7 +2393,7 @@ export const consumersSpecs = [
         partShape:
           "a part is the bundle shape with `part: { index, of }` after `declarations`, where `of` is the number of parts; its `members` hold its run of members, its `boundary` holds the scope's boundary in part 1 and is null in every later part, and its `used` and `tokenEstimate` measure the part.",
         partDiagnostic:
-          'a `part` above the number of parts returns `{ diagnostics: [{ scope: "part", problem: "The bundle has <of> parts." }] }`.',
+          'a `part` above the number of parts returns `{ diagnostics: [{ scope: "part", problem: "The bundle has <of> parts." }] }`, in the `{ scope, problem }` row the recipe\'s other diagnostics use.',
         partsExceeded:
           '`{ scope, budget, declarations, part: { index, of: null }, budgetExceeded: true, oversized: [{ item, length }], leftOut }` is the whole result when an item exceeds the budget alone after every permitted cut, where `item` is a member id or `"boundary"`, in scope order, and `length` counts the code units of a part that holds that item alone.',
       },
@@ -2914,7 +2918,7 @@ export const consumersSpecs = [
           "The sink supplies a fifth binding, `recipes`, beside `g`, `graph`, `report` and `params`, and every body it, the rules runner or the exported evaluator runs receives it, a recipe called through it included.",
           "A body calls a shipped recipe as a function of its catalog number and one parameters object; the call runs the recipe's body over the caller's own `g`, `graph` and `report`, with no second derivation and no copy, and resolves to the recipe's answer unchanged, `{ unknownParams, accepts }` and `{ diagnostics }` included.",
           "A call names a recipe the catalog holds and passes one plain object or nothing; any other number or parameters reject the call with a message naming the recipe, and a recipe that throws rejects the call with its error, so a mistaken call fails loudly instead of answering for a sample.",
-          "`sdp q`, the rules runner and the exported evaluator compile and run a body one way: the same compilation, the same parse-error message and the same five bindings.",
+          "`sdp q`, the rules runner and the exported evaluator compile and run a body one way: the same compilation, the same parse error with its line and column, worded by each surface in its own pinned text, and the same five bindings.",
           "The package exports the body evaluator, so a script that holds a graph runs a body, or a shipped recipe through `recipes`, without deriving the graph again; the evaluator writes and prints nothing and claims no sandbox, as the sink claims none.",
         ],
         exampleSpace: {
@@ -3445,7 +3449,7 @@ export const consumersSpecs = [
           "A waiting Spec that rests on no waiting Spec is in round 1, the statements a person can make first; any other waiting Spec is in the round after the latest round among the waiting Specs it rests on.",
           "The queue lists the waiting Specs by round, and within a round by id in code-unit order, numbering each by its place, so each comes after every waiting Spec it rests on unless the two share a cycle.",
           "Waiting Specs that reach each other through those rests-on links form a cycle; its members share one round, the round after the latest round among the waiting Specs outside the cycle that any member rests on, or round 1 when there is none, and the planner lists each cycle with one closed path through it and refuses nothing.",
-          "Apart from the statements, the planner lists each open question whose `decider` names the person the caller gives, the owner by default, blocking questions first, each with the Specs it holds: a blocking question holds its own Spec below `defined` and every Spec whose `ready` the typed-dependency clause refuses because that Spec states below `defined`.",
+          "Apart from the statements, the planner lists each open question whose `decider` names the person the caller gives, the owner by default, blocking questions first, each with the Specs it holds: a blocking question holds its own Spec below `defined`, and it holds every Spec whose `ready` the typed-dependency clause refuses because the question's own Spec states below `defined`.",
           "The planner counts the open questions that carry no `decider`, and how many of them block, so an empty list of the owner's questions never reads as nothing waiting on the owner.",
           "The planner is a catalog recipe that reads the graph and states, records and gates nothing; each statement it lists stays a person's edit of the carrier, and a Spec stated out of its order is never a finding.",
         ],
@@ -3641,7 +3645,7 @@ export const consumersSpecs = [
         rules: [
           "The kit reports and proposes and never edits: its recipes read the graph and return data, and a change reaches a carrier only as an agent's or a person's edit, applied after the proposal check and recorded by git.",
           "The kit states no rung, authors no fact and scores nothing: a capability it reports as unused is a place it could apply, never a finding, a gate or a quota.",
-          "The package ships an upgrade guide for an adopter moving its corpus onto a newer commit: it measures the corpus with capability adoption, keys its rules with the rule-key proposal, and, for each capability the report lists, names the Spec that carries its law and the recipe that reads it.",
+          "The package ships an upgrade guide for an adopter moving its corpus onto a newer commit: it measures the corpus with capability adoption, keys its rules with the rule-key proposal, and, for each capability the report lists, names the Spec that carries its law, with capability adoption as the recipe that measures it.",
           "The guide teaches and states no law: each section names the Spec that carries what it teaches, and no section repeats that Spec's rules.",
         ],
         ruleKeys: {
@@ -3655,7 +3659,7 @@ export const consumersSpecs = [
         guideFile:
           "`docs/agent-surface/upgrade-guide.md`, shipped in the package beside the recipe catalog, listed in the package's files and named by `sdp --help` among the shipped on-ramps.",
         guideSections:
-          "in this order: re-pin the package and check `sdp --version`; measure the corpus with capability adoption (recipe 47); key the rules with the rule-key proposal (recipe 48), check the proposal with the proposal check (recipe 38) and apply it through an agent's edit; adopt each other capability the report lists, one subsection each with its carrying Spec and recipe; move rules files onto shipped recipes, recipes 25, 26, 42, 50 and 51 and the `recipes` binding; read large Packs in parts and order the waiting statements, recipes 36 and 46; publish every root with `sdp generate`; and pass a recipe's subject as `--params` data, the recipe-caller guidance the README carries.",
+          "in this order: re-pin the package and check `sdp --version`; measure the corpus with capability adoption (recipe 47); key the rules with the rule-key proposal (recipe 48), check the proposal with the proposal check (recipe 38) and apply it through an agent's edit; for every capability in recipe 47's answer, one subsection citing its `carriedBy` Spec and recipe 47 as the measurement, naming a further recipe only when the subsection teaches a distinct next action with it and otherwise sending the reader to the carrying Spec; move rules files onto shipped recipes, recipes 25, 26, 42, 50 and 51 and the `recipes` binding; read large Packs in parts and order the waiting statements, recipes 36 and 46; publish every root with `sdp generate`; and pass a recipe's subject as `--params` data, the recipe-caller guidance the README carries.",
       },
     },
     deliveryFacts: [],
@@ -3679,7 +3683,7 @@ export const consumersSpecs = [
         rules: [
           "Capability adoption, recipe 47, reports one row per capability with the places that use it and the places it could apply, counted from the graph, each row naming the Spec that carries the capability's law.",
           "Beside the rows it reports the corpus's size and its readiness statements: Specs, Packs, examples, decisions, anchored component units, the Specs stated `ready` and the Specs whose floor allows `ready`.",
-          "It sums each capability's places over each Pack's members and, on request, reports each Spec's own places, so an adopter sees where each capability could apply.",
+          "It counts each capability's places within each Pack's members and, on request, within each Spec, a place two members share counted once, so an adopter sees where each capability could apply.",
           "A capability the graph does not hold, such as the perspectives a corpus keeps as files, is counted only from data the caller passes, and its row reads null otherwise; the recipe reads no file.",
           "A count is a place a capability could apply, never a score, a ranking or a finding, and the answer carries no findings.",
         ],
@@ -3710,11 +3714,11 @@ export const consumersSpecs = [
         capabilityRow:
           "`{ capability, inUse, applicable, carriedBy }`, where `inUse` counts the places that use the capability, `applicable` the places it could apply, and `carriedBy` is the id of the Spec that carries its law; a count the graph cannot give is null.",
         capabilityList:
-          "each row as `capability` (`carriedBy`): places used, of places it could apply. `ruleKeys` (`spec:model.rule-keys`): rule and flow entries that carry a key, of all rule and flow entries; `questionKeys` (`spec:model.open-question-keys`): open questions that carry a key, of all open questions; `questionFields` (`spec:model.open-question-fields`): open questions that carry `decider`, `links`, `provisional` or `trigger`, of all open questions; `relationReasons` (`spec:model.relation-reasons`): authored relations that carry a reason, of all authored relations; `exercises` (`spec:model.rule-keys`): declared `verifies` edges from an example that carry `exercises`, of all such edges; `pinnedDeclarations` (`spec:extraction.contract-declarations`): keyed Design entries whose value opens with a code span, of every keyed Design entry other than `description`; `componentDesigns` (`spec:model.planned-architecture`): component design Specs, of anchored component units; `stepKeys` (`spec:carrier.step-keys`): keyed example steps, of all example steps; `termKeys` (`spec:model.term-addresses`): keyed Model terms, of all Model terms; `entryCitations` (`spec:extraction.entry-citations`): pinned declarations an anchored line cites, of all pinned declarations; `perspectives` (`spec:consumers.review-perspectives`): the perspective objects passed, of null.",
+          "each row as `capability` (`carriedBy`): places used, of places it could apply. `ruleKeys` (`spec:model.rule-keys`): rule and flow entries that carry a key, of all rule and flow entries; `questionKeys` (`spec:model.open-question-keys`): open questions that carry a key, of all open questions; `questionFields` (`spec:model.open-question-fields`): open questions that carry `decider`, `links`, `provisional` or `trigger`, of all open questions; `relationReasons` (`spec:model.relation-reasons`): authored relations that carry a reason, of all authored relations; `exercises` (`spec:model.rule-keys`): declared `verifies` edges from an example that carry `exercises`, of all such edges; `pinnedDeclarations` (`spec:extraction.contract-declarations`): keyed Design entries whose value opens with a code span, of every keyed Design entry other than `description`; `componentDesigns` (`spec:model.planned-architecture`): components that have a component design, of the distinct components a component design or a `component:` anchor names; `stepKeys` (`spec:carrier.step-keys`): keyed example steps, of all example steps; `termKeys` (`spec:model.term-addresses`): keyed Model terms, of all Model terms; `entryCitations` (`spec:extraction.entry-citations`): pinned declarations an anchored line cites, of all pinned declarations; `perspectives` (`spec:consumers.review-perspectives`): the perspective objects passed, of null.",
         packRow:
-          "`{ id, members, capabilities }`, where `capabilities` maps each capability but `componentDesigns` and `perspectives` to `{ inUse, applicable }` summed over the Pack's resolving members.",
+          "`{ id, members, capabilities }`, where `capabilities` maps each capability but `perspectives` to `{ inUse, applicable }` summed over the Pack's resolving members, except `componentDesigns`, which counts once each the components a member names as a component design or a `component:` anchor names when it satisfies a member, `inUse` being those that have a component design anywhere in the corpus.",
         specRow:
-          "`{ id, packs, inUse, couldApply }`, where `inUse` maps each capability the Spec uses to its count and `couldApply` maps each capability with places left to `applicable` minus `inUse`, both leaving out `componentDesigns`, `perspectives` and every zero; rows sort by id.",
+          "`{ id, packs, inUse, couldApply }`, where `inUse` maps each capability the Spec uses to its count and `couldApply` maps each capability with places left to `applicable` minus `inUse`, both leaving out `perspectives` and every zero, and `componentDesigns` counts as a Pack row does for that Spec alone; rows sort by id.",
       },
     },
     deliveryFacts: [],
@@ -3915,7 +3919,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "Every verb answers `--help`: when `--help` is among a verb's arguments, the verb prints its help on standard output and exits 0, reading no other argument, deriving no graph and touching no file, a projection root included.",
-          "A verb's help is its usage and its paragraph from the top-level help, the same text, so a verb's help and `sdp --help` never disagree.",
+          "A verb's help opens with its usage and its paragraph from the top-level help, the same text, so a verb's help and `sdp --help` never disagree; only the scaffolder's help, for `sdp new` and `sdp new spec`, adds a paragraph of its own after that text.",
           "`sdp generate [root] [--exclude PATH]... [--check-clean]` enters the shared build once, validates the graph, and writes all five projection roots from that one graph: the Design Review, the census, the Mermaid diagrams, the Gherkin-shaped view and the Studio.",
           "Each root the verb writes holds the bytes its own publisher writes from the same graph, written wholesale through its temporary sibling as that publisher writes it.",
           "Findings never withhold a root: the verb writes all five and exits with the validation exit code, and a graph that does not derive writes no root and exits 1.",
@@ -3923,13 +3927,16 @@ export const consumersSpecs = [
         ],
         exampleSpace: {
           given: [
-            "an extraction root holding one authored Spec and a stale page in each of the five projection roots",
+            'an extraction root holding two authored Specs and {roots:"a stale page in each of the five projection roots"|"five current projection roots, one stale page planted in the census root"}',
           ],
-          when: ['the command {command:"sdp generate"|"sdp view --help"} runs at that root'],
+          when: [
+            'the command {command:"sdp generate"|"sdp generate --check-clean"|"sdp view --help"} runs at that root',
+          ],
           then: [
             "the command exits {exitCode:number}",
             "the stale pages survive: {staleSurvive:boolean}",
-            "every projection root holds the current pages for that Spec: {current:boolean}",
+            "the roots holding the current pages for those Specs are {currentRoots:string}",
+            "the absent projection roots are {absentRoots:string}",
             "standard output opens with the line {firstLine:string}",
           ],
         },
@@ -3946,13 +3953,48 @@ export const consumersSpecs = [
         helpVerbs:
           "`build`, `validate`, `view`, `census`, `mermaid`, `gherkin`, `studio`, `generate`, `import`, `new` and `q` answer `--help`.",
         verbHelpText:
-          "`Usage:` on its own line, then the verb's usage lines as `sdp --help` writes them, a blank line and the verb's paragraph from the `Commands:` list of `sdp --help`; `sdp new --help` and `sdp new spec --help` keep the scaffolder's own longer help.",
+          "`Usage:` on its own line, then the verb's usage lines as `sdp --help` writes them, a blank line and the verb's paragraph from the `Commands:` list of `sdp --help`; `sdp new --help` and `sdp new spec --help` then add a blank line and the scaffolder's own paragraph on what `PATH` takes and what the scaffold writes.",
         generateRoots:
           "in this order, `generated/design-review/`, `generated/census/`, `generated/mermaid/`, `generated/gherkin/` and `generated/spec-studio/`.",
         generateOutput:
           "the build and validation summary lines once, then the line each publisher prints for its root, in the order of the roots.",
         vaultRoot:
           "the verb writes the five roots above and never removes or rewrites a vault, because a vault keeps notes a person wrote; whether one run of the verb also regenerates the vault is settled with the vault's own publisher, which this entry then names.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.command-line.generate-check-failure",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/command-line.generate-check-failure.sdp.md",
+    title: "A root that fails its check is removed while sdp generate writes the others",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the check rule of the all-roots verb over five current roots, one of which holds a page its publisher would not write.",
+        assumptions: [
+          "The world writes the extraction root of the generate example, runs `sdp generate` on it so every root is current, since each publisher alone would leave only its own root, then plants one stale page in the census root. It runs `sdp generate --check-clean` on the root, then checks that the census root is gone and that each other root's files equal the files its own publisher writes when run alone on a copy of the same root. Lists of roots read as in the generate example.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding two authored Specs and {roots: "five current projection roots, one stale page planted in the census root"}',
+            ],
+            when: ['the command {command: "sdp generate --check-clean"} runs at that root'],
+            then: [
+              "the command exits {exitCode: 1}",
+              "the stale pages survive: {staleSurvive: false}",
+              'the roots holding the current pages for those Specs are {currentRoots: "design-review, mermaid, gherkin, spec-studio"}',
+              'the absent projection roots are {absentRoots: "census"}',
+            ],
+          },
+        ],
       },
     },
     deliveryFacts: [],
@@ -3970,20 +4012,21 @@ export const consumersSpecs = [
         outcome:
           "Execute the all-roots verb over a root whose five projection roots each hold a stale page.",
         assumptions: [
-          "The world writes an extraction root of two story-altitude behavior Specs stating `idea`, each with an Intent outcome, the second declaring `refines` on the first, so the Protocol's validators report no finding, and plants one stale page in each of the five projection roots. It runs `sdp generate` on the root, then checks that no stale page survives and that each root's files equal the files its own publisher writes when run alone on a copy of the same root.",
+          "The world writes an extraction root of two story-altitude behavior Specs stating `idea`, each with an Intent outcome, the second declaring `refines` on the first, so the Protocol's validators report no finding, and plants one stale page in each of the five projection roots. It runs `sdp generate` on the root, then checks that no stale page survives and that each root's files equal the files its own publisher writes when run alone on a copy of the same root. A list of roots names each by its directory under `generated/`, in the verb's root order, joined by a comma and a space.",
         ],
       },
       behavior: {
         examples: [
           {
             given: [
-              "an extraction root holding one authored Spec and a stale page in each of the five projection roots",
+              'an extraction root holding two authored Specs and {roots: "a stale page in each of the five projection roots"}',
             ],
             when: ['the command {command: "sdp generate"} runs at that root'],
             then: [
               "the command exits {exitCode: 0}",
               "the stale pages survive: {staleSurvive: false}",
-              "every projection root holds the current pages for that Spec: {current: true}",
+              'the roots holding the current pages for those Specs are {currentRoots: "design-review, census, mermaid, gherkin, spec-studio"}',
+              'the absent projection roots are {absentRoots: ""}',
             ],
           },
         ],
@@ -4011,13 +4054,14 @@ export const consumersSpecs = [
         examples: [
           {
             given: [
-              "an extraction root holding one authored Spec and a stale page in each of the five projection roots",
+              'an extraction root holding two authored Specs and {roots: "a stale page in each of the five projection roots"}',
             ],
             when: ['the command {command: "sdp view --help"} runs at that root'],
             then: [
               "the command exits {exitCode: 0}",
               "the stale pages survive: {staleSurvive: true}",
-              "every projection root holds the current pages for that Spec: {current: false}",
+              'the roots holding the current pages for those Specs are {currentRoots: ""}',
+              'the absent projection roots are {absentRoots: ""}',
               'standard output opens with the line {firstLine: "Usage:"}',
             ],
           },

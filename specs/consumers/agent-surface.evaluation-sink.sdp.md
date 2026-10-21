@@ -24,7 +24,7 @@ Without a way to call a shipped recipe, a body that needs its answer pastes the 
 - rule: [#fifthBinding] The sink supplies a fifth binding, `recipes`, beside `g`, `graph`, `report` and `params`, and every body it, the rules runner or the exported evaluator runs receives it, a recipe called through it included.
 - rule: [#recipeCall] A body calls a shipped recipe as a function of its catalog number and one parameters object; the call runs the recipe's body over the caller's own `g`, `graph` and `report`, with no second derivation and no copy, and resolves to the recipe's answer unchanged, `{ unknownParams, accepts }` and `{ diagnostics }` included.
 - rule: [#callRefusals] A call names a recipe the catalog holds and passes one plain object or nothing; any other number or parameters reject the call with a message naming the recipe, and a recipe that throws rejects the call with its error, so a mistaken call fails loudly instead of answering for a sample.
-- rule: [#oneEvaluator] `sdp q`, the rules runner and the exported evaluator compile and run a body one way: the same compilation, the same parse-error message and the same five bindings.
+- rule: [#oneEvaluator] `sdp q`, the rules runner and the exported evaluator compile and run a body one way: the same compilation, the same parse error with its line and column, worded by each surface in its own pinned text, and the same five bindings.
 - rule: [#exportedEvaluator] The package exports the body evaluator, so a script that holds a graph runs a body, or a shipped recipe through `recipes`, without deriving the graph again; the evaluator writes and prints nothing and claims no sandbox, as the sink claims none.
 
 ## Design

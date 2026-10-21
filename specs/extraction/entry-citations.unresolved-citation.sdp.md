@@ -17,7 +17,7 @@ relations:
 
 ```gwt
 Given a probe corpus whose Spec pins the declaration {declaration: "spec:probe.one#design.typeOne"}
-Given a test file that {anchored: "carries a test anchor"} and names the address {address: "spec:probe.one#design.typeTwo"} in a test title on line {line: 9}
+Given a source file that {anchored: "carries a test anchor verifying the Spec"} and names the address {address: "spec:probe.one#design.typeTwo"} on line {line: 9}
 When the graph is derived
 Then the Spec context lists {citations: 1} entry citations
 Then the citation {recorded: "does not resolve"}

@@ -2121,6 +2121,42 @@ export const expectedDeclaredRelations: readonly (readonly [
     ["brokenRuleFails"],
   ],
   [
+    "spec:validation.corpus-rules.params-edit-starts-a-cycle",
+    "refines",
+    "spec:validation.corpus-rules",
+  ],
+  [
+    "spec:validation.corpus-rules.params-edit-starts-a-cycle",
+    "verifies",
+    "spec:validation.corpus-rules",
+    null,
+    ["watchedParams"],
+  ],
+  [
+    "spec:validation.corpus-rules.rules-edit-starts-a-cycle",
+    "refines",
+    "spec:validation.corpus-rules",
+  ],
+  [
+    "spec:validation.corpus-rules.rules-edit-starts-a-cycle",
+    "verifies",
+    "spec:validation.corpus-rules",
+    null,
+    ["watchReruns"],
+  ],
+  [
+    "spec:validation.corpus-rules.unreadable-params-fail-one-file",
+    "refines",
+    "spec:validation.corpus-rules",
+  ],
+  [
+    "spec:validation.corpus-rules.unreadable-params-fail-one-file",
+    "verifies",
+    "spec:validation.corpus-rules",
+    null,
+    ["watchedParams"],
+  ],
+  [
     "spec:validation.corpus-rules.warning-finding-informs",
     "refines",
     "spec:validation.corpus-rules",
@@ -2243,6 +2279,13 @@ export const expectedDeclaredRelations: readonly (readonly [
     ["cycleFindings", "findingsSeverity"],
   ],
   [
+    "spec:consumers.agent-surface.address-and-cycle-recipes.cycle-fails-a-rules-run",
+    "verifies",
+    "spec:validation.corpus-rules",
+    null,
+    ["recipesAsRules"],
+  ],
+  [
     "spec:consumers.agent-surface.address-and-cycle-recipes.unresolved-address-fails-a-rules-run",
     "refines",
     "spec:consumers.agent-surface.address-and-cycle-recipes",
@@ -2253,6 +2296,13 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.agent-surface.address-and-cycle-recipes",
     null,
     ["addressFindings", "findingsSeverity"],
+  ],
+  [
+    "spec:consumers.agent-surface.address-and-cycle-recipes.unresolved-address-fails-a-rules-run",
+    "verifies",
+    "spec:validation.corpus-rules",
+    null,
+    ["recipesAsRules"],
   ],
   [
     "spec:consumers.agent-surface.address-and-cycle-recipes.chain-reports-nothing",
@@ -2334,6 +2384,18 @@ export const expectedDeclaredRelations: readonly (readonly [
     "every citation carries the inferred claim",
   ],
   ["spec:extraction.entry-citations", "constrainedBy", "spec:extraction.determinism"],
+  [
+    "spec:extraction.entry-citations.code-comment-cites-declaration",
+    "refines",
+    "spec:extraction.entry-citations",
+  ],
+  [
+    "spec:extraction.entry-citations.code-comment-cites-declaration",
+    "verifies",
+    "spec:extraction.entry-citations",
+    null,
+    ["anchoredFilesOnly", "declarationLines"],
+  ],
   [
     "spec:extraction.entry-citations.test-title-cites-declaration",
     "refines",
@@ -2635,6 +2697,14 @@ export const expectedDeclaredRelations: readonly (readonly [
     "decidedBy",
     "spec:decisions.shipped-projections-frozen",
     "the verb writes the frozen roots unchanged and adds no projection of its own",
+  ],
+  ["spec:consumers.command-line.generate-check-failure", "refines", "spec:consumers.command-line"],
+  [
+    "spec:consumers.command-line.generate-check-failure",
+    "verifies",
+    "spec:consumers.command-line",
+    null,
+    ["generateCheck"],
   ],
   [
     "spec:consumers.command-line.generate-writes-every-root",
