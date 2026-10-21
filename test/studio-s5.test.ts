@@ -1322,3 +1322,24 @@ it("contains phone navigation, stamp and wide tables within the viewport", () =>
   expect(declarations["sdp-maturity-map table"]).toMatchObject({ "min-width": "48rem" });
   expect(declarations["sdp-maturity-map td"]).toMatchObject({ "min-width": "9rem" });
 });
+
+it("keeps table headers and one-word cells intact while allowing word-boundary wrapping", () => {
+  const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
+  const declarations: Record<string, Record<string, string>> = {};
+  css.walkRules((rule) => {
+    if (rule.parent?.type === "atrule") return;
+    for (const selector of rule.selector.split(",").map((s) => s.trim())) {
+      const values = (declarations[selector] ??= {});
+      rule.walkDecls((decl) => {
+        values[decl.prop] = decl.value;
+      });
+    }
+  });
+  for (const selector of ["th", "td"]) {
+    expect(declarations[selector]).toMatchObject({
+      "overflow-wrap": "normal",
+      "word-break": "normal",
+    });
+    expect(declarations[selector]?.["white-space"]).not.toBe("nowrap");
+  }
+});

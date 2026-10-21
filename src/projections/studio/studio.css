@@ -429,6 +429,8 @@ td {
   vertical-align: top;
   padding: 0.35rem 0.5rem;
   border-bottom: 1px solid var(--line);
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 th {
@@ -571,7 +573,6 @@ pre {
 p,
 li,
 dd,
-td,
 .line1 {
   overflow-wrap: anywhere;
 }

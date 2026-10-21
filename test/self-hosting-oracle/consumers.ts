@@ -6104,7 +6104,7 @@ export const consumersSpecs = [
         runHeader:
           "`Run <n>: external run evidence from <tool> <version>`, `<n>` the input's position counting from 1 and the version left out when the record names none, then a line with the build, branch, commit and times, each labelled, a time written as an ISO 8601 UTC time from the milliseconds the record holds.",
         fileRow:
-          "the file as text with a copy action, the anchors in it as code, the Specs they verify as links, then a table of results with columns name, suite, result and duration.",
+          "the file as text with a copy action, the anchors in it as code, the Specs they verify as links, then a table of results with columns name, suite, result and duration. A duration shows milliseconds with at most two decimals, rounded and without trailing zeroes, as `2.84 ms`, `0.46 ms` or `12 ms`; short headers and one-word cells never break inside a word.",
         unjoinedRow:
           "the test's name, its file path or `no file path`, its result in words, and the reason.",
       },
