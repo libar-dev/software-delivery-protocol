@@ -153,7 +153,7 @@ export const modelSpecs = [
       behavior: {
         rules: [
           "A Protocol ID is stable, unique, namespaced, human-readable, and the only binding between intent and code.",
-          "An ID has a lowercase namespace followed by a colon and a dotted path whose segments admit mixed case. An optional single `#` suffix is an entry address, `<section>.<key>`, with section `design`, `ui`, `question` or `rule` and a lower-camel ASCII key; it is admitted only in the `spec:` namespace and never belongs to an identity. Referential-integrity checks reject malformed or unresolved references.",
+          "An ID has a lowercase namespace followed by a colon and a dotted path whose segments admit mixed case. An optional single `#` suffix is an entry address, `<section>.<key>`, with section `design`, `ui`, `question`, `rule` or `term` and a lower-camel ASCII key; it is admitted only in the `spec:` namespace and never belongs to an identity. Referential-integrity checks reject malformed or unresolved references.",
           "IDs carry no history: a rename is a repository edit recorded by git rather than graph-resident bookkeeping.",
           "The Spec and Spec-reference builders admit `spec:`, the Pack builder `pack:`, the code-anchor builder `impl:`, `api:` and `component:`, the test-anchor builder `test:`, and the oracle-anchor builder `oracle:`. These are the namespaces of the flavored authored identities and targets; the grammar itself admits any lowercase namespace.",
           "`doc:` is reserved for a genuinely external document a decision Spec links to; in-system decisions are Specs. Authored relations and the Spec-reference builder accept `spec:` targets, so the `doc:` relation-target reservation is a named deferral rather than a landed relation target.",
@@ -868,44 +868,209 @@ export const modelSpecs = [
     id: "spec:model.term-addresses",
     specKind: "rule",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/model/term-addresses.sdp.md",
     title: "A Model term may carry a key that addresses it",
     narrative:
-      "A Model section defines a Spec's terms, and prose can name those terms by word. Such a word is not a checked entry address, so a view cannot resolve it to one authored definition without a rule for its owner and key. Design, UI, question and rule entries already carry keys that a mention addresses and validation checks; a Model term has none. With a key, prose could cite a concept as a checked mention, and every view, the Obsidian vault included, could link it exactly.",
+      "A Model section defines a Spec's terms, and prose names those terms by word. A word is not a checked entry address, so a view cannot resolve it to one authored definition, and a renamed term leaves every sentence that names it silently stale. Design, UI, question and rule entries already carry keys that a mention addresses and validation checks; a key gives a Model term the same. The key is authored in a marker, as a rule's is, rather than derived from the term: a derived key would change, and break every address, whenever the term is reworded. The address segment is `term`, because an address names the kind of entry it reaches, as `question` and `rule` do, and the Model section's own prose is not an entry. The ratified glossary stays a document, beside the graph and outside it, so its terms gain no address; a term gains one where a Spec defines it.",
+    sections: {
+      intent: {
+        problem:
+          "Prose that names a concept a Model section defines has no checked way to point at that definition, so a view cannot link it and a renamed term breaks its readers silently.",
+        outcome:
+          "Let a Model term carry a key, addressed as `spec:<id>#term.<key>`, so prose cites a concept as a checked mention and every view links it exactly.",
+      },
+      behavior: {
+        description:
+          "The world writes two Markdown carriers in one extraction root. The first is a story-altitude model Spec stating `scoped`, with an Intent outcome and a Model section holding the entries the terms slot joins with a semicolon and a space, one line each. The second is a story-altitude rule Spec stating `idea`, with an Intent outcome and one rule; its narrative names the address, and it declares `dependsOn` on the first. A finding read is the first extraction finding, and an empty slot value means the extraction reports none; the term keys of every Spec in the graph are joined by a comma and a space.",
+        rules: [
+          "A Model term may carry an optional key in a marker that opens its definition, after the bold term and the em dash, as in `- **step key** — [#stepKey] the key a step carries`; the TypeScript carrier writes the same marker at the start of the definition string. The key follows the entry-address key grammar, and an unkeyed term stays lawful and has no address.",
+          "The key is authored and never derived from the term, so rewording a term or its definition keeps its address, while renaming or removing the key fails validation in every Spec that addresses it.",
+          "A term key is unique among the Model terms of one Spec. Term keys and the Spec's Design, UI, question and rule keys sit under different address segments and stay apart.",
+          "A definition that opens with `[#` and does not continue as a marker is refused at its term, and a repeated term key is refused at each term that carries it; a refused Markdown carrier is refused whole, as for every structure refusal, and in the TypeScript carrier the key drops at each site and the Spec stays.",
+          "A keyed term is addressed as `spec:<id>#term.<key>`. The address parses, is refused in every id slot as every entry address is, and resolves while the Spec's `model.termKeys` carries the key; a mention of a term key the Spec does not carry is a prose-mentions error.",
+          "The ratified glossary stays a document, so its terms gain no address; a term gains one where a Spec defines it in a Model section.",
+          "The location table records every Model term its carrier locates, keyed or not, as `term[<i>]`, with `<i>` the term's position among the Spec's terms in authored order and `key` beside a keyed term.",
+          "Address resolution resolves a `term` address to the term's definition with its file and line, entry search gives a keyed term its address and matches term keys as it matches rule keys, and the mention audit reports a term key the Spec does not carry as a missing entry.",
+          "A term key mints no edge, confers no delivery fact and moves no readiness floor, and `exercises` names rule keys only. A term promoted to a `model` Spec of its own leaves its address behind, because promotion moves the content out, and every mention of the address fails until it names the new Spec.",
+        ],
+        ruleKeys: {
+          termMarker: "rules[0]",
+          authoredKey: "rules[1]",
+          uniqueTermKeys: "rules[2]",
+          markerRefusals: "rules[3]",
+          termAddress: "rules[4]",
+          termLocations: "rules[6]",
+          termReaders: "rules[7]",
+        },
+        exampleSpace: {
+          given: [
+            "a Markdown Spec carrier {specId:string} whose Model terms read {terms:string}",
+            "a second Spec that names {address:string} in its narrative and declares dependsOn on the first",
+          ],
+          when: ["the extractor reifies both carriers and the graph is validated"],
+          then: [
+            "the first carrier is reified: {reified:boolean}",
+            "the first extraction finding's message contains {extractMessage:string}",
+            "the graph holds the term keys {keys:string}",
+            "the report holds {mentionErrors:number} prose-mention errors",
+          ],
+        },
+      },
+      design: {
+        termMarker:
+          '`- **<term>** — [#<key>] <definition>` is a keyed Model entry in Markdown and `terms: { "<term>": "[#<key>] <definition>" }` in TypeScript; `<key>` matches `^[a-z][A-Za-z0-9]*$`, and a marker later in the definition is plain text.',
+        termKeysField:
+          "`model.termKeys` maps each key to the term it names, as authored, in authored order; the definitions hold the text with the marker removed; a Spec with no keyed term carries no `termKeys`, and the serialized graph writes it after `terms`.",
+        markerRefusal:
+          "`term key markers must be [#<lower-camel ASCII key>] followed by one space and text` is the message, as the finding `extract/unrecognized-property` at severity error, at path `model.terms.<term>`.",
+        repeatedKey:
+          '`term key "<key>" is repeated; term keys must be unique within a Spec` is the message, as the same finding, at each term that carries the key.',
+        addressSections:
+          '`ENTRY_ADDRESS_SECTIONS` is `["design", "ui", "question", "rule", "term"]`, and `parseId` refuses any other segment with `entry address must be <section>.<key> with section design, ui, question, rule, or term`.',
+        missingTerm:
+          '`Mention in "<spec>" at <path> points to missing entry "term.<key>" of "<target>".` is the prose-mentions error for a term key the target does not carry.',
+        termLocation:
+          "`{ spec, file, entry: \"term[<i>]\", key?, line }` is a term's row in the location table; a mention in a definition, at `model.terms.<term>`, takes that row's line.",
+        resolutionRow:
+          "address resolution (recipe 25) reads `term` as a fifth section through `model.termKeys`, gives a resolving row the definition as its `value` and the Spec's term keys as `available`, sorted in code-unit order, and writes its grammar as `spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII`.",
+        searchRow:
+          "entry search (recipe 23) gives a matching keyed term, in section `model` and entry `terms.<term>`, the address `spec:<id>#term.<key>` and the line of its `term[<i>]` row, matches the term key as it matches a rule key, and never walks `termKeys` as content.",
+        importEmitter:
+          "the TypeScript-to-Markdown import writes a keyed term as `- **<term>** — [#<key>] <definition>`, so a keyed TypeScript term imports keyed.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:model.term-addresses.keyed-term-resolves",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/model/term-addresses.keyed-term-resolves.sdp.md",
+    title: "A keyed term is reified and its address resolves",
+    narrative: null,
     sections: {
       intent: {
         outcome:
-          "Let a Model term carry a key, addressed as an entry of its Spec's model section, so prose cites a concept as a checked mention and every view links it exactly.",
-        openQuestions: [
+          "Execute the term marker and the term address on one keyed term beside an unkeyed one.",
+      },
+      behavior: {
+        examples: [
           {
-            question:
-              "Is a term's key authored in a marker, as rules and questions carry theirs, or derived from the term?",
-            blocking: true,
-            key: "termKeyForm",
-            decider: "owner",
-            provisional:
-              "an authored marker, since a key derived from the term breaks every address when the term is reworded",
-          },
-          {
-            question:
-              "Do the ratified glossary terms move into Model sections so that each gains an address?",
-            blocking: false,
-            key: "glossaryTerms",
-            provisional:
-              "no; the glossary stays a document, and a term gains an address where a Spec defines it",
-            decider: "owner",
-          },
-          {
-            question:
-              "Does a keyed Model term use the term segment or the model segment in its entry address?",
-            blocking: false,
-            key: "addressSection",
-            decider: "owner",
+            given: [
+              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepKey] the key a step carries in its marker; - **slot** — one typed placeholder in a step"}',
+              'a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first',
+            ],
+            when: ["the extractor reifies both carriers and the graph is validated"],
+            then: [
+              "the first carrier is reified: {reified: true}",
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the graph holds the term keys {keys: "stepKey"}',
+              "the report holds {mentionErrors: 0} prose-mention errors",
+            ],
           },
         ],
       },
-      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:model.term-addresses.unknown-term-key-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/model/term-addresses.unknown-term-key-refused.sdp.md",
+    title: "An address that names a term key no term carries is an error",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the missing-entry error on a term address whose key the target no longer carries, after the key was renamed and the address was not.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepLabel] the key a step carries in its marker"}',
+              'a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first',
+            ],
+            when: ["the extractor reifies both carriers and the graph is validated"],
+            then: [
+              "the first carrier is reified: {reified: true}",
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the graph holds the term keys {keys: "stepLabel"}',
+              "the report holds {mentionErrors: 1} prose-mention errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:model.term-addresses.repeated-term-key-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/model/term-addresses.repeated-term-key-refused.sdp.md",
+    title: "A term key repeated in one Spec refuses its carrier",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the uniqueness refusal, and show that the address then names a missing Spec.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepKey] the key a step carries in its marker; - **term key** — [#stepKey] the key a Model term carries in its marker"}',
+              'a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first',
+            ],
+            when: ["the extractor reifies both carriers and the graph is validated"],
+            then: [
+              "the first carrier is reified: {reified: false}",
+              'the first extraction finding\'s message contains {extractMessage: "is repeated; term keys must be unique within a Spec"}',
+              'the graph holds the term keys {keys: ""}',
+              "the report holds {mentionErrors: 1} prose-mention errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:model.term-addresses.malformed-term-marker-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/model/term-addresses.malformed-term-marker-refused.sdp.md",
+    title: "A term marker whose key is off the grammar refuses its carrier",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the marker refusal on a definition that opens with a marker whose key is not lower-camel ASCII.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#step-key] the key a step carries in its marker"}',
+              'a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first',
+            ],
+            when: ["the extractor reifies both carriers and the graph is validated"],
+            then: [
+              "the first carrier is reified: {reified: false}",
+              'the first extraction finding\'s message contains {extractMessage: "term key markers must be [#<lower-camel ASCII key>] followed by one space and text"}',
+              'the graph holds the term keys {keys: ""}',
+              "the report holds {mentionErrors: 1} prose-mention errors",
+            ],
+          },
+        ],
+      },
     },
     deliveryFacts: [],
   },
