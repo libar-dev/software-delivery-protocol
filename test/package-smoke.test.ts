@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -186,6 +186,80 @@ const shippedProtocolCorpusTestAnchor = specTest({
 void shippedProtocolCorpusTestAnchor;
 
 describe("published package surface", () => {
+  it.each(["dist/adapters/vitest.js", "dist/index.cjs"])(
+    "%s keeps Vitest runner code outside the package",
+    async (entry) => {
+      const built = await readFile(join(repositoryRoot, entry), "utf8");
+      expect(built.match(/\b(?:initSuite|createSuiteCollector)\b/gu) ?? []).toEqual([]);
+      if (entry === "dist/adapters/vitest.js") {
+        expect(built).toMatch(/from ["'](?:vitest|@vitest\/[^"']+)["']/u);
+      }
+    },
+  );
+
+  it("registers and passes one bindExample test with the installed consumer's Vitest", async () => {
+    const packageRoot = await mkdtemp(join(tmpdir(), "sdp-vitest-smoke-"));
+    const consumer = join(packageRoot, "consumer");
+
+    try {
+      const packed = JSON.parse(
+        run(
+          "npm",
+          ["pack", "--ignore-scripts", "--json", "--pack-destination", packageRoot],
+          repositoryRoot,
+        ),
+      ) as readonly [{ readonly filename: string }];
+      const vitest = JSON.parse(
+        await readFile(join(repositoryRoot, "node_modules/vitest/package.json"), "utf8"),
+      ) as { readonly version: string };
+      await mkdir(consumer);
+      await writeFile(
+        join(consumer, "package.json"),
+        JSON.stringify({ name: "sdp-vitest-smoke", private: true, type: "module" }),
+      );
+      run(
+        "npm",
+        [
+          "install",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund",
+          join(packageRoot, packed[0].filename),
+          `vitest@${vitest.version}`,
+        ],
+        consumer,
+      );
+      await writeFile(
+        join(consumer, "bound.test.js"),
+        `import { expect } from "vitest";
+import { bindExample } from "${packageName}/vitest";
+
+bindExample({
+  spec: "spec:package.bound-example",
+  title: "The installed adapter uses the consumer's runner",
+  steps: [{ kind: "then", key: "freshWorld", text: "the world is fresh", params: {} }],
+}, () => ({ fresh: true }), {
+  freshWorld: world => expect(world.fresh).toBe(true),
+});
+`,
+      );
+      const executed = spawnSync(
+        process.execPath,
+        ["node_modules/vitest/vitest.mjs", "run", "--reporter=json"],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect(executed.status, executed.stdout + executed.stderr).toBe(0);
+      const result = JSON.parse(executed.stdout) as {
+        readonly numTotalTests: number;
+        readonly numPassedTests: number;
+        readonly numFailedTests: number;
+      };
+      expect(result).toMatchObject({ numTotalTests: 1, numPassedTests: 1, numFailedTests: 0 });
+    } finally {
+      await rm(packageRoot, { force: true, recursive: true });
+    }
+  }, 60_000);
+
   it("proves the installed tarball lists import, dry-runs conversion without writes, and exposes the barrel", async () => {
     const packageRoot = await mkdtemp(join(tmpdir(), "sdp-package-smoke-"));
     const consumer = join(packageRoot, "consumer");
