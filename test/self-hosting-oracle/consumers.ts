@@ -5148,7 +5148,7 @@ export const consumersSpecs = [
       },
       design: {
         helpVerbs:
-          "`build`, `validate`, `view`, `census`, `mermaid`, `gherkin`, `studio`, `generate`, `import`, `new` and `q` answer `--help`.",
+          "`build`, `validate`, `view`, `census`, `mermaid`, `gherkin`, `studio`, `vault`, `stamp`, `generate`, `import`, `new` and `q` answer `--help`.",
         verbHelpText:
           "`Usage:` on its own line, then the verb's usage lines as `sdp --help` writes them, a blank line and the verb's paragraph from the `Commands:` list of `sdp --help`; `sdp new --help` and `sdp new spec --help` then add a blank line and the scaffolder's own paragraph on what `PATH` takes and what the scaffold writes.",
         generateRoots:
@@ -5350,7 +5350,7 @@ export const consumersSpecs = [
         diagramElement:
           "`sdp-diagram` with `subject`, the Spec, Pack, component or context id the diagram is rooted at, or `architecture`, wrapping one `figure` that holds the caption, the SVG and its text equivalent; on upgrade it adds `Zoom in`, `Zoom out` and `Reset` buttons and handles drag, a wheel turned with Control or Command held, and a two-finger pinch.",
         elementIds:
-          "a diagram's text equivalent has the id `diagram.<subject>.text`, unique on its page because a page draws one diagram per subject.",
+          "a diagram's text equivalent has the id `diagram.<subject>.text` and its arrow has the id `diagram.<subject>.arrow`. A page that draws a second view of one subject inserts that view's name before `text` or `arrow`, so the Spec page's realization drawing uses `diagram.<subject>.realization.text` and `diagram.<subject>.realization.arrow`; its trace graph keeps the unqualified ids. Every id is unique on its page.",
         omittedDrawing:
           "a drawing over the bound keeps its `figure` and caption, holds the sentence `Shown as text: this drawing exceeds the bound of <b> boxes and <e> edges.`, with the bound's two numbers, where the SVG would be, and writes its text equivalent open.",
       },
@@ -5817,7 +5817,7 @@ export const consumersSpecs = [
         rules: [
           "The page set holds `queue.html`, which renders recipe 46, the statement queue, over the whole corpus.",
           "The first list holds every waiting statement in the queue's order, numbered by position: the Spec linked, its kind, its stated rung, the rung its floor allows, the waiting Specs it rests on, each linked to its own row, and its Packs; a statement that rests on no waiting Spec reads `can be made now`.",
-          "The second list holds the open questions whose decider is `owner`, blocking ones first, each with its address linked to the question on its Spec page, its text, its provisional reading when present, and the Specs it holds below a rung, linked.",
+          "The second list holds the open questions whose decider is `owner`, blocking ones first, each with its address linked to the question on its Spec page, its text, its provisional reading when present, and the Specs it holds below a rung, linked. The page reads the provisional reading from the reader by the question's Spec and key, or by its position when it has no key.",
           "The page opens with sentences the build counts from the queue's answer: the statements waiting, how many rest on no waiting Spec and can be made now, the owner's questions blocking and not blocking, and any dependency cycle the queue names.",
           "Filters narrow both lists by Pack, and the statements by the rung their floor allows; without script every row shows.",
           "The page orders and links: it states no rung, records no statement, and never presents a waiting statement as approved or a position as a priority the owner set.",
@@ -5848,7 +5848,7 @@ export const consumersSpecs = [
           "`blocking` or `non-blocking` in words, the address as a link with a copy action, the text, the provisional reading on its own labelled line, then `holds` and the held Specs as links.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.owner-queue.sdp.md",
   },
   {

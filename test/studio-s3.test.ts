@@ -756,3 +756,58 @@ describe("Studio base comparison", () => {
     expect(main(content(result, "specs/probe.alpha.html"))).toContain('id="term.purchase"');
   });
 });
+
+it("reads each owner question's provisional reading from its reader Spec and key", async () => {
+  const root = corpus({
+    "a.sdp.md": carrier(
+      "spec:probe.alpha",
+      "\n### Open questions\n- [blocking #first] First choice?\n  - decider: owner\n  - provisional: Alpha `<first>`.\n- [non-blocking #second] Second choice?\n  - decider: owner\n  - provisional: Alpha second.\n- [non-blocking] Unkeyed choice?\n  - decider: owner\n  - provisional: Alpha unkeyed.\n- [non-blocking #absent] No reading?\n  - decider: owner\n",
+    ),
+    "z.sdp.md": carrier(
+      "spec:probe.zeta",
+      "\n### Open questions\n- [blocking #first] Zeta choice?\n  - decider: owner\n  - provisional: Zeta first.\n",
+    ),
+  });
+  const extracted = extract({ root });
+  expect(extracted.report.findings).toEqual([]);
+  const data = await createStudioData(createReader(extracted.graph));
+  const queue = data.recipes.all.get(46) as {
+    questions: { address: string | null; index: number }[];
+  };
+  expect(queue.questions.every((row) => !Object.hasOwn(row, "provisional"))).toBe(true);
+  const all = new Map(data.recipes.all);
+  all.set(46, {
+    ...queue,
+    questions: queue.questions.map((row) => ({
+      ...row,
+      index: row.address === null ? row.index : 999,
+    })),
+  });
+  const specs = data.specs.map((spec) => ({
+    ...spec,
+    designColumns: {
+      ...spec.designColumns,
+      openQuestions: [...spec.designColumns.openQuestions].reverse(),
+    },
+  }));
+  const before = JSON.stringify(queue);
+  const html = main(
+    content(renderStudio({ ...data, specs, recipes: { ...data.recipes, all } }), "queue.html"),
+  );
+  const rows = [...html.matchAll(/<div data-row data-pack="[^"]*">(.*?)<\/div>/gsu)].map((match) =>
+    required(match[1]),
+  );
+  expect(rows).toHaveLength(5);
+  for (const [question, reading] of [
+    ["First choice?", "Alpha <code>&lt;first&gt;</code>."],
+    ["Second choice?", "Alpha second."],
+    ["Unkeyed choice?", "Alpha unkeyed."],
+    ["Zeta choice?", "Zeta first."],
+  ]) {
+    const row = required(rows.find((value) => value.includes(required(question))));
+    expect(row).toContain(`<p>Provisional: ${required(reading)}</p>`);
+    expect(row.indexOf("Provisional:")).toBeLessThan(row.indexOf("holds "));
+  }
+  expect(required(rows.find((row) => row.includes("No reading?")))).not.toContain("Provisional:");
+  expect(JSON.stringify(queue)).toBe(before);
+});

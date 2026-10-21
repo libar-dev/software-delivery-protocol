@@ -537,3 +537,20 @@ it("keeps example steps and composing actions outside a short Spec card", async 
   expect(short).not.toContain("<article");
   expect(short).not.toContain("sdp-compose");
 });
+
+it("keeps trace and realization description and arrow ids distinct for one Spec subject", async () => {
+  const files = coverageFiles({});
+  files["implementation.ts"] =
+    "/**\n * @sdpAnchor impl:orders\n * @sdpSatisfies spec:orders\n */\nexport const order=1;\n";
+  const page = (await pages(files)).find((p) => p.path === "specs/orders.html")?.content ?? "";
+  for (const view of ["", ".realization"])
+    for (const part of ["text", "arrow"])
+      expect(
+        page.match(
+          new RegExp(`id="diagram\\.spec:orders${view.replaceAll(".", "\\.")}\\.${part}"`, "gu"),
+        ),
+      ).toHaveLength(1);
+  expect(page.match(/<sdp-diagram subject="spec:orders"/gu)).toHaveLength(2);
+  expect(page).toContain('aria-describedby="diagram.spec:orders.realization.text"');
+  expect(page).toContain('aria-describedby="diagram.spec:orders.text"');
+});

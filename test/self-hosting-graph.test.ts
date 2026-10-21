@@ -272,6 +272,28 @@ describe("the self-hosting corpus", () => {
     expect(result.graph.edges).toHaveLength(2488);
   });
 
+  it("permits a named second diagram view in the authored element-id contract", () => {
+    const design = createReader(result.graph).specContext("spec:consumers.spec-studio.diagrams")
+      ?.sections?.design;
+    expect(design?.elementIds).toContain("second view");
+    expect(design?.elementIds).toContain("`diagram.<subject>.realization.text`");
+    expect(design?.elementIds).toContain("`diagram.<subject>.realization.arrow`");
+  });
+
+  it("states the owner queue's reader lookup by Spec and question key", () => {
+    const rules = createReader(result.graph).specContext("spec:consumers.spec-studio.owner-queue")
+      ?.sections?.behavior?.rules;
+    expect(rules?.[2]).toContain("from the reader by the question's Spec and key");
+  });
+
+  it("names vault and stamp beside every other help verb in the authored contract", () => {
+    const design = createReader(result.graph).specContext("spec:consumers.command-line")?.sections
+      ?.design;
+    expect(design?.helpVerbs).toBe(
+      "`build`, `validate`, `view`, `census`, `mermaid`, `gherkin`, `studio`, `vault`, `stamp`, `generate`, `import`, `new` and `q` answer `--help`.",
+    );
+  });
+
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
     // The roster is derived from the same authored arrays the descriptor and binding assertions
     // read: one oracle statement of the corpus's identities, compared against the graph once.

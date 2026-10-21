@@ -36,7 +36,7 @@ An adopter meets the command line one verb at a time, and the verb itself is the
 - rule: [#generateCheck] With `--check-clean`, the verb applies to each root the check its publisher applies under `--check-clean`, to renders of the one graph; a root that fails its check is removed, the others are written, and the run exits 1.
 
 ## Design
-- helpVerbs: `build`, `validate`, `view`, `census`, `mermaid`, `gherkin`, `studio`, `generate`, `import`, `new` and `q` answer `--help`.
+- helpVerbs: `build`, `validate`, `view`, `census`, `mermaid`, `gherkin`, `studio`, `vault`, `stamp`, `generate`, `import`, `new` and `q` answer `--help`.
 - verbHelpText: `Usage:` on its own line, then the verb's usage lines as `sdp --help` writes them, a blank line and the verb's paragraph from the `Commands:` list of `sdp --help`; `sdp new --help` and `sdp new spec --help` then add a blank line and the scaffolder's own paragraph on what `PATH` takes and what the scaffold writes.
 - generateRoots: in this order, `generated/design-review/`, `generated/census/`, `generated/mermaid/`, `generated/gherkin/` and `generated/spec-studio/`.
 - generateOutput: the build and validation summary lines once, then the line each publisher prints for its root, in the order of the roots.

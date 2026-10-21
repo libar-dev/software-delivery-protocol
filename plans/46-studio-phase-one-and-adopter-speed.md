@@ -164,6 +164,19 @@ and term addresses. Examples stay `defined` until a build binds them. The three 
 `spec:decisions.vault-owned-folder`, stay `defined` for the owner to ratify. Each new `ready`
 Spec reports an honest verifier gap until wave 2 binds it.
 
+## Rulings during wave 2b integration
+
+Made by the executing thread on the owner's delegation; each awaits the owner's review.
+
+| Ruling | Carrying entry |
+| --- | --- |
+| A second diagram view of one subject inserts the view's name in its text and arrow ids; the Spec page's realization drawing uses `.realization.text` and `.realization.arrow`. | `spec:consumers.spec-studio.diagrams#design.elementIds` |
+| The owner queue reads provisional readings from reader questions by Spec and key, using position for an unkeyed question; recipe 46 keeps its shape. | `spec:consumers.spec-studio.owner-queue#rule.ownerQuestions` |
+| `vault` and `stamp` join the other verbs in the help contract. | `spec:consumers.command-line#design.helpVerbs` |
+
+The merge chain, conflicts, tests and close measurements are recorded in
+`reviews/plan46-wave2b-integration.md`. Plan 46 remains executing.
+
 ## Decisions only the owner makes
 
 These wait for the owner. None blocks the build; each is listed in the PR description.

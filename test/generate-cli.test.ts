@@ -34,6 +34,8 @@ describe("help before argument parsing", () => {
     "mermaid",
     "gherkin",
     "studio",
+    "vault",
+    "stamp",
     "generate",
     "import",
     "new",

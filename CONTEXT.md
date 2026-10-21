@@ -260,11 +260,9 @@ delivery fact, workflow state, or graph state.
   external `doc:` ADR is a **named deferral** (MD-16, stated in `spec:decisions.carried-evidence`);
   revisit when `doc:`-target
   relations or pack-targeting arrive.
-- **"vault"** is Obsidian's word for a folder of linked notes, used by the `idea` captures in
-  `pack:obsidian-vault-v1` for a projection regenerated from the graph. That projection stands
-  alone, beside the Studio and not as its local half (`spec:consumers.obsidian-vault`), and waits
-  for a reader, so the term stays unratified until it is built; a **term address**
-  (`spec:model.term-addresses`) is a candidate too.
+- **"vault"** is Obsidian's word for a folder of linked notes. The built projection in
+  `pack:obsidian-vault-v1` stands alone beside the Studio (`spec:consumers.obsidian-vault`).
+  Adopting the word into the Protocol's glossary still awaits the owner's review.
 
 ## Term ledger  (locked / rejected / resolved)
 

@@ -8,7 +8,7 @@ import { SPEC_READINESS } from "../../../model/descriptors.js";
 
 /**
  * @sdpAnchor impl:protocol.studio-owner-queue
- * @sdpReferences spec:consumers.spec-studio.owner-queue
+ * @sdpSatisfies spec:consumers.spec-studio.owner-queue
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
@@ -27,10 +27,16 @@ export function queuePage(ctx: PageContext): string {
   });
   const questionFilters = filterBar({ pack: packFacet(ctx) });
   const questions = list(
-    q.questions.map(
-      (row) =>
-        `<div data-row data-pack="${escape(ctx.data.specs.find((s) => s.id === row.spec)?.packs.join(" ") ?? "")}"><p>${row.blocking ? "blocking" : "non-blocking"} · ${row.address === null ? titleLink(ctx, row.spec) : `${link(ctx, row.address)}${copy(row.address)}`}</p><p>${text(ctx, row.question)}</p><p>holds ${row.holds.length ? row.holds.map((id) => link(ctx, id)).join(", ") : "no Specs"}</p></div>`,
-    ),
+    q.questions.map((row) => {
+      const spec = ctx.data.specs.find((s) => s.id === row.spec);
+      const question = spec?.designColumns.openQuestions.find((question) =>
+        row.address === null
+          ? question.index === row.index
+          : `${row.spec}#question.${question.key ?? ""}` === row.address,
+      );
+      const provisional = question?.provisional;
+      return `<div data-row data-pack="${escape(spec?.packs.join(" ") ?? "")}"><p>${row.blocking ? "blocking" : "non-blocking"} · ${row.address === null ? titleLink(ctx, row.spec) : `${link(ctx, row.address)}${copy(row.address)}`}</p><p>${text(ctx, row.question)}</p>${provisional === undefined ? "" : `<p>Provisional: ${text(ctx, provisional)}</p>`}<p>holds ${row.holds.length ? row.holds.map((id) => link(ctx, id)).join(", ") : "no Specs"}</p></div>`;
+    }),
   );
   return frame(
     ctx,

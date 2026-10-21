@@ -4201,7 +4201,7 @@ export const expectedBindingEdges = [
   ["oracle:protocol.studio-diff-page", "models", "spec:consumers.spec-studio.diff-page"],
   ["oracle:protocol.studio-glossary-page", "models", "spec:consumers.spec-studio.glossary-page"],
   ["impl:protocol.studio-registers", "satisfies", "spec:consumers.spec-studio.registers"],
-  ["impl:protocol.studio-owner-queue", "references", "spec:consumers.spec-studio.owner-queue"],
+  ["impl:protocol.studio-owner-queue", "satisfies", "spec:consumers.spec-studio.owner-queue"],
   ["impl:protocol.studio-diff", "satisfies", "spec:consumers.spec-studio.diff-page"],
   ["impl:protocol.studio-glossary", "satisfies", "spec:consumers.spec-studio.glossary-page"],
   ["impl:protocol.studio-base-input", "references", "spec:consumers.spec-studio.data.inputs"],

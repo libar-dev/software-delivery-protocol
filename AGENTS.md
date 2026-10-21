@@ -171,7 +171,7 @@ pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready
 pnpm --silent sdp:q "$(cat dist/recipes/06-where-is-this-concept.js)" --params '{"term":"readiness floor"}'
 ```
 
-The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · studio · generate · import · new spec · q`.
+The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · studio · vault · stamp · generate · import · new spec · q`.
 `sdp validate --watch` re-runs that same validate path on carrier create, change, delete, or rename
 and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
 with `--check-clean`. `sdp validate --rules PATH [--params FORM]...` runs an operator-selected corpus
