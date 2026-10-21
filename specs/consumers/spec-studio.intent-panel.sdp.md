@@ -9,7 +9,9 @@ relations:
     - spec:consumers.edit-model
     - spec:model.open-question-keys
     - target: spec:consumers.intent-composition.proposal
-      reason: the panel hands off a change proposal and the memo recipe 49 renders for it
+      reason: the panel hands off a change proposal
+    - target: spec:consumers.intent-composition.proposal.memo
+      reason: the panel writes the memo recipe 49 renders, byte for byte
 ---
 # A composing panel on every page gathers scoped intent for an agent
 
@@ -27,19 +29,20 @@ The change-proposal contract requires the commit whose graph the person read, an
 - rule: [#handOff] The panel hands its gathered intents off as one change proposal, on the change-proposal contract, and as the memo recipe 49 renders for it: the person copies the memo or the proposal as text, or saves either as a file. The page opens no pull request, because a static page holds no credentials; any pull request comes from the agent's ordinary source edit.
 - rule: [#sameMemo] The memo the panel writes for a proposal is byte for byte the memo recipe 49 returns for the same proposal.
 - rule: [#proposalBase] A proposal's base is the commit a present build stamp names, otherwise one the person supplies, and the person gives one reason for the whole proposal; without a base and a reason the panel exports its intents as scoped-intent text, and the agent that receives them writes the proposal against a commit it knows.
-- rule: [#packScope] A request scoped to a Pack expands at hand-off to the member Spec ids that Pack holds at the proposal's base; a request that changes a Pack's membership or framing, or names an empty Pack, stays scoped-intent text, so the change-proposal contract keeps its Spec and entry scopes.
+- rule: [#packScope] A request scoped to a Pack records the members this page set renders for that Pack, and expands to them at hand-off only when the proposal's base is the commit the page set's stamp names; otherwise it stays scoped-intent text for an agent to resolve against the base. A request that changes a Pack's membership or framing, or names an empty Pack, stays scoped-intent text too, so the change-proposal contract keeps its Spec and entry scopes.
+- rule: [#textApart] The proposal holds only the intents its contract can carry; every intent that stays scoped-intent text is listed apart under `Not in the proposal`, and `Copy scoped intent` copies those intents, so the panel drops none.
 - rule: [#noRequest] The panel requests nothing over the network and sends its intents nowhere.
 
 ## UI
 - gatheredIntents: the intents gathered so far, headed `Composing` with their count, each on one line naming its scope and the change it asks for, such as adding an example or changing a constraint's target, with a button that discards it.
 - baseAndReason: the base as code when a stamp names it, otherwise a labelled text field for a commit, then a labelled text field for the proposal's reason.
-- panelActions: `Copy memo`, `Copy proposal`, `Save memo`, `Save proposal` and `Discard all`, the copy and save actions shown only when a base and a reason are present, and `Copy scoped intent` otherwise.
+- panelActions: `Copy memo`, `Copy proposal`, `Save memo`, `Save proposal` and `Discard all`, the copy and save actions shown only when a base and a reason are present; and `Copy scoped intent` whenever an intent stays scoped-intent text, every intent without a base and a reason, and otherwise those the proposal cannot hold.
 - composingActions: the actions on other panels that compose intent: propose new text for a keyed entry, resolve an open question or promote it to a decision record, propose or edit an example, propose or change a constraint target, and propose examples for values no example binds.
 - composeDialog: a native dialog with a labelled text area for the request, a second for the exact entry text when the action proposes one, and `Gather` and `Cancel` buttons.
 
 ## Design
 - storageKey: `sdp-studio:intents:<root path>`, where the root path is the URL path of the page set's root as the page's `page-root` attribute resolves it, so a page set at `/preview/12/` and one at `/preview/13/` keep apart.
-- intentRecord: `{ scope: string[]; request: string; text?: string; replaces?: string; follows?: string; pack?: string; action: string }` per gathered intent, in gathering order, where `action` names the composing action that gathered it, such as `edit-example`, and `pack` keeps the Pack a Pack-scoped request named, its members already in `scope`.
+- intentRecord: `{ scope: string[]; request: string; text?: string; replaces?: string; follows?: string; pack?: string; action: string }` per gathered intent, in gathering order, where `action` names the composing action that gathered it, such as `edit-example`, and `pack` keeps the Pack a Pack-scoped request named, with `scope` holding the members this page set renders for it.
 - savedFiles: `proposal.json` holding the proposal document and `proposal.md` holding its memo, each saved through a link the panel writes with the `download` attribute.
 - baseSource: the panel reads the base from the `data-corpus-commit` attribute the page's `sdp-stamp` sets once its stamp loads, and requests no stamp of its own.
 

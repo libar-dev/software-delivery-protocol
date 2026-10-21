@@ -24,6 +24,13 @@ A Spec's Model section defines terms, and a term may carry a key that gives it a
 - rule: [#letterIndex] The page opens with the count of terms and of defining Specs in one sentence and the letters its terms start with, each linked to the heading over its terms.
 
 ## UI
-- glossaryNavigation: the page appears in the top navigation as Glossary, after the registers.
 - letterHeading: one heading per first letter, lowercased, with the element id `letter.<letter>`, over the terms that start with it; a term that starts with no letter sits under the heading `#` with the element id `letter.other`.
 - termRow: the term in bold, its definition as text with inline code spans as code, then the Spec's title linked and, when keyed, `term.<key>` as a link with a copy action for the full address.
+
+## Example space
+```gwt-vocabulary
+Given two Specs whose Model sections define the term {term:string}, the first with the key {key:string}
+When the build renders the glossary page
+Then the page lists the term {rows:number} times
+Then the keyed row shows the address {address:string}
+```

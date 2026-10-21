@@ -43,3 +43,11 @@ The panels' parts in page order.
 - verifierList: each verifier with its id, its binding, and its recorded repository-relative file and line as text, as `spec:consumers.spec-studio.spec-page#rule.sourceText` states, no line invented for a verifier the graph does not locate; given run records, under each verifier the results joined from the test file that binds it, a test anchor's own file or, for an example, the file of the test anchor that verifies the example, each with its run, name, result in words and duration, headed `External run evidence from <file>`.
 - coverageGrid: one table per enumerable slot, a row per declared value with the examples that bind it or `no example`; one line per other slot with the values bound and `not enumerable`; then `Unbound` with the examples that bind no value for a slot; and an action that composes intent proposing examples for the values no example binds.
 - evidencePanel: runtime observation reads not tracked under the binding-language rule; build attestations, deployments and bills of materials show no payload and each reads not tracked until a Spec designs its source.
+
+## Example space
+```gwt-vocabulary
+Given a Spec whose keyed rule {exercisedKey:string} an enabled example exercises and whose keyed rule {otherKey:string} no example exercises
+When the build renders the Spec's page
+Then beside the first rule the panel lists the example as {enabledWords:"enabled"|"not enabled"}
+Then beside the second rule the panel reads {unexercised:string}
+```

@@ -9,7 +9,7 @@ relations:
 ---
 # Four lenses read the graph as Packs, architecture, tests and evidence
 
-Each lens is a page with a Spec of its own, so the Packs, architecture and tests lenses build on the graph they read today, and only the evidence lens waits for an observation the graph does not yet record. This Spec keeps what the four share.
+Each lens is a page with a Spec of its own, so each builds on the graph it reads today: the Packs, architecture and tests lenses read what the graph records, and the evidence lens reads not tracked until the graph records an observation. This Spec keeps what the four share.
 
 ## Intent
 - outcome: Let a person see the graph four ways, by Pack, by architecture, by verification and by evidence, from one top navigation.

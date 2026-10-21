@@ -13,6 +13,7 @@ relations:
   decidedBy:
     - spec:decisions.studio-html-surface
     - spec:decisions.studio-web-components
+    - spec:decisions.studio-build-renders
     - spec:decisions.shipped-projections-frozen
 ---
 # The Spec Studio is a static HTML workbench over the one graph
@@ -32,7 +33,7 @@ relations:
 - rule: The Studio is write-careful: it writes nothing to canonical source, and a change a person wants leaves it as scoped intent for an agent, as `spec:consumers.edit-model` states.
 - rule: [#noSecondGraph] The Studio never builds a second graph: every join, claim, delivery fact, derived readiness, floor failure and finding it shows is a value the reader computed when the Studio was built, and the page computes none of them again.
 - rule: [#recipeAnswers] A page shows a catalog recipe's answer only when the Studio's design names that recipe, and the build composes the answer over the graph it derived; the page recomputes none of it.
-- rule: [#namedInputs] Beside the graph the Studio reads only the two optional inputs `spec:consumers.spec-studio.data` names, a base graph and run records; each is named on every page that shows it, never becomes graph data, a delivery fact or a verdict, and never answers in the graph's name.
+- rule: [#namedInputs] Beside the graph the Studio reads only two optional inputs, a base graph and run records; each is named on every page that shows it, never becomes graph data, a delivery fact or a verdict, and never answers in the graph's name.
 - rule: The Studio stands beside the shipped Design Review, census, Mermaid and Gherkin projections and re-specifies none of them, which `spec:decisions.shipped-projections-frozen` keeps as they are.
 
 ## Verification — manual

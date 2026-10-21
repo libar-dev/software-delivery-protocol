@@ -11,11 +11,12 @@ relations:
       reason: the panel element renders the gathered intents that Spec designs
   decidedBy:
     - spec:decisions.studio-web-components
+    - spec:decisions.studio-build-renders
     - spec:decisions.studio-diagram-renderer
 ---
 # The Studio's custom elements each hold one view the build renders
 
-The original's harness element has no subject in the graph, which holds example spaces, bound points and oracle bindings but no harness node, so its successor takes the Spec that owns an example space. The build renders every view into the page's markup, so a view reads without script, prints, and travels inside a Pack export; an element names the view wherever it appears and adds only the interaction the view needs. A trace graph draws one hop, a maturity map places members by stated rung and floor, and a card always shows its rung, so the attributes the original used to choose another setting are gone.
+The original's harness element has no subject in the graph, which holds example spaces, bound points and oracle bindings but no harness node, so its successor takes the Spec that owns an example space. The build renders every view into the page's markup and an element adds only the interaction its view needs, as `spec:decisions.studio-build-renders` rules, so a trace graph draws one hop, a maturity map places members by stated rung and floor, a card always shows its rung, and the attributes the original used to choose another setting are gone.
 
 ## Intent
 - outcome: Give the Studio a small set of custom elements that each hold one view of the graph, rendered by the build, in a Studio page or in any HTML page that holds that markup and loads the element script.

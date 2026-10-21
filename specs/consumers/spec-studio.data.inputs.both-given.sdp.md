@@ -1,13 +1,13 @@
 ---
-id: spec:consumers.spec-studio.data.named-inputs
+id: spec:consumers.spec-studio.data.inputs.both-given
 kind: example
 altitude: story
 readiness: defined
 relations:
-  refines: spec:consumers.spec-studio.data
+  refines: spec:consumers.spec-studio.data.inputs
   verifies:
-    target: spec:consumers.spec-studio.data
-    exercises: [namedInputs, inputNaming, inputsNeverGraph, sameInputsSameBytes]
+    target: spec:consumers.spec-studio.data.inputs
+    exercises: [namedInputs, inputFlags, inputPages, inputNaming, inputsNeverGraph, sameInputsSameBytes]
 ---
 # Both inputs add their pages, named, and the same inputs write the same bytes
 

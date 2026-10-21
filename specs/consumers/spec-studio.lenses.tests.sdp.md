@@ -33,3 +33,12 @@ A verifier binding states that a verifier exists, and pass and fail stay in CI, 
 - testsPage: in order, the page title `Tests`, the summary sentences, the filter bar, and the rows, each a line that wraps on a narrow screen.
 - coverageRow: the Spec's title linked to its page's verification panel, its id as code, then as plain text: verifier binding present or none with `<n> verifiers, <m> enabled`, `<e> of <k> keyed rules exercised`, `<u> unkeyed rules`, and `<v> uncovered values` when it owns an example space; with run records, `external run evidence:` and the count of each result.
 - filterBar: one labelled select per filter, each listing any and the values the rows hold, and a line saying how many of all rows show.
+
+## Example space
+```gwt-vocabulary
+Given a Spec with {keyed:number} keyed rules and {unkeyed:number} unkeyed rules
+Given an example bound to a test anchor that exercises {exercised:number} of those keyed rules
+When the build renders the tests lens
+Then the Spec's row reads {coverage:string}
+Then the Spec's row reads its verifier binding as {binding:"present"|"none"}
+```

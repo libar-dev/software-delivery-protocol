@@ -36,8 +36,14 @@ A large design keeps registers, and each is a catalog recipe an agent runs. Four
 - rule: [#registerTotals] Each register page opens with its recipe's totals as sentences, each opening with its count.
 
 ## UI
-- registerNavigation: the four pages appear in the top navigation as Questions, Decisions, Declarations and Backlog, after the lenses and the owner queue.
 - questionRow: the blocking flag in words, `question.<key>` as a link with a copy action for the full address when keyed, the text, then each present field on its own labelled line, `deferral` written beside a question with a trigger.
 - decisionRow: the title linked, the id as code, the rung badge, then labelled lines for Supersedes, Superseded by, Refines, Refined by, Shapes and Questions, each listing ids as links and an empty line reading None, and the reasons under the relations they belong to.
 - declarationRow: the key as a link, the declaration in a code block, then `Cited at` and each citing file and line with a copy action, or `no citation recorded`.
 - backlogRow: the title linked, the id as code, then as plain text the kind, altitude, floor in words, the unmet clauses by id, `<e> entries, <d> declarations, <q> open, <b> blocking`, and the referencing units by id.
+
+## Example space
+```gwt-vocabulary
+Given a Spec {blockingSpec:string} with a blocking open question and a Spec {otherSpec:string}, before it in id order, with only a non-blocking one
+When the build renders the questions page
+Then the page lists {first:string} first
+```

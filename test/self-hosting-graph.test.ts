@@ -223,16 +223,16 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // Re-measured from the refreshed tree: 303 Markdown Specs and four Gherkin Specs,
-    // 307 in the self-hosting Pack; seven Pack manifests and 339 source anchors.
-    // The excluded-root validate run corroborates 653 nodes and 1778 edges.
-    expect(result.counts).toEqual({ specs: 307, packs: 7, anchors: 339 });
-    expect(expectedSpecs).toHaveLength(307);
-    expect(expectedPackMembers).toHaveLength(307);
+    // Re-measured from the refreshed tree: 319 Markdown Specs and four Gherkin Specs,
+    // 323 in the self-hosting Pack; seven Pack manifests and 339 source anchors.
+    // The excluded-root validate run corroborates 669 nodes and 1843 edges.
+    expect(result.counts).toEqual({ specs: 323, packs: 7, anchors: 339 });
+    expect(expectedSpecs).toHaveLength(323);
+    expect(expectedPackMembers).toHaveLength(323);
     expect(expectedAnchors).toHaveLength(339);
     expect(expectedBindingEdges).toHaveLength(393);
-    expect(result.graph.nodes).toHaveLength(653);
-    expect(result.graph.edges).toHaveLength(1778);
+    expect(result.graph.nodes).toHaveLength(669);
+    expect(result.graph.edges).toHaveLength(1843);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -294,7 +294,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 44, idea: 15, ready: 245, scoped: 3 });
+    ).toEqual({ defined: 60, idea: 15, ready: 245, scoped: 3 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {

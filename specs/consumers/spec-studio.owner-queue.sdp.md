@@ -27,6 +27,13 @@ A large design waits on one person: the statements its floor already allows and 
 - rule: [#statesNothing] The page orders and links: it states no rung, records no statement, and never presents a waiting statement as approved or a position as a priority the owner set.
 
 ## UI
-- queueNavigation: the page appears in the top navigation as Queue, after the lenses.
 - statementRow: `<position>.`, the title linked, the id as code, then as plain text the kind, `stated <rung>`, `floor allows <rung>`, `rests on` and the waiting Specs as links to their rows or `can be made now`, and the Packs; the row's element id is the Spec's id.
 - ownerQuestionRow: `blocking` or `non-blocking` in words, the address as a link with a copy action, the text, the provisional reading on its own labelled line, then `holds` and the held Specs as links.
+
+## Example space
+```gwt-vocabulary
+Given a Spec {dependent:string} that waits for a statement its floor allows and rests on a Spec {dependency:string} that waits for one too
+When the build renders the owner queue page
+Then the queue lists {first:string} first
+Then the row of the Spec that rests on the other links it: {linked:boolean}
+```

@@ -219,18 +219,32 @@ specs:
   - spec:consumers.spec-studio.responsive
   - spec:consumers.spec-studio.sharing
   - spec:consumers.spec-studio.sharing.stamp-written-apart
-  - spec:consumers.spec-studio.data.graph-only
-  - spec:consumers.spec-studio.data.named-inputs
-  - spec:consumers.spec-studio.publisher.watch-matches-plain-run
+  - spec:consumers.spec-studio.data.recipe-answers
+  - spec:consumers.spec-studio.data.inputs
+  - spec:consumers.spec-studio.data.inputs.graph-only
+  - spec:consumers.spec-studio.data.inputs.both-given
+  - spec:consumers.spec-studio.publisher.watch
+  - spec:consumers.spec-studio.publisher.watch.matches-plain-run
+  - spec:consumers.spec-studio.navigation
   - spec:consumers.spec-studio.lenses.packs
   - spec:consumers.spec-studio.lenses.architecture
+  - spec:consumers.spec-studio.lenses.architecture.planned-apart
   - spec:consumers.spec-studio.lenses.tests
+  - spec:consumers.spec-studio.lenses.tests.coverage-row
   - spec:consumers.spec-studio.lenses.evidence
+  - spec:consumers.spec-studio.pack-page.maturity-map
+  - spec:consumers.spec-studio.spec-page.cited-declaration
+  - spec:consumers.spec-studio.verification-panels.rule-coverage
   - spec:consumers.spec-studio.registers
+  - spec:consumers.spec-studio.registers.blocking-first
   - spec:consumers.spec-studio.owner-queue
+  - spec:consumers.spec-studio.owner-queue.dependency-first
   - spec:consumers.spec-studio.diff-page
+  - spec:consumers.spec-studio.diff-page.changed-entry
   - spec:consumers.spec-studio.runs-page
+  - spec:consumers.spec-studio.runs-page.external-evidence
   - spec:consumers.spec-studio.glossary-page
+  - spec:consumers.spec-studio.glossary-page.same-word-twice
   - spec:consumers.spec-studio.intent-panel.refresh-keeps-intents
   - spec:consumers.spec-studio.diagrams
   - spec:consumers.spec-studio.diagrams.within-bound
@@ -251,7 +265,8 @@ specs:
   - spec:consumers.context-bundle
   - spec:consumers.design-diff
   - spec:consumers.intent-composition.proposal
-  - spec:consumers.intent-composition.proposal.memo-shared
+  - spec:consumers.intent-composition.proposal.memo
+  - spec:consumers.intent-composition.proposal.memo.shared
   - spec:consumers.reference-projection
   - spec:consumers.structural-mermaid
   - spec:consumers.obsidian-vault
@@ -303,6 +318,7 @@ specs:
   - spec:decisions.question-key-rendering
   - spec:decisions.studio-html-surface
   - spec:decisions.studio-web-components
+  - spec:decisions.studio-build-renders
   - spec:decisions.studio-diagram-renderer
   - spec:decisions.anchor-comment-form
   - spec:decisions.anchor-binding-grain

@@ -1,12 +1,12 @@
 ---
-id: spec:consumers.intent-composition.proposal.memo-shared
+id: spec:consumers.intent-composition.proposal.memo.shared
 kind: example
 altitude: story
 readiness: defined
 relations:
-  refines: spec:consumers.intent-composition.proposal
+  refines: spec:consumers.intent-composition.proposal.memo
   verifies:
-    target: spec:consumers.intent-composition.proposal
+    target: spec:consumers.intent-composition.proposal.memo
     exercises: [memo]
 ---
 # Recipe 49 and the composing panel write one memo for one proposal

@@ -51,7 +51,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **Scenario** | a low-altitude `example`-kind `Spec` that `refines`/`verifies` a Story | an altitude or a kind |
 | **NFR** | a `constraint` with a measurable `target`; the *flavor* (performance / security / …) lives on the section | a separate kind |
 | **Executable Spec** | an `example` that **has a verifier** (a delivery fact) | a readiness rung |
-| **capability / domain** | a **`Pack` grouping** and/or a designed-for Capability Map projection over high-altitude `behavior` Specs; no Capability Map is built, and the Studio groups Specs by Pack and draws no capability tree (`spec:consumers.spec-studio.lenses#rule.packGrouping`) | a kind or an altitude |
+| **capability / domain** | a **`Pack` grouping** and/or a designed-for Capability Map projection over high-altitude `behavior` Specs; no Capability Map is built, and the Studio groups Specs by Pack and draws no capability tree (`spec:consumers.spec-studio.lenses.packs#rule.packGrouping`) | a kind or an altitude |
 
 ## Sections  (→ `spec:model.spec-sections`)
 

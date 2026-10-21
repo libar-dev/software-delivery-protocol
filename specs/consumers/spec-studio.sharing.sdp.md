@@ -28,6 +28,7 @@ A page set is a function of the graph and its named inputs, so it carries no com
 - rule: [#publishingStep] Publishing a preview and writing its stamp are a step the adopter's CI runs, never the Studio's build; the shell reads the stamp as `spec:consumers.spec-studio.shell#rule.stamp` states.
 - rule: [#previewWorkflow] The package's repository ships a reusable GitHub Actions workflow that, on a pull request, installs the caller's dependencies, runs `sdp studio` with the caller's root, exclusions and inputs, runs `sdp stamp` with the pull request's head commit and the repository's source template, and uploads the page set as a CI artifact; it opens no pull request, writes no comment and holds no credential beyond the run's own token.
 - rule: [#previewDeploy] The workflow deploys the stamped page set under `/preview/<pr-number>/` only when the caller asks for it and the repository serves a host from the branch the workflow writes to; a pull request from a fork never deploys.
+- rule: [#sourceLinks] Every recorded file and line a page shows as text carries its file and line as data on its element, and when a loaded stamp names a source template the stamp element links each to the template with the file and line filled in; without such a stamp, or through `file://`, each stays text.
 
 ## Design
 - buildStamp: `{ schemaVersion: string; corpusCommit: string; engine: string; builtAt: string; source?: string }` in `stamp.json` beside the page set, written by `sdp stamp` and never by the Studio's build: the graph schema version of the stamping engine, the commit `--commit` names or `unknown`, the engine `sdp --version` names, the time the step ran as an ISO 8601 UTC timestamp to the second, and the source template `--source` names, when given.
@@ -37,6 +38,10 @@ A page set is a function of the graph and its named inputs, so it carries no com
 - previewArtifact: the artifact `spec-studio-pr-<pr-number>`, holding the stamped page set.
 - workflowSource: the workflow stamps with the pull request's head commit and the source template `<server>/<repository>/blob/<head commit>/<root>/{file}#L{line}`, the root and its slash left out when the root is `.`.
 - previewPath: a pull request's preview is served at `<host>/preview/<pr-number>/`, which the workflow writes as the folder `preview/<pr-number>/` of the `gh-pages` branch, the branch GitHub Pages serves when a repository enables Pages from it.
+- stampElement: the page element `sdp-stamp`, once its stamp loads, also sets `data-corpus-commit` on itself and, when the stamp names a source template, wraps each `code` element carrying `data-source-file` and `data-source-line` in a link to the template with `{file}` and `{line}` filled in, the file percent-encoded by path segment; without a template it links nothing.
+
+## UI
+- sourceMark: a recorded file and line written as `<file>:<line>` in a `code` element carrying `data-source-file` and `data-source-line`, beside its copy action.
 
 ## Example space
 ```gwt-vocabulary

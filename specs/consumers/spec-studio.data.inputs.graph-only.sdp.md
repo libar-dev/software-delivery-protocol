@@ -1,13 +1,13 @@
 ---
-id: spec:consumers.spec-studio.data.graph-only
+id: spec:consumers.spec-studio.data.inputs.graph-only
 kind: example
 altitude: story
 readiness: defined
 relations:
-  refines: spec:consumers.spec-studio.data
+  refines: spec:consumers.spec-studio.data.inputs
   verifies:
-    target: spec:consumers.spec-studio.data
-    exercises: [namedInputs, sameInputsSameBytes]
+    target: spec:consumers.spec-studio.data.inputs
+    exercises: [namedInputs, inputPages, sameInputsSameBytes]
 ---
 # Without inputs the page set is the graph's alone
 

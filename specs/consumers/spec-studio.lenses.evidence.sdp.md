@@ -5,9 +5,6 @@ altitude: story
 readiness: defined
 relations:
   refines: spec:consumers.spec-studio.lenses
-  dependsOn:
-    target: spec:observation.runtime-overlay
-    reason: an observation the graph records would be the first evidence this lens shows
   decidedBy: spec:decisions.binding-not-liveness
 ---
 # The evidence lens names each source of runtime evidence and reads it as not tracked
