@@ -1,0 +1,115 @@
+"""Re-measure the shipped adapter on the retained disposable platform copy."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+
+root = Path('/tmp/plan46/accept/platform')
+evidence = Path('/tmp/plan46/fix-x3')
+tarball = evidence / 'libar-dev-software-delivery-protocol-0.0.0.tgz'
+backup = Path(tempfile.mkdtemp(prefix='platform-before-', dir=evidence))
+parent = 'design/specs/kernel/domain-kernel.sdp.md'
+example = 'design/specs/kernel/domain-kernel.evaluate-twice.sdp.md'
+sibling = 'design/specs/kernel/domain-kernel.incremental-then-rebuild.sdp.md'
+suite = 'tests/pure/domain-kernel.evaluate-twice.test.ts'
+sources = [parent, example, sibling, suite]
+saved_paths = sources + ['package.json', 'package-lock.json', 'node_modules/.package-lock.json']
+saved = {p: (root / p).read_bytes() if (root / p).exists() else None for p in saved_paths}
+registrars = {p.relative_to(root): p.read_bytes() for p in (root / 'tests').rglob('*.test.generated.ts')}
+directories = ['generated', 'node_modules/@libar-dev/software-delivery-protocol']
+for directory in directories:
+    shutil.copytree(root / directory, backup / directory, symlinks=True)
+for path, content in saved.items():
+    if content is not None:
+        destination = backup / path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(content)
+
+def tree_hash(directory):
+    return {str(p.relative_to(directory)): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in directory.rglob('*') if p.is_file()}
+
+before = {d: tree_hash(root / d) for d in directories}
+results = []
+
+def run(label, command, expected=0):
+    result = subprocess.run(command, cwd=root, env={**os.environ, 'NO_COLOR': '1'},
+                            text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    log = evidence / (label + '.log')
+    log.write_text(result.stdout)
+    results.append({'label': label, 'command': command, 'cwd': str(root),
+                    'exit': result.returncode, 'log': str(log)})
+    print(label, 'exit', result.returncode, flush=True)
+    assert result.returncode == expected, result.stdout
+    return result.stdout
+
+def measure(stage, passed, failed):
+    run(stage + '-build', ['npx', 'sdp', 'build'])
+    report = evidence / (stage + '-vitest.json')
+    output = run(stage + '-vitest', ['npx', 'vitest', 'run', '--project', 'pure', suite,
+                 '--reporter=default', '--reporter=json', '--outputFile=' + str(report)],
+                 expected=1 if failed else 0)
+    counts = json.loads(report.read_text())
+    assert counts['numTotalTests'] == passed + failed, counts
+    assert counts['numPassedTests'] == passed, counts
+    assert counts['numFailedTests'] == failed, counts
+    if failed:
+        assert 'bindings[step.key] is not a function' in output, output
+        assert 'Given the decision inputs are immutable before evaluation' in output, output
+    results[-1]['tests'] = {'total': passed + failed, 'passed': passed, 'failed': failed}
+
+original = 'every input is frozen before the kernel runs'
+reworded = 'all decision inputs are frozen before evaluation'
+unkeyed = 'the decision inputs are immutable before evaluation'
+restored = False
+try:
+    run('platform-install', ['npm', 'install', str(tarball)])
+    run('platform-cli', ['npx', 'sdp', '--version'])
+    run('platform-vitest', ['npx', 'vitest', '--version'])
+    run('platform-context', ['npx', 'sdp', 'q',
+        'return g.specContext("spec:kernel.domain-kernel.evaluate-twice")', '--json'])
+    for path in sources:
+        (root / path).write_bytes(subprocess.check_output(['git', 'show', 'HEAD:' + path], cwd=root))
+    assert '@libar-dev/software-delivery-protocol/vitest' in (root / suite).read_text()
+    measure('baseline', 2, 0)
+    for path in [parent, example]:
+        text = (root / path).read_text()
+        assert text.count(original) == 1
+        (root / path).write_text(text.replace(original, '[#freezeInputs] ' + original))
+    text = (root / suite).read_text()
+    assert text.count('"' + original + '"') == 1
+    (root / suite).write_text(text.replace('"' + original + '"', '"freezeInputs"'))
+    measure('keyed', 2, 0)
+    for path in [parent, example, sibling]:
+        (root / path).write_text((root / path).read_text().replace(original, reworded))
+    measure('keyed-reworded', 2, 0)
+    for path in [parent, example, sibling]:
+        text = (root / path).read_text().replace('[#freezeInputs] ', '').replace(reworded, unkeyed)
+        (root / path).write_text(text)
+    measure('unkeyed-reworded', 0, 2)
+finally:
+    for path, content in saved.items():
+        if content is None:
+            (root / path).unlink(missing_ok=True)
+        else:
+            (root / path).write_bytes(content)
+    for path in (root / 'tests').rglob('*.test.generated.ts'):
+        if path.relative_to(root) not in registrars:
+            path.unlink()
+    for path, content in registrars.items():
+        (root / path).write_bytes(content)
+    for directory in directories:
+        shutil.rmtree(root / directory)
+        shutil.copytree(backup / directory, root / directory, symlinks=True)
+    assert all(((root / p).read_bytes() if (root / p).exists() else None) == b for p, b in saved.items())
+    assert {p.relative_to(root): p.read_bytes() for p in (root / 'tests').rglob('*.test.generated.ts')} == registrars
+    assert all(tree_hash(root / d) == before[d] for d in directories)
+    restored = True
+    (evidence / 'platform-results.json').write_text(json.dumps({
+        'commands': results, 'restored': restored,
+        'tarballSha256': hashlib.sha256(tarball.read_bytes()).hexdigest(),
+    }, indent=2) + '\n')
+    print('Restored source files, manifests, generated output, registrars and installed package.', flush=True)

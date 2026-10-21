@@ -4,6 +4,10 @@ import { copyFileSync } from "node:fs";
 import { RECIPES_DIRECTORY, writeBuildArtifacts } from "./src/cli/build-artifacts.js";
 import { BUILD_INFO_FILE } from "./src/cli/build-info.js";
 
+// The adapter must register on the adopter's runner. Vitest stays a dev dependency because
+// an optional Vitest peer crashes plain npm 10 installs, so tsup cannot infer these externals.
+const vitestExternals = [/^vitest(?:\/|$)/u, /^@vitest\//u];
+
 // The CLI entry (`src/cli/sdp.ts`) carries its own source shebang; esbuild preserves a leading
 // shebang on an entry point, so `dist/cli/sdp.js` stays executable while `dist/index.js` (the
 // library entry, no shebang) stays clean. No banner / strip-plugin / post-build normalisation.
@@ -23,6 +27,7 @@ export default defineConfig([
       "src/testing/index.ts",
     ],
     format: ["esm"],
+    external: vitestExternals,
     dts: true,
     platform: "node",
     target: "es2022",
@@ -37,6 +42,7 @@ export default defineConfig([
   {
     entry: ["src/index.ts"],
     format: ["cjs"],
+    external: vitestExternals,
     dts: false,
     platform: "node",
     target: "es2022",

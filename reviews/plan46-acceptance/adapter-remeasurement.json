@@ -1,0 +1,184 @@
+{
+  "commands": [
+    {
+      "label": "platform-install",
+      "command": [
+        "npm",
+        "install",
+        "/tmp/plan46/fix-x3/libar-dev-software-delivery-protocol-0.0.0.tgz"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/platform-install.log"
+    },
+    {
+      "label": "platform-cli",
+      "command": [
+        "npx",
+        "sdp",
+        "--version"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/platform-cli.log"
+    },
+    {
+      "label": "platform-vitest",
+      "command": [
+        "npx",
+        "vitest",
+        "--version"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/platform-vitest.log"
+    },
+    {
+      "label": "platform-context",
+      "command": [
+        "npx",
+        "sdp",
+        "q",
+        "return g.specContext(\"spec:kernel.domain-kernel.evaluate-twice\")",
+        "--json"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/platform-context.log"
+    },
+    {
+      "label": "baseline-build",
+      "command": [
+        "npx",
+        "sdp",
+        "build"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/baseline-build.log"
+    },
+    {
+      "label": "baseline-vitest",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "--project",
+        "pure",
+        "tests/pure/domain-kernel.evaluate-twice.test.ts",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=/tmp/plan46/fix-x3/baseline-vitest.json"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/baseline-vitest.log",
+      "tests": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0
+      }
+    },
+    {
+      "label": "keyed-build",
+      "command": [
+        "npx",
+        "sdp",
+        "build"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/keyed-build.log"
+    },
+    {
+      "label": "keyed-vitest",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "--project",
+        "pure",
+        "tests/pure/domain-kernel.evaluate-twice.test.ts",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=/tmp/plan46/fix-x3/keyed-vitest.json"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/keyed-vitest.log",
+      "tests": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0
+      }
+    },
+    {
+      "label": "keyed-reworded-build",
+      "command": [
+        "npx",
+        "sdp",
+        "build"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/keyed-reworded-build.log"
+    },
+    {
+      "label": "keyed-reworded-vitest",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "--project",
+        "pure",
+        "tests/pure/domain-kernel.evaluate-twice.test.ts",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=/tmp/plan46/fix-x3/keyed-reworded-vitest.json"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/keyed-reworded-vitest.log",
+      "tests": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0
+      }
+    },
+    {
+      "label": "unkeyed-reworded-build",
+      "command": [
+        "npx",
+        "sdp",
+        "build"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 0,
+      "log": "/tmp/plan46/fix-x3/unkeyed-reworded-build.log"
+    },
+    {
+      "label": "unkeyed-reworded-vitest",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "--project",
+        "pure",
+        "tests/pure/domain-kernel.evaluate-twice.test.ts",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=/tmp/plan46/fix-x3/unkeyed-reworded-vitest.json"
+      ],
+      "cwd": "/tmp/plan46/accept/platform",
+      "exit": 1,
+      "log": "/tmp/plan46/fix-x3/unkeyed-reworded-vitest.log",
+      "tests": {
+        "total": 2,
+        "passed": 0,
+        "failed": 2
+      }
+    }
+  ],
+  "restored": true,
+  "tarballSha256": "1797a846e222183903f73ae36608dc02cfcbc856748cb8297f296a4d22e759c9"
+}
