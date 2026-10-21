@@ -18,22 +18,20 @@ relations:
 
 The original design gave an open question an owner and a list of links to decision records, discussions and tickets, beside its text and its blocking flag (`docs/lineage/v0-design/01-core-primitives.md` §2.1). A question key gives a question an address and nothing more, so the first adopter keeps the rest beside the graph. Its decision register (`libar-platform/design/decisions/register.json`, described in `design/advisors/register.md`) records for each open decision its sources, who decides it as a class (`tactical`, `delegated` or `owner`) and an advisor lens, the provisional reading the design proceeds on, and a lean. It also records a status, the work unit it blocks, dates and who checked the lean. This Spec captures the part that states something about the question and leaves the work record outside.
 
+A TypeScript open-question list that cannot be read statically drops whole, blocking questions included. A failure under one of the four fields is an error, because the fields arrived with no carrier relying on a lossy reading; a failure in a question's text, its blocking flag or the list itself keeps the warning every other non-static TypeScript section property gives.
+
 ## Intent
 - problem: A question's text and blocking flag do not say who settles it, what it rests on, or what the design assumes until it is settled, so an adopter keeps a register beside the graph that repeats each question.
 - outcome: Let an open question carry who decides it, the sources it rests on, the reading the design proceeds on and, on a deferral, what brings it back, without a status.
 - risk: A field for who decides invites fields for when and for what state the question is in, which would rebuild a workflow tracker inside the Spec.
-
-### Open questions
-- [non-blocking #droppedQuestionList] A non-static question text, blocking flag or spread in a TypeScript open-question list also drops the whole list, blocking questions included, and stays a warning; is every dropped question list an error?
-  - decider: owner
-  - provisional: only a failure under the four fields is an error
 
 ## Rule
 - An open question may carry four optional fields beside its text, flag and key, namely who decides it, the links it rests on, its provisional reading and its re-entry trigger; a question without them stays lawful.
 - Who decides a question names the person, role or body whose ruling settles it. It authorizes nothing, gates no edit, and no validator compares it with the author of a change.
 - Who decides a question is one lowercase kebab token the corpus owns, on the grammar a role uses, such as `owner` or `delegated`. The graph holds no person or role to point at, so the value references nothing, and the Protocol ships no list of values.
 - In the Markdown carrier the four fields ride labelled sub-items indented under the question's own line, `decider:`, `links:`, `provisional:` and `trigger:`, each at most once and each one line, so the question line stays as authored. They are the only indented field lines the body grammar admits, and the TypeScript carrier carries the same four fields on the question object.
-- In the TypeScript carrier, a value under any of the four fields that cannot be read statically is an extraction error rather than a lossy warning, because the failure drops the Spec's whole open-question list, blocking questions included.
+- [#fieldFailureError] In the TypeScript carrier, a value under any of the four fields that cannot be read statically is an extraction error at that field, and the Spec's whole open-question list drops with it.
+- [#droppedListWarning] In the TypeScript carrier, a question text or blocking flag that cannot be read statically, or a spread in the list, drops the Spec's whole open-question list, blocking questions included, with the lossy warning `extract/non-static-section`; only a failure under the four fields is an error.
 - A link is a Spec id or an entry address the question rests on, and nothing else. Each is checked as a mention is: a missing target or entry is an error, and a target with no declared relation either way raises the `conformance/prose-mentions` warning for that pair. A link mints no relation, and a document outside the graph is named in the question's text as prose, because the graph holds no identity for it to resolve.
 - The provisional reading is one line stating what the design assumes while the question is open. It is intent, never a ruling.
 - A question carries at most one provisional line. A worked proposal for settling it is a decision Spec whose Decision section holds its decision, context, rationales, alternatives and consequences, stated at the rung its record earns. Each shaped Spec names it through `decidedBy`, so a decision below `defined` holds that Spec below `ready` under the typed-dependency floor.

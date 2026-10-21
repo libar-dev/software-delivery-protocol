@@ -5,7 +5,7 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:carrier.slot-notation
-  verifies: spec:carrier.slot-notation
+  verifies: { target: spec:carrier.slot-notation, exercises: [typeForm, skeletonIdentity] }
 ---
 # A typed declaration normalizes to the skeleton its binding shares
 

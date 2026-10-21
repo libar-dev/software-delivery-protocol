@@ -780,22 +780,12 @@ export const carrierSpecs = [
     readiness: "ready",
     file: "specs/carrier/slot-notation.sdp.md",
     title: "Slot notation declares, binds, and refuses to guess",
-    narrative: null,
+    narrative:
+      "A closed union takes two or more literals because a dimension with one value varies nothing. A vocabulary that means one fixed word writes it as step text, so a group holding one quoted literal stays what it is in an example, a binding, and declares no dimension.",
     sections: {
       intent: {
         outcome:
           "Give step text one owned typed placeholder syntax whose normalized identity a generated contract can key on.",
-        openQuestions: [
-          {
-            question:
-              "Should a group holding one double-quoted literal declare a one-value dimension in a vocabulary?",
-            blocking: false,
-            key: "oneLiteralVocabulary",
-            decider: "owner",
-            provisional:
-              "the group is a binding and declares no vocabulary type; contract generation reports contracts/untyped-vocabulary-slot.",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -803,10 +793,19 @@ export const carrierSpecs = [
           "A vocabulary slot declares a type only in the ratified type form — `number`, `string`, `boolean`, or a closed union of two or more quoted literals — while an example binds one scalar literal in the same position.",
           "The skeleton — every slot group normalized to `{name}` with prose braces left untouched — is the step's identity: it keys the generated step contract, matches an example step to its vocabulary entry, and makes a declaration and its binding the same step.",
           "An identifier-led group whose remainder parses as neither a type nor a value stays a named but unusable slot: it declares nothing, binds nothing, and reads as unbound rather than being guessed into meaning.",
-          'A group holding one double-quoted literal, `{x: "only"}`, is a binding; in a vocabulary it declares no type, the provisional reading of the open question above, and contract generation reports `contracts/untyped-vocabulary-slot`.',
+          'A group holding one double-quoted literal, `{x: "only"}`, is a binding; in a vocabulary it declares no type, no one-value dimension, and contract generation reports `contracts/untyped-vocabulary-slot`.',
           "A bare group, `{n}`, names a slot and binds nothing; in an example it is unbound, and in a vocabulary it declares no type.",
           "Lexical degradation stays local: a stray or unterminated brace group is prose only up to the next candidate, so it never swallows a well-formed binding that follows it.",
         ],
+        ruleKeys: {
+          slotName: "rules[0]",
+          typeForm: "rules[1]",
+          skeletonIdentity: "rules[2]",
+          unusableSlot: "rules[3]",
+          oneLiteralBinding: "rules[4]",
+          bareGroup: "rules[5]",
+          localDegradation: "rules[6]",
+        },
         exampleSpace: {
           given: ["the step text {stepText:string}"],
           when: ["the notation parses the step text"],
@@ -891,18 +890,6 @@ export const carrierSpecs = [
           "Without a stated body grammar, an author learns the default carrier by probing refusals and keeps a private copy that drifts when the parser changes.",
         outcome:
           "State what each section of a Markdown Spec body accepts and refuses, and name the Spec that owns each field's values, so an author can write a lawful carrier from this Spec and the Specs it depends on.",
-        openQuestions: [
-          {
-            question:
-              "Should the held ruling of one Constraints entry per Spec be applied to the TypeScript carrier, or should the cross-carrier cardinality be reconsidered? A `constrainedBy` edge targets a Spec and does not specify its entry count.",
-            blocking: false,
-            key: "constraintEntryCount",
-            decider: "owner",
-            provisional:
-              "Markdown admits one Constraints entry; TypeScript admits several while the cross-carrier revision remains held.",
-            links: ["spec:validation.kind-evidence"],
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -916,7 +903,8 @@ export const carrierSpecs = [
           "Intent accepts `actor`, `problem`, `outcome`, and `value` once each and `risk` and `assumption` repeatedly. One `### Open questions` heading may follow those fields, each of its entries opens with `[blocking]` or `[non-blocking]`, optionally with a lower-camel key after one space and `#` inside the brackets, unique within the Spec, and it is the only H3 any section accepts. Under a question's line may follow its `decider`, `links`, `provisional` and `trigger` fields, one line each and each at most once; their values follow `spec:model.open-question-fields`.",
           "Behavior entries are keyed `rule` or `flow`. Rule and Contract entries are plain bullets, each one rule. Workflow entries are plain bullets, each one flow, plus keyed `rule` entries. Any entry of the primary behavior owner may open its text, after its label where it has one, with a rule key marker, `[#key]` and a space, and the key follows `spec:model.rule-keys`. Verification entries are plain criteria.",
           "A keyed entry is one ASCII word, a colon, and a space before its value. Where a section takes plain bullets, a bullet of that shape is read as a key and refused unless the section names that key, so a plain bullet never opens with a single word and a colon.",
-          "Constraints accept one flat entry of `statement`, `flavor`, `target`, and `measurableBy`, each at most once, with `statement` required and no prose. A second entry is refused by this carrier; the cross-carrier revision is held at `spec:carrier.markdown-body-grammar#question.constraintEntryCount`.",
+          "Constraints accept one flat entry of `statement`, `flavor`, `target`, and `measurableBy`, each at most once, with `statement` required and no prose. A second entry is refused by this carrier.",
+          "The TypeScript carrier may give one Spec several constraint entries, and the evidence clauses read every entry a Spec carries, whichever carrier wrote it. A `constrainedBy` edge names the constraint Spec whole, whatever its entry count, so a Markdown author with two measurable targets writes two constraint Specs.",
           "A Model entry is a bold term, the em dash character with a space on each side, and the definition; a hyphen is refused, terms are unique, and an integer-like term is refused. Decision accepts `context` and `decision` once each and `rationale`, `alternative`, and `consequence` repeatedly.",
           "Design and UI are open sections. Each entry is a lower-camel ASCII key, unique within its section, and a one-line value; the same key may appear once under Design and once under UI.",
           "The keys `implemented`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo`, and `models` are refused in every keyed section, under `spec:validation.authored-honesty`. In Design and UI, an otherwise lawful lower-camel key outside this set is ordinary content, including `dependsOn`, `references`, `uses` and `memberOf`; it creates no edge. Every closed section still admits only its own fields.",
@@ -940,8 +928,9 @@ export const carrierSpecs = [
           singleH3: "rules[7]",
           keyedEntryShape: "rules[9]",
           constraintFields: "rules[10]",
-          modelEntries: "rules[11]",
-          openSectionKeys: "rules[12]",
+          constraintEntryCount: "rules[11]",
+          modelEntries: "rules[12]",
+          openSectionKeys: "rules[13]",
         },
         description:
           "The world writes two Markdown carriers in one extraction root, the refused carrier and a healthy sibling. The sibling is a story-altitude behavior Spec stating `idea`, with no relations and an Intent outcome.",
@@ -956,38 +945,32 @@ export const carrierSpecs = [
     readiness: "ready",
     file: "specs/carrier/inline-code-spans.sdp.md",
     title: "Inline code is content, never markup",
-    narrative: null,
+    narrative:
+      "CommonMark lets a code span cross a line ending inside a paragraph, lets a backslash escape a backtick, and lets an HTML tag that opens before a backtick pair win over the span. The Protocol reads all three cases the other way. A span is a pair of equal backtick runs on one line, and nothing else changes that, so an author or an agent can tell by eye what a span shields, every location reads a span the same way, and a carrier that validates today stays valid. The cost is that a CommonMark renderer may show these rare constructs differently from how the Protocol reads them.",
     sections: {
       intent: {
         problem:
           "Authors need to write type parameters inside code spans without the raw-HTML guard forcing a private bracket notation that cannot be pasted into source.",
         outcome:
           "Let a code span carry any literal text, angle brackets included, while raw HTML outside code spans stays refused.",
-        openQuestions: [
-          {
-            question:
-              "CommonMark lets a code span cross a line ending inside a paragraph, so a renderer and the Protocol can disagree about which text is inside a span. Should the owner keep the line-scoped rule or match spans across a paragraph?",
-            blocking: false,
-            key: "spanAcrossLines",
-            decider: "owner",
-            provisional: "the line-scoped reading stands",
-          },
-          {
-            question:
-              "A backslash-escaped backtick still opens a span, and a tag that starts before a backtick pair loses to the span. CommonMark decides both cases the other way. Should the owner keep these readings or follow CommonMark in these two cases?",
-            blocking: false,
-            key: "commonMarkCases",
-            decider: "owner",
-          },
-        ],
       },
       behavior: {
         rules: [
           "A code span is literal content. The raw-HTML refusal never reads inside one, whether the span sits in a Spec's narrative, a section description, a list entry, or a Pack's framing prose.",
-          "A code span opens at a backtick run and closes at the next run of the same length on that same line. Both runs must sit on one line. An unmatched run is ordinary text and shields nothing.",
+          "A code span opens at a backtick run and closes at the next run of the same length on that same line. Both runs must sit on one line, even inside a paragraph whose next line holds the closing run. An unmatched run is ordinary text and shields nothing.",
+          "A backslash does not escape a backtick: every backtick run counts when spans are matched, so a backtick written after a backslash still opens or closes a span.",
+          "Spans are matched before the raw-HTML test reads what is left of the line, so a tag that opens before a span and closes inside it is no tag, while a tag that opens before a span and closes after it is still refused.",
           "Raw HTML outside a code span is refused as `extract/invalid-markdown-structure` with the message `raw HTML is unsupported`.",
           "The graph stores the line as authored, backticks included. Each projection renders it through the encoding its own Spec requires for that field.",
         ],
+        ruleKeys: {
+          literalSpan: "rules[0]",
+          lineScoped: "rules[1]",
+          noEscape: "rules[2]",
+          spanBeforeTag: "rules[3]",
+          rawHtmlRefused: "rules[4]",
+          storedAsAuthored: "rules[5]",
+        },
         exampleSpace: {
           given: ["the code-span matrix in {location:string}"],
           when: ["the extractor reifies the probes"],

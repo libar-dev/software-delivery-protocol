@@ -5,7 +5,7 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:carrier.inline-code-spans
-  verifies: spec:carrier.inline-code-spans
+  verifies: { target: spec:carrier.inline-code-spans, exercises: [literalSpan, lineScoped, rawHtmlRefused] }
 ---
 # Code spans in section descriptions are literal
 
