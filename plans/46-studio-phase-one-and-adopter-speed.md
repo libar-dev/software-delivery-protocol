@@ -1,6 +1,6 @@
 # Plan 46. Designs people can read, and an adopter at full speed
 
-> **Status:** DRAFTED on `feature/studio-and-adoption-v0`, from `main` at `5a0b22c`, the merge of
+> **Status:** EXECUTING on `feature/studio-and-adoption-v0`, from `main` at `5a0b22c`, the merge of
 > PR 33. One branch and one PR. The rulings below were made by the coordinating session on the
 > owner's delegation of 2026-10-21; the decisions only the owner makes are listed apart. A thin
 > lineage pointer: once the design passes land, readiness, backlog and open questions are read

@@ -2072,4 +2072,21 @@ export const validationSpecs = [
     },
     deliveryFacts: ["has-verifier"],
   },
+  {
+    id: "spec:validation.external-registers",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/validation/external-registers.sdp.md",
+    title: "A corpus checks the register tokens its prose cites",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Check the tokens a corpus cites from an outside register against a register file it supplies, as a rules file, with no new grammar and no graph node.",
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
 ] as const;

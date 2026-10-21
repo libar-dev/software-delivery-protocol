@@ -883,4 +883,21 @@ export const extractionSpecs = [
     },
     deliveryFacts: ["implemented", "has-verifier"],
   },
+  {
+    id: "spec:extraction.entry-citations",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/extraction/entry-citations.sdp.md",
+    title: "The graph records where anchored source cites an entry address",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Record each entry address an anchored source file cites, with its file and line, as an inferred citation that confers nothing, so a view can show the test line that checks a pinned declaration.",
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
 ] as const;

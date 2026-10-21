@@ -49,6 +49,7 @@ specs:
   - spec:carrier.slot-notation
   - spec:carrier.slot-notation.typed-declaration
   - spec:carrier.slot-notation.refused-guess
+  - spec:carrier.step-keys
   - spec:model.core-model
   - spec:model.enrichment-lifecycle
   - spec:model.spec-sections
@@ -100,6 +101,7 @@ specs:
   - spec:extraction.pack-member-order
   - spec:extraction.pack-member-order.manifest-order-kept
   - spec:extraction.entry-locations
+  - spec:extraction.entry-citations
   - spec:validation.readiness-floor
   - spec:validation.readiness-floor.unrelated-scoped-spec
   - spec:validation.readiness-floor.blocking-open-question
@@ -158,6 +160,7 @@ specs:
   - spec:validation.corpus-rules.error-finding-fails
   - spec:validation.corpus-rules.malformed-finding-fails
   - spec:validation.corpus-rules.warning-finding-informs
+  - spec:validation.external-registers
   - spec:consumers.projections-model
   - spec:consumers.projections-model.roadmap-views
   - spec:consumers.impact-graph
@@ -232,6 +235,8 @@ specs:
   - spec:consumers.obsidian-vault.notes
   - spec:consumers.obsidian-vault.bases
   - spec:consumers.obsidian-vault.iteration
+  - spec:consumers.readiness-planner
+  - spec:consumers.upgrade-kit
   - spec:observation.runtime-overlay
   - spec:observation.run-evidence
   - spec:protocol.self-hosting

@@ -3046,4 +3046,38 @@ export const consumersSpecs = [
     },
     deliveryFacts: ["implemented", "has-verifier"],
   },
+  {
+    id: "spec:consumers.readiness-planner",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/consumers/readiness-planner.sdp.md",
+    title: "The readiness planner orders the statements a person can make",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Order the Specs whose floor allows a higher rung than their author stated, the Specs they rest on first, so a person makes those statements in an order that holds while tooling states nothing.",
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.upgrade-kit",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/consumers/upgrade-kit.sdp.md",
+    title: "The upgrade kit shows a corpus what it could adopt",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Report, per Spec and Pack, the Protocol capabilities a corpus uses and where each could apply, and propose the edits as a change proposal an agent applies, never editing a carrier itself.",
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
 ] as const;

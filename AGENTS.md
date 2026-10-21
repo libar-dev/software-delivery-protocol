@@ -16,7 +16,7 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 46 is DRAFTED** on `feature/studio-and-adoption-v0`. Designs people can read, and an
+> **plan 46 is EXECUTING** on `feature/studio-and-adoption-v0`. Designs people can read, and an
 > adopter at full speed: the Studio's phase 1 (diagrams, every Spec-page panel, the registers and
 > the owner's queue as pages, the design diff, run evidence, the composing panel, previews per
 > pull request), the vault, and the adopter's loop at scale (recipes called from rules files, step

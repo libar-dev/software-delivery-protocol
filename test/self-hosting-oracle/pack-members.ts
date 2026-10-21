@@ -50,6 +50,7 @@ export const expectedPackMembers = [
   "spec:carrier.slot-notation",
   "spec:carrier.slot-notation.typed-declaration",
   "spec:carrier.slot-notation.refused-guess",
+  "spec:carrier.step-keys",
   "spec:model.core-model",
   "spec:model.enrichment-lifecycle",
   "spec:model.spec-sections",
@@ -101,6 +102,7 @@ export const expectedPackMembers = [
   "spec:extraction.pack-member-order",
   "spec:extraction.pack-member-order.manifest-order-kept",
   "spec:extraction.entry-locations",
+  "spec:extraction.entry-citations",
   "spec:validation.readiness-floor",
   "spec:validation.readiness-floor.unrelated-scoped-spec",
   "spec:validation.readiness-floor.blocking-open-question",
@@ -159,6 +161,7 @@ export const expectedPackMembers = [
   "spec:validation.corpus-rules.error-finding-fails",
   "spec:validation.corpus-rules.malformed-finding-fails",
   "spec:validation.corpus-rules.warning-finding-informs",
+  "spec:validation.external-registers",
   "spec:consumers.projections-model",
   "spec:consumers.projections-model.roadmap-views",
   "spec:consumers.impact-graph",
@@ -233,6 +236,8 @@ export const expectedPackMembers = [
   "spec:consumers.obsidian-vault.notes",
   "spec:consumers.obsidian-vault.bases",
   "spec:consumers.obsidian-vault.iteration",
+  "spec:consumers.readiness-planner",
+  "spec:consumers.upgrade-kit",
   "spec:observation.runtime-overlay",
   "spec:observation.run-evidence",
   "spec:protocol.self-hosting",
@@ -369,7 +374,31 @@ export const expectedCorpusChecksPackMembers = [
   "spec:model.planned-architecture.matching-design",
 ] as const;
 
+// The authored membership of `pack:adopter-speed-v1`, in manifest order.
+export const expectedAdopterSpeedPackMembers = [
+  "spec:consumers.agent-surface.evaluation-sink",
+  "spec:validation.corpus-rules",
+  "spec:validation.external-registers",
+  "spec:carrier.step-keys",
+  "spec:extraction.executable-contracts",
+  "spec:model.term-addresses",
+  "spec:extraction.entry-citations",
+  "spec:consumers.context-bundle",
+  "spec:consumers.readiness-planner",
+  "spec:consumers.upgrade-kit",
+] as const;
+
 export const expectedPacks = [
+  {
+    id: "pack:adopter-speed-v1",
+    nodeType: "Pack",
+    claim: "declared",
+    title: "An adopter at full speed",
+    framing:
+      "What a corpus needs to move onto the Protocol's capabilities at scale and keep designing fast. First the reach of a body and a rules file: shipped recipes called as functions, recipes that answer as rules files, and outside registers checked by pattern. Then keys that survive rewording, for example steps and for Model terms, and the test lines that cite a pinned declaration. Then reading material that fits a budget in parts. Last, the order a person makes the waiting statements in, and the kit that shows a corpus what it could adopt next.",
+    file: "specs/adopter-speed.pack.sdp.md",
+    members: expectedAdopterSpeedPackMembers,
+  },
   {
     id: "pack:spec-studio-v1",
     nodeType: "Pack",
