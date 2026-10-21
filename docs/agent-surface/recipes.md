@@ -45,6 +45,7 @@
 | 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
 | 42 | The architecture walk | forbidden, isolated, severity | Check anchored architecture rules |
 | 43 | Planned against realized components | none | Compare component designs with anchors |
+| 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -4156,3 +4157,89 @@ return { totals: { designs: designs.length, realized: realizedCount, matching, u
 An anchor without an anchored `satisfies` edge stays unrealized. `differing` counts rows; `matching`
 counts realized designs with neither differences nor unreadable fields. The law is
 `spec:model.planned-architecture`.
+
+## 51. Entry citations
+
+Use this to find anchored source lines that cite a pinned declaration or another entry, and to
+report citations that no longer resolve. Pass at most one of `params.pack` and `params.specs`;
+without either, the scope is the corpus. `params.severity` is `error` by default or `warning`.
+Only a non-empty `testAnchors` identifies a test line. A citation records no test verdict.
+
+```js
+const accepts = ["pack", "specs", "severity"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const diagnostics = [];
+const severity = params.severity === undefined ? "error" : params.severity;
+if (severity !== "error" && severity !== "warning") diagnostics.push({ parameter: "severity", problem: "Expected error or warning." });
+const all = g.specs().map((spec) => spec.id);
+const known = new Set(all);
+const hasPack = params.pack !== undefined;
+const hasSpecs = params.specs !== undefined;
+if (hasPack && hasSpecs) diagnostics.push({ parameter: "scope", problem: "Expected at most one of pack or specs." });
+let ids = all;
+if (hasPack) {
+  const pack = typeof params.pack === "string" ? g.packContext(params.pack) : undefined;
+  if (pack === undefined) diagnostics.push({ parameter: "pack", problem: "Expected a Pack id that resolves." });
+  else ids = pack.members.map((member) => member.id);
+}
+if (hasSpecs) {
+  if (!Array.isArray(params.specs) || params.specs.some((id) => !known.has(id))) diagnostics.push({ parameter: "specs", problem: "Expected a list of Spec ids that resolve." });
+  else ids = params.specs;
+}
+if (ids.some((id) => !known.has(id))) diagnostics.push({ parameter: "scope", problem: "Every member must name a Spec that resolves." });
+if (diagnostics.length > 0) return { diagnostics };
+const scope = hasPack ? { pack: params.pack } : hasSpecs ? { specs: params.specs } : { corpus: true };
+const selected = new Set(ids);
+const entries = new Map();
+const citations = [];
+for (const id of [...selected].sort()) {
+  const context = g.specContext(id);
+  for (const [key, value] of Object.entries(context.sections?.design ?? {})) {
+    if (key === "description" || typeof value !== "string" || !/^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.test(value)) continue;
+    const address = `${id}#design.${key}`;
+    entries.set(address, { address, spec: id, pinned: true, line: context.entryLocations.find((row) => row.entry === `design.${key}`)?.line ?? null, citedBy: [] });
+  }
+  for (const citation of context.entryCitations) {
+    citations.push(citation);
+    if (!citation.resolves) continue;
+    let entry = entries.get(citation.address);
+    if (entry === undefined) {
+      entry = { address: citation.address, spec: id, pinned: false, line: context.entryLocations.find((row) => row.entry === citation.entry)?.line ?? null, citedBy: [] };
+      entries.set(citation.address, entry);
+    }
+    entry.citedBy.push({ file: citation.file, line: citation.line, anchors: citation.anchors, testAnchors: citation.testAnchors });
+  }
+}
+// Missing Specs have no Spec context. Parsing still uses the shared address grammar.
+const { parseId } = await import("@libar-dev/software-delivery-protocol");
+const unresolved = citations.filter((row) => !row.resolves).map(({ address, reason, file, line }) => ({ address, reason, file, line }));
+if (!hasPack && !hasSpecs) {
+  for (const row of graph.citations ?? []) {
+    const id = row.address.split("#")[0];
+    if (known.has(id)) continue;
+    let reason = "spec";
+    try { if (parseId(row.address).subpath === undefined) reason = "malformed"; } catch { reason = "malformed"; }
+    unresolved.push({ ...row, reason });
+  }
+}
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+unresolved.sort((a, b) => compare(a.file, b.file) || a.line - b.line || compare(a.address, b.address));
+const rows = [...entries.values()].sort((a, b) => compare(a.address, b.address));
+for (const row of rows) row.citedBy.sort((a, b) => compare(a.file, b.file) || a.line - b.line);
+const findings = unresolved.map((row) => {
+  const [id, suffix = ""] = row.address.split("#");
+  const dot = suffix.indexOf(".");
+  const section = suffix.slice(0, dot);
+  const key = suffix.slice(dot + 1);
+  const why = row.reason === "malformed" ? "not an entry address" : row.reason === "spec" ? `no Spec ${id}` : row.reason === "section" ? `${id} has no ${section} entries` : `${id} has no ${section} entry ${key}`;
+  return { validatorId: "unresolved-citation", subjectId: row.address, severity, message: `${row.address} cited at ${row.file}:${row.line} does not resolve: ${why}`, file: row.file, line: row.line };
+});
+return {
+  scope,
+  totals: { citations: citations.length, citedEntries: rows.filter((row) => row.citedBy.length > 0).length, declarations: rows.filter((row) => row.pinned).length, citedDeclarations: rows.filter((row) => row.pinned && row.citedBy.length > 0).length, unresolved: unresolved.length },
+  entries: rows,
+  unresolved,
+  findings,
+};
+```

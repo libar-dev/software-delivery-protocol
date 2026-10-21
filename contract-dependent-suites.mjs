@@ -24,6 +24,12 @@ export const contractDependentSuites = [
     contracts: "generated/contracts",
     generation: "npm run generate:self-hosting",
     testPaths: [
+      "test/entry-citations.test.ts",
+      "test/extraction.entry-citations.test-title-cites-declaration.test.generated.ts",
+      "test/extraction.entry-citations.code-comment-cites-declaration.test.generated.ts",
+      "test/extraction.entry-citations.unanchored-file-unread.test.generated.ts",
+      "test/extraction.entry-citations.unresolved-citation.test.generated.ts",
+
       "test/self-hosting-corpus-checks.test.ts",
       "test/validation.corpus-rules.copies-contain-changes.test.generated.ts",
       "test/validation.corpus-rules.error-finding-fails.test.generated.ts",

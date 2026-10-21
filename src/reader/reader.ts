@@ -1,3 +1,6 @@
+import { entryCitationsBySpec } from "./entry-citations.js";
+import type { EntryCitation } from "./entry-citations.js";
+export type { EntryCitation } from "./entry-citations.js";
 import { matchConcept } from "./concept-match.js";
 import type { ConceptMatch } from "./concept-match.js";
 export { matchConcept } from "./concept-match.js";
@@ -174,6 +177,7 @@ export interface SpecContext extends SpecSummary {
    * locates none; a missing row reads as not located, never as absent.
    */
   readonly entryLocations: readonly EntryLocation[];
+  readonly entryCitations: readonly EntryCitation[];
   /** The graph findings naming this spec (as subject or related) — the holes beside the assertions. */
   readonly findings: readonly Finding[];
 }
@@ -724,6 +728,8 @@ export function createReader(graph: GraphSchema): Reader {
 
   const locationsOf = (id: string): readonly EntryLocation[] => locationsBySpec.get(id) ?? [];
 
+  const citationsBySpec = entryCitationsBySpec(graph, index);
+
   /** The unit's component: its `memberOf` target (the first by id, should a foreign graph hold more). */
   const componentOf = (codeId: string): CodeUnitComponent | undefined => {
     const [componentId] = (index.edgesByFrom.get(codeId) ?? [])
@@ -935,6 +941,7 @@ export function createReader(graph: GraphSchema): Reader {
       verifiers,
       ...(oracle === undefined ? {} : { oracle }),
       entryLocations: locationsOf(id),
+      entryCitations: citationsBySpec.get(id) ?? [],
       findings: findingsNaming(id),
     };
   };

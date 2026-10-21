@@ -1,3 +1,4 @@
+import { nativeQuery } from "./helpers/native-query.js";
 import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
 import { deriveGraph } from "../src/extract/derive.js";
 import {
@@ -150,6 +151,8 @@ async function runRecipe(
   params?: Readonly<Record<string, unknown>>,
   extraction: ExtractionResult = derived,
 ): Promise<unknown> {
+  if (recipe.ordinal === 51) return nativeQuery(recipe.body, extraction, params);
+
   // Recipe 40 requires external input rather than a corpus-specific sample fallback.
   // The general catalog checks supply an empty imports snapshot; curation tests build a fixture.
   const suppliedParams =
@@ -503,7 +506,10 @@ describe("the agent-surface recipe corpus", () => {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (let ordinal = 12; ordinal <= recipes.length; ordinal += 1) {
+    // The integration lane updates the shared on-ramps for the wave-2 recipes.
+    for (const { ordinal } of recipes.filter(
+      (recipe) => recipe.ordinal >= 12 && recipe.ordinal <= 43,
+    )) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -4519,10 +4525,15 @@ describe("recipe parameters and the shipped recipe files", () => {
           !(recipe.ordinal === 39 && name === "pack") &&
           !(recipe.ordinal === 40 && name === "imports") &&
           !(recipe.ordinal === 41 && name !== "prefixes") &&
-          !(recipe.ordinal === 42 && name !== "severity");
+          !(recipe.ordinal === 42 && name !== "severity") &&
+          !(recipe.ordinal === 51 && name !== "severity");
         expect({
           recipe: recipe.ordinal,
-          fallback: recipe.body.includes(`params.${name} ?? `),
+          fallback:
+            recipe.body.includes(`params.${name} ?? `) ||
+            (recipe.ordinal === 51 &&
+              name === "severity" &&
+              recipe.body.includes(`params.${name} === undefined ? `)),
         }).toEqual({ recipe: recipe.ordinal, fallback: hasSample });
         expect({
           recipe: recipe.ordinal,
@@ -6851,6 +6862,202 @@ describe("authoring grammar recipes", () => {
     ).toEqual({
       totals: { keyedRules: 0, exercised: 0, unexercised: 0, unkeyedRules: 0 },
       rows: [],
+    });
+  });
+});
+
+function citationRecipeProbe(): ExtractionResult {
+  const extraction = syntheticExtraction(
+    [
+      {
+        id: "spec:probe.cited",
+        nodeType: "Primitive",
+        claim: "declared",
+        file: "cited.sdp.md",
+        specKind: "behavior",
+        altitude: "story",
+        readiness: "idea",
+        sections: {
+          intent: { outcome: "Read citations" },
+          design: {
+            used: "`type Used = string`",
+            unused: "``type Unused = string``",
+            prose: "A design entry",
+          },
+        },
+      },
+      {
+        id: "pack:probe.citations",
+        nodeType: "Pack",
+        claim: "declared",
+        file: "group.pack.sdp.md",
+        members: ["spec:probe.cited"],
+      },
+      {
+        id: "test:probe.citations",
+        nodeType: "Anchor",
+        claim: "anchored",
+        file: "test.ts",
+        line: 1,
+      },
+    ],
+    [{ from: "test:probe.citations", to: "spec:probe.cited", type: "verifies", claim: "anchored" }],
+  );
+  const addresses = [
+    "design.used",
+    "design.prose",
+    "design.missing",
+    "ui.missing",
+    "invalid.section",
+  ].map((suffix) => `spec:probe.cited#${suffix}`);
+  return {
+    ...extraction,
+    graph: {
+      ...extraction.graph,
+      locations: [
+        { spec: "spec:probe.cited", file: "cited.sdp.md", entry: "design.used", line: 12 },
+      ],
+      citations: [
+        ...addresses.map((address, index) => ({ address, file: "test.ts", line: index + 2 })),
+        { address: "spec:probe.absent#design.key", file: "z.ts", line: 2 },
+        { address: "spec:bad_token#design.key", file: "z.ts", line: 3 },
+      ],
+    },
+  };
+}
+
+const entryCitationRecipeAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.entry-citation-recipe"),
+  label: "asserts realization of Entry citations in docs/agent-surface/recipes.md",
+  satisfies: ref("spec:extraction.entry-citations"),
+});
+void entryCitationRecipeAnchor;
+
+describe("entry citations recipe", () => {
+  it("joins declarations and other cited entries, including uncited declarations", async () => {
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(51), { pack: "pack:probe.citations" }, citationRecipeProbe()),
+    );
+    expect(result.scope).toEqual({ pack: "pack:probe.citations" });
+    expect(result.totals).toEqual({
+      citations: 5,
+      citedEntries: 2,
+      declarations: 2,
+      citedDeclarations: 1,
+      unresolved: 3,
+    });
+    expect(result.entries).toEqual([
+      {
+        address: "spec:probe.cited#design.prose",
+        spec: "spec:probe.cited",
+        pinned: false,
+        line: null,
+        citedBy: [
+          {
+            file: "test.ts",
+            line: 3,
+            anchors: ["test:probe.citations"],
+            testAnchors: ["test:probe.citations"],
+          },
+        ],
+      },
+      {
+        address: "spec:probe.cited#design.unused",
+        spec: "spec:probe.cited",
+        pinned: true,
+        line: null,
+        citedBy: [],
+      },
+      {
+        address: "spec:probe.cited#design.used",
+        spec: "spec:probe.cited",
+        pinned: true,
+        line: 12,
+        citedBy: [
+          {
+            file: "test.ts",
+            line: 2,
+            anchors: ["test:probe.citations"],
+            testAnchors: ["test:probe.citations"],
+          },
+        ],
+      },
+    ]);
+    expect(
+      asArray(result.findings)
+        .map(asRecord)
+        .map((row) => row.message),
+    ).toEqual([
+      "spec:probe.cited#design.missing cited at test.ts:4 does not resolve: spec:probe.cited has no design entry missing",
+      "spec:probe.cited#ui.missing cited at test.ts:5 does not resolve: spec:probe.cited has no ui entries",
+      "spec:probe.cited#invalid.section cited at test.ts:6 does not resolve: not an entry address",
+    ]);
+  });
+  it("includes absent Specs and malformed tokens only in the corpus unresolved list", async () => {
+    const extraction = citationRecipeProbe();
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(51), { severity: "warning" }, extraction),
+    );
+    expect(result.totals).toEqual({
+      citations: 5,
+      citedEntries: 2,
+      declarations: 2,
+      citedDeclarations: 1,
+      unresolved: 5,
+    });
+    expect(asArray(result.unresolved).slice(-2)).toEqual([
+      { address: "spec:probe.absent#design.key", reason: "spec", file: "z.ts", line: 2 },
+      { address: "spec:bad_token#design.key", reason: "malformed", file: "z.ts", line: 3 },
+    ]);
+    for (const finding of asArray(result.findings).map(asRecord))
+      expect(finding).toMatchObject({
+        validatorId: "unresolved-citation",
+        severity: "warning",
+      });
+    const scoped = asRecord(
+      await runRecipe(recipeByOrdinal(51), { specs: ["spec:probe.cited"] }, extraction),
+    );
+    expect(asArray(scoped.unresolved)).toHaveLength(3);
+  });
+  it.each([
+    { pack: "pack:missing" },
+    { specs: ["spec:missing"] },
+    { specs: "spec:probe.cited" },
+    { pack: "pack:probe.citations", specs: [] },
+    { severity: "fatal" },
+    { severity: null },
+  ])("returns diagnostics without findings for %j", async (params) => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(51), params, citationRecipeProbe()));
+    expect(result).toHaveProperty("diagnostics");
+    expect(result).not.toHaveProperty("findings");
+  });
+  it("reads an absent table as empty, and accepts an empty Spec scope", async () => {
+    const extraction = citationRecipeProbe();
+    expect(
+      asRecord(
+        await runRecipe(
+          recipeByOrdinal(51),
+          {},
+          { ...extraction, graph: { ...extraction.graph, citations: [] } },
+        ),
+      ),
+    ).toMatchObject({
+      totals: { citations: 0, declarations: 2, unresolved: 0 },
+      unresolved: [],
+      findings: [],
+    });
+    expect(asRecord(await runRecipe(recipeByOrdinal(51), { specs: [] }, extraction))).toEqual({
+      scope: { specs: [] },
+      totals: {
+        citations: 0,
+        citedEntries: 0,
+        declarations: 0,
+        citedDeclarations: 0,
+        unresolved: 0,
+      },
+      entries: [],
+      unresolved: [],
+      findings: [],
     });
   });
 });

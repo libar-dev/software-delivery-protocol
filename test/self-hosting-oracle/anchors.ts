@@ -21,6 +21,67 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.entry-citation-scan",
+    nodeType: "CodeNode",
+    label: "records prose-mention tokens with addresses in anchored source files",
+    file: "src/extract/entry-citations.ts",
+    constant: "entryCitationsAnchor",
+    site: "export function scanEntryCitations(",
+    role: "extractor",
+  },
+  {
+    id: "impl:protocol.entry-citation-reader",
+    nodeType: "CodeNode",
+    label:
+      "resolves citations and joins file anchors with direct and example-based test verification",
+    file: "src/reader/entry-citations.ts",
+    site: "export function entryCitationsBySpec(",
+    role: "reader",
+  },
+  {
+    id: "impl:protocol.entry-citation-recipe",
+    nodeType: "CodeNode",
+    label: "asserts realization of Entry citations in docs/agent-surface/recipes.md",
+    file: "test/recipes.test.ts",
+    constant: "entryCitationRecipeAnchor",
+    site: 'describe("entry citations recipe"',
+  },
+  {
+    id: "oracle:protocol.entry-citations",
+    nodeType: "Anchor",
+    file: "test/entry-citations.test.ts",
+    constant: "oracleAnchor",
+    site: "function expected(",
+  },
+  {
+    id: "test:protocol.entry-citations.test-title-cites-declaration",
+    nodeType: "Anchor",
+    file: "test/entry-citations.test.ts",
+    constant: "testTitleCitesDeclarationTestAnchor",
+    site: "registerTestTitleCitesDeclaration(",
+  },
+  {
+    id: "test:protocol.entry-citations.code-comment-cites-declaration",
+    nodeType: "Anchor",
+    file: "test/entry-citations.test.ts",
+    constant: "codeCommentCitesDeclarationTestAnchor",
+    site: "registerCodeCommentCitesDeclaration(",
+  },
+  {
+    id: "test:protocol.entry-citations.unanchored-file-unread",
+    nodeType: "Anchor",
+    file: "test/entry-citations.test.ts",
+    constant: "unanchoredFileUnreadTestAnchor",
+    site: "registerUnanchoredFileUnread(",
+  },
+  {
+    id: "test:protocol.entry-citations.unresolved-citation",
+    nodeType: "Anchor",
+    file: "test/entry-citations.test.ts",
+    constant: "unresolvedCitationTestAnchor",
+    site: "registerUnresolvedCitation(",
+  },
+  {
     id: "impl:protocol.corpus-rules",
     nodeType: "CodeNode",
     file: "src/cli/validate-view-command.ts",
@@ -2812,6 +2873,31 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.entry-citation-scan", "satisfies", "spec:extraction.entry-citations"],
+  ["impl:protocol.entry-citation-reader", "satisfies", "spec:extraction.entry-citations"],
+  ["impl:protocol.entry-citation-recipe", "satisfies", "spec:extraction.entry-citations"],
+  ["oracle:protocol.entry-citations", "models", "spec:extraction.entry-citations"],
+  [
+    "test:protocol.entry-citations.test-title-cites-declaration",
+    "verifies",
+    "spec:extraction.entry-citations.test-title-cites-declaration",
+  ],
+  [
+    "test:protocol.entry-citations.code-comment-cites-declaration",
+    "verifies",
+    "spec:extraction.entry-citations.code-comment-cites-declaration",
+  ],
+  [
+    "test:protocol.entry-citations.unanchored-file-unread",
+    "verifies",
+    "spec:extraction.entry-citations.unanchored-file-unread",
+  ],
+  [
+    "test:protocol.entry-citations.unresolved-citation",
+    "verifies",
+    "spec:extraction.entry-citations.unresolved-citation",
+  ],
+
   ["impl:protocol.corpus-rules", "satisfies", "spec:validation.corpus-rules"],
   [
     "impl:protocol.architecture-walk-recipe",
@@ -3707,6 +3793,7 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.entry-citation-reader",
   "impl:protocol.corpus-rules",
   "impl:protocol.studio-data",
   "impl:protocol.studio-paths",

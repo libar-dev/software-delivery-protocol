@@ -70,6 +70,7 @@ function specContext(overrides: Partial<SpecContext> = {}): SpecContext {
     references: [],
     verifiers: [],
     entryLocations: [],
+    entryCitations: [],
     findings: [],
     ...overrides,
   };

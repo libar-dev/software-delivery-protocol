@@ -25,6 +25,7 @@ export const expectedComponentIds = [
 // outside the engine source seams and therefore have no truthful owner among the accepted
 // component set.
 export const structuralMembershipExceptions = [
+  "impl:protocol.entry-citation-recipe",
   "impl:protocol.architecture-walk-recipe",
   "impl:protocol.planned-components-recipe",
   "impl:protocol.authoring-on-ramp",
@@ -50,6 +51,17 @@ export const structuralMembershipExceptions = [
 ] as const;
 
 export const acceptedArchitecturalUnits = [
+  {
+    unit: "src/extract/entry-citations.ts#scanEntryCitations",
+    anchorId: "impl:protocol.entry-citation-scan",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/reader/entry-citations.ts#entryCitationsBySpec",
+    anchorId: "impl:protocol.entry-citation-reader",
+    componentId: "component:protocol.reader",
+  },
+
   {
     unit: "src/cli/validate-view-command.ts#runValidateRules",
     anchorId: "impl:protocol.corpus-rules",

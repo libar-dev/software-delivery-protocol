@@ -12,6 +12,7 @@ import type {
   VerificationSection,
 } from "../model/sections.js";
 import { setOwn } from "./set-own.js";
+import { compareCitations } from "./entry-citations.js";
 
 /**
  * Every output byte is owned here, so no `ts-morph` upgrade can change them silently: nodes sorted
@@ -278,6 +279,9 @@ export function serializeGraph(graph: GraphSchema): string {
         ...(location.key === undefined ? {} : { key: location.key }),
         line: location.line,
       })),
+    citations: [...(graph.citations ?? [])]
+      .sort(compareCitations)
+      .map(({ address, file, line }) => ({ address, file, line })),
   };
 
   return `${JSON.stringify(canonical, null, 2)}\n`;
