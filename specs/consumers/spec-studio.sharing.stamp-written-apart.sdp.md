@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.sharing.stamp-written-apart
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.sharing
   verifies:

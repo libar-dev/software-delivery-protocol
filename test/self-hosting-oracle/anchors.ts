@@ -21,6 +21,110 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.stamp-command",
+    nodeType: "CodeNode",
+    file: "src/cli/stamp-command.ts",
+    site: "export function runStamp(",
+    label: "writes the publishing stamp without extraction or rendering",
+    role: "publisher",
+  },
+  {
+    id: "impl:protocol.studio-run-rows",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/run-rows.ts",
+    site: "export function runRows(",
+    label: "renders recipe 45 file rows shared by the tests lens and verification panel",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-runs-page",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/runs-page.ts",
+    site: "export function runsPage(",
+    label: "renders readable CTRF inputs, file results, unjoined records and diagnostics",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.run-evidence-recipe",
+    nodeType: "CodeNode",
+    file: "test/recipes.test.ts",
+    site: 'it("runs recipe 45 as shipped',
+    constant: "runRecipeAnchor",
+    label: "asserts realization of Run evidence in docs/agent-surface/recipes.md",
+  },
+  {
+    id: "impl:protocol.studio-preview-workflow",
+    nodeType: "CodeNode",
+    file: "test/studio-s4.test.ts",
+    site: 'it("ships a reusable preview',
+    constant: "workflowAnchor",
+    label: "asserts the reusable Studio preview workflow and Protocol CI caller",
+  },
+  {
+    id: "test:protocol.run-absolute",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "registerAbsolutePathJoins(",
+    constant: "absoluteAnchor",
+  },
+  {
+    id: "test:protocol.run-unjoined",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "registerUnanchoredFileUnjoined(",
+    constant: "unjoinedAnchor",
+  },
+  {
+    id: "test:protocol.run-external",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "registerExternalEvidence<PageWorld>(",
+    constant: "externalAnchor",
+  },
+  {
+    id: "test:protocol.studio-graph-only",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "registerGraphOnly<InputsWorld>(",
+    constant: "graphOnlyAnchor",
+  },
+  {
+    id: "test:protocol.studio-stamp-apart",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "registerStampWrittenApart<StampWorld>(",
+    constant: "stampAnchor",
+  },
+  {
+    id: "oracle:protocol.run-evidence",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "function expectedRun(",
+    constant: "runOracle",
+  },
+  {
+    id: "oracle:protocol.runs-page",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "function expectedPage(",
+    constant: "pageOracle",
+  },
+  {
+    id: "oracle:protocol.studio-inputs",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "function expectedInputs(",
+    constant: "inputsOracle",
+  },
+  {
+    id: "oracle:protocol.studio-sharing",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "function expectedStamp(",
+    constant: "stampOracle",
+  },
+
+  {
     id: "oracle:protocol.kind-evidence",
     nodeType: "Anchor",
     file: "test/self-hosting-validators.test.ts",
@@ -3607,6 +3711,41 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.stamp-command", "references", "spec:consumers.spec-studio.sharing"],
+  ["impl:protocol.studio-run-rows", "references", "spec:consumers.spec-studio.runs-page"],
+  ["impl:protocol.studio-run-rows", "references", "spec:consumers.spec-studio.verification-panels"],
+  ["impl:protocol.studio-runs-page", "references", "spec:consumers.spec-studio.runs-page"],
+  ["impl:protocol.studio-runs-page", "references", "spec:observation.run-evidence"],
+  ["impl:protocol.run-evidence-recipe", "references", "spec:observation.run-evidence"],
+  ["impl:protocol.studio-preview-workflow", "references", "spec:consumers.spec-studio.sharing"],
+  ["impl:protocol.studio-command", "references", "spec:consumers.spec-studio.data.inputs"],
+  ["impl:protocol.studio-stamp", "references", "spec:consumers.spec-studio.sharing"],
+  ["test:protocol.run-absolute", "verifies", "spec:observation.run-evidence.absolute-path-joins"],
+  [
+    "test:protocol.run-unjoined",
+    "verifies",
+    "spec:observation.run-evidence.unanchored-file-unjoined",
+  ],
+  [
+    "test:protocol.run-external",
+    "verifies",
+    "spec:consumers.spec-studio.runs-page.external-evidence",
+  ],
+  [
+    "test:protocol.studio-graph-only",
+    "verifies",
+    "spec:consumers.spec-studio.data.inputs.graph-only",
+  ],
+  [
+    "test:protocol.studio-stamp-apart",
+    "verifies",
+    "spec:consumers.spec-studio.sharing.stamp-written-apart",
+  ],
+  ["oracle:protocol.run-evidence", "models", "spec:observation.run-evidence"],
+  ["oracle:protocol.runs-page", "models", "spec:consumers.spec-studio.runs-page"],
+  ["oracle:protocol.studio-inputs", "models", "spec:consumers.spec-studio.data.inputs"],
+  ["oracle:protocol.studio-sharing", "models", "spec:consumers.spec-studio.sharing"],
+
   ["oracle:protocol.kind-evidence", "models", "spec:validation.kind-evidence"],
   ["oracle:protocol.open-question-fields", "models", "spec:model.open-question-fields"],
   ["oracle:protocol.slot-notation", "models", "spec:carrier.slot-notation"],
@@ -4950,6 +5089,10 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.stamp-command",
+  "impl:protocol.studio-run-rows",
+  "impl:protocol.studio-runs-page",
+
   "impl:protocol.structural-self-binding",
   "impl:protocol.validator-probe-table",
   "impl:protocol.validator-self-testing",

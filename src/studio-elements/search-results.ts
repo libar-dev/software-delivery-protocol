@@ -193,6 +193,12 @@ function fieldLabel(field: string): string {
   );
 }
 
+function sourceMark(file: string | undefined, line: number | undefined): string {
+  if (file === undefined || line === undefined) return "";
+  const value = `${file}:${String(line)}`;
+  return `<code data-source-file="${escapeHtml(file)}" data-source-line="${String(line)}">${escapeHtml(value)}</code> <sdp-copy text="${escapeHtml(value)}"></sdp-copy>`;
+}
+
 function excerpt(text: string, term: string): string {
   if (text.length <= 180) return text;
   const at = text.toLowerCase().indexOf(term.toLowerCase().trim());
@@ -227,12 +233,12 @@ export function renderResults(hits: readonly SearchHit[], term: string, limit: n
             : `${record.file}${record.line === undefined ? "" : `:${String(record.line)}`}`;
         const unit =
           record.nodeType === "Anchor" || record.nodeType === "CodeNode"
-            ? `<p>${escapeHtml(location)} <sdp-copy text="${escapeHtml(location || record.id)}"></sdp-copy></p><ul>${record.bindings.map((binding) => `<li>${escapeHtml(binding.edge)} ${link(pagePath(binding.specId) ?? "", binding.specId)}</li>`).join("")}</ul>`
+            ? `<p>${record.line === undefined ? `${escapeHtml(location)} <sdp-copy text="${escapeHtml(location || record.id)}"></sdp-copy>` : sourceMark(record.file, record.line)}</p><ul>${record.bindings.map((binding) => `<li>${escapeHtml(binding.edge)} ${link(pagePath(binding.specId) ?? "", binding.specId)}</li>`).join("")}</ul>`
             : "";
         const entryList =
           entries.length === 0
             ? ""
-            : `<ul class="search-entries">${entries.map((entry) => `<li>${link(entryUrl(record, entry), entry.key ?? entry.entry ?? entry.section, `<code>${escapeHtml(entry.key ?? entry.entry ?? entry.section)}</code>`)} · ${escapeHtml(sectionTitle(entry.section))} · ${entry.line === null ? "line not recorded" : `line ${String(entry.line)}`} · ${escapeHtml(excerpt(entry.text, term))}</li>`).join("")}</ul>`;
+            : `<ul class="search-entries">${entries.map((entry) => `<li>${link(entryUrl(record, entry), entry.key ?? entry.entry ?? entry.section, `<code>${escapeHtml(entry.key ?? entry.entry ?? entry.section)}</code>`)} · ${escapeHtml(sectionTitle(entry.section))} · ${entry.line === null ? "line not recorded" : `line ${String(entry.line)} ${sourceMark(record.file, entry.line)}`} · ${escapeHtml(excerpt(entry.text, term))}</li>`).join("")}</ul>`;
         return `<article class="search-result"><h2>${title}</h2><code>${escapeHtml(record.id)}</code>${descriptor}<p>Matched in: ${escapeHtml(matchedIn.map(fieldLabel).join(", "))}</p>${unit}${entryList}</article>`;
       })
       .join("")

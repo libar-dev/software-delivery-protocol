@@ -4534,6 +4534,7 @@ describe("recipe parameters and the shipped recipe files", () => {
       for (const name of names) {
         const hasSample =
           recipe.ordinal !== 34 &&
+          recipe.ordinal !== 45 &&
           !(
             [35, 36, 37, 38].includes(recipe.ordinal) &&
             !["budget", "detail", "declarations"].includes(name)
@@ -7213,3 +7214,24 @@ function required<T>(value: T | null | undefined): T {
   if (value === null || value === undefined) throw new Error("Expected a value");
   return value;
 }
+
+const runRecipeAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.run-evidence-recipe"),
+  label: "asserts realization of Run evidence in docs/agent-surface/recipes.md",
+  references: [ref("spec:observation.run-evidence")],
+});
+void runRecipeAnchor;
+it("runs recipe 45 as shipped and reports missing and malformed CTRF metadata", async () => {
+  expect(await runRecipe(recipeByOrdinal(45), {})).toEqual({
+    diagnostics: [{ input: null, problem: "params.runs is required." }],
+  });
+  for (const runs of [
+    {},
+    { reportFormat: "CTRF", results: { tests: [] } },
+    { reportFormat: "other", specVersion: "0.0.0", results: { tests: [] } },
+  ]) {
+    const answer = asRecord(await runRecipe(recipeByOrdinal(45), { runs }));
+    expect(asArray(answer.diagnostics)).toHaveLength(1);
+    expect(answer.inputs).toBeUndefined();
+  }
+});

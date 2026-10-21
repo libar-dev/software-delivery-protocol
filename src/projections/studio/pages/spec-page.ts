@@ -3,6 +3,7 @@ import { SPEC_SECTION_NAMES } from "../../../model/sections.js";
 import type { SpecContext, RelationEnd } from "../../../reader/reader.js";
 import {
   code,
+  sourceCode,
   copy,
   count,
   escape,
@@ -22,8 +23,10 @@ import { codeSpans, prose, text, valueHtml } from "./text.js";
 
 const entryLine = (spec: SpecContext, entry: string): number | undefined =>
   spec.entryLocations.find((loc) => loc.entry === entry)?.line;
-const lineLabel = (line?: number): string =>
-  line === undefined ? "" : ` <span class="entry-line">line ${String(line)}</span>`;
+const lineLabel = (file: string, line?: number): string =>
+  line === undefined
+    ? ""
+    : ` <span class="entry-line">line ${String(line)} · ${sourceCode(file, line)}${copy(location(file, line))}</span>`;
 
 function entry(
   ctx: PageContext,
@@ -33,7 +36,7 @@ function entry(
   address?: string,
   located?: string,
 ): string {
-  return `<div class="entry"${address === undefined ? "" : ` id="${escape(address)}"`}><dt>${code(key)}${lineLabel(entryLine(spec, located ?? address ?? ""))}${address === undefined ? "" : copy(`${spec.id}#${address}`)}</dt><dd>${valueHtml(ctx, value)}</dd></div>`;
+  return `<div class="entry"${address === undefined ? "" : ` id="${escape(address)}"`}><dt>${code(key)}${lineLabel(spec.file, entryLine(spec, located ?? address ?? ""))}${address === undefined ? "" : copy(`${spec.id}#${address}`)}</dt><dd>${valueHtml(ctx, value)}</dd></div>`;
 }
 
 function steps(value: unknown): string {
@@ -124,7 +127,7 @@ function sections(ctx: PageContext, spec: SpecContext): string {
           .join("")}</dl>`;
         const questions = spec.designColumns.openQuestions;
         if (questions.length)
-          body += `<h3>Open questions</h3><ul class="questions">${questions.map((q) => `<li${q.key === undefined ? "" : ` id="question.${escape(q.key)}"`}>${q.blocking ? "blocking" : "non-blocking"}${q.key === undefined ? "" : ` · ${code(`question.${q.key}`)}${copy(`${spec.id}#question.${q.key}`)}`}${lineLabel(q.line)} · ${text(ctx, q.question)}${questionFields(ctx, q, (v) => text(ctx, v))}</li>`).join("")}</ul>`;
+          body += `<h3>Open questions</h3><ul class="questions">${questions.map((q) => `<li${q.key === undefined ? "" : ` id="question.${escape(q.key)}"`}>${q.blocking ? "blocking" : "non-blocking"}${q.key === undefined ? "" : ` · ${code(`question.${q.key}`)}${copy(`${spec.id}#question.${q.key}`)}`}${lineLabel(spec.file, q.line)} · ${text(ctx, q.question)}${questionFields(ctx, q, (v) => text(ctx, v))}</li>`).join("")}</ul>`;
       } else {
         if (name === "verification" && typeof record.mode === "string")
           title += ` · ${record.mode}`;
@@ -156,12 +159,12 @@ function bindings(ctx: PageContext, spec: SpecContext): string {
   const verifiers = list(
     spec.verifiers.map(
       (v) =>
-        `${link(ctx, v.verifierId)}${v.label === undefined ? "" : ` · ${escape(v.label)}`} · ${escape(v.claim)} · ${code(location(v.file, v.line))}${v.file === undefined ? "" : copy(location(v.file, v.line))}${v.via === "example" ? ` · example ${v.enabled ? "enabled" : "not enabled"}` : " · test anchor"}`,
+        `${link(ctx, v.verifierId)}${v.label === undefined ? "" : ` · ${escape(v.label)}`} · ${escape(v.claim)} · ${sourceCode(v.file, v.line)}${v.file === undefined ? "" : copy(location(v.file, v.line))}${v.via === "example" ? ` · example ${v.enabled ? "enabled" : "not enabled"}` : " · test anchor"}`,
     ),
     "units",
   );
   const oracle = spec.oracle;
-  return `<h2 id="bindings">Bindings</h2><h3>Implementation binding: ${present(spec.implementations.length > 0)}</h3>${spec.implementations.length ? unitList(spec.implementations) : ""}<h3>Design reference: ${present(spec.references.length > 0)}</h3>${spec.references.length ? unitList(spec.references) : ""}<h3 id="verification">Verifier binding: ${present(spec.deliveryFacts.includes("has-verifier"))}</h3>${spec.verifiers.length ? verifiers : ""}<h3>Expected-outcome oracle: ${present(oracle !== undefined)}</h3>${oracle === undefined ? "" : list([`${code(oracle.anchorId)}${oracle.label === undefined ? "" : ` · ${escape(oracle.label)}`} · ${code(location(oracle.file, oracle.line))}${oracle.file === undefined ? "" : copy(location(oracle.file, oracle.line))}`], "units")}<p>Runtime observation: not tracked.</p><p>Run results: not recorded in the graph.</p>`;
+  return `<h2 id="bindings">Bindings</h2><h3>Implementation binding: ${present(spec.implementations.length > 0)}</h3>${spec.implementations.length ? unitList(spec.implementations) : ""}<h3>Design reference: ${present(spec.references.length > 0)}</h3>${spec.references.length ? unitList(spec.references) : ""}<h3 id="verification">Verifier binding: ${present(spec.deliveryFacts.includes("has-verifier"))}</h3>${spec.verifiers.length ? verifiers : ""}<h3>Expected-outcome oracle: ${present(oracle !== undefined)}</h3>${oracle === undefined ? "" : list([`${code(oracle.anchorId)}${oracle.label === undefined ? "" : ` · ${escape(oracle.label)}`} · ${sourceCode(oracle.file, oracle.line)}${oracle.file === undefined ? "" : copy(location(oracle.file, oracle.line))}`], "units")}<p>Runtime observation: not tracked.</p><p>Run results: not recorded in the graph.</p>`;
 }
 
 /**

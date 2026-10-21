@@ -378,6 +378,7 @@ describe("Protocol skill assets", () => {
         "mermaid",
         "new spec",
         "q",
+        "stamp",
         "studio",
         "validate",
         "view",

@@ -2,7 +2,7 @@
 id: spec:observation.run-evidence.absolute-path-joins
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:observation.run-evidence
   verifies:

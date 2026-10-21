@@ -1,3 +1,4 @@
+import { runsPage } from "./runs-page.js";
 import { architecturePage } from "./architecture-page.js";
 import { testsPage } from "./tests-page.js";
 import { evidencePage } from "./evidence-page.js";
@@ -20,6 +21,9 @@ export function renderStudio(data: StudioData): readonly StudioPage[] {
     { path: "tests.html", content: testsPage({ data, path: "tests.html" }) },
     { path: "evidence.html", content: evidencePage({ data, path: "evidence.html" }) },
     { path: "search.html", content: searchPage({ data, path: "search.html" }) },
+    ...(data.recipes.all.has(45)
+      ? [{ path: "runs.html", content: runsPage({ data, path: "runs.html" }) }]
+      : []),
     ...data.packs.map(({ context, totals }) => {
       const path = pagePath(context.id);
       if (path === null) throw new Error(`Pack has no Studio path: ${context.id}`);

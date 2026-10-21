@@ -68,6 +68,11 @@ export interface SearchIndex {
   readonly records: readonly SearchRecord[];
 }
 
+export interface StudioInputs {
+  readonly base?: { readonly graph: unknown; readonly label: string | null };
+  readonly runs: readonly unknown[];
+}
+
 export interface StudioData {
   readonly recipes: StudioRecipeAnswers;
   readonly specs: readonly SpecContext[];
@@ -283,6 +288,7 @@ function specContext(reader: Reader, id: string): SpecContext {
 export async function createStudioData(
   source: Reader,
   report: ValidationReport = { validatorId: graphReportId, findings: source.findings() },
+  inputs: StudioInputs = { runs: [] },
 ): Promise<StudioData> {
   // Studio owns these values for one build and shares their joins across shipped recipes.
   const specRows = source.specs(),
@@ -302,7 +308,7 @@ export async function createStudioData(
       return packContexts.get(id);
     },
   };
-  const recipes = await studioRecipeAnswers(reader, report);
+  const recipes = await studioRecipeAnswers(reader, report, inputs);
   return {
     recipes,
     specs: reader.specs().map((spec) => specContext(reader, spec.id)),

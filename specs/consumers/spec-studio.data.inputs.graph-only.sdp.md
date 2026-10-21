@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.data.inputs.graph-only
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.data.inputs
   verifies:

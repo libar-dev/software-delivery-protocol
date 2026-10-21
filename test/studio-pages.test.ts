@@ -542,7 +542,7 @@ describe("Studio static pages", () => {
     const pack = html("pack:probe");
     for (const name of ["Rests on", "Rested on by", "Verified by", "Superseded by"])
       expect(pack).toContain(name);
-    expect(pack.match(/The graph records bindings and never runs/gu)).toHaveLength(1);
+    expect(pack.match(/The graph records verifier bindings/gu)).toHaveLength(1);
     expect(pack).toContain("Members with no verifier binding");
     expect(pack).not.toContain("0 verifiers");
   });

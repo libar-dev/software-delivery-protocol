@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import CtrfReporter from "./test/helpers/ctrf-reporter.js";
 import { defineConfig } from "vitest/config";
 
 const packageAliasTarget = fileURLToPath(new URL("./src/index.ts", import.meta.url));
@@ -26,6 +27,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    ...(process.env.SDP_CTRF_DIR
+      ? { reporters: ["default", new CtrfReporter(process.env.SDP_CTRF_DIR)] }
+      : {}),
     globals: true,
     // The example's tests run too: the tracer-bullet verifier anchor must sit beside a real,
     // executing runner test (`04` §2), not stand alone as a binding-only file.

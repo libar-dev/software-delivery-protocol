@@ -105,12 +105,6 @@ export const expectedWarnings = [
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:consumers.spec-studio.data.inputs",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
     subjectId: "spec:consumers.spec-studio.diff-page",
   },
   {
@@ -171,19 +165,7 @@ export const expectedWarnings = [
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:consumers.spec-studio.runs-page",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
     subjectId: "spec:consumers.spec-studio",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:consumers.spec-studio.sharing",
   },
   {
     validatorId: "honesty/gaps",
@@ -220,12 +202,6 @@ export const expectedWarnings = [
     family: "honesty",
     severity: "warning",
     subjectId: "spec:model.spec-sections",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:observation.run-evidence",
   },
 ] as const;
 

@@ -2,6 +2,7 @@ import type { PackContext, PackMemberSummary } from "../../../reader/reader.js";
 import type { PackTotals } from "../data.js";
 import {
   code,
+  sourceCode,
   copy,
   count,
   escape,
@@ -9,6 +10,7 @@ import {
   link,
   list,
   present,
+  relative,
   questionFields,
   rungLine,
   unitList,
@@ -41,7 +43,7 @@ function memberCard(ctx: PageContext, member: PackMemberSummary, index: number):
   const questions = list(
     (design?.openQuestions ?? []).map(
       (q) =>
-        `${q.blocking ? "blocking" : "non-blocking"}${q.key === undefined ? "" : ` · ${link(ctx, `${member.id}#question.${q.key}`, `question.${q.key}`)} ${copy(`${member.id}#question.${q.key}`)}`}${q.line === undefined ? "" : ` · line ${String(q.line)}`} · ${text(ctx, q.question)}${questionFields(ctx, q, (v) => text(ctx, v))}`,
+        `${q.blocking ? "blocking" : "non-blocking"}${q.key === undefined ? "" : ` · ${link(ctx, `${member.id}#question.${q.key}`, `question.${q.key}`)} ${copy(`${member.id}#question.${q.key}`)}`}${q.line === undefined ? "" : ` · line ${String(q.line)} · ${sourceCode(ctx.data.specs.find((s) => s.id === member.id)?.file, q.line)}`} · ${text(ctx, q.question)}${questionFields(ctx, q, (v) => text(ctx, v))}`,
     ),
     "questions",
   );
@@ -105,7 +107,7 @@ export function packPage(ctx: PageContext, pack: PackContext, totals: PackTotals
   return frame(
     ctx,
     pack.title ?? pack.id,
-    `<header class="page-head"><h1>${codeSpans(pack.title ?? pack.id)}</h1><div class="ids"><span>${code(pack.id)}${copy(pack.id)}</span><span>${code(pack.file)}${copy(pack.file)}</span></div><h2>Where the design stands</h2><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header><h2>Framing</h2>${prose(ctx, pack.framing)}${pack.modelRefs.length === 0 ? "" : `<p>Vocabulary: ${pack.modelRefs.map((id) => link(ctx, id)).join(", ")}</p>`}<h2>Members</h2><sdp-expander>${pack.members.map((m, i) => memberCard(ctx, m, i)).join("")}<h2>Boundary</h2>${boundary}<h2>Members with no verifier binding</h2><p class="prose">The graph records bindings and never runs, so no page shows a run result. Decision records are left out: a decision never needs a verifier binding.</p>${list(gaps.map((g) => `${link(ctx, g.id, ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id, codeSpans(ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id))} · ${code(g.id)} · stated ${escape(g.statedReadiness ?? "not recorded")}`))}<h2>Findings</h2>${findingList(
+    `<header class="page-head"><h1>${codeSpans(pack.title ?? pack.id)}</h1><div class="ids"><span>${code(pack.id)}${copy(pack.id)}</span><span>${code(pack.file)}${copy(pack.file)}</span></div><h2>Where the design stands</h2><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header><h2>Framing</h2>${prose(ctx, pack.framing)}${pack.modelRefs.length === 0 ? "" : `<p>Vocabulary: ${pack.modelRefs.map((id) => link(ctx, id)).join(", ")}</p>`}<h2>Members</h2><sdp-expander>${pack.members.map((m, i) => memberCard(ctx, m, i)).join("")}<h2>Boundary</h2>${boundary}<h2>Members with no verifier binding</h2><p class="prose">The graph records verifier bindings. Decision records are left out: a decision never needs a verifier binding.${ctx.data.recipes.all.has(45) ? ` The <a href="${escape(relative(ctx, "runs.html"))}">runs page</a>, the <a href="${escape(relative(ctx, "tests.html"))}">tests lens</a> and the Spec pages of the Specs their files verify show the run records as external evidence from test files.` : ""}</p>${list(gaps.map((g) => `${link(ctx, g.id, ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id, codeSpans(ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id))} · ${code(g.id)} · stated ${escape(g.statedReadiness ?? "not recorded")}`))}<h2>Findings</h2>${findingList(
       ctx,
       ctx.data.findings.filter((f) => f.subjectId === pack.id),
     )}</sdp-expander>`,

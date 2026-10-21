@@ -51,6 +51,7 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
       ["architecture.html", "Architecture"],
       ["tests.html", "Tests"],
       ["evidence.html", "Evidence"],
+      ...(ctx.data.recipes.all.has(45) ? [["runs.html", "Runs"]] : []),
     ] as const
   )
     .map(

@@ -1,3 +1,4 @@
+import type { StudioInputs } from "./data.js";
 import { evaluateBodyWithReader } from "../../reader/evaluate-body.js";
 import type { Reader } from "../../reader/reader.js";
 import type { ValidationReport } from "../../validate/contracts.js";
@@ -37,6 +38,7 @@ export async function evaluateStudioRecipe(
 export async function studioRecipeAnswers(
   reader: Reader,
   report: ValidationReport,
+  inputs: StudioInputs = { runs: [] },
 ): Promise<StudioRecipeAnswers> {
   const value = await evaluateBodyWithReader("return recipes;", {
     reader,
@@ -50,6 +52,7 @@ export async function studioRecipeAnswers(
   const specs = new Map<string, ReadonlyMap<number, unknown>>();
   // Recipes 46 and 51 ship; lane S3 adds them for its register and queue pages.
   for (const number of [17, 20, 24, 31, 33, 43, 44]) all.set(number, await evaluate(number, {}));
+  if (inputs.runs.length > 0) all.set(45, await evaluate(45, { runs: inputs.runs }));
   for (const pack of reader.packs()) packs.set(pack.id, await evaluate(29, { pack: pack.id }));
   for (const spec of reader.specs()) {
     const answers = new Map<number, unknown>();

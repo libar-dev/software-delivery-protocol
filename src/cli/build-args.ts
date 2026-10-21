@@ -11,6 +11,7 @@ export interface BuildArgs {
   readonly exclude: readonly string[];
   readonly checkClean: boolean;
   readonly watch?: boolean;
+  readonly runs?: readonly string[];
   readonly imports?: string;
   readonly vault?: string;
   readonly rules?: readonly RulesInput[];
@@ -33,6 +34,7 @@ export function parseBuildArgs(
   let watchMode = false;
   let imports: string | undefined;
   let vault: string | undefined;
+  const runs: string[] = [];
   const rawExcludes: string[] = [];
   const rawRules: { rulesFile: string; forms: string[] }[] = [];
   const rulePaths = new Set<string>();
@@ -41,6 +43,25 @@ export function parseBuildArgs(
     const argument = args[index];
 
     if (argument === undefined) {
+      continue;
+    }
+
+    if (argument === "--runs") {
+      const path = args[index + 1];
+      if (
+        command !== "studio" ||
+        path === undefined ||
+        path.trim() === "" ||
+        path.startsWith("--")
+      ) {
+        writeStderr(
+          output,
+          `sdp ${command}: --runs requires a path and is only valid on studio.\n`,
+        );
+        return undefined;
+      }
+      runs.push(path);
+      index += 1;
       continue;
     }
 
@@ -202,6 +223,7 @@ export function parseBuildArgs(
         root: resolvedRoot,
         exclude,
         checkClean,
+        ...(runs.length === 0 ? {} : { runs }),
         ...(rules.length === 0 ? {} : { rules }),
         watch: watchMode,
         ...(imports === undefined ? {} : { imports }),
