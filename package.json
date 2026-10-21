@@ -90,14 +90,6 @@
     "typescript-eslint": "^8.0.0",
     "vitest": "^4.1.10"
   },
-  "peerDependencies": {
-    "vitest": ">=2"
-  },
-  "peerDependenciesMeta": {
-    "vitest": {
-      "optional": true
-    }
-  },
   "dependencies": {
     "@cucumber/gherkin": "42.0.1",
     "@cucumber/messages": "34.2.1",

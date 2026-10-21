@@ -4695,7 +4695,7 @@ const scope = packNode ? { pack } : requested !== undefined ? { specs: ids } : {
 const label = packNode ? pack : requested !== undefined ? ids.join(", ") : "the corpus";
 const stop = new Set("a an the and or but nor so then than if when while where of to in on at by for with from into onto as per via over under about is are was were be been being do does did has have had can could may might must shall should will would it its this that these those there their they them which who whom whose what each every any also only own".split(" "));
 const coin = (text) => {
-  const words = text.normalize("NFD").replace(/\p{M}/gu, "").replace(/^(?:\[[^\]]*\]\s*)+/u, "").replace(/([a-z0-9])([A-Z])/gu, "$1 $2").toLowerCase().split(/[^a-z0-9]+/u).filter(Boolean);
+  const words = text.normalize("NFD").replace(/\p{M}/gu, "").replace(/^(?:\[[^\]]*\]\s*)+/u, "").replace(/[\u0027’]s\b/gu, "").replace(/[\u0027’]/gu, "").replace(/([a-z0-9])([A-Z])/gu, "$1 $2").toLowerCase().split(/[^a-z0-9]+/u).filter(Boolean);
   const kept = words.filter((word) => !stop.has(word));
   const candidates = kept.length ? kept : words;
   while (candidates.length && !/^[a-z]/u.test(candidates[0])) candidates.shift();
@@ -4834,7 +4834,7 @@ function fenced(value, language = "") {
 function renderMemo(proposal) {
     let memo = `# Change proposal\n\nBase: ${span(proposal.base)}\nReason: ${proposal.reason}\n\n`;
     proposal.changes.forEach((change, index) => {
-        memo += `## Change ${String(index + 1)}\n\nScope: ${change.scope.map(span).join(", ")}\nRequest: ${change.request}\n`;
+        memo += `## Change ${String(index + 1)}\n\nScope: ${change.scope.map(span).join(", ")}\nRequest:\n\n${fenced(change.request, "text")}`;
         if (change.replaces !== undefined)
             memo += `Replaces: ${span(change.replaces)}\n`;
         if (change.follows !== undefined)

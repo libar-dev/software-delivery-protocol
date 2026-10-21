@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createReader,
+  evaluateBody,
   contractsFindingIds,
   generateContracts,
   refines,
@@ -371,7 +372,7 @@ describe("the contracts codegen stage", () => {
     expect(space).toContain('{ spec: "spec:orders.create-order.empty-cart", point: { n: 0 } }');
   });
 
-  it("preserves incomplete contract points while keeping them outside reader coverage", () => {
+  it("keeps incomplete contract points in reader and recipe coverage", async () => {
     const incomplete = child(
       { given: ["a customer has a cart with {n: 0} line items"], when: [], then: [] },
       "spec:orders.create-order.incomplete",
@@ -381,7 +382,58 @@ describe("the contracts codegen stage", () => {
     expect(space).toContain('{ spec: "spec:orders.create-order.incomplete", point: { n: 0 } }');
     expect(
       createReader(graph).specContext("spec:orders.create-order")?.exampleSpace?.points,
-    ).toEqual([]);
+    ).toEqual([{ example: "spec:orders.create-order.incomplete", values: { n: 0 } }]);
+    expect(
+      await evaluateBody("return recipes(44, params)", {
+        graph,
+        params: { spec: "spec:orders.create-order" },
+      }),
+    ).toMatchObject({ spaces: [{ examples: ["spec:orders.create-order.incomplete"] }] });
+  });
+
+  it("counts the review probe's small binding with an empty Then in recipe 44", async () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        parent({
+          given: ['size {size:"small"|"large"}', 'tone {tone:"light"|"dark"}'],
+          when: ["it is read"],
+          then: ["it appears"],
+        }),
+        child(
+          { given: ['size {size: "small"}'], when: ["it is read"], then: [] },
+          "spec:orders.create-order.incomplete",
+        ),
+      ],
+    });
+    expect(generateContracts(graph).files.get("orders.create-order.space.ts")).toContain(
+      '{ spec: "spec:orders.create-order.incomplete", point: { size: "small" } }',
+    );
+    expect(
+      createReader(graph).specContext("spec:orders.create-order")?.exampleSpace?.points,
+    ).toEqual([{ example: "spec:orders.create-order.incomplete", values: { size: "small" } }]);
+    expect(
+      await evaluateBody("return recipes(44, params)", {
+        graph,
+        params: { spec: "spec:orders.create-order" },
+      }),
+    ).toMatchObject({
+      spaces: [
+        {
+          examples: ["spec:orders.create-order.incomplete"],
+          slots: [
+            {
+              name: "size",
+              values: [
+                { value: "small", examples: ["spec:orders.create-order.incomplete"] },
+                { value: "large", examples: [] },
+              ],
+              unbound: [],
+            },
+            { name: "tone", unbound: ["spec:orders.create-order.incomplete"] },
+          ],
+        },
+      ],
+    });
   });
 
   it("warns and drops an undeclared slot from the point — loud, never silent (L2)", () => {

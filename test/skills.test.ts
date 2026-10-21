@@ -855,6 +855,10 @@ const readmeClauses = [
   ["pnpm repository approval", /allowBuilds/u],
   ["pnpm 10 exact approval", /onlyBuiltDependencies \(pnpm 10\)/u],
   ["installed CLI check", /node_modules\/\.bin\/sdp --version/u],
+  [
+    "vitest subpath requirement",
+    /\.\/vitest subpath needs Vitest 2 or later installed beside the package/u,
+  ],
   ["recipe subject as params", /dist\/recipes\/25-address-resolution\.js\)" --params/u],
 ] as const;
 

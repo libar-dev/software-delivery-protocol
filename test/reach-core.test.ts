@@ -498,12 +498,61 @@ it.each([null, [], "text", 3, true, new Date()])(
   },
 );
 
-it.each([99, 0, -1, 25.5, "26"])("rejects an unknown recipe number %j by name", async (number) => {
+it.each([99, 0, -1])("rejects an unknown recipe number %j by name", async (number) => {
   const { evaluateBody, extract } = await import("../src/index.js");
   const { graph } = extract({ root: probe() });
   await expect(
     evaluateBody("return recipes(params.number)", { graph, params: { number } }),
   ).rejects.toThrow(`recipes: the catalog holds no recipe ${String(number)}`);
+});
+
+it.each([
+  { number: 25.5, value: "25.5" },
+  { number: "26", value: "26" },
+  { number: null, value: "null" },
+  { number: true, value: "true" },
+  { number: [], value: "" },
+  { number: {}, value: "[object Object]" },
+  { number: Number.NaN, value: "NaN" },
+  { number: Number.POSITIVE_INFINITY, value: "Infinity" },
+])("rejects a non-integer recipe number %j", async ({ number, value }) => {
+  const { evaluateBody, extract } = await import("../src/index.js");
+  const { graph } = extract({ root: probe() });
+  await expect(
+    evaluateBody("return recipes(params.number)", { graph, params: { number } }),
+  ).rejects.toThrow(`recipes: ${value} is not a recipe number`);
+});
+
+it("shares the given report with the body and reader findings", async () => {
+  const { evaluateBody, extract, validateGraph } = await import("../src/index.js");
+  const { graph } = extract({ root: probe() });
+  const id = graph.nodes.find((node) => node.nodeType === "Primitive")?.id;
+  if (id === undefined) throw new Error("Expected a probe Spec");
+  const finding = {
+    validatorId: "probe/marked",
+    family: "conformance" as const,
+    subjectId: id,
+    severity: "warning" as const,
+    message: "Marked report finding",
+  };
+  const report = { ...validateGraph(graph), findings: [finding] };
+  const answer = await evaluateBody(
+    "return { report, findings: g.specContext(params.id).findings }",
+    { graph, report, params: { id } },
+  );
+  expect(answer).toEqual({ report, findings: [finding] });
+  expect((answer as { report: unknown }).report).toBe(report);
+});
+
+it.each([
+  ["return 1;\nfoo bar", 2, 5],
+  ["let x = 'a' 'bcdef';", 1, 13],
+])("locates a multi-character parse token in evaluateBody: %s", async (body, line, column) => {
+  const { evaluateBody, extract } = await import("../src/index.js");
+  const { graph } = extract({ root: probe() });
+  await expect(evaluateBody(body, { graph })).rejects.toThrow(
+    `the body does not parse at line ${String(line)}, column ${String(column)}:`,
+  );
 });
 
 it("preserves recipe diagnostics and errors and shares the parse error across CLI paths", async () => {

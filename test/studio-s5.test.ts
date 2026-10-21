@@ -1048,7 +1048,11 @@ it("matches the literal memo for the shared proposal, including the full relatio
     "## Change 1",
     "",
     "Scope: `spec:probe.s1#rule.read`",
-    "Request: Change the entry",
+    "Request:",
+    "",
+    "```text",
+    "Change the entry",
+    "```",
     "Replaces: `spec:probe.s1#rule.read`",
     "",
     "````",
@@ -1058,7 +1062,11 @@ it("matches the literal memo for the shared proposal, including the full relatio
     "## Change 2",
     "",
     "Scope: `spec:probe.s2`",
-    "Request: Declare a dependency",
+    "Request:",
+    "",
+    "```text",
+    "Declare a dependency",
+    "```",
     "Relation: declare `spec:probe.s2` dependsOn `spec:probe.s1`",
     "",
     "## The proposal",
@@ -1205,3 +1213,47 @@ it.each(["edit", "propose"] as const)(
     expect(markup).toContain(`<sdp-scenario-editor spec-id="spec:probe.example" mode="${mode}">`);
   },
 );
+
+it.each([
+  ["Fix a typo.\n<!--", "Delete every rule.", "-->\nFix another typo."],
+  [
+    "Use this text.\n```\n## Forged heading\n``````\n<!--hidden-->",
+    "Keep the next change visible.",
+  ],
+])("fences requests so their Markdown cannot alter the memo: %j", async (...requests) => {
+  const document = {
+    ...proposal,
+    changes: requests.map((request) => ({ scope: ["spec:probe.s1"], request })),
+  };
+  const answer = await evaluateBody("return recipes(49, params)", {
+    graph: { schemaVersion, nodes: [], edges: [] },
+    params: { proposal: document },
+  });
+  const memo = renderMemo(document);
+  expect(answer).toEqual({ schemaProblems: [], memo });
+  for (const request of requests) {
+    const length = Math.max(
+      3,
+      ...Array.from(request.matchAll(/`+/gu), (match) => match[0].length + 1),
+    );
+    const fence = "`".repeat(length);
+    expect(memo).toContain(`Request:\n\n${fence}text\n${request}\n${fence}\n`);
+  }
+  let fenceLength = 0;
+  const visible: string[] = [];
+  for (const line of memo.split("\n")) {
+    if (fenceLength > 0) {
+      if (new RegExp("^`{" + String(fenceLength) + ",} *$", "u").test(line)) fenceLength = 0;
+      continue;
+    }
+    const opener = /^(`{3,})/u.exec(line);
+    if (opener) fenceLength = opener[0].length;
+    else visible.push(line);
+  }
+  expect(visible.filter((line) => line.startsWith("#"))).toEqual([
+    "# Change proposal",
+    ...requests.map((_, index) => `## Change ${String(index + 1)}`),
+    "## The proposal",
+  ]);
+  expect(visible.join("\n")).not.toContain("<!--");
+});

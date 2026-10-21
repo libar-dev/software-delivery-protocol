@@ -24,14 +24,6 @@ const commit = run("git", ["rev-parse", "--verify", `${revision}^{commit}`]).tri
 const cloneDependency = `git+${pathToFileURL(root).href}#${commit}`;
 
 try {
-  const sourceManifest = JSON.parse(run("git", ["show", `${commit}:package.json`]));
-  for (const peer of Object.keys(sourceManifest.peerDependencies ?? {})) {
-    assert.equal(
-      sourceManifest.peerDependenciesMeta?.[peer]?.optional,
-      true,
-      `${peer} is required`,
-    );
-  }
   const managers = ["npm"];
   const pnpm = spawnSync("pnpm", ["--version"], { encoding: "utf8" });
   if (pnpm.status === 0) managers.push("pnpm");
@@ -83,14 +75,12 @@ try {
       );
     }
     const started = Date.now();
-    // npm 10 crashes exploring Vitest's optional peers. This is a runtime-only consumer;
-    // the assertion above prevents suppressing a required peer if the manifest changes.
     run(
       manager,
       [
         "install",
         ...(manager === "npm"
-          ? ["--no-audit", "--no-fund", "--legacy-peer-deps"]
+          ? ["--no-audit", "--no-fund"]
           : ["--reporter=append-only", "--store-dir", join(scratch, "pnpm-store")]),
       ],
       consumer,

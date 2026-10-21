@@ -38,7 +38,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -63,7 +62,7 @@ jobs:
           SDP: ${{ inputs.sdp }}
           DIFF: ${{ inputs.diff }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CORPUS_COMMIT: ${{ github.sha }}
           SOURCE_SERVER: ${{ github.server_url }}
           SOURCE_REPO: ${{ github.repository }}
           RUNS_ARTIFACT: ${{ inputs.runs-artifact }}
@@ -97,7 +96,7 @@ jobs:
           root_prefix="${ROOT#./}"
           if [[ "$root_prefix" == . ]]; then root_prefix=""; fi
           if [[ -n "$root_prefix" ]]; then root_prefix="${root_prefix%/}/"; fi
-          sdp stamp "$ROOT" --commit "$HEAD_SHA" --source "$SOURCE_SERVER/$SOURCE_REPO/blob/$HEAD_SHA/$root_prefix{file}#L{line}"
+          sdp stamp "$ROOT" --commit "$CORPUS_COMMIT" --source "$SOURCE_SERVER/$SOURCE_REPO/blob/$CORPUS_COMMIT/$root_prefix{file}#L{line}"
           PAGE_SET="$ROOT/generated/spec-studio" node --input-type=module <<'JS'
           import { readdirSync, statSync, appendFileSync } from 'node:fs';
           import { join } from 'node:path';
@@ -128,7 +127,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - name: Check the Pages source
         id: pages

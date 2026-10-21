@@ -23,7 +23,7 @@ The original design rendered a coverage heatmap from each example space: which c
 - rule: [#catalogRecipe] Slot-value coverage is a catalog recipe, recipe 44, over the decoded reader values, listing each literal-union value with the example children that bind it and each value no child binds.
 - rule: [#literalUnions] The recipe enumerates slots typed as closed unions of quoted literals. It reports every other slot type, a boolean included, as not enumerable by this recipe, never as covered or as missing a value.
 - rule: [#perSlotOnly] Coverage is reported per slot value; the recipe reports no combination of two or more slots until a design pass asks which combinations no example exercises.
-- rule: [#eligibleChildren] The examples counted are the space owner's example children that declare `refines` on it and carry a given, when and then entry, the same children its space contract collects.
+- rule: [#eligibleChildren] The examples counted are the children its space contract collects.
 - rule: [#unboundSlot] An example that binds no value for a slot is listed under that slot as unbound, never as covering a value of it.
 - rule: [#confersNothing] Slot-value coverage reports and confers nothing: it moves no readiness, records no verdict and emits no validation finding.
 

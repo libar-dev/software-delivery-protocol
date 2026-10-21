@@ -1198,7 +1198,7 @@ export const consumersSpecs = [
     file: "specs/consumers/impact-graph.sdp.md",
     title: "Mechanical code structure stays inferred and apart from curated intent",
     narrative:
-      "File-level import structure, keyed by repository-relative path, is designed in `spec:consumers.impact-graph.curation-assist`; exhaustive symbol reach is designed in `spec:consumers.impact-graph.symbol-reach`, which holds the symbol-identity question.",
+      "File-level import structure, keyed by repository-relative path, is designed in `spec:consumers.impact-graph.curation-assist`; exhaustive symbol reach is designed in `spec:consumers.impact-graph.symbol-reach`, which holds the symbol-identity question. This parent promises the stance that inferred structure stays apart from curated intent. Symbol reach is the deferred child's promise alone.",
     sections: {
       intent: {
         outcome:
@@ -1296,7 +1296,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "An adopter can pin the package to a git commit, and the package's `prepare` script builds the CLI, subpath exports and shipped recipes before installation completes. While the package version is `0.0.0`, the installation guidance uses a commit pin rather than an npm prerelease.",
-          "The shipped README teaches a commit install with npm and pnpm, the source-qualified build approval each needs, and a check that the installed CLI's `sdp --version` names the pinned full commit, for a git clone or a hosted git archive install.",
+          "The shipped README teaches a commit install with npm and pnpm, the source-qualified build approval each needs, and a check that the installed CLI's `sdp --version` names the pinned full commit, for a git clone or a hosted git archive install. It teaches that the `./vitest` subpath needs Vitest 2 or later installed beside the package.",
           "The upgrade guidance teaches a recipe caller to pass the recipe's subject as `--params` data and run the shipped recipe file, never to rewrite the recipe body.",
           "The authoring skill teaches a deferral as a blocking open question whose `trigger:` field names what brings the Spec back, plus `dependsOn` for a true precondition. Its blocking question holds the Spec below `defined` without an adopter-specific tag. Example children may still state `defined` once their bound points are complete and match the parent's example vocabulary when it has one; their `ready` waits until the parent states at least `defined`.",
           "It teaches an unsettled fact as a constraint Spec whose blocking open question names the check that would settle it. Specs bounded by it declare `constrainedBy`; they may state `defined` when their own floor clears, and their `ready` waits until the constraint states at least `defined`.",
@@ -2017,7 +2017,7 @@ export const consumersSpecs = [
     readiness: "ready",
     title: "A Studio build is stamped and shared from a static host",
     narrative:
-      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file at the page set's root, and the shell shows it where the set is served over http or https. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host.",
+      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file at the page set's root, and the shell shows it where the set is served over http or https. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host. Checks and previews use GitHub's default pull-request merge checkout, so the gate proves the merge result and the run evidence, page set and stamp name that same commit.",
     sections: {
       intent: {
         outcome:
@@ -2031,7 +2031,7 @@ export const consumersSpecs = [
           "`sdp stamp [root] [--commit SHA] [--source TEMPLATE]` writes `stamp.json` into `<root>/generated/spec-studio/` and touches no other file: it derives no graph, renders no page, and refuses with exit 1 when the root holds no page set; a stamp without `--commit` names the commit `unknown`.",
           "A later build removes the page set and its stamp together, so no stamp outlives the build it names.",
           "Publishing a preview and writing its stamp are a step the adopter's CI runs, never the Studio's build; the shell reads the stamp as `spec:consumers.spec-studio.shell#rule.stamp` states.",
-          "The package's repository ships a reusable GitHub Actions workflow that, on a pull request, installs the caller's dependencies, runs `sdp studio` with the caller's root, exclusions and inputs, runs `sdp stamp` with the pull request's head commit and the repository's source template, and uploads the page set as a CI artifact; it opens no pull request, writes no comment and holds no credential beyond the run's own token.",
+          "The package's repository ships a reusable GitHub Actions workflow that, on a pull request, installs the caller's dependencies, runs `sdp studio` with the caller's root, exclusions and inputs, runs `sdp stamp` with the checked-out merge commit and the repository's source template, and uploads the page set as a CI artifact; it opens no pull request, writes no comment and holds no credential beyond the run's own token.",
           "The workflow deploys the stamped page set under `/preview/<pr-number>/` only when the caller asks for it and the repository serves a host from the branch the workflow writes to; a pull request from a fork never deploys.",
           "Every recorded file and line a page shows as text carries its file and line as data on its element, and when a loaded stamp names a source template the stamp element links each to the template with the file and line filled in; without such a stamp, or through `file://`, each stays text.",
         ],
@@ -2067,7 +2067,7 @@ export const consumersSpecs = [
           "`root` (default `.`), `exclude` (root-relative prefixes, one per line), `node-version` (default `20`), `install` (the install command, default `npm ci`), `sdp` (the command that runs the installed `sdp`, default `npx sdp`), `runs-artifact` (the name of an artifact an earlier job uploaded holding CTRF reports, each passed as `--runs`), `diff` (a boolean: write the graph of the pull request's base commit in a separate worktree, with that commit's own install and engine, and pass it as `--base` labelled `base <short commit>`), and `deploy` (a boolean, default false).",
         previewArtifact: "the artifact `spec-studio-pr-<pr-number>`, holding the stamped page set.",
         workflowSource:
-          "the workflow stamps with the pull request's head commit and the source template `<server>/<repository>/blob/<head commit>/<root>/{file}#L{line}`, the root and its slash left out when the root is `.`.",
+          "the workflow stamps with the checked-out merge commit and the source template `<server>/<repository>/blob/<merge commit>/<root>/{file}#L{line}`, the root and its slash left out when the root is `.`.",
         previewPath:
           "a pull request's preview is served at `<host>/preview/<pr-number>/`, which the workflow writes as the folder `preview/<pr-number>/` of the `gh-pages` branch, the branch GitHub Pages serves when a repository enables Pages from it.",
         stampElement:
@@ -2102,7 +2102,7 @@ export const consumersSpecs = [
           "The shell shows no recent edits and no other history: git holds it.",
           "Served over http or https, the shell reads `stamp.json` beside the page set and, when it loads, shows the build context it names; a page opened through `file://` requests nothing and shows no stamp.",
           "A stated rung shows as a badge that carries the rung's word, colored from a palette of four that stays distinct under color blindness; the floor reached shows beside it as words with no color of its own, and only the divergence banner adds a warning color, beside its words.",
-          "Every status a color marks is also written in words, so no reading depends on color.",
+          "Every meaning a color conveys is also written in words, so no reading depends on color.",
           "Every link and control is reachable from the keyboard in reading order and shows where the focus is.",
           "Prose runs no wider than about 80 characters, and a table wider than the canvas scrolls inside its own box, never the page.",
           "Authored text renders as plain text with each inline code span as code, and no other Markdown is read. A mention the prose-mentions validator reads links to its target's page when the target resolves, and to the entry when the mention is an entry address.",
@@ -2576,7 +2576,7 @@ export const consumersSpecs = [
           "Slot-value coverage is a catalog recipe, recipe 44, over the decoded reader values, listing each literal-union value with the example children that bind it and each value no child binds.",
           "The recipe enumerates slots typed as closed unions of quoted literals. It reports every other slot type, a boolean included, as not enumerable by this recipe, never as covered or as missing a value.",
           "Coverage is reported per slot value; the recipe reports no combination of two or more slots until a design pass asks which combinations no example exercises.",
-          "The examples counted are the space owner's example children that declare `refines` on it and carry a given, when and then entry, the same children its space contract collects.",
+          "The examples counted are the children its space contract collects.",
           "An example that binds no value for a slot is listed under that slot as unbound, never as covering a value of it.",
           "Slot-value coverage reports and confers nothing: it moves no readiness, records no verdict and emits no validation finding.",
         ],
@@ -2972,11 +2972,11 @@ export const consumersSpecs = [
         memoHead:
           "the memo opens with the line `# Change proposal`, a blank line, the line `Base: ` followed by the base as a code span, the line `Reason: ` followed by the reason, and a blank line.",
         memoChange:
-          "each change follows in document order as the line `## Change <n>`, counting from 1, and a blank line, then each on its own line: `Scope: ` followed by the scope items as code spans joined by `, `; `Request: ` followed by the request; when present, `Replaces: ` or `Follows: ` followed by the address as a code span; `Relation: ` followed by the action, the source as a code span, the relation type and the target as a code span, separated by single spaces; and `Reason: ` followed by the change's reason; then, when the change carries exact text, a blank line and the text in a fenced block with no info string; then a blank line.",
+          "each change follows in document order as the line `## Change <n>`, counting from 1, and a blank line, then each on its own line: `Scope: ` followed by the scope items as code spans joined by `, `; `Request:` followed by a blank line and the request in a fenced block whose info string is `text`; when present, `Replaces: ` or `Follows: ` followed by the address as a code span; `Relation: ` followed by the action, the source as a code span, the relation type and the target as a code span, separated by single spaces; and `Reason: ` followed by the change's reason; then, when the change carries exact text, a blank line and the text in a fenced block with no info string; then a blank line.",
         memoDocument:
           "the memo ends with the line `## The proposal`, a blank line, and the document in a fenced block whose info string is `json`, written as `JSON.stringify` writes it with two-space indentation and the keys in the order the document holds them.",
         memoMarkup:
-          "a code span uses a backtick run one longer than the longest run its content holds, padded with a space on each side when the content starts or ends with a backtick; a fence is a backtick run one longer than the longest run its content holds and at least three long; every value is written verbatim; every line ends with a line feed and the memo with one.",
+          "a code span uses a backtick run one longer than the longest run its content holds, padded with a space on each side when the content starts or ends with a backtick; a fence is a backtick run one longer than the longest run its content holds and at least three long; each request and each change's exact text is enclosed in a fence longer than any backtick run it holds, so a request cannot open HTML, add a heading or close its fence; every value is written verbatim; every line ends with a line feed and the memo with one.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -4050,7 +4050,7 @@ export const consumersSpecs = [
         calledBindings:
           "a called recipe receives the caller's `g`, `graph` and `report`, the same objects; its parameters object as `params`; and `recipes` itself, so one recipe may call another.",
         callRejections:
-          "`recipes: the catalog holds no recipe <number>` rejects a call whose number the catalog does not list, or that is not an integer; `recipes: recipe <number> takes one parameters object` rejects parameters that are null, an array, a string, a number or a boolean.",
+          "`recipes: the catalog holds no recipe <number>` rejects an integer the catalog does not list; `recipes: <value> is not a recipe number` rejects a value that is not an integer; `recipes: recipe <number> takes one parameters object` rejects parameters that are null, an array, a string, a number or a boolean.",
         evaluatorExport:
           "`evaluateBody(body: string, input: { graph: GraphSchema; report?: ValidationReport; params?: Readonly<Record<string, unknown>> }): Promise<unknown>`, exported from the package's main entry, `@libar-dev/software-delivery-protocol`; it binds `g` to the reader over `graph`, `report` to the given report or, when absent, the validation report of `graph`, `params` to the given object or `{}`, and `recipes` over the same three, and resolves to the body's return.",
         evaluatorRejections:
@@ -4978,7 +4978,7 @@ export const consumersSpecs = [
           "Each key is coined from its entry's text by fixed steps, so the same graph and parameters give the same keys.",
           "A coined key is lower camel on the rule-key grammar, unique among the rule and flow keys of its Spec, the keys it already carries and the keys coined before it, and never a name the carrier refuses as a key.",
           "An entry whose text yields no word to coin from is listed apart, with its Spec, entry and line, and gets no change; the recipe never invents a key from nothing.",
-          "An agent applies the proposal only after the proposal check finds no change whose scope moved since the commit it names, as composed intent is applied; a person may rename a coined key before it is applied, and `sdp validate` on the worktree stays the only gate.",
+          "An agent reads the proposal check per change: a change whose scope moved since the named commit goes to a person, and the remaining changes are applied as ordinary carrier edits, so one moved scope never holds back the whole proposal. A person may rename a coined key before it is applied. The proposal check grants no approval and edits nothing; conformance and honesty checks remain the only gate.",
         ],
         exampleSpace: {
           given: ["a probe Spec whose unkeyed rules read {rules:string}"],
@@ -5013,7 +5013,7 @@ export const consumersSpecs = [
         keyRequest:
           "`Add the key marker [#<key>] and one space at the start of the text of <entry> of <spec id>, at <file> line <line>, after its rule: or flow: label where it has one.`, with `<entry>` the location table's `rule[<i>]` or `flow[<i>]` and `, at <file>` alone when the line is not located.",
         keyCoining:
-          "decompose the text and drop combining marks; drop the bracketed groups that open it, such as `[extension]`; split the rest into words at every character other than an ASCII letter or digit and at each change from a lowercase letter or digit to an uppercase letter; lowercase each word; drop the stop words, unless that leaves no word; drop the leading words that do not open with a letter and every repeat of a word kept before it; join the first three words left in lower camel case, the first all lowercase and each later one with its first letter uppercased.",
+          "decompose the text and drop combining marks; drop the bracketed groups that open it, such as `[extension]`; drop `'s` and `’s`, then any remaining apostrophe; split the rest into words at every character other than an ASCII letter or digit and at each change from a lowercase letter or digit to an uppercase letter; lowercase each word; drop the stop words, unless that leaves no word; drop the leading words that do not open with a letter and every repeat of a word kept before it; join the first three words left in lower camel case, the first all lowercase and each later one with its first letter uppercased.",
         stopWords:
           "`a`, `an`, `the`, `and`, `or`, `but`, `nor`, `so`, `then`, `than`, `if`, `when`, `while`, `where`, `of`, `to`, `in`, `on`, `at`, `by`, `for`, `with`, `from`, `into`, `onto`, `as`, `per`, `via`, `over`, `under`, `about`, `is`, `are`, `was`, `were`, `be`, `been`, `being`, `do`, `does`, `did`, `has`, `have`, `had`, `can`, `could`, `may`, `might`, `must`, `shall`, `should`, `will`, `would`, `it`, `its`, `this`, `that`, `these`, `those`, `there`, `their`, `they`, `them`, `which`, `who`, `whom`, `whose`, `what`, `each`, `every`, `any`, `also`, `only` and `own`.",
         keyCollision:

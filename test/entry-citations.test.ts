@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { scanEntryCitations } from "../src/extract/entry-citations.js";
 import {
   oracleAnchorId,
   ref,
@@ -275,6 +276,79 @@ describe("entry citation extraction and reader", () => {
         (row) => row.file !== "Z.ts",
       ),
     ).toBe(true);
+  });
+  it("ends template citation tokens at interpolation and ignores an unbound key", () => {
+    const world = createWorld(point);
+    const file = join(world.root, "source.ts");
+    writeFileSync(
+      file,
+      readFileSync(file, "utf8") +
+        'const key = "typeOne";\n' +
+        "test(`spec:probe.one#design.${key}`, () => {});\n" +
+        "test(`spec:probe.one#design.typeOne${key}`, () => {});\n",
+    );
+    const graph = extract({ root: world.root }).graph;
+    expect(graph.citations).toEqual([
+      { address: point.address, file: "source.ts", line: 9 },
+      { address: point.address, file: "source.ts", line: 12 },
+    ]);
+    invoke(world);
+    expect(world.code, world.stderr).toBe(0);
+  });
+  it("keeps a literal malformed token beside an interpolated token on the same line", () => {
+    const source =
+      'const literal = "spec:probe.one#design.$"; const dynamic = `spec:probe.one#design.${key}`;';
+    expect(scanEntryCitations(source, "source.ts")).toEqual([
+      { address: "spec:probe.one#design.$", file: "source.ts", line: 1 },
+    ]);
+  });
+  it("keeps a malformed literal before a separate template interpolation", () => {
+    expect(scanEntryCitations('test("spec:probe.one#design.$", `${key}`);', "source.ts")).toEqual([
+      { address: "spec:probe.one#design.$", file: "source.ts", line: 1 },
+    ]);
+  });
+  it("removes trailing punctuation from a complete prefix before interpolation", () => {
+    expect(
+      scanEntryCitations("const title = `spec:probe.one#design.typeOne.${key}`;", "source.ts"),
+    ).toEqual([{ address: point.address, file: "source.ts", line: 1 }]);
+  });
+  it("recipe 51 locates a citation of the second keyed question", async () => {
+    const { evaluateBody } = await import("../src/reader/evaluate-body.js");
+    const world = createWorld(point);
+    const carrier = join(world.root, "one.sdp.md");
+    const text = readFileSync(carrier, "utf8").replace(
+      "## Design",
+      "### Open questions\n- [non-blocking #first] First?\n- [non-blocking #second] Second?\n\n## Design",
+    );
+    writeFileSync(carrier, text);
+    const file = join(world.root, "source.ts");
+    writeFileSync(file, readFileSync(file, "utf8") + "// spec:probe.one#question.second\n");
+    const graph = extract({ root: world.root }).graph;
+    expect(createReader(graph).specContext(subject)?.entryCitations).toContainEqual(
+      expect.objectContaining({
+        address: `${subject}#question.second`,
+        entry: "question[1]",
+        resolves: true,
+      }),
+    );
+    const answer = await evaluateBody("return recipes(51)", { graph });
+    expect(answer).toMatchObject({
+      findings: [],
+      entries: expect.arrayContaining([
+        expect.objectContaining({
+          address: `${subject}#question.second`,
+          line: text.split("\n").findIndex((line) => line.includes("#second]")) + 1,
+          citedBy: [
+            {
+              file: "source.ts",
+              line: 10,
+              anchors: ["test:probe.one"],
+              testAnchors: ["test:probe.one"],
+            },
+          ],
+        }),
+      ]),
+    });
   });
   it("ends citation tokens at source escapes before checking for an address", () => {
     const world = createWorld(point);
