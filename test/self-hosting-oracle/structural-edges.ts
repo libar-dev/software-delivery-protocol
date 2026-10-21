@@ -25,6 +25,9 @@ export const expectedComponentIds = [
 // outside the engine source seams and therefore have no truthful owner among the accepted
 // component set.
 export const structuralMembershipExceptions = [
+  "impl:protocol.graph-first-planning",
+  "impl:protocol.self-hosting",
+  "impl:protocol.structural-self-binding",
   "impl:protocol.validator-self-testing",
   "impl:protocol.architecture-walk-recipe",
   "impl:protocol.planned-components-recipe",

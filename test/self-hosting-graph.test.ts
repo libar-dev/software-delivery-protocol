@@ -18,7 +18,13 @@ import {
 } from "typescript";
 import { describe, expect, it } from "vitest";
 
-import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
+import {
+  ref,
+  specTest,
+  testAnchorId,
+  codeAnchor,
+  codeAnchorId,
+} from "@libar-dev/software-delivery-protocol";
 
 import { extract, validateGraph } from "../src/index.js";
 import { auditStructuralCoverage } from "./helpers/structural-coverage.js";
@@ -81,7 +87,7 @@ const structuralSelfBindingTestAnchor = specTest({
   id: testAnchorId("test:protocol.structural-self-binding"),
   label:
     "checks the accepted membership and helper coverage, authored uses, and pinned anchor roles, layers and contexts",
-  verifies: ref("spec:protocol.structural-self-binding"),
+  verifies: [ref("spec:protocol.structural-self-binding"), ref("spec:model.structural-patterns")],
 });
 void structuralSelfBindingTestAnchor;
 
@@ -124,6 +130,19 @@ function executableActivationLine(source: string, activation: string): number | 
 // Given: the repository root with evidence and the worked example excluded from the authored model.
 // The corpus walk is this suite's one expensive step, so it runs exactly once and every assertion
 // below reads the same derived graph: splitting the oracle by law never multiplies extraction.
+const selfHostingImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.self-hosting"),
+  label: "realizes the self-hosted corpus through the shared extraction and validation path",
+  satisfies: ref("spec:protocol.self-hosting"),
+});
+void selfHostingImplementationAnchor;
+const structuralSelfBindingImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.structural-self-binding"),
+  label: "realizes the declared significant-unit set and its structural self-binding",
+  satisfies: [ref("spec:protocol.structural-self-binding"), ref("spec:model.structural-patterns")],
+});
+void structuralSelfBindingImplementationAnchor;
+
 const result = extract({
   root: repoRoot,
   exclude: ["explorations", "examples", "test/fixtures/import/parity"],
@@ -224,15 +243,15 @@ describe("the self-hosting corpus", () => {
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 399 Markdown Specs and four Gherkin Specs,
-    // 403 in the self-hosting Pack; seven Pack manifests and 339 source anchors.
-    // The excluded-root validate run corroborates 749 nodes and 2206 edges.
-    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 359 });
+    // 403 in the self-hosting Pack; seven Pack manifests and 368 source anchors.
+    // The excluded-root validate run corroborates 778 nodes and 2244 edges.
+    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 368 });
     expect(expectedSpecs).toHaveLength(403);
     expect(expectedPackMembers).toHaveLength(403);
-    expect(expectedAnchors).toHaveLength(359);
-    expect(expectedBindingEdges).toHaveLength(413);
-    expect(result.graph.nodes).toHaveLength(769);
-    expect(result.graph.edges).toHaveLength(2227);
+    expect(expectedAnchors).toHaveLength(368);
+    expect(expectedBindingEdges).toHaveLength(430);
+    expect(result.graph.nodes).toHaveLength(778);
+    expect(result.graph.edges).toHaveLength(2244);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {

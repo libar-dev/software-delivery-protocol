@@ -796,7 +796,7 @@ export const extractionSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:extraction.pack-member-order.manifest-order-kept",

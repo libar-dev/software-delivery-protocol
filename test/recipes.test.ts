@@ -321,21 +321,6 @@ function structuralGroundTruth() {
   };
 }
 
-const registerRecipesImplementationAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.register-recipes"),
-  label: "asserts realization of the shipped register recipes",
-  satisfies: [
-    ref("spec:consumers.agent-surface.register-recipes"),
-    ref("spec:model.open-question-keys"),
-  ],
-});
-void registerRecipesImplementationAnchor;
-const registerRecipesTestAnchor = specTest({
-  id: testAnchorId("test:protocol.register-recipes"),
-  label: "recipe checks verify the register recipes",
-  verifies: ref("spec:consumers.agent-surface.register-recipes"),
-});
-void registerRecipesTestAnchor;
 const authoringRecipesImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authoring-recipes"),
   label: "asserts realization of the shipped authoring recipe catalog",
@@ -2052,6 +2037,25 @@ export const probe = spec({
   }
 }
 
+const registerRecipesImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.register-recipes"),
+  label: "asserts realization of the shipped register recipes",
+  satisfies: [
+    ref("spec:consumers.agent-surface.register-recipes"),
+    ref("spec:model.open-question-keys"),
+    ref("spec:extraction.contract-declarations"),
+  ],
+});
+void registerRecipesImplementationAnchor;
+const registerRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.register-recipes"),
+  label: "recipe checks verify the register recipes",
+  verifies: [
+    ref("spec:consumers.agent-surface.register-recipes"),
+    ref("spec:extraction.contract-declarations"),
+  ],
+});
+void registerRecipesTestAnchor;
 describe("register recipe semantics", () => {
   it("lists key families across the corpus in key, Spec and section order with the documented sample", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(41)));

@@ -1,3 +1,4 @@
+import { specOracle, oracleAnchorId } from "@libar-dev/software-delivery-protocol";
 import { secondEntryUntargetedContract } from "../generated/contracts/validation.kind-evidence.second-entry-untargeted.contract.js";
 import { registerSecondEntryUntargeted } from "./validation.kind-evidence.second-entry-untargeted.test.generated.js";
 import type {
@@ -539,7 +540,7 @@ registerConstraintsAlone({
   createWorld: createKindEvidenceWorld,
   invoke: invokeKindEvidenceValidate,
   observe: observeNamedFinding,
-  expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
+  expected: expectedKindEvidence,
   assertions: (world) => {
     const { clauseId } = paramsForStep(
       constraintsAloneContract,
@@ -564,7 +565,7 @@ registerUntargetedConstraint({
   createWorld: createKindEvidenceWorld,
   invoke: invokeKindEvidenceValidate,
   observe: observeNamedFinding,
-  expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
+  expected: expectedKindEvidence,
   assertions: (world) => {
     const { clauseId } = paramsForStep(
       untargetedConstraintContract,
@@ -589,7 +590,7 @@ registerEmptyPromotedChild({
   createWorld: createKindEvidenceWorld,
   invoke: invokeKindEvidenceValidate,
   observe: observeNamedFinding,
-  expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
+  expected: expectedKindEvidence,
   assertions: (world) => {
     const { clauseId } = paramsForStep(
       emptyPromotedChildContract,
@@ -1539,6 +1540,12 @@ function observeSuperseded(world: ValidatorWorld): SupersededDecisionSignalOutco
   };
 }
 
+const supersededDecisionOracleAnchor = specOracle({
+  id: oracleAnchorId("oracle:protocol.superseded-decision-signal"),
+  models: ref("spec:validation.superseded-decision-signal"),
+});
+void supersededDecisionOracleAnchor;
+
 function expectedSuperseded(
   point: Partial<SupersededDecisionSignalConditions>,
 ): SupersededDecisionSignalOutcome {
@@ -1797,6 +1804,15 @@ it("warns once for each stale decision and ignores unresolved and wrongly typed 
   expect(supersededFindings(world)).toEqual([]);
 });
 
+const kindEvidenceOracleAnchor = specOracle({
+  id: oracleAnchorId("oracle:protocol.kind-evidence"),
+  models: ref("spec:validation.kind-evidence"),
+});
+void kindEvidenceOracleAnchor;
+function expectedKindEvidence(point: Partial<KindEvidenceConditions>): KindEvidenceOutcome {
+  return expectedNamedFinding(point, "honesty/readiness-floor", "error");
+}
+
 const secondEntryUntargetedAnchor = specTest({
   id: testAnchorId("test:protocol.kind-evidence.second-entry-untargeted"),
   verifies: ref("spec:validation.kind-evidence.second-entry-untargeted"),
@@ -1806,7 +1822,7 @@ registerSecondEntryUntargeted({
   createWorld: createKindEvidenceWorld,
   invoke: invokeKindEvidenceValidate,
   observe: observeNamedFinding,
-  expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
+  expected: expectedKindEvidence,
   assertions: (world) => {
     const { clauseId } = paramsForStep(
       secondEntryUntargetedContract,

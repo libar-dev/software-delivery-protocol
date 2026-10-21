@@ -447,7 +447,7 @@ export const modelSpecs = [
         },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:model.open-question-keys.keyed-question-resolves",

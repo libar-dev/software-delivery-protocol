@@ -144,7 +144,30 @@ const deliverySessionOnRampTestAnchor = specTest({
 });
 void deliverySessionOnRampTestAnchor;
 
+const graphFirstPlanningImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.graph-first-planning"),
+  label: "realizes placement homes and advisory session guidance in the shipped skills",
+  references: [ref("spec:consumers.graph-first-planning")],
+});
+void graphFirstPlanningImplementationAnchor;
+const graphFirstPlanningTestAnchor = specTest({
+  id: testAnchorId("test:protocol.graph-first-planning"),
+  label: "checks placement homes and advisory graph-first session guidance",
+  verifies: ref("spec:consumers.graph-first-planning"),
+});
+void graphFirstPlanningTestAnchor;
+
 describe("Protocol skill assets", () => {
+  it("keeps planning truth in graph homes and session routing advisory", () => {
+    const authoring = readSkill(skillPaths[1]).body;
+    const sessions = readSkill(skillPaths[2]).body;
+    expect(authoring).toContain("### Place what is not settled");
+    for (const home of ["trigger:", "dependsOn", "blocking", "decision", "example"])
+      expect(authoring).toContain(home);
+    expect(sessions).toContain("one current graph serves every work shape");
+    expect(sessions).toContain("All preflights are advisory");
+    expect(sessions).toContain('Never hand off a carried "verified" verdict');
+  });
   it("owns skills under .agents and exposes them to Claude through one relative symlink", () => {
     const claudeSkills = join(repoRoot, ".claude", "skills");
 

@@ -1,3 +1,4 @@
+import { specOracle, oracleAnchorId } from "@libar-dev/software-delivery-protocol";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -96,6 +97,12 @@ function observe(world: AuditWorld): ValidatorSelfTestingOutcome {
     verdict: Object.values(world.answer).every((list) => list.length === 0) ? "passes" : "fails",
   };
 }
+const validatorAuditOracleAnchor = specOracle({
+  id: oracleAnchorId("oracle:protocol.validator-self-testing"),
+  models: ref("spec:validation.validator-self-testing"),
+});
+void validatorAuditOracleAnchor;
+
 function expected(point: Partial<ValidatorSelfTestingConditions>): ValidatorSelfTestingOutcome {
   if (Object.keys(point).length !== 4) return unspecified;
   return {

@@ -1,3 +1,4 @@
+import { specOracle, oracleAnchorId } from "@libar-dev/software-delivery-protocol";
 import { oneLiteralBindingContract } from "../generated/contracts/carrier.slot-notation.one-literal-binding.contract.js";
 import { droppedListWarnsContract } from "../generated/contracts/model.open-question-fields.dropped-list-warns.contract.js";
 import type {
@@ -187,6 +188,12 @@ function observeSlotCount(world: SlotWorld): SlotNotationOutcome {
   };
 }
 
+const slotNotationOracleAnchor = specOracle({
+  id: oracleAnchorId("oracle:protocol.slot-notation"),
+  models: ref("spec:carrier.slot-notation"),
+});
+void slotNotationOracleAnchor;
+
 function expectedSlotCount(point: Partial<SlotNotationConditions>): SlotNotationOutcome {
   if (point.stepText === undefined) {
     return unspecified;
@@ -332,6 +339,12 @@ function observeDroppedQuestion(world: DroppedQuestionWorld): OpenQuestionFields
     severity: finding.severity,
   };
 }
+const droppedQuestionOracleAnchor = specOracle({
+  id: oracleAnchorId("oracle:protocol.open-question-fields"),
+  models: ref("spec:model.open-question-fields"),
+});
+void droppedQuestionOracleAnchor;
+
 function expectedDroppedQuestion(
   point: Partial<OpenQuestionFieldsConditions>,
 ): OpenQuestionFieldsOutcome {

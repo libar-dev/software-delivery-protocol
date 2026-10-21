@@ -21,6 +21,73 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "oracle:protocol.kind-evidence",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "function expectedKindEvidence(",
+    constant: "kindEvidenceOracleAnchor",
+  },
+  {
+    id: "oracle:protocol.open-question-fields",
+    nodeType: "Anchor",
+    file: "test/self-hosting-carrier.test.ts",
+    site: "function expectedDroppedQuestion(",
+    constant: "droppedQuestionOracleAnchor",
+  },
+  {
+    id: "oracle:protocol.slot-notation",
+    nodeType: "Anchor",
+    file: "test/self-hosting-carrier.test.ts",
+    site: "function expectedSlotCount(",
+    constant: "slotNotationOracleAnchor",
+  },
+  {
+    id: "oracle:protocol.validator-self-testing",
+    nodeType: "Anchor",
+    file: "test/validator-audit.test.ts",
+    site: "function expected(",
+    constant: "validatorAuditOracleAnchor",
+  },
+  {
+    id: "oracle:protocol.superseded-decision-signal",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "function expectedSuperseded(",
+    constant: "supersededDecisionOracleAnchor",
+  },
+  {
+    id: "impl:protocol.structural-self-binding",
+    nodeType: "CodeNode",
+    file: "test/self-hosting-graph.test.ts",
+    site: "const result = extract(",
+    constant: "structuralSelfBindingImplementationAnchor",
+    label: "realizes the declared significant-unit set and its structural self-binding",
+  },
+  {
+    id: "impl:protocol.self-hosting",
+    nodeType: "CodeNode",
+    file: "test/self-hosting-graph.test.ts",
+    site: "const result = extract(",
+    constant: "selfHostingImplementationAnchor",
+    label: "realizes the self-hosted corpus through the shared extraction and validation path",
+  },
+  {
+    id: "test:protocol.graph-first-planning",
+    nodeType: "Anchor",
+    file: "test/skills.test.ts",
+    site: 'describe("Protocol skill assets"',
+    constant: "graphFirstPlanningTestAnchor",
+    label: "checks placement homes and advisory graph-first session guidance",
+  },
+  {
+    id: "impl:protocol.graph-first-planning",
+    nodeType: "CodeNode",
+    file: "test/skills.test.ts",
+    site: 'describe("Protocol skill assets"',
+    constant: "graphFirstPlanningImplementationAnchor",
+    label: "realizes placement homes and advisory session guidance in the shipped skills",
+  },
+  {
     id: "test:protocol.kind-evidence.second-entry-untargeted",
     nodeType: "Anchor",
     file: "test/self-hosting-validators.test.ts",
@@ -2300,7 +2367,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     label: "asserts realization of the shipped register recipes",
     file: "test/recipes.test.ts",
     constant: "registerRecipesImplementationAnchor",
-    site: 'describe("the agent-surface recipe corpus",',
+    site: 'describe("register recipe semantics",',
   },
   {
     id: "test:protocol.register-recipes",
@@ -2308,7 +2375,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     label: "recipe checks verify the register recipes",
     file: "test/recipes.test.ts",
     constant: "registerRecipesTestAnchor",
-    site: 'describe("the agent-surface recipe corpus",',
+    site: 'describe("register recipe semantics",',
   },
   {
     id: "impl:protocol.adopter-on-ramp",
@@ -2955,6 +3022,27 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["oracle:protocol.kind-evidence", "models", "spec:validation.kind-evidence"],
+  ["oracle:protocol.open-question-fields", "models", "spec:model.open-question-fields"],
+  ["oracle:protocol.slot-notation", "models", "spec:carrier.slot-notation"],
+  ["oracle:protocol.validator-self-testing", "models", "spec:validation.validator-self-testing"],
+  [
+    "oracle:protocol.superseded-decision-signal",
+    "models",
+    "spec:validation.superseded-decision-signal",
+  ],
+  ["test:protocol.structural-self-binding", "verifies", "spec:model.structural-patterns"],
+  ["impl:protocol.structural-self-binding", "satisfies", "spec:model.structural-patterns"],
+  ["impl:protocol.structural-self-binding", "satisfies", "spec:protocol.structural-self-binding"],
+  ["impl:protocol.self-hosting", "satisfies", "spec:protocol.self-hosting"],
+  ["impl:protocol.census-page", "satisfies", "spec:model.structural-patterns"],
+  ["impl:protocol.anchor-extraction", "satisfies", "spec:model.structural-patterns"],
+  ["test:protocol.register-recipes", "verifies", "spec:extraction.contract-declarations"],
+  ["impl:protocol.register-recipes", "satisfies", "spec:extraction.contract-declarations"],
+  ["test:protocol.curation-imports", "verifies", "spec:consumers.impact-graph"],
+  ["impl:protocol.typescript-imports", "satisfies", "spec:consumers.impact-graph"],
+  ["test:protocol.graph-first-planning", "verifies", "spec:consumers.graph-first-planning"],
+  ["impl:protocol.graph-first-planning", "references", "spec:consumers.graph-first-planning"],
   [
     "test:protocol.kind-evidence.second-entry-untargeted",
     "verifies",
@@ -3821,7 +3909,7 @@ export const expectedBindingEdges = [
   // Each unit references the decision it answers to; a design that builds on existing code
   // states that through its own relation, never through a reference from the unit.
   ["impl:protocol.pack-design", "references", "spec:extraction.entry-locations"],
-  ["impl:protocol.pack-design", "references", "spec:extraction.contract-declarations"],
+  ["impl:protocol.pack-design", "satisfies", "spec:extraction.contract-declarations"],
   ["test:protocol.pack-design", "verifies", "spec:consumers.pack-design"],
   ["impl:protocol.pack-design-page", "satisfies", "spec:consumers.design-review.pack-design-page"],
   ["impl:protocol.pack-design-page", "references", "spec:decisions.pack-design-page"],
