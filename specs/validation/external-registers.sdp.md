@@ -2,7 +2,7 @@
 id: spec:validation.external-registers
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   dependsOn:
     - target: spec:validation.corpus-rules

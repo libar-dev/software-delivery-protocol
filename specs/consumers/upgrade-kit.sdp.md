@@ -2,7 +2,7 @@
 id: spec:consumers.upgrade-kit
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:consumers.authoring-on-ramp

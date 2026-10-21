@@ -33,7 +33,7 @@ export const observationSpecs = [
     id: "spec:observation.run-evidence",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/observation/run-evidence.sdp.md",
     title: "CI run records are joined to verifiers in a view",
     narrative:

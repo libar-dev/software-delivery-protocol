@@ -2,7 +2,7 @@
 id: spec:model.term-addresses
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:model.spec-sections

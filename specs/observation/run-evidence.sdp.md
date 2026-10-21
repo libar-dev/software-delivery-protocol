@@ -2,7 +2,7 @@
 id: spec:observation.run-evidence
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   dependsOn:
     - target: spec:extraction.delivery-facts

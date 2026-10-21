@@ -2,7 +2,7 @@
 id: spec:consumers.impact-graph
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.projections-model
   dependsOn: spec:extraction.derive-graph

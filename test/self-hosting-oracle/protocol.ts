@@ -7,7 +7,7 @@ export const protocolSpecs = [
     id: "spec:protocol.self-hosting",
     specKind: "behavior",
     altitude: "epic",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/protocol/self-hosting.sdp.md",
     title: "The Protocol authors and validates itself",
     narrative:
@@ -30,7 +30,7 @@ export const protocolSpecs = [
     id: "spec:protocol.structural-self-binding",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/protocol/structural-self-binding.sdp.md",
     title: "The engine's structural self-binding covers its architecturally significant units",
     narrative: null,

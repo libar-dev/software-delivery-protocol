@@ -124,6 +124,46 @@ one unsound reports it to the executing thread, which rules again and records wh
 Kept open on purpose: `spec:model.design-maturity#question.designColumnsSufficiency`, which waits
 on evidence from the platform's design passes.
 
+## Rulings after wave 1
+
+Wave 1 merged at `1f4d276`. Five Opus 5.5 design passes (S; V; K; R, D, B, Q and U
+together; G), each reviewed by gpt-6-sol, and S and the combined pass also by Kimi K3, and
+answered before the executing thread ruled. Delegated; each awaits the owner's review. The
+passes' own recommendations stand as their carrying Specs state them; the rows below are the ones
+a reader of the PR most needs.
+
+| Ruling | Carrying Spec |
+| --- | --- |
+| A diagram holds at most 40 boxes and 100 edges; the architecture diagram is a grid of contexts by layers; a drawing still over the bound after every fold shows only its text equivalent | `spec:consumers.spec-studio.diagrams` |
+| The build renders every view and an element only enhances it; this refines the custom-elements decision and awaits the owner's ratification | `spec:decisions.studio-build-renders` |
+| Planned components sit in the architecture grid, dashed and labelled `planned`, and are listed again as designed, not built | `spec:consumers.spec-studio.lenses.architecture#rule.plannedApart` |
+| Recipe 17 adds each component's label, file, line, role, layer, context, references and per-pair use counts; every field it returns today keeps its meaning | `spec:consumers.spec-studio.lenses.architecture#design.componentRows` |
+| The build evaluates each shipped recipe a page shows once per build, so a page and an agent read one answer | `spec:consumers.spec-studio.data.recipe-answers` |
+| The registers that become pages: open questions, decisions, pinned declarations with their citations, and the design backlog; the key-family register gets none | `spec:consumers.spec-studio.registers` |
+| The Studio's two inputs are `--base PATH` (with `--base-label`) and repeatable `--runs PATH`; an input adds pages, never a data file | `spec:consumers.spec-studio.data.inputs` |
+| A CTRF report must carry `reportFormat` and `specVersion`; recipe 45 joins a record by exact path or longest suffix | `spec:observation.run-evidence` |
+| `sdp stamp` writes the stamp apart from the build, and may carry a source-link template the browser applies; the preview workflow uploads the page set and deploys to `gh-pages` only when asked, never from a fork | `spec:consumers.spec-studio.sharing` |
+| Every build writes one self-contained export per Pack | `spec:consumers.spec-studio.export` |
+| A body calls a recipe as `recipes(number, parameters?)`, by catalog number only; the package exports `evaluateBody(body, { graph, report?, params? })` | `spec:consumers.agent-surface.evaluation-sink` |
+| Recipes 25 and 26 report findings `unresolved-address` and `dependency-cycle`, at `params.severity`, `error` by default | `spec:consumers.agent-surface.address-and-cycle-recipes` |
+| Under `--watch`, the parameter files named after a `--rules` are watched and reread too | `spec:validation.corpus-rules#rule.watchedParams` |
+| Entry citations are read only from files that carry an anchor; a citation shows as a test line only when a test anchor at its file verifies the cited Spec | `spec:extraction.entry-citations` |
+| The statement queue orders by the four relations the ready floor reads, and a `refines` yields where the other Spec names it back; a cycle settles in one round | `spec:consumers.readiness-planner` |
+| The all-roots verb is `sdp generate`; it synchronizes the vault at its folder or at `--vault DIR` before it publishes any root, and leaves the vault alone under `--check-clean` | `spec:consumers.command-line#design.vaultRoot` |
+| A step key is not an entry address; keys are unique per Spec and shared by a sibling set through its vocabulary | `spec:carrier.step-keys` |
+| The vault's generator owns one folder and a file list of what it wrote, refuses rather than overwrite, and synchronizes instead of rewriting; this awaits the owner's ratification | `spec:decisions.vault-owned-folder` |
+| The superseded-decision warning is `conformance/superseded-decisions`; a branching chain names every end, and a loop names its members | `spec:validation.superseded-decision-signal` |
+| A dropped TypeScript question list stays a warning, as the plan's provisional answer ruled; the owner may prefer an error | `spec:model.open-question-fields#rule.droppedListWarning` |
+| A design pass that adds promises to a ready, implemented Spec puts them in a defined child, or enriches the Spec in place only when the same branch builds them before it merges | — |
+
+Stated on the same delegation, at the floor recipe 9 reported and after the reviews: `ready` for
+every non-example Spec the passes designed or matured, among them the plan's eight named
+candidates, the Studio's phase-1 Specs, the vault's four, the adopter lanes' new Specs, step keys
+and term addresses. Examples stay `defined` until a build binds them. The three new decisions,
+`spec:decisions.studio-build-renders`, `spec:decisions.studio-diagram-renderer` and
+`spec:decisions.vault-owned-folder`, stay `defined` for the owner to ratify. Each new `ready`
+Spec reports an honest verifier gap until wave 2 binds it.
+
 ## Decisions only the owner makes
 
 These wait for the owner. None blocks the build; each is listed in the PR description.

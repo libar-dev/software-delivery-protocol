@@ -2,7 +2,7 @@
 id: spec:validation.validator-self-testing
 kind: rule
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.two-check-families
 ---

@@ -773,7 +773,7 @@ export const extractionSpecs = [
     id: "spec:extraction.contract-declarations",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/contract-declarations.sdp.md",
     title: "Pinned declarations give an adopter a derived module to typecheck",
     narrative:
@@ -905,7 +905,7 @@ export const extractionSpecs = [
     id: "spec:extraction.entry-citations",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/entry-citations.sdp.md",
     title: "The graph records where anchored source cites an entry address",
     narrative:

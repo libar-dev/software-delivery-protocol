@@ -1582,7 +1582,7 @@ export const carrierSpecs = [
     id: "spec:carrier.step-keys",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/step-keys.sdp.md",
     title: "An example step may carry a key that survives rewording",
     narrative:

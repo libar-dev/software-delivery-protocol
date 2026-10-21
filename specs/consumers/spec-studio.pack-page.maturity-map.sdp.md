@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.pack-page.maturity-map
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.pack-page
   dependsOn:

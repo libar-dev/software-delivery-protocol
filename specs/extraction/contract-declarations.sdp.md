@@ -2,7 +2,7 @@
 id: spec:extraction.contract-declarations
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:extraction.executable-contracts
   dependsOn: spec:carrier.inline-code-spans

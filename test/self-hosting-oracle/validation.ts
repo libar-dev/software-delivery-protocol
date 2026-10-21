@@ -1175,7 +1175,7 @@ export const validationSpecs = [
     id: "spec:validation.validator-self-testing",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/validator-self-testing.sdp.md",
     title: "Every validator ships evidence in both directions",
     narrative:
@@ -1863,7 +1863,7 @@ export const validationSpecs = [
     id: "spec:validation.superseded-decision-signal",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/superseded-decision-signal.sdp.md",
     title: "A Spec shaped by a superseded decision warns",
     narrative:
@@ -2769,7 +2769,7 @@ export const validationSpecs = [
     id: "spec:validation.external-registers",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/external-registers.sdp.md",
     title: "A corpus checks the register tokens its prose cites",
     narrative:

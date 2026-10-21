@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.verification-panels
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.spec-page
   dependsOn:

@@ -2,7 +2,7 @@
 id: spec:carrier.step-keys
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:carrier.slot-notation

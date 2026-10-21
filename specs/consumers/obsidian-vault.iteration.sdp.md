@@ -2,7 +2,7 @@
 id: spec:consumers.obsidian-vault.iteration
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.obsidian-vault
   dependsOn:

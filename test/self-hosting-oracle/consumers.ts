@@ -463,7 +463,7 @@ export const consumersSpecs = [
     id: "spec:consumers.edit-model",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/edit-model.sdp.md",
     title: "Views compose scoped intent instead of patching canonical source",
     narrative: null,
@@ -1166,7 +1166,7 @@ export const consumersSpecs = [
     id: "spec:consumers.graph-first-planning",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "ready",
     file: "specs/consumers/graph-first-planning.sdp.md",
     title: "The next body of work is planned from the graph, not from a prose index",
     narrative: null,
@@ -1193,7 +1193,7 @@ export const consumersSpecs = [
     id: "spec:consumers.impact-graph",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/impact-graph.sdp.md",
     title: "Mechanical code structure stays inferred and apart from curated intent",
     narrative:
@@ -1250,7 +1250,7 @@ export const consumersSpecs = [
     id: "spec:consumers.intent-composition",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/intent-composition.sdp.md",
     title: "Composed intent hands off on one proposal shape",
     narrative:
@@ -1564,7 +1564,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.components",
     specKind: "contract",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The Studio's custom elements each hold one view the build renders",
     narrative:
       "The original's harness element has no subject in the graph, which holds example spaces, bound points and oracle bindings but no harness node, so its successor takes the Spec that owns an example space. The build renders every view into the page's markup and an element adds only the interaction its view needs, as `spec:decisions.studio-build-renders` rules, so a trace graph draws one hop, a maturity map places members by stated rung and floor, a card always shows its rung, and the attributes the original used to choose another setting are gone.",
@@ -1663,7 +1663,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.data.recipe-answers",
     specKind: "contract",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A page takes each recipe answer from the recipe's shipped body",
     narrative:
       "The lenses, the registers, the owner queue, the diff and runs pages and the panels of a Spec page show recipe answers. Each takes its answer from the recipe's shipped body, evaluated over the graph the build derived, so a page and `sdp q` give one answer. The two Design entries name every evaluation a build runs and which page reads each answer, so a builder and a test author read one list.",
@@ -1696,7 +1696,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.data.inputs",
     specKind: "contract",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The Studio reads two named inputs beside the graph, a base graph and run records",
     narrative:
       "Two inputs may ride beside the graph: the graph an earlier commit wrote, so a page can show what changed since, and CI run records, so a reviewer reads what ran beside the verifier bindings. Each is named on the command line and on every page that shows it, and neither answers in the graph's name. Without them the page set is what the graph alone writes.",
@@ -1825,7 +1825,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.intent-panel",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A composing panel on every page gathers scoped intent for an agent",
     narrative:
       "The change-proposal contract requires the commit whose graph the person read, and a generated page set carries no commit, so a proposal's base comes from the build stamp when one is present and from the person otherwise. The panel hands off the same Markdown memo an agent gets from recipe 49 for the same proposal, so a person, a reviewer and an agent read one text. A static page holds no credentials, so the panel opens no pull request and writes nothing but its own gathered intents in the browser.",
@@ -1894,7 +1894,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.lenses",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Four lenses read the graph as Packs, architecture, tests and evidence",
     narrative:
       "Each lens is a page with a Spec of its own, so each builds on the graph it reads today: the Packs, architecture and tests lenses read what the graph records, and the evidence lens reads not tracked until the graph records an observation. This Spec keeps what the four share.",
@@ -1927,7 +1927,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.responsive",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The Studio reads on a phone as on a desktop",
     narrative:
       "The curated graph's edges carry no confidence, and the impact graph's inferred imports stay outside it, so a diagram never drops an edge for a low score; a trace graph draws one hop at every width, and a narrow screen scales the drawing rather than cutting it.",
@@ -1963,7 +1963,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     title: "The Spec Studio is a static HTML workbench over the one graph",
     narrative: null,
     sections: {
@@ -2013,7 +2013,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.sharing",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A Studio build is stamped and shared from a static host",
     narrative:
       "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file beside the page set, and the shell shows it. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host.",
@@ -2138,7 +2138,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.navigation",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Every page of the page set is reached from the top navigation and the index",
     narrative:
       "The shell's top navigation reaches the index and each lens, and the index routes a reader by the task they came to do. The register pages, the owner queue, the glossary, and the diff and runs pages join both, so a reviewer with only a link reaches every page from any page and sees which page they are on.",
@@ -2167,7 +2167,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.spec-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A Spec page shows one Spec in collapsible panels, in a fixed order",
     narrative:
       "The original runtime panel linked Fastify routes to Effect programs, showed what Effect layers provided and required, and recorded Awilix registrations and their lifetimes, beside ports and external systems. That representation is lineage evidence in `docs/lineage/v0-design/07-spec-studio-and-projections.md`, section 2.3, Section F. The structural anchors record identity, component membership, uses, role, and a component's architectural layer and context, so the runtime panel shows that structural neighborhood and no more until a reader asks for more of the runtime composition.\n\nThe page shows only what the graph and the build's named inputs hold. The original header's owner, tags and last-verified time, its schema bindings and its `UI / Stories` section have no graph value behind them, so the page shows none of them.",
@@ -2276,7 +2276,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.verification-panels",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The panels for examples, targets, verifiers and evidence",
     narrative:
       "The graph records that a verifier binding exists and never a run, and a static page runs nothing, so the panels show bindings and offer no run of an example. A run result shows only when the build was given run records, and then as evidence from a test file. No Spec designs a source for build attestations, deployments or bills of materials, so each reads not tracked. Moving a constraint target on a slider and running a scenario harness wait for designs of their own, as the HTML surface decision records; a panel action composes intent instead.",
@@ -2558,7 +2558,7 @@ export const consumersSpecs = [
     id: "spec:consumers.agent-surface.example-space-coverage",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Example spaces report which values their examples cover",
     narrative:
       "The original design rendered a coverage heatmap from each example space: which combinations of its typed slots an example witnesses and which none does (`docs/lineage/v0-design/04-authoring-surfaces.md` §4 and §4.1, `06-extraction-and-validation.md` §8). This Spec reports slot-value coverage; the glossary keeps witness for an example in an outcome class. Coverage is per slot value: no design pass has yet asked which combinations of slots no example exercises, and a combination grid grows with the product of the slots' sizes.",
@@ -2937,7 +2937,7 @@ export const consumersSpecs = [
     id: "spec:consumers.intent-composition.proposal.memo",
     specKind: "contract",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Recipe 49 renders a change proposal as the Markdown memo a person reviews",
     narrative:
       "A person reviews a proposed change as text, not as JSON beside the proposal check's rows. The memo is a rendering of the proposal document and never a second source of it: it ends with the document itself, so one paste hands an agent everything the person reviewed. Recipe 49 renders it, and the Studio's composing panel writes the same bytes, so a person, a reviewer and an agent read one text.",
@@ -3127,7 +3127,7 @@ export const consumersSpecs = [
     id: "spec:consumers.obsidian-vault",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/obsidian-vault.sdp.md",
     title: "An Obsidian vault lets a person iterate on designs from the one graph",
     narrative:
@@ -3551,7 +3551,7 @@ export const consumersSpecs = [
     id: "spec:consumers.obsidian-vault.notes",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/obsidian-vault.notes.sdp.md",
     title: "Every Spec, Pack, code unit and keyed term is a note, and every relation is a link",
     narrative:
@@ -3780,7 +3780,7 @@ export const consumersSpecs = [
     id: "spec:consumers.obsidian-vault.bases",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/obsidian-vault.bases.sdp.md",
     title: "A Pack's members and the standing queries are tables over the reader's values",
     narrative:
@@ -3878,7 +3878,7 @@ export const consumersSpecs = [
     id: "spec:consumers.obsidian-vault.iteration",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/obsidian-vault.iteration.sdp.md",
     title: "A design pass is followed and answered from the vault",
     narrative:
@@ -4307,7 +4307,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.pack-page.maturity-map",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A Pack page's maturity map places every member by its stated rung and its floor",
     narrative:
       "A Pack of many members takes a reviewer a long scroll through its cards before they know where the design stands. The maturity map answers that first: one table, a row per stated rung and a column per floor reached, each member a short card in its cell. A member right of its row's own rung waits only for a statement the floor already allows; a member left of it states more than its floor holds.",
@@ -4498,7 +4498,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.publisher.watch",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "`sdp studio --watch` rebuilds the page set on each carrier change",
     narrative:
       "While an author edits, the watch rebuilds the page set on each carrier change, and a person reloads the page to read it. Each cycle writes exactly what a plain run with the same arguments writes, so the watch adds no server, no live reload and no script of its own.",
@@ -4622,7 +4622,7 @@ export const consumersSpecs = [
     id: "spec:consumers.readiness-planner",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/readiness-planner.sdp.md",
     title: "The readiness planner orders the statements a person can make",
     narrative:
@@ -4822,7 +4822,7 @@ export const consumersSpecs = [
     id: "spec:consumers.upgrade-kit",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/upgrade-kit.sdp.md",
     title: "The upgrade kit shows a corpus what it could adopt",
     narrative:
@@ -4863,7 +4863,7 @@ export const consumersSpecs = [
     id: "spec:consumers.upgrade-kit.capability-adoption",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/upgrade-kit.capability-adoption.sdp.md",
     title: "Capability adoption counts where each capability is used and where it could apply",
     narrative: null,
@@ -4956,7 +4956,7 @@ export const consumersSpecs = [
     id: "spec:consumers.upgrade-kit.rule-key-proposal",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/upgrade-kit.rule-key-proposal.sdp.md",
     title: "The rule-key proposal keys every unkeyed rule as a change proposal",
     narrative:
@@ -5098,7 +5098,7 @@ export const consumersSpecs = [
     id: "spec:consumers.command-line",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/consumers/command-line.sdp.md",
     title: "Every verb answers --help, and one verb writes every projection root",
     narrative:
@@ -5115,7 +5115,7 @@ export const consumersSpecs = [
         rules: [
           "Every verb answers `--help`: when `--help` is among a verb's arguments, the verb prints its help on standard output and exits 0, reading no other argument, deriving no graph and touching no file, a projection root included.",
           "A verb's help opens with its usage and its paragraph from the top-level help, the same text, so a verb's help and `sdp --help` never disagree; only the scaffolder's help, for `sdp new` and `sdp new spec`, adds a paragraph of its own after that text.",
-          "`sdp generate [root] [--exclude PATH]... [--check-clean]` enters the shared build once, validates the graph, and writes all five projection roots from that one graph: the Design Review, the census, the Mermaid diagrams, the Gherkin-shaped view and the Studio.",
+          "`sdp generate [root] [--exclude PATH]... [--vault DIR] [--check-clean]` enters the shared build once, validates the graph, synchronizes the vault, and writes all five projection roots from that one graph: the Design Review, the census, the Mermaid diagrams, the Gherkin-shaped view and the Studio.",
           "Each root the verb writes holds the bytes its own publisher writes from the same graph, written wholesale through its temporary sibling as that publisher writes it.",
           "Findings never withhold a root: the verb writes all five and exits with the validation exit code, and a graph that does not derive writes no root and exits 1.",
           "With `--check-clean`, the verb applies to each root the check its publisher applies under `--check-clean`, to renders of the one graph; a root that fails its check is removed, the others are written, and the run exits 1.",
@@ -5154,7 +5154,7 @@ export const consumersSpecs = [
         generateOutput:
           "the build and validation summary lines once, then the line each publisher prints for its root, in the order of the roots.",
         vaultRoot:
-          "the verb writes the five roots above and never removes or rewrites a vault, because a vault keeps notes a person wrote; whether one run of the verb also regenerates the vault is settled with the vault's own publisher, which this entry then names.",
+          "the verb never removes a vault with the five roots; before it publishes any root it synchronizes the vault at the folder `sdp vault` uses for the same root, or at `--vault DIR`, through the vault's own directory checks and guard, and a refusal there writes no root and exits 1; under `--check-clean` it leaves the vault alone, since the vault has no check mode and its tests hold its determinism.",
       },
     },
     deliveryFacts: [],
@@ -5269,7 +5269,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagrams",
     specKind: "contract",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A diagram is laid out from graph values into SVG with a text equivalent",
     narrative:
       "The Studio draws four diagrams: the architecture lens's components by context and layer, one component's members and what they use, one Spec's relations, and on a Spec page the code that realizes it. Each is laid out in the engine when the page set is built, so a page draws it with no script and the same graph draws the same bytes. Words carry every reading the drawing shows: bands and columns are labelled, a planned or folded box says so, and a text equivalent after the drawing states every box and edge.",
@@ -5465,7 +5465,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.lenses.packs",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The Packs lens groups every Spec by the Packs that hold it",
     narrative:
       "A capability is read as a Pack, or as a projection over high-altitude behavior Specs that no view draws yet, so the lens groups by Pack and draws no capability tree. The index page holds it, because the Packs are where a reader of a design starts.",
@@ -5498,7 +5498,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.lenses.architecture",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title:
       "The architecture lens draws components by context and layer, the planned beside the built",
     narrative:
@@ -5597,7 +5597,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.lenses.tests",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The tests lens shows how far each Spec's verification reaches",
     narrative:
       "A verifier binding states that a verifier exists, and pass and fail stay in CI, so the lens shows bindings and coverage. It shows a run result only when the build was given run records, and then as evidence from a test file, never as a verdict on a Spec.",
@@ -5681,7 +5681,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.lenses.evidence",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The evidence lens names each source of runtime evidence and reads it as not tracked",
     narrative:
       "The graph derives no observation yet, and no Spec designs a source for build attestations, deployments or bills of materials, so every row of this lens reads not tracked. The lens stays in the navigation so a reader sees what is not tracked rather than assuming it is.",
@@ -5714,7 +5714,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.registers",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The corpus's registers are pages a reviewer opens from a link",
     narrative:
       "A large design keeps registers, and each is a catalog recipe an agent runs. Four become pages, so a reviewer with only a link reads the same rows: the open questions and the decisions, which the owner works through; the pinned declarations, each with the source lines that cite it, which is where a reader finds the test that checks a declaration; and the design backlog, the Specs designed and not yet built, which a design ahead of its code is mostly made of. The key-family register stays a recipe: its rows depend on key prefixes a corpus chooses, the Studio takes no corpus configuration, and search already finds a coined key.",
@@ -5802,7 +5802,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.owner-queue",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The owner queue page orders the statements and questions only a person can settle",
     narrative:
       "A large design waits on one person: the statements its floor already allows and the questions only its owner decides. The readiness planner orders those statements, the ones they rest on first. This page shows that order to a reviewer with only a link, so the owner sees which statements can be made first and which questions hold the most. A rung stays a person's statement, so the page orders and links and states nothing.",
@@ -5886,7 +5886,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diff-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The diff page shows what changed in the design since a base graph",
     narrative:
       "Iterating on a design asks what changed since the last pass, or what a change proposal would change. Given the graph of an earlier commit, the build renders the design diff between it and the graph it built, so a reviewer reads the changed Specs, entries, relations and bindings, and each changed Spec's page says it changed.",
@@ -5976,7 +5976,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.glossary-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The glossary page lists every term the corpus's Specs define",
     narrative:
       "A Spec's Model section defines terms, and a term may carry a key that gives it an address. The glossary page gathers every defined term on one page so a reviewer finds a word and the Spec that defines it. A corpus's ratified glossary stays the document it is; the page lists what the Specs define, so two definitions of one word read side by side.",
@@ -6056,7 +6056,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.runs-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The runs page shows the run records the build was given, joined to test files",
     narrative:
       "CI keeps the results of its test runs; the graph records only that a verifier is bound. Given run records in the Common Test Report Format, the build shows each run and the test files it joins, so a reviewer reads what ran where the verifiers are anchored. A result is evidence from a file, never the verdict of one verifier, and never a delivery fact.",
@@ -6146,7 +6146,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.export",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A Pack exports as one file, and every page prints as a document",
     narrative:
       "A design is sent and archived as well as browsed: attached to a message, handed to someone outside the repository, printed for a review meeting. Every build writes each Pack as one self-contained HTML file inside the page set, so a reader with only a link downloads it from the Pack page, and the file opens anywhere with nothing beside it. Every page also prints as a document.",

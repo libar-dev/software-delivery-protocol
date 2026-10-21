@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.lenses.evidence
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.lenses
   decidedBy: spec:decisions.binding-not-liveness

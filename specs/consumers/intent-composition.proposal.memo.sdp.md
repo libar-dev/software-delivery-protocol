@@ -2,7 +2,7 @@
 id: spec:consumers.intent-composition.proposal.memo
 kind: contract
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.intent-composition.proposal
 ---

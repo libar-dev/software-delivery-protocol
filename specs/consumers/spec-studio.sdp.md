@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.projections-model
   dependsOn:

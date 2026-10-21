@@ -2,7 +2,7 @@
 id: spec:validation.superseded-decision-signal
 kind: rule
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.warn-level-signals
   dependsOn:

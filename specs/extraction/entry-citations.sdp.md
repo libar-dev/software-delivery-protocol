@@ -2,7 +2,7 @@
 id: spec:extraction.entry-citations
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:extraction.derive-graph
   dependsOn:

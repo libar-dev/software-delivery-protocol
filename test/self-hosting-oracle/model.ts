@@ -427,7 +427,7 @@ export const modelSpecs = [
     id: "spec:model.structural-patterns",
     specKind: "model",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/structural-patterns.sdp.md",
     title: "Architecturally significant units are annotated where they are realized",
     narrative: null,
@@ -905,7 +905,7 @@ export const modelSpecs = [
     id: "spec:model.term-addresses",
     specKind: "rule",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/term-addresses.sdp.md",
     title: "A Model term may carry a key that addresses it",
     narrative:

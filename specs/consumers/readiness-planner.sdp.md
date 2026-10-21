@@ -2,7 +2,7 @@
 id: spec:consumers.readiness-planner
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:consumers.graph-first-planning

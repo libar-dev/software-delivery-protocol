@@ -2,7 +2,7 @@
 id: spec:consumers.obsidian-vault
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:consumers.projections-model

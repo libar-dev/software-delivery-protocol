@@ -49,15 +49,303 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// No intended prose-mention pair is left without a declared relation. The owner retains
-// the honesty gap on spec:model.spec-sections. The built corpus-check and Studio designs
-// have verifier bindings, so their former gaps are absent.
+// No intended prose-mention pair is left without a declared relation. The owner retains the
+// honesty gap on spec:model.spec-sections. The other gaps are this arc's ready designs, each
+// stated before the build that binds its verifier; each leaves this list as its build lands. The list follows carrier-path order, as validation reports it.
 export const expectedWarnings = [
   {
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
+    subjectId: "spec:carrier.step-keys",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.agent-surface.example-space-coverage",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.command-line",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.edit-model",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.graph-first-planning",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.impact-graph",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.intent-composition.proposal.memo",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.intent-composition",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.obsidian-vault.bases",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.obsidian-vault.iteration",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.obsidian-vault.notes",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.obsidian-vault",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.readiness-planner",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.components",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.data.inputs",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.data.recipe-answers",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.diagrams",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.diff-page",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.export",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.glossary-page",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.intent-panel",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.lenses.architecture",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.lenses.evidence",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.lenses.packs",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.lenses",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.lenses.tests",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.navigation",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.owner-queue",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.pack-page.maturity-map",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.publisher.watch",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.registers",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.responsive",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.runs-page",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.sharing",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.spec-page",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.spec-studio.verification-panels",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.upgrade-kit.capability-adoption",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.upgrade-kit.rule-key-proposal",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:consumers.upgrade-kit",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:extraction.contract-declarations",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:extraction.entry-citations",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
     subjectId: "spec:model.spec-sections",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:model.structural-patterns",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:model.term-addresses",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:observation.run-evidence",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:validation.external-registers",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:validation.superseded-decision-signal",
+  },
+  {
+    validatorId: "honesty/gaps",
+    family: "honesty",
+    severity: "warning",
+    subjectId: "spec:validation.validator-self-testing",
   },
 ] as const;
 

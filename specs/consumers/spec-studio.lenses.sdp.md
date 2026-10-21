@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.lenses
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio
   dependsOn: spec:consumers.spec-studio.data
