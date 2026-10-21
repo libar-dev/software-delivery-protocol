@@ -4050,7 +4050,7 @@ export const consumersSpecs = [
         calledBindings:
           "a called recipe receives the caller's `g`, `graph` and `report`, the same objects; its parameters object as `params`; and `recipes` itself, so one recipe may call another.",
         callRejections:
-          "`recipes: the catalog holds no recipe <number>` rejects a call whose number the catalog does not list, or that is not an integer; `recipes: recipe <number> takes one parameters object` rejects parameters that are null, an array, a string, a number or a boolean.",
+          "`recipes: the catalog holds no recipe <number>` rejects an integer the catalog does not list; `recipes: <value> is not a recipe number` rejects a value that is not an integer; `recipes: recipe <number> takes one parameters object` rejects parameters that are null, an array, a string, a number or a boolean.",
         evaluatorExport:
           "`evaluateBody(body: string, input: { graph: GraphSchema; report?: ValidationReport; params?: Readonly<Record<string, unknown>> }): Promise<unknown>`, exported from the package's main entry, `@libar-dev/software-delivery-protocol`; it binds `g` to the reader over `graph`, `report` to the given report or, when absent, the validation report of `graph`, `params` to the given object or `{}`, and `recipes` over the same three, and resolves to the body's return.",
         evaluatorRejections:

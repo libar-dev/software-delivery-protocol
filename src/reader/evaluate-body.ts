@@ -60,7 +60,7 @@ export function compileBody(source: string): CompiledBody {
       });
     } catch (syntaxError) {
       const stack = syntaxError instanceof Error ? (syntaxError.stack ?? "") : "";
-      const position = /^sdp-q-body:(\d+)\n[^\n]*\n([^\n]*)\^/u.exec(stack);
+      const position = /^sdp-q-body:(\d+)\n[^\n]*\n([^\n^]*)\^/u.exec(stack);
       const lines = source.split("\n");
       const wrapperLine = Number(position?.[1] ?? 2);
       const line = Math.max(1, Math.min(lines.length, wrapperLine - 1));
@@ -136,10 +136,11 @@ export async function evaluateBody(
     params?: Readonly<Record<string, unknown>>;
   },
 ): Promise<unknown> {
+  const report = input.report ?? validateGraph(input.graph);
   return evaluateBodyWithReader(body, {
     ...input,
-    reader: createReader(input.graph),
-    report: input.report ?? validateGraph(input.graph),
+    reader: createReader(input.graph, report),
+    report,
   });
 }
 
@@ -158,12 +159,12 @@ export async function evaluateBodyWithReader(
   const compiled = compileBody(body);
   const recipeBodies = new Map<number, CompiledBody>();
   const recipes: RecipeCaller = async (number, parameters = {}) => {
+    if (!Number.isInteger(number))
+      throw new Error(`recipes: ${String(number)} is not a recipe number`);
     const directory = recipeDirectory();
-    const file = Number.isInteger(number)
-      ? readdirSync(directory).find((name) =>
-          new RegExp(`^${String(number).padStart(2, "0")}-[a-z0-9-]+\\.js$`, "u").test(name),
-        )
-      : undefined;
+    const file = readdirSync(directory).find((name) =>
+      new RegExp(`^${String(number).padStart(2, "0")}-[a-z0-9-]+\\.js$`, "u").test(name),
+    );
     if (file === undefined)
       throw new Error(`recipes: the catalog holds no recipe ${String(number)}`);
     if (!plainObject(parameters))
