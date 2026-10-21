@@ -3807,6 +3807,10 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 // re-measured under plan 41
 export const expectedBindingEdges = [
   ["impl:protocol.vault-sync", "satisfies", "spec:consumers.obsidian-vault"],
+  ["impl:protocol.vault-sync", "satisfies", "spec:consumers.obsidian-vault.iteration"],
+  ["impl:protocol.vault-text", "satisfies", "spec:consumers.obsidian-vault.iteration"],
+  ["impl:protocol.vault-notes", "satisfies", "spec:consumers.obsidian-vault.bases"],
+  ["impl:protocol.agent-surface-cli", "satisfies", "spec:consumers.command-line"],
   ["impl:protocol.vault-sync", "references", "spec:decisions.vault-owned-folder"],
   ["impl:protocol.vault-notes", "satisfies", "spec:consumers.obsidian-vault.notes"],
   ["impl:protocol.vault-notes", "satisfies", "spec:consumers.obsidian-vault"],
@@ -4197,7 +4201,7 @@ export const expectedBindingEdges = [
   ],
 
   ["impl:protocol.generate-command", "satisfies", "spec:consumers.command-line"],
-  ["impl:protocol.adopter-help", "references", "spec:consumers.command-line"],
+  ["impl:protocol.adopter-help", "satisfies", "spec:consumers.command-line"],
   ["impl:protocol.external-registers-recipe", "satisfies", "spec:validation.external-registers"],
   ["oracle:protocol.command-line", "models", "spec:consumers.command-line"],
   ["oracle:protocol.external-registers", "models", "spec:validation.external-registers"],

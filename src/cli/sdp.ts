@@ -93,7 +93,7 @@ export function readEngineProvenance(read: EngineFileReader = readShippedFile): 
 /**
  * @sdpAnchor impl:protocol.agent-surface-cli
  * @sdpLabel CLI verb dispatcher and agent-surface front of the package CLI
- * @sdpSatisfies spec:consumers.agent-surface
+ * @sdpSatisfies spec:consumers.agent-surface, spec:consumers.command-line
  * @sdpComponent component:protocol.cli
  * @sdpRole service
  */

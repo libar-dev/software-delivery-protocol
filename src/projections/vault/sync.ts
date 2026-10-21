@@ -97,7 +97,7 @@ function missing(error: unknown): boolean {
 /**
  * @sdpAnchor impl:protocol.vault-sync
  * @sdpLabel guards every owned entry and records transitional hashes before atomic file replacement
- * @sdpSatisfies spec:consumers.obsidian-vault
+ * @sdpSatisfies spec:consumers.obsidian-vault, spec:consumers.obsidian-vault.iteration
  * @sdpReferences spec:decisions.vault-owned-folder
  * @sdpComponent component:protocol.projections
  * @sdpRole publisher
@@ -168,6 +168,17 @@ export function synchronizeVault(
   state = inspectVault(out),
   rename = renameSync,
 ): SyncResult {
+  const current = inspectVault(out);
+  const changed = [...new Set([...state.files.keys(), ...current.files.keys()])].filter(
+    (path) =>
+      !state.files.get(path)?.equals(current.files.get(path) ?? Buffer.alloc(0)) ||
+      !current.files.has(path),
+  );
+  if (changed.length)
+    throw new VaultGuardError(
+      changed.sort(compare).map((path) => ({ path: `sdp/${path}`, reason: "changed" })),
+    );
+  state = current;
   const folder = join(out, "sdp");
   const desired = new Map(next.map((file) => [file.path, file.content]));
   const transitional: Record<string, readonly string[]> = Object.create(null) as Record<

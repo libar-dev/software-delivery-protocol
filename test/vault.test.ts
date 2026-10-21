@@ -1,8 +1,9 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { expect, it } from "vitest";
 import { runSdpCli } from "../src/cli/sdp.js";
+import { verbHelpText } from "../src/cli/help.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 it("writes a fresh vault from the CLI", async () => {
@@ -27,7 +28,7 @@ it("writes a fresh vault from the CLI", async () => {
 
 import { mkdirSync, renameSync, symlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { buildOwnedPaths } from "../src/cli/vault-command.js";
+import { buildOwnedPaths } from "../src/cli/build-command.js";
 import {
   inspectVault,
   LIST,
@@ -50,23 +51,26 @@ function scratch(run: (root: string) => void): void {
     rmSync(root, { recursive: true, force: true });
   }
 }
-it.each([...buildOwnedPaths, "generated", "."])(
-  "refuses vault placement %s before the build changes anything",
-  async (path) => {
-    const root = mkdtempSync(join(tmpdir(), "sdp-vault-place-"));
-    try {
-      probe(root);
-      put(join(root, "generated/design-review/stale"), "keep");
-      const before = bytes(root),
-        capture = createCaptureOutput();
-      expect(await runSdpCli(["vault", root, "--out", join(root, path)], capture.output)).toBe(1);
-      expect(capture.readStderr()).toContain("overlaps generated/");
-      expect(bytes(root)).toEqual(before);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  },
-);
+it.each([
+  ...buildOwnedPaths,
+  "generated/Design-Review",
+  "generated/CONTRACTS/new",
+  "generated",
+  ".",
+])("refuses vault placement %s before the build changes anything", async (path) => {
+  const root = mkdtempSync(join(tmpdir(), "sdp-vault-place-"));
+  try {
+    probe(root);
+    put(join(root, "generated/design-review/stale"), "keep");
+    const before = bytes(root),
+      capture = createCaptureOutput();
+    expect(await runSdpCli(["vault", root, "--out", join(root, path)], capture.output)).toBe(1);
+    expect(capture.readStderr()).toContain("overlaps generated/");
+    expect(bytes(root)).toEqual(before);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 it.each(["notes", "src/vault"])("refuses discoverable %s before the build", async (path) => {
   const root = mkdtempSync(join(tmpdir(), "sdp-vault-place-"));
   try {
@@ -330,4 +334,198 @@ it("orders integer-looking file-list paths by code units", () => {
   const serialized = serializeList({ "2": [sha], "10": [sha] });
   expect(serialized.indexOf('"10"')).toBeLessThan(serialized.indexOf('"2"'));
   expect(parseList(serialized)).toBeDefined();
+});
+
+it.each(["vault", "generate"])("%s preserves a note saved during extraction", async (verb) => {
+  const root = mkdtempSync(join(tmpdir(), "sdp-vault-concurrent-"));
+  try {
+    probe(root);
+    expect(await runSdpCli(["vault", root], createCaptureOutput().output)).toBe(0);
+    probe(root, "Changed");
+    const out = join(root, "generated/obsidian-vault");
+    const note = join(out, "sdp/specs/probe/spec.probe.member.md");
+    let saved: Record<string, string> = {};
+    const capture = createCaptureOutput();
+    expect(
+      await runSdpCli([verb, root], capture.output, {
+        extract: (input) => {
+          put(note, "My words during extraction.\n");
+          saved = bytes(out);
+          return extract(input);
+        },
+      }),
+    ).toBe(1);
+    expect(capture.readStderr()).toContain("has changed since this command wrote it (changed)");
+    expect(bytes(out)).toEqual(saved);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it.each(["vault", "generate"])(
+  "%s preserves a note saved during failed extraction",
+  async (verb) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-vault-concurrent-"));
+    try {
+      probe(root);
+      expect(await runSdpCli(["vault", root], createCaptureOutput().output)).toBe(0);
+      put(join(root, "member.sdp.md"), "---\ninvalid: true\n---\n# Broken\n");
+      const out = join(root, "generated/obsidian-vault");
+      let saved: Record<string, string> = {};
+      const capture = createCaptureOutput();
+      expect(
+        await runSdpCli([verb, root], capture.output, {
+          extract: (input) => {
+            put(join(out, "sdp/specs/probe/spec.probe.member.md"), "My words.\n");
+            saved = bytes(out);
+            return extract(input);
+          },
+        }),
+      ).toBe(1);
+      expect(capture.readStderr()).toContain("has changed since this command wrote it (changed)");
+      expect(bytes(out)).toEqual(saved);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  },
+);
+
+it("rejects stale synchronization state before writing a transitional list", () => {
+  scratch((root) => {
+    synchronizeVault(root, [{ path: "note.md", content: "old" }]);
+    const state = inspectVault(root);
+    put(join(root, "sdp/note.md"), "A person's words.");
+    const before = bytes(root);
+    expect(() => synchronizeVault(root, [{ path: "note.md", content: "new" }], state)).toThrow(
+      VaultGuardError,
+    );
+    expect(bytes(root)).toEqual(before);
+  });
+});
+
+it("keeps rule block ids separate from example-space prose", () => {
+  scratch((root) => {
+    put(
+      join(root, "member.sdp.md"),
+      carrier(
+        "spec:probe.member",
+        "Member",
+        "behavior",
+        "idea",
+        "\n## Behavior\n- rule: [#last] Keep this rule addressable.\n\n## Example space\nA reader exercises the last rule.\n\n```gwt-vocabulary\nGiven a member {name:string}\nWhen it is read\nThen it exists {exists:boolean}\n```\n",
+      ),
+    );
+    const files = renderVault(extract({ root }).graph);
+    const note = files.find((f) => f.path === "specs/probe/spec.probe.member.md")?.content ?? "";
+    expect(note).toContain(" ^rule-last\n\n### Example space\n\nA reader exercises the last rule.");
+  });
+});
+
+it("rejects links whose target block id has a lazy paragraph continuation", () => {
+  scratch((out) => {
+    put(join(out, "sdp/source.md"), "[[sdp/target.md#^rule-last|last]]\n");
+    put(join(out, "sdp/target.md"), "- A rule. ^rule-last\nThis is part of the same paragraph.\n");
+    expect(() => checkLinks(out)).toThrow();
+  });
+});
+
+it("refuses case collisions in family directories before changing any file", async () => {
+  const root = mkdtempSync(join(tmpdir(), "sdp-vault-case-"));
+  try {
+    put(join(root, "one.sdp.md"), carrier("spec:Probe.one"));
+    put(join(root, "two.sdp.md"), carrier("spec:probe.two"));
+    put(join(root, "generated/design-review/keep.md"), "Keep.");
+    const before = bytes(root),
+      capture = createCaptureOutput();
+    expect(await runSdpCli(["vault", root], capture.output)).toBe(1);
+    expect(capture.readStderr()).toContain("spec:Probe.one and spec:probe.two");
+    expect(bytes(root)).toEqual(before);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it.each(["vault", "generate"])(
+  "%s renders only extraction errors in the failed index",
+  async (verb) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-vault-errors-"));
+    try {
+      probe(root);
+      const result = extract({ root });
+      const capture = createCaptureOutput();
+      expect(
+        await runSdpCli([verb, root], capture.output, {
+          extract: () => ({
+            ...result,
+            report: {
+              validatorId: "extract",
+              findings: [
+                {
+                  validatorId: "extract/probe",
+                  family: "conformance",
+                  severity: "error",
+                  file: "member.sdp.md",
+                  message: "The carrier is broken.",
+                },
+                {
+                  validatorId: "extract/probe",
+                  family: "conformance",
+                  severity: "warning",
+                  file: "other.sdp.md",
+                  message: "An advisory warning.",
+                },
+              ],
+            },
+          }),
+        }),
+      ).toBe(1);
+      expect(readFileSync(join(root, "generated/obsidian-vault/sdp/index.md"), "utf8")).toBe(
+        "> [!warning] The last regeneration failed, and the notes show the graph of the last one that succeeded.\n\nmember.sdp.md · The carrier is broken.\n",
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  },
+);
+
+it("prunes every empty directory under sdp after removing stale notes", () => {
+  scratch((root) => {
+    synchronizeVault(root, [{ path: "specs/old/nested/member.md", content: "old" }]);
+    mkdirSync(join(root, "sdp/empty/nested"), { recursive: true });
+    synchronizeVault(root, [{ path: "index.md", content: "current" }]);
+    expect(existsSync(join(root, "sdp/specs"))).toBe(false);
+    expect(existsSync(join(root, "sdp/empty"))).toBe(false);
+    expect(inspectVault(root).temporaries).toEqual([]);
+  });
+});
+
+it("refuses a vault holding a prior registrar sibling before the build", async () => {
+  const root = mkdtempSync(join(tmpdir(), "sdp-vault-registrar-"));
+  try {
+    probe(root);
+    put(
+      join(root, "generated/registrars.json"),
+      JSON.stringify({ version: 1, files: ["notes/example.test.generated.ts"] }),
+    );
+    put(join(root, "notes/example.test.generated.ts"), "Keep this registrar.");
+    put(join(root, "generated/design-review/keep.md"), "Keep this page.");
+    const before = bytes(root),
+      capture = createCaptureOutput();
+    expect(
+      await runSdpCli(
+        ["vault", root, "--out", join(root, "notes"), "--exclude", "notes"],
+        capture.output,
+      ),
+    ).toBe(1);
+    expect(capture.readStderr()).toContain("overlaps notes/example.test.generated.ts");
+    expect(bytes(root)).toEqual(before);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("wraps the generate help paragraph within the established width", () => {
+  const paragraph = verbHelpText("generate")?.split("\n\n")[1] ?? "";
+  expect(paragraph).not.toBe("");
+  expect(paragraph.split("\n").every((line) => line.length <= 100)).toBe(true);
 });

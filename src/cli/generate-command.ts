@@ -47,16 +47,6 @@ export async function runGenerate(
   if (!parsed.checkClean && vaultState === undefined) return 1;
   const vaultHooks = parsed.checkClean ? hooks : prepareVaultBuild(parsed, output, hooks);
   if (vaultHooks === undefined) return 1;
-  const errors: string[] = [];
-  const tee: CliOutput = {
-    ...output,
-    stderr: {
-      write: (chunk) => {
-        errors.push(chunk);
-        writeStderr(output, chunk);
-      },
-    },
-  };
   // Preparation captures every prior tree before runBuild invalidates the five roots.
   const publishers = [
     (validated: Parameters<typeof publishDesignReview>[0]) =>
@@ -66,9 +56,11 @@ export async function runGenerate(
     prepareGherkinPublication(parsed, output, hooks, "generate"),
     prepareStudioPublication(parsed, output, hooks, "generate"),
   ];
-  const validated = runValidate(parsed, tee, "generate", { ...hooks, ...vaultHooks });
+  const validated = runValidate(parsed, output, "generate", { ...hooks, ...vaultHooks });
   if (validated.graph === undefined)
-    return vaultState === undefined ? 1 : publishFailedVault(parsed, output, vaultState, errors);
+    return vaultState === undefined
+      ? 1
+      : publishFailedVault(parsed, output, vaultState, validated.extractionReport?.findings ?? []);
 
   if (!parsed.checkClean) {
     try {

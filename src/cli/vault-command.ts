@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { generateContracts } from "../codegen/contracts.js";
 import { extract } from "../extract/index.js";
 import type { GraphSchema } from "../graph/schema.js";
 import { isExcludedDiscoveryDirectory } from "../extract/discover.js";
@@ -9,6 +10,7 @@ import {
   VaultCaseCollisionError,
 } from "../projections/vault/notes.js";
 import { escapeText } from "../projections/vault/text.js";
+import type { Finding } from "../validate/contracts.js";
 import {
   inspectVault,
   LIST,
@@ -17,6 +19,7 @@ import {
 } from "../projections/vault/sync.js";
 import type { SyncResult, VaultFile, VaultState } from "../projections/vault/sync.js";
 import type { BuildArgs } from "./build-args.js";
+import { buildOwnedPaths, buildOwnedRegistrarPaths } from "./build-command.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
 import { runValidate } from "./validate-view-command.js";
@@ -27,34 +30,23 @@ import type { ValidateWatchHooks } from "./validate-watch.js";
 export interface VaultHooks extends ValidationViewHooks {
   readonly vaultRename?: Parameters<typeof synchronizeVault>[3];
 }
-export const buildOwnedPaths = [
-  "graph.json",
-  "contracts",
-  "registrars.json",
-  "imports.json",
-  "design-review",
-  "census",
-  "mermaid",
-  "gherkin",
-  "spec-studio",
-].flatMap((name) => [`generated/${name}`, `generated/${name}.tmp`]);
 export function vaultDirectory(parsed: BuildArgs): string {
   return resolve(parsed.vault ?? join(parsed.root, "generated/obsidian-vault"));
 }
 const inside = (parent: string, child: string): boolean => {
-  const path = relative(parent, child);
-  return path === "" || (!path.startsWith("../") && path !== ".." && !isAbsolute(path));
+  const path = relative(parent.toLowerCase(), child.toLowerCase());
+  return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path));
 };
 function physical(path: string): string {
-  if (existsSync(path)) return realpathSync(path);
+  if (existsSync(path)) return realpathSync.native(path);
   const parent = dirname(path);
   return parent === path ? path : resolve(physical(parent), relative(parent, path));
 }
-export function checkVaultDirectory(parsed: BuildArgs): void {
+export function checkVaultDirectory(parsed: BuildArgs, registrars: readonly string[] = []): void {
   const out = vaultDirectory(parsed),
     resolvedOut = physical(out),
     root = physical(parsed.root);
-  for (const path of buildOwnedPaths) {
+  for (const path of [...buildOwnedPaths, ...buildOwnedRegistrarPaths(parsed.root, registrars)]) {
     const owned = physical(join(root, path));
     if (inside(owned, resolvedOut) || inside(resolvedOut, owned))
       throw new Error(
@@ -123,17 +115,19 @@ export function prepareVaultBuild(
   } // The shared build owns extraction failure diagnostics.
   try {
     assertVaultNoteNames(extracted.graph);
+    const contracts = (hooks.generateContracts ?? generateContracts)(extracted.graph);
+    checkVaultDirectory(parsed, [...contracts.registrars.keys()]);
+    return { ...hooks, extract: () => extracted, generateContracts: () => contracts };
   } catch (error) {
     reportVaultError(error, output);
     return undefined;
   }
-  return { ...hooks, extract: () => extracted };
 }
 export function publishFailedVault(
   parsed: BuildArgs,
   output: CliOutput,
   state: VaultState,
-  errors: readonly string[],
+  errors: readonly Finding[],
   hooks: VaultHooks = {},
 ): number {
   try {
@@ -142,7 +136,14 @@ export function publishFailedVault(
       .map(([path, bytes]) => ({ path, content: bytes.toString("utf8") }));
     const warning =
       "> [!warning] The last regeneration failed, and the notes show the graph of the last one that succeeded.\n\n" +
-      errors.map((error) => escapeText(error.split(parsed.root).join(".").trim())).join("\n") +
+      errors
+        .filter((error) => error.severity === "error")
+        .map((error) =>
+          [error.file, escapeText(error.message)]
+            .filter((value) => value !== undefined)
+            .join(" · "),
+        )
+        .join("\n") +
       "\n";
     summarize(
       parsed,
@@ -201,25 +202,21 @@ export function publishVault(
 export function runVault(parsed: BuildArgs, output: CliOutput, hooks: VaultHooks = {}): number {
   const state = prepareVault(parsed, output);
   if (state === undefined) return 1;
-  const errors: string[] = [];
-  const tee: CliOutput = {
-    ...output,
-    stderr: {
-      write: (chunk) => {
-        errors.push(chunk);
-        writeStderr(output, chunk);
-      },
-    },
-  };
   const preparedHooks = prepareVaultBuild(parsed, output, hooks);
   if (preparedHooks === undefined) return 1;
-  const validated = runValidate(parsed, tee, "vault", preparedHooks);
+  const validated = runValidate(parsed, output, "vault", preparedHooks);
   if (validated.graph !== undefined)
     return (
       publishVault(parsed, validated.graph, output, state, hooks, validated.report?.findings) ||
       validated.exitCode
     );
-  return publishFailedVault(parsed, output, state, errors, hooks);
+  return publishFailedVault(
+    parsed,
+    output,
+    state,
+    validated.extractionReport?.findings ?? [],
+    hooks,
+  );
 }
 /**
  * @sdpAnchor impl:protocol.vault-watch

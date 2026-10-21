@@ -46,7 +46,13 @@ for (const path of generatedFiles.filter((path) => path.endsWith(".md"))) {
   for (const match of prose.matchAll(/(?<!\\)\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/gu)) {
     const [target, block] = match[1].split("#^");
     assert.ok(statSync(join(out, target)).isFile(), `${path} -> ${target}`);
-    if (block) assert.match(readFileSync(join(out, target), "utf8"), new RegExp(` \\^${block}$`, "m"));
+    if (block) {
+      const lines = readFileSync(join(out, target), "utf8").split("\n");
+      const index = lines.findIndex((line) => line.endsWith(` ^${block}`));
+      assert.ok(index >= 0, `${path} -> ${target}#^${block}`);
+      const next = lines[index + 1] ?? "";
+      assert.ok(next === "" || /^\s*(?:[-+*] |\d+[.)] |#{1,6} |>|`{3,}|~{3,})/u.test(next), `${target}#^${block} has a lazy paragraph continuation`);
+    }
     links++;
   }
 }

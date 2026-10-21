@@ -27,7 +27,7 @@ import { expect, it } from "vitest";
 import { parse } from "yaml";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { renderVault } from "../src/projections/vault/notes.js";
-import { inspectVault } from "../src/projections/vault/sync.js";
+import { inspectVault, temporary } from "../src/projections/vault/sync.js";
 import { extract } from "../src/extract/index.js";
 import { createReader } from "../src/reader/reader.js";
 import { evaluateBody } from "../src/reader/evaluate-body.js";
@@ -353,10 +353,10 @@ const notesAdapters = (contract: Contract) => ({
       else {
         const path = "sdp/specs/probe/spec.probe.source.md";
         const content = readFileSync(join(out, path), "utf8");
-        const expected = notesExpected(w.point);
+        const mentionLine = content.split("\n").find((line) => line.startsWith("Mention ")) ?? "";
         w.answer = {
           notePath: path,
-          rendered: content.includes(String(expected.rendered)) ? expected.rendered : "missing",
+          rendered: mentionLine.slice("Mention ".length, -1),
           alias:
             readNotes(out).find((n) => n.path === path)?.props.aliases instanceof Array
               ? (readNotes(out).find((n) => n.path === path)?.props.aliases as unknown[])[0]
@@ -433,7 +433,9 @@ const basesAdapters = (contract: Contract) => ({
             ? "\n### Open questions\n- [blocking #hold] Who decides?\n\n## Behavior\n- rule: Keep the graph.\n"
             : name === "decision"
               ? "\n## Decision\n- context: A real choice.\n- decision: Keep it.\n"
-              : "\n## Behavior\n- rule: Keep the graph.\n\n## Design\n- shape: A note.\n";
+              : (name === "idea"
+                  ? "\n### Open questions\n- [non-blocking #later] A question for later.\n"
+                  : "") + "\n## Behavior\n- rule: Keep the graph.\n\n## Design\n- shape: A note.\n";
         put(
           join(root, `${name}.sdp.md`),
           carrier(
@@ -491,9 +493,9 @@ const basesAdapters = (contract: Contract) => ({
         ],
         [
           "Blocking questions",
-          collect(questions.specs).filter(
-            (id) => reader.specContext(id)?.designColumns.blockingQuestions,
-          ),
+          (questions.specs as { id: string; questions: { blocking: boolean }[] }[])
+            .filter((row) => row.questions.some((question) => question.blocking))
+            .map((row) => row.id),
         ],
         ["Decisions", collect(decisions.rows)],
       ]);
@@ -602,6 +604,8 @@ const iterationAdapters = (contract: Contract) => ({
       const after = snapshot(out);
       const content = readFileSync(join(out, "specs/probe/spec.probe.member.md"), "utf8");
       const alive = child.exitCode === null;
+      put(join(out, temporary("specs/probe/spec.probe.member.md")), content);
+      expect(inspectVault(join(root, "generated/obsidian-vault")).temporaries).toHaveLength(1);
       child.kill("SIGINT");
       const exitCode = await stopped;
       w.answer = {

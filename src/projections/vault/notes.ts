@@ -17,37 +17,35 @@ export function findingLine(f: Finding, text: (v: string) => string): string {
   return `- ${f.severity} · ${f.validatorId}${f.file === undefined ? "" : ` · ${code(f.file + (f.line === undefined ? "" : `:${String(f.line)}`))}`} · ${text(f.message)}`;
 }
 export function assertVaultNoteNames(graph: GraphSchema): void {
-  const names = new Map<string, string[]>();
+  const names = new Map<string, { path: string; id: string }>();
+  const pairs = new Map<string, [string, string]>();
   for (const node of graph.nodes) {
     const entries: [string, string][] = [[notePath(node.id), node.id]];
     if (node.nodeType === "Primitive")
       for (const key of Object.keys(node.sections?.model?.termKeys ?? {}))
         entries.push([termPath(node.id, key), `${node.id}#term.${key}`]);
     for (const [path, id] of entries) {
-      const ids = names.get(path.toLowerCase()) ?? [];
-      ids.push(id);
-      names.set(path.toLowerCase(), ids);
+      const segments = path.split("/");
+      for (let count = 1; count <= segments.length; count++) {
+        const prefix = segments.slice(0, count).join("/");
+        const folded = prefix.toLowerCase();
+        const previous = names.get(folded);
+        if (previous !== undefined && previous.path !== prefix) {
+          const pair: [string, string] = previous.id < id ? [previous.id, id] : [id, previous.id];
+          pairs.set(JSON.stringify(pair), pair);
+        } else if (previous === undefined) names.set(folded, { path: prefix, id });
+      }
     }
   }
-  const pairs: [string, string][] = [];
-  for (const ids of names.values()) {
-    ids.sort(compare);
-    for (let i = 0; i < ids.length; i++)
-      for (let j = i + 1; j < ids.length; j++) {
-        const first = ids[i],
-          second = ids[j];
-        if (first !== undefined && second !== undefined) pairs.push([first, second]);
-      }
-  }
-  if (pairs.length)
+  if (pairs.size)
     throw new VaultCaseCollisionError(
-      pairs.sort(([a, b], [c, d]) => compare(a, c) || compare(b, d)),
+      [...pairs.values()].sort(([a, b], [c, d]) => compare(a, c) || compare(b, d)),
     );
 }
 /**
  * @sdpAnchor impl:protocol.vault-notes
  * @sdpLabel renders reader contexts, declared relations and keyed terms as linked notes
- * @sdpSatisfies spec:consumers.obsidian-vault.notes, spec:consumers.obsidian-vault
+ * @sdpSatisfies spec:consumers.obsidian-vault.notes, spec:consumers.obsidian-vault, spec:consumers.obsidian-vault.bases
  * @sdpComponent component:protocol.projections
  * @sdpUses impl:protocol.reader
  * @sdpRole projection

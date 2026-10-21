@@ -30,7 +30,7 @@ export function escapeText(text: string): string {
 /**
  * @sdpAnchor impl:protocol.vault-text
  * @sdpLabel renders checked mentions and escapes Obsidian syntax outside code spans
- * @sdpSatisfies spec:consumers.obsidian-vault.notes
+ * @sdpSatisfies spec:consumers.obsidian-vault.notes, spec:consumers.obsidian-vault.iteration
  * @sdpComponent component:protocol.projections
  * @sdpRole codec
  */

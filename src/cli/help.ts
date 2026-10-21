@@ -82,7 +82,8 @@ const commands = {
     usage: "  sdp generate [root] [--exclude PATH]... [--vault DIR] [--check-clean]",
     paragraph: `Validate once, then publish the Design Review, census, Mermaid diagrams, Gherkin-shaped
              view and Studio from that graph. --check-clean applies each publisher's checks,
-             removing only roots that fail. Synchronizes the vault through its directory checks and guard before publishing any root,
+             removing only roots that fail. Synchronizes the vault through its directory checks
+             and guard before publishing any root,
              at the default vault directory or --vault DIR. --check-clean leaves the vault alone.`,
   },
   import: {
@@ -148,8 +149,7 @@ export const NEW_SPEC_HELP_TEXT = verbHelpText("new") ?? "";
 /**
  * @sdpAnchor impl:protocol.adopter-help
  * @sdpLabel SDP_HELP_TEXT indexes the shipped skills, recipe catalog, schema, walkthrough, glossary and specs/ by package-relative path
- * @sdpSatisfies spec:consumers.adopter-on-ramp
- * @sdpReferences spec:consumers.command-line
+ * @sdpSatisfies spec:consumers.adopter-on-ramp, spec:consumers.command-line
  * @sdpComponent component:protocol.cli
  * @sdpRole service
  */

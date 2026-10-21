@@ -52,7 +52,7 @@ export function renderSections(context: SpecContext, text: (v: string) => string
     for (const [key, value] of Object.entries(bag)) {
       if (key === "ruleKeys" || key === "termKeys" || key === "stepKeys") continue;
       if (key === "description") {
-        lines.push(prose(value), "");
+        lines.push("", "### Example space", "", prose(value), "");
         continue;
       }
       if (section === "intent" && key === "openQuestions" && Array.isArray(value)) {

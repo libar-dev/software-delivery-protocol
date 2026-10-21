@@ -60,10 +60,16 @@ export function checkLinks(out: string): number {
     for (const match of plain.matchAll(/(?<!\\)\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/gu)) {
       const [target = "", block] = (match[1] ?? "").split("#^");
       expect(existsSync(join(out, target)), `${path} -> ${target}`).toBe(true);
-      if (block !== undefined)
-        expect(readFileSync(join(out, target), "utf8"), `${path} -> ${target}#^${block}`).toMatch(
-          new RegExp(` \\^${block}$`, "m"),
-        );
+      if (block !== undefined) {
+        const lines = readFileSync(join(out, target), "utf8").split("\n");
+        const index = lines.findIndex((line) => line.endsWith(` ^${block}`));
+        expect(index, `${path} -> ${target}#^${block}`).toBeGreaterThanOrEqual(0);
+        const next = lines[index + 1] ?? "";
+        expect(
+          next === "" || /^\s*(?:[-+*] |\d+[.)] |#{1,6} |>|`{3,}|~{3,})/u.test(next),
+          `${target}#^${block} has a lazy paragraph continuation`,
+        ).toBe(true);
+      }
       count++;
     }
   }
