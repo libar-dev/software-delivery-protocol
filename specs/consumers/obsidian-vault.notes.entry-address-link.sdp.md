@@ -17,9 +17,9 @@ relations:
 ```gwt
 Given a corpus holding the Spec {source: "spec:probe.source"} whose narrative mentions {mention: "spec:probe.target#design.limit"}
 Given the Spec {target: "spec:probe.target"} keys the Design entry {key: "limit"}
-When the vault command writes the vault
+When the vault command runs over that corpus
 Then the mentioning Spec's note is {notePath: "sdp/specs/probe/spec.probe.source.md"}
 Then the mention renders as {rendered: "[[sdp/specs/probe/spec.probe.target.md#^design-limit|spec:probe.target#design.limit]]"}
 Then the note's aliases open with {alias: "spec:probe.source"}
-Then no property but aliases holds a value Obsidian reads as an address: {plainProperties: true}
+Then no property but aliases holds an id or an entry address as plain text: {plainProperties: true}
 ```

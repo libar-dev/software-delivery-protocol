@@ -17,6 +17,6 @@ relations:
 ```gwt
 Given a corpus holding the Spec {source: "spec:probe.source"} whose narrative mentions {mention: "spec:probe.target#design.missing"}
 Given the Spec {target: "spec:probe.target"} keys the Design entry {key: "limit"}
-When the vault command writes the vault
+When the vault command runs over that corpus
 Then the mention renders as {rendered: "spec:probe.target#design.missing"}
 ```

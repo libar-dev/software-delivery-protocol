@@ -16,7 +16,7 @@ relations:
 
 ```gwt
 Given a vault the vault command wrote from an extraction root and now watches
-When the title of {specId: "spec:probe.member"} changes in its carrier
+When the Spec {specId: "spec:probe.member"} is edited by {edit: "a title change in its carrier"}
 Then the note of that Spec shows the new title: {shown: true}
 Then every note whose bytes the change leaves alone keeps its modification time: {othersUntouched: true}
 Then the watch process stays alive and exits {exitCode: 0} on SIGINT

@@ -2056,7 +2056,7 @@ export const consumersSpecs = [
           "A carrier ends in `.sdp.md`, `.sdp.gherkin` or `.sdp.ts`. The watcher ignores the directories discovery skips, the configured exclusion prefixes and every non-carrier path; a removed watched directory and an event with no filename each schedule a run because their affected carriers cannot be named.",
           "Events that arrive while a run is in progress coalesce into one pending run.",
           "Findings print as `sdp validate` prints them and the process stays alive; operator SIGINT terminates the process with exit 0 even while a rules body is active, without waiting for it. No further rules file runs or output is written after the stop.",
-          "`--watch` is a validate option only and cannot combine with `--check-clean`. It re-runs on carrier edits and never on source edits, so an author re-runs validation after editing an anchor.",
+          "For `sdp validate`, `--watch` cannot combine with `--check-clean`, and it re-runs on carrier edits and never on source edits, so an author re-runs validation after editing an anchor. This rule restricts no other verb's `--watch`, which its own Spec states.",
         ],
         ruleKeys: { operatorStop: "rules[3]" },
       },
@@ -2461,7 +2461,7 @@ export const consumersSpecs = [
     file: "specs/consumers/obsidian-vault.sdp.md",
     title: "An Obsidian vault lets a person iterate on designs from the one graph",
     narrative:
-      "The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio serves a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view lets a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive. It is a projection of its own, not the Studio's local half: the Studio's page set serves a reader who holds a link, the vault serves a person who iterates in a notes app, and each has its own verb.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. The first prototype, in `explorations/obsidian-vault/`, wrote notes from dumped graph and reader values, with relations and checked mentions as wikilinks, entry addresses as block links, and Bases for Pack members and standing queries. The second, in `explorations/obsidian-vault-prototype/`, writes the vault this Pack designs from the built engine and checks it on the Protocol's corpus and the first adopter's: links that resolve, Bases whose views select what their recipes select, two identical renders, and a person's notes that survive.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two runs over one graph write the same bytes, so no note names a commit or a time. Intent is still written only in the carriers. One thing sets the vault apart from the other projections: a person keeps it open and writes notes of their own in it. So the command owns one folder of the vault and a list of what it wrote there, and synchronizes that folder instead of rewriting a root wholesale; the vault's owned-folder decision, `spec:decisions.vault-owned-folder`, says why.\n\nThe default vault sits under `generated/`, which discovery skips and an adopter usually keeps out of git. A person who wants to keep the intent notes they write in the vault points `--out` at a directory of their own.",
+      "The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio serves a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view lets a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive. It is a projection of its own, not the Studio's local half: the Studio's page set serves a reader who holds a link, the vault serves a person who iterates in a notes app, and each has its own verb; the verb that writes every projection root writes the vault too.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. The first prototype, in `explorations/obsidian-vault/`, wrote notes from dumped graph and reader values, with relations and checked mentions as wikilinks, entry addresses as block links, and Bases for Pack members and standing queries. The second, in `explorations/obsidian-vault-prototype/`, writes the vault this Pack designs from the built engine and checks it on the Protocol's corpus and the first adopter's: links that resolve, Bases whose views select what their recipes select, two identical renders, and a person's notes that survive.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two runs over one graph write the same bytes, so no note names a commit or a time. Intent is still written only in the carriers. One thing sets the vault apart from the other projections: a person keeps it open and writes notes of their own in it. So the command owns one folder of the vault and a list of what it wrote there, and synchronizes that folder instead of rewriting a root wholesale; the vault's owned-folder decision, `spec:decisions.vault-owned-folder`, says why. For the same reason the vault never lies where the shared build removes files, and a run refuses rather than guess whose a file is.\n\nThe default vault sits under `generated/`, which discovery skips and an adopter usually keeps out of git. A person who wants to keep the intent notes they write in the vault points `--out` at a directory of their own.",
     sections: {
       intent: {
         actor:
@@ -2476,32 +2476,38 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "The vault is a projection of its own, written only by `sdp vault`, and no part of the Studio's page set.",
-          "`sdp vault [root] [--exclude PATH]... [--out DIR] [--watch]` validates the graph as `sdp validate` does and then synchronizes the vault at `DIR`, by default `generated/obsidian-vault/` under the root; `root` defaults to the working directory, each exclusion is a root-relative path prefix as for the publishers, `--out` resolves against the working directory, and any other option refuses the run.",
-          "A vault directory inside the root must lie under a directory discovery skips or under an excluded prefix, so no file in the vault is ever read as a carrier or a source; any other vault directory inside the root refuses the run before the build.",
+          "The vault is a projection of its own, written only through its synchronization, which `sdp vault` and the verb that writes every projection root run, and no part of the Studio's page set.",
+          "`sdp vault [root | --root PATH] [--exclude PATH]... [--out DIR] [--watch]` validates the graph as `sdp validate` does and then synchronizes the vault at `DIR`, by default `generated/obsidian-vault/` under the root; the root is given as an argument or by `--root`, never both, and defaults to the working directory, each exclusion is a root-relative path prefix as for the publishers, and `--out` resolves against the working directory; a root given both ways, `--root` or `--out` given twice or without a value, and any other option refuse the run.",
+          "A vault directory inside the root must lie under a directory discovery skips or under an excluded prefix, so no file in the vault is ever read as a carrier or a source; any other vault directory inside the root refuses the run before the build, writing and removing nothing.",
+          "A vault directory that is, lies inside or holds a path the shared build writes or removes, as `spec:consumers.obsidian-vault#design.buildOwnedPaths` lists, refuses the run before the build, writing and removing nothing, so no build ever removes a file in the vault.",
           "The command writes only the generated folder `sdp/` inside the vault; Obsidian's settings, a person's intent notes and every other file of the vault lie outside it and are never written, moved or removed.",
-          "Before the build, a run reads every file under `sdp/` whose path holds no name that begins with a dot; a file the file list does not name, or whose bytes match no content the list records for it, refuses the run, which then writes nothing, removes nothing, names each such path and exits 1.",
-          "A run that passes the guard writes each generated file whose bytes differ from the file on disk through a temporary sibling renamed into place, leaves every file whose bytes already match untouched, removes each file the list names that the new set no longer holds, removes the directories under `sdp/` it leaves empty, and writes the file list last.",
-          "Before it changes any file, a run records in the file list both the content each path holds and the content it will hold, so a run stopped at any point leaves every generated file matching the list, and the next run recognizes each as its own.",
-          "The vault is not a projection root of the shared build: the build's invalidation never removes it, the verb that writes every projection root leaves it out, and the repository's projection suite does not certify it; `sdp vault` enters the shared build, so it removes the five projection roots as `sdp validate` does.",
+          "Before the build and before any cleanup, a run inspects `sdp/` and every entry under it, names that begin with a dot included, and refuses when `sdp/` or an entry under it is a symbolic link or neither a file nor a directory, when the file list is not well formed, when a file other than the file list and the command's own temporaries is one the list does not name, or when a listed file's bytes match no content the list records for it; a refused run writes nothing, removes nothing, names each such path and exits 1. Without a file list, every file under `sdp/` is one the list does not name.",
+          "A run that passes the guard writes each generated file whose bytes differ from the file on disk through a temporary sibling renamed into place, leaves every file whose bytes already match untouched, removes each file the list names that the new set no longer holds, removes every directory under `sdp/` left empty, and writes the file list last.",
+          "Before it changes any file, a run records in the file list both the content each path holds and the content it will hold, so a run stopped at any point leaves every generated file matching the list, and the next run recognizes each, and each whole temporary, as its own and completes the synchronization; a temporary cut short while it was written matches no recorded content, so the guard refuses it as unknown and the person deletes it.",
+          "The vault is not one of the five projection roots the shared build rewrites: the build's invalidation never removes it, and the repository's projection suite does not certify it. The verb that writes every projection root also synchronizes the vault, at the directory `sdp vault` would use for the same root unless that verb names another, through the same directory checks and guard, before it publishes any root; a refusal there leaves the vault untouched and fails that run. `sdp vault` enters the shared build, so it removes the five projection roots as `sdp validate` does.",
           "Two runs over one graph write byte-identical files under `sdp/`, the file list included, and no file there holds a time, a commit, an absolute path or a host name.",
           "Every wikilink, embed and block link a generated note writes resolves to a file the run wrote and, with a block, to a block id that file carries; no note links outside the vault, a carrier or source file is named by its root-relative path in a code span, and text in a code span or a fenced block, where Obsidian reads no link, is no link.",
-          "Findings never withhold the vault: a run over a graph with validation findings still synchronizes and returns the validation exit code, each finding shows on the note of the Spec or Pack it names, and the index note counts them by severity.",
-          "A run whose extraction fails keeps every generated note but the index, which it rewrites to open with a warning naming the failure, and exits 1; the next run that succeeds writes the index whole again.",
+          "Findings never withhold the vault: a run over a graph with validation findings still synchronizes and returns the validation exit code. A finding whose subject is a Spec or a Pack with a note shows on that note; every other finding shows on the index with its severity, its validator, its file and line when known and its message; and the index counts every finding by severity.",
+          "A run whose extraction fails keeps every generated file but the index and the file list: it rewrites the index to open with a warning naming the failure, through the steps `spec:consumers.obsidian-vault#rule.interruptedRun` and `spec:consumers.obsidian-vault#rule.synchronize` state, so the file list ends recording the warning index, and exits 1. The next run that succeeds finds the index matching the list and writes it whole again; with no earlier run, the failed run leaves only that index and the file list under `sdp/`.",
           "Notes are plain Markdown with YAML properties, wikilinks and block ids, which other notes tools read; only the `.base` files are Obsidian's own.",
           "A person opens the vault directory itself as an Obsidian vault, and every link and Base filter names its target by a path from that directory.",
         ],
         exampleSpace: {
           given: [
             "an extraction root holding a Pack and its member Specs, among them {member:string}",
-            'a vault whose generated folder holds {generated:"nothing"|"the files an earlier run wrote"}',
-            'the vault holds {extra:"no other file"|"an intent note and Obsidian settings outside the generated folder"|"a note a person wrote inside the generated folder"|"a generated note a person changed"}',
-            'the member {change:"stays in the corpus"|"leaves the corpus"}',
+            "the vault command names the vault directory {out:string}",
+            'a vault whose generated folder holds {generated:"nothing"|"the files an earlier run wrote"|"the files a run stopped at its first rename left"|"the files a run whose extraction failed left"}',
+            'the vault holds {extra:"no other file"|"an intent note and Obsidian settings outside the generated folder"|"a note a person wrote inside the generated folder"|"a file a person wrote inside the generated folder under a temporary\'s name"|"a generated note a person changed"}',
+            'the member {change:"stays in the corpus"|"leaves the corpus"|"changes its title"|"has a carrier the extractor refuses"}',
           ],
           when: ["the vault command runs at that root"],
           then: [
             "the run exits {exitCode:number}",
             'the run refuses the path {refusedPath:string} as {refusal:"unknown"|"changed"}',
+            'the run refuses the vault directory as {placement:"overlapping a path the build owns"|"inside the extraction"}',
+            "the index note warns that the last regeneration failed: {indexWarns:boolean}",
+            "every generated file matches a content the file list records for it: {listMatches:boolean}",
+            "the generated folder is byte-identical to a fresh vault's, the file list included: {matchesFresh:boolean}",
             "a second run over the same graph leaves every generated file byte-identical: {byteIdentical:boolean}",
             "the member's note is present: {memberNote:boolean}",
             "every file the person wrote is byte-identical: {personFilesKept:boolean}",
@@ -2512,38 +2518,47 @@ export const consumersSpecs = [
           ownProjection: "rules[0]",
           verb: "rules[1]",
           outsideExtraction: "rules[2]",
-          ownedFolder: "rules[3]",
-          guard: "rules[4]",
-          synchronize: "rules[5]",
-          interruptedRun: "rules[6]",
-          standsApart: "rules[7]",
-          deterministic: "rules[8]",
-          linksResolve: "rules[9]",
-          findingsShown: "rules[10]",
-          failedExtraction: "rules[11]",
-          plainNotes: "rules[12]",
-          openAsVault: "rules[13]",
+          apartFromBuild: "rules[3]",
+          ownedFolder: "rules[4]",
+          guard: "rules[5]",
+          synchronize: "rules[6]",
+          interruptedRun: "rules[7]",
+          standsApart: "rules[8]",
+          deterministic: "rules[9]",
+          linksResolve: "rules[10]",
+          findingsShown: "rules[11]",
+          failedExtraction: "rules[12]",
+          plainNotes: "rules[13]",
+          openAsVault: "rules[14]",
         },
         description:
-          "The world writes a probe corpus of one Pack and its member Specs, runs the vault command with the vault under the root's `generated/` directory, and reads the vault from disk; a second run reads the same graph.",
+          "The world writes a probe corpus of one Pack and its member Specs, runs the vault command with the vault under the root's `generated/` directory unless a point names another, and reads the vault from disk; a second run reads the same graph. The world leaves a stopped run's files by running the command with its first rename failing, which leaves the file list recording both contents and a whole temporary beside its target, and a failed run's files by running it while the member's carrier is one the extractor refuses, then repairing that carrier. A fresh vault is one the command writes into an empty directory from the same graph.",
       },
       design: {
         layout:
           "the generated folder `sdp/` holds `index.md`, `specs.base`, `specs/<family>/<note>.md`, `packs/<note>.md` beside `packs/<note>.base`, `code/<namespace>/<note>.md`, `terms/<note>.md` and the file list `.sdp-vault.json`; `<family>` is the first segment of a Spec's path, `<namespace>` a code unit's or anchor's namespace, and `<note>` the note name `spec:consumers.obsidian-vault.notes#design.noteName` states.",
         fileList:
-          '`{ "schema": "sdp-vault/1", "files": { "<path under sdp/>": ["<sha256 hex of the file\'s bytes>"] } }` in `sdp/.sdp-vault.json`, paths sorted in code-unit order, JSON with two-space indentation and a closing newline; a path lists one content after a completed run and at most two while a run is under way.',
+          '`{ "schema": "sdp-vault/1", "files": { "<path under sdp/>": ["<sha256 hex of the file\'s bytes>"] } }` in `sdp/.sdp-vault.json`, paths sorted in code-unit order, JSON with two-space indentation and a closing newline; a path lists one content after a completed run and at most two while a run is under way, the content it held first.',
+        wellFormedList:
+          "a file list is well formed when it parses to the `fileList` shape, every path is relative to `sdp/`, `/`-separated, with no empty, `.` or `..` segment, and names neither the file list nor a temporary, every content is 64 lowercase hex digits, every path lists one or two contents, and the file's bytes equal the serialization `spec:consumers.obsidian-vault#design.fileList` states of what it parses to, so a repeated or reordered path is not well formed.",
         temporaryName:
-          "a file is written as `.<name>.sdp-tmp` in its own directory and renamed over `<name>`; a run removes any such temporary it finds under `sdp/`.",
+          "a file is written as `.<name>.sdp-tmp` in its own directory and renamed over `<name>`; a temporary a run finds is the command's own only when its bytes match a content the file list records for `<name>`, and the run removes it after the guard passes; the file list's own temporary is the command's own only when it is itself a well-formed file list; any other file of a temporary's name is one the list does not name.",
+        buildOwnedPaths:
+          "under the root, `generated/graph.json`, `generated/contracts/`, `generated/registrars.json`, `generated/imports.json`, `generated/design-review/`, `generated/census/`, `generated/mermaid/`, `generated/gherkin/` and `generated/spec-studio/`, each with its `.tmp` sibling, and every path the shared build comes to write or remove.",
         guardMessage:
-          "one stderr line per refused path, `sdp vault: <path> is not a file this command wrote (unknown)` or `sdp vault: <path> has changed since this command wrote it (changed)`, with `<path>` relative to the vault, then `sdp vault: nothing was written; move a note you wrote out of sdp/, or delete a generated note you changed after keeping what you wrote`.",
+          "one stderr line per refused path, with `<path>` relative to the vault: `sdp vault: <path> is not a file this command wrote (unknown)`, `sdp vault: <path> has changed since this command wrote it (changed)`, `sdp vault: <path> is a link or a special file, which this command never writes (not a file)` or `sdp vault: sdp/.sdp-vault.json is not a file list this command wrote (malformed)`; then `sdp vault: nothing was written or removed; keep what you wrote outside sdp/, then delete each refused path, or delete sdp/ whole`.",
         outsideExtractionMessage:
           "`sdp vault: the vault <out> lies inside the root and would be read as source; choose a directory under generated/, under an excluded prefix, or outside the root`.",
+        buildOwnedMessage:
+          "`sdp vault: the vault <out> overlaps <path>, which every build rewrites or removes; choose another directory, such as generated/obsidian-vault/`, with `<path>` the first overlapping path in the order `spec:consumers.obsidian-vault#design.buildOwnedPaths` lists them.",
         summaryLine:
           "on stdout after a synchronization, `Wrote <out>/sdp (<n> files: <w> written, <u> unchanged, <r> removed)`.",
         exitCodes:
-          "0 when the vault is synchronized over a graph with no validation error; the validation exit code when it is synchronized over one with errors; 1 on a guard refusal, a vault inside the extraction, a failed extraction or a write that fails.",
+          "0 when the vault is synchronized over a graph with no validation error; the validation exit code when it is synchronized over one with errors; 1 on a refused option, a refused vault directory, a guard refusal, a case collision, a failed extraction or a write that fails.",
         indexNote:
-          "`sdp/index.md` opens with `` > [!info] Generated by `sdp vault` from the graph. Every file under `sdp/` is regenerated: write your own notes outside it, and intent notes in `intent/`. ``, then `# Spec graph`, the finding counts by severity, the corpus Base embedded, and a link to each Pack note in id order.",
+          "`sdp/index.md` opens with `` > [!info] Generated by `sdp vault` from the graph. Every file under `sdp/` is regenerated: write your own notes outside it, and intent notes in `intent/`. ``, then `# Spec graph`, the finding counts by severity, `## Findings without a note` with one line per finding whose subject has no Spec or Pack note, in report order, the corpus Base embedded, and a link to each Pack note in id order.",
+        findingLine:
+          "`- <severity> · <validator id> · <file>:<line> · <message>`, leaving out the file and line when the finding names none and the line when it names only a file, with the message escaped as `spec:consumers.obsidian-vault.notes#rule.textEscaped` states.",
         failedIndex:
           "after a failed extraction, `sdp/index.md` opens with `> [!warning] The last regeneration failed, and the notes show the graph of the last one that succeeded.` followed by one line per extraction error, its root-relative file and its message.",
       },
@@ -2690,6 +2705,179 @@ export const consumersSpecs = [
     deliveryFacts: [],
   },
   {
+    id: "spec:consumers.obsidian-vault.hidden-file-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.hidden-file-refused.sdp.md",
+    title: "A person's file under a temporary's name refuses the regeneration",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the guard on a file whose name begins with a dot and reads as a temporary of a generated note, but whose bytes the file list does not record.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding a Pack and its member Specs, among them {member: "spec:probe.member"}',
+              'a vault whose generated folder holds {generated: "the files an earlier run wrote"}',
+              'the vault holds {extra: "a file a person wrote inside the generated folder under a temporary\'s name"}',
+              'the member {change: "stays in the corpus"}',
+            ],
+            when: ["the vault command runs at that root"],
+            then: [
+              "the run exits {exitCode: 1}",
+              'the run refuses the path {refusedPath: "sdp/specs/probe/.spec.probe.member.md.sdp-tmp"} as {refusal: "unknown"}',
+              "every file the person wrote is byte-identical: {personFilesKept: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.vault-in-build-path-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.vault-in-build-path-refused.sdp.md",
+    title: "A vault directory the build removes refuses the run and keeps a person's notes",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the refusal of a vault directory inside a projection root the shared build removes, and show that a person's notes there survive.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding a Pack and its member Specs, among them {member: "spec:probe.member"}',
+              'the vault command names the vault directory {out: "generated/design-review"}',
+              'a vault whose generated folder holds {generated: "nothing"}',
+              'the vault holds {extra: "an intent note and Obsidian settings outside the generated folder"}',
+            ],
+            when: ["the vault command runs at that root"],
+            then: [
+              "the run exits {exitCode: 1}",
+              'the run refuses the vault directory as {placement: "overlapping a path the build owns"}',
+              "every file the person wrote is byte-identical: {personFilesKept: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.interrupted-run-recovered",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.interrupted-run-recovered.sdp.md",
+    title: "A run after a stopped synchronization finishes it",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the recovery from a run stopped at its first rename, which left the file list recording both contents and a whole temporary beside its target.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding a Pack and its member Specs, among them {member: "spec:probe.member"}',
+              'a vault whose generated folder holds {generated: "the files a run stopped at its first rename left"}',
+              'the vault holds {extra: "an intent note and Obsidian settings outside the generated folder"}',
+              'the member {change: "changes its title"}',
+            ],
+            when: ["the vault command runs at that root"],
+            then: [
+              "the run exits {exitCode: 0}",
+              "the generated folder is byte-identical to a fresh vault's, the file list included: {matchesFresh: true}",
+              "every file the person wrote is byte-identical: {personFilesKept: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.failed-extraction-keeps-notes",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.failed-extraction-keeps-notes.sdp.md",
+    title: "A failed extraction keeps the notes and says so on the index",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute a run whose extraction fails over a vault an earlier run wrote, which keeps every note, rewrites the index with a warning and records it in the file list.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding a Pack and its member Specs, among them {member: "spec:probe.member"}',
+              'a vault whose generated folder holds {generated: "the files an earlier run wrote"}',
+              'the vault holds {extra: "an intent note and Obsidian settings outside the generated folder"}',
+              'the member {change: "has a carrier the extractor refuses"}',
+            ],
+            when: ["the vault command runs at that root"],
+            then: [
+              "the run exits {exitCode: 1}",
+              "the member's note is present: {memberNote: true}",
+              "the index note warns that the last regeneration failed: {indexWarns: true}",
+              "every generated file matches a content the file list records for it: {listMatches: true}",
+              "every file the person wrote is byte-identical: {personFilesKept: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.failed-extraction-recovered",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.failed-extraction-recovered.sdp.md",
+    title: "The run after a failed extraction passes the guard and restores the index",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the run that follows a failed extraction once the carrier is repaired: the guard accepts the warning index the failed run recorded, and the vault ends as a fresh one would.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding a Pack and its member Specs, among them {member: "spec:probe.member"}',
+              'a vault whose generated folder holds {generated: "the files a run whose extraction failed left"}',
+              'the vault holds {extra: "an intent note and Obsidian settings outside the generated folder"}',
+              'the member {change: "stays in the corpus"}',
+            ],
+            when: ["the vault command runs at that root"],
+            then: [
+              "the run exits {exitCode: 0}",
+              "the index note warns that the last regeneration failed: {indexWarns: false}",
+              "the generated folder is byte-identical to a fresh vault's, the file list included: {matchesFresh: true}",
+              "every file the person wrote is byte-identical: {personFilesKept: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
     id: "spec:consumers.obsidian-vault.notes",
     specKind: "behavior",
     altitude: "story",
@@ -2708,11 +2896,11 @@ export const consumersSpecs = [
           "The vault holds one note per Spec, Pack, code unit, test anchor and oracle anchor, and one per Model term that carries a key, which `spec:model.term-addresses` gives an address; a term without a key appears only in its Spec's note, since no address can name it, and a ratified glossary term gains a note only where a Spec's Model section defines it with a key.",
           "A term defined in several Specs gets one note per defining Spec and term, so each definition keeps its authored owner; the term's aliases bring the notes together when a person types it.",
           "A note is named by its id with the colon after the namespace replaced by a dot, and a term note by `term.`, its Spec's path, a dot and its key; one vault holds the notes of one corpus.",
-          "Two notes whose paths differ only in case refuse the run before it writes, naming both ids, so no two names collide on a file system that ignores case.",
-          "A note's id, colon included, is written only in its `aliases` property and in the code span of its head line, since Obsidian shows an alias as plain text; no other property holds a value Obsidian would read as an address.",
+          "Two notes whose paths differ only in case refuse the run before it writes, naming both ids, so no two names collide on a file system that ignores case; the run writes and removes nothing and exits 1.",
+          "A note's id, colon included, is written as plain text only in its `aliases` property and in the code span of its head line, since Obsidian shows an alias as plain text; a property that names another node holds a link to its note, and no other property value the generator composes is an id or an entry address. Authored text in a property, such as a title or a label, is written as authored, and the generator never treats one that looks like an address as an address.",
           "A Spec note's properties are the reader's values for that Spec, listed under `spec:consumers.obsidian-vault.notes#design.specProperties`; every join, delivery fact, floor and rung among them is one the reader computed, and the generator computes none.",
           "A Spec's bindings are two booleans, `implementationBinding` true where the reader's delivery facts hold `implemented` and `verifierBinding` true where they hold `has-verifier`, and the note's body renders the four binding lines `spec:consumers.binding-language-views` states, so no rendered label is a delivery-fact name.",
-          "Each declared relation is a link on the notes at both ends, with its type, its reason, and for an example's `verifies` a link to the block of each rule it exercises in the verified Spec's note.",
+          "Each declared relation whose two ends have notes is a link on the notes at both ends, with its type, its reason, and for an example's `verifies` a link to the block of each rule it exercises in the verified Spec's note; an end with no note, such as a target that does not resolve, and an exercised key the verified Spec does not carry, appear on the source note as their id or key in a code span, with no link.",
           "Each keyed Design and UI entry, keyed open question, keyed rule or flow, and keyed Model term ends its line in its Spec's note with the block id `^<section>-<key>`, with section `design`, `ui`, `question`, `rule` or `term`.",
           "A mention in any text the vault renders from the graph, found by the scanner the prose-mention validator uses, becomes a link when its Spec resolves and, for an entry address, its entry does; a mention that does not resolve stays as written. A code span holding exactly one mention becomes that link, and any other code span stays code.",
           "Text from the graph renders as written, except that the generator escapes what Obsidian would read as a link, an embed, a tag, a block id, a comment, a highlight or math, so no note holds a link, tag or block id the graph does not.",
@@ -2721,14 +2909,21 @@ export const consumersSpecs = [
         exampleSpace: {
           given: [
             "a corpus holding the Spec {source:string} whose narrative mentions {mention:string}",
+            "a corpus holding the Specs {first:string} and {second:string}",
             "the Spec {target:string} keys the Design entry {key:string}",
+            "the Spec {termSpec:string} defines a Model term with the key {termKey:string}",
           ],
-          when: ["the vault command writes the vault"],
+          when: ["the vault command runs over that corpus"],
           then: [
+            "the run exits {exitCode:number}",
+            "the refusal names {named:string}",
+            "nothing under the generated folder was written: {nothingWritten:boolean}",
             "the mentioning Spec's note is {notePath:string}",
             "the mention renders as {rendered:string}",
+            "the term's note is {termNotePath:string}",
+            "the defining Spec's note carries the block id {blockId:string}",
             "the note's aliases open with {alias:string}",
-            "no property but aliases holds a value Obsidian reads as an address: {plainProperties:boolean}",
+            "no property but aliases holds an id or an entry address as plain text: {plainProperties:boolean}",
           ],
         },
         ruleKeys: {
@@ -2746,7 +2941,7 @@ export const consumersSpecs = [
           addressRoundTrip: "rules[11]",
         },
         description:
-          "The world writes a probe corpus whose Specs mention each other, runs the vault command, and reads the mentioning Spec's note from disk.",
+          "The world writes a probe corpus whose Specs mention each other, runs the vault command, and reads the mentioning Spec's note from disk. A keyed Model term is written as `spec:model.term-addresses` states.",
       },
       design: {
         noteName:
@@ -2779,6 +2974,8 @@ export const consumersSpecs = [
           "the banner, `# <id>`, the label, `` `<file>:<line>` ``, then link lists under `## Member of`, `## Members`, `## Uses`, `## Used by`, `## Satisfies`, `## References`, `## Verifies` and `## Models`, each left out when empty.",
         termNoteBody:
           "the banner, `# <term>`, the definition, and `Defined in [[<Spec note>.md#^term-<key>|<term address>]].`",
+        caseCollisionMessage:
+          "`sdp vault: <first id> and <second id> name notes whose paths differ only in case; nothing was written`, one line per colliding pair, the ids in code-unit order.",
         escapes:
           "a backslash before `[[`, `%%`, `==`, `$`, a `#` that opens a tag after a space or at a line's start, and a `^` that would end a line as a block id; text inside a code span is left as written.",
       },
@@ -2805,12 +3002,12 @@ export const consumersSpecs = [
               'a corpus holding the Spec {source: "spec:probe.source"} whose narrative mentions {mention: "spec:probe.target#design.limit"}',
               'the Spec {target: "spec:probe.target"} keys the Design entry {key: "limit"}',
             ],
-            when: ["the vault command writes the vault"],
+            when: ["the vault command runs over that corpus"],
             then: [
               'the mentioning Spec\'s note is {notePath: "sdp/specs/probe/spec.probe.source.md"}',
               'the mention renders as {rendered: "[[sdp/specs/probe/spec.probe.target.md#^design-limit|spec:probe.target#design.limit]]"}',
               'the note\'s aliases open with {alias: "spec:probe.source"}',
-              "no property but aliases holds a value Obsidian reads as an address: {plainProperties: true}",
+              "no property but aliases holds an id or an entry address as plain text: {plainProperties: true}",
             ],
           },
         ],
@@ -2838,8 +3035,71 @@ export const consumersSpecs = [
               'a corpus holding the Spec {source: "spec:probe.source"} whose narrative mentions {mention: "spec:probe.target#design.missing"}',
               'the Spec {target: "spec:probe.target"} keys the Design entry {key: "limit"}',
             ],
-            when: ["the vault command writes the vault"],
+            when: ["the vault command runs over that corpus"],
             then: ['the mention renders as {rendered: "spec:probe.target#design.missing"}'],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.notes.term-address-link",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.notes.term-address-link.sdp.md",
+    title: "A keyed Model term gets a note, and its address in prose opens the term's block",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the term note, the term's block id and a mention of a term address rendered as a block link.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a corpus holding the Spec {source: "spec:probe.source"} whose narrative mentions {mention: "spec:probe.target#term.limit"}',
+              'the Spec {termSpec: "spec:probe.target"} defines a Model term with the key {termKey: "limit"}',
+            ],
+            when: ["the vault command runs over that corpus"],
+            then: [
+              'the term\'s note is {termNotePath: "sdp/terms/term.probe.target.limit.md"}',
+              'the defining Spec\'s note carries the block id {blockId: "term-limit"}',
+              'the mention renders as {rendered: "[[sdp/specs/probe/spec.probe.target.md#^term-limit|spec:probe.target#term.limit]]"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.notes.case-collision-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.notes.case-collision-refused.sdp.md",
+    title: "Two Specs whose notes differ only in case refuse the run",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the case-collision refusal on two Spec ids that differ only in the case of one letter.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a corpus holding the Specs {first: "spec:probe.Member"} and {second: "spec:probe.member"}',
+            ],
+            when: ["the vault command runs over that corpus"],
+            then: [
+              "the run exits {exitCode: 1}",
+              'the refusal names {named: "spec:probe.Member and spec:probe.member"}',
+              "nothing under the generated folder was written: {nothingWritten: true}",
+            ],
           },
         ],
       },
@@ -2965,16 +3225,19 @@ export const consumersSpecs = [
         rules: [
           "A person composes intent in notes outside the generated folder, by convention in `intent/` at the top of the vault, citing entries by block link or by entry address; the vault command never writes there.",
           "An agent turns an intent note into a change proposal on the one proposal contract, runs the proposal check, and applies what the check allows as an ordinary carrier edit; git records the edit and validation checks it. The vault writes no carrier and no proposal.",
-          "`sdp vault --watch` runs once and then again after every create, change, delete or rename of a carrier or an anchored source file, a `.ts` or `.tsx` file other than a `.d.ts`, under the root, outside the directories discovery skips, the exclusions and the vault; it runs the loop `spec:consumers.validate-watch` states, so events during a run coalesce into one pending run, findings, refusals and failed extractions print while the process stays alive, and an operator's SIGINT exits 0.",
+          "`sdp vault --watch` runs once and then again after every create, change, delete or rename of a carrier or an anchored source file, a `.ts` or `.tsx` file other than a `.d.ts`, under the root, outside the directories discovery skips, the exclusions and the vault; it runs the loop `spec:consumers.validate-watch` states, so events during a run coalesce into one pending run, findings, refusals and failed extractions print while the process stays alive, and an operator's SIGINT exits 0 and leaves no temporary under `sdp/`.",
           "The vault's watch never widens `sdp validate --watch`, which still runs on carrier edits only.",
           "A regeneration under `--watch` writes only the notes whose bytes change and removes the notes whose node or entry left the graph, so a note a person is reading reloads in place and every other note keeps its bytes and modification time.",
           "Every generated note opens with a banner naming the file to edit instead, and a regeneration that finds a generated note changed refuses as `spec:consumers.obsidian-vault#rule.guard` states, naming it, so a person's edit is never overwritten and the person moves those words into an intent note.",
         ],
         exampleSpace: {
           given: ["a vault the vault command wrote from an extraction root and now watches"],
-          when: ["the title of {specId:string} changes in its carrier"],
+          when: [
+            'the Spec {specId:string} is edited by {edit:"a title change in its carrier"|"an anchor added in a source file"}',
+          ],
           then: [
             "the note of that Spec shows the new title: {shown:boolean}",
+            "the note of that Spec shows an implementation binding: {bindingShown:boolean}",
             "every note whose bytes the change leaves alone keeps its modification time: {othersUntouched:boolean}",
             "the watch process stays alive and exits {exitCode:number} on SIGINT",
           ],
@@ -2988,7 +3251,7 @@ export const consumersSpecs = [
           editGuard: "rules[5]",
         },
         description:
-          "The world writes a probe corpus and starts the vault command with `--watch`, waits for the first run, edits one carrier, waits for the next run, records each generated file's bytes and modification time before and after, and stops the process with SIGINT.",
+          "The world writes a probe corpus and starts the vault command with `--watch`, waits for the first run, edits one carrier or adds a comment-form anchor that satisfies the Spec in a new `.ts` source file, waits for the next run, records each generated file's bytes and modification time before and after, and stops the process with SIGINT.",
       },
     },
     deliveryFacts: [],
@@ -3010,9 +3273,42 @@ export const consumersSpecs = [
         examples: [
           {
             given: ["a vault the vault command wrote from an extraction root and now watches"],
-            when: ['the title of {specId: "spec:probe.member"} changes in its carrier'],
+            when: [
+              'the Spec {specId: "spec:probe.member"} is edited by {edit: "a title change in its carrier"}',
+            ],
             then: [
               "the note of that Spec shows the new title: {shown: true}",
+              "every note whose bytes the change leaves alone keeps its modification time: {othersUntouched: true}",
+              "the watch process stays alive and exits {exitCode: 0} on SIGINT",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.iteration.watch-source-anchor",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.iteration.watch-source-anchor.sdp.md",
+    title: "An anchor added in a source file under watch rewrites the Spec's note",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the vault's watch on a source-file edit, which `sdp validate --watch` ignores, and show the Spec's note gaining its binding while every other note keeps its bytes.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: ["a vault the vault command wrote from an extraction root and now watches"],
+            when: [
+              'the Spec {specId: "spec:probe.member"} is edited by {edit: "an anchor added in a source file"}',
+            ],
+            then: [
+              "the note of that Spec shows an implementation binding: {bindingShown: true}",
               "every note whose bytes the change leaves alone keeps its modification time: {othersUntouched: true}",
               "the watch process stays alive and exits {exitCode: 0} on SIGINT",
             ],

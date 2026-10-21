@@ -26,18 +26,19 @@ The answering half must not become a second write path. The edit model refuses p
 ## Behavior
 - rule: [#composeHome] A person composes intent in notes outside the generated folder, by convention in `intent/` at the top of the vault, citing entries by block link or by entry address; the vault command never writes there.
 - rule: [#handOff] An agent turns an intent note into a change proposal on the one proposal contract, runs the proposal check, and applies what the check allows as an ordinary carrier edit; git records the edit and validation checks it. The vault writes no carrier and no proposal.
-- rule: [#watch] `sdp vault --watch` runs once and then again after every create, change, delete or rename of a carrier or an anchored source file, a `.ts` or `.tsx` file other than a `.d.ts`, under the root, outside the directories discovery skips, the exclusions and the vault; it runs the loop `spec:consumers.validate-watch` states, so events during a run coalesce into one pending run, findings, refusals and failed extractions print while the process stays alive, and an operator's SIGINT exits 0.
+- rule: [#watch] `sdp vault --watch` runs once and then again after every create, change, delete or rename of a carrier or an anchored source file, a `.ts` or `.tsx` file other than a `.d.ts`, under the root, outside the directories discovery skips, the exclusions and the vault; it runs the loop `spec:consumers.validate-watch` states, so events during a run coalesce into one pending run, findings, refusals and failed extractions print while the process stays alive, and an operator's SIGINT exits 0 and leaves no temporary under `sdp/`.
 - rule: [#carriersOnlyForValidate] The vault's watch never widens `sdp validate --watch`, which still runs on carrier edits only.
 - rule: [#inPlace] A regeneration under `--watch` writes only the notes whose bytes change and removes the notes whose node or entry left the graph, so a note a person is reading reloads in place and every other note keeps its bytes and modification time.
 - rule: [#editGuard] Every generated note opens with a banner naming the file to edit instead, and a regeneration that finds a generated note changed refuses as `spec:consumers.obsidian-vault#rule.guard` states, naming it, so a person's edit is never overwritten and the person moves those words into an intent note.
 
 ## Example space
-The world writes a probe corpus and starts the vault command with `--watch`, waits for the first run, edits one carrier, waits for the next run, records each generated file's bytes and modification time before and after, and stops the process with SIGINT.
+The world writes a probe corpus and starts the vault command with `--watch`, waits for the first run, edits one carrier or adds a comment-form anchor that satisfies the Spec in a new `.ts` source file, waits for the next run, records each generated file's bytes and modification time before and after, and stops the process with SIGINT.
 
 ```gwt-vocabulary
 Given a vault the vault command wrote from an extraction root and now watches
-When the title of {specId:string} changes in its carrier
+When the Spec {specId:string} is edited by {edit:"a title change in its carrier"|"an anchor added in a source file"}
 Then the note of that Spec shows the new title: {shown:boolean}
+Then the note of that Spec shows an implementation binding: {bindingShown:boolean}
 Then every note whose bytes the change leaves alone keeps its modification time: {othersUntouched:boolean}
 Then the watch process stays alive and exits {exitCode:number} on SIGINT
 ```

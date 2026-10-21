@@ -26,11 +26,11 @@ Two findings from the prototypes shape the names and properties. Obsidian refuse
 - rule: [#oneNotePer] The vault holds one note per Spec, Pack, code unit, test anchor and oracle anchor, and one per Model term that carries a key, which `spec:model.term-addresses` gives an address; a term without a key appears only in its Spec's note, since no address can name it, and a ratified glossary term gains a note only where a Spec's Model section defines it with a key.
 - rule: [#termNoteGrain] A term defined in several Specs gets one note per defining Spec and term, so each definition keeps its authored owner; the term's aliases bring the notes together when a person types it.
 - rule: [#noteNames] A note is named by its id with the colon after the namespace replaced by a dot, and a term note by `term.`, its Spec's path, a dot and its key; one vault holds the notes of one corpus.
-- rule: [#caseCollision] Two notes whose paths differ only in case refuse the run before it writes, naming both ids, so no two names collide on a file system that ignores case.
-- rule: [#idInAliases] A note's id, colon included, is written only in its `aliases` property and in the code span of its head line, since Obsidian shows an alias as plain text; no other property holds a value Obsidian would read as an address.
+- rule: [#caseCollision] Two notes whose paths differ only in case refuse the run before it writes, naming both ids, so no two names collide on a file system that ignores case; the run writes and removes nothing and exits 1.
+- rule: [#idInAliases] A note's id, colon included, is written as plain text only in its `aliases` property and in the code span of its head line, since Obsidian shows an alias as plain text; a property that names another node holds a link to its note, and no other property value the generator composes is an id or an entry address. Authored text in a property, such as a title or a label, is written as authored, and the generator never treats one that looks like an address as an address.
 - rule: [#readerProperties] A Spec note's properties are the reader's values for that Spec, listed under `spec:consumers.obsidian-vault.notes#design.specProperties`; every join, delivery fact, floor and rung among them is one the reader computed, and the generator computes none.
 - rule: [#bindingProperties] A Spec's bindings are two booleans, `implementationBinding` true where the reader's delivery facts hold `implemented` and `verifierBinding` true where they hold `has-verifier`, and the note's body renders the four binding lines `spec:consumers.binding-language-views` states, so no rendered label is a delivery-fact name.
-- rule: [#relationsBothWays] Each declared relation is a link on the notes at both ends, with its type, its reason, and for an example's `verifies` a link to the block of each rule it exercises in the verified Spec's note.
+- rule: [#relationsBothWays] Each declared relation whose two ends have notes is a link on the notes at both ends, with its type, its reason, and for an example's `verifies` a link to the block of each rule it exercises in the verified Spec's note; an end with no note, such as a target that does not resolve, and an exercised key the verified Spec does not carry, appear on the source note as their id or key in a code span, with no link.
 - rule: [#blockIds] Each keyed Design and UI entry, keyed open question, keyed rule or flow, and keyed Model term ends its line in its Spec's note with the block id `^<section>-<key>`, with section `design`, `ui`, `question`, `rule` or `term`.
 - rule: [#mentionLinks] A mention in any text the vault renders from the graph, found by the scanner the prose-mention validator uses, becomes a link when its Spec resolves and, for an entry address, its entry does; a mention that does not resolve stays as written. A code span holding exactly one mention becomes that link, and any other code span stays code.
 - rule: [#textEscaped] Text from the graph renders as written, except that the generator escapes what Obsidian would read as a link, an embed, a tag, a block id, a comment, a highlight or math, so no note holds a link, tag or block id the graph does not.
@@ -52,17 +52,25 @@ Two findings from the prototypes shape the names and properties. Obsidian refuse
 - packNoteBody: the banner, `# <title>`, the framing, `## Members, filterable` with the Pack's Base embedded, `## Members, in reading order` as a numbered list in manifest order, each a link with its stated rung, floor and stated next rung or `nothing blocks`, then `## Boundary` with the reader's four boundary lists and `## Findings`.
 - codeNoteBody: the banner, `# <id>`, the label, `` `<file>:<line>` ``, then link lists under `## Member of`, `## Members`, `## Uses`, `## Used by`, `## Satisfies`, `## References`, `## Verifies` and `## Models`, each left out when empty.
 - termNoteBody: the banner, `# <term>`, the definition, and `Defined in [[<Spec note>.md#^term-<key>|<term address>]].`
+- caseCollisionMessage: `sdp vault: <first id> and <second id> name notes whose paths differ only in case; nothing was written`, one line per colliding pair, the ids in code-unit order.
 - escapes: a backslash before `[[`, `%%`, `==`, `$`, a `#` that opens a tag after a space or at a line's start, and a `^` that would end a line as a block id; text inside a code span is left as written.
 
 ## Example space
-The world writes a probe corpus whose Specs mention each other, runs the vault command, and reads the mentioning Spec's note from disk.
+The world writes a probe corpus whose Specs mention each other, runs the vault command, and reads the mentioning Spec's note from disk. A keyed Model term is written as `spec:model.term-addresses` states.
 
 ```gwt-vocabulary
 Given a corpus holding the Spec {source:string} whose narrative mentions {mention:string}
+Given a corpus holding the Specs {first:string} and {second:string}
 Given the Spec {target:string} keys the Design entry {key:string}
-When the vault command writes the vault
+Given the Spec {termSpec:string} defines a Model term with the key {termKey:string}
+When the vault command runs over that corpus
+Then the run exits {exitCode:number}
+Then the refusal names {named:string}
+Then nothing under the generated folder was written: {nothingWritten:boolean}
 Then the mentioning Spec's note is {notePath:string}
 Then the mention renders as {rendered:string}
+Then the term's note is {termNotePath:string}
+Then the defining Spec's note carries the block id {blockId:string}
 Then the note's aliases open with {alias:string}
-Then no property but aliases holds a value Obsidian reads as an address: {plainProperties:boolean}
+Then no property but aliases holds an id or an entry address as plain text: {plainProperties:boolean}
 ```
