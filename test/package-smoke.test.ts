@@ -1,5 +1,14 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -209,9 +218,6 @@ describe("published package surface", () => {
           repositoryRoot,
         ),
       ) as readonly [{ readonly filename: string }];
-      const vitest = JSON.parse(
-        await readFile(join(repositoryRoot, "node_modules/vitest/package.json"), "utf8"),
-      ) as { readonly version: string };
       await mkdir(consumer);
       await writeFile(
         join(consumer, "package.json"),
@@ -225,9 +231,16 @@ describe("published package surface", () => {
           "--no-audit",
           "--no-fund",
           join(packageRoot, packed[0].filename),
-          `vitest@${vitest.version}`,
         ],
         consumer,
+      );
+      // npm 10 crashes installing Vitest 4.1 from the registry, with or without this package, so
+      // the consumer takes the repository's installed Vitest through a link; the adapter still
+      // resolves `vitest` from the consumer's own node_modules.
+      await symlink(
+        join(repositoryRoot, "node_modules/vitest"),
+        join(consumer, "node_modules/vitest"),
+        "dir",
       );
       await writeFile(
         join(consumer, "bound.test.js"),
