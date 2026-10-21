@@ -1,5 +1,5 @@
 import type { EntryCitationLocation } from "../graph/schema.js";
-import { codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { mentionTokens } from "../validate/validators.js";
 
@@ -21,12 +21,8 @@ export function scanEntryCitations(text: string, file: string): readonly EntryCi
       if (fragmentIndex < fragments.length - 1 && last !== undefined) {
         const suffix = fragment.slice(fragment.lastIndexOf(last) + last.length);
         if (/^[.,;:!?*_~]*$/u.test(suffix)) {
-          try {
-            // An interpolated key has no entry address yet; earlier literals still count.
-            if (parseId(last).subpath === undefined) tokens = tokens.slice(0, -1);
-          } catch {
-            tokens = tokens.slice(0, -1);
-          }
+          // A computed address has no literal citation; earlier literals still count.
+          tokens = tokens.slice(0, -1);
         }
       }
       return tokens.filter((token) => token.includes("#"));
