@@ -13,7 +13,7 @@ relations:
 
 ## Intent
 - outcome: Execute the register check as a rules file over a Spec that cites one held, one retired and one unlisted token.
-- assumption: The world writes a probe corpus of one story-altitude behavior Spec stating `idea`, whose Intent outcome names the cited tokens in prose, and which the Protocol's validators find clean. It writes the register file `{ "tokens": ["E-1", "E-2", { "token": "E-7", "retired": true }] }` and runs `sdp validate` on the probe root with `dist/recipes/50-external-registers.js` named by `--rules`, followed by `--params register=@` that file and `--params` holding the pattern `\bE-\d+\b` and `uncited`. The rule ids are the corpus findings' rule ids in printed order, joined by a comma and a space.
+- assumption: The world writes a probe corpus of two story-altitude behavior Specs stating `idea`, each with an Intent outcome, the second declaring `refines` on the first, so the Protocol's validators report no finding; the first Spec's outcome names the cited tokens in prose. It writes the register file `{ "tokens": ["E-1", "E-2", { "token": "E-7", "retired": true }] }` and runs `sdp validate` on the probe root with `dist/recipes/50-external-registers.js` named by `--rules`, followed by `--params register=@` that file and `--params` holding the pattern `\bE-\d+\b` and `uncited`. The rule ids are the corpus findings' rule ids in printed order, joined by a comma and a space.
 
 ```gwt
 Given a probe corpus whose Spec cites the tokens {cited: "E-1 E-7 E-9"}

@@ -2162,7 +2162,7 @@ export const validationSpecs = [
         outcome:
           "Execute the register check as a rules file over a Spec that cites one held, one retired and one unlisted token.",
         assumptions: [
-          'The world writes a probe corpus of one story-altitude behavior Spec stating `idea`, whose Intent outcome names the cited tokens in prose, and which the Protocol\'s validators find clean. It writes the register file `{ "tokens": ["E-1", "E-2", { "token": "E-7", "retired": true }] }` and runs `sdp validate` on the probe root with `dist/recipes/50-external-registers.js` named by `--rules`, followed by `--params register=@` that file and `--params` holding the pattern `\\bE-\\d+\\b` and `uncited`. The rule ids are the corpus findings\' rule ids in printed order, joined by a comma and a space.',
+          'The world writes a probe corpus of two story-altitude behavior Specs stating `idea`, each with an Intent outcome, the second declaring `refines` on the first, so the Protocol\'s validators report no finding; the first Spec\'s outcome names the cited tokens in prose. It writes the register file `{ "tokens": ["E-1", "E-2", { "token": "E-7", "retired": true }] }` and runs `sdp validate` on the probe root with `dist/recipes/50-external-registers.js` named by `--rules`, followed by `--params register=@` that file and `--params` holding the pattern `\\bE-\\d+\\b` and `uncited`. The rule ids are the corpus findings\' rule ids in printed order, joined by a comma and a space.',
         ],
       },
       behavior: {
@@ -2198,7 +2198,7 @@ export const validationSpecs = [
         outcome:
           "Execute the uncited check as a rules file over a Spec that cites one of two held tokens.",
         assumptions: [
-          'The world writes the probe corpus of the unknown-and-retired example, its Spec citing only the held token named below, and the register file `{ "tokens": ["E-1", "E-2"] }`, and runs the shipped file as that example does, with `uncited` true.',
+          'The world writes the probe corpus of the unknown-and-retired example, its first Spec citing only the held token named below, and the register file `{ "tokens": ["E-1", "E-2"] }`, and runs the shipped file as that example does, with `uncited` true.',
         ],
       },
       behavior: {
