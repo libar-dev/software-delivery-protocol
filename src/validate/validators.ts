@@ -1,3 +1,4 @@
+import { resolveEntryAddress } from "../graph/entry-address.js";
 import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel, ownsExampleSpace } from "../graph/oracle-bindings.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
@@ -1300,38 +1301,6 @@ function parseMention(token: string): IdParts | string {
   }
 }
 
-/**
- * A `design` or `ui` address resolves to an own key of its section, never the section's
- * `description`. A `question` address resolves to an open question that carries the key, and
- * there `description` is an ordinary key.
- */
-function hasAddressedEntry(target: PrimitiveNode, address: string): boolean {
-  const dotIndex = address.indexOf(".");
-  const key = address.slice(dotIndex + 1);
-  const sectionName = address.slice(0, dotIndex);
-  const sections = target.sections as Readonly<Record<string, unknown>> | undefined;
-
-  if (sectionName === "question") {
-    const intent = sections?.intent;
-    const questions = isRecord(intent) ? intent.openQuestions : undefined;
-
-    return (
-      Array.isArray(questions) &&
-      questions.some((question) => isRecord(question) && question.key === key)
-    );
-  }
-
-  if (sectionName === "rule") {
-    const behavior = sections?.behavior;
-    return (
-      isRecord(behavior) && isRecord(behavior.ruleKeys) && Object.hasOwn(behavior.ruleKeys, key)
-    );
-  }
-  const section = sections?.[sectionName];
-
-  return key !== "description" && isRecord(section) && Object.hasOwn(section, key);
-}
-
 function backingPairs(graph: GraphSchema): ReadonlySet<string> {
   const pairs = new Set<string>();
 
@@ -1454,7 +1423,7 @@ function checkProseMentions(graph: GraphSchema, index: GraphIndex): readonly Fin
           continue;
         }
 
-        if (subpath !== undefined && !hasAddressedEntry(target, subpath)) {
+        if (subpath !== undefined && !resolveEntryAddress(target, token).resolves) {
           reportError(
             path,
             token,

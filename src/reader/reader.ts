@@ -1,3 +1,5 @@
+import { resolveEntryAddress } from "../graph/entry-address.js";
+import type { AddressResolution } from "../graph/entry-address.js";
 import { entryCitationsBySpec } from "./entry-citations.js";
 import type { EntryCitation } from "./entry-citations.js";
 export type { EntryCitation } from "./entry-citations.js";
@@ -405,6 +407,8 @@ export interface Reader {
   byFile(path: string): FileEntry;
   /** The grep→graph bridge from a changeset — file-level, `coverage-unknown` honest (`06` §2). */
   blastRadius(changedFiles: readonly string[]): BlastRadius;
+  /** Resolves an entry address with the same grammar and entry rules as prose validation. */
+  resolveEntryAddress(address: string): AddressResolution;
   specContext(id: string): SpecContext | undefined;
   packContext(id: string): PackContext | undefined;
 }
@@ -1197,6 +1201,8 @@ export function createReader(graph: GraphSchema): Reader {
     findByConcept,
     byFile,
     blastRadius,
+    resolveEntryAddress: (address) =>
+      resolveEntryAddress(index.primitivesById.get(address.split("#")[0] ?? ""), address),
     specContext,
     packContext,
   };

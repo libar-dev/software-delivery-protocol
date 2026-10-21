@@ -14,7 +14,9 @@ void entryCitationsAnchor;
 
 export function scanEntryCitations(text: string, file: string): readonly EntryCitationLocation[] {
   return text.split(/\r\n|[\r\n\u2028\u2029]/u).flatMap((line, index) =>
-    [...new Set(mentionTokens(line).filter((token) => token.includes("#")))].map((address) => ({
+    [
+      ...new Set(mentionTokens(line.replaceAll("\\", " ")).filter((token) => token.includes("#"))),
+    ].map((address) => ({
       address,
       file,
       line: index + 1,

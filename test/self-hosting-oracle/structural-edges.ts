@@ -52,6 +52,11 @@ export const structuralMembershipExceptions = [
 
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/graph/entry-address.ts#resolveEntryAddress",
+    anchorId: "impl:protocol.entry-address-resolution",
+    componentId: "component:protocol.graph",
+  },
+  {
     unit: "src/extract/entry-citations.ts#scanEntryCitations",
     anchorId: "impl:protocol.entry-citation-scan",
     componentId: "component:protocol.extract",

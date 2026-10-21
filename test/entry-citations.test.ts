@@ -55,6 +55,7 @@ interface World {
   rows?: readonly EntryCitation[];
   code?: number;
   stderr?: string;
+  stdout?: string;
 }
 function expectedCount(point: Partial<EntryCitationsConditions>): number {
   return point.anchored === "carries no anchor" ? 0 : 1;
@@ -122,6 +123,7 @@ function invoke(world: World): void {
   );
   world.code = execution.status ?? -1;
   world.stderr = execution.stderr;
+  world.stdout = execution.stdout;
 }
 function observe(world: World): EntryCitationsOutcome {
   return { kind: countStep, citations: world.rows?.length ?? 0 };
@@ -145,10 +147,13 @@ function assertions(contract: {
       expect(contract.steps.find((step) => step.text === testLineStep)?.params.testLine).toBe(
         (rows[0]?.testAnchors.length ?? 0) > 0,
       );
-    if (hasStep(exitStep))
-      expect(world.code, world.stderr).toBe(
-        contract.steps.find((step) => step.text === exitStep)?.params.exitCode,
+    if (hasStep(exitStep)) {
+      const exitCode = contract.steps.find((step) => step.text === exitStep)?.params.exitCode;
+      expect(world.code, world.stderr).toBe(exitCode);
+      expect(world.stdout).toContain(
+        `corpus rules: ${exitCode === 1 ? "1" : "0"} errors · 0 warnings · 0 of 1 files failed`,
       );
+    }
     const result = world.result;
     if (result === undefined) throw new Error("The world must derive a graph.");
     expect(result.report.findings).toEqual([]);
@@ -271,6 +276,56 @@ describe("entry citation extraction and reader", () => {
       ),
     ).toBe(true);
   });
+  it("ends citation tokens at source escapes before checking for an address", () => {
+    const world = createWorld(point);
+    const file = join(world.root, "source.ts");
+    writeFileSync(
+      file,
+      readFileSync(file, "utf8") +
+        String.raw`const fixture = "---\nid: spec:probe.one\n---\n## H";` +
+        "\n" +
+        String.raw`const address = "spec:probe.one#design.typeOne\n## H";` +
+        "\n",
+    );
+    const graph = extract({ root: world.root }).graph;
+    expect(graph.citations).toEqual([
+      { address: point.address, file: "source.ts", line: 9 },
+      { address: point.address, file: "source.ts", line: 11 },
+    ]);
+  });
+  it("sorts in-memory citations by address on a shared source line", () => {
+    const world = createWorld(point);
+    const file = join(world.root, "source.ts");
+    writeFileSync(file, readFileSync(file, "utf8") + `// ${subject}#ui.a ${subject}#design.b\n`);
+    expect(extract({ root: world.root }).graph.citations?.slice(-2)).toEqual([
+      { address: `${subject}#design.b`, file: "source.ts", line: 10 },
+      { address: `${subject}#ui.a`, file: "source.ts", line: 10 },
+    ]);
+  });
+  it("sorts reader citations by address before file and line", () => {
+    const world = createWorld(point);
+    const graph = extract({ root: world.root }).graph;
+    const citations = [
+      { address: `${subject}#ui.z`, file: "a.ts", line: 1 },
+      { address: point.address, file: "z.ts", line: 9 },
+      { address: point.address, file: "b.ts", line: 8 },
+      { address: point.address, file: "b.ts", line: 2 },
+    ];
+    expect(
+      createReader({ ...graph, citations })
+        .specContext(subject)
+        ?.entryCitations.map(({ address, file, line }) => ({ address, file, line })),
+    ).toEqual([citations[3], citations[2], citations[1], citations[0]]);
+  });
+  it("rejects a crashed rules file even when its exit code matches the example", () => {
+    const world = createWorld({ ...point, address: `${subject}#design.typeTwo` });
+    invoke(world);
+    expect(world.code).toBe(1);
+    world.stdout = "corpus rules: 0 errors · 0 warnings · 1 of 1 files failed\n";
+    expect(() => {
+      assertions(unresolvedCitationContract)(world);
+    }).toThrow();
+  });
   it("counts Unicode source line separators as TypeScript does", () => {
     const world = createWorld(point);
     const file = join(world.root, "source.ts");
@@ -343,6 +398,16 @@ describe("entry citation extraction and reader", () => {
     const added = !sections.includes("term");
     if (added) sections.push("term");
     try {
+      expect(
+        validateGraph({
+          ...candidate,
+          nodes: candidate.nodes.map((node) =>
+            node.id === subject && node.nodeType === "Primitive"
+              ? { ...node, narrative: `${subject}#term.second` }
+              : node,
+          ),
+        }).findings.filter((finding) => finding.severity === "error"),
+      ).toEqual([]);
       expect(createReader(candidate).specContext(subject)?.entryCitations[0]).toMatchObject({
         resolves: true,
         entry: "term[1]",
@@ -350,6 +415,39 @@ describe("entry citation extraction and reader", () => {
       });
     } finally {
       if (added) sections.pop();
+    }
+  });
+  it("does not treat future address sections as Model terms", () => {
+    const world = createWorld(point);
+    const graph = extract({ root: world.root }).graph;
+    const candidate = {
+      ...graph,
+      nodes: graph.nodes.map((node) =>
+        node.id === subject && node.nodeType === "Primitive"
+          ? {
+              ...node,
+              sections: {
+                ...node.sections,
+                model: {
+                  terms: { "A term": "Definition" },
+                  termKeys: { a: "A term" },
+                },
+              },
+            }
+          : node,
+      ),
+      citations: [{ address: `${subject}#future.a`, file: "source.ts", line: 9 }],
+    };
+    const sections = ENTRY_ADDRESS_SECTIONS as unknown as string[];
+    sections.push("future");
+    try {
+      expect(createReader(candidate).specContext(subject)?.entryCitations[0]).toMatchObject({
+        resolves: false,
+        reason: "malformed",
+        entry: null,
+      });
+    } finally {
+      sections.pop();
     }
   });
   it("resolves UI, rules, flows and questions without depending on entry locations", () => {

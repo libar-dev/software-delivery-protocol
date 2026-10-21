@@ -1,4 +1,3 @@
-import { nativeQuery } from "./helpers/native-query.js";
 import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
 import { deriveGraph } from "../src/extract/derive.js";
 import {
@@ -151,8 +150,6 @@ async function runRecipe(
   params?: Readonly<Record<string, unknown>>,
   extraction: ExtractionResult = derived,
 ): Promise<unknown> {
-  if (recipe.ordinal === 51) return nativeQuery(recipe.body, extraction, params);
-
   // Recipe 40 requires external input rather than a corpus-specific sample fallback.
   // The general catalog checks supply an empty imports snapshot; curation tests build a fixture.
   const suppliedParams =
@@ -506,10 +503,7 @@ describe("the agent-surface recipe corpus", () => {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    // The integration lane updates the shared on-ramps for the wave-2 recipes.
-    for (const { ordinal } of recipes.filter(
-      (recipe) => recipe.ordinal >= 12 && recipe.ordinal <= 43,
-    )) {
+    for (const { ordinal } of recipes.filter((recipe) => recipe.ordinal >= 12)) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -521,6 +515,7 @@ describe("the agent-surface recipe corpus", () => {
         hasReturn: true,
       });
       expect(recipe.body).not.toMatch(/^\s*import\s/mu);
+      expect(recipe.body).not.toMatch(/\bimport\s*\(/u);
       expect(recipe.body).not.toMatch(/^\s*export\s/mu);
       // Single quotes would break the documented `sdp q '<body>'` invocation in any shell.
       expect(recipe.body).not.toContain("'");
@@ -6934,6 +6929,55 @@ const entryCitationRecipeAnchor = codeAnchor({
 void entryCitationRecipeAnchor;
 
 describe("entry citations recipe", () => {
+  it("runs the catalog body in the evaluator without a module loader", async () => {
+    const extraction = citationRecipeProbe();
+    const result = await compileBody(recipeByOrdinal(51).body)(
+      createReader(extraction.graph),
+      extraction.graph,
+      extraction.report,
+      {},
+    );
+    expect(result).toMatchObject({ totals: { unresolved: 5 } });
+  });
+  it("orders a declaration's citing files and lines independently of input order", async () => {
+    const extraction = citationRecipeProbe();
+    const address = "spec:probe.cited#design.used";
+    const citations = [
+      { address, file: "z.ts", line: 1 },
+      { address, file: "a.ts", line: 9 },
+      { address, file: "a.ts", line: 2 },
+    ];
+    const graph = { ...extraction.graph, citations };
+    const reader = createReader(graph);
+    // Keep this test independent of the reader's own ordering guarantee.
+    const unorderedReader = {
+      ...reader,
+      specContext: (id: string) => {
+        const context = reader.specContext(id);
+        return context === undefined
+          ? undefined
+          : {
+              ...context,
+              entryCitations: [...context.entryCitations].reverse(),
+            };
+      },
+    };
+    const result = asRecord(
+      await compileBody(recipeByOrdinal(51).body)(unorderedReader, graph, extraction.report, {}),
+    );
+    const entry = asArray(result.entries)
+      .map(asRecord)
+      .find((row) => row.address === address);
+    expect(
+      asArray(entry?.citedBy)
+        .map(asRecord)
+        .map(({ file, line }) => ({ file, line })),
+    ).toEqual([
+      { file: "a.ts", line: 2 },
+      { file: "a.ts", line: 9 },
+      { file: "z.ts", line: 1 },
+    ]);
+  });
   it("joins declarations and other cited entries, including uncited declarations", async () => {
     const result = asRecord(
       await runRecipe(recipeByOrdinal(51), { pack: "pack:probe.citations" }, citationRecipeProbe()),

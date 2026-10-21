@@ -21,6 +21,15 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.entry-address-resolution",
+    nodeType: "CodeNode",
+    label: "resolves entry addresses for prose validation and citation readers",
+    file: "src/graph/entry-address.ts",
+    constant: "entryAddressAnchor",
+    site: "export function resolveEntryAddress(",
+    role: "utility",
+  },
+  {
     id: "impl:protocol.entry-citation-scan",
     nodeType: "CodeNode",
     label: "records prose-mention tokens with addresses in anchored source files",
@@ -2873,6 +2882,8 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.entry-address-resolution", "satisfies", "spec:extraction.entry-citations"],
+  ["impl:protocol.entry-address-resolution", "satisfies", "spec:validation.prose-mentions"],
   ["impl:protocol.entry-citation-scan", "satisfies", "spec:extraction.entry-citations"],
   ["impl:protocol.entry-citation-reader", "satisfies", "spec:extraction.entry-citations"],
   ["impl:protocol.entry-citation-recipe", "satisfies", "spec:extraction.entry-citations"],

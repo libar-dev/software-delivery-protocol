@@ -4211,15 +4211,13 @@ for (const id of [...selected].sort()) {
     entry.citedBy.push({ file: citation.file, line: citation.line, anchors: citation.anchors, testAnchors: citation.testAnchors });
   }
 }
-// Missing Specs have no Spec context. Parsing still uses the shared address grammar.
-const { parseId } = await import("@libar-dev/software-delivery-protocol");
+// Missing Specs have no Spec context; the reader resolves their addresses with the shared grammar.
 const unresolved = citations.filter((row) => !row.resolves).map(({ address, reason, file, line }) => ({ address, reason, file, line }));
 if (!hasPack && !hasSpecs) {
   for (const row of graph.citations ?? []) {
     const id = row.address.split("#")[0];
     if (known.has(id)) continue;
-    let reason = "spec";
-    try { if (parseId(row.address).subpath === undefined) reason = "malformed"; } catch { reason = "malformed"; }
+    const { reason } = g.resolveEntryAddress(row.address);
     unresolved.push({ ...row, reason });
   }
 }
