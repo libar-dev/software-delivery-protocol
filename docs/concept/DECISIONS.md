@@ -61,7 +61,7 @@ These use the registry's `held` convention, as the annotations arc did at `ea9c5
 |---|---|---|---|---|
 | MD-43 | the build renders Studio views | held | The build writes each view into markup, and its custom element adds interaction; a host supplies that markup rather than graph data. | [Spec](../../specs/decisions/studio-build-renders.sdp.md) (`spec:decisions.studio-build-renders`) |
 | MD-44 | the engine lays out Studio diagrams | held | Deterministic build-time layout writes inline SVG with a text equivalent; the element adds pan, zoom and pinch. | [Spec](../../specs/decisions/studio-diagram-renderer.sdp.md) (`spec:decisions.studio-diagram-renderer`) |
-| MD-45 | the vault owns one folder | held | A guarded file list owns `sdp/`; synchronization preserves unchanged files and refuses edits or unknown files before writing. | [Spec](../../specs/decisions/vault-owned-folder.sdp.md) (`spec:decisions.vault-owned-folder`) |
+| MD-45 | the vault owns one folder | held | A guarded file list owns `sdp/`; synchronization preserves unchanged files, keeps a Base a person changed, and refuses other edits or unknown files before writing. | [Spec](../../specs/decisions/vault-owned-folder.sdp.md) (`spec:decisions.vault-owned-folder`) |
 
 ### Decision Specs without a registry code
 

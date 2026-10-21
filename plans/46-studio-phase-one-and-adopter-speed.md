@@ -1,8 +1,9 @@
 # Plan 46. Designs people can read, and an adopter at full speed
 
-> **Status:** EXECUTING on `feature/studio-and-adoption-v0`, from `main` at `5a0b22c`, the merge of
-> PR 33. One branch and one PR. The rulings below were made by the coordinating session on the
-> owner's delegation of 2026-10-21; the decisions only the owner makes are listed apart. A thin
+> **Status:** ✅ EXECUTED on `feature/studio-and-adoption-v0`, from `main` at `5a0b22c`, the merge
+> of PR 33, as PR 34. One branch and one PR. Every lane landed, each reviewed across model families;
+> the rulings were made on the owner's delegation of 2026-10-21 and await the owner's review; the
+> decisions only the owner makes are listed apart. A thin
 > lineage pointer: once the design passes land, readiness, backlog and open questions are read
 > from the graph (recipes 1, 9, 11, 20, 29, 33), never from this file. If this file and the graph
 > disagree, the graph wins and this file is stale.
@@ -249,6 +250,34 @@ These wait for the owner. None blocks the build; each is listed in the PR descri
   the proposal check and, applied on the copy, validates with no errors.
 - Every lane is reviewed across model families; the adversarial findings are fixed with tests that
   failed first.
+
+## Acceptance, measured at close
+
+Measured on a copy of the platform at `b038bd4` with this branch's packed build; commands and
+results are in `reviews/plan46-acceptance.md`. Re-run them rather than inheriting these.
+
+- `npm run check` passes, and CI's route on Node 20 with npm 10 passes in a fresh clone. The frozen
+  projections changed only where their Specs promise (the design-honesty review compared them).
+- `policy.js` calls recipes 25 and 26 instead of copying them, and every planted mistake its tests
+  carry still fails its gate; recipe 50 checks the platform's extension register as a rules file
+  and agrees with `check.py`.
+- `application` and `foundation` bundle completely within the default budget, in 8 and 6 parts.
+- A keyed step reworded on the copy keeps its example bound through the shipped Vitest adapter
+  under Vitest 5; the same rewording without the key fails.
+- Recipe 47 reproduces the survey's counts; recipe 48's proposal for `pack:history-view` passes the
+  proposal check and, applied, validates with no errors.
+- The Studio built from the copy: the architecture lens draws its 12 components by context and
+  layer and a planned one apart; every Pack page shows a maturity map; every Spec page shows its
+  rule coverage, the 18 example-space owners their coverage grid, and pinned declarations their
+  citing test lines; the owner queue lists all 222 waiting statements in recipe 46's order; the
+  diff page compares the copy before and after the proposal; the runs page labels its runs as
+  external evidence; two builds are byte-identical and no page requests the network.
+- A reader job given only the pages completed the eight tasks: OD-157 is found where the design
+  cites it (the outside register's own entry is not graph data), and the declaration task reaches
+  the test line and its anchor, with the assertion behind the source link the stamp adds.
+- The vault built from the copy regenerates without touching a person's note, and the Studio's
+  watch rebuilds byte-identically to a plain build.
+- The pull request's CI uploads the stamped Studio and its CTRF runs: measured on PR 34 itself.
 
 ## Deferred, with their triggers
 
