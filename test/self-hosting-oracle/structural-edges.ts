@@ -21,7 +21,7 @@ export const expectedComponentIds = [
   "component:protocol.validate",
 ] as const;
 
-// These impl anchors deliberately have no component. The skill/document realization anchors live
+// These impl anchors deliberately have no component. Skill, document and test-helper anchors live
 // outside the engine source seams and therefore have no truthful owner among the accepted
 // component set.
 export const structuralMembershipExceptions = [
@@ -29,6 +29,7 @@ export const structuralMembershipExceptions = [
   "impl:protocol.self-hosting",
   "impl:protocol.structural-self-binding",
   "impl:protocol.validator-self-testing",
+  "impl:protocol.validator-probe-table",
   "impl:protocol.architecture-walk-recipe",
   "impl:protocol.planned-components-recipe",
   "impl:protocol.authoring-on-ramp",
@@ -53,6 +54,11 @@ export const structuralMembershipExceptions = [
   "impl:protocol.proposal-schema-and-recipe",
 ] as const;
 
+/**
+ * @sdpAnchor impl:protocol.structural-self-binding
+ * @sdpLabel realizes the declared significant-unit set and its structural self-binding
+ * @sdpSatisfies spec:protocol.structural-self-binding, spec:model.structural-patterns
+ */
 export const acceptedArchitecturalUnits = [
   {
     unit: "src/validate/validators.ts#checkSupersededDecisions",

@@ -26,7 +26,7 @@ import {
   codeAnchorId,
 } from "@libar-dev/software-delivery-protocol";
 
-import { extract, validateGraph } from "../src/index.js";
+import { createReader, extract, validateGraph } from "../src/index.js";
 import { auditStructuralCoverage } from "./helpers/structural-coverage.js";
 import type { ExpectedAnchor, ExpectedSpec } from "./self-hosting-oracle/index.js";
 import {
@@ -127,22 +127,16 @@ function executableActivationLine(source: string, activation: string): number | 
   return activationLine;
 }
 
-// Given: the repository root with evidence and the worked example excluded from the authored model.
-// The corpus walk is this suite's one expensive step, so it runs exactly once and every assertion
-// below reads the same derived graph: splitting the oracle by law never multiplies extraction.
 const selfHostingImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.self-hosting"),
   label: "realizes the self-hosted corpus through the shared extraction and validation path",
   satisfies: ref("spec:protocol.self-hosting"),
 });
 void selfHostingImplementationAnchor;
-const structuralSelfBindingImplementationAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.structural-self-binding"),
-  label: "realizes the declared significant-unit set and its structural self-binding",
-  satisfies: [ref("spec:protocol.structural-self-binding"), ref("spec:model.structural-patterns")],
-});
-void structuralSelfBindingImplementationAnchor;
 
+// Given: the repository root with evidence and the worked example excluded from the authored model.
+// The corpus walk is this suite's one expensive step, so it runs exactly once and every assertion
+// below reads the same derived graph: splitting the oracle by law never multiplies extraction.
 const result = extract({
   root: repoRoot,
   exclude: ["explorations", "examples", "test/fixtures/import/parity"],
@@ -219,6 +213,30 @@ function compareCoverageMismatch(
 }
 
 describe("the self-hosting corpus", () => {
+  it.each([
+    {
+      file: "test/self-hosting-oracle/structural-edges.ts",
+      anchor: "impl:protocol.structural-self-binding",
+      specs: ["spec:protocol.structural-self-binding", "spec:model.structural-patterns"],
+    },
+    {
+      file: "test/helpers/validator-probes.ts",
+      anchor: "impl:protocol.validator-probe-table",
+      specs: ["spec:validation.validator-self-testing"],
+    },
+  ])("traces changes to $file through its realizing anchor", ({ file, anchor, specs }) => {
+    const radius = createReader(result.graph).blastRadius([file]);
+    expect(radius.coverageUnknown).toEqual([]);
+    for (const id of specs) {
+      expect(radius.impactedSpecs).toContainEqual({
+        id,
+        reasons: [
+          { file, throughBinding: { id: anchor, edgeType: "satisfies", claim: "anchored" } },
+        ],
+      });
+    }
+  });
+
   // Then: the frozen corpus enters one graph with exact descriptors and its direct bindings.
   it("reifies the root corpus without an extraction finding", () => {
     expect(result.report.findings).toEqual([]);
@@ -243,15 +261,15 @@ describe("the self-hosting corpus", () => {
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 399 Markdown Specs and four Gherkin Specs,
-    // 403 in the self-hosting Pack; seven Pack manifests and 368 source anchors.
-    // The excluded-root validate run corroborates 778 nodes and 2244 edges.
-    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 368 });
+    // 403 in the self-hosting Pack; seven Pack manifests and 369 source anchors.
+    // The excluded-root validate run corroborates 779 nodes and 2245 edges.
+    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 369 });
     expect(expectedSpecs).toHaveLength(403);
     expect(expectedPackMembers).toHaveLength(403);
-    expect(expectedAnchors).toHaveLength(368);
-    expect(expectedBindingEdges).toHaveLength(430);
-    expect(result.graph.nodes).toHaveLength(778);
-    expect(result.graph.edges).toHaveLength(2244);
+    expect(expectedAnchors).toHaveLength(369);
+    expect(expectedBindingEdges).toHaveLength(431);
+    expect(result.graph.nodes).toHaveLength(779);
+    expect(result.graph.edges).toHaveLength(2245);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -526,7 +544,7 @@ describe("the self-hosting corpus", () => {
 
   it("finds every converted comment anchor at its block's first line", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedCommentAnchorIds).toHaveLength(53);
+    expect(expectedCommentAnchorIds).toHaveLength(55);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)

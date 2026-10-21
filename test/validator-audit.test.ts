@@ -243,11 +243,12 @@ it("reads all literal quote forms, ignores comments, and locates incomplete ids"
         "const e = `honesty/${part}`;",
         'const regex = /"extract\\/regex-only"/;',
         'const after = `prefix ${part} tail`; const literal = "extract/after-template";',
+        "const f = `extract/foo-${part}`;",
       ].join("\n"),
     );
     expect(scanFindingIds(root)).toEqual({
       ids: ["conformance/template", "extract/after-template", "extract/double", "honesty/single"],
-      unresolved: ["source.ts:5", "source.ts:6"],
+      unresolved: ["source.ts:5", "source.ts:6", "source.ts:9"],
     });
   } finally {
     rmSync(root, { recursive: true, force: true });

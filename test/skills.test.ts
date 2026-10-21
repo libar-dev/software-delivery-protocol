@@ -130,6 +130,23 @@ function documentedCommand(line: string, commands: ReadonlySet<string>): string 
   return commands.has(first) ? first : undefined;
 }
 
+function assertPlanningHomes(authoring: string): void {
+  const placement = authoring
+    .split("### Place what is not settled\n")[1]
+    ?.split("\n### ")[0]
+    ?.replace(/\s+/gu, " ");
+  expect(placement).toBeDefined();
+  for (const home of [
+    "An open question goes under Intent's `### Open questions`.",
+    "A deferral is a `[blocking]` open question that names its re-entry trigger in a `trigger:` field, plus `dependsOn` when another Spec must hold first; `spec:decisions.planning-truths-placement` rules this home.",
+    "An unsettled fact that bounds other Specs is a `constraint` Spec whose `[blocking]` open question names the check that would settle it. Each Spec it bounds declares `constrainedBy`.",
+    "A ruling that awaits its owner is a `decision` Spec below `ready`, with `decidedBy` from each Spec it shapes.",
+    "A statement a test checks lives in the Spec that states it, plus an `example` Spec that `verifies` it.",
+    "Derive a count, a register, or a review scope each time you need it:",
+  ])
+    expect(placement).toContain(home);
+}
+
 const authoringOnRampTestAnchor = specTest({
   id: testAnchorId("test:protocol.authoring-on-ramp"),
   label: "skill-asset checks verify the authoring on-ramp",
@@ -161,12 +178,25 @@ describe("Protocol skill assets", () => {
   it("keeps planning truth in graph homes and session routing advisory", () => {
     const authoring = readSkill(skillPaths[1]).body;
     const sessions = readSkill(skillPaths[2]).body;
-    expect(authoring).toContain("### Place what is not settled");
-    for (const home of ["trigger:", "dependsOn", "blocking", "decision", "example"])
-      expect(authoring).toContain(home);
+    assertPlanningHomes(authoring);
     expect(sessions).toContain("one current graph serves every work shape");
     expect(sessions).toContain("All preflights are advisory");
     expect(sessions).toContain('Never hand off a carried "verified" verdict');
+  });
+  it.each([
+    "An open question goes",
+    "A deferral is",
+    "An unsettled fact",
+    "A ruling that awaits",
+    "A statement a test checks",
+    "Derive a count",
+  ])("rejects missing planning guidance: %s", (opening) => {
+    const authoring = readSkill(skillPaths[1]).body;
+    const withoutHome = authoring.replace(new RegExp(`^- ${opening}[^]*?(?=^\\n|^- )`, "mu"), "");
+    expect(withoutHome).not.toBe(authoring);
+    expect(() => {
+      assertPlanningHomes(withoutHome);
+    }).toThrow();
   });
   it("owns skills under .agents and exposes them to Claude through one relative symlink", () => {
     const claudeSkills = join(repoRoot, ".claude", "skills");

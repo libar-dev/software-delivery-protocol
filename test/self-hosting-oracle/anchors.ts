@@ -58,10 +58,17 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "impl:protocol.structural-self-binding",
     nodeType: "CodeNode",
-    file: "test/self-hosting-graph.test.ts",
-    site: "const result = extract(",
-    constant: "structuralSelfBindingImplementationAnchor",
+    file: "test/self-hosting-oracle/structural-edges.ts",
+    site: "export const acceptedArchitecturalUnits =",
     label: "realizes the declared significant-unit set and its structural self-binding",
+  },
+  {
+    id: "impl:protocol.validator-probe-table",
+    nodeType: "CodeNode",
+    file: "test/helpers/validator-probes.ts",
+    site: "export const validatorProbeTable:",
+    label: "declares the refusing and accepting probes for every registered finding id",
+    role: "utility",
   },
   {
     id: "impl:protocol.self-hosting",
@@ -3089,6 +3096,7 @@ export const expectedBindingEdges = [
     "spec:validation.validator-self-testing.shipped-checks-paired",
   ],
   ["impl:protocol.validator-self-testing", "satisfies", "spec:validation.validator-self-testing"],
+  ["impl:protocol.validator-probe-table", "satisfies", "spec:validation.validator-self-testing"],
   [
     "test:protocol.superseded-decision-signal.end-and-loop-named",
     "verifies",
@@ -4034,6 +4042,8 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.structural-self-binding",
+  "impl:protocol.validator-probe-table",
   "impl:protocol.validator-self-testing",
   "impl:protocol.corpus-rules",
   "impl:protocol.studio-data",

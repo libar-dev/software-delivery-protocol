@@ -34,7 +34,6 @@ export const contractDependentSuites = [
       "test/validation.validator-self-testing.unpaired-check-named.test.generated.ts",
       "test/validation.validator-self-testing.duplicate-pair-named.test.generated.ts",
       "test/validation.validator-self-testing.unregistered-id-named.test.generated.ts",
-
       "test/validation.superseded-decision-signal.replaced-ruling-warns.test.generated.ts",
       "test/validation.superseded-decision-signal.chain-end-named.test.generated.ts",
       "test/validation.superseded-decision-signal.branch-names-every-end.test.generated.ts",
@@ -44,7 +43,6 @@ export const contractDependentSuites = [
       "test/validation.superseded-decision-signal.replacement-below-ready-named.test.generated.ts",
       "test/validation.superseded-decision-signal.live-replacement-warns.test.generated.ts",
       "test/validation.superseded-decision-signal.end-and-loop-named.test.generated.ts",
-
       "test/self-hosting-corpus-checks.test.ts",
       "test/validation.corpus-rules.copies-contain-changes.test.generated.ts",
       "test/validation.corpus-rules.error-finding-fails.test.generated.ts",
@@ -144,7 +142,6 @@ export const contractDependentSuites = [
       "test/validation.unbound-example-posture.lower-rungs.test.generated.ts",
       "test/validation.unbound-example-posture.warning-cases.test.generated.ts",
       "test/validation.unbound-example-posture.parent-traces.test.generated.ts",
-
       "test/validation.authored-honesty.section-authored-fact.test.generated.ts",
       "test/validation.authored-honesty.unearned-stated-fact.test.generated.ts",
       "test/validation.claim-separation.collapsed-edge-claim.test.generated.ts",

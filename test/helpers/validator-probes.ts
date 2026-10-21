@@ -369,4 +369,10 @@ const extractionPairs: ProbeEntry[] = [
 ];
 
 // Add a new finding id as one graphPair(...) or carrierPair(...) row. The closed audit checks it against both registries.
+/**
+ * @sdpAnchor impl:protocol.validator-probe-table
+ * @sdpLabel declares the refusing and accepting probes for every registered finding id
+ * @sdpSatisfies spec:validation.validator-self-testing
+ * @sdpRole utility
+ */
 export const validatorProbeTable: readonly ProbeEntry[] = [...graphPairs, ...extractionPairs];

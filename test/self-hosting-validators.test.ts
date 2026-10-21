@@ -24,6 +24,7 @@ import { registerLiveReplacementWarns } from "./validation.superseded-decision-s
 import { endAndLoopNamedContract } from "../generated/contracts/validation.superseded-decision-signal.end-and-loop-named.contract.js";
 import { registerEndAndLoopNamed } from "./validation.superseded-decision-signal.end-and-loop-named.test.generated.js";
 import { expect, it } from "vitest";
+import { fileURLToPath } from "node:url";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
@@ -85,7 +86,7 @@ import type {
   OracleTargetEligibilityConditions,
   OracleTargetEligibilityOutcome,
 } from "../generated/contracts/validation.oracle-target-eligibility.space.js";
-import { createReader, schemaVersion, validateGraph } from "../src/index.js";
+import { createReader, extract, schemaVersion, validateGraph } from "../src/index.js";
 import type {
   Finding,
   GraphClaim,
@@ -1440,6 +1441,13 @@ type SupersededContract =
   | typeof liveReplacementWarnsContract
   | typeof endAndLoopNamedContract;
 
+const supersededMessageDesign = extract({
+  root: fileURLToPath(new URL("../specs/validation", import.meta.url)),
+}).graph.nodes.find((node) => node.id === "spec:validation.superseded-decision-signal");
+if (supersededMessageDesign?.nodeType !== "Primitive" || !supersededMessageDesign.sections?.design)
+  throw new Error("The superseded-decision Spec must carry its message Design entries.");
+const messageDesign = supersededMessageDesign.sections.design;
+
 function createSupersededWorld(point: Partial<SupersededDecisionSignalConditions>): ValidatorWorld {
   const world = validatorWorld();
   const decision = (name: string, readiness: SpecReadiness = "ready"): void => {
@@ -1561,7 +1569,11 @@ function expectedSuperseded(
   };
 }
 
-function assertSuperseded(world: ValidatorWorld, contract: SupersededContract): void {
+function assertSuperseded(
+  world: ValidatorWorld,
+  contract: SupersededContract,
+  design: Readonly<Record<string, unknown>> = messageDesign,
+): void {
   const warnings = supersededFindings(world);
   const warning = warnings[0];
   for (const step of contract.steps) {
@@ -1588,14 +1600,29 @@ function assertSuperseded(world: ValidatorWorld, contract: SupersededContract): 
         break;
       case "the warning message follows {template}": {
         if (!warning) throw new Error("Expected the warning whose message is compared.");
-        const prefix = `Spec "${warning.subjectId ?? ""}" is decided by "${warning.relatedId ?? ""}"`;
-        const suffix = " (informative, never a gate).";
-        const expected =
-          step.params.template === "closedChainMessage"
-            ? `${prefix}, whose chain of replacements closes on itself through "spec:probe.decision-a", "spec:probe.decision-b"${suffix}`
-            : step.params.template === "mixedChainMessage"
-              ? `${prefix}, whose chain of replacements ends at "spec:probe.decision-b" and also closes on itself through "spec:probe.decision-c", "spec:probe.decision-d"${suffix}`
-              : `${prefix}, which a later decision supersedes; the chain of replacements ends at ${contract.spec.includes("branch-names") ? '"spec:probe.decision-b", "spec:probe.decision-c"' : '"spec:probe.decision-b"'}${suffix}`;
+        const entry = design[step.params.template];
+        const template = typeof entry === "string" ? /^`([^`]+)`/u.exec(entry)?.[1] : undefined;
+        if (template === undefined)
+          throw new Error(`Missing message template ${step.params.template}`);
+        let ids: readonly string[] | undefined;
+        for (const candidate of contract.steps) {
+          if (candidate.text === "the warnings name {named}") {
+            ids = candidate.params.named.split(", ");
+            break;
+          }
+        }
+        if (ids === undefined) throw new Error("A message step needs the named decisions step.");
+        const ends = ids.filter(
+          (id) => !world.edges.some((edge) => edge.type === "supersedes" && edge.to === id),
+        );
+        const loops = ids.filter((id) => !ends.includes(id));
+        const quoted = (values: readonly string[]): string =>
+          values.map((id) => `"${id}"`).join(", ");
+        const expected = template
+          .replaceAll("<subjectId>", warning.subjectId ?? "")
+          .replaceAll("<relatedId>", warning.relatedId ?? "")
+          .replace(/"<end>"(?:, "<end>")*/gu, quoted(ends))
+          .replace(/"<loop-id>"(?:, "<loop-id>")*/gu, quoted(loops));
         expect(warning.message).toBe(expected);
         break;
       }
@@ -1803,6 +1830,91 @@ it("warns once for each stale decision and ignores unresolved and wrongly typed 
   validate(world);
   expect(supersededFindings(world)).toEqual([]);
 });
+
+it("locates each subject separately when two Specs name the same stale decision", () => {
+  const world = createSupersededWorld({
+    subject: "live Spec",
+    relation: "decidedBy",
+    replacement: "one decision",
+    replacementRung: "ready",
+  });
+  world.nodes.push({ ...probeSpec("spec:probe.second"), file: "second.sdp.md" });
+  world.edges.push({
+    from: "spec:probe.second",
+    type: "decidedBy",
+    to: "spec:probe.decision-a",
+    claim: "declared",
+  });
+  world.report = validateGraph({
+    schemaVersion,
+    nodes: world.nodes,
+    edges: world.edges,
+    locations: [
+      {
+        spec: "spec:probe.shaped",
+        file: "shaped.sdp.md",
+        entry: "relation.decidedBy.spec:probe.decision-a",
+        line: 7,
+      },
+      {
+        spec: "spec:probe.second",
+        file: "second.sdp.md",
+        entry: "relation.decidedBy.spec:probe.decision-a",
+        line: 19,
+      },
+    ],
+  });
+  expect(
+    supersededFindings(world).map(({ subjectId, file, line }) => ({ subjectId, file, line })),
+  ).toEqual([
+    { subjectId: "spec:probe.second", file: "second.sdp.md", line: 19 },
+    { subjectId: "spec:probe.shaped", file: "shaped.sdp.md", line: 7 },
+  ]);
+});
+
+it("checks branch messages independently of the example id", () => {
+  const world = createSupersededWorld({
+    subject: "live Spec",
+    relation: "decidedBy",
+    replacement: "two decisions at once",
+    replacementRung: "ready",
+  });
+  validateSuperseded(world);
+  assertSuperseded(world, { ...branchNamesEveryEndContract, spec: "spec:probe.renamed-example" });
+});
+
+it.each([
+  { contract: replacedRulingWarnsContract, replacement: "one decision", template: "message" },
+  {
+    contract: closedChainNamedContract,
+    replacement: "a chain that closes on itself",
+    template: "closedChainMessage",
+  },
+  {
+    contract: endAndLoopNamedContract,
+    replacement: "an end and a loop at once",
+    template: "mixedChainMessage",
+  },
+] as const)(
+  "checks the extracted $template Design entry",
+  ({ contract, replacement, template }) => {
+    const world = createSupersededWorld({
+      subject: "live Spec",
+      relation: "decidedBy",
+      replacement,
+      replacementRung: "ready",
+    });
+    validateSuperseded(world);
+    const entry = messageDesign[template];
+    if (typeof entry !== "string") throw new Error(`Missing Design entry ${template}`);
+    expect(() => {
+      assertSuperseded(world, contract, {
+        ...messageDesign,
+        [template]: entry.replace("informative", "changed template"),
+      });
+    }).toThrow();
+  },
+);
 
 const kindEvidenceOracleAnchor = specOracle({
   id: oracleAnchorId("oracle:protocol.kind-evidence"),
