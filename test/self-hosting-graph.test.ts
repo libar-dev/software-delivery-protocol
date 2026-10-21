@@ -205,7 +205,7 @@ describe("the self-hosting corpus", () => {
     expect(result.report.findings).toEqual([]);
   });
 
-  it("reports exactly the retained verifier gap and five intended prose mentions", () => {
+  it("reports exactly the retained verifier gap and one intended prose mention", () => {
     expect(
       validateGraph(result.graph).findings.map(
         ({ validatorId, family, severity, subjectId, relatedId }) => ({
@@ -223,16 +223,16 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // Re-measured from the refreshed tree: 277 Markdown Specs and four Gherkin Specs,
-    // 281 in the self-hosting Pack; seven Pack manifests and 339 source anchors.
-    // The excluded-root validate run corroborates 627 nodes and 1639 edges.
-    expect(result.counts).toEqual({ specs: 281, packs: 7, anchors: 339 });
-    expect(expectedSpecs).toHaveLength(281);
-    expect(expectedPackMembers).toHaveLength(281);
+    // Re-measured from the refreshed tree: 303 Markdown Specs and four Gherkin Specs,
+    // 307 in the self-hosting Pack; seven Pack manifests and 339 source anchors.
+    // The excluded-root validate run corroborates 653 nodes and 1778 edges.
+    expect(result.counts).toEqual({ specs: 307, packs: 7, anchors: 339 });
+    expect(expectedSpecs).toHaveLength(307);
+    expect(expectedPackMembers).toHaveLength(307);
     expect(expectedAnchors).toHaveLength(339);
     expect(expectedBindingEdges).toHaveLength(393);
-    expect(result.graph.nodes).toHaveLength(627);
-    expect(result.graph.edges).toHaveLength(1639);
+    expect(result.graph.nodes).toHaveLength(653);
+    expect(result.graph.edges).toHaveLength(1778);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -294,7 +294,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 17, idea: 16, ready: 245, scoped: 3 });
+    ).toEqual({ defined: 44, idea: 15, ready: 245, scoped: 3 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {

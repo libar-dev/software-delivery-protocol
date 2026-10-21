@@ -4,24 +4,51 @@ specs:
   - spec:consumers.spec-studio
   - spec:decisions.studio-html-surface
   - spec:consumers.spec-studio.data
+  - spec:consumers.spec-studio.data.graph-only
+  - spec:consumers.spec-studio.data.named-inputs
   - spec:consumers.spec-studio.publisher
+  - spec:consumers.spec-studio.publisher.watch-matches-plain-run
   - spec:consumers.spec-studio.shell
   - spec:consumers.spec-studio.search
   - spec:consumers.spec-studio.lenses
+  - spec:consumers.spec-studio.lenses.packs
   - spec:consumers.spec-studio.index-page
+  - spec:consumers.spec-studio.lenses.architecture
+  - spec:consumers.spec-studio.lenses.tests
+  - spec:consumers.agent-surface.example-space-coverage
+  - spec:consumers.agent-surface.example-space-coverage.uncovered-literal
+  - spec:consumers.agent-surface.example-space-coverage.number-not-enumerable
+  - spec:consumers.spec-studio.lenses.evidence
   - spec:consumers.spec-studio.pack-page
   - spec:consumers.spec-studio.spec-page
   - spec:consumers.spec-studio.spec-page.core
   - spec:consumers.spec-studio.verification-panels
+  - spec:consumers.spec-studio.registers
+  - spec:consumers.spec-studio.owner-queue
+  - spec:consumers.spec-studio.diff-page
+  - spec:consumers.spec-studio.runs-page
+  - spec:observation.run-evidence
+  - spec:observation.run-evidence.absolute-path-joins
+  - spec:observation.run-evidence.unanchored-file-unjoined
+  - spec:consumers.spec-studio.glossary-page
   - spec:consumers.spec-studio.intent-panel
+  - spec:consumers.spec-studio.intent-panel.refresh-keeps-intents
   - spec:consumers.spec-studio.components
   - spec:decisions.studio-web-components
+  - spec:decisions.studio-diagram-renderer
+  - spec:consumers.spec-studio.diagrams
+  - spec:consumers.spec-studio.diagrams.within-bound
+  - spec:consumers.spec-studio.diagrams.folds-by-context
+  - spec:consumers.spec-studio.diagrams.folds-by-layer
   - spec:consumers.spec-studio.page-elements
   - spec:consumers.spec-studio.responsive
+  - spec:consumers.spec-studio.export
+  - spec:consumers.spec-studio.export.self-contained
   - spec:consumers.spec-studio.sharing
+  - spec:consumers.spec-studio.sharing.stamp-written-apart
 modelRefs:
   - spec:consumers.projections-model
 ---
 # Spec Studio
 
-The Spec Studio of the original design, `docs/lineage/v0-design/07-spec-studio-and-projections.md` sections 1 to 3, 11 and 12, in the order a reviewer reads it: what the Studio is and why it renders HTML, the data it reads and the verb that publishes it, its shell and search, its lenses and the index, the Pack page, the Spec page with its core and its panels, the composing panel, its custom elements, its phone layout, and how a build is shared. The publisher, the shell, search, the index, the Pack page, the Spec page's core and the page elements make up the static page set; the other panels, the other lenses and the composing panel build on it. Recipe 27, references into a design, shows each member's code bindings and the implemented Specs it builds on.
+The Spec Studio of the original design, `docs/lineage/v0-design/07-spec-studio-and-projections.md` sections 1 to 3, 11 and 12, in the order a reviewer reads it: what the Studio is and why it renders HTML; the data it reads, with its two named inputs, and the verb that publishes and watches it; its shell and search; its four lenses, with the index that is the Packs lens and the coverage recipe the tests lens reads; the Pack page and its maturity map; the Spec page with its core and its panels; the register pages, the owner queue, and the diff, runs and glossary pages, with the run-evidence recipe the runs page reads; the composing panel; its custom elements and the diagrams the engine draws for them; its phone layout; the Pack export and print; and how a build is stamped and shared. Each Spec is followed by the examples that will verify it. Recipe 27, references into a design, shows each member's code bindings and the implemented Specs it builds on.

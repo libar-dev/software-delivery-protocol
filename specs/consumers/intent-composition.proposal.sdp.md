@@ -21,14 +21,9 @@ The first adopter's agents already write proposals in that shape. A design pass 
 - problem: A proposed design change travels as free prose, so a reviewer cannot tell what it touches, which version of the design it read, or whether it still applies once the design has moved.
 - outcome: Give a proposed design change a reviewable shape: what it touches by Spec id or entry address, the commit it was read at, the change requested and why, checked on a worktree before merge.
 
-### Open questions
-- [non-blocking #memoRecipe] Which catalog recipe renders a proposal as the Markdown memo a person reviews, so the Studio's composing panel and an agent hand off the same text?
-  - decider: owner
-  - links: spec:consumers.spec-studio.intent-panel
-  - provisional: a person reviews the proposal's JSON beside the proposal check's rows
-
 ## Contract
 - A proposal is one JSON document on one schema, which a recipe takes as a parameter; a Markdown memo is a rendering of that document and never a second source of it.
+- [#memo] Recipe 49 renders a proposal as the Markdown memo a person reviews and hands off, ending with the document itself, and the Studio's composing panel, `spec:consumers.spec-studio.intent-panel`, writes the same bytes for the same document, so a person, a reviewer and an agent read one text.
 - A proposal names its scope as one or more Spec ids or entry addresses, each resolved before anything is applied: a Spec id through the reader's Spec context, an entry address through address resolution.
 - A proposal names the commit whose graph it was read against.
 - A proposal states the requested change in words an agent can apply, such as the exact text for an entry with the address it replaces or follows, a new open question with its flag, or a relation to declare or remove.
@@ -47,3 +42,17 @@ The first adopter's agents already write proposals in that shape. A design pass 
 - checkedScope: the check resolves and compares the deduplicated union of `scope`, `replaces`, `follows` and `relation.from`, and a change row's `scope` reports that union, so an entry a change replaces or follows cannot move unseen.
 - checkRows: each change row is `{ index, scope: [{ ref, resolvesAtHead, resolvesAtBase, moved }], moved, relationTarget }`; an item's `moved` is true when its Spec is added or removed between the two graphs, and otherwise, for an entry address, when the entry's value is added, removed or changed, an order-only move leaving it false, or, for a whole Spec, when any of its parts changed or moved in order; the row's `moved` is true when any item's is; `relationTarget` is `{ ref, resolvesAtHead }` for a declared relation and null otherwise.
 - incomparableScope: an item outside the common schema, or an otherwise unmoved whole-Spec item whose order across rules and flows one graph does not keep, carries `comparable: false` and a `reason` in place of `moved`; its row carries `comparable: false` and a null `moved` unless another item moved.
+- memoRecipe: recipe 49, the proposal memo, takes `params.proposal` and returns `{ schemaProblems: [{ path, problem }], memo }`: the schema problems recipe 38 reports for the same document and, when there are none, the memo as one string, otherwise `memo: null`; it reads no graph value, so one document renders one memo in any corpus.
+- memoHead: the memo opens with the line `# Change proposal`, a blank line, `Base: ` and the base as a code span, `Reason: ` and the reason, and a blank line.
+- memoChange: each change follows in document order as `## Change <n>`, counting from 1, a blank line, then `Scope: ` and the scope items as code spans joined by `, `, `Request: ` and the request, and when present `Replaces: ` or `Follows: ` with the address as a code span, `Relation: ` with the action, the source as a code span, the relation type and the target as a code span, separated by single spaces, and `Reason: ` with the change's reason; then, when the change carries exact text, a blank line and the text in a fenced block with no info string; then a blank line.
+- memoDocument: the memo ends with `## The proposal`, a blank line, and the document in a fenced block whose info string is `json`, written as `JSON.stringify` writes it with two-space indentation and the keys in the order the document holds them.
+- memoMarkup: a code span uses a backtick run one longer than the longest run its content holds, padded with a space on each side when the content starts or ends with a backtick; a fence is a backtick run one longer than the longest run its content holds and at least three long; every value is written verbatim; every line ends with a line feed and the memo with one.
+
+## Example space
+```gwt-vocabulary
+Given a change proposal with {changes:number} changes, one whose exact text holds a run of {ticks:number} backticks
+When recipe 49 renders its memo and the composing panel renders its memo
+Then the two memos are byte-identical: {identical:boolean}
+Then the memo ends with the proposal as JSON in a fenced block: {carriesDocument:boolean}
+Then the fence around that exact text is {fence:number} backticks long
+```

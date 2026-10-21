@@ -218,6 +218,26 @@ specs:
   - spec:consumers.spec-studio.components
   - spec:consumers.spec-studio.responsive
   - spec:consumers.spec-studio.sharing
+  - spec:consumers.spec-studio.sharing.stamp-written-apart
+  - spec:consumers.spec-studio.data.graph-only
+  - spec:consumers.spec-studio.data.named-inputs
+  - spec:consumers.spec-studio.publisher.watch-matches-plain-run
+  - spec:consumers.spec-studio.lenses.packs
+  - spec:consumers.spec-studio.lenses.architecture
+  - spec:consumers.spec-studio.lenses.tests
+  - spec:consumers.spec-studio.lenses.evidence
+  - spec:consumers.spec-studio.registers
+  - spec:consumers.spec-studio.owner-queue
+  - spec:consumers.spec-studio.diff-page
+  - spec:consumers.spec-studio.runs-page
+  - spec:consumers.spec-studio.glossary-page
+  - spec:consumers.spec-studio.intent-panel.refresh-keeps-intents
+  - spec:consumers.spec-studio.diagrams
+  - spec:consumers.spec-studio.diagrams.within-bound
+  - spec:consumers.spec-studio.diagrams.folds-by-context
+  - spec:consumers.spec-studio.diagrams.folds-by-layer
+  - spec:consumers.spec-studio.export
+  - spec:consumers.spec-studio.export.self-contained
   - spec:consumers.pack-design
   - spec:consumers.design-review.pack-design-page
   - spec:consumers.agent-surface.recipe-parameters
@@ -225,10 +245,13 @@ specs:
   - spec:consumers.engine-provenance
   - spec:consumers.validate-watch
   - spec:consumers.agent-surface.example-space-coverage
+  - spec:consumers.agent-surface.example-space-coverage.uncovered-literal
+  - spec:consumers.agent-surface.example-space-coverage.number-not-enumerable
   - spec:consumers.review-perspectives
   - spec:consumers.context-bundle
   - spec:consumers.design-diff
   - spec:consumers.intent-composition.proposal
+  - spec:consumers.intent-composition.proposal.memo-shared
   - spec:consumers.reference-projection
   - spec:consumers.structural-mermaid
   - spec:consumers.obsidian-vault
@@ -239,6 +262,8 @@ specs:
   - spec:consumers.upgrade-kit
   - spec:observation.runtime-overlay
   - spec:observation.run-evidence
+  - spec:observation.run-evidence.absolute-path-joins
+  - spec:observation.run-evidence.unanchored-file-unjoined
   - spec:protocol.self-hosting
   - spec:protocol.structural-self-binding
   - spec:decisions.plain-language-references
@@ -278,6 +303,7 @@ specs:
   - spec:decisions.question-key-rendering
   - spec:decisions.studio-html-surface
   - spec:decisions.studio-web-components
+  - spec:decisions.studio-diagram-renderer
   - spec:decisions.anchor-comment-form
   - spec:decisions.anchor-binding-grain
   - spec:decisions.architectural-annotation
