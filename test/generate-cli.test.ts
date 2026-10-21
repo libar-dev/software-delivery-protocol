@@ -10,6 +10,14 @@ import { verbHelpText } from "../src/cli/help.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { writeProbeCorpus } from "./helpers/probe-corpus.js";
 
+it("wraps the generate help paragraph without short interior lines", () => {
+  const description = (verbHelpText("generate") ?? "").split("\n\n")[1] ?? "";
+  const lines = description.split("\n");
+  expect(lines.length).toBeGreaterThan(1);
+  for (const line of lines.slice(0, -1)) expect(line.length).toBeGreaterThanOrEqual(80);
+  for (const line of lines) expect(line.length).toBeLessThanOrEqual(100);
+});
+
 const roots = ["design-review", "census", "mermaid", "gherkin", "spec-studio"];
 const assets = {
   script: resolve("dist/studio/studio.js"),

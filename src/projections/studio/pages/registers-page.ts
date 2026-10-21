@@ -2,12 +2,11 @@ import { frame } from "./frame.js";
 import {
   badge,
   code,
-  sourceCode,
+  citationRows,
   copy,
   escape,
   link,
   list,
-  location,
   questionFields,
   verb,
 } from "./html.js";
@@ -110,7 +109,7 @@ export function declarationsPage(ctx: PageContext): string {
           .map((row) => {
             const address = `${id}#design.${row.key}`,
               cites = citations.entries.find((e) => e.address === address)?.citedBy ?? [];
-            return `<article class="spec-row" data-row data-citation="${cites.length ? "recorded" : "none"}"><h3>${link(ctx, address, row.key)}</h3><pre><code>${escape(row.declaration)}</code></pre><p>Cited at</p>${cites.length ? list(cites.map((c) => `${sourceCode(c.file, c.line)}${copy(location(c.file, c.line))}${c.testAnchors.length ? " · test line" : ""}`)) : "<p>no citation recorded</p>"}</article>`;
+            return `<article class="spec-row" data-row data-citation="${cites.length ? "recorded" : "none"}"><h3>${link(ctx, address, row.key)}</h3><pre><code>${escape(row.declaration)}</code></pre>${citationRows(cites, false)}</article>`;
           })
           .join("")}</section>`,
     )

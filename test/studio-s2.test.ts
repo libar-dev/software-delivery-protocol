@@ -54,6 +54,79 @@ function entry(page: string, key: string) {
 function panel(page: string, name: string): string {
   return page.split(`id="panel.${name}"`)[1]?.split("</details>")[0] ?? "";
 }
+
+function sourceLinkFiles(): Record<string, string> {
+  const files = coverageFiles({});
+  files["parent.sdp.md"] =
+    `${files["parent.sdp.md"] ?? ""}\n## Design\n- declaration: \`Order\` is the declaration.\n`;
+  files["src/orders.ts"] =
+    "/**\n * @sdpAnchor impl:orders\n * @sdpSatisfies spec:orders\n * @sdpComponent component:orders\n */\nexport const orders=1;\n";
+  files["src/component.ts"] =
+    "/**\n * @sdpAnchor component:orders\n */\nexport const component=1;\n";
+  files["consumer.sdp.md"] = carrier(
+    "spec:consumer",
+    "behavior",
+    "{dependsOn: spec:orders}",
+    "\n## Behavior\n- rule: Consume orders.\n",
+  );
+  files["src/consumer.ts"] =
+    "/**\n * @sdpAnchor impl:consumer\n * @sdpSatisfies spec:consumer\n */\nexport const consumer=1;\n";
+  files["test/oracle.ts"] =
+    "/**\n * @sdpAnchor oracle:orders\n * @sdpModels spec:orders\n */\nexport const oracle=1;\n";
+  files["test/orders.test.ts"] =
+    `${files["test/orders.test.ts"] ?? ""}// spec:orders#design.declaration\n`;
+  files["orders.pack.sdp.md"] =
+    "---\nid: pack:orders\nspecs: [spec:orders, spec:orders.example, spec:consumer]\n---\n# Orders\n";
+  return files;
+}
+
+it("marks every displayed file and line across the Studio page set for source links", async () => {
+  const rendered = await pages(sourceLinkFiles());
+  const page = rendered.find((p) => p.path === "specs/orders.html")?.content ?? "";
+  for (const [name, file] of [
+    ["runtime", "src/orders.ts"],
+    ["runtime", "src/component.ts"],
+    ["impact", "src/consumer.ts"],
+    ["verification", "test/oracle.ts"],
+  ] as const)
+    expect(page.split(`id="panel.${name}"`)[1]?.split('id="relations"')[0]).toContain(
+      `data-source-file="${file}"`,
+    );
+  expect(rendered.find((p) => p.path === "specs/orders.example.html")?.content).toContain(
+    'data-source-file="test/orders.test.ts"',
+  );
+  expect(rendered.find((p) => p.path === "declarations.html")?.content).toContain(
+    'data-source-file="test/orders.test.ts"',
+  );
+  const missing: string[] = [];
+  for (const { path, content } of rendered)
+    for (const match of content.matchAll(/<code\b([^>]*)>([^<]*)<\/code>/gu)) {
+      const [, attributes = "", at = ""] = match;
+      if (!/^.+:\d+$/u.test(at)) continue;
+      const separator = at.lastIndexOf(":");
+      if (
+        !attributes.includes(`data-source-file="${at.slice(0, separator)}"`) ||
+        !attributes.includes(`data-source-line="${at.slice(separator + 1)}"`)
+      )
+        missing.push(`${path}: ${at}`);
+    }
+  expect(missing).toEqual([]);
+});
+
+it("renders citation labels consistently on Spec and declaration pages", async () => {
+  const files = sourceLinkFiles();
+  files["src/orders.ts"] = `${files["src/orders.ts"] ?? ""}// spec:orders#design.declaration\n`;
+  const rendered = await pages(files);
+  const spec = rendered.find((p) => p.path === "specs/orders.html")?.content ?? "";
+  const declarations = rendered.find((p) => p.path === "declarations.html")?.content ?? "";
+  const citations = entry(spec, "design.declaration").split('<div class="citations">')[1] ?? "";
+  const withoutIds = citations.replaceAll(/ · <code>test:orders.example<\/code>/gu, "");
+  expect(declarations).toContain(withoutIds);
+  expect(citations).toContain("Test line · ");
+  expect(citations).toContain("src/orders.ts:");
+  expect(citations).toContain("test/orders.test.ts:");
+  expect(declarations).not.toContain("<code>test:orders.example</code>");
+});
 const citationsOracle = specOracle({
   id: oracleAnchorId("oracle:protocol.studio-citations"),
   models: ref("spec:consumers.spec-studio.spec-page"),

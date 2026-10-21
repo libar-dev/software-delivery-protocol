@@ -95,10 +95,9 @@ const commands = {
     usage: "  sdp generate [root] [--exclude PATH]... [--vault DIR] [--check-clean]",
     paragraph: `Validate once, then publish the Design Review, census, Mermaid diagrams, Gherkin-shaped
              view and Studio from that graph. --check-clean applies each publisher's checks,
-             removing only roots that fail. Studio is written without optional inputs.
-             Synchronizes the vault through its directory checks
-             and guard before publishing any root,
-             at the default vault directory or --vault DIR. --check-clean leaves the vault alone.`,
+             removing only roots that fail. Studio is written without optional inputs. Synchronizes
+             the vault through its directory checks and guard before publishing any root, at the
+             default vault directory or --vault DIR. --check-clean leaves the vault alone.`,
   },
   import: {
     name: "import",

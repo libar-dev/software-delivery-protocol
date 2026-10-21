@@ -1,7 +1,18 @@
 import { runRows } from "./run-rows.js";
 import type { SpecContext } from "../../../reader/reader.js";
 import type { PageContext } from "./html.js";
-import { code, sourceCode, copy, escape, link, list, location, present, rungLine } from "./html.js";
+import {
+  citationRows,
+  code,
+  sourceCode,
+  copy,
+  escape,
+  link,
+  list,
+  location,
+  present,
+  rungLine,
+} from "./html.js";
 import { codeSpans, text } from "./text.js";
 import type { RuleCoverage, SpaceCoverage } from "./tests-page.js";
 
@@ -21,7 +32,7 @@ export function entryCitations(ctx: PageContext, spec: SpecContext, address: str
   if (!row) return "";
   if (row.citedBy.length === 0)
     return row.pinned ? '<p class="citations">no citation recorded</p>' : "";
-  return `<div class="citations"><p>Cited at</p>${list(row.citedBy.map((c) => `${c.testAnchors.length ? "Test line · " : ""}${sourceCode(c.file, c.line)}${copy(location(c.file, c.line))}${c.testAnchors.map((id) => ` · ${code(id)}`).join("")}`))}</div>`;
+  return `<div class="citations">${citationRows(row.citedBy)}</div>`;
 }
 
 export function ruleCoverage(ctx: PageContext, spec: SpecContext, key: string): string {
@@ -68,13 +79,22 @@ export function constraintTarget(
  * @sdpRole projection
  */
 export function verificationPanel(ctx: PageContext, spec: SpecContext): string {
+  const renderedFiles = new Set<string>();
   const verifiers = list(
-    spec.verifiers.map(
-      (v) =>
-        `${link(ctx, v.verifierId)}${v.label === undefined ? "" : ` · ${escape(v.label)}`} · ${escape(v.claim)} · ${v.via === "example" ? `example ${v.enabled ? "enabled" : "not enabled"}` : "test anchor binding present"} · ${sourceCode(v.file, v.line)}${v.file === undefined ? "" : copy(location(v.file, v.line))}`,
-    ),
+    spec.verifiers.map((v) => {
+      const anchors =
+        v.via === "test-anchor"
+          ? [v.verifierId]
+          : (ctx.data.specs.find((s) => s.id === v.verifierId)?.verifiers ?? [])
+              .filter((binding) => binding.via === "test-anchor")
+              .map((binding) => binding.verifierId);
+      const runs = anchors
+        .map((id) => runRows(ctx, spec.id, id, undefined, renderedFiles))
+        .join("");
+      return `${link(ctx, v.verifierId)}${v.label === undefined ? "" : ` · ${escape(v.label)}`} · ${escape(v.claim)} · ${v.via === "example" ? `example ${v.enabled ? "enabled" : "not enabled"}` : "test anchor binding present"} · ${sourceCode(v.file, v.line)}${v.file === undefined ? "" : copy(location(v.file, v.line))}${runs}`;
+    }),
   );
-  return `<h3>Verifier bindings</h3>${spec.verifiers.length ? verifiers : "<p>No verifier binding recorded.</p>"}${spec.sections?.behavior === undefined ? exampleCards(ctx, spec) : ""}${exampleSpace(ctx, spec)}${runRows(ctx, spec.id)}`;
+  return `<h3>Verifier bindings</h3>${spec.verifiers.length ? verifiers : "<p>No verifier binding recorded.</p>"}${spec.sections?.behavior === undefined ? exampleCards(ctx, spec) : ""}${exampleSpace(ctx, spec)}`;
 }
 function exampleSpace(ctx: PageContext, spec: SpecContext): string {
   const space = spec.exampleSpace;

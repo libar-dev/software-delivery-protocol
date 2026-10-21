@@ -54,6 +54,26 @@ export const list = (rows: readonly string[], className = "plain-list"): string 
   rows.length === 0
     ? "<p>None.</p>"
     : `<ul class="${className}">${rows.map((row) => `<li>${row}</li>`).join("")}</ul>`;
+
+export function citationRows(
+  citations: readonly {
+    readonly file: string;
+    readonly line: number;
+    readonly testAnchors: readonly string[];
+  }[],
+  includeAnchorIds = true,
+): string {
+  return `<p>Cited at</p>${
+    citations.length
+      ? list(
+          citations.map(
+            (c) =>
+              `${c.testAnchors.length ? "Test line · " : ""}${sourceCode(c.file, c.line)}${copy(location(c.file, c.line))}${includeAnchorIds ? c.testAnchors.map((id) => ` · ${code(id)}`).join("") : ""}`,
+          ),
+        )
+      : "<p>no citation recorded</p>"
+  }`;
+}
 export const relative = (ctx: PageContext, path: string): string =>
   posix.relative(posix.dirname(ctx.path), path);
 

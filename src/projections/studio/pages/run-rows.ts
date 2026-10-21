@@ -78,6 +78,7 @@ export function runRows(
   specId?: string,
   anchorId?: string,
   inputIndex?: number,
+  renderedFiles?: Set<string>,
 ): string {
   const evidence = runEvidence(ctx);
   if (evidence === undefined) return "";
@@ -85,10 +86,12 @@ export function runRows(
     (file) =>
       (specId === undefined || file.specs.includes(specId)) &&
       (anchorId === undefined || file.anchors.some((a) => a.id === anchorId)) &&
-      (inputIndex === undefined || file.results.some((result) => result.input === inputIndex)),
+      (inputIndex === undefined || file.results.some((result) => result.input === inputIndex)) &&
+      !renderedFiles?.has(file.file),
   );
   return files
     .map((file) => {
+      renderedFiles?.add(file.file);
       const heading = `<h3>External run evidence from ${code(file.file)}${copy(file.file)}</h3><p>Test anchors: ${file.anchors.map((a) => code(a.id)).join(", ")}. Specs verified by those bindings: ${file.specs.map((id) => link(ctx, id)).join(", ") || "none"}.</p>`;
       const sections = (evidence.inputs ?? [])
         .map((input) => {

@@ -30,6 +30,11 @@ commit being reviewed. The first all-up gate caught two worked-example CLI asser
 integration count-update script had incorrectly changed with the self-hosting warning count.
 Close restores their original zero-warning expectations. The self-hosting assertion remains 11.
 S3 through U were typecheck and self-hosting checkpoints, not full-gate checkpoints.
+Specifically, `7fb44c6`, `25d9837`, `6a7a359` and `f4c2cf5` fail the CLI tests
+"validates the example: exit 0, the artifact written, and no warning" and
+"views the example: validate + the Design Review written, with no warning" because their assertions expect
+22, 18, 14 and 11 warnings respectively. `891edd2` restores both to zero. These historical
+failures remain recorded for bisecting; the review follow-up fixes forward without rewriting merges.
 
 ## Conflict resolutions
 
@@ -65,6 +70,10 @@ still assert both Pack filters, the ordered floor filter and populated row attri
 citation observer now requires S4's source attributes while still comparing the exact cited file
 and line through the generated example comparator. Its Pack-sentence test retains the binding
 limit and now checks S4's required no-run clause too.
+At the S3 merge `7fb44c6`, the register and queue selects still emitted `data-facet`, while the
+element read `data-filter`, so those filters did nothing. The rename and corresponding test edits
+landed as unconflicted changes in the S4 merge `25d9837`. This repair was part of integration,
+not behavior supplied by S4; the historical S3 state remains unchanged.
 
 ## Rulings applied
 
@@ -162,6 +171,31 @@ The self-hosting checkpoints are reproducible with `npm test -- test/self-hostin
 and both generation scripts. The focused integration evidence lives in `test/studio-s1.test.ts`,
 `test/studio-s2.test.ts`, `test/studio-s3.test.ts`, `test/studio-s4.test.ts`,
 `test/generate-cli.test.ts`, `test/skills.test.ts`, `test/recipes.test.ts` and the self-hosting oracle.
+
+## Review follow-up
+
+The integration review read `891edd2`. This follow-up addresses its seven findings in a new
+commit; all five merge commits retain their original identities.
+
+| Finding | Resolution | Regression evidence |
+| --- | --- | --- |
+| 1. Run results outside verifier rows | Fixed. The verification panel renders recipe 45's file rows under the direct test anchor or the example's verifying test anchors. A file shared by multiple verifiers renders once per panel. | `test/studio-s4.test.ts`, "places external file rows under their verifier and renders shared files once", failed on the old placement, then passed. It checks separate direct and example files, deduplication and a Spec with no joined records. |
+| 2. Historical CLI assertion failures | Recorded above, naming all four affected commits and both tests. History is preserved as requested. | Documentation correction; `git show <commit>:test/cli.test.ts` confirms each incorrect count and `891edd2`'s repair. No new runtime defect remains. |
+| 3. Historical filter mismatch | Recorded above. S3's `data-facet` output was repaired to `data-filter` in the S4 merge. | Documentation correction; `git show 7fb44c6:src/projections/studio/pages/register-common.ts` and the same path at `25d9837` confirm where the repair landed. |
+| 4. Unprotected source marks | Fixed with a page-set regression containing implementations, a component, a direct verifier, an oracle, impact rows and a cited declaration. Every displayed `path:line` must carry matching file and line attributes. | `test/studio-s2.test.ts`, "marks every displayed file and line across the Studio page set for source links", failed independently when marks were removed from structure, impact, verifier, oracle and citation rows. All five mutations were restored. |
+| 5. Duplicate citation renderers | Fixed with the shared `citationRows` helper. Both pages use the same test-line label, source marks and copy action; the declarations page omits anchor ids. | `test/studio-s2.test.ts`, "renders citation labels consistently on Spec and declaration pages", failed on the differing labels, then passed. It includes source and test citations. |
+| 6. Recipe source-text assertion | Fixed. The handoff test checks `createStudioData(...).recipes.all` for recipes 46 and 51. | The old assertion failed after a formatting-only mutation. Its replacement passes that mutation and fails when recipe 51 is omitted. The existing S1 matrix still checks evaluation exactly once. |
+| 7. Uneven generate help wrapping | Fixed by wrapping the paragraph to the surrounding help width. | `test/generate-cli.test.ts`, "wraps the generate help paragraph without short interior lines", failed on the short interior lines, then passed. |
+
+The focused Studio, generation and integration suites passed 227 tests across 10 files. The
+source-link and recipe mutations were temporary probes, not committed changes. This pass follows
+the carrying Specs' current promises; broader whole-Spec binding reviews remain with close.
+
+Re-measured after the review fixes: `npm run check` passed with 2,690 tests in 114 main-suite
+files and 100 dedicated CLI tests, all projection checks and preflight. Standalone
+`npm run typecheck` also passed. Validation reported 0 errors and 11 expected `honesty/gaps`
+warnings; the worked example reported 0 errors and 0 warnings. Recipe 2 returned
+`{ total: 0, alarms: [] }`. Re-run the commands above rather than inheriting these measurements.
 
 ## Left for S5, close or the owner
 

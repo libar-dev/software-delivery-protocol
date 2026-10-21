@@ -981,21 +981,36 @@ it("preview still stamps and uploads rendered pages when evidence is absent and 
   expect(readFileSync(summary, "utf8")).toContain("validation");
 });
 
-it("places the shared external file rows inside the Spec verification panel", async () => {
+it("places external file rows under their verifier and renders shared files once", async () => {
   const root = fixture();
+  writeFileSync(
+    join(root, "child.sdp.md"),
+    "---\nid: spec:probe.child\nkind: example\naltitude: story\nreadiness: defined\nrelations:\n  refines: spec:probe.page\n  verifies: spec:probe.page\n---\n# Child\n\n## Intent\n- outcome: Read the page.\n\n```gwt\nGiven a page\nWhen it renders\nThen it is read\n```\n",
+  );
+  writeFileSync(
+    join(root, "test/child.test.ts"),
+    "/**\n * @sdpAnchor test:probe.child\n * @sdpVerifies spec:probe.child\n */\nexport const child=1;\n/**\n * @sdpAnchor test:probe.shared\n * @sdpVerifies spec:probe.page\n */\nexport const shared=2;\n",
+  );
   writeFileSync(
     join(root, "other.sdp.md"),
     "---\nid: spec:probe.other\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Other\n\n## Intent\n- outcome: Read another page.\n",
   );
   const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
-    runs: [report()],
+    runs: [report(["test/page.test.ts", "test/child.test.ts"])],
   });
   const pages = renderStudio(data);
   const page = required(pages.find((p) => p.path === "specs/probe.page.html")).content;
   const panel = required(/id="panel.verification"[^>]*>(.*?)<\/details>/su.exec(page)?.[1]);
-  expect(panel).toContain(runRows({ data, path: "specs/probe.page.html" }, "spec:probe.page"));
-  expect(panel.match(/data-run-result/gu)).toHaveLength(3);
-  expect(panel).toContain("External run evidence from <code>test/page.test.ts</code>");
+  const rows = [...panel.matchAll(/<li>(.*?)<\/li>/gsu)].map((match) => required(match[1]));
+  const direct = required(rows.find((row) => row.startsWith("test:probe.page")));
+  expect(direct).toContain("External run evidence from <code>test/page.test.ts</code>");
+  expect(direct).not.toContain("test/child.test.ts");
+  const example = required(rows.find((row) => row.includes('href="probe.child.html"')));
+  expect(example).toContain("External run evidence from <code>test/child.test.ts</code>");
+  expect(example).not.toContain("test/page.test.ts");
+  const shared = required(rows.find((row) => row.startsWith("test:probe.shared")));
+  expect(shared).not.toContain("data-run-result");
+  expect(panel.match(/data-run-result/gu)).toHaveLength(2);
   const other = required(pages.find((p) => p.path === "specs/probe.other.html")).content;
   expect(other).not.toContain("data-run-result");
 });

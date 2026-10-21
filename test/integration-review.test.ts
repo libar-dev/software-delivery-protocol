@@ -4,14 +4,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
+import { schemaVersion } from "../src/graph/schema.js";
+import { createReader } from "../src/reader/reader.js";
+import { createStudioData } from "../src/projections/studio/data.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-it("evaluates S3's recipe 46 and S2's recipe 51 in the shared Studio build", () => {
-  const source = readFileSync(join(root, "src/projections/studio/recipes.ts"), "utf8");
-  expect(source).toContain("[17, 20, 24, 31, 33, 43, 44, 46, 51]");
+it("evaluates S3's recipe 46 and S2's recipe 51 in the shared Studio build", async () => {
+  const data = await createStudioData(createReader({ schemaVersion, nodes: [], edges: [] }));
+  const catalog = readFileSync(join(root, "docs/agent-surface/recipes.md"), "utf8");
   for (const number of [46, 51]) {
-    const catalog = readFileSync(join(root, "docs/agent-surface/recipes.md"), "utf8");
+    expect(data.recipes.all.has(number)).toBe(true);
     expect(catalog).toMatch(new RegExp(`^## ${String(number)}\\. `, "mu"));
   }
 });
