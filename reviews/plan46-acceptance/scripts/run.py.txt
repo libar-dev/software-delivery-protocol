@@ -1,0 +1,12 @@
+import sys, subprocess, time, json
+from pathlib import Path
+root=Path('/tmp/plan46/accept/evidence')
+cwd, name, command = sys.argv[1:]
+start=time.monotonic()
+p=subprocess.run(command,cwd=cwd,shell=True,executable='/bin/bash',stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+elapsed=time.monotonic()-start
+(root/(name+'.log')).write_text(p.stdout)
+row=dict(name=name,cwd=cwd,command=command,exit=p.returncode,seconds=round(elapsed,3),log=name+'.log')
+with (root/'commands.jsonl').open('a') as f: f.write(json.dumps(row)+'\n')
+print(json.dumps(row)); print(p.stdout[-14000:])
+sys.exit(p.returncode)

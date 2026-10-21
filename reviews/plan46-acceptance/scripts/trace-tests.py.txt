@@ -1,0 +1,20 @@
+import sys,unittest,json,subprocess
+from pathlib import Path
+sys.path.insert(0,str(Path.cwd()))
+from design.tools import test_decisions as module
+real=subprocess.run
+rows=[]
+def traced(*args,**kwargs):
+    result=real(*args,**kwargs)
+    if isinstance(result.stdout,str) and ('corpus rules' in result.stdout or 'FAIL' in result.stdout):
+        rows.append({'command':result.args,'exit':result.returncode,'output':result.stdout+(result.stderr or '')})
+    return result
+subprocess.run=traced
+suite=unittest.TestSuite()
+for cls in [module.CheckTests,module.CorpusRulesTests,module.CheckCommandTests]:
+    for name in unittest.defaultTestLoader.getTestCaseNames(cls):
+        if name!='test_address_sections_follow_the_protocol_export':suite.addTest(cls(name))
+result=unittest.TextTestRunner(verbosity=2).run(suite)
+Path('/tmp/plan46/accept/evidence/planted-results.json').write_text(json.dumps(rows,indent=2)+'\n')
+print(f'Captured {len(rows)} subprocess results, {sum(r["exit"]!=0 for r in rows)} refusals.')
+sys.exit(not result.wasSuccessful())

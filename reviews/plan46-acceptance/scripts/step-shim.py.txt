@@ -1,0 +1,15 @@
+from pathlib import Path
+p=Path('scripts/acceptance-vitest.ts')
+p.write_text('''// Copy-only acceptance workaround for the packed adapter's bundled Vitest runtime.
+import {describe,it} from "vitest";
+import {planExample,runExamplePlan} from "@libar-dev/software-delivery-protocol/runner";
+export function bindExample(contract:any,world:()=>any,bindings:any) {
+  const plan=planExample(contract,bindings);
+  describe(`${contract.title} (${contract.spec})`,()=>{
+    it("executes the bound example against a fresh world",async()=>runExamplePlan(plan,world()));
+  });
+}
+''')
+p=Path('tests/pure/domain-kernel.evaluate-twice.test.ts')
+p.write_text(p.read_text().replace('@libar-dev/software-delivery-protocol/vitest','../../scripts/acceptance-vitest.js'))
+print('The suite now uses the copy-only adapter over the shipped framework-free runner.')

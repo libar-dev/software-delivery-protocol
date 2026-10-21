@@ -1,0 +1,30 @@
+from pathlib import Path
+p = Path('design/rules/policy.js')
+s = p.read_text()
+start = s.index('// Entry-address resolution,')
+end = s.index('// Entry addresses written outside', start)
+s = s[:start] + '''// Resolve external and register addresses through the shipped recipe.
+const addresses = [...new Set([
+  ...params.addressSites.map(site => site?.address),
+  ...params.register.decisions.flatMap(row => (row.sources ?? []).map(source => source.address)),
+])];
+const addressAnswer = await recipes(25, { addresses });
+const resolvedAddresses = new Map(addressAnswer.rows.map(row => [row.address, row]));
+const resolve = address => {
+  const row = resolvedAddresses.get(address);
+  const reasons = { malformed: "is outside the address grammar", spec: "names no Spec",
+    section: "names no entry of its Spec", entry: "names no entry of its Spec" };
+  return { ...row, reason: row?.resolves ? null : reasons[row?.reason] ?? "is outside the address grammar" };
+};
+
+''' + s[end:]
+start = s.index('// No Spec rests on itself through dependsOn:')
+end = s.index('// Open questions:', start)
+s = s[:start] + '''// Dependency cycles come from the shipped recipe; the corpus keeps its finding id.
+const cycleAnswer = await recipes(26);
+for (const { members } of cycleAnswer.cycles)
+  fail("dependency-cycle", members[0], `dependsOn cycle among ${members.join(", ")}`);
+
+''' + s[end:]
+p.write_text(s)
+print('Replaced address resolver and cycle algorithm with recipes 25 and 26.')

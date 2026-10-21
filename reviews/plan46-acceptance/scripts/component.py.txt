@@ -1,0 +1,33 @@
+from pathlib import Path
+p=Path('design/specs/application/history-view-component.sdp.md')
+p.write_text('''---
+id: spec:application.history-view-component
+kind: model
+altitude: feature
+readiness: scoped
+relations:
+  dependsOn:
+    - spec:application.history-projection
+    - spec:application.history-rebuild
+---
+# History view application component
+
+The history view build in `design/ROADMAP.md`, section 5d, needs the live history projection and the paused rebuild. This copy records their planned application component before either is built.
+
+## Intent
+
+- outcome: Keep the history fold and paused rebuild behind the history view application component described by the roadmap.
+
+## Model
+
+- **history view component** — The planned application seam for applying history events and coordinating the paused rebuild, realized later by a component anchor satisfying this design.
+
+## Design
+
+- id: `component:platform.history-view`
+- layer: `application`
+- context: `platform`
+- role: `projection`
+- uses: `component:platform.read-model, component:platform.gate, component:platform.context`
+''')
+print(p)
