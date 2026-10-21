@@ -521,6 +521,8 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
+  // Every catalog body runs over the whole corpus here, so the time grows with the corpus; under
+  // the full suite's parallel load it outruns the default five seconds.
   it("runs every body through the front door without throwing", async () => {
     for (const recipe of recipes) {
       const value = await runRecipe(recipe);
@@ -530,7 +532,7 @@ describe("the agent-surface recipe corpus", () => {
         returned: true,
       });
     }
-  });
+  }, 30_000);
 
   it("returns the non-example build backlog and audits excluded example evidence", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(1)));
