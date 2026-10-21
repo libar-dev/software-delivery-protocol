@@ -16,7 +16,14 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 45 is EXECUTED** on `feature/design-at-scale-v0`, as PR 33. Design at the adopter's
+> **plan 46 is DRAFTED** on `feature/studio-and-adoption-v0`. Designs people can read, and an
+> adopter at full speed: the Studio's phase 1 (diagrams, every Spec-page panel, the registers and
+> the owner's queue as pages, the design diff, run evidence, the composing panel, previews per
+> pull request), the vault, and the adopter's loop at scale (recipes called from rules files, step
+> keys, term addresses, checked declarations, bundles in parts, the readiness planner, the upgrade
+> kit). The rulings were made on the owner's delegation; the plan lists the decisions only the
+> owner makes.
+> **plan 45 is EXECUTED**, merged as PR 33. Design at the adopter's
 > scale: the adopter installs from a commit, the design-pass loop fits a large corpus
 > (`declarations: "addresses"`, recipe 41), corpus rules run under `sdp validate --rules` with
 > recipes 42 and 43, and the Spec Studio's phase 0 publishes static pages (`sdp studio`; plan 42
