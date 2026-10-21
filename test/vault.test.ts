@@ -156,7 +156,6 @@ it("guards hidden unknowns, changed notes, links and special files without clean
       const e = error as VaultGuardError;
       expect(e.refusals.map((r) => [r.path, r.reason])).toEqual(
         expect.arrayContaining([
-          ["sdp/.DS_Store", "unknown"],
           ["sdp/specs/.a.md.sdp-tmp", "unknown"],
           ["sdp/specs/a.md", "changed"],
           ["sdp/link", "not a file"],

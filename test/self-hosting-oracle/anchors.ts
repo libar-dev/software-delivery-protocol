@@ -385,6 +385,13 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     constant: "graphOnlyAnchor",
   },
   {
+    id: "test:protocol.studio-inputs-both-given",
+    nodeType: "Anchor",
+    file: "test/studio-s4.test.ts",
+    site: "registerBothGiven<InputsWorld & { inputsNamed?: boolean }>({",
+    constant: "bothGivenAnchor",
+  },
+  {
     id: "test:protocol.studio-stamp-apart",
     nodeType: "Anchor",
     file: "test/studio-s4.test.ts",
@@ -4439,6 +4446,11 @@ export const expectedBindingEdges = [
     "test:protocol.studio-graph-only",
     "verifies",
     "spec:consumers.spec-studio.data.inputs.graph-only",
+  ],
+  [
+    "test:protocol.studio-inputs-both-given",
+    "verifies",
+    "spec:consumers.spec-studio.data.inputs.both-given",
   ],
   [
     "test:protocol.studio-stamp-apart",

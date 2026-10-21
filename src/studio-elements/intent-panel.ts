@@ -8,6 +8,7 @@ export interface GatheredIntent {
   replaces?: string;
   follows?: string;
   pack?: string;
+  packMembersComplete?: boolean;
   action: string;
 }
 export interface IntentStorage {
@@ -29,6 +30,7 @@ function validIntent(value: unknown): value is GatheredIntent {
     typeof i.request === "string" &&
     i.request.trim().length > 0 &&
     typeof i.action === "string" &&
+    (i.packMembersComplete === undefined || typeof i.packMembersComplete === "boolean") &&
     ["text", "replaces", "follows", "pack"].every(
       (k) => i[k] === undefined || typeof i[k] === "string",
     )
@@ -134,6 +136,7 @@ export class IntentPanel {
         !intent.pack ||
         (base === stampedCommit &&
           scope.length > 0 &&
+          intent.packMembersComplete !== false &&
           intent.action !== "change-pack" &&
           scope.every(scopeRef));
       if (!base.trim() || !reason.trim() || !packAllowed || proposalProblems(candidate).length)

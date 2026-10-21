@@ -250,7 +250,7 @@ export function isCliEntrypoint(executedPath: string | undefined, moduleUrl: str
   }
 
   try {
-    return realpathSync(executedPath) === realpathSync(fileURLToPath(moduleUrl));
+    return realpathSync.native(executedPath) === realpathSync.native(fileURLToPath(moduleUrl));
   } catch {
     return false;
   }

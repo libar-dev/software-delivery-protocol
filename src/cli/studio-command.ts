@@ -1,6 +1,6 @@
 import { runValidateWatch } from "./validate-watch.js";
 import type { ValidateWatchHooks } from "./validate-watch.js";
-import { readStudioBase } from "./studio-inputs.js";
+import { readStudioBase, readStudioRuns } from "./studio-inputs.js";
 import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,15 +43,8 @@ export function prepareStudioPublication(
     removeArtifacts([studioPath, temporaryPath], output, command, recoveryRm);
     return 1;
   };
-  const runs: unknown[] = [];
-  for (const path of parsed.runs ?? []) {
-    try {
-      runs.push(JSON.parse(readFileSync(path, "utf8")) as unknown);
-    } catch {
-      writeStderr(output, `sdp ${command}: cannot read --runs ${JSON.stringify(path)} as JSON.\n`);
-      return undefined;
-    }
-  }
+  const runs = readStudioRuns(parsed.runs ?? [], parsed.root, output, command);
+  if (runs === undefined) return undefined;
   let prior: readonly StudioFile[] | undefined;
   try {
     if (parsed.checkClean) prior = readPublishedStudio(studioPath);

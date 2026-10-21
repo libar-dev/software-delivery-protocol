@@ -121,7 +121,9 @@ export function registerCompose(): void {
             scope: pack ? members : [scope],
             request: request.value,
             action: packPart?.value === "pack" ? "change-pack" : action,
-            ...(pack ? { pack } : {}),
+            ...(pack
+              ? { pack, packMembersComplete: this.getAttribute("members-complete") !== "false" }
+              : {}),
             ...(exact?.value.trim() ? { text: exact.value } : {}),
             ...(action === "change-entry" && scope.includes("#") ? { replaces: scope } : {}),
           });

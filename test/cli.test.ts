@@ -959,6 +959,7 @@ export const probe = spec({
     try {
       expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
       const registrar = join(root, "test/orders/orders.create-order.valid-cart.test.generated.ts");
+      writeFileSync(registrar, "Changed registrar bytes require replacement.\n", "utf8");
       const capture = createCaptureOutput();
 
       expect(

@@ -23,6 +23,7 @@ export interface VaultState {
   readonly files: ReadonlyMap<string, Buffer>;
   readonly list: FileList;
   readonly temporaries: readonly string[];
+  readonly preservedBases: readonly string[];
 }
 export const LIST = ".sdp-vault.json";
 export const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -123,7 +124,7 @@ export function inspectVault(out: string): VaultState {
       for (const name of readdirSync(absolute).sort(compare))
         walk(join(absolute, name), path ? `${path}/${name}` : name);
     } else if (path === "") refusals.push({ path: "sdp", reason: "not a file" });
-    else files.set(path, readFileSync(absolute));
+    else if (basename(path) !== ".DS_Store") files.set(path, readFileSync(absolute));
   };
   walk(folder, "");
   const listBytes = files.get(LIST);
@@ -132,6 +133,7 @@ export function inspectVault(out: string): VaultState {
     refusals.push({ path: `sdp/${LIST}`, reason: "malformed" });
   const list = parsed ?? { schema: "sdp-vault/1" as const, files: {} };
   const temporaries: string[] = [];
+  const preservedBases: string[] = [];
   for (const [path, bytes] of files) {
     if (path === LIST) continue;
     const target = path.split("/");
@@ -147,20 +149,23 @@ export function inspectVault(out: string): VaultState {
         continue;
       }
     } else if (Object.hasOwn(list.files, path)) {
-      if (!list.files[path]?.includes(hash(bytes)))
-        refusals.push({ path: `sdp/${path}`, reason: "changed" });
+      if (!list.files[path]?.includes(hash(bytes))) {
+        if (path.endsWith(".base")) preservedBases.push(path);
+        else refusals.push({ path: `sdp/${path}`, reason: "changed" });
+      }
       continue;
     }
     refusals.push({ path: `sdp/${path}`, reason: "unknown" });
   }
   if (refusals.length) throw new VaultGuardError(refusals);
-  return { files, list, temporaries };
+  return { files, list, temporaries, preservedBases };
 }
 export interface SyncResult {
   readonly files: number;
   readonly written: number;
   readonly unchanged: number;
   readonly removed: number;
+  readonly preservedBases: readonly string[];
 }
 export function synchronizeVault(
   out: string,
@@ -171,8 +176,9 @@ export function synchronizeVault(
   const current = inspectVault(out);
   const changed = [...new Set([...state.files.keys(), ...current.files.keys()])].filter(
     (path) =>
-      !state.files.get(path)?.equals(current.files.get(path) ?? Buffer.alloc(0)) ||
-      !current.files.has(path),
+      !current.preservedBases.includes(path) &&
+      (!state.files.get(path)?.equals(current.files.get(path) ?? Buffer.alloc(0)) ||
+        !current.files.has(path)),
   );
   if (changed.length)
     throw new VaultGuardError(
@@ -194,7 +200,15 @@ export function synchronizeVault(
       throw new Error(`invalid vault path ${path}`);
     final[path] = [hash(content)];
   }
+  for (const path of state.preservedBases) {
+    desired.delete(path);
+    final[path] = state.list.files[path] ?? [];
+  }
   for (const path of new Set([...Object.keys(state.list.files), ...desired.keys()])) {
+    if (state.preservedBases.includes(path)) {
+      transitional[path] = state.list.files[path] ?? [];
+      continue;
+    }
     const previous = state.files.get(path);
     const hashes = [
       ...new Set([...(previous === undefined ? [] : [hash(previous)]), ...(final[path] ?? [])]),
@@ -216,6 +230,25 @@ export function synchronizeVault(
   let written = 0,
     unchanged = 0,
     removed = 0;
+  for (const path of Object.keys(state.list.files))
+    if (!desired.has(path) && !state.preservedBases.includes(path) && state.files.has(path)) {
+      rmSync(join(folder, path));
+      removed++;
+    }
+  const prune = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }))
+      if (entry.isDirectory()) prune(join(directory, entry.name));
+    const remaining = readdirSync(directory, { withFileTypes: true });
+    if (
+      directory !== folder &&
+      remaining.every((entry) => entry.isFile() && entry.name === ".DS_Store")
+    ) {
+      for (const entry of remaining) rmSync(join(directory, entry.name));
+      rmdirSync(directory);
+    }
+  };
+  mkdirSync(folder, { recursive: true });
+  prune(folder);
   for (const [path, content] of desired) {
     if (state.files.get(path)?.equals(Buffer.from(content))) unchanged++;
     else {
@@ -223,19 +256,13 @@ export function synchronizeVault(
       written++;
     }
   }
-  for (const path of Object.keys(state.list.files))
-    if (!desired.has(path) && state.files.has(path)) {
-      rmSync(join(folder, path));
-      removed++;
-    }
-  const prune = (directory: string): void => {
-    for (const entry of readdirSync(directory, { withFileTypes: true }))
-      if (entry.isDirectory()) prune(join(directory, entry.name));
-    if (directory !== folder && readdirSync(directory).length === 0) rmdirSync(directory);
-  };
-  mkdirSync(folder, { recursive: true });
-  prune(folder);
   const finalBytes = serializeList(final);
   if (readFileSync(join(folder, LIST), "utf8") !== finalBytes) atomic(LIST, finalBytes);
-  return { files: desired.size, written, unchanged, removed };
+  return {
+    files: desired.size + state.preservedBases.length,
+    written,
+    unchanged: unchanged + state.preservedBases.length,
+    removed,
+    preservedBases: state.preservedBases,
+  };
 }
