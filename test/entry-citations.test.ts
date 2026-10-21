@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { scanEntryCitations } from "../src/extract/entry-citations.js";
 import {
   oracleAnchorId,
   ref,
@@ -293,6 +294,18 @@ describe("entry citation extraction and reader", () => {
     ]);
     invoke(world);
     expect(world.code, world.stderr).toBe(0);
+  });
+  it("keeps a literal malformed token beside an interpolated token on the same line", () => {
+    const source =
+      'const literal = "spec:probe.one#design.$"; const dynamic = `spec:probe.one#design.${key}`;';
+    expect(scanEntryCitations(source, "source.ts")).toEqual([
+      { address: "spec:probe.one#design.$", file: "source.ts", line: 1 },
+    ]);
+  });
+  it("removes trailing punctuation from a complete prefix before interpolation", () => {
+    expect(
+      scanEntryCitations("const title = `spec:probe.one#design.typeOne.${key}`;", "source.ts"),
+    ).toEqual([{ address: point.address, file: "source.ts", line: 1 }]);
   });
   it("recipe 51 locates a citation of the second keyed question", async () => {
     const { evaluateBody } = await import("../src/reader/evaluate-body.js");
