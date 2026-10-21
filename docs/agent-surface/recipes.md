@@ -47,6 +47,8 @@
 | 43 | Planned against realized components | none | Compare component designs with anchors |
 | 44 | Example-space coverage | spec or pack | Report covered and uncovered slot values from decoded example spaces |
 | 46 | The statement queue | decider | Order waiting readiness statements and questions |
+| 47 | Capability adoption | detail, perspectives | Measure capability use and possible places |
+| 48 | The rule-key proposal | commit, pack or specs | Propose keys for unkeyed rules and flows |
 | 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
 
@@ -4464,6 +4466,163 @@ holds, Spec id and authored position. Blocking questions hold their own Spec and
 below `defined`, its direct typed dependents. `totals.withoutDecider` and
 `totals.blockingWithoutDecider` count questions that name nobody, so an empty owner list does not
 hide them. The law is `spec:consumers.readiness-planner`.
+
+## 47. Capability adoption
+
+Use this to measure a corpus before choosing which capabilities to adopt. Counts describe places
+a capability could apply. They give no score and produce no findings.
+
+`params.detail` defaults to `false`; pass `true` for every Spec row or a list of Spec ids for a
+selection. `params.perspectives` is the list of perspective objects kept outside the graph.
+Without it, perspectives read `null`, since the graph cannot count those files.
+
+```js
+const accepts = ["detail", "perspectives"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const detail = params.detail ?? false;
+const perspectives = params.perspectives;
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const specs = graph.nodes.filter((node) => node.nodeType === "Primitive").sort((a, b) => compare(a.id, b.id));
+const byId = new Map(specs.map((spec) => [spec.id, spec]));
+const diagnostics = [];
+if (params.detail === null || !(typeof detail === "boolean" || Array.isArray(detail) && detail.every((id) => typeof id === "string" && byId.has(id)))) diagnostics.push({ parameter: "detail", problem: "Expected a boolean or a list of resolving Spec ids." });
+if (perspectives !== undefined && !(Array.isArray(perspectives) && perspectives.every((item) => item !== null && typeof item === "object" && !Array.isArray(item)))) diagnostics.push({ parameter: "perspectives", problem: "Expected a list of perspective objects." });
+if (diagnostics.length) return { diagnostics };
+const laws = [
+  ["ruleKeys", "spec:model.rule-keys"],
+  ["questionKeys", "spec:model.open-question-keys"],
+  ["questionFields", "spec:model.open-question-fields"],
+  ["relationReasons", "spec:model.relation-reasons"],
+  ["exercises", "spec:model.rule-keys"],
+  ["pinnedDeclarations", "spec:extraction.contract-declarations"],
+  ["componentDesigns", "spec:model.planned-architecture"],
+  ["stepKeys", "spec:carrier.step-keys"],
+  ["termKeys", "spec:model.term-addresses"],
+  ["entryCitations", "spec:extraction.entry-citations"],
+  ["perspectives", "spec:consumers.review-perspectives"],
+];
+const authored = new Set(["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"]);
+const relations = new Map(specs.map((spec) => [spec.id, []]));
+for (const edge of graph.edges) if (edge.claim === "declared" && authored.has(edge.type)) relations.get(edge.from)?.push(edge);
+const span = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u;
+const machineValue = (value) => typeof value === "string" ? (span.exec(value)?.[2] ?? value).trim() : "";
+const componentId = /^component:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*$/u;
+const designs = new Map(specs.map((spec) => [spec.id, machineValue(spec.sections?.design?.id)]).filter(([, id]) => componentId.test(id)));
+const designed = new Set(designs.values());
+const components = new Set(graph.nodes.filter((node) => node.nodeType === "CodeNode" && node.claim === "anchored" && node.id.startsWith("component:")).map((node) => node.id));
+const realized = new Map(specs.map((spec) => [spec.id, new Set()]));
+for (const edge of graph.edges) if (edge.claim === "anchored" && edge.type === "satisfies" && components.has(edge.from)) realized.get(edge.to)?.add(edge.from);
+const cited = new Set((graph.citations ?? []).map((row) => row.address));
+const count = (inUse, applicable) => ({ inUse, applicable });
+const perSpec = new Map(specs.map((spec) => {
+  const sections = spec.sections ?? {}, behavior = sections.behavior ?? {};
+  const questions = sections.intent?.openQuestions ?? [];
+  const edges = relations.get(spec.id);
+  const verifies = spec.specKind === "example" ? edges.filter((edge) => edge.type === "verifies") : [];
+  const entries = Object.entries(sections.design ?? {}).filter(([key]) => key !== "description");
+  const pinned = entries.filter(([, value]) => typeof value === "string" && span.test(value));
+  const steps = [behavior.exampleSpace, ...(behavior.examples ?? [])].filter((item) => item !== null && typeof item === "object").flatMap((item) => ["given", "when", "then"].flatMap((phase) => item[phase] ?? []));
+  return [spec.id, {
+    ruleKeys: count(Object.keys(behavior.ruleKeys ?? {}).length, (behavior.rules?.length ?? 0) + (behavior.flows?.length ?? 0)),
+    questionKeys: count(questions.filter((question) => question?.key !== undefined).length, questions.length),
+    questionFields: count(questions.filter((question) => ["decider", "links", "provisional", "trigger"].some((field) => question?.[field] !== undefined)).length, questions.length),
+    relationReasons: count(edges.filter((edge) => edge.reason !== undefined).length, edges.length),
+    exercises: count(verifies.filter((edge) => edge.exercises !== undefined).length, verifies.length),
+    pinnedDeclarations: count(pinned.length, entries.length),
+    stepKeys: count(Object.keys(behavior.stepKeys ?? {}).length, steps.length),
+    termKeys: count(Object.keys(sections.model?.termKeys ?? {}).length, Object.keys(sections.model?.terms ?? {}).length),
+    entryCitations: count(pinned.filter(([key]) => cited.has(`${spec.id}#design.${key}`)).length, pinned.length),
+  }];
+}));
+const componentCount = (ids, corpus = false) => {
+  const possible = new Set(corpus ? [...components, ...designed] : []);
+  for (const id of ids) {
+    if (designs.has(id)) possible.add(designs.get(id));
+    for (const component of realized.get(id) ?? []) possible.add(component);
+  }
+  return count([...possible].filter((id) => designed.has(id)).length, possible.size);
+};
+const aggregate = (ids, corpus = false) => Object.fromEntries(laws.filter(([name]) => name !== "perspectives").map(([name]) => [name, name === "componentDesigns" ? componentCount(ids, corpus) : count(ids.reduce((sum, id) => sum + perSpec.get(id)[name].inUse, 0), ids.reduce((sum, id) => sum + perSpec.get(id)[name].applicable, 0))]));
+const ids = specs.map((spec) => spec.id);
+const corpus = aggregate(ids, true);
+const packs = graph.nodes.filter((node) => node.nodeType === "Pack").sort((a, b) => compare(a.id, b.id)).map((pack) => {
+  const members = [...new Set(pack.members.filter((id) => byId.has(id)))];
+  return { id: pack.id, members: members.length, capabilities: aggregate(members) };
+});
+const selected = new Set(detail === true ? ids : Array.isArray(detail) ? detail : []);
+return {
+  totals: { specs: specs.length, packs: packs.length, examples: specs.filter((spec) => spec.specKind === "example").length, decisions: specs.filter((spec) => spec.specKind === "decision").length, componentUnits: components.size, statedReady: specs.filter((spec) => spec.readiness === "ready").length, floorReady: g.specs().filter((spec) => spec.derivedReadiness === "ready").length },
+  capabilities: laws.map(([capability, carriedBy]) => ({ capability, ...(capability === "perspectives" ? count(perspectives === undefined ? null : perspectives.length, null) : corpus[capability]), carriedBy })),
+  packs,
+  specs: ids.filter((id) => selected.has(id)).map((id) => {
+    const counts = aggregate([id]);
+    return { id, packs: packs.filter((pack) => graph.nodes.find((node) => node.id === pack.id).members.includes(id)).map((pack) => pack.id), inUse: Object.fromEntries(Object.entries(counts).filter(([, row]) => row.inUse > 0).map(([name, row]) => [name, row.inUse])), couldApply: Object.fromEntries(Object.entries(counts).filter(([, row]) => row.applicable > row.inUse).map(([name, row]) => [name, row.applicable - row.inUse])) };
+  }),
+  leftOut: selected.size < specs.length ? ["Spec rows; pass detail: true or a list of Spec ids."] : [],
+};
+```
+
+## 48. The rule-key proposal
+
+Use this to propose rule keys for review. It preserves every entry's text and writes no carrier.
+
+`params.commit` is required and names the commit whose graph you read. Limit the proposal with
+`params.pack` or `params.specs`, a list of Spec ids, or omit both for the corpus. Check the returned
+proposal with recipe 38 against that commit's graph before an agent applies it.
+
+```js
+const accepts = ["commit", "pack", "specs"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const commit = params.commit;
+const pack = params.pack;
+const requested = params.specs;
+const diagnostics = [];
+const bad = (parameter, problem) => diagnostics.push({ parameter, problem });
+const byId = new Map(graph.nodes.filter((node) => node.nodeType === "Primitive").map((node) => [node.id, node]));
+const packNode = graph.nodes.find((node) => node.nodeType === "Pack" && node.id === pack);
+if (typeof commit !== "string" || commit.trim().length === 0) bad("commit", "Supply the commit whose graph is being read.");
+if (pack !== undefined && requested !== undefined) bad("scope", "Supply pack or specs, not both.");
+if (pack !== undefined && !packNode) bad("pack", "Expected a resolving Pack id.");
+if (requested !== undefined && !(Array.isArray(requested) && requested.every((id) => typeof id === "string" && byId.has(id)))) bad("specs", "Expected a list of resolving Spec ids.");
+if (diagnostics.length) return { diagnostics };
+const ids = [...new Set(packNode ? packNode.members.filter((id) => byId.has(id)) : requested !== undefined ? requested : [...byId.keys()].sort())];
+const scope = packNode ? { pack } : requested !== undefined ? { specs: ids } : { corpus: true };
+const label = packNode ? pack : requested !== undefined ? ids.join(", ") : "the corpus";
+const stop = new Set("a an the and or but nor so then than if when while where of to in on at by for with from into onto as per via over under about is are was were be been being do does did has have had can could may might must shall should will would it its this that these those there their they them which who whom whose what each every any also only own".split(" "));
+const refused = new Set(["implemented", "hasVerifier", "observed", "claim", "deliveryFacts", "nodeType", "specKind", "satisfies", "verifies", "belongsTo", "models"]);
+const coin = (text) => {
+  const words = text.normalize("NFD").replace(/\p{M}/gu, "").replace(/^(?:\[[^\]]*\]\s*)+/u, "").replace(/([a-z0-9])([A-Z])/gu, "$1 $2").toLowerCase().split(/[^a-z0-9]+/u).filter(Boolean);
+  const kept = words.filter((word) => !stop.has(word));
+  const candidates = kept.length ? kept : words;
+  while (candidates.length && !/^[a-z]/u.test(candidates[0])) candidates.shift();
+  return [...new Set(candidates)].slice(0, 3).map((word, index) => index ? word[0].toUpperCase() + word.slice(1) : word).join("");
+};
+const locations = new Map((graph.locations ?? []).map((row) => [`${row.spec}:${row.entry}`, row]));
+const changes = [], unkeyable = [];
+let entries = 0, keyed = 0;
+for (const id of ids) {
+  const spec = byId.get(id), behavior = spec.sections?.behavior ?? {};
+  const used = new Set(Object.keys(behavior.ruleKeys ?? {}));
+  const addressed = new Set(Object.values(behavior.ruleKeys ?? {}));
+  for (const [list, entryName] of [["rules", "rule"], ["flows", "flow"]]) {
+    for (const [index, text] of (behavior[list] ?? []).entries()) {
+      entries++;
+      if (addressed.has(`${list}[${index}]`)) { keyed++; continue; }
+      const entry = `${entryName}[${index}]`;
+      const line = locations.get(`${id}:${entry}`)?.line ?? null;
+      const stem = coin(text);
+      if (!stem) { unkeyable.push({ spec: id, entry, file: spec.file, line, reason: "no word to coin a key from" }); continue; }
+      let key = stem, suffix = 2;
+      while (used.has(key) || refused.has(key)) key = `${stem}${suffix++}`;
+      used.add(key);
+      changes.push({ scope: [id], request: `Add the key marker [#${key}] and one space at the start of the text of ${entry} of ${id}, at ${spec.file}${line === null ? "" : ` line ${line}`}, after its rule: or flow: label where it has one.`, text: `[#${key}] ${text}`, reason: `Gives the entry the address ${id}#rule.${key}.` });
+    }
+  }
+}
+return { scope, totals: { specs: ids.length, entries, keyed, proposed: changes.length, unkeyable: unkeyable.length }, proposal: changes.length ? { schema: "sdp-proposal/1", base: commit, reason: `Key every rule and flow entry in ${label} so a review, a register row or an example can cite it.`, changes } : null, unkeyable };
+```
 
 ## 50. External registers
 

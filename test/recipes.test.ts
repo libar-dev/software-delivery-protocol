@@ -499,7 +499,10 @@ describe("the agent-surface recipe corpus", () => {
     }
 
     for (const { ordinal } of recipes.filter((recipe) => recipe.ordinal >= 12)) {
-      expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
+      const guidance = [47, 48].includes(ordinal)
+        ? readFileSync(join(repoRoot, "docs/agent-surface/upgrade-guide.md"), "utf8")
+        : onRamps.sessions;
+      expect(guidance).toContain(`recipe ${String(ordinal)}`);
     }
   });
 
@@ -4538,6 +4541,8 @@ describe("recipe parameters and the shipped recipe files", () => {
             [35, 36, 37, 38].includes(recipe.ordinal) &&
             !["budget", "detail", "declarations"].includes(name)
           ) &&
+          !(recipe.ordinal === 47 && name === "perspectives") &&
+          recipe.ordinal !== 48 &&
           !(recipe.ordinal === 39 && name === "pack") &&
           !(recipe.ordinal === 40 && name === "imports") &&
           !(recipe.ordinal === 41 && name !== "prefixes") &&

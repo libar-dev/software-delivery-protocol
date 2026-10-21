@@ -24,6 +24,10 @@ export const contractDependentSuites = [
     contracts: "generated/contracts",
     generation: "npm run generate:self-hosting",
     testPaths: [
+      "test/upgrade-kit.test.ts",
+      "test/consumers.upgrade-kit.capability-adoption.counts-a-corpus.test.generated.ts",
+      "test/consumers.upgrade-kit.rule-key-proposal.proposal-applies-clean.test.generated.ts",
+      "test/consumers.upgrade-kit.rule-key-proposal.collision-and-unkeyable.test.generated.ts",
       "test/carrier.slot-notation.one-literal-binding.test.generated.ts",
       "test/model.open-question-fields.dropped-list-warns.test.generated.ts",
       "test/validation.kind-evidence.second-entry-untargeted.test.generated.ts",

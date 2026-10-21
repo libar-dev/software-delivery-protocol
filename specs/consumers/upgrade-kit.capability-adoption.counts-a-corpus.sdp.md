@@ -2,7 +2,7 @@
 id: spec:consumers.upgrade-kit.capability-adoption.counts-a-corpus
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.upgrade-kit.capability-adoption
   verifies:

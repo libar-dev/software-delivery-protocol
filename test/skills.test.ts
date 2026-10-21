@@ -548,7 +548,7 @@ const readingOnRampTestAnchor = specTest({
 void readingOnRampTestAnchor;
 
 describe("the graph-reading on-ramp", () => {
-  it("maps a task to every catalog recipe in one sheet", () => {
+  it("maps reading tasks in the skill sheet and upgrade tasks in the guide", () => {
     const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
     const heading = "### Which recipe answers a task";
     const start = surface.indexOf(heading);
@@ -566,7 +566,12 @@ describe("the graph-reading on-ramp", () => {
     for (const row of rows.slice(1)) {
       expect({ row, namesRecipe: /\(recipe \d+\)/u.test(row) }).toEqual({ row, namesRecipe: true });
     }
-    expect([...new Set(ordinals)].sort((left, right) => left - right)).toEqual(catalogOrdinals());
+    const guide = readFileSync(join(repoRoot, "docs/agent-surface/upgrade-guide.md"), "utf8");
+    const upgradeRecipes = [47, 48];
+    for (const ordinal of upgradeRecipes) expect(guide).toContain(`recipe ${String(ordinal)}`);
+    expect(
+      [...new Set([...ordinals, ...upgradeRecipes])].sort((left, right) => left - right),
+    ).toEqual(catalogOrdinals());
   });
 
   it("links the Specs that own the graph contract, the claims and the sink", () => {

@@ -1,0 +1,149 @@
+# Upgrade a corpus
+
+This guide follows `spec:consumers.upgrade-kit`. Start from a clean worktree so you can review
+and record the edits separately. Choose the Protocol commit you want to adopt, re-pin
+`@libar-dev/software-delivery-protocol` to it with your package manager, and check the installed
+build:
+
+```sh
+pnpm exec sdp --version
+```
+
+## Measure the corpus
+
+Run capability adoption, recipe 47. It reports the corpus totals, each Pack's counts, and the
+places each capability could apply. A count does not ask you to fill every place.
+
+```sh
+pnpm exec sdp q 'return await recipes(47, params)' --params '{"detail":true}' --json
+```
+
+Keep the result as your starting measurement. Add your project's `--root` and `--exclude`
+arguments where needed. The catalog is
+`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md`.
+
+## Propose and apply rule keys
+
+Choose one Pack first. Write its base graph with `pnpm exec sdp build .` and save
+`generated/graph.json` outside the generated roots before another build. Record the commit
+whose corpus it contains. Pass that commit and your Pack id to the rule-key proposal, recipe 48:
+
+```sh
+pnpm exec sdp q 'return await recipes(48, params)' --params @key-scope.json --json
+```
+
+`key-scope.json` contains `commit` and `pack`. Save the answer's `proposal` object as
+`proposal.json`. Review the proposed keys and the entries listed as unkeyable. Check the proposal
+against the saved base graph with recipe 38:
+
+```sh
+pnpm exec sdp q 'return await recipes(38, params)' --params proposal=@proposal.json --params base=@base-graph.json --json
+```
+
+Resolve schema problems and unresolved scopes. A change whose scope moved since the base goes
+to a person. Once the check is clear, ask an agent to apply the proposal, inspect the diff, run
+`pnpm exec sdp validate .`, and record the edits in git. The recipes write no carriers.
+The proposal contract is `spec:consumers.intent-composition.proposal`.
+
+## Choose capabilities to adopt
+
+### ruleKeys
+
+Recipe 47 measures this row. Use the proposal above to add keys, then use rule coverage,
+recipe 34, to find keyed rules no example exercises. The law is `spec:model.rule-keys`.
+
+### questionKeys
+
+Recipe 47 measures this row. Give a question a key when a review or another Spec needs to cite
+it. Follow `spec:model.open-question-keys` for the marker and address form.
+
+### questionFields
+
+Recipe 47 measures this row. Add the decider, links, provisional answer or deferral trigger you
+know. Read the open-question register, recipe 20, to choose the questions to enrich.
+The law is `spec:model.open-question-fields`.
+
+### relationReasons
+
+Recipe 47 measures this row. Explain a relation where its target alone leaves the reader asking
+why it holds. Follow `spec:model.relation-reasons` for the carrier form.
+
+### exercises
+
+Recipe 47 measures this row. Read rule coverage, recipe 34, and name the rules an example
+actually exercises on its `verifies` relation. The law is `spec:model.rule-keys`.
+
+### pinnedDeclarations
+
+Recipe 47 measures this row. Use pinned declarations, recipe 24, to review the signatures and
+shapes a builder and test author share. Follow `spec:extraction.contract-declarations` when
+pinning another declaration.
+
+### componentDesigns
+
+Recipe 47 measures this row. Describe a planned component under `spec:model.planned-architecture`.
+Use planned against realized components, recipe 43, to compare its design with the code anchors.
+
+### stepKeys
+
+Recipe 47 measures this row. Key a step you expect to reword, then regenerate its contracts and
+check the bound examples. Follow `spec:carrier.step-keys` for the vocabulary and binding rules.
+
+### termKeys
+
+Recipe 47 measures this row. Give a Model term a key when another entry needs to cite it.
+Follow `spec:model.term-addresses` for the definition marker and address form.
+
+### entryCitations
+
+Recipe 47 measures this row. Cite an entry address in the anchored source that implements or
+checks it. Use entry citations, recipe 51, to resolve those citations and find the test lines.
+The law is `spec:extraction.entry-citations`.
+
+### perspectives
+
+Recipe 47 measures this row only when you pass your perspective objects as `perspectives`.
+Use the perspective filter, recipe 37, to select one concern's Pack members.
+The law is `spec:consumers.review-perspectives`.
+
+## Move rules files onto shipped recipes
+
+Replace local copies of recipe bodies with calls through `recipes(number, parameters)`.
+Select address resolution, recipe 25, dependency cycles, recipe 26, the architecture walk,
+recipe 42, external registers, recipe 50, or entry citations, recipe 51, where they answer your
+corpus's policy. Pass each call its own parameters. A rules file can combine their findings:
+
+```js
+const addresses = await recipes(25, { addresses: params.addresses });
+const citations = await recipes(51);
+return { findings: [...addresses.findings, ...citations.findings] };
+```
+
+Run the file with `sdp validate --rules PATH`, with each `--params` after the rules file it
+belongs to. Follow `spec:validation.corpus-rules` and
+`spec:consumers.agent-surface.evaluation-sink` for that execution contract.
+
+## Read large Packs and waiting statements
+
+Use the context bundle, recipe 36, with `part: 1`, then request every part through `part.of`.
+Follow `spec:consumers.context-bundle`. Use the statement queue, recipe 46, to order waiting
+readiness statements and the selected decider's questions. The queue states no rung;
+`spec:consumers.readiness-planner` carries its law.
+
+## Publish the roots
+
+After validation, run `pnpm exec sdp generate .` to publish every projection root from one build.
+Follow `spec:consumers.command-line` for publishing and checking the generated output.
+
+## Pass subjects as data
+
+Pass a recipe's subject through `--params`, as the README's recipe-caller guidance teaches.
+Keep the shipped body unchanged. You can run a shipped file directly:
+
+```sh
+pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/recipes/47-capability-adoption.js)" --params @adoption.json --json
+```
+
+`adoption.json` might contain `{"detail":true}`. Use `--params KEY=@PATH` for an external JSON
+value such as a base graph or proposal. Run recipe 47 again after your edits to compare adoption
+with the starting measurement.
