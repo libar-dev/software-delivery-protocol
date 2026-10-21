@@ -433,6 +433,11 @@ td {
   word-break: normal;
 }
 
+td code,
+th code {
+  overflow-wrap: break-word;
+}
+
 th {
   color: var(--muted);
   font-weight: 600;
@@ -664,7 +669,6 @@ sdp-diagram figcaption {
   margin-bottom: 0.75rem;
 }
 sdp-diagram svg {
-  width: 100%;
   max-width: 100%;
   height: auto;
   display: block;
@@ -746,11 +750,19 @@ sdp-compose:empty {
 sdp-maturity-map table {
   min-width: 48rem;
 }
+sdp-maturity-map caption {
+  text-align: start;
+  max-width: calc(100vw - 2.5rem);
+}
 sdp-maturity-map td {
   min-width: 9rem;
   vertical-align: top;
 }
+sdp-maturity-map td:not(:has(sdp-spec-card)) {
+  min-width: 0;
+}
 sdp-maturity-map td > p {
+  margin-block-start: 0;
   color: var(--muted);
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
@@ -833,8 +845,11 @@ sdp-compose button {
 }
 @media (max-width: 719.98px) {
   sdp-diagram svg {
-    width: 100%;
+    max-width: 100%;
     height: auto;
+  }
+  sdp-maturity-map table {
+    min-width: 0;
   }
   dialog {
     padding: 1rem;

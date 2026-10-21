@@ -7369,9 +7369,15 @@ it("reports text-preserving rule and flow key changes apart from rewording", asy
           id: "spec:probe.keying",
           parts: [
             {
-              part: "rule.third",
-              change: "changed",
+              part: "rule.second",
+              change: "removed",
               from: { list: "rules", text: "Revised second rule." },
+              to: null,
+            },
+            {
+              part: "rule.third",
+              change: "added",
+              from: null,
               to: { list: "rules", text: "Third rule wording." },
             },
           ],
@@ -7382,3 +7388,51 @@ it("reports text-preserving rule and flow key changes apart from rewording", asy
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+it.each(["rule", "flow"])(
+  "preserves a removed keyed %s address beside new unkeyed text",
+  async (kind) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-keyed-removal-"));
+    const path = join(root, "probe.sdp.md");
+    const write = (text: string) => {
+      writeFileSync(
+        path,
+        `---\nid: spec:probe.removal\nkind: behavior\naltitude: story\nreadiness: scoped\nrelations: {}\n---\n# Removal probe\n\n## Intent\n- outcome: Keep removed addresses visible.\n\n## Behavior\n- ${kind}: ${text}\n`,
+      );
+    };
+    try {
+      write("[#old] Old wording.");
+      const base = extract({ root }).graph;
+      write("New wording.");
+      const list = kind === "rule" ? "rules" : "flows";
+      const diff = asRecord(
+        await runRecipe(recipeByOrdinal(35), { base, detail: true }, extract({ root })),
+      );
+      expect(diff.specs).toEqual({
+        added: [],
+        removed: [],
+        changed: [
+          {
+            id: "spec:probe.removal",
+            parts: [
+              {
+                part: `behavior.${list}[0]`,
+                change: "added",
+                from: null,
+                to: { list, text: "New wording." },
+              },
+              {
+                part: "rule.old",
+                change: "removed",
+                from: { list, text: "Old wording." },
+                to: null,
+              },
+            ],
+          },
+        ],
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  },
+);

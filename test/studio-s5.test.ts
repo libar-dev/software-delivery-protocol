@@ -746,7 +746,7 @@ it("ships a phone layout and a print stylesheet for the whole canvas", () => {
     });
   });
   expect(declarations[".layout"]).toMatchObject({ "grid-template-columns": "minmax(0, 1fr)" });
-  expect(declarations["sdp-diagram svg"]).toMatchObject({ width: "100%", height: "auto" });
+  expect(declarations["sdp-diagram svg"]).toMatchObject({ "max-width": "100%", height: "auto" });
   expect(css).toContain("@media print");
   expect(css).toContain("details > :not(summary)");
   expect(css).toContain("sdp-intent-panel,");
@@ -1319,8 +1319,38 @@ it("contains phone navigation, stamp and wide tables within the viewport", () =>
     "overflow-wrap": "anywhere",
   });
   expect(declarations[".table-scroll"]).toMatchObject({ overflow: "auto", "max-width": "100%" });
-  expect(declarations["sdp-maturity-map table"]).toMatchObject({ "min-width": "48rem" });
+  expect(declarations["sdp-maturity-map table"]).toMatchObject({ "min-width": "0" });
   expect(declarations["sdp-maturity-map td"]).toMatchObject({ "min-width": "9rem" });
+});
+
+it("keeps the maturity caption readable and empty cells compact on a phone", () => {
+  const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
+  const declarations: Record<string, Record<string, string>> = {};
+  css.walkRules((rule) => {
+    if (rule.parent?.type === "atrule" && rule.parent.params !== "(max-width: 719.98px)") return;
+    const values = (declarations[rule.selector] ??= {});
+    rule.walkDecls((decl) => {
+      values[decl.prop] = decl.value;
+    });
+  });
+  expect(declarations["sdp-maturity-map caption"]).toMatchObject({
+    "text-align": "start",
+    "max-width": "calc(100vw - 2.5rem)",
+  });
+  expect(declarations["sdp-maturity-map td:not(:has(sdp-spec-card))"]).toMatchObject({
+    "min-width": "0",
+  });
+});
+
+it("aligns maturity cell counts with the empty cell dashes", () => {
+  const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
+  const values: Record<string, string> = {};
+  css.walkRules("sdp-maturity-map td > p", (rule) => {
+    rule.walkDecls((decl) => {
+      values[decl.prop] = decl.value;
+    });
+  });
+  expect(values).toMatchObject({ "margin-block-start": "0" });
 });
 
 it("keeps table headers and one-word cells intact while allowing word-boundary wrapping", () => {
@@ -1342,16 +1372,24 @@ it("keeps table headers and one-word cells intact while allowing word-boundary w
     });
     expect(declarations[selector]?.["white-space"]).not.toBe("nowrap");
   }
+  for (const selector of ["td code", "th code"]) {
+    expect(declarations[selector]).toMatchObject({ "overflow-wrap": "break-word" });
+  }
 });
 
-it("fits diagrams to their container on first view at desktop and phone widths", () => {
+it("fits diagrams without enlarging them at desktop and phone widths", () => {
   const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
   const values: Record<string, string> = {};
   css.walkRules("sdp-diagram svg", (rule) => {
-    if (rule.parent?.type === "atrule") return;
+    if (rule.parent?.type === "atrule" && rule.parent.params === "print") return;
+    expect(
+      rule.nodes
+        .filter((node) => node.type === "decl" && node.prop === "width")
+        .map((node) => node.type),
+    ).toEqual([]);
     rule.walkDecls((decl) => {
       values[decl.prop] = decl.value;
     });
   });
-  expect(values).toMatchObject({ width: "100%", "max-width": "100%", height: "auto" });
+  expect(values).toMatchObject({ "max-width": "100%", height: "auto" });
 });
