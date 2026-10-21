@@ -719,6 +719,7 @@ describe("rule-key proposal details", () => {
             "A history projection's fold",
             "A history projection’s fold",
             "A reader's don't split apostrophe",
+            "The order's_id field",
           ],
         },
       }),
@@ -728,6 +729,7 @@ describe("rule-key proposal details", () => {
       "[#historyProjectionFold] A history projection's fold",
       "[#historyProjectionFold2] A history projection’s fold",
       "[#readerDontSplit] A reader's don't split apostrophe",
+      "[#ordersIdField] The order's_id field",
     ]);
   });
   it("preserves scope and entry order and skips existing keys and tags", async () => {

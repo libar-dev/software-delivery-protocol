@@ -277,7 +277,7 @@ describe("entry citation extraction and reader", () => {
       ),
     ).toBe(true);
   });
-  it("ends template citation tokens at interpolation and ignores an unbound key", () => {
+  it("records no citation for a token continued by interpolation, even when its prefix parses", () => {
     const world = createWorld(point);
     const file = join(world.root, "source.ts");
     writeFileSync(
@@ -288,10 +288,7 @@ describe("entry citation extraction and reader", () => {
         "test(`spec:probe.one#design.typeOne${key}`, () => {});\n",
     );
     const graph = extract({ root: world.root }).graph;
-    expect(graph.citations).toEqual([
-      { address: point.address, file: "source.ts", line: 9 },
-      { address: point.address, file: "source.ts", line: 12 },
-    ]);
+    expect(graph.citations).toEqual([{ address: point.address, file: "source.ts", line: 9 }]);
     invoke(world);
     expect(world.code, world.stderr).toBe(0);
   });
@@ -307,10 +304,35 @@ describe("entry citation extraction and reader", () => {
       { address: "spec:probe.one#design.$", file: "source.ts", line: 1 },
     ]);
   });
-  it("removes trailing punctuation from a complete prefix before interpolation", () => {
+  it("records no citation for a prefix with trailing punctuation before interpolation", () => {
     expect(
       scanEntryCitations("const title = `spec:probe.one#design.typeOne.${key}`;", "source.ts"),
-    ).toEqual([{ address: point.address, file: "source.ts", line: 1 }]);
+    ).toEqual([]);
+  });
+  it("does not report a computed order key as an unresolved citation in recipe 51", async () => {
+    const { evaluateBody } = await import("../src/reader/evaluate-body.js");
+    const world = createWorld(point);
+    const carrier = join(world.root, "one.sdp.md");
+    writeFileSync(
+      carrier,
+      readFileSync(carrier, "utf8") +
+        "- orderCreated: `type Created = string`\n- orderShipped: `type Shipped = string`\n",
+    );
+    const file = join(world.root, "source.ts");
+    writeFileSync(
+      file,
+      readFileSync(file, "utf8") +
+        'for (const kind of ["Created", "Shipped"]) {\n' +
+        "  test(`spec:probe.one#design.order${kind}`, () => {});\n}\n",
+    );
+    const graph = extract({ root: world.root }).graph;
+    expect(graph.citations).toEqual([{ address: point.address, file: "source.ts", line: 9 }]);
+    expect(await evaluateBody("return recipes(51)", { graph })).toMatchObject({
+      unresolved: [],
+      findings: [],
+    });
+    invoke(world);
+    expect(world.code, world.stderr).toBe(0);
   });
   it("recipe 51 locates a citation of the second keyed question", async () => {
     const { evaluateBody } = await import("../src/reader/evaluate-body.js");

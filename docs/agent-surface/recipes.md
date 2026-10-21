@@ -4832,7 +4832,7 @@ function fenced(value, language = "") {
     return `${ticks}${language}\n${value}\n${ticks}\n`;
 }
 function renderMemo(proposal) {
-    let memo = `# Change proposal\n\nBase: ${span(proposal.base)}\nReason: ${proposal.reason}\n\n`;
+    let memo = `# Change proposal\n\nBase: ${span(proposal.base)}\nReason: ${span(proposal.reason)}\n\n`;
     proposal.changes.forEach((change, index) => {
         memo += `## Change ${String(index + 1)}\n\nScope: ${change.scope.map(span).join(", ")}\nRequest:\n\n${fenced(change.request, "text")}`;
         if (change.replaces !== undefined)
@@ -4844,7 +4844,7 @@ function renderMemo(proposal) {
             memo += `Relation: ${r.action} ${span(r.from)} ${r.type} ${span(r.target)}\n`;
         }
         if (change.reason !== undefined)
-            memo += `Reason: ${change.reason}\n`;
+            memo += `Reason: ${span(change.reason)}\n`;
         if (change.text !== undefined)
             memo += `\n${fenced(change.text)}`;
         memo += "\n";

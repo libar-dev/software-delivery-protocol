@@ -2019,7 +2019,7 @@ export const consumersSpecs = [
     readiness: "ready",
     title: "A Studio build is stamped and shared from a static host",
     narrative:
-      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file at the page set's root, and the shell shows it where the set is served over http or https. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host. Checks and previews use GitHub's default pull-request merge checkout, so the gate proves the merge result and the run evidence, page set and stamp name that same commit.",
+      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file at the page set's root, and the shell shows it where the set is served over http or https. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host. Checks and previews use GitHub's default pull-request merge checkout, so the gate proves the merge result and the run evidence, page set and stamp name that same commit.\n\nA stakeholder opens the link, navigates the Studio and composes intent, and the pull request's author hands that intent to an agent that edits the source.",
     sections: {
       intent: {
         outcome:
@@ -2028,7 +2028,6 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "A build is shared by uploading its page set to a static host, such as S3, Vercel or GitHub Pages.",
-          "A stakeholder opens the link, navigates the Studio and composes intent, and the pull request's author hands that intent to an agent that edits the source.",
           "The Studio's build writes no stamp, so every page and data file it writes stays a function of the graph and its named inputs; the stamp is written apart, after the build.",
           "`sdp stamp [root] [--commit SHA] [--source TEMPLATE]` writes `stamp.json` into `<root>/generated/spec-studio/` and touches no other file: it derives no graph, renders no page, and refuses with exit 1 when the root holds no page set; a stamp without `--commit` names the commit `unknown`.",
           "A later build removes the page set and its stamp together, so no stamp outlives the build it names.",
@@ -2038,13 +2037,13 @@ export const consumersSpecs = [
           "Every recorded file and line a page shows as text carries its file and line as data on its element, and when a loaded stamp names a source template the stamp element links each to the template with the file and line filled in; without such a stamp, or through `file://`, each stays text.",
         ],
         ruleKeys: {
-          buildWritesNoStamp: "rules[2]",
-          stampVerb: "rules[3]",
-          stampLifetime: "rules[4]",
-          publishingStep: "rules[5]",
-          previewWorkflow: "rules[6]",
-          previewDeploy: "rules[7]",
-          sourceLinks: "rules[8]",
+          buildWritesNoStamp: "rules[1]",
+          stampVerb: "rules[2]",
+          stampLifetime: "rules[3]",
+          publishingStep: "rules[4]",
+          previewWorkflow: "rules[5]",
+          previewDeploy: "rules[6]",
+          sourceLinks: "rules[7]",
         },
         exampleSpace: {
           given: ["a page set the studio command wrote at an extraction root"],
@@ -2972,13 +2971,13 @@ export const consumersSpecs = [
         memoRecipe:
           "recipe 49, the proposal memo, takes `params.proposal` and returns `{ schemaProblems: [{ path, problem }], memo }`: the schema problems recipe 38 reports for the same document and, when there are none, the memo as one string, otherwise `memo: null`; it reads no graph value, so one document renders one memo in any corpus.",
         memoHead:
-          "the memo opens with the line `# Change proposal`, a blank line, the line `Base: ` followed by the base as a code span, the line `Reason: ` followed by the reason, and a blank line.",
+          "the memo opens with the line `# Change proposal`, a blank line, the line `Base: ` followed by the base as a code span, the line `Reason: ` followed by the reason as a code span, and a blank line.",
         memoChange:
-          "each change follows in document order as the line `## Change <n>`, counting from 1, and a blank line, then each on its own line: `Scope: ` followed by the scope items as code spans joined by `, `; `Request:` followed by a blank line and the request in a fenced block whose info string is `text`; when present, `Replaces: ` or `Follows: ` followed by the address as a code span; `Relation: ` followed by the action, the source as a code span, the relation type and the target as a code span, separated by single spaces; and `Reason: ` followed by the change's reason; then, when the change carries exact text, a blank line and the text in a fenced block with no info string; then a blank line.",
+          "each change follows in document order as the line `## Change <n>`, counting from 1, and a blank line, then each on its own line: `Scope: ` followed by the scope items as code spans joined by `, `; `Request:` followed by a blank line and the request in a fenced block whose info string is `text`; when present, `Replaces: ` or `Follows: ` followed by the address as a code span; `Relation: ` followed by the action, the source as a code span, the relation type and the target as a code span, separated by single spaces; and `Reason: ` followed by the change's reason as a code span; then, when the change carries exact text, a blank line and the text in a fenced block with no info string; then a blank line.",
         memoDocument:
           "the memo ends with the line `## The proposal`, a blank line, and the document in a fenced block whose info string is `json`, written as `JSON.stringify` writes it with two-space indentation and the keys in the order the document holds them.",
         memoMarkup:
-          "a code span uses a backtick run one longer than the longest run its content holds, padded with a space on each side when the content starts or ends with a backtick; a fence is a backtick run one longer than the longest run its content holds and at least three long; each request and each change's exact text is enclosed in a fence longer than any backtick run it holds, so a request cannot open HTML, add a heading or close its fence; every value is written verbatim; every line ends with a line feed and the memo with one.",
+          "a code span uses a backtick run one longer than the longest run its content holds, padded with a space on each side when the content starts or ends with a backtick; a fence is a backtick run one longer than the longest run its content holds and at least three long; each request and each change's exact text is enclosed in a fence longer than any backtick run it holds, each reason is enclosed in a code span whose backtick run is longer than any run it holds, so no field of the memo can open HTML, add a heading or close its enclosing span or fence; every value is written verbatim; every line ends with a line feed and the memo with one.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -3159,7 +3158,7 @@ export const consumersSpecs = [
           "Before it changes any file, a run records in the file list both the content each path holds and the content it will hold, so a run stopped at any point leaves every generated file other than a kept, changed `.base` file matching the list, and the next run recognizes each, and each whole temporary, as its own and completes the synchronization; a temporary cut short while it was written matches no recorded content, so the guard refuses it as unknown and the person deletes it.",
           "The vault is not one of the five projection roots the shared build rewrites: the build's invalidation never removes it, and the repository's projection suite does not certify it. The verb that writes every projection root also synchronizes the vault, at the directory `sdp vault` would use for the same root unless that verb names another, through the same directory checks and guard, before it publishes any root; a refusal there leaves the vault untouched and fails that run. `sdp vault` enters the shared build, so it removes the five projection roots as `sdp validate` does.",
           "Without kept, changed `.base` files, two runs over one graph write byte-identical files under `sdp/`, the file list included, and no file there holds a time, a commit, an absolute path or a host name.",
-          "Every wikilink, embed and block link a generated note writes resolves to a file the run wrote and, with a block, to a block id that file carries; no note links outside the vault, a carrier or source file is named by its root-relative path in a code span, and text in a code span or a fenced block, where Obsidian reads no link, is no link.",
+          "Every wikilink, embed and block link a generated note writes resolves to a file the run wrote or kept and, with a block, to a block id that file carries; no note links outside the vault, a carrier or source file is named by its root-relative path in a code span, and text in a code span or a fenced block, where Obsidian reads no link, is no link.",
           "Findings never withhold the vault: a run over a graph with validation findings still synchronizes and returns the validation exit code. A finding whose subject is a Spec or a Pack with a note shows on that note; every other finding shows on the index with its severity, its validator, its file and line when known and its message; and the index counts every finding by severity.",
           "A run whose extraction fails keeps every generated file but the index and the file list: it rewrites the index to open with a warning naming the failure, through the steps `spec:consumers.obsidian-vault#rule.interruptedRun` and `spec:consumers.obsidian-vault#rule.synchronize` state, so the file list ends recording the warning index, and exits 1. The next run that succeeds finds the index matching the list and writes it whole again; with no earlier run, the failed run leaves only that index and the file list under `sdp/`.",
           "Notes are plain Markdown with YAML properties, wikilinks and block ids, which other notes tools read; only the `.base` files are Obsidian's own.",
@@ -3229,7 +3228,7 @@ export const consumersSpecs = [
         exitCodes:
           "0 when the vault is synchronized over a graph with no validation error; the validation exit code when it is synchronized over one with errors; 1 on a refused option, a refused vault directory, a guard refusal, a case collision, a failed extraction or a write that fails.",
         indexNote:
-          "`sdp/index.md` opens with `` > [!info] Generated by `sdp vault` from the graph. Every file under `sdp/` is regenerated: write your own notes outside it, and intent notes in `intent/`. ``, then `# Spec graph`, the finding counts by severity, `## Findings without a note` with one line per finding whose subject has no Spec or Pack note, in report order, the corpus Base embedded, and a link to each Pack note in id order.",
+          "`sdp/index.md` opens with `` > [!info] Generated by `sdp vault` from the graph. Every file under `sdp/` is regenerated, except a `.base` file you changed: write your own notes outside it, and intent notes in `intent/`. ``, then `# Spec graph`, the finding counts by severity, `## Findings without a note` with one line per finding whose subject has no Spec or Pack note, in report order, the corpus Base embedded, and a link to each Pack note in id order.",
         findingLine:
           "`- <severity> · <validator id> · <file>:<line> · <message>`, leaving out the file and line when the finding names none and the line when it names only a file, with the message escaped as `spec:consumers.obsidian-vault.notes#rule.textEscaped` states.",
         failedIndex:
@@ -3795,9 +3794,9 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "The corpus has one Base, `sdp/specs.base`, over every Spec note, whose views are the standing queries `spec:consumers.obsidian-vault.bases#design.standingViews` lists, embedded in the index note.",
-          "Each Pack has a Base beside its note that selects the Spec notes whose `packs` property links the Pack, with the views `spec:consumers.obsidian-vault.bases#design.packViews` lists, embedded in the Pack's note.",
-          "Each standing view selects, over one graph, exactly the Specs its source selects, as `spec:consumers.obsidian-vault.bases#design.viewSources` pairs them.",
+          "A corpus Base the command writes, `sdp/specs.base`, is over every Spec note, with the standing views `spec:consumers.obsidian-vault.bases#design.standingViews` lists; the index embeds it.",
+          "A Pack Base the command writes beside its note selects the Spec notes whose `packs` property links the Pack, with the views `spec:consumers.obsidian-vault.bases#design.packViews` lists; the Pack's note embeds it.",
+          "Each standing view of a Base the command writes selects, over one graph, exactly the Specs its source selects, as `spec:consumers.obsidian-vault.bases#design.viewSources` pairs them.",
           "Every filter is an `and` list of clauses from the closed grammar `spec:consumers.obsidian-vault.bases#design.filterClauses` states, over properties the notes hold, so no view computes a join, a fact or a floor.",
           "A Base shows the two binding properties through formulas as present or none, under the column names Implementation binding and Verifier binding, never under a delivery-fact name.",
           "A Pack's note lists its members in manifest order beside its embedded Base, since a Base sorts by property and keeps no authored order.",
@@ -5015,7 +5014,7 @@ export const consumersSpecs = [
         keyRequest:
           "`Add the key marker [#<key>] and one space at the start of the text of <entry> of <spec id>, at <file> line <line>, after its rule: or flow: label where it has one.`, with `<entry>` the location table's `rule[<i>]` or `flow[<i>]` and `, at <file>` alone when the line is not located.",
         keyCoining:
-          "decompose the text and drop combining marks; drop the bracketed groups that open it, such as `[extension]`; drop `'s` and `’s`, then any remaining apostrophe; split the rest into words at every character other than an ASCII letter or digit and at each change from a lowercase letter or digit to an uppercase letter; lowercase each word; drop the stop words, unless that leaves no word; drop the leading words that do not open with a letter and every repeat of a word kept before it; join the first three words left in lower camel case, the first all lowercase and each later one with its first letter uppercased.",
+          "decompose the text and drop combining marks; drop the bracketed groups that open it, such as `[extension]`; drop a word-final `'s` or `’s`, then any remaining apostrophe; split the rest into words at every character other than an ASCII letter or digit and at each change from a lowercase letter or digit to an uppercase letter; lowercase each word; drop the stop words, unless that leaves no word; drop the leading words that do not open with a letter and every repeat of a word kept before it; join the first three words left in lower camel case, the first all lowercase and each later one with its first letter uppercased.",
         stopWords:
           "`a`, `an`, `the`, `and`, `or`, `but`, `nor`, `so`, `then`, `than`, `if`, `when`, `while`, `where`, `of`, `to`, `in`, `on`, `at`, `by`, `for`, `with`, `from`, `into`, `onto`, `as`, `per`, `via`, `over`, `under`, `about`, `is`, `are`, `was`, `were`, `be`, `been`, `being`, `do`, `does`, `did`, `has`, `have`, `had`, `can`, `could`, `may`, `might`, `must`, `shall`, `should`, `will`, `would`, `it`, `its`, `this`, `that`, `these`, `those`, `there`, `their`, `they`, `them`, `which`, `who`, `whom`, `whose`, `what`, `each`, `every`, `any`, `also`, `only` and `own`.",
         keyCollision:
