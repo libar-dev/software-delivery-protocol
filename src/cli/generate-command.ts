@@ -1,4 +1,10 @@
 import type { GraphSchema } from "../graph/schema.js";
+import {
+  prepareVault,
+  prepareVaultBuild,
+  publishFailedVault,
+  publishVault,
+} from "./vault-command.js";
 import type { BuildArgs } from "./build-args.js";
 import { prepareCensusPublication } from "./census-command.js";
 import type { CensusHooks } from "./census-command.js";
@@ -16,23 +22,19 @@ export interface GenerateHooks extends CensusHooks, GherkinViewHooks, MermaidHoo
   readonly synchronizeVaultBeforeGenerate?: typeof synchronizeVaultBeforeGenerate;
 }
 
-/**
- * Lane V fills this seam with the vault publisher's directory checks and synchronization.
- * Until that publisher exists, generate parses --vault and leaves the vault untouched.
- */
 export function synchronizeVaultBeforeGenerate(
   parsed: BuildArgs,
   graph: GraphSchema,
   output: CliOutput,
 ): number {
-  void [parsed, graph, output];
-  return 0;
+  const state = prepareVault(parsed, output);
+  return state === undefined ? 1 : publishVault(parsed, graph, output, state);
 }
 
 /**
  * @sdpAnchor impl:protocol.generate-command
  * @sdpLabel prepares all prior roots before one shared build and publishes with each verb's checks
- * @sdpReferences spec:consumers.command-line
+ * @sdpSatisfies spec:consumers.command-line
  * @sdpComponent component:protocol.cli
  * @sdpRole publisher
  */
@@ -41,6 +43,10 @@ export async function runGenerate(
   output: CliOutput,
   hooks: GenerateHooks = {},
 ): Promise<number> {
+  const vaultState = parsed.checkClean ? undefined : prepareVault(parsed, output);
+  if (!parsed.checkClean && vaultState === undefined) return 1;
+  const vaultHooks = parsed.checkClean ? hooks : prepareVaultBuild(parsed, output, hooks);
+  if (vaultHooks === undefined) return 1;
   // Preparation captures every prior tree before runBuild invalidates the five roots.
   const publishers = [
     (validated: Parameters<typeof publishDesignReview>[0]) =>
@@ -50,8 +56,11 @@ export async function runGenerate(
     prepareGherkinPublication(parsed, output, hooks, "generate"),
     prepareStudioPublication(parsed, output, hooks, "generate"),
   ];
-  const validated = runValidate(parsed, output, "generate", hooks);
-  if (validated.graph === undefined) return 1;
+  const validated = runValidate(parsed, output, "generate", { ...hooks, ...vaultHooks });
+  if (validated.graph === undefined)
+    return vaultState === undefined
+      ? 1
+      : publishFailedVault(parsed, output, vaultState, validated.extractionReport?.findings ?? []);
 
   if (!parsed.checkClean) {
     try {

@@ -80,13 +80,25 @@ const commands = {
              engine, commit (unknown without --commit) and UTC publishing time. --source is an
              http(s) source URL template holding {file} and optionally {line}. Pages stay untouched.`,
   },
+  vault: {
+    name: "vault",
+    usage: "  sdp vault [root | --root PATH] [--exclude PATH]... [--out DIR] [--watch]",
+    paragraph: `Validate, then synchronize linked Markdown notes and Bases under DIR/sdp, by default
+             <root>/generated/obsidian-vault/sdp. Open DIR itself as an Obsidian vault. Keep your
+             notes outside sdp/, by convention in intent/. Refuses edited or unknown generated
+             files before any build or cleanup. --out resolves against cwd; an in-root vault must
+             be under a skipped directory or excluded prefix, apart from build outputs. --watch
+             reruns on carriers and TypeScript sources; SIGINT exits 0. There is no check mode.`,
+  },
   generate: {
     name: "generate",
     usage: "  sdp generate [root] [--exclude PATH]... [--vault DIR] [--check-clean]",
     paragraph: `Validate once, then publish the Design Review, census, Mermaid diagrams, Gherkin-shaped
              view and Studio from that graph. --check-clean applies each publisher's checks,
-             removing only roots that fail. Studio is written without optional inputs. --vault DIR is parsed for the vault publisher;
-             synchronization is pending that publisher. --check-clean leaves the vault alone.`,
+             removing only roots that fail. Studio is written without optional inputs.
+             Synchronizes the vault through its directory checks
+             and guard before publishing any root,
+             at the default vault directory or --vault DIR. --check-clean leaves the vault alone.`,
   },
   import: {
     name: "import",
@@ -151,8 +163,7 @@ export const NEW_SPEC_HELP_TEXT = verbHelpText("new") ?? "";
 /**
  * @sdpAnchor impl:protocol.adopter-help
  * @sdpLabel SDP_HELP_TEXT indexes the shipped skills, recipe catalog, schema, walkthrough, glossary and specs/ by package-relative path
- * @sdpSatisfies spec:consumers.adopter-on-ramp
- * @sdpReferences spec:consumers.command-line
+ * @sdpSatisfies spec:consumers.adopter-on-ramp, spec:consumers.command-line
  * @sdpComponent component:protocol.cli
  * @sdpRole service
  */

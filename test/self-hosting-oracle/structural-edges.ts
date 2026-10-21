@@ -127,6 +127,41 @@ export const acceptedArchitecturalUnits = [
     anchorId: "impl:protocol.studio-runs-page",
     componentId: "component:protocol.projections",
   },
+  {
+    unit: "src/projections/vault/sync.ts#inspectVault",
+    anchorId: "impl:protocol.vault-sync",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/vault/notes.ts#renderVault",
+    anchorId: "impl:protocol.vault-notes",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/vault/bases.ts#renderBase",
+    anchorId: "impl:protocol.vault-bases",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/vault/text.ts#createText",
+    anchorId: "impl:protocol.vault-text",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/vault/sections.ts#renderSections",
+    anchorId: "impl:protocol.vault-sections",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/cli/vault-command.ts#runVault",
+    anchorId: "impl:protocol.vault-command",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/vault-command.ts#runVaultWatch",
+    anchorId: "impl:protocol.vault-watch",
+    componentId: "component:protocol.cli",
+  },
 
   {
     unit: "src/validate/validators.ts#checkSupersededDecisions",
@@ -913,6 +948,9 @@ export const coarseGrainCoverage = [
 // re-measured under plan 41
 export const expectedUsesEdges = [
   ["impl:protocol.stamp-command", "impl:protocol.schema-version"],
+  ["impl:protocol.vault-command", "component:protocol.projections"],
+  ["impl:protocol.vault-notes", "impl:protocol.reader"],
+
   ["impl:protocol.studio-recipes", "impl:protocol.reader"],
   ["impl:protocol.studio-recipes", "api:protocol.evaluate-body"],
   ["component:protocol.studio-elements", "component:protocol.reader"],

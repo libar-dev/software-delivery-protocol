@@ -381,6 +381,7 @@ describe("Protocol skill assets", () => {
         "stamp",
         "studio",
         "validate",
+        "vault",
         "view",
       ].sort(),
     );

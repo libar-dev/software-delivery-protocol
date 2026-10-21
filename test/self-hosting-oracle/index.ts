@@ -75,30 +75,6 @@ export const expectedWarnings = [
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:consumers.obsidian-vault.bases",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:consumers.obsidian-vault.iteration",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:consumers.obsidian-vault.notes",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:consumers.obsidian-vault",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
     subjectId: "spec:consumers.spec-studio.components",
   },
   {
