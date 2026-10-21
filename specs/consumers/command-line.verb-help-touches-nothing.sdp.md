@@ -2,7 +2,7 @@
 id: spec:consumers.command-line.verb-help-touches-nothing
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.command-line
   verifies:

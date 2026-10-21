@@ -261,15 +261,15 @@ describe("the self-hosting corpus", () => {
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 399 Markdown Specs and four Gherkin Specs,
-    // 403 in the self-hosting Pack; seven Pack manifests and 408 source anchors.
-    // The excluded-root validate run corroborates 818 nodes and 2306 edges.
-    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 408 });
+    // 403 in the self-hosting Pack; seven Pack manifests and 417 source anchors.
+    // The excluded-root validate run corroborates 827 nodes and 2317 edges.
+    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 417 });
     expect(expectedSpecs).toHaveLength(403);
     expect(expectedPackMembers).toHaveLength(403);
-    expect(expectedAnchors).toHaveLength(408);
-    expect(expectedBindingEdges).toHaveLength(487);
-    expect(result.graph.nodes).toHaveLength(818);
-    expect(result.graph.edges).toHaveLength(2306);
+    expect(expectedAnchors).toHaveLength(417);
+    expect(expectedBindingEdges).toHaveLength(497);
+    expect(result.graph.nodes).toHaveLength(827);
+    expect(result.graph.edges).toHaveLength(2317);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -331,7 +331,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 56, idea: 5, ready: 341, scoped: 1 });
+    ).toEqual({ defined: 51, idea: 5, ready: 346, scoped: 1 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -384,7 +384,7 @@ describe("the self-hosting corpus", () => {
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedMemberOfEdges).toHaveLength(131);
+    expect(expectedMemberOfEdges).toHaveLength(132);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>
@@ -544,7 +544,7 @@ describe("the self-hosting corpus", () => {
 
   it("finds every converted comment anchor at its block's first line", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedCommentAnchorIds).toHaveLength(57);
+    expect(expectedCommentAnchorIds).toHaveLength(58);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)

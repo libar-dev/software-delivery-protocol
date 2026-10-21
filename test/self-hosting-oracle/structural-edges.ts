@@ -31,6 +31,7 @@ export const structuralMembershipExceptions = [
   "impl:protocol.validator-self-testing",
   "impl:protocol.validator-probe-table",
   "impl:protocol.entry-citation-recipe",
+  "impl:protocol.external-registers-recipe",
   "impl:protocol.architecture-walk-recipe",
   "impl:protocol.planned-components-recipe",
   "impl:protocol.authoring-on-ramp",
@@ -87,6 +88,11 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.reader",
   },
 
+  {
+    unit: "src/cli/generate-command.ts#runGenerate",
+    anchorId: "impl:protocol.generate-command",
+    componentId: "component:protocol.cli",
+  },
   {
     unit: "src/cli/validate-view-command.ts#runValidateRules",
     anchorId: "impl:protocol.corpus-rules",
@@ -703,7 +709,7 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.validate",
   },
   {
-    unit: "src/cli/sdp.ts#SDP_HELP_TEXT",
+    unit: "src/cli/help.ts#SDP_HELP_TEXT",
     anchorId: "impl:protocol.adopter-help",
     componentId: "component:protocol.cli",
   },

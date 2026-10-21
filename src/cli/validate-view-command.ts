@@ -129,21 +129,26 @@ const wholesaleViewRewriteAnchor = codeAnchor({
 });
 void wholesaleViewRewriteAnchor;
 
-export function runView(parsed: BuildArgs, output: CliOutput, hooks: ValidationViewHooks): number {
+export function publishDesignReview(
+  validate: BuildOutcome,
+  parsed: BuildArgs,
+  output: CliOutput,
+  hooks: ValidationViewHooks,
+  command = "view",
+): number {
   const render = hooks.renderDesignReview ?? renderDesignReview;
   const recoveryRm = hooks.rmSync ?? rmSync;
   const viewPath = join(parsed.root, "generated", "design-review");
-  const validate = runValidate(parsed, output, "view", hooks);
 
   if (validate.graph === undefined) {
-    removeArtifacts([viewPath], output, "view", recoveryRm);
+    removeArtifacts([viewPath], output, command, recoveryRm);
     return validate.exitCode;
   }
 
   const temporaryPath = `${viewPath}.tmp`;
   const failView = (message: string): number => {
     writeStderr(output, message);
-    removeArtifacts([viewPath, temporaryPath], output, "view", recoveryRm);
+    removeArtifacts([viewPath, temporaryPath], output, command, recoveryRm);
     return 1;
   };
 
@@ -155,7 +160,7 @@ export function runView(parsed: BuildArgs, output: CliOutput, hooks: ValidationV
 
       if (JSON.stringify(second) !== JSON.stringify(pages)) {
         return failView(
-          "sdp view --check-clean: two independent renders diverged — the view is not deterministic.\n",
+          `sdp ${command} --check-clean: two independent renders diverged — the view is not deterministic.\n`,
         );
       }
     }
@@ -174,6 +179,10 @@ export function runView(parsed: BuildArgs, output: CliOutput, hooks: ValidationV
     return validate.exitCode;
   } catch (error) {
     const detail = error instanceof Error ? error.message : errorMessage(error);
-    return failView(`sdp view: ${detail}\n`);
+    return failView(`sdp ${command}: ${detail}\n`);
   }
+}
+
+export function runView(parsed: BuildArgs, output: CliOutput, hooks: ValidationViewHooks): number {
+  return publishDesignReview(runValidate(parsed, output, "view", hooks), parsed, output, hooks);
 }

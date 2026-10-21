@@ -2,7 +2,7 @@
 id: spec:consumers.command-line.generate-writes-every-root
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.command-line
   verifies:

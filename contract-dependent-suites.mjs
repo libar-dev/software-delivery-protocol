@@ -49,6 +49,13 @@ export const contractDependentSuites = [
       "test/extraction.entry-citations.unanchored-file-unread.test.generated.ts",
       "test/extraction.entry-citations.unresolved-citation.test.generated.ts",
 
+      "test/self-hosting-command-line.test.ts",
+      "test/self-hosting-external-registers.test.ts",
+      "test/consumers.command-line.generate-writes-every-root.test.generated.ts",
+      "test/consumers.command-line.generate-check-failure.test.generated.ts",
+      "test/consumers.command-line.verb-help-touches-nothing.test.generated.ts",
+      "test/validation.external-registers.unknown-and-retired.test.generated.ts",
+      "test/validation.external-registers.uncited-on-request.test.generated.ts",
       "test/self-hosting-corpus-checks.test.ts",
       "test/self-hosting-term-addresses.test.ts",
       "test/model.term-addresses.keyed-term-resolves.test.generated.ts",
