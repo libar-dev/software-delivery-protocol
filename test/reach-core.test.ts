@@ -464,7 +464,7 @@ it("exports one evaluator from the source, ESM and CommonJS main entries", async
   const { createRequire } = await import("node:module");
   const require = createRequire(import.meta.url);
   const cjs = require("../dist/index.cjs") as { evaluateBody: typeof evaluateBody };
-  const esm = await import("../dist/index.js");
+  const esm = (await import("../dist/index.js")) as typeof import("../src/index.js");
   const { graph } = extract({ root: probe() });
   for (const run of [evaluateBody, esm.evaluateBody, cjs.evaluateBody]) {
     expect(await run("return report", { graph })).toEqual(validateGraph(graph));
