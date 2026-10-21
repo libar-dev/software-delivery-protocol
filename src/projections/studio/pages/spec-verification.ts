@@ -17,8 +17,8 @@ import { codeSpans, text } from "./text.js";
 import type { RuleCoverage, SpaceCoverage } from "./tests-page.js";
 
 // Controls are added by the classic script; the surrounding content reads without it.
-export const composeSlot = (scope: string, action: string): string =>
-  `<sdp-compose scope="${escape(scope)}" action="${action}"></sdp-compose>`;
+export const composeSlot = (scope: string, action: string, entryText?: string): string =>
+  `<sdp-compose scope="${escape(scope)}" action="${action}"${entryText === undefined ? "" : ` data-entry-text="${escape(entryText)}"`}></sdp-compose>`;
 
 export function entryCitations(ctx: PageContext, spec: SpecContext, address: string): string {
   const answer = ctx.data.recipes.all.get(51) as {

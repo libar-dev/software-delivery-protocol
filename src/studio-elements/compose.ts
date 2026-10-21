@@ -67,6 +67,9 @@ export function registerCompose(): void {
         requestLabel.textContent = "Request";
         const request = doc.createElement("textarea");
         request.required = true;
+        request.addEventListener("input", () => {
+          request.setCustomValidity("");
+        });
         requestLabel.append(request);
         form.append(requestLabel);
         const exact = [
@@ -81,8 +84,7 @@ export function registerCompose(): void {
         if (exact) {
           const label = doc.createElement("label");
           label.textContent = "Exact entry text";
-          exact.value =
-            this.closest(".entry")?.querySelector("dd, .entry-value")?.textContent ?? "";
+          exact.value = this.getAttribute("data-entry-text") ?? "";
           label.append(exact);
           form.append(label);
         }
@@ -113,6 +115,7 @@ export function registerCompose(): void {
         form.append(gather, cancel);
         form.addEventListener("submit", (event) => {
           event.preventDefault();
+          request.setCustomValidity(request.value.trim() ? "" : "Give the intent a request.");
           if (!form.reportValidity()) return;
           const members = (this.getAttribute("members") ?? "").split(" ").filter(Boolean);
           gatherInPage(this, {
@@ -120,7 +123,7 @@ export function registerCompose(): void {
             request: request.value,
             action: packPart?.value === "pack" ? "change-pack" : action,
             ...(pack ? { pack } : {}),
-            ...(exact === undefined ? {} : { text: exact.value }),
+            ...(exact?.value.trim() ? { text: exact.value } : {}),
             ...(action === "change-entry" && scope.includes("#") ? { replaces: scope } : {}),
           });
           dialog.close();

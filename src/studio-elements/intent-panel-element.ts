@@ -26,6 +26,10 @@ export function registerIntentPanel(): void {
     private reason = "";
     private observer?: MutationObserver;
     private urls: string[] = [];
+    private readonly refresh = (): void => {
+      this.model?.refresh();
+      this.render();
+    };
     connectedCallback(): void {
       if (!this.model) {
         let storage: IntentStorage | undefined;
@@ -39,6 +43,9 @@ export function registerIntentPanel(): void {
           pageRootPath(this.getAttribute("page-root") ?? "./", this.ownerDocument.location.href),
         );
       }
+      this.model.refresh();
+      this.ownerDocument.defaultView?.addEventListener("storage", this.refresh);
+      this.ownerDocument.defaultView?.addEventListener("pageshow", this.refresh);
       const stamp = this.ownerDocument.querySelector("sdp-stamp");
       if (stamp && typeof MutationObserver === "function") {
         this.observer = new MutationObserver(() => {
@@ -49,6 +56,8 @@ export function registerIntentPanel(): void {
       this.render();
     }
     disconnectedCallback(): void {
+      this.ownerDocument.defaultView?.removeEventListener("storage", this.refresh);
+      this.ownerDocument.defaultView?.removeEventListener("pageshow", this.refresh);
       this.observer?.disconnect();
       this.releaseUrls();
     }
@@ -104,7 +113,7 @@ export function registerIntentPanel(): void {
       if (this.model.storageProblem) {
         const warning = doc.createElement("p");
         warning.textContent =
-          "Browser storage is unavailable. Copy these intents before leaving the page.";
+          "Browser storage is unavailable or contains unreadable intents. Copy these intents before leaving the page.";
         body.append(warning);
       }
       if (!this.model.intents.length) {
@@ -176,12 +185,14 @@ export function registerIntentPanel(): void {
               "application/json",
             ],
           ] as const;
-          for (const [label, content, file, type] of documents) {
+          for (const [label, content] of documents) {
             const copy = button(this, `Copy ${label}`);
             copy.addEventListener("click", () => {
               copied(content);
             });
             actions.append(copy);
+          }
+          for (const [label, content, file, type] of documents) {
             const save = doc.createElement("a");
             save.textContent = `Save ${label}`;
             save.download = file;

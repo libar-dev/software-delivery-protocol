@@ -8,7 +8,8 @@ import { schemaVersion } from "../src/graph/schema.js";
 import type { GraphSchema, PrimitiveNode } from "../src/graph/schema.js";
 import { createReader } from "../src/reader/reader.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderStudio } from "../src/projections/studio/pages/index.js";
+import { renderStudio } from "./helpers/studio-render.js";
+
 import type { StudioPage } from "../src/projections/studio/pages/index.js";
 import { pagePath } from "../src/projections/studio/paths.js";
 import { text } from "../src/projections/studio/pages/text.js";

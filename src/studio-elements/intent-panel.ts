@@ -55,6 +55,7 @@ export function scopedIntentText(intents: readonly GatheredIntent[]): string {
  */
 export class IntentPanel {
   private gathered: GatheredIntent[] = [];
+  private pending: ((intents: GatheredIntent[]) => GatheredIntent[])[] = [];
   readonly key: string;
   storageProblem = false;
   constructor(
@@ -62,9 +63,21 @@ export class IntentPanel {
     rootPath: string,
   ) {
     this.key = `sdp-studio:intents:${rootPath}`;
+    this.refresh();
+  }
+  refresh(): void {
+    if (!this.storage) {
+      this.storageProblem = true;
+      return;
+    }
     try {
-      const value: unknown = JSON.parse(storage?.getItem(this.key) ?? "[]");
-      if (Array.isArray(value) && value.every(validIntent)) this.gathered = value;
+      const value: unknown = JSON.parse(this.storage.getItem(this.key) ?? "[]");
+      if (Array.isArray(value)) {
+        this.gathered = value.filter(validIntent);
+        this.storageProblem = this.gathered.length !== value.length;
+        for (const change of this.pending) this.gathered = change(this.gathered);
+        if (this.pending.length) this.storageProblem = true;
+      } else this.storageProblem = true;
     } catch {
       this.storageProblem = true;
     }
@@ -76,22 +89,33 @@ export class IntentPanel {
     try {
       this.storage?.setItem(this.key, JSON.stringify(this.gathered));
       if (!this.storage) this.storageProblem = true;
+      else this.pending = [];
     } catch {
       this.storageProblem = true;
     }
   }
+  private change(change: (intents: GatheredIntent[]) => GatheredIntent[]): void {
+    this.refresh();
+    this.gathered = change(this.gathered);
+    this.pending.push(change);
+    this.persist();
+  }
   gather(intent: GatheredIntent): void {
     if (!validIntent(intent)) throw new Error("Give the intent a scope and a request.");
-    this.gathered.push({ ...intent, scope: [...intent.scope] });
-    this.persist();
+    const gathered = { ...intent, scope: [...intent.scope] };
+    this.change((intents) => [...intents, gathered]);
   }
   discard(index: number): void {
-    this.gathered.splice(index, 1);
-    this.persist();
+    const target = this.gathered[index];
+    this.change((intents) => {
+      const current = intents.findIndex(
+        (intent) => JSON.stringify(intent) === JSON.stringify(target),
+      );
+      return intents.filter((_, index) => index !== current);
+    });
   }
   discardAll(): void {
-    this.gathered = [];
-    this.persist();
+    this.change(() => []);
   }
   handoff(base: string, reason: string, stampedCommit?: string): Handoff {
     const changes: ProposalChange[] = [];

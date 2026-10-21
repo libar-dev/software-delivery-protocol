@@ -43,7 +43,7 @@ as `dist/recipes/<NN>-<slug>.js`. The recipe result informs the session; it neve
 permission or records a verdict.
 
 For a corpus upgrade, measure capability adoption (recipe 47), then review the rule-key proposal
-(recipe 48) through recipe 38 before an agent applies it. Follow
+(recipe 48) through recipe 38 before an agent applies it, and render its review memo with recipe 49. Follow
 `docs/agent-surface/upgrade-guide.md` for the upgrade steps.
 
 ## Choose an advisory work shape
@@ -82,7 +82,7 @@ reading material with the context bundle (recipe 36) within a stated budget; `pa
 1 through the returned `part.of` reads the complete scope in parts. Narrow it to one
 perspective's members by the perspective filter (recipe 37) when the pass reads for one concern.
 Hand findings back as a change proposal, the JSON document `spec:consumers.intent-composition.proposal`
-states, and run the proposal check (recipe 38) before an agent applies it: a change whose scope
+states, and render its memo with recipe 49, then run the proposal check (recipe 38) before an agent applies it: a change whose scope
 moved since the base goes to a person. The design backlog (recipe 33) lists what is designed and
 unbuilt; rule coverage (recipe 34) lists keyed rules no example exercises. Example-space coverage
 (recipe 44) lists slot values no example binds and slots that are not enumerable.

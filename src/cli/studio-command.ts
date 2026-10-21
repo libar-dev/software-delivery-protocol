@@ -70,6 +70,7 @@ export function prepareStudioPublication(
         script: fileURLToPath(new URL("../studio/studio.js", import.meta.url)),
         stylesheet: fileURLToPath(new URL("../studio/studio.css", import.meta.url)),
       };
+      const stylesheet = readFileSync(assets.stylesheet, "utf8");
       const files = studioFiles(
         render(
           await createStudioData(
@@ -77,6 +78,7 @@ export function prepareStudioPublication(
             validated.report,
             { ...parsed.studioInputs, runs },
           ),
+          stylesheet,
         ),
         assets,
       );
@@ -88,6 +90,7 @@ export function prepareStudioPublication(
               validated.report,
               { ...parsed.studioInputs, runs },
             ),
+            stylesheet,
           ),
           assets,
         );
@@ -149,18 +152,7 @@ export async function runStudioWatch(
           output,
           parsed.root,
         );
-        if (studioInputs === undefined) {
-          removeArtifacts(
-            [
-              join(parsed.root, "generated/spec-studio"),
-              join(parsed.root, "generated/spec-studio.tmp"),
-            ],
-            output,
-            "studio",
-            hooks.rmSync ?? rmSync,
-          );
-          return { exitCode: 1 };
-        }
+        if (studioInputs === undefined) return { exitCode: 1 };
         current = { ...parsed, studioInputs };
       }
       return { exitCode: await runStudio(current, output, hooks) };

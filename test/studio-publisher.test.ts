@@ -17,7 +17,7 @@ import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protoc
 import { runSdpCli, SDP_HELP_TEXT } from "../src/cli/sdp.js";
 import { runStudio } from "../src/cli/studio-command.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderStudio } from "../src/projections/studio/pages/index.js";
+import { renderStudio } from "./helpers/studio-render.js";
 import { createReader } from "../src/reader/reader.js";
 import { extract } from "../src/extract/index.js";
 import type { Finding } from "../src/validate/contracts.js";

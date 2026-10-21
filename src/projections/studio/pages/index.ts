@@ -1,6 +1,4 @@
-import { readFileSync } from "node:fs";
 import { exportPages } from "./export-page.js";
-import { studioStylesheet } from "../stylesheet.js";
 import { questionsPage, decisionsPage, declarationsPage, backlogPage } from "./registers-page.js";
 import { queuePage } from "./queue-page.js";
 import { glossaryPage } from "./glossary-page.js";
@@ -21,7 +19,7 @@ export interface StudioPage {
   readonly content: string;
 }
 
-export function renderStudio(data: StudioData): readonly StudioPage[] {
+export function renderStudio(data: StudioData, stylesheet: string): readonly StudioPage[] {
   const pages = [
     { path: "index.html", content: indexPage({ data, path: "index.html" }) },
     { path: "architecture.html", content: architecturePage({ data, path: "architecture.html" }) },
@@ -53,6 +51,5 @@ export function renderStudio(data: StudioData): readonly StudioPage[] {
       return { path, content: specPage({ data, path }, spec) };
     }),
   ];
-  const stylesheet = readFileSync(studioStylesheet, "utf8");
   return [...pages, ...exportPages(data, pages, stylesheet)];
 }

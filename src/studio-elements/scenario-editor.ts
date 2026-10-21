@@ -45,6 +45,9 @@ export function registerScenarioEditor(): void {
       requestLabel.textContent = "Request";
       const request = doc.createElement("textarea");
       request.required = true;
+      request.addEventListener("input", () => {
+        request.setCustomValidity("");
+      });
       request.value =
         this.getAttribute("mode") === "edit"
           ? "Edit these example steps."
@@ -56,16 +59,18 @@ export function registerScenarioEditor(): void {
       form.append(submit);
       form.addEventListener("submit", (event) => {
         event.preventDefault();
+        request.setCustomValidity(request.value.trim() ? "" : "Give the intent a request.");
         if (!form.reportValidity()) return;
+        const text = scenarioText(
+          fields[0]?.value ?? "",
+          fields[1]?.value ?? "",
+          fields[2]?.value ?? "",
+        );
         gatherInPage(this, {
           scope: [this.getAttribute("spec-id") ?? ""],
           action: this.getAttribute("mode") === "edit" ? "edit-example" : "propose-example",
           request: request.value,
-          text: scenarioText(
-            fields[0]?.value ?? "",
-            fields[1]?.value ?? "",
-            fields[2]?.value ?? "",
-          ),
+          ...(text.trim() ? { text } : {}),
         });
         this.closest("dialog")?.close();
       });

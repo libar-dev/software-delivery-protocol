@@ -36,6 +36,8 @@ import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { evaluateBody } from "../src/reader/evaluate-body.js";
 import { schemaVersion } from "../src/graph/schema.js";
 import { readPublishedStudio, studioFilesEqual } from "../src/projections/studio/publish.js";
+import { studioDom } from "./helpers/studio-dom.js";
+import { parse as parseCss } from "postcss";
 
 const assets = {
   script: fileURLToPath(new URL("../dist/studio/studio.js", import.meta.url)),
@@ -99,11 +101,27 @@ function storage() {
 }
 function refresh(gathered: number): number {
   const saved = storage();
-  const panel = new IntentPanel(saved, "/preview/12/");
+  const page = (href: string, root: string) => {
+    const dom = studioDom(assets.script, href, saved);
+    return dom.mount("sdp-intent-panel", { "page-root": root });
+  };
+  const panel = page("https://studio.test/preview/12/specs/probe.s1.html", "../");
   for (let i = 0; i < gathered; i++)
-    panel.gather({ scope: ["spec:probe.s1"], request: `Request ${i}`, action: "propose-example" });
-  expect(new IntentPanel(saved, "/preview/13/").intents).toHaveLength(0);
-  return new IntentPanel(saved, "/preview/12/").intents.length;
+    panel.gather?.({
+      scope: ["spec:probe.s1"],
+      request: `Request ${i}`,
+      action: "propose-example",
+    });
+  expect(
+    page("https://studio.test/preview/13/index.html", "./")
+      .querySelector("ol")
+      ?.querySelectorAll("li"),
+  ).toHaveLength(0);
+  return (
+    page("https://studio.test/preview/12/packs/probe.html", "../")
+      .querySelector("ol")
+      ?.querySelectorAll("li").length ?? 0
+  );
 }
 function memoProposal(changes: number, ticks: number) {
   return {
@@ -538,6 +556,25 @@ it("keeps the last local intents when storage refuses writes", () => {
   expect(panel.intents).toHaveLength(1);
   expect(panel.storageProblem).toBe(true);
 });
+it("keeps unsaved local intents when storage remains readable but its quota refuses writes", () => {
+  const panel = new IntentPanel(
+    {
+      getItem: () => "[]",
+      setItem: () => {
+        throw new Error("quota");
+      },
+    },
+    "/",
+  );
+  panel.gather({ scope: ["spec:probe"], request: "First request", action: "change-entry" });
+  panel.gather({ scope: ["spec:probe"], request: "Second request", action: "change-entry" });
+  panel.refresh();
+  expect(panel.intents.map((intent) => intent.request)).toEqual([
+    "First request",
+    "Second request",
+  ]);
+  expect(panel.storageProblem).toBe(true);
+});
 it("rewrites SVG and accessibility references without changing subject attributes or authored text", () => {
   const root = fixture(1);
   const pack = createReader(extract({ root }).graph).packContext("pack:probe");
@@ -694,16 +731,28 @@ it("removes a failed watch publication, keeps watching and recovers on the next 
 });
 it("ships a phone layout and a print stylesheet for the whole canvas", () => {
   const css = readFileSync(assets.stylesheet, "utf8");
-  expect(css).toContain("@media (max-width: 719.98px)");
-  expect(css).toContain("grid-template-columns: minmax(0, 1fr)");
-  expect(css).toContain("sdp-diagram svg {\n    width: 100%;\n    height: auto;");
+  const rules = parseCss(css);
+  const declarations: Record<string, Record<string, string>> = {};
+  rules.walkAtRules("media", (media) => {
+    if (media.params !== "(max-width: 719.98px)") return;
+    media.walkRules((rule) => {
+      const values = declarations[rule.selector] ?? {};
+      rule.walkDecls((declaration) => {
+        values[declaration.prop] = declaration.value;
+      });
+      declarations[rule.selector] = values;
+    });
+  });
+  expect(declarations[".layout"]).toMatchObject({ "grid-template-columns": "minmax(0, 1fr)" });
+  expect(declarations["sdp-diagram svg"]).toMatchObject({ width: "100%", height: "auto" });
   expect(css).toContain("@media print");
   expect(css).toContain("details > :not(summary)");
   expect(css).toContain("sdp-intent-panel,");
 });
 
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderStudio } from "../src/projections/studio/pages/index.js";
+import { renderStudio } from "./helpers/studio-render.js";
+
 it("keeps exports graph-only when the browsing pages receive a base and run records", async () => {
   const graph = extract({ root: fixture(1) }).graph;
   const reader = createReader(graph);
@@ -765,4 +814,360 @@ it("starts no cycle for source or input-file events", async () => {
   expect(result).toBe(0);
   expect(cycles).toBe(2);
   expect(observedOnlyCarriers).toBe(true);
+});
+
+it("merges concurrent panels before gathering or discarding and flags rejected storage records", () => {
+  const saved = storage();
+  const a = new IntentPanel(saved, "/preview/12/");
+  const b = new IntentPanel(saved, "/preview/12/");
+  const intent = (request: string) => ({
+    scope: ["spec:probe.s1"],
+    request,
+    action: "change-entry",
+  });
+  a.gather(intent("From tab A"));
+  b.gather(intent("From tab B"));
+  expect(new IntentPanel(saved, "/preview/12/").intents.map((i) => i.request)).toEqual([
+    "From tab A",
+    "From tab B",
+  ]);
+  a.discard(0);
+  expect(new IntentPanel(saved, "/preview/12/").intents.map((i) => i.request)).toEqual([
+    "From tab B",
+  ]);
+  b.discardAll();
+  a.gather(intent("After discard all"));
+  expect(new IntentPanel(saved, "/preview/12/").intents.map((i) => i.request)).toEqual([
+    "After discard all",
+  ]);
+  saved.setItem(a.key, JSON.stringify([intent("Keep valid"), { broken: true }]));
+  const damaged = new IntentPanel(saved, "/preview/12/");
+  expect(damaged.storageProblem).toBe(true);
+  expect(damaged.intents.map((i) => i.request)).toEqual(["Keep valid"]);
+});
+
+it("refreshes the browser panel on storage and pageshow and removes those listeners on disconnect", () => {
+  const saved = storage();
+  const dom = studioDom(assets.script, "https://studio.test/preview/12/index.html", saved);
+  const panel = dom.mount("sdp-intent-panel", { "page-root": "./" });
+  const other = new IntentPanel(saved, "/preview/12/");
+  other.gather({ scope: ["spec:probe.s1"], request: "Another page", action: "change-entry" });
+  dom.event("storage");
+  expect(panel.textContent).toContain("Another page");
+  other.gather({ scope: ["spec:probe.s2"], request: "After Back", action: "change-entry" });
+  dom.event("pageshow");
+  expect(panel.textContent).toContain("After Back");
+  panel.remove();
+  other.discardAll();
+  dom.event("storage");
+  expect(panel.textContent).toContain("After Back");
+});
+
+it("prefills compose with the authored entry text including code spans and no rendered annotations", async () => {
+  const root = fixture(1);
+  const carrier = join(root, "spec1.sdp.md");
+  const authored = 'Use `safe <&> "text"` here.';
+  writeFileSync(carrier, readFileSync(carrier, "utf8").replace("Read it.", authored));
+  const capture = createCaptureOutput();
+  expect(await cli(["studio", root], capture.output), capture.readStderr()).toBe(0);
+  const html = readFileSync(join(root, "generated/spec-studio/specs/probe.s1.html"), "utf8");
+  const encoded = /data-entry-text="([^"]*)"/u.exec(html)?.[1];
+  expect(encoded).toBe("Use `safe &lt;&amp;&gt; &quot;text&quot;` here.");
+  const dom = studioDom(
+    assets.script,
+    "https://studio.test/preview/12/specs/probe.s1.html",
+    storage(),
+  );
+  const panel = dom.mount("sdp-intent-panel", { "page-root": "../" });
+  const entry = dom.mount("div");
+  entry.className = "entry";
+  const dd = dom.doc.createElement("dd");
+  dd.textContent = "Use safe <&> text here.no example exercises it.no citation recorded";
+  const compose = dom.doc.createElement("sdp-compose");
+  compose.setAttribute("action", "change-entry");
+  compose.setAttribute("scope", "spec:probe.s1#rule.read");
+  compose.setAttribute("data-entry-text", authored);
+  dd.append(compose);
+  entry.append(dd);
+  compose.querySelector("button")?.dispatch("click");
+  const dialog = dom.doc.querySelector("dialog");
+  expect(dialog?.getAttribute("aria-label")).toBe("Propose new text");
+  const fields = dialog?.querySelectorAll("textarea") ?? [];
+  expect(fields[1]?.value).toBe(authored);
+  if (fields[0]) fields[0].value = "Change one word";
+  dialog?.querySelector("form")?.dispatch("submit");
+  expect(panel.textContent).toContain("Change one word");
+  expect(dom.doc.querySelector("dialog")).toBeNull();
+});
+
+it("omits blank exact text and reports whitespace requests in the compose dialog", () => {
+  const saved = storage();
+  const dom = studioDom(assets.script, "https://studio.test/index.html", saved);
+  dom.mount("sdp-intent-panel", { "page-root": "./" });
+  const compose = dom.mount("sdp-compose", { action: "change-target", scope: "spec:probe.s1" });
+  compose.querySelector("button")?.dispatch("click");
+  const form = dom.doc.querySelector("dialog")?.querySelector("form");
+  const fields = form?.querySelectorAll("textarea") ?? [];
+  if (fields[0]) fields[0].value = "   ";
+  expect(() => form?.dispatch("submit")).not.toThrow();
+  expect(fields[0]?.validationMessage).not.toBe("");
+  expect(new IntentPanel(saved, "/").intents).toHaveLength(0);
+  if (fields[0]) fields[0].value = "Adjust the target";
+  if (fields[1]) fields[1].value = "  \n ";
+  form?.dispatch("submit");
+  expect(new IntentPanel(saved, "/").intents).toEqual([
+    { scope: ["spec:probe.s1"], request: "Adjust the target", action: "change-target" },
+  ]);
+});
+
+it("uses the stamp base, labels fields, orders actions and copies and saves the named documents", async () => {
+  const saved = storage();
+  const dom = studioDom(assets.script, "https://studio.test/index.html", saved);
+  const stamp = dom.mount("sdp-stamp");
+  const panel = dom.mount("sdp-intent-panel", { "page-root": "./" });
+  panel.gather?.({ scope: ["spec:probe.s1"], request: "Read this", action: "change-entry" });
+  expect(panel.querySelectorAll("label").map((e) => e.textContent)).toEqual([
+    "Base commit",
+    "Reason for the proposal",
+  ]);
+  const actions = () => panel.querySelector(".intent-actions");
+  expect(actions()?.querySelectorAll("a")).toHaveLength(0);
+  expect(actions()?.textContent).toContain("Not in the proposal");
+  const base = panel.querySelectorAll("input")[0];
+  if (base) {
+    base.value = "manual";
+    base.dispatch("input");
+  }
+  expect(actions()?.querySelectorAll("a")).toHaveLength(0);
+  const reason = panel.querySelectorAll("input")[1];
+  if (reason) {
+    reason.value = "Review this design";
+    reason.dispatch("input");
+  }
+  expect(
+    actions()
+      ?.querySelectorAll("button, a")
+      .map((e) => e.textContent),
+  ).toEqual(["Copy memo", "Copy proposal", "Save memo", "Save proposal", "Discard all"]);
+  stamp.setAttribute("data-corpus-commit", "stamped");
+  expect(panel.querySelectorAll("label").map((e) => e.textContent)).toEqual([
+    "Reason for the proposal",
+  ]);
+  expect(panel.querySelectorAll("code").map((e) => e.textContent)).toContain("stamped");
+  const links = actions()?.querySelectorAll("a") ?? [];
+  expect(links.map((e) => e.download)).toEqual(["proposal.md", "proposal.json"]);
+  const memo = await dom.downloads.get(links[0]?.href ?? "")?.text();
+  const document = await dom.downloads.get(links[1]?.href ?? "")?.text();
+  expect(JSON.parse(document ?? "null")).toMatchObject({
+    base: "stamped",
+    reason: "Review this design",
+  });
+  const copies = actions()?.querySelectorAll("button") ?? [];
+  copies[0]?.dispatch("click");
+  copies[1]?.dispatch("click");
+  await Promise.resolve();
+  expect(dom.copied).toEqual([memo, document]);
+});
+
+it("keeps Pack framing changes apart and gathers scenario editor steps verbatim", () => {
+  const saved = storage();
+  const dom = studioDom(assets.script, "https://studio.test/index.html", saved);
+  dom.mount("sdp-stamp", { "data-corpus-commit": "abc" });
+  const panel = dom.mount("sdp-intent-panel", { "page-root": "./" });
+  const compose = dom.mount("sdp-compose", {
+    scope: "pack:probe",
+    action: "change-entry",
+    members: "spec:probe.s1 spec:probe.s2",
+  });
+  compose.querySelector("button")?.dispatch("click");
+  const dialog = dom.doc.querySelector("dialog");
+  expect(
+    dialog?.querySelectorAll("label").some((e) => e.textContent.startsWith("Change applies to")),
+  ).toBe(true);
+  const request = dialog?.querySelector("textarea");
+  if (request) request.value = "Change framing";
+  const choice = dialog?.querySelector("select");
+  if (choice) choice.value = "pack";
+  dialog?.querySelector("form")?.dispatch("submit");
+  const editor = dom.doc.createElement("sdp-scenario-editor");
+  editor.setAttribute("mode", "edit");
+  editor.setAttribute("spec-id", "spec:probe.s1");
+  for (const [step, text] of [
+    ["given", "a `code` value"],
+    ["when", "read it"],
+    ["then", "shown\nkept"],
+  ]) {
+    const pre = dom.doc.createElement("pre");
+    pre.setAttribute("data-step", step ?? "");
+    pre.textContent = text ?? "";
+    editor.append(pre);
+  }
+  dom.doc.body.append(editor);
+  expect(editor.querySelectorAll("textarea").map((e) => e.value)).toEqual([
+    "a `code` value",
+    "read it",
+    "shown\nkept",
+    "Edit these example steps.",
+  ]);
+  editor.querySelector("form")?.dispatch("submit");
+  const intents = new IntentPanel(saved, "/").intents;
+  expect(intents[0]).toMatchObject({
+    action: "change-pack",
+    pack: "pack:probe",
+    scope: ["spec:probe.s1", "spec:probe.s2"],
+  });
+  expect(intents[1]).toMatchObject({
+    text: "Given a `code` value\nWhen read it\nThen shown\nThen kept",
+  });
+  const reason = panel.querySelector("input");
+  if (reason) {
+    reason.value = "Reason";
+    reason.dispatch("input");
+  }
+  expect(panel.querySelector(".intent-actions")?.textContent).toContain("Not in the proposal");
+  expect(
+    panel
+      .querySelector(".intent-actions")
+      ?.querySelectorAll("li")
+      .map((e) => e.textContent),
+  ).toEqual(["pack:probe: Change framing"]);
+});
+
+it("matches the literal memo for the shared proposal, including the full relation and document", async () => {
+  // spec:consumers.intent-composition.proposal.memo#design.memoHead
+  // spec:consumers.intent-composition.proposal.memo#design.memoChange
+  // spec:consumers.intent-composition.proposal.memo#design.memoDocument
+  const expected = [
+    "# Change proposal",
+    "",
+    "Base: `abc`",
+    "Reason: Review the design.",
+    "",
+    "## Change 1",
+    "",
+    "Scope: `spec:probe.s1#rule.read`",
+    "Request: Change the entry",
+    "Replaces: `spec:probe.s1#rule.read`",
+    "",
+    "````",
+    "Use ``` here",
+    "````",
+    "",
+    "## Change 2",
+    "",
+    "Scope: `spec:probe.s2`",
+    "Request: Declare a dependency",
+    "Relation: declare `spec:probe.s2` dependsOn `spec:probe.s1`",
+    "",
+    "## The proposal",
+    "",
+    "````json",
+    "{",
+    '  "schema": "sdp-proposal/1",',
+    '  "base": "abc",',
+    '  "reason": "Review the design.",',
+    '  "changes": [',
+    "    {",
+    '      "scope": [',
+    '        "spec:probe.s1#rule.read"',
+    "      ],",
+    '      "request": "Change the entry",',
+    '      "text": "Use ``` here",',
+    '      "replaces": "spec:probe.s1#rule.read"',
+    "    },",
+    "    {",
+    '      "scope": [',
+    '        "spec:probe.s2"',
+    "      ],",
+    '      "request": "Declare a dependency",',
+    '      "relation": {',
+    '        "action": "declare",',
+    '        "from": "spec:probe.s2",',
+    '        "type": "dependsOn",',
+    '        "target": "spec:probe.s1"',
+    "      }",
+    "    }",
+    "  ]",
+    "}",
+    "````",
+    "",
+  ].join("\n");
+  const answer = await evaluateBody("return recipes(49, params)", {
+    graph: { schemaVersion, nodes: [], edges: [] },
+    params: { proposal },
+  });
+  expect(renderMemo(proposal)).toBe(expected);
+  expect(answer).toEqual({ schemaProblems: [], memo: expected });
+});
+
+it("keeps the last watch pages when an optional base becomes unreadable, just like a plain run", async () => {
+  const root = fixture(1);
+  const base = join(root, "base.json");
+  writeFileSync(base, JSON.stringify(extract({ root }).graph));
+  const controller = new AbortController();
+  let emit: ((event: { type: "change"; path: string }) => void) | undefined;
+  let prior: ReturnType<typeof readPublishedStudio>;
+  const outcomes: number[] = [];
+  const output = createCaptureOutput();
+  expect(
+    await cli(["studio", root, "--base", base, "--watch"], output.output, {
+      abortSignal: controller.signal,
+      createWatchSource: () => ({
+        on: (listener) => {
+          emit = listener;
+        },
+        onError() {
+          /* The source emits only carrier changes. */
+        },
+        close() {
+          /* This source owns no native handles. */
+        },
+      }),
+      onWatchCycleComplete: (cycle) => {
+        outcomes.push(cycle.exitCode);
+        if (cycle.index === 1) {
+          prior = readPublishedStudio(join(root, "generated/spec-studio"));
+          rmSync(base);
+          emit?.({ type: "change", path: "spec1.sdp.md" });
+        } else {
+          controller.abort();
+          expect(readPublishedStudio(join(root, "generated/spec-studio"))).toEqual(prior);
+        }
+      },
+    }),
+  ).toBe(0);
+  expect(outcomes).toEqual([0, 1]);
+  expect(await cli(["studio", root, "--base", base], output.output)).toBe(1);
+  expect(readPublishedStudio(join(root, "generated/spec-studio"))).toEqual(prior);
+});
+
+it("inlines the selected stylesheet asset in exports and publishes those same style bytes", async () => {
+  const root = fixture(1);
+  const stylesheet = join(root, "custom.css");
+  const css = "body { color: rebeccapurple; }\n";
+  writeFileSync(stylesheet, css);
+  expect(
+    await cli(["studio", root], createCaptureOutput().output, {
+      studioAssets: { ...assets, stylesheet },
+    }),
+  ).toBe(0);
+  expect(readFileSync(join(root, "generated/spec-studio/assets/studio.css"), "utf8")).toBe(css);
+  expect(readFileSync(join(root, "generated/spec-studio/exports/probe.html"), "utf8")).toContain(
+    `<style>${css}`,
+  );
+});
+
+it("introduces studio before its watch option and gives recipe 49 a use case", async () => {
+  const capture = createCaptureOutput();
+  expect(await cli(["studio", "--help"], capture.output)).toBe(0);
+  const help = capture.readStdout();
+  expect(help.indexOf("Validate, then publish")).toBeGreaterThan(0);
+  expect(help.indexOf("Validate, then publish")).toBeLessThan(help.indexOf("--watch publishes"));
+  const catalog = readFileSync(
+    new URL("../docs/agent-surface/recipes.md", import.meta.url),
+    "utf8",
+  );
+  expect(catalog.split("## 49. The proposal memo")[1]?.split("```js")[0]).toContain(
+    "*When you need this:*",
+  );
 });

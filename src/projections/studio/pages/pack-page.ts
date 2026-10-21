@@ -67,7 +67,7 @@ function memberCard(ctx: PageContext, member: PackMemberSummary, index: number):
 /**
  * Renders reader Pack totals, ordered member disclosures and the four boundary directions.
  * @sdpAnchor impl:protocol.studio-pack-page
- * @sdpSatisfies spec:consumers.spec-studio.pack-page
+ * @sdpSatisfies spec:consumers.spec-studio.pack-page, spec:consumers.spec-studio.export
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

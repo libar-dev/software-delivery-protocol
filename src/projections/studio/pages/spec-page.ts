@@ -48,7 +48,7 @@ function entry(
   address?: string,
   located?: string,
 ): string {
-  return `<div class="entry"${address === undefined ? "" : ` id="${escape(address)}"`}><dt>${code(key)}${lineLabel(spec.file, entryLine(spec, located ?? address ?? ""))}${address === undefined ? "" : copy(`${spec.id}#${address}`)}</dt><dd>${valueHtml(ctx, value)}${address === undefined ? "" : `${composeSlot(`${spec.id}#${address}`, "change-entry")}${address.startsWith("rule.") ? ruleCoverage(ctx, spec, address.slice(5)) : ""}${entryCitations(ctx, spec, address)}`}</dd></div>`;
+  return `<div class="entry"${address === undefined ? "" : ` id="${escape(address)}"`}><dt>${code(key)}${lineLabel(spec.file, entryLine(spec, located ?? address ?? ""))}${address === undefined ? "" : copy(`${spec.id}#${address}`)}</dt><dd>${valueHtml(ctx, value)}${address === undefined ? "" : `${composeSlot(`${spec.id}#${address}`, "change-entry", typeof value === "string" ? value : undefined)}${address.startsWith("rule.") ? ruleCoverage(ctx, spec, address.slice(5)) : ""}${entryCitations(ctx, spec, address)}`}</dd></div>`;
 }
 
 function steps(value: unknown): string {

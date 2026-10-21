@@ -17,7 +17,7 @@ import { extract } from "../src/extract/index.js";
 import { createReader } from "../src/reader/reader.js";
 import { evaluateStudioRecipe } from "../src/projections/studio/recipes.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderStudio } from "../src/projections/studio/pages/index.js";
+import { renderStudio } from "./helpers/studio-render.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import * as extraction from "../src/extract/index.js";
 

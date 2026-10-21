@@ -6,7 +6,7 @@ import { codeSpans, plainTitle } from "./code-spans.js";
 /**
  * Writes the shared navigation and the rail appropriate to the selected graph node.
  * @sdpAnchor impl:protocol.studio-frame
- * @sdpSatisfies spec:consumers.spec-studio.shell, spec:consumers.spec-studio.responsive
+ * @sdpSatisfies spec:consumers.spec-studio.shell, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.intent-panel
  * @sdpReferences spec:consumers.spec-studio, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.navigation
  * @sdpComponent component:protocol.projections
  * @sdpRole projection

@@ -4711,6 +4711,8 @@ return { scope, totals: { specs: ids.length, entries, keyed, proposed: changes.l
 
 ## 49. The proposal memo
 
+*When you need this:* Render a change proposal as the memo a person reviews and hands to an agent.
+
 The law is `spec:consumers.intent-composition.proposal.memo`. Pass `params.proposal`, the change-proposal document. This recipe reads no graph value and writes nothing. A malformed document returns the same schema problems as recipe 38; a valid one returns the Markdown memo the Studio panel hands off.
 
 ```js
