@@ -42,9 +42,7 @@ against the saved base graph with recipe 38:
 pnpm exec sdp q 'return await recipes(38, params)' --params proposal=@proposal.json --params base=@base-graph.json --json
 ```
 
-Resolve schema problems and unresolved scopes. A change whose scope moved since the base goes
-to a person. Once the check is clear, ask an agent to apply the proposal, inspect the diff, run
-`pnpm exec sdp validate .`, and record the edits in git. The recipes write no carriers.
+Resolve schema problems and unresolved scopes. Send each change whose scope moved since the base to a person, and ask an agent to apply the remaining changes. Inspect the diff, run `pnpm exec sdp validate .`, and record the edits in git. The recipes write no carriers and grant no approval.
 The proposal contract is `spec:consumers.intent-composition.proposal`.
 
 ## Choose capabilities to adopt

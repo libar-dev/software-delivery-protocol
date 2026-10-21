@@ -20,7 +20,7 @@ function fenced(value: string, language = ""): string {
 export function renderMemo(proposal: Proposal): string {
   let memo = `# Change proposal\n\nBase: ${span(proposal.base)}\nReason: ${proposal.reason}\n\n`;
   proposal.changes.forEach((change, index) => {
-    memo += `## Change ${String(index + 1)}\n\nScope: ${change.scope.map(span).join(", ")}\nRequest: ${change.request}\n`;
+    memo += `## Change ${String(index + 1)}\n\nScope: ${change.scope.map(span).join(", ")}\nRequest:\n\n${fenced(change.request, "text")}`;
     if (change.replaces !== undefined) memo += `Replaces: ${span(change.replaces)}\n`;
     if (change.follows !== undefined) memo += `Follows: ${span(change.follows)}\n`;
     if (change.relation) {

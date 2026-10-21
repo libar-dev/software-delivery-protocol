@@ -102,6 +102,11 @@ describe("upgrade kit", () => {
     new URL("../docs/agent-surface/upgrade-guide.md", import.meta.url),
     "utf8",
   );
+  it("applies unchanged scopes while sending only moved changes to a person", () => {
+    expect(guide).toContain("Send each change whose scope moved since the base to a person");
+    expect(guide).toMatch(/ask an agent to apply the remaining changes/u);
+    expect(guide).toContain("The recipes write no carriers and grant no approval.");
+  });
   it("names a carrying Spec in every guide section", () => {
     for (const section of guide.split(/^## /mu).slice(1)) {
       expect(section, section.split("\n")[0]).toMatch(/`spec:[a-z0-9.-]+`/u);
@@ -705,6 +710,25 @@ const proposalAnchor = codeAnchor({
 void proposalAnchor;
 
 describe("rule-key proposal details", () => {
+  it("drops possessives and apostrophes before coining keys", async () => {
+    const input = graph([
+      probe("possessives", {
+        behavior: {
+          rules: [
+            "A history projection's fold",
+            "A history projection’s fold",
+            "A reader's don't split apostrophe",
+          ],
+        },
+      }),
+    ]);
+    const answer = await catalogRecipe<Proposed>(48, input, { commit: "abc" });
+    expect(answer.proposal?.changes.map((change) => change.text)).toEqual([
+      "[#historyProjectionFold] A history projection's fold",
+      "[#historyProjectionFold2] A history projection’s fold",
+      "[#readerDontSplit] A reader's don't split apostrophe",
+    ]);
+  });
   it("preserves scope and entry order and skips existing keys and tags", async () => {
     const a = probe("a", {
       behavior: {
