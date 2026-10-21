@@ -177,6 +177,12 @@ Made by the executing thread on the owner's delegation; each awaits the owner's 
 The merge chain, conflicts, tests and close measurements are recorded in
 `reviews/plan46-wave2b-integration.md`. Plan 46 remains executing.
 
+## Rulings by the coordinating session during the close
+
+| Ruling | Why | Carrying Spec |
+| --- | --- | --- |
+| The D ruling governs over the refused list: entry citations are a located table in the graph, beside the location table, and are refused only as nodes, edges, delivery facts, readiness effects or test verdicts | The refusal was always aimed at verdicts and conferral, not at a located table like the location table | `spec:extraction.entry-citations` |
+
 ## Decisions only the owner makes
 
 These wait for the owner. None blocks the build; each is listed in the PR description.
@@ -231,7 +237,8 @@ These wait for the owner. None blocks the build; each is listed in the PR descri
 
 - A rung stated by tooling, including the planner and the upgrade kit.
 - A tool that edits a carrier itself; edits flow through an agent and git.
-- Run records, citations or stamps as graph data, delivery facts or verdicts.
+- Run records or stamps as graph data; entry citations as nodes, edges, delivery facts, readiness
+  effects or test verdicts.
 - A Studio build that writes a stamp, reads the network, or computes a join, claim, fact or floor.
 - A page that opens a pull request or holds credentials.
 - A partial bundle.
