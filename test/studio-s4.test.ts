@@ -878,14 +878,18 @@ it("every reusable preview job's permissions fit the CI caller's grant", () => {
   }
 });
 
-it("PR checks and run evidence use the same head commit as the preview stamp", () => {
+it("PR checks and preview stamps name the same default merge checkout", () => {
   const check = required(workflow("ci").jobs.check);
-  expect(check.steps?.find((step) => step.uses === "actions/checkout@v4")?.with?.ref).toBe(
-    "${{ github.event.pull_request.head.sha || github.sha }}",
-  );
-  expect(stepNamed(check, "Check").env?.SDP_CORPUS_COMMIT).toBe(
-    "${{ github.event.pull_request.head.sha || github.sha }}",
-  );
+  const preview = required(workflow("studio-preview").jobs.build);
+  for (const job of [check, preview]) {
+    const checkout = required(job.steps?.find((step) => step.uses === "actions/checkout@v4"));
+    expect(checkout.with?.ref).toBeUndefined();
+  }
+  expect(stepNamed(check, "Check").env?.SDP_CORPUS_COMMIT).toBe("${{ github.sha }}");
+  const publish = stepNamed(preview, "Build, stamp and measure the page set");
+  expect(publish.env?.CORPUS_COMMIT).toBe("${{ github.sha }}");
+  expect(publish.run).toContain('sdp stamp "$ROOT" --commit "$CORPUS_COMMIT"');
+  expect(publish.run).toContain("/blob/$CORPUS_COMMIT/");
 });
 
 it("preview download is optional and cancelled or skipped checks do not call it", () => {

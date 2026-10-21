@@ -1198,7 +1198,7 @@ export const consumersSpecs = [
     file: "specs/consumers/impact-graph.sdp.md",
     title: "Mechanical code structure stays inferred and apart from curated intent",
     narrative:
-      "File-level import structure, keyed by repository-relative path, is designed in `spec:consumers.impact-graph.curation-assist`; exhaustive symbol reach is designed in `spec:consumers.impact-graph.symbol-reach`, which holds the symbol-identity question.",
+      "File-level import structure, keyed by repository-relative path, is designed in `spec:consumers.impact-graph.curation-assist`; exhaustive symbol reach is designed in `spec:consumers.impact-graph.symbol-reach`, which holds the symbol-identity question. This parent promises the stance that inferred structure stays apart from curated intent. Symbol reach is the deferred child's promise alone.",
     sections: {
       intent: {
         outcome:
@@ -2017,7 +2017,7 @@ export const consumersSpecs = [
     readiness: "ready",
     title: "A Studio build is stamped and shared from a static host",
     narrative:
-      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file at the page set's root, and the shell shows it where the set is served over http or https. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host.",
+      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file at the page set's root, and the shell shows it where the set is served over http or https. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host. Checks and previews use GitHub's default pull-request merge checkout, so the gate proves the merge result and the run evidence, page set and stamp name that same commit.",
     sections: {
       intent: {
         outcome:
@@ -2031,7 +2031,7 @@ export const consumersSpecs = [
           "`sdp stamp [root] [--commit SHA] [--source TEMPLATE]` writes `stamp.json` into `<root>/generated/spec-studio/` and touches no other file: it derives no graph, renders no page, and refuses with exit 1 when the root holds no page set; a stamp without `--commit` names the commit `unknown`.",
           "A later build removes the page set and its stamp together, so no stamp outlives the build it names.",
           "Publishing a preview and writing its stamp are a step the adopter's CI runs, never the Studio's build; the shell reads the stamp as `spec:consumers.spec-studio.shell#rule.stamp` states.",
-          "The package's repository ships a reusable GitHub Actions workflow that, on a pull request, installs the caller's dependencies, runs `sdp studio` with the caller's root, exclusions and inputs, runs `sdp stamp` with the pull request's head commit and the repository's source template, and uploads the page set as a CI artifact; it opens no pull request, writes no comment and holds no credential beyond the run's own token.",
+          "The package's repository ships a reusable GitHub Actions workflow that, on a pull request, installs the caller's dependencies, runs `sdp studio` with the caller's root, exclusions and inputs, runs `sdp stamp` with the checked-out merge commit and the repository's source template, and uploads the page set as a CI artifact; it opens no pull request, writes no comment and holds no credential beyond the run's own token.",
           "The workflow deploys the stamped page set under `/preview/<pr-number>/` only when the caller asks for it and the repository serves a host from the branch the workflow writes to; a pull request from a fork never deploys.",
           "Every recorded file and line a page shows as text carries its file and line as data on its element, and when a loaded stamp names a source template the stamp element links each to the template with the file and line filled in; without such a stamp, or through `file://`, each stays text.",
         ],
@@ -2067,7 +2067,7 @@ export const consumersSpecs = [
           "`root` (default `.`), `exclude` (root-relative prefixes, one per line), `node-version` (default `20`), `install` (the install command, default `npm ci`), `sdp` (the command that runs the installed `sdp`, default `npx sdp`), `runs-artifact` (the name of an artifact an earlier job uploaded holding CTRF reports, each passed as `--runs`), `diff` (a boolean: write the graph of the pull request's base commit in a separate worktree, with that commit's own install and engine, and pass it as `--base` labelled `base <short commit>`), and `deploy` (a boolean, default false).",
         previewArtifact: "the artifact `spec-studio-pr-<pr-number>`, holding the stamped page set.",
         workflowSource:
-          "the workflow stamps with the pull request's head commit and the source template `<server>/<repository>/blob/<head commit>/<root>/{file}#L{line}`, the root and its slash left out when the root is `.`.",
+          "the workflow stamps with the checked-out merge commit and the source template `<server>/<repository>/blob/<merge commit>/<root>/{file}#L{line}`, the root and its slash left out when the root is `.`.",
         previewPath:
           "a pull request's preview is served at `<host>/preview/<pr-number>/`, which the workflow writes as the folder `preview/<pr-number>/` of the `gh-pages` branch, the branch GitHub Pages serves when a repository enables Pages from it.",
         stampElement:
@@ -2102,7 +2102,7 @@ export const consumersSpecs = [
           "The shell shows no recent edits and no other history: git holds it.",
           "Served over http or https, the shell reads `stamp.json` beside the page set and, when it loads, shows the build context it names; a page opened through `file://` requests nothing and shows no stamp.",
           "A stated rung shows as a badge that carries the rung's word, colored from a palette of four that stays distinct under color blindness; the floor reached shows beside it as words with no color of its own, and only the divergence banner adds a warning color, beside its words.",
-          "Every status a color marks is also written in words, so no reading depends on color.",
+          "Every meaning a color conveys is also written in words, so no reading depends on color.",
           "Every link and control is reachable from the keyboard in reading order and shows where the focus is.",
           "Prose runs no wider than about 80 characters, and a table wider than the canvas scrolls inside its own box, never the page.",
           "Authored text renders as plain text with each inline code span as code, and no other Markdown is read. A mention the prose-mentions validator reads links to its target's page when the target resolves, and to the entry when the mention is an entry address.",
