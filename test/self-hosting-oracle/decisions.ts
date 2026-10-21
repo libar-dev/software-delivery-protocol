@@ -1349,7 +1349,7 @@ export const decisionsSpecs = [
         rationale: [
           "Inline SVG reads without script, prints, survives the Pack export and opens from `file://`, so the page carries no layout code and the element stays small.",
           "A layout computed from graph values, with no font, clock or random value, draws the same bytes from the same graph, which the Studio's reproducibility rule and `--check-clean` need.",
-          "The bound is measured, not chosen by taste: every architecture diagram both corpora draw today fits in one drawing, and in the prototype a drawing past about forty boxes ran beyond two screen widths at the label size the pages use.",
+          "The bound sits between what the two corpora need and what a page reads well: in the prototype the largest real drawing is the Protocol's thirty-five-box member diagram, and a synthetic sixty-two-component drawing spanned about two and a half screen widths unfolded; nothing between forty and sixty-two boxes was measured, and the edge bound is headroom over the thirty-nine edges the largest real diagram draws.",
         ],
         alternatives: [
           "Mermaid rendered in the page needs its script and a runtime of several hundred kilobytes, lays out differently per browser, and shows nothing without script; the shipped Mermaid projection stays frozen for its own readers.",

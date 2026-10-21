@@ -24,6 +24,7 @@ The Studio has its own verb and root beside the four shipped publishers, and is 
 ## Behavior
 - rule: [#verb] `sdp studio [root] [--exclude PATH]... [--check-clean]` validates the graph and writes the Studio's page set to `<root>/generated/spec-studio/`; `root` defaults to the working directory, and each exclusion is a root-relative path prefix, as for the shipped publishers.
 - rule: [#ownRoot] A run writes nothing outside its root, writes no stamp, and leaves every carrier and source file under the root byte-identical.
+- rule: [#readsNoNetwork] A run reads no network: every byte it reads is a file under the root, a file its flags name, or a file the package ships.
 - rule: [#wholesale] A run writes its page set to `generated/spec-studio.tmp/`, removes the prior root and renames the temporary into place, so no page of an earlier run survives a later one and no temporary survives a completed run.
 - rule: [#buildInvalidates] Every command that enters the shared build, `sdp studio` among them, removes `generated/spec-studio/` and its temporary sibling before extraction, beside the four roots `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` names; a removal failure refuses the command before extraction.
 - rule: [#checkClean] `sdp studio --check-clean` renders an independent twin and refuses divergent renders, then compares the current root with the new render; missing or drifted output returns nonzero and is removed, and clean output is replaced wholesale with byte-identical content.

@@ -57,17 +57,18 @@ seen on a corpus larger than either measured one; the page says so.
 
 | Corpus | Components | Units, `uses` | Largest member diagram | Spec neighbours, p95 and largest | Over 40 |
 | --- | --- | --- | --- | --- | --- |
-| This repository | 14, one context | 146 units, 43 `uses`; 38 component pairs | 35 nodes (`component:protocol.cli`) | 15 and 29 | none |
-| libar-platform | 12, four contexts | 64 units, 36 `uses`; 36 component pairs | 13 nodes | 25 and 52 | 4 trace graphs |
+| This repository | 14, one context | 146 units, 43 `uses`; 38 component pairs | 35 nodes (`component:protocol.cli`) | 15 and 29 | 1 trace graph (43 boxes) |
+| libar-platform | 12, four contexts | 64 units, 36 `uses`; 36 component pairs | 13 nodes | 25 and 52 | 3 trace graphs (64, 59 and 52 boxes) |
 
 Every architecture diagram either corpus has today fits in one drawing of 40 nodes and 100 edges.
-Only the platform's hub Specs, the ones with 41 to 52 related Specs, fold their trace graph, and
-folding there helps the reader: the folded box names the count and the relation, and the relation
+Only hub Specs fold their trace graph, the platform's three and one of this repository's, as
+`out/*/measurements.json` records, and folding there helps the reader: the folded box names the count and the relation, and the relation
 table lists the Specs. The synthetic run shows the architecture fold the platform will need once
 its later layers state component designs: 62 components fold to nine contexts, and each context
 draws within the bound.
 
-The chosen bound is **40 nodes and 100 edges per diagram**. Below it the busiest real diagram (the
+The chosen bound is **40 nodes and 100 edges per diagram**. Nothing between 40 and 62 boxes was
+measured, and the edge bound is headroom over the 39 edges the largest real diagram draws. Below it the busiest real diagram (the
 platform's architecture, 12 nodes and 36 edges) reads at a desktop width. Drawn unfolded, the
 synthetic run's 62 components and 81 edges span 4000 pixels, more than two and a half screens
 (`platform-synthetic-unfolded.png`); at about 40 boxes a drawing stays within two screen widths at

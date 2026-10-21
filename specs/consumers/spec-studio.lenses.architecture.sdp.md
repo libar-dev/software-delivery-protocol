@@ -33,7 +33,7 @@ The original's architecture lens drew runtime layers, ports and external systems
 
 ## UI
 - architecturePage: in order, the page title `Architecture`, the summary sentences, the architecture diagram or its fold with one section per context, the `Designed, not built` section, the component details in id order, and the `Unresolved structure` section when it has rows.
-- designedNotBuilt: a table with one row per unrealized design in Spec id order: the component design's Spec, linked; the planned component's id as code; its planned context, layer and role, or `not stated`; the components it plans to use; and whether its component anchor exists without satisfying it.
+- designedNotBuilt: a table with one row per unrealized design in Spec id order: the component design's Spec, linked; the planned component's id as code; its planned context, layer and role, or `not stated`; the components it plans to use; and whether its component anchor exists without satisfying it; a design whose value recipe 43 cannot read adds a row naming the design, the key and the unreadable value.
 - componentDetail: a heading with the component's id as code and its label, a line with its layer, context and role in words, its file and line with a copy action, then lists headed Members, Uses, Used by, Satisfies and References, an empty list reading None, then the member diagram.
 
 ## Design

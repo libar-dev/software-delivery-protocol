@@ -9,6 +9,8 @@ relations:
     - spec:consumers.spec-studio.data
     - target: spec:model.term-addresses
       reason: a keyed term's address links it to its definition
+    - target: spec:carrier.markdown-body-grammar
+      reason: the page splits a Model entry into its term and definition as the body grammar reads it
 ---
 # The glossary page lists every term the corpus's Specs define
 
@@ -18,7 +20,7 @@ A Spec's Model section defines terms, and a term may carry a key that gives it a
 - outcome: Let a person find any term a Spec defines, read its definition, and open the Spec and the entry that define it.
 
 ## Behavior
-- rule: [#terms] The page set holds `glossary.html`, which lists every term a Spec's Model section defines, sorted by the term's lowercase form in code-unit order and then by Spec id, each with its definition as text, its Spec linked, and, when the term carries a key, its address `spec:<id>#term.<key>` with a copy action, linked to the term on the Spec page.
+- rule: [#terms] The page set holds `glossary.html`, which lists every term a Spec's Model section defines, sorted by the term's lowercase form in code-unit order and then by Spec id, each with its definition as text, its Spec linked, and, when the term carries a key, its address `spec:<id>#term.<key>` with a copy action, linked to the term on the Spec page; the term and its definition split as `spec:carrier.markdown-body-grammar#rule.modelEntries` states.
 - rule: [#sameWordTwice] A word two Specs define appears once per Spec, so the definitions read side by side and the page chooses none.
 - rule: [#noGlossaryDocument] The page renders no glossary document: it lists the terms the graph holds and nothing else.
 - rule: [#letterIndex] The page opens with the count of terms and of defining Specs in one sentence and the letters its terms start with, each linked to the heading over its terms.

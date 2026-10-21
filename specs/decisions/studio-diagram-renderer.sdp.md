@@ -7,8 +7,6 @@ relations:
   refines:
     - target: spec:decisions.studio-web-components
       reason: narrows how an element that shows a diagram renders it; the element only enhances an SVG the build drew
-    - target: spec:consumers.spec-studio.components
-      reason: names the renderer and the bound the diagram-renderer rule asked for
   dependsOn:
     target: spec:extraction.determinism
     reason: a diagram laid out from graph values alone keeps one graph to one set of bytes
@@ -23,7 +21,7 @@ relations:
 - decision: The engine lays out every Studio diagram at build time with its own deterministic layered layout and writes it into the page as inline SVG followed by a text equivalent. The custom element that holds a diagram adds only pan, zoom and pinch, by changing the SVG's view box. One diagram draws at most the bound `spec:consumers.spec-studio.diagrams#design.bound` names, and above it the diagram folds, by context and then by layer, as that Spec states.
 - rationale: Inline SVG reads without script, prints, survives the Pack export and opens from `file://`, so the page carries no layout code and the element stays small.
 - rationale: A layout computed from graph values, with no font, clock or random value, draws the same bytes from the same graph, which the Studio's reproducibility rule and `--check-clean` need.
-- rationale: The bound is measured, not chosen by taste: every architecture diagram both corpora draw today fits in one drawing, and in the prototype a drawing past about forty boxes ran beyond two screen widths at the label size the pages use.
+- rationale: The bound sits between what the two corpora need and what a page reads well: in the prototype the largest real drawing is the Protocol's thirty-five-box member diagram, and a synthetic sixty-two-component drawing spanned about two and a half screen widths unfolded; nothing between forty and sixty-two boxes was measured, and the edge bound is headroom over the thirty-nine edges the largest real diagram draws.
 - alternative: Mermaid rendered in the page needs its script and a runtime of several hundred kilobytes, lays out differently per browser, and shows nothing without script; the shipped Mermaid projection stays frozen for its own readers.
 - alternative: A layout library such as ELK or Dagre run at build time adds a dependency whose version moves the bytes, while the Studio's diagrams need only labelled bands and a grid.
 - alternative: Drawing on a canvas from embedded data puts the diagram out of reach of a screen reader, of print and of a reader without script.

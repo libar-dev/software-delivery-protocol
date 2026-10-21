@@ -24,7 +24,7 @@ relations:
     - target: spec:consumers.spec-studio.sharing
       reason: a recorded file and line become a link only from a stamp's source template
     - target: spec:consumers.spec-studio.diff-page
-      reason: given a base graph, the header's marker links the Spec's row on the diff page
+      reason: given a base graph, the header's change note links the Spec's row on the diff page
   decidedBy: spec:decisions.authored-entry-order
 ---
 # A Spec page shows one Spec in collapsible panels, in a fixed order
@@ -47,7 +47,7 @@ The page shows only what the graph and the build's named inputs hold. The origin
 - rule: [#designView] The Design view panel draws the realization diagram of the units that satisfy the Spec, their components and what they use, and then lists the decision records the Spec names through `decidedBy`, each with its title linked and its decision text inline.
 - rule: [#runtime] The Runtime panel shows the structural neighborhood of the Spec's implementation anchors: each anchor's component with its layer and context, and the units it uses, each with its file and line; runtime observation reads not tracked.
 - rule: [#impact] The Impact panel draws the Spec's trace graph, one hop each way, and then lists what it rests on with each target's stated and derived rung, from recipe 21, and every Spec that rests on it to any depth, by distance, with the units, enabled verifiers and Packs each brings, from recipe 30.
-- rule: [#diffMarker] Given a base graph, a line under the header names the base and lists the Spec's changed parts, as `spec:consumers.spec-studio.diff-page` states.
+- rule: [#diffChangeNote] Given a base graph, a line under the header names the base and lists the Spec's changed parts, as `spec:consumers.spec-studio.diff-page` states.
 
 ## UI
 The panels the core does not hold, in page order.

@@ -2016,7 +2016,7 @@ export const consumersSpecs = [
     readiness: "ready",
     title: "A Studio build is stamped and shared from a static host",
     narrative:
-      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file beside the page set, and the shell shows it. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host.",
+      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file at the page set's root, and the shell shows it where the set is served over http or https. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host.",
     sections: {
       intent: {
         outcome:
@@ -2057,7 +2057,7 @@ export const consumersSpecs = [
       },
       design: {
         buildStamp:
-          "`{ schemaVersion: string; corpusCommit: string; engine: string; builtAt: string; source?: string }` in `stamp.json` beside the page set, written by `sdp stamp` and never by the Studio's build: the graph schema version of the stamping engine, the commit `--commit` names or `unknown`, the engine `sdp --version` names, the time the step ran as an ISO 8601 UTC timestamp to the second, and the source template `--source` names, when given.",
+          "`{ schemaVersion: string; corpusCommit: string; engine: string; builtAt: string; source?: string }` in `stamp.json` at the page set's root, written by `sdp stamp` and never by the Studio's build: the graph schema version of the stamping engine, the commit `--commit` names or `unknown`, the engine `sdp --version` names, the time the step ran as an ISO 8601 UTC timestamp to the second, and the source template `--source` names, when given.",
         sourceTemplate:
           "a URL holding `{file}` and optionally `{line}`, such as `https://github.com/<owner>/<repo>/blob/<commit>/{file}#L{line}`, into which the shell writes a recorded root-relative file and its line; `sdp stamp` refuses a template without `{file}`.",
         previewWorkflow:
@@ -2199,7 +2199,7 @@ export const consumersSpecs = [
           designView: "rules[7]",
           runtime: "rules[8]",
           impact: "rules[9]",
-          diffMarker: "rules[10]",
+          diffChangeNote: "rules[10]",
         },
         exampleSpace: {
           given: [
@@ -4454,6 +4454,7 @@ export const consumersSpecs = [
         rules: [
           "`sdp studio [root] [--exclude PATH]... [--check-clean]` validates the graph and writes the Studio's page set to `<root>/generated/spec-studio/`; `root` defaults to the working directory, and each exclusion is a root-relative path prefix, as for the shipped publishers.",
           "A run writes nothing outside its root, writes no stamp, and leaves every carrier and source file under the root byte-identical.",
+          "A run reads no network: every byte it reads is a file under the root, a file its flags name, or a file the package ships.",
           "A run writes its page set to `generated/spec-studio.tmp/`, removes the prior root and renames the temporary into place, so no page of an earlier run survives a later one and no temporary survives a completed run.",
           "Every command that enters the shared build, `sdp studio` among them, removes `generated/spec-studio/` and its temporary sibling before extraction, beside the four roots `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` names; a removal failure refuses the command before extraction.",
           "`sdp studio --check-clean` renders an independent twin and refuses divergent renders, then compares the current root with the new render; missing or drifted output returns nonzero and is removed, and clean output is replaced wholesale with byte-identical content.",
@@ -4482,13 +4483,14 @@ export const consumersSpecs = [
         ruleKeys: {
           verb: "rules[0]",
           ownRoot: "rules[1]",
-          wholesale: "rules[2]",
-          buildInvalidates: "rules[3]",
-          checkClean: "rules[4]",
-          findingsShown: "rules[5]",
-          pageSet: "rules[6]",
-          deterministic: "rules[7]",
-          linksResolve: "rules[8]",
+          wholesale: "rules[3]",
+          buildInvalidates: "rules[4]",
+          checkClean: "rules[5]",
+          findingsShown: "rules[6]",
+          pageSet: "rules[7]",
+          deterministic: "rules[8]",
+          linksResolve: "rules[9]",
+          readsNoNetwork: "rules[2]",
         },
       },
     },
@@ -5285,7 +5287,7 @@ export const consumersSpecs = [
           "One graph and the same inputs draw byte-identical SVG on every build and every machine.",
           "The architecture diagram places each component in the column of its recorded context, contexts in code-unit order and then a column for components that state none, and in the band of its layer, in the order edge, application, domain, adapter, infrastructure, then a band for components that state none; a cell holds its components in id order.",
           "An architecture edge joins two components and carries the count of unit `uses` edges between them, as the component rows of `spec:consumers.spec-studio.lenses.architecture#design.componentRows` count them: each end of a unit `uses` edge resolves to its component, directly or through `memberOf`, and a use within one component draws nothing.",
-          "A trace graph draws the Spec in a band of its own, the Specs it rests on above it in one band per relation type, in the order refines, dependsOn, constrainedBy, decidedBy, verifies, supersedes, and the Specs that rest on it below in bands of the same order; a Spec related more than one way sits in the band of its first relation, and each relation is its own edge.",
+          "A trace graph draws the Spec in a band of its own, the Specs its declared relations name above it in one band per relation type, in the order refines, dependsOn, constrainedBy, decidedBy, verifies, supersedes, and the Specs whose declared relations name it below in bands of the same order; a Spec related more than one way sits in the band of its first relation, and each relation is its own edge.",
           "A member diagram draws a component's members in bands by how deep `uses` among members reaches, a member that uses another sitting above it, and the units and components outside the component that members use in a last band of their own.",
           "A realization diagram draws the units that satisfy the Spec, then their components, then what those units use, in three bands.",
           "A diagram draws at most the boxes and edges the bound names.",
@@ -5550,7 +5552,7 @@ export const consumersSpecs = [
         architecturePage:
           "in order, the page title `Architecture`, the summary sentences, the architecture diagram or its fold with one section per context, the `Designed, not built` section, the component details in id order, and the `Unresolved structure` section when it has rows.",
         designedNotBuilt:
-          "a table with one row per unrealized design in Spec id order: the component design's Spec, linked; the planned component's id as code; its planned context, layer and role, or `not stated`; the components it plans to use; and whether its component anchor exists without satisfying it.",
+          "a table with one row per unrealized design in Spec id order: the component design's Spec, linked; the planned component's id as code; its planned context, layer and role, or `not stated`; the components it plans to use; and whether its component anchor exists without satisfying it; a design whose value recipe 43 cannot read adds a row naming the design, the key and the unreadable value.",
         componentDetail:
           "a heading with the component's id as code and its label, a line with its layer, context and role in words, its file and line with a copy action, then lists headed Members, Uses, Used by, Satisfies and References, an empty list reading None, then the member diagram.",
       },
@@ -5897,19 +5899,19 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "The page set holds `diff.html` only when the build was given a base graph; without one, no page, link or marker names a diff.",
+          "The page set holds `diff.html` only when the build was given a base graph; without one, no page, link or change note names a diff.",
           "The page opens by naming its input: the base graph, its label when the build was given one, its schema version and its Spec count beside the built graph's, and a sentence that the comparison reads the two graphs only.",
           "The page renders recipe 35's answer with `detail: true` over the whole corpus, in sections in this order: the totals as sentences; the Specs added, linked; the Specs removed, as their ids in text, since no page holds them; the Specs changed, each linked, with each changed part, its change in words, and for a changed value the base value and the built value as text, one above the other; the Packs whose membership or order changed; the bindings changed, kept apart and headed as derived from anchors; and the diagnostics.",
           "Given a base graph, each changed Spec's page adds a line under its header that names the base input and lists the Spec's changed parts, linked to its row on the diff page, and each added Spec's page says it is new since the base.",
           "Given a base graph, each Pack page adds a `Changed since the base` section after its maturity map, from recipe 35's answer for that Pack, listing its changed and added members, linked, and its own membership change.",
-          "The page and the markers state differences between two graphs and confer nothing: no approval, staleness or readiness, and no record that a design pass happened.",
+          "The page and the change notes state differences between two graphs and confer nothing: no approval, staleness or readiness, and no record that a design pass happened.",
         ],
         ruleKeys: {
           onlyWithBase: "rules[0]",
           namesTheBase: "rules[1]",
           diffSections: "rules[2]",
-          specMarkers: "rules[3]",
-          packMarkers: "rules[4]",
+          specChangeNotes: "rules[3]",
+          packChangeNotes: "rules[4]",
           confersNothing: "rules[5]",
         },
         exampleSpace: {
@@ -5920,7 +5922,7 @@ export const consumersSpecs = [
           when: ["the build renders the diff page"],
           then: [
             "the Spec's row shows the base value {baseShown:string} and the built value {nowShown:string}",
-            "the Spec's page carries the changed-since-base line: {marker:boolean}",
+            "the Spec's page carries the changed-since-base line: {changeNote:boolean}",
           ],
         },
       },
@@ -5928,10 +5930,10 @@ export const consumersSpecs = [
         baseLine:
           "`Compared with the base graph <label>, schema <version>, <n> Specs; the built graph has schema <version>, <m> Specs.`, the label left out when none was given.",
         changedSpec:
-          "the title linked, the id as code, then one row per part: the part as code, its change in words, and for a changed value two labelled blocks, `Base` and `Now`, holding the values as text; the block's element id is the Spec's id, which the Spec page's marker links to.",
+          "the title linked, the id as code, then one row per part: the part as code, its change in words, and for a changed value two labelled blocks, `Base` and `Now`, holding the values as text; the block's element id is the Spec's id, which the Spec page's change note links to.",
         bindingRow:
           "the Spec linked, then for implementing units, referencing units, enabled verifiers and delivery facts the ids added and removed, under the heading `Bindings, derived from anchors`.",
-        specMarker:
+        changeNote:
           "`Changed since the base graph <label>:` and the changed parts as code, linked to the Spec's row on the diff page.",
       },
     },
@@ -5948,7 +5950,7 @@ export const consumersSpecs = [
     sections: {
       intent: {
         outcome:
-          "Execute the diff page on one changed Design entry: both values side by side, and the marker on the Spec's page.",
+          "Execute the diff page on one changed Design entry: both values side by side, and the change note on the Spec's page.",
         assumptions: [
           "The world writes a root with one Spec whose Design entry `limit` reads `ten items`, writes its graph with `sdp build` and keeps it outside the root as the base, changes the entry to `twenty items`, builds the page set with the base, and reads the Spec's row on the diff page and the line under the Spec page's header.",
         ],
@@ -5963,7 +5965,7 @@ export const consumersSpecs = [
             when: ["the build renders the diff page"],
             then: [
               'the Spec\'s row shows the base value {baseShown: "ten items"} and the built value {nowShown: "twenty items"}',
-              "the Spec's page carries the changed-since-base line: {marker: true}",
+              "the Spec's page carries the changed-since-base line: {changeNote: true}",
             ],
           },
         ],
@@ -5987,7 +5989,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "The page set holds `glossary.html`, which lists every term a Spec's Model section defines, sorted by the term's lowercase form in code-unit order and then by Spec id, each with its definition as text, its Spec linked, and, when the term carries a key, its address `spec:<id>#term.<key>` with a copy action, linked to the term on the Spec page.",
+          "The page set holds `glossary.html`, which lists every term a Spec's Model section defines, sorted by the term's lowercase form in code-unit order and then by Spec id, each with its definition as text, its Spec linked, and, when the term carries a key, its address `spec:<id>#term.<key>` with a copy action, linked to the term on the Spec page; the term and its definition split as `spec:carrier.markdown-body-grammar#rule.modelEntries` states.",
           "A word two Specs define appears once per Spec, so the definitions read side by side and the page chooses none.",
           "The page renders no glossary document: it lists the terms the graph holds and nothing else.",
           "The page opens with the count of terms and of defining Specs in one sentence and the letters its terms start with, each linked to the heading over its terms.",
@@ -6071,7 +6073,7 @@ export const consumersSpecs = [
           "The page names each run by its position among the inputs and its own fields: its tool and version, its build name and number, its branch, its commit, and its start and stop times as recorded, a field the record lacks reading `not recorded`.",
           "Every place a run shows, on this page, in the tests lens and on a Spec page, says in words that it is external run evidence from a test file, and none says that a Spec or a verifier passed.",
           "For each run the page shows how many of its tests passed, failed, were skipped, pending or other, in words, then each test file it joins, with the test anchors in that file, the Specs they verify, linked, and each test's name, suite, result in words and duration, then the records that join no test anchor, each with its reason, no file path or no test anchor in that file.",
-          "Each run shows its commit, and the page never says a run is fresh or stale; a stamp present beside the page set names the commit the build read, so a reader compares the two.",
+          "Each run shows its commit, and the page never says a run is fresh or stale; a stamp present beside the page set names the corpus commit the publishing step recorded, so a reader compares the two.",
           "An input recipe 45 cannot read as a run record shows with its problem, and the other inputs still show.",
           "Given run records, the sentence over a Pack page's members with no verifier binding also says that the runs page, the tests lens and the Spec pages of the Specs their files verify show the run records as external evidence from test files; it never says that no page shows a run result.",
         ],

@@ -3426,7 +3426,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.spec-studio.spec-page",
     "dependsOn",
     "spec:consumers.spec-studio.diff-page",
-    "given a base graph, the header's marker links the Spec's row on the diff page",
+    "given a base graph, the header's change note links the Spec's row on the diff page",
   ],
   [
     "spec:consumers.spec-studio.verification-panels",
@@ -3470,12 +3470,6 @@ export const expectedDeclaredRelations: readonly (readonly [
     "refines",
     "spec:decisions.studio-web-components",
     "narrows how an element that shows a diagram renders it; the element only enhances an SVG the build drew",
-  ],
-  [
-    "spec:decisions.studio-diagram-renderer",
-    "refines",
-    "spec:consumers.spec-studio.components",
-    "names the renderer and the bound the diagram-renderer rule asked for",
   ],
   [
     "spec:decisions.studio-diagram-renderer",
@@ -3645,6 +3639,12 @@ export const expectedDeclaredRelations: readonly (readonly [
     "dependsOn",
     "spec:model.term-addresses",
     "a keyed term's address links it to its definition",
+  ],
+  [
+    "spec:consumers.spec-studio.glossary-page",
+    "dependsOn",
+    "spec:carrier.markdown-body-grammar",
+    "the page splits a Model entry into its term and definition as the body grammar reads it",
   ],
   ["spec:consumers.spec-studio.runs-page", "refines", "spec:consumers.spec-studio"],
   [
@@ -3998,7 +3998,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "verifies",
     "spec:consumers.spec-studio.diff-page",
     null,
-    ["diffSections", "specMarkers"],
+    ["diffSections", "specChangeNotes"],
   ],
   [
     "spec:consumers.spec-studio.runs-page.external-evidence",
