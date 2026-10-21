@@ -22,9 +22,12 @@ export function specChangeNote(ctx: PageContext, id: string): string {
   if (diff.specs?.added.includes(id))
     return `<p>New since ${baseLabel(ctx)}. <a href="${escape(path)}">See the diff</a>.</p>${baseMetadata(ctx)}`;
   const changed = diff.specs?.changed.find((s) => s.id === id);
+  const keyed = changed?.parts.filter((p) => p.change === "keyed").length ?? 0;
+  const parts = changed?.parts.filter((p) => p.change !== "keyed").map((p) => code(p.part)) ?? [];
+  if (keyed > 0) parts.unshift(`${total(keyed, "rule")} keyed, wording unchanged`);
   return changed === undefined
     ? ""
-    : `<p class="change-note">Changed since ${baseLabel(ctx)}: <a href="${escape(path)}">${changed.parts.map((p) => code(p.part)).join(", ")}</a></p>${baseMetadata(ctx)}`;
+    : `<p class="change-note">Changed since ${baseLabel(ctx)}: <a href="${escape(path)}">${parts.join("; ")}</a></p>${baseMetadata(ctx)}`;
 }
 export function packChangeNote(ctx: PageContext, id: string): string {
   if (ctx.data.inputs.base === undefined) return "";
@@ -33,7 +36,7 @@ export function packChangeNote(ctx: PageContext, id: string): string {
   const changed = diff.specs?.changed ?? [];
   const added = diff.specs?.added ?? [];
   const compared = diff.specs !== undefined && diff.diagnostics.length === 0;
-  return `<section id="changed-since-base"><h2>Changed since the base</h2><p>Compared with ${baseLabel(ctx)}. <a href="${escape(relative(ctx, "diff.html"))}">Read the diff</a>.</p>${baseMetadata(ctx)}${changed.length || compared ? `<h3>Changed members</h3>${list(changed.map((s) => link(ctx, s.id)))}` : ""}${added.length || compared ? `<h3>Added members</h3>${list(added.map((s) => link(ctx, s)))}` : ""}${pack !== undefined ? `<h3>Pack membership</h3>${packDelta(ctx, pack)}` : compared ? "<h3>Pack membership</h3><p>No membership or order change.</p>" : ""}${diff.diagnostics.length ? `<h3>Diagnostics</h3>${diagnostics(diff)}` : ""}</section>`;
+  return `<section id="changed-since-base"><h2>Changed since the base</h2><p>Compared with ${baseLabel(ctx)}. <a href="${escape(relative(ctx, "diff.html"))}">Read the diff</a>.</p>${baseMetadata(ctx)}${changed.length || compared ? `<h3>Changed members</h3>${list(changed.map((s) => `${link(ctx, s.id)}${s.parts.length > 0 && s.parts.every((p) => p.change === "keyed") ? " · keyed only" : ""}`))}` : ""}${added.length || compared ? `<h3>Added members</h3>${list(added.map((s) => link(ctx, s)))}` : ""}${pack !== undefined ? `<h3>Pack membership</h3>${packDelta(ctx, pack)}` : compared ? "<h3>Pack membership</h3><p>No membership or order change.</p>" : ""}${diff.diagnostics.length ? `<h3>Diagnostics</h3>${diagnostics(diff)}` : ""}</section>`;
 }
 function packDelta(ctx: PageContext, pack: NonNullable<Diff["packs"]>[number]): string {
   return `<p>${escape(pack.change)} · ${link(ctx, pack.id)}</p><p>Members added: ${pack.membersAdded.map((id) => link(ctx, id)).join(", ") || "None"}</p><p>Members removed: ${pack.membersRemoved.map(code).join(", ") || "None"}</p><p>Order ${pack.reordered ? "changed" : "unchanged"}.</p>`;

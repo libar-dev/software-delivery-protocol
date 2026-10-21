@@ -848,6 +848,69 @@ it("renders a keying proposal as one line per keyed entry and readable changed r
   expect(entries[1]).not.toMatch(/<pre>|&quot;list&quot;|&quot;text&quot;/u);
 });
 
+it.each([false, true])(
+  "counts keyed rules apart from changed parts, mixed changes: %s",
+  async (mixed) => {
+    const root = corpus({
+      "probe.sdp.md": carrier(
+        "spec:probe.keying",
+        "\n## Behavior\n- rule: First rule.\n- flow: Last flow.\n\n## Design\n- limit: Original limit.\n",
+      ),
+    });
+    const base = extract({ root }).graph;
+    const path = join(root, "probe.sdp.md");
+    writeFileSync(
+      path,
+      readFileSync(path, "utf8")
+        .replace("rule: First", "rule: [#first] First")
+        .replace("flow: Last", "flow: [#last] Last")
+        .replace("Original limit.", mixed ? "Revised limit." : "Original limit."),
+    );
+    const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+      base: { graph: base, label: "Before keying" },
+      runs: [],
+    });
+    const html = main(content(renderStudio(data), "specs/probe.keying.html"));
+    const note = required(/<p class="change-note">(.*?)<\/p>/su.exec(html)?.[1]);
+    expect(note).toContain("2 rules keyed, wording unchanged");
+    expect(note).toContain('href="../diff.html#spec:probe.keying"');
+    expect(note.includes("<code>design.limit</code>")).toBe(mixed);
+    expect(note).not.toMatch(/<code>rule\.(first|last)<\/code>/u);
+  },
+);
+
+it("marks only members with exclusively keyed changes as keyed only", async () => {
+  const root = corpus({
+    "keyed.sdp.md": carrier("spec:probe.keyed", "\n## Behavior\n- rule: Keep it.\n"),
+    "mixed.sdp.md": carrier(
+      "spec:probe.mixed",
+      "\n## Behavior\n- rule: Keep it.\n- rule: Old wording.\n",
+    ),
+    "p.pack.sdp.md":
+      "---\nid: pack:probe\nspecs: [spec:probe.keyed, spec:probe.mixed]\n---\n# Probe\n",
+  });
+  const base = extract({ root }).graph;
+  for (const name of ["keyed", "mixed"]) {
+    const path = join(root, `${name}.sdp.md`);
+    writeFileSync(
+      path,
+      readFileSync(path, "utf8")
+        .replace("rule: Keep", "rule: [#keep] Keep")
+        .replace("Old wording.", "New wording."),
+    );
+  }
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: null },
+    runs: [],
+  });
+  const html = main(content(renderStudio(data), "packs/probe.html"));
+  const changes = required(/<section id="changed-since-base">(.*?)<\/section>/su.exec(html)?.[1]);
+  expect(changes).toContain(
+    '<li><a href="../specs/probe.keyed.html">spec:probe.keyed</a> · keyed only</li>',
+  );
+  expect(changes).toContain('<li><a href="../specs/probe.mixed.html">spec:probe.mixed</a></li>');
+});
+
 it("renders changed list values as lists instead of raw JSON arrays", async () => {
   const root = corpus({
     "probe.sdp.md": carrier("spec:probe.lists", "\n## Behavior\n- rule: Read it.\n").replace(

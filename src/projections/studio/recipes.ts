@@ -61,7 +61,10 @@ export async function studioRecipeAnswers(
   for (const pack of reader.packs()) {
     packs.set(pack.id, await evaluate(29, { pack: pack.id }));
     if (inputs.base !== undefined)
-      packDiffs.set(pack.id, await evaluate(35, { base: inputs.base.graph, pack: pack.id }));
+      packDiffs.set(
+        pack.id,
+        await evaluate(35, { base: inputs.base.graph, pack: pack.id, detail: true }),
+      );
   }
   for (const spec of reader.specs()) {
     const answers = new Map<number, unknown>();

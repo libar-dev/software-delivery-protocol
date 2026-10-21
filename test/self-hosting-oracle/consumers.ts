@@ -5904,8 +5904,8 @@ export const consumersSpecs = [
           "The page set holds `diff.html` only when the build was given a base graph; without one, no page, link or change note names a diff.",
           "The page opens by naming its input: the base graph, its label when the build was given one, its schema version and its Spec count beside the built graph's, and a sentence that the comparison reads the two graphs only.",
           "The page renders recipe 35's answer with `detail: true` over the whole corpus, in sections in this order: the totals as sentences; the Specs added, linked; the Specs removed, as their ids in text, since no page holds them; the Specs changed, each linked, with each changed part, its change in words, and for a changed value the base value and the built value as readable text blocks or lists, one above the other, never a raw JSON array; a keyed change is one line naming its old and new address or `none`; the Packs whose membership or order changed; the bindings changed, kept apart and headed as derived from anchors; and the diagnostics.",
-          "Given a base graph, each changed Spec's page adds a line under its header that names the base input and lists the Spec's changed parts, linked to its row on the diff page, and each added Spec's page says it is new since the base.",
-          "Given a base graph, each Pack page adds a `Changed since the base` section after its maturity map, from recipe 35's answer for that Pack, listing its changed and added members, linked, and its own membership change.",
+          "Given a base graph, each changed Spec's page adds a line under its header that names the base input, counts keyed parts apart as `<n> rules keyed, wording unchanged` beside any other changed parts it lists, and links to its row on the diff page; each added Spec's page says it is new since the base.",
+          "Given a base graph, each Pack page adds a `Changed since the base` section after its maturity map, from recipe 35's answer for that Pack, listing its changed and added members, linked, and its own membership change; a member whose only changes are keying is marked `keyed only`.",
           "The page and the change notes state differences between two graphs and confer nothing: no approval, staleness or readiness, and no record that a design pass happened.",
         ],
         ruleKeys: {
@@ -5936,7 +5936,7 @@ export const consumersSpecs = [
         bindingRow:
           "the Spec linked, then for implementing units, referencing units, enabled verifiers and delivery facts the ids added and removed, under the heading `Bindings, derived from anchors`.",
         changeNote:
-          "`Changed since the base graph <label>:` and the changed parts as code, linked to the Spec's row on the diff page.",
+          "`Changed since the base graph <label>:` followed by `<n> rules keyed, wording unchanged` when any parts are keyed, using `rule` for one, beside the other changed parts as code, linked to the Spec's row on the diff page.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
