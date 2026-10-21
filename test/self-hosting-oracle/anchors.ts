@@ -33,7 +33,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     nodeType: "CodeNode",
     file: "src/projections/studio/pages/run-rows.ts",
     site: "export function runRows(",
-    label: "renders recipe 45 file rows shared by the tests lens and verification panel",
+    label: "renders recipe 45 file rows shared by the runs page and verification panel",
     role: "projection",
   },
   {

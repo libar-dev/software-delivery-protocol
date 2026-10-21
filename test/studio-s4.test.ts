@@ -1,4 +1,15 @@
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  chmodSync,
+} from "node:fs";
+import { spawnSync } from "node:child_process";
+import { schemaVersion } from "../src/graph/schema.js";
+import { runHeader, runRows } from "../src/projections/studio/pages/run-rows.js";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
@@ -126,7 +137,7 @@ it("recipe 45 joins normalized paths, preserves records and graph facts, and dia
     { ...report(), specVersion: undefined },
   ])
     expect(await evaluateStudioRecipe(reader, 45, { runs })).toMatchObject({
-      diagnostics: expect.any(Array),
+      diagnostics: [{ input: runs === undefined ? null : 0, problem: expect.any(String) }],
     });
 });
 it("renders external run evidence with result rows, metadata, diagnostics and conditional navigation", async () => {
@@ -139,7 +150,7 @@ it("renders external run evidence with result rows, metadata, diagnostics and co
   expect(runs.match(/data-run-result/g)).toHaveLength(3);
   expect(runs).toContain("Input 2");
   expect(pages.find((p) => p.path === "tests.html")?.content).toContain(
-    "External run evidence from test file",
+    "external run evidence: 2 passed, 1 failed, 0 skipped, 0 pending, 0 other",
   );
   expect(pages.find((p) => p.path.startsWith("packs/"))?.content).not.toContain(
     "no page shows a run result",
@@ -204,7 +215,8 @@ it("stamps apart, touches no page, refuses bad sources and removes the stamp on 
     corpusCommit: "0123abc",
     source: "https://example.test/blob/0123abc/{file}#L{line}",
     engine: expect.stringMatching(/^sdp /),
-    builtAt: expect.stringMatching(/Z$/),
+    schemaVersion,
+    builtAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
   });
   expect(await cli(["stamp", root, "--source", "https://example.test"], out)).toBe(1);
   expect(await cli(["studio", root], out)).toBe(0);
@@ -312,7 +324,7 @@ function runAdapters(
         status: required(w.point.status),
       };
       w.answer = (await evaluateStudioRecipe(reader, 45, { runs: input })) as RunEvidence;
-      w.factsUnchanged = JSON.stringify(extract({ root }).graph) === before;
+      w.factsUnchanged = JSON.stringify(reader.graph) === before;
     },
     observe: (w) => ({
       kind: "the test joins the file {joinedFile}",
@@ -680,5 +692,291 @@ it("ships a reusable preview and calls it on pull requests with runs and diff, d
     uses: "./.github/workflows/studio-preview.yml",
     with: { "runs-artifact": "ctrf-runs", diff: true, deploy: false },
   });
-  expect(ci.jobs["studio-preview"]?.if).toBe("always() && github.event_name == 'pull_request'");
+  expect(ci.jobs["studio-preview"]?.if).toContain("needs.check.result == 'success'");
+  expect(ci.jobs["studio-preview"]?.if).toContain("needs.check.result == 'failure'");
+});
+
+it("the tests lens counts file results once per Spec and names every run input", async () => {
+  const root = fixture();
+  writeFileSync(
+    join(root, "other.sdp.md"),
+    "---\nid: spec:probe.other\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Other\n\n## Intent\n- outcome: Read another page.\n",
+  );
+  writeFileSync(
+    join(root, "test/other.test.ts"),
+    "/**\n * @sdpAnchor test:probe.other\n * @sdpVerifies spec:probe.other\n */\nexport const other=1;\n",
+  );
+  const reader = createReader(extract({ root }).graph);
+  const first = report(Array.from({ length: 6 }, () => "test/page.test.ts"));
+  first.results.tests.forEach((test, index) => {
+    test.status = ["passed", "failed", "skipped", "pending", "other", "custom"][index] ?? "other";
+  });
+  const second = report(["test/page.test.ts", "test/other.test.ts"]);
+  second.results.tool.name = "second runner";
+  const pages = renderStudio(await createStudioData(reader, undefined, { runs: [first, second] }));
+  const tests = required(pages.find((p) => p.path === "tests.html")).content;
+  expect(tests).toContain(
+    "external run evidence: 2 passed, 1 failed, 1 skipped, 1 pending, 2 other",
+  );
+  expect(tests).toContain(
+    "external run evidence: 1 passed, 0 failed, 0 skipped, 0 pending, 0 other",
+  );
+  expect(tests).not.toContain("data-run-result");
+  const summary = tests.slice(
+    tests.indexOf('<header class="page-head">'),
+    tests.indexOf("</header>", tests.indexOf('<header class="page-head">')),
+  );
+  expect(summary).toContain("Run 1: external run evidence from vitest 3.2.4");
+  expect(summary).toContain("Run 2: external run evidence from second runner 3.2.4");
+  expect(summary).not.toContain("<h2>");
+  expect(summary).toContain("Build: CI 7");
+  expect(summary).toContain("Branch: lane");
+  expect(summary).toContain("Commit: abc");
+  expect(summary).toContain("1970-01-01T00:00:01.000Z");
+});
+
+it("the Pack sentence keeps the graph's binding limit and positively names external evidence", async () => {
+  const reader = createReader(extract({ root: fixture() }).graph);
+  for (const runs of [[], [report()]]) {
+    const pages = renderStudio(await createStudioData(reader, undefined, { runs }));
+    const pack = required(pages.find((p) => p.path.startsWith("packs/"))).content;
+    expect(pack.match(/The graph records bindings and never runs/gu)).toHaveLength(1);
+    if (runs.length) {
+      expect(pack).toContain('href="../runs.html">runs page</a>');
+      expect(pack).toContain('href="../tests.html">tests lens</a>');
+      expect(pack).toContain(
+        "Spec pages of the Specs their files verify show the run records as external evidence from test files",
+      );
+      expect(pack).not.toContain("no page shows a run result");
+    } else {
+      expect(pack).toContain(
+        "The graph records bindings and never runs, so no page shows a run result.",
+      );
+    }
+  }
+});
+
+it("run metadata labels build and branch, and absent fields read not recorded", () => {
+  const input = {
+    index: 0,
+    tool: "runner",
+    toolVersion: null,
+    specVersion: "1",
+    commit: null,
+    branch: null,
+    build: null,
+    start: null,
+    stop: null,
+    summary: { tests: 0, passed: 0, failed: 0, skipped: 0, pending: 0, other: 0 },
+    sameCommit: null,
+  };
+  const html = runHeader(input);
+  expect(html).toContain("Run 1: external run evidence from runner</h2>");
+  expect(html).not.toContain("null");
+  for (const label of ["Build", "Branch", "Commit", "Start", "Stop"])
+    expect(html).toContain(`${label}: not recorded`);
+  const recorded = runHeader({ ...input, build: "CI 7", branch: "lane" });
+  expect(recorded).toContain("Build: CI 7");
+  expect(recorded).toContain("Branch: lane");
+});
+
+it("unjoined records escape outside names and explain both reason codes in words", async () => {
+  const reader = createReader(extract({ root: fixture() }).graph);
+  const input = report(["test/unanchored.test.ts", ""]);
+  required(input.results.tests[0]).name = '<script>alert("run")</script>';
+  const pages = renderStudio(await createStudioData(reader, undefined, { runs: [input] }));
+  const html = required(pages.find((p) => p.path === "runs.html")).content;
+  expect(html).toContain("&lt;script&gt;alert(&quot;run&quot;)&lt;/script&gt;");
+  expect(html).not.toContain('<script>alert("run")</script>');
+  expect(html).toContain("no test anchor in that file");
+  expect(html).toContain("no file path");
+  expect(html).not.toMatch(/noTestAnchor|noFilePath/u);
+});
+
+it("run files show the file alone, bindings and Suite, with one header per run", async () => {
+  const reader = createReader(extract({ root: fixture() }).graph);
+  const data = await createStudioData(reader, undefined, { runs: [report()] });
+  const html = required(renderStudio(data).find((p) => p.path === "runs.html")).content;
+  expect(html.match(/Run 1: external run evidence/gu)).toHaveLength(1);
+  expect(html.match(/Build: CI 7/gu)).toHaveLength(1);
+  expect(html).toContain(
+    '<h3>External run evidence from <code>test/page.test.ts</code><sdp-copy text="test/page.test.ts"></sdp-copy></h3>',
+  );
+  expect(html).toContain("Test anchors: <code>test:probe.page</code>");
+  expect(html).toContain(
+    'Specs verified by those bindings: <a href="specs/probe.page.html">spec:probe.page</a>',
+  );
+  expect(html).toContain("<th>Suite</th>");
+  expect(html).toContain("suite &gt; nested");
+  const panel = runRows({ data, path: "specs/probe.page.html" }, "spec:probe.page");
+  expect(panel).toContain("Run 1: external run evidence from vitest 3.2.4");
+});
+
+it("recipe 45 does not join a suffix inside a path segment", async () => {
+  const reader = createReader(extract({ root: fixture() }).graph);
+  const answer = await evaluateStudioRecipe(reader, 45, {
+    runs: report(["/repo/xtest/page.test.ts"]),
+  });
+  expect(answer).toMatchObject({ files: [], unjoined: [{ reason: "noTestAnchor" }] });
+});
+
+it("stamp defaults to unknown and a stamped page set passes check-clean", async () => {
+  const root = fixture(),
+    out = output();
+  expect(await cli(["studio", root], out)).toBe(0);
+  const directory = join(root, "generated/spec-studio"),
+    before = snapshot(directory);
+  expect(await cli(["stamp", root], out)).toBe(0);
+  const stamp = JSON.parse(readFileSync(join(directory, "stamp.json"), "utf8")) as Record<
+    string,
+    unknown
+  >;
+  expect(stamp.corpusCommit).toBe("unknown");
+  expect(stamp.schemaVersion).toBe(schemaVersion);
+  expect(stamp.builtAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u);
+  expect(await cli(["studio", root, "--check-clean"], out)).toBe(0);
+  expect(snapshot(directory)).toEqual(before);
+});
+
+interface WorkflowStep {
+  name?: string;
+  id?: string;
+  uses?: string;
+  run?: string;
+  if?: string;
+  "continue-on-error"?: boolean;
+  env?: Record<string, string>;
+  with?: Record<string, unknown>;
+}
+interface WorkflowJob {
+  permissions?: Record<string, string>;
+  steps?: WorkflowStep[];
+  if?: string;
+}
+interface Workflow {
+  permissions?: Record<string, string>;
+  jobs: Record<string, WorkflowJob>;
+}
+const workflow = (file: string): Workflow =>
+  parse(readFileSync(join(process.cwd(), `.github/workflows/${file}.yml`), "utf8")) as Workflow;
+const stepNamed = (job: WorkflowJob | undefined, name: string): WorkflowStep =>
+  required(job?.steps?.find((step) => step.name === name));
+
+it("every reusable preview job's permissions fit the CI caller's grant", () => {
+  const caller = required(workflow("ci").jobs["studio-preview"]).permissions ?? {};
+  const called = workflow("studio-preview");
+  const rank: Record<string, number> = { none: 0, read: 1, write: 2 };
+  for (const [name, job] of Object.entries(called.jobs)) {
+    for (const [scope, grant] of Object.entries(job.permissions ?? called.permissions ?? {}))
+      expect({
+        job: name,
+        scope,
+        fits: (rank[grant] ?? 0) <= (rank[caller[scope] ?? "none"] ?? 0),
+      }).toEqual({ job: name, scope, fits: true });
+  }
+});
+
+it("PR checks and run evidence use the same head commit as the preview stamp", () => {
+  const check = required(workflow("ci").jobs.check);
+  expect(check.steps?.find((step) => step.uses === "actions/checkout@v4")?.with?.ref).toBe(
+    "${{ github.event.pull_request.head.sha || github.sha }}",
+  );
+  expect(stepNamed(check, "Check").env?.SDP_CORPUS_COMMIT).toBe(
+    "${{ github.event.pull_request.head.sha || github.sha }}",
+  );
+});
+
+it("preview download is optional and cancelled or skipped checks do not call it", () => {
+  const ci = required(workflow("ci").jobs["studio-preview"]);
+  expect(ci.if).toContain("needs.check.result == 'success'");
+  expect(ci.if).toContain("needs.check.result == 'failure'");
+  expect(
+    stepNamed(workflow("studio-preview").jobs.build, "Download run evidence")["continue-on-error"],
+  ).toBe(true);
+});
+
+it.each(["gh-pages", "main", "disabled"])(
+  "deploy checks the enabled Pages source before writing: %s",
+  (source) => {
+    const deploy = required(workflow("studio-preview").jobs.deploy);
+    const check = stepNamed(deploy, "Check the Pages source");
+    expect(deploy.permissions?.pages).toBe("read");
+    expect(deploy.steps?.indexOf(check)).toBeLessThan(
+      required(deploy.steps).indexOf(
+        stepNamed(deploy, "Write the preview to the enabled Pages branch"),
+      ),
+    );
+    expect(stepNamed(deploy, "Write the preview to the enabled Pages branch").if).toBe(
+      "steps.pages.outputs.enabled == 'true'",
+    );
+    const root = fixture(),
+      bin = join(root, "bin"),
+      summary = join(root, "summary"),
+      output = join(root, "output");
+    mkdirSync(bin);
+    writeFileSync(
+      join(bin, "gh"),
+      '#!/bin/bash\nprintf "%s\\n" "$*" > "$API_ARGS"\nif [[ "$PAGE_SOURCE" == disabled ]]; then exit 1; fi\nprintf "%s\\n" "$PAGE_SOURCE"\n',
+    );
+    chmodSync(join(bin, "gh"), 0o755);
+    writeFileSync(summary, "");
+    writeFileSync(output, "");
+    const result = spawnSync("bash", ["-e", "-o", "pipefail", "-c", required(check.run)], {
+      env: {
+        ...process.env,
+        PATH: `${bin}:${process.env.PATH ?? ""}`,
+        GH_REPO: "owner/repo",
+        GITHUB_REPOSITORY: "owner/repo",
+        PAGE_SOURCE: source,
+        API_ARGS: join(root, "args"),
+        GITHUB_STEP_SUMMARY: summary,
+        GITHUB_OUTPUT: output,
+      },
+      encoding: "utf8",
+    });
+    expect(result.status, result.stderr).toBe(0);
+    expect(readFileSync(join(root, "args"), "utf8")).toContain("repos/owner/repo/pages");
+    expect(readFileSync(output, "utf8")).toBe(
+      `enabled=${source === "gh-pages" ? "true" : "false"}\n`,
+    );
+    if (source !== "gh-pages") expect(readFileSync(summary, "utf8")).toContain("skipped");
+  },
+);
+
+it("preview still stamps and uploads rendered pages when evidence is absent and validation fails", () => {
+  const build = stepNamed(
+    workflow("studio-preview").jobs.build,
+    "Build, stamp and measure the page set",
+  );
+  const root = fixture(),
+    sdp = join(root, "sdp"),
+    calls = join(root, "calls"),
+    summary = join(root, "summary");
+  writeFileSync(
+    sdp,
+    '#!/bin/bash\nprintf "%s\\n" "$*" >> "$CALLS"\nif [[ "$1" == studio ]]; then mkdir -p "$2/generated/spec-studio"; echo page > "$2/generated/spec-studio/index.html"; exit 1; fi\n',
+  );
+  chmodSync(sdp, 0o755);
+  const result = spawnSync("bash", ["-e", "-o", "pipefail", "-c", required(build.run)], {
+    env: {
+      ...process.env,
+      ROOT: root,
+      EXCLUDE: "",
+      SDP: sdp,
+      DIFF: "false",
+      HEAD_SHA: "abc",
+      SOURCE_SERVER: "https://github.com",
+      SOURCE_REPO: "owner/repo",
+      RUNS_ARTIFACT: "missing",
+      RUNNER_TEMP: root,
+      GITHUB_STEP_SUMMARY: summary,
+      CALLS: calls,
+    },
+    encoding: "utf8",
+  });
+  expect(result.status, result.stderr).toBe(0);
+  const args = readFileSync(calls, "utf8");
+  expect(args).toContain("stamp");
+  expect(args).not.toContain("--runs");
+  expect(readFileSync(summary, "utf8")).toContain("validation");
 });

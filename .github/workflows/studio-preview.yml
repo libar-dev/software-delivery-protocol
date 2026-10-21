@@ -48,6 +48,7 @@ jobs:
           INSTALL: ${{ inputs.install }}
         run: bash -e -o pipefail -c "$INSTALL"
       - name: Download run evidence
+        continue-on-error: true
         if: inputs.runs-artifact != ''
         uses: actions/download-artifact@v4
         with:
@@ -84,10 +85,15 @@ jobs:
             cp "$base/$ROOT/generated/graph.json" "$RUNNER_TEMP/studio-base.json"
             inputs+=(--base "$RUNNER_TEMP/studio-base.json" --base-label "base ${BASE_SHA:0:7}")
           fi
-          if [[ -n "$RUNS_ARTIFACT" ]]; then
+          if [[ -n "$RUNS_ARTIFACT" && -d "$RUNNER_TEMP/studio-runs" ]]; then
             while IFS= read -r -d '' report; do inputs+=(--runs "$report"); done < <(find "$RUNNER_TEMP/studio-runs" -type f -name '*.json' -print0 | sort -z)
           fi
-          sdp studio "$ROOT" "${exclusions[@]}" "${inputs[@]}"
+          studio_status=0
+          sdp studio "$ROOT" "${exclusions[@]}" "${inputs[@]}" || studio_status=$?
+          if (( studio_status != 0 )); then
+            if [[ ! -f "$ROOT/generated/spec-studio/index.html" ]]; then exit "$studio_status"; fi
+            echo "Studio validation reported findings; the rendered preview includes them." >> "$GITHUB_STEP_SUMMARY"
+          fi
           root_prefix="${ROOT#./}"
           if [[ "$root_prefix" == . ]]; then root_prefix=""; fi
           if [[ -n "$root_prefix" ]]; then root_prefix="${root_prefix%/}/"; fi
@@ -115,6 +121,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: read
     concurrency:
       group: studio-gh-pages
       cancel-in-progress: false
@@ -123,11 +130,25 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+      - name: Check the Pages source
+        id: pages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if source=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.source.branch' 2>/dev/null) && [[ "$source" == gh-pages ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Studio deployment skipped: Pages does not serve the gh-pages branch." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - uses: actions/download-artifact@v4
+        if: steps.pages.outputs.enabled == 'true'
         with:
           name: spec-studio-pr-${{ github.event.pull_request.number }}
           path: ${{ runner.temp }}/studio-preview
       - name: Write the preview to the enabled Pages branch
+        if: steps.pages.outputs.enabled == 'true'
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |

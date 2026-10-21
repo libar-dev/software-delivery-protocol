@@ -121,7 +121,7 @@ with the reasons the relations state, and the Specs it shapes; to review depende
 `uses` edges that cross a context or layer and refuses nothing. For a corpus's own architecture
 rules, run the architecture walk (recipe 42), which reports forbidden layer pairs and isolated
 contexts, with unstated layers kept as unclassified. Planned against realized components
-(recipe 43) lists component designs whose anchors are absent or differ. A corpus may select the
+(recipe 43) lists component designs whose anchors are absent or differ. Run evidence (recipe 45) joins caller-supplied CTRF records at test-file grain, without changing graph facts or stating a verifier verdict. A corpus may select the
 walk as a rules file under `sdp validate --rules`; follow `sdp-authoring` for per-file parameters
 and the separate corpus findings. Review findings and gaps as data;
 the review never becomes a workflow gate.

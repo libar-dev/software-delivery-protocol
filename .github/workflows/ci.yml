@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -25,7 +27,7 @@ jobs:
       - name: Check
         env:
           SDP_CTRF_DIR: ${{ runner.temp }}/ctrf
-          SDP_CORPUS_COMMIT: ${{ github.sha }}
+          SDP_CORPUS_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
         run: npm run check
 
       - name: Upload run evidence
@@ -41,10 +43,11 @@ jobs:
 
   studio-preview:
     needs: check
-    if: always() && github.event_name == 'pull_request'
+    if: always() && github.event_name == 'pull_request' && (needs.check.result == 'success' || needs.check.result == 'failure')
     uses: ./.github/workflows/studio-preview.yml
     permissions:
-      contents: read
+      contents: write
+      pages: read
     with:
       exclude: |
         explorations
