@@ -2315,7 +2315,7 @@ export const validationSpecs = [
     file: "specs/validation/corpus-rules.sdp.md",
     title: "Corpus-authored rules run on the one validation path",
     narrative:
-      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate runs `sdp validate` and parses its summary line, then checks its own context isolation, entry addresses, dependency cycles, question keys, prose mentions, cited laws and Pack pages. It also parses carrier frontmatter to read kind, readiness and relations, a second read model that a graph-based corpus-rule runner would remove.\n\nA rules file holds the body `sdp q` evaluates, so a rule tried through `sdp q` runs unchanged under `sdp validate`, and a catalog recipe whose answer carries findings, such as the architecture walk, is a rules file as shipped. The runner reads only the answer's findings, so the recipe keeps the rest of its answer for a reader. Corpus findings print after the Protocol's and are tallied on a line of their own, so a gate that reads the Protocol's summary line reads it unchanged; any error, the Protocol's or the corpus's, exits 1, and the two lines say which. Each rules file receives its own copy of what it reads, so a careless rule cannot change another rule's input and the order of the files changes only the order of the output. Its parameters are its own too: a catalog recipe answers a parameter name it does not take with that name and no findings, so parameters shared by every file would fail the walk on the names another file reads.",
+      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate runs `sdp validate` and parses its summary line, then checks its own context isolation, entry addresses, dependency cycles, question keys, prose mentions, cited laws and Pack pages. It also parses carrier frontmatter to read kind, readiness and relations, a second read model that a graph-based corpus-rule runner would remove.\n\nA rules file holds the body `sdp q` evaluates, so a rule tried through `sdp q` runs unchanged under `sdp validate`, and a catalog recipe whose answer carries findings, such as the architecture walk, is a rules file as shipped. A rules file that needs a shipped recipe's answer calls it through `recipes` and keeps no copy of its code. The runner reads only the answer's findings, so the recipe keeps the rest of its answer for a reader. Corpus findings print after the Protocol's and are tallied on a line of their own, so a gate that reads the Protocol's summary line reads it unchanged; any error, the Protocol's or the corpus's, exits 1, and the two lines say which. Each rules file receives its own copy of what it reads, so a careless rule cannot change another rule's input and the order of the files changes only the order of the output. Its parameters are its own too: a catalog recipe answers a parameter name it does not take with that name and no findings, so parameters shared by every file would fail the walk on the names another file reads.",
     sections: {
       intent: {
         problem:
@@ -2325,8 +2325,8 @@ export const validationSpecs = [
       },
       behavior: {
         rules: [
-          "A corpus rule is a graph body the corpus authors, given `g`, `graph`, `report` and `params` as a recipe body is, and returning findings that each carry a rule id, a subject, a message and a severity.",
-          "A corpus rule reads the one derived graph, the Protocol's report and the `params` the operator supplies for its file, and no carrier, source file or network; that is the rule author's obligation, because the runner evaluates the body with the trust `sdp q` asks and claims no sandbox.",
+          "A corpus rule is a graph body the corpus authors, given `g`, `graph`, `report`, `params` and `recipes` as a recipe body is, and returning findings that each carry a rule id, a subject, a message and a severity.",
+          "A corpus rule reads the one derived graph, the Protocol's report and the `params` the operator supplies for its file, directly or through the shipped recipes it calls, and no carrier, source file or network; that is the rule author's obligation, because the runner evaluates the body with the trust `sdp q` asks and claims no sandbox.",
           "Validation runs corpus rules only from a file the operator names with `sdp validate --rules PATH`, which may repeat, and never from a file it finds in the corpus or in a configuration; it asks the trust `sdp q` already asks, to run code the operator chose.",
           "Rules files run one at a time in the order named, each to completion, after the Protocol's validators; every file receives the same Protocol report and none sees another file's findings, so the order changes only the order of the output.",
           "Each rules file receives its own copy of the graph and the report, made after the graph is written, and its own `params`, so a body that changes what it receives changes no node, edge, delivery fact or Protocol finding, and nothing another rules file receives.",
@@ -2337,13 +2337,15 @@ export const validationSpecs = [
           "A corpus finding carries severity `error` or `warning`. When the operator names `--rules`, an `error` corpus finding makes `sdp validate` exit nonzero and a `warning` stays informative; without `--rules` no corpus rule runs and only the Protocol's validators set the exit code.",
           "A corpus finding moves no readiness floor and reaches no other surface: not the report `sdp q` hands a body, not the reader, not the written graph, and not the Design Review or another projection.",
           "A rules file that cannot be read or does not parse, a body that throws, or an answer that is not an object with a `findings` array of well-formed findings is a rule execution failure; `sdp validate` reports it in the corpus section and exits nonzero, so a broken rule never passes as a clean run. A failed file reports none of its findings, and the other files still run.",
-          "`sdp validate --watch` with `--rules` reads and runs every named rules file afresh in each cycle, after the Protocol's validators; an edit to a rules file alone starts no cycle, because the watcher watches carriers.",
+          "`sdp validate --watch` with `--rules` reads and runs every named rules file afresh in each cycle, after the Protocol's validators, and a create, change, delete or rename of a named rules file starts a cycle as a carrier edit does, wherever the file lives, under a directory discovery skips such as `node_modules` included.",
+          "Under `--watch`, each cycle after the first reads again every file a `--params @PATH` or `KEY=@PATH` after a `--rules` names, and an edit to such a file starts a cycle, wherever the file lives; a file that cannot be read or parsed then fails only the rules file it belongs to, for that cycle, while the first cycle's read refuses the command as `paramsFlag` states.",
+          "Address resolution (recipe 25) and dependency cycles (recipe 26) answer with `findings` beside the rest of their answers, as the architecture walk (recipe 42), external registers (recipe 50) and entry citations (recipe 51) do, so a corpus names any of those shipped files as a rules file, or calls it through `recipes` from a rules file of its own.",
           "When the graph does not derive, no rules file runs, and the corpus summary line says so.",
         ],
         exampleSpace: {
           given: [
             "a probe corpus the Protocol's validators find clean",
-            'a first rules file that {first:"returns one error finding"|"returns one warning finding"|"returns a finding with no subject"|"empties the graph it receives"}',
+            'a first rules file that {first:"returns one error finding"|"returns one warning finding"|"returns a finding with no subject"|"empties the graph it receives"|"is rewritten to return one error finding after the first cycle under --watch"|"reads a parameter file that gains a key after the first cycle under --watch"|"reads a parameter file that stops being JSON after the first cycle under --watch"}',
             "a second rules file that returns one warning when the graph it receives holds no node",
           ],
           when: [
@@ -2353,6 +2355,8 @@ export const validationSpecs = [
             "the command exits {exitCode:number}",
             "the Protocol summary line reads {protocolSummary:string}",
             "the corpus summary line reads {corpusSummary:string}",
+            "the second cycle's corpus summary line reads {corpusSummary:string}",
+            "the watcher is still running after the second cycle: {running:boolean}",
           ],
         },
         ruleKeys: {
@@ -2364,6 +2368,8 @@ export const validationSpecs = [
           neverMovesFloor: "rules[10]",
           brokenRuleFails: "rules[11]",
           watchReruns: "rules[12]",
+          watchedParams: "rules[13]",
+          recipesAsRules: "rules[14]",
         },
       },
       design: {
@@ -2372,7 +2378,7 @@ export const validationSpecs = [
         paramsFlag:
           "`--params` on `validate` takes the three forms of `sdp q --params` with the same refusals, before the graph derives; each `--params` belongs to the nearest `--rules` before it in the argument list, whatever other options stand between them; one file's parameters merge as `sdp q` merges them, a key given twice for one file is refused, two files may each take the same key, and a file with no `--params` after it receives `{}`.",
         rulesFile:
-          "a rules file is UTF-8 text holding one plain JavaScript async function body, the form `sdp q` evaluates, with the bindings `g`, `graph`, `report` and `params`; the runner reads the text and never imports it as a module, so no file extension is required and a catalog recipe file under `dist/recipes/` is a lawful rules file.",
+          "a rules file is UTF-8 text holding one plain JavaScript async function body, the form `sdp q` evaluates, with the bindings `g`, `graph`, `report`, `params` and `recipes`; the runner reads the text and never imports it as a module, so no file extension is required and a catalog recipe file under `dist/recipes/` is a lawful rules file.",
         ruleAnswer:
           "`{ findings: [] }`: the body returns an object whose `findings` is an array, possibly empty; the runner reads `findings` and nothing else, so the answer's other keys stay the body's own data and are never printed.",
         ruleFinding:
@@ -2388,7 +2394,7 @@ export const validationSpecs = [
         exitCodes:
           "with `--rules`, `sdp validate` exits 1 when a Protocol finding is an error, a corpus finding is an error, a rules file fails or the graph does not derive, and 0 otherwise; the two summary lines say which.",
         failureReasons:
-          "`<reason>` is `cannot be read (<cause>)`, `does not parse at line <L>, column <C>: <cause>`, `threw: <message on one line>`, `returned no findings array`, followed by `; diagnostics: <the answer's diagnostics as JSON>` when the answer carries `diagnostics` or by `; unknownParams: <as JSON>; accepts: <as JSON>` when it carries `unknownParams`, or `finding <N> has no lawful <field>`, with N counted from 1.",
+          "`<reason>` is `cannot be read (<cause>)`, `does not parse at line <L>, column <C>: <cause>`, `threw: <message on one line>`, `returned no findings array`, followed by `; diagnostics: <the answer's diagnostics as JSON>` when the answer carries `diagnostics` or by `; unknownParams: <as JSON>; accepts: <as JSON>` when it carries `unknownParams`, `finding <N> has no lawful <field>`, with N counted from 1, or, under `--watch` after the first cycle, `its parameters cannot be read (<cause>)` when a parameter file named after its `--rules` cannot be read or parsed.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -2504,6 +2510,116 @@ export const validationSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.corpus-rules.params-edit-starts-a-cycle",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.params-edit-starts-a-cycle.sdp.md",
+    title: "Editing a parameter file starts a cycle that reads the new parameters",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the watched-parameters rule on a parameter file, outside the probe root, that gains a key after the first cycle.",
+        assumptions: [
+          'The world writes the probe corpus of the error example, a parameter file outside the probe root holding `{ "one": 1 }`, a first rules file whose body returns one warning finding for each key of its `params`, named by `--rules` and followed by `--params @PATH` naming that file, and the second rules file of the copy example. It starts the watcher as the rules-edit example does and, after the first cycle, writes `{ "one": 1, "two": 2 }` to the parameter file, then reads the second cycle\'s corpus summary line and stops the watcher.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "reads a parameter file that gains a key after the first cycle under --watch"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the second cycle's corpus summary line reads {corpusSummary: \"corpus rules: 0 errors · 2 warnings · 0 of 2 files failed (the corpus's own rules)\"}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules.rules-edit-starts-a-cycle",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.rules-edit-starts-a-cycle.sdp.md",
+    title: "Rewriting a rules file under node_modules starts a cycle that runs the new body",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the watch rule on a rules file that lives under a directory discovery skips and is rewritten after the first cycle.",
+        assumptions: [
+          "The world writes the probe corpus of the error example, a first rules file under the probe root's `node_modules/probe/` whose body returns one warning finding, and the second rules file of the copy example. It starts `sdp validate --watch` on the probe root with the two files named by `--rules` in that order, waits for the first cycle, rewrites the first file to return one error finding in place of the warning, waits for the second cycle, reads its corpus summary line and stops the watcher.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "is rewritten to return one error finding after the first cycle under --watch"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the second cycle's corpus summary line reads {corpusSummary: \"corpus rules: 1 errors · 0 warnings · 0 of 2 files failed (the corpus's own rules)\"}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.corpus-rules.unreadable-params-fail-one-file",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/corpus-rules.unreadable-params-fail-one-file.sdp.md",
+    title:
+      "A parameter file that stops being JSON fails only its own rules file, and the watcher runs on",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the watched-parameters rule on a parameter file that holds text that is not JSON after the first cycle.",
+        assumptions: [
+          "The world writes the probe corpus, parameter file and rules files of the parameter-edit example and starts the watcher as that example does. After the first cycle it writes text that is not JSON to the parameter file, waits for the second cycle, reads its corpus summary line and, on standard error, the line `corpus rules <path> failed: its parameters cannot be read (<cause>)` for the first file, then checks that the process is still running before it stops the watcher.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "reads a parameter file that stops being JSON after the first cycle under --watch"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the second cycle's corpus summary line reads {corpusSummary: \"corpus rules: 0 errors · 0 warnings · 1 of 2 files failed (the corpus's own rules)\"}",
+              "the watcher is still running after the second cycle: {running: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:validation.corpus-rules.warning-finding-informs",
@@ -2653,16 +2769,144 @@ export const validationSpecs = [
     id: "spec:validation.external-registers",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/validation/external-registers.sdp.md",
     title: "A corpus checks the register tokens its prose cites",
+    narrative:
+      "A corpus written against an earlier design cites that design's numbered things by token: its decisions, laws, scenarios, and the extensions the corpus itself adds. The first adopter keeps such a register as a table in its design README and checks the tokens its Specs cite against it with a script that reads the carriers a second way (`libar-platform/design/tools/check.py`). A register is the corpus's own data and never the Protocol's. A token stays prose: the carrier gains no grammar for it and the graph mints no node for it. Recipe 50 reads the tokens the Specs already hold as text, finds them by a pattern the corpus gives, checks them against a register file the corpus passes, and answers with findings, so the check runs as a rules file on the one validation path. Which registers a corpus may cite, and so which files it passes, is its owner's ruling.",
+    sections: {
+      intent: {
+        problem:
+          "A corpus that cites the tokens of an outside register checks them with a script that reads its carriers a second way, or does not check them at all.",
+        outcome:
+          "Check the tokens a corpus cites from an outside register against a register file it supplies, as a rules file, with no new grammar and no graph node.",
+      },
+      behavior: {
+        rules: [
+          "A register token stays prose: the carrier gains no grammar for it, the graph holds no node or edge for it, and no Protocol validator reads it.",
+          "External registers, recipe 50, takes the register as data, a file the corpus passes with `--params register=@PATH`, and the pattern that finds the register's tokens in text, and reads the graph and nothing else.",
+          "It reads every string entry search walks in each Spec, the narrative and every section value with the keys an author coins, open questions and their fields and example steps included, plus each Spec's title and the reason of each relation it declares; it reads no id, fixed field name, Pack manifest, file or source.",
+          "Each match of the pattern in one of those strings cites the matched text as a token, at that Spec and entry.",
+          "A cited token the register does not list is an `unknown-token` finding, once per citing Spec and token.",
+          "A cited token the register retires is a `retired-token` finding, once per citing Spec and token.",
+          "When the caller passes `uncited: true`, each token the register holds that no Spec cites is an `uncited-token` finding; a retired token is never one.",
+          "The answer carries its findings, so the shipped file runs unchanged as a rules file at the severity the corpus passes; a corpus that checks several registers calls the recipe once per register through `recipes` from a rules file of its own, because one rules file is named once.",
+          "The recipe reports and refuses nothing, and states no register: what an outside design may be cited for stays the corpus's own text.",
+        ],
+        exampleSpace: {
+          given: [
+            "a probe corpus whose Spec cites the tokens {cited:string}",
+            "a register file that holds {held:string} and retires {retired:string}",
+          ],
+          when: [
+            "the shipped external-registers file runs as a rules file with the pattern for E-numbers and uncited {uncited:boolean}",
+          ],
+          then: [
+            "the command exits {exitCode:number}",
+            "the corpus findings carry the rule ids {ruleIds:string}",
+          ],
+        },
+        ruleKeys: {
+          tokensStayProse: "rules[0]",
+          registerAsData: "rules[1]",
+          textRead: "rules[2]",
+          citation: "rules[3]",
+          unknownToken: "rules[4]",
+          retiredToken: "rules[5]",
+          uncitedToken: "rules[6]",
+          asRulesFile: "rules[7]",
+        },
+      },
+      design: {
+        registerFile:
+          '`{ "tokens": [token] }`, where each token is a non-empty string the register holds, or `{ "token": "<string>", "retired": <boolean> }`, retired when `retired` is true and held otherwise; other keys of the file and of a token object are the corpus\'s own and ignored, so a register may carry its own columns.',
+        registerParams:
+          'recipe 50 takes `params.register`, the register file\'s object, `params.pattern`, `params.severity`, `"error"` by default or `"warning"`, and `params.uncited`, `false` by default; `register` and `pattern` have no sample, and a missing or malformed parameter returns `{ diagnostics: [{ parameter, problem }] }` and no findings, which fails the file as a rules file.',
+        patternParam:
+          "`params.pattern` is the source of a JavaScript regular expression compiled with the flags `gu`, whose whole match is the token; a pattern that does not compile, that matches the empty string, or that fails to match each of the register's tokens whole is a diagnostic, as is a token the register lists twice.",
+        registerAnswer:
+          "`{ input: { pattern, severity, uncited }, totals: { specs, citations, tokens, unknown, retired, uncited }, tokens, findings }`, where `specs` counts the Specs read, `citations` the matches, `tokens` the distinct cited tokens, and the last three the findings of each rule id.",
+        tokenRow:
+          "`{ token, held, retired, citations, specs }` for each distinct cited token in code-unit order, where `specs` lists the citing Specs by id and an unknown token has `held` and `retired` false.",
+        tokenFinding:
+          "`{ validatorId, subjectId, relatedId, severity, message, file, path, line }` for `unknown-token` and `retired-token`, where `subjectId` is the citing Spec, `relatedId` the token, `file` the Spec's carrier, `path` the first citing text, in the order the title, the narrative and sections as entry search walks them, then relation reasons as authored, written `title`, a text path in the form the prose-mention check writes, such as `narrative`, `behavior.rules[2]` or `design.<key>`, or `relation.<type>.<target>`, and `line` that text's recorded line, left out when not located; findings sort by Spec id, then token.",
+        tokenMessages:
+          "`<spec> cites <token>, which the register does not list` for `unknown-token`, `<spec> cites <token>, which the register retires` for `retired-token`, and `<token> is held by the register and no Spec cites it` for `uncited-token`.",
+        uncitedFinding:
+          '`{ validatorId: "uncited-token", subjectId, severity, message }`, where `subjectId` is the token; these findings follow the others, in the register\'s order.',
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.external-registers.unknown-and-retired",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/external-registers.unknown-and-retired.sdp.md",
+    title: "A cited token the register lacks or retires fails a rules run",
     narrative: null,
     sections: {
       intent: {
         outcome:
-          "Check the tokens a corpus cites from an outside register against a register file it supplies, as a rules file, with no new grammar and no graph node.",
+          "Execute the register check as a rules file over a Spec that cites one held, one retired and one unlisted token.",
+        assumptions: [
+          'The world writes a probe corpus of two story-altitude behavior Specs stating `idea`, each with an Intent outcome, the second declaring `refines` on the first, so the Protocol\'s validators report no finding; the first Spec\'s outcome names the cited tokens in prose. It writes the register file `{ "tokens": ["E-1", "E-2", { "token": "E-7", "retired": true }] }` and runs `sdp validate` on the probe root with `dist/recipes/50-external-registers.js` named by `--rules`, followed by `--params register=@` that file and `--params` holding the pattern `\\bE-\\d+\\b` and `uncited`. The rule ids are the corpus findings\' rule ids in printed order, joined by a comma and a space.',
+        ],
       },
-      behavior: {},
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec cites the tokens {cited: "E-1 E-7 E-9"}',
+              'a register file that holds {held: "E-1 E-2"} and retires {retired: "E-7"}',
+            ],
+            when: [
+              "the shipped external-registers file runs as a rules file with the pattern for E-numbers and uncited {uncited: false}",
+            ],
+            then: [
+              "the command exits {exitCode: 1}",
+              'the corpus findings carry the rule ids {ruleIds: "retired-token, unknown-token"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.external-registers.uncited-on-request",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/external-registers.uncited-on-request.sdp.md",
+    title: "A held token no Spec cites fails a rules run only when the caller asks",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the uncited check as a rules file over a Spec that cites one of two held tokens.",
+        assumptions: [
+          'The world writes the probe corpus of the unknown-and-retired example, its first Spec citing only the held token named below, and the register file `{ "tokens": ["E-1", "E-2"] }`, and runs the shipped file as that example does, with `uncited` true.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec cites the tokens {cited: "E-1"}',
+              'a register file that holds {held: "E-1 E-2"} and retires {retired: ""}',
+            ],
+            when: [
+              "the shipped external-registers file runs as a rules file with the pattern for E-numbers and uncited {uncited: true}",
+            ],
+            then: [
+              "the command exits {exitCode: 1}",
+              'the corpus findings carry the rule ids {ruleIds: "uncited-token"}',
+            ],
+          },
+        ],
+      },
     },
     deliveryFacts: [],
   },
