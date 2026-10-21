@@ -1,6 +1,6 @@
 # Plan 46 acceptance on a platform copy
 
-Measured on 2026-10-22, Europe/Zagreb. Most requested measurements pass. Acceptance is incomplete: the packed Vitest adapter fails before registering the platform's example tests, and the browser tool refused the standalone export's `file://` URL. The step-key behavior passes through a copy-only adapter over the shipped runner. That result does not certify the packed Vitest adapter.
+Measured on 2026-10-22, Europe/Zagreb. The original run found a packed Vitest adapter failure and a browser-tool limitation. Defect 1 is now fixed by `4e0199bb744b7a1476e138b77d6d14f6877e1b5c`; the shipped-adapter re-measurement under item 3 passes. The browser tool's refusal of the standalone export's `file://` URL still leaves its visual inspection and runtime request capture unverified.
 
 ## Identity and reproduction
 
@@ -15,7 +15,7 @@ Measured on 2026-10-22, Europe/Zagreb. Most requested measurements pass. Accepta
 | Tools | Node `v24.21.0`, npm `11.19.0`, platform Vitest `5.0.3` |
 | Installed CLI | `sdp 0.0.0 (78eb96c41645a1de1dc3455049f6bc9b6c7f84ba)` |
 
-The original platform and its worktrees were never written. Nothing was pushed. The Protocol's engine and tests were not changed. The copy is intentionally dirty with the acceptance edits described below; its HEAD and the stamp's `corpusCommit` identify the starting commit, not a commit containing those edits. Source links in the stamp point to that starting commit.
+The original platform and its worktrees were never written. Nothing was pushed. The initial acceptance changed no Protocol engine code or tests; the follow-up fix and measurements are recorded under item 3 and Defect 1. The copy is intentionally dirty with the acceptance edits described below; its HEAD and the stamp's `corpusCommit` identify the starting commit, not a commit containing those edits. Source links in the stamp point to that starting commit.
 
 The [command ledger](plan46-acceptance/commands.jsonl) records commands, working directories, exit statuses, elapsed seconds and output-log names. It includes unsuccessful probes. Complete output remains under `/tmp/plan46/accept/evidence/`. The [measurement scripts](plan46-acceptance/scripts/) preserve the final versions of the mutations, proposal application, reporter and checks; they are acceptance tools, not Protocol engine changes. Each is archived with a `.txt` suffix; remove that suffix when restoring it under `/tmp/plan46/accept/`. The ledger retains the intervening corrections. Commands inside these scripts are explicit argument lists. The watch result also records both CLI invocations, and `planted-results.json` in the scratch evidence contains all 39 captured subprocess results.
 
@@ -122,7 +122,44 @@ For an independent measurement of the generated contract, `step-shim.py` gives t
 | Key removed; text reworded again to “the decision inputs are immutable before evaluation”; handler unchanged | Same build and suite | 2 failed |
 | Keyed, reworded state restored | Included in the CTRF run below | 2 passed |
 
-The negative fails at the intended step with `bindings[step.key] is not a function`, naming `Given the decision inputs are immutable before evaluation`. One exploratory build withheld the sibling's contract until its shared wording was updated; the corrected build emitted all 140 modules without codegen warnings. The copy retains the keyed, reworded state and the local adapter. The packaged-adapter acceptance remains failed.
+The negative fails at the intended step with `bindings[step.key] is not a function`, naming `Given the decision inputs are immutable before evaluation`. One exploratory build withheld the sibling's contract until its shared wording was updated; the corrected build emitted all 140 modules without codegen warnings. The copy retains the keyed, reworded state and the local adapter. The initial packaged-adapter acceptance failed.
+
+### Re-measurement through the shipped adapter
+
+Re-measured on 2026-10-22 after `4e0199bb744b7a1476e138b77d6d14f6877e1b5c`, `fix(x3): use the adopter Vitest runner in packed adapters`. Packed that commit and installed the tarball on the retained copy. The installed CLI reported that full commit. The tarball is `/tmp/plan46/fix-x3/libar-dev-software-delivery-protocol-0.0.0.tgz`, SHA-256 `1797a846e222183903f73ae36608dc02cfcbc856748cb8297f296a4d22e759c9`.
+
+The [restoring measurement script](plan46-acceptance/scripts/adapter-remeasure.py.txt) resets the parent, both examples and target suite to the copy's HEAD for the probe. The target suite imports `@libar-dev/software-delivery-protocol/vitest` throughout. The shared vocabulary and sibling wording follow the tested step so its contract keeps generating. Each row runs `npx sdp build`, then the bound suite on the platform's Vitest 5.0.3:
+
+```bash
+npx vitest run --project pure tests/pure/domain-kernel.evaluate-twice.test.ts \
+  --reporter=default --reporter=json --outputFile=/tmp/plan46/fix-x3/keyed-reworded-vitest.json
+```
+
+| State | Result |
+| --- | --- |
+| Original unkeyed example and original handler | 2 passed |
+| `[#freezeInputs]` added; handler named `freezeInputs` | 2 passed |
+| Key retained; step reworded to "all decision inputs are frozen before evaluation" | 2 passed |
+| Key removed; step reworded to "the decision inputs are immutable before evaluation"; handler unchanged | 2 failed |
+
+The negative registered both tests and failed at `Given the decision inputs are immutable before evaluation` with `bindings[step.key] is not a function`. Every build exited 0. This closes item 3 through the shipped adapter. The script restored and byte-checked the saved source files, package manifests, generated output, registrar siblings and installed Protocol package. The retained copy therefore keeps its earlier acceptance edits and local diagnostic adapter after the probe. The [command results](plan46-acceptance/adapter-remeasurement.json) record exits, test counts, restoration and the tarball hash; full output remains under `/tmp/plan46/fix-x3/`.
+
+Reproduce from the fix commit in this worktree:
+
+```bash
+mkdir -p /tmp/plan46/fix-x3
+npm pack --json --pack-destination /tmp/plan46/fix-x3
+python3 reviews/plan46-acceptance/scripts/adapter-remeasure.py.txt
+```
+
+The same tarball also installed into a fresh scratch consumer with plain npm install, exit 0, using the requested tool versions. Run from an empty scratch consumer with a `package.json`:
+
+```bash
+npx -y -p node@20.20.2 -p npm@10.8.2 -c \
+  'node --version && npm --version && npm install /tmp/plan46/fix-x3/libar-dev-software-delivery-protocol-0.0.0.tgz'
+```
+
+The output reported Node `v20.20.2` and npm `10.8.2`. Neither a Vitest peer declaration nor peer-resolution flags were needed.
 
 ## 4. The upgrade kit
 
@@ -260,11 +297,17 @@ After the initial build, the script changes one sentence in the new component de
 
 ## Defects
 
-### 1. The tarball's Vitest adapter embeds a second runner and fails under platform Vitest 5
+### 1. Fixed: the tarball's Vitest adapter embedded a second runner
 
-The packed `dist/adapters/vitest.js` contains bundled `@vitest/runner` implementation. The platform's own runner is Vitest 5.0.3. Calling the package's `bindExample` fails in bundled `initSuite` while reading `config`; zero tests register. This blocks the requested passing bound-example suite through the shipped adapter. It also occurs with the platform's original unkeyed carrier and unchanged suite, so it is independent of step-key authoring.
+Fixed by `4e0199bb744b7a1476e138b77d6d14f6877e1b5c`, `fix(x3): use the adopter Vitest runner in packed adapters`. Item 3 records the passing shipped-adapter re-measurement and its negative control.
 
-Exact reproduction on the retained copy, with automatic restoration of its acceptance edits:
+Cause confirmed in the installed tsup implementation: its automatic externals come from `dependencies` and `peerDependencies`. Commit `053ad1d` removed the optional Vitest peer to repair npm 10 installs, leaving Vitest only in `devDependencies`. Without an explicit external, tsup bundled its runner into the adapter. Both Node builds now explicitly externalize `vitest`, its subpaths and `@vitest/*`; the package still declares no Vitest peer.
+
+Test first: `test/package-smoke.test.ts` gained built ESM/CJS checks and an installed-tarball `bindExample` smoke run using the consumer's real Vitest. Before the fix, the ESM check found `initSuite` and `createSuiteCollector`, and the consumer run exited 1. The CJS entry was already clean. After the fix, all four package-smoke tests pass, including one registered and passing example test in the scratch consumer. The ESM adapter imports `vitest`; neither it nor the CJS root entry contains those runner definitions.
+
+At the initial acceptance, the packed `dist/adapters/vitest.js` contained bundled `@vitest/runner` implementation. The platform's own runner was Vitest 5.0.3. Calling the package's `bindExample` failed in bundled `initSuite` while reading `config`; zero tests registered. This also occurred with the platform's original unkeyed carrier and unchanged suite, independently of step-key authoring.
+
+Original failing reproduction on the retained copy with the original tarball installed, with automatic restoration of its acceptance edits:
 
 ```bash
 cd /tmp/plan46/accept/platform
@@ -289,7 +332,7 @@ Test Files  1 failed (1)
 Tests  no tests
 ```
 
-The local adapter makes the same example assertions pass using the tarball's framework-free runner, but is only a diagnostic workaround in the disposable copy. This lane changed no Protocol engine code or tests. A fix lane must add the failing package-install test and resolve the packaged runner identity before acceptance can be closed.
+The local adapter made the same example assertions pass using the tarball's framework-free runner, but remains only a diagnostic workaround in the disposable copy. The follow-up fix adds the failing package-install regression and resolves runner identity, as measured under item 3.
 
 ## Reader handoff and remaining limits
 
