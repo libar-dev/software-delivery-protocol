@@ -2019,7 +2019,7 @@ export const consumersSpecs = [
     readiness: "ready",
     title: "A Studio build is stamped and shared from a static host",
     narrative:
-      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file at the page set's root, and the shell shows it where the set is served over http or https. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host. Checks and previews use GitHub's default pull-request merge checkout, so the gate proves the merge result and the run evidence, page set and stamp name that same commit.",
+      "A page set is a function of the graph and its named inputs, so it carries no commit or time. A reviewer opening a preview still needs to know which commit and which engine built it, so a publishing step that runs after the build writes one stamp file at the page set's root, and the shell shows it where the set is served over http or https. The same stamp may name where the repository's source is served, so a recorded file and line become a link in a preview and stay text everywhere else. A reusable workflow does the build, the stamp and the upload for every pull request, and deploys a preview only where the repository has chosen a host. Checks and previews use GitHub's default pull-request merge checkout, so the gate proves the merge result and the run evidence, page set and stamp name that same commit.\n\nA stakeholder opens the link, navigates the Studio and composes intent, and the pull request's author hands that intent to an agent that edits the source.",
     sections: {
       intent: {
         outcome:
@@ -2028,7 +2028,6 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "A build is shared by uploading its page set to a static host, such as S3, Vercel or GitHub Pages.",
-          "A stakeholder opens the link, navigates the Studio and composes intent, and the pull request's author hands that intent to an agent that edits the source.",
           "The Studio's build writes no stamp, so every page and data file it writes stays a function of the graph and its named inputs; the stamp is written apart, after the build.",
           "`sdp stamp [root] [--commit SHA] [--source TEMPLATE]` writes `stamp.json` into `<root>/generated/spec-studio/` and touches no other file: it derives no graph, renders no page, and refuses with exit 1 when the root holds no page set; a stamp without `--commit` names the commit `unknown`.",
           "A later build removes the page set and its stamp together, so no stamp outlives the build it names.",
@@ -2038,13 +2037,13 @@ export const consumersSpecs = [
           "Every recorded file and line a page shows as text carries its file and line as data on its element, and when a loaded stamp names a source template the stamp element links each to the template with the file and line filled in; without such a stamp, or through `file://`, each stays text.",
         ],
         ruleKeys: {
-          buildWritesNoStamp: "rules[2]",
-          stampVerb: "rules[3]",
-          stampLifetime: "rules[4]",
-          publishingStep: "rules[5]",
-          previewWorkflow: "rules[6]",
-          previewDeploy: "rules[7]",
-          sourceLinks: "rules[8]",
+          buildWritesNoStamp: "rules[1]",
+          stampVerb: "rules[2]",
+          stampLifetime: "rules[3]",
+          publishingStep: "rules[4]",
+          previewWorkflow: "rules[5]",
+          previewDeploy: "rules[6]",
+          sourceLinks: "rules[7]",
         },
         exampleSpace: {
           given: ["a page set the studio command wrote at an extraction root"],
