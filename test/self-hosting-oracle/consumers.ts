@@ -5298,9 +5298,9 @@ export const consumersSpecs = [
           "A drawing still over the bound after these folds, the context overview, one context's diagram or one layer's, writes no SVG; its text equivalent lists every box and edge the drawing would hold and then says the drawing was omitted because it exceeds the bound.",
           "A trace graph over the bound folds its largest relation group first, ties broken by direction and then by relation type, into one box that names the count and the relation and links to the Spec page's relations, until the drawing fits.",
           "A member or realization diagram over the bound writes no SVG; its text equivalent lists every member or unit and every use or realization edge, and then says the drawing was omitted because it exceeds the bound.",
-          "Every reading a fill, outline or line style marks is also in words: bands and columns carry labels, a planned component reads `planned`, a folded box reads `folded`, and an aggregated edge's count is in its text.",
+          "Every reading a fill, outline or line style marks is also in words: bands and columns carry labels, a planned component reads `planned`, a folded box reads `folded`, and an aggregated edge's count is in its text equivalent. A drawing whose edges all have one relation names it once in its legend and draws no edge label; a drawing with several relations keeps its labelled bands and edge labels.",
           "Each diagram is followed by its text equivalent, which states every box with its words and every edge as a sentence naming its two ends and its kind, and the SVG names it as its description.",
-          "The diagram element adds only pan, zoom and pinch, by rewriting the SVG's view box; it never moves a box or an edge, and without script the drawing shows at its own size inside a box that scrolls.",
+          "The diagram element adds only pan, zoom and pinch, by rewriting the SVG's view box; it never moves a box or an edge. With or without script the SVG scales to its container's width on first view at every viewport width; pan and zoom enlarge it for reading.",
         ],
         ruleKeys: {
           buildTime: "rules[0]",
@@ -5350,7 +5350,7 @@ export const consumersSpecs = [
         textEquivalent:
           "a `details` element closed by default, summary `The diagram as text`, holding one `li` per box, `<id>: <words>`, and then one `li` per edge, `<from> <kind> <to>`, followed by `(<n> unit edges)` when the edge aggregates more than one.",
         diagramElement:
-          "`sdp-diagram` with `subject`, the Spec, Pack, component or context id the diagram is rooted at, or `architecture`, wrapping one `figure` that holds the caption, the SVG and its text equivalent; on upgrade it adds `Zoom in`, `Zoom out` and `Reset` buttons and handles drag, a wheel turned with Control or Command held, and a two-finger pinch.",
+          "`sdp-diagram` with `subject`, the Spec, Pack, component or context id the diagram is rooted at, or `architecture`, wrapping one `figure` that holds the caption, a legend `Arrows: <relation>.` when all edges share one relation, the SVG and its text equivalent; on upgrade it adds `Zoom in`, `Zoom out` and `Reset` buttons and handles drag, a wheel turned with Control or Command held, and a two-finger pinch.",
         elementIds:
           "a diagram's text equivalent has the id `diagram.<subject>.text` and its arrow has the id `diagram.<subject>.arrow`. A page that draws a second view of one subject inserts that view's name before `text` or `arrow`, so the Spec page's realization drawing uses `diagram.<subject>.realization.text` and `diagram.<subject>.realization.arrow`; its trace graph keeps the unqualified ids. Every id is unique on its page.",
         omittedDrawing:

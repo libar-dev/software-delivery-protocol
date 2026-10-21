@@ -1343,3 +1343,15 @@ it("keeps table headers and one-word cells intact while allowing word-boundary w
     expect(declarations[selector]?.["white-space"]).not.toBe("nowrap");
   }
 });
+
+it("fits diagrams to their container on first view at desktop and phone widths", () => {
+  const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
+  const values: Record<string, string> = {};
+  css.walkRules("sdp-diagram svg", (rule) => {
+    if (rule.parent?.type === "atrule") return;
+    rule.walkDecls((decl) => {
+      values[decl.prop] = decl.value;
+    });
+  });
+  expect(values).toMatchObject({ width: "100%", "max-width": "100%", height: "auto" });
+});

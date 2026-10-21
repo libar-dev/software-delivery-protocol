@@ -133,6 +133,7 @@ function svg(d: Diagram, textId: string, diagramId: string): string {
   const l = layout(d),
     positions = new Map(l.boxes.map((b) => [b.box.id, b]));
   const marker = `diagram.${diagramId}.arrow`;
+  const singleRelation = new Set(d.edges.map((edge) => edge.kind)).size === 1;
   const edges = d.edges
     .map((e) => {
       const a = positions.get(e.from),
@@ -145,7 +146,7 @@ function svg(d: Diagram, textId: string, diagramId: string): string {
       const mid = ay + 12;
       const rail = a.x + l.boxStride - 12;
       const approach = by - 12;
-      return `<g class="edge" data-from="${escape(e.from)}" data-to="${escape(e.to)}" data-kind="${escape(e.kind)}"><path d="M ${String(ax)} ${String(ay)} V ${String(mid)} H ${String(rail)} V ${String(approach)} H ${String(bx)} V ${String(by)}" fill="none"${e.kind === "plans to use" ? ' stroke-dasharray="6 4"' : ""} marker-end="url(#${escape(marker)})"/><text x="${String(Math.round((ax + bx) / 2))}" y="${String(mid - 3)}">${escape(e.kind)}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}</text></g>`;
+      return `<g class="edge" data-from="${escape(e.from)}" data-to="${escape(e.to)}" data-kind="${escape(e.kind)}"><path d="M ${String(ax)} ${String(ay)} V ${String(mid)} H ${String(rail)} V ${String(approach)} H ${String(bx)} V ${String(by)}" fill="none"${e.kind === "plans to use" ? ' stroke-dasharray="6 4"' : ""} marker-end="url(#${escape(marker)})"/>${singleRelation ? "" : `<text x="${String(Math.round((ax + bx) / 2))}" y="${String(mid - 3)}">${escape(e.kind)}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}</text>`}</g>`;
     })
     .join("");
   const node = (p: Positioned) =>
@@ -225,6 +226,11 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
     ),
   };
   const text = `<details${fits ? "" : " open"} id="${escape(textId)}"><summary>The diagram as text</summary><ul>${normalized.boxes.map((b) => `<li>${escape(b.id)}: ${escape(b.words)}</li>`).join("")}${normalized.edges.map((e) => `<li>${escape(edgeLabels.get(e.from) ?? e.from)} ${escape(e.kind)} ${escape(edgeLabels.get(e.to) ?? e.to)}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}</li>`).join("")}</ul></details>`;
+  const relation = new Set(d.edges.map((edge) => edge.kind));
+  const legend =
+    relation.size === 1 && fits
+      ? `<p class="diagram-legend">Arrows: ${escape([...relation][0] ?? "")}.</p>`
+      : "";
   const sectionId = d.sectionId === undefined ? d.subject : d.sectionId;
-  return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${fits ? `<div class="diagram-scroll">${svg(normalized, textId, diagramId)}</div>` : "<p>Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.</p>"}${text}</figure></sdp-diagram></section>`;
+  return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${legend}${fits ? `<div class="diagram-scroll">${svg(normalized, textId, diagramId)}</div>` : "<p>Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.</p>"}${text}</figure></sdp-diagram></section>`;
 }

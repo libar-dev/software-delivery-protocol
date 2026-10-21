@@ -641,7 +641,7 @@ sdp-copy output {
   }
 }
 
-/* Diagrams keep their native size without script, with text available beside every drawing. */
+/* Diagrams fit the column; pan and zoom enlarge the build-rendered view. */
 sdp-diagram {
   display: block;
   min-width: 0;
@@ -664,6 +664,9 @@ sdp-diagram figcaption {
   margin-bottom: 0.75rem;
 }
 sdp-diagram svg {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
   display: block;
   background: var(--surface);
 }

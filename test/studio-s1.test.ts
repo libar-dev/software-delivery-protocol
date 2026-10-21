@@ -1034,3 +1034,34 @@ it("gives unstated context and layer folds addressable text descriptions", () =>
   for (const match of html.matchAll(/aria-describedby="([^"]+)"/g))
     expect(match[1]).not.toMatch(/\s/u);
 });
+
+it("names a single edge relation once in the legend and preserves its text equivalent", () => {
+  const drawing: Diagram = {
+    subject: "probe",
+    caption: "Probe diagram",
+    boxes: [
+      { id: "a", words: "First", target: "#a" },
+      { id: "b", words: "Second", target: "#b" },
+      { id: "c", words: "Third", target: "#c" },
+    ],
+    edges: [
+      { from: "a", to: "b", kind: "uses", count: 2 },
+      { from: "a", to: "c", kind: "uses" },
+    ],
+  };
+  const html = renderDiagram(drawing);
+  expect(html).toContain('<p class="diagram-legend">Arrows: uses.</p>');
+  const edges = groups(html, "edge");
+  expect(edges).toHaveLength(2);
+  expect(edges.every((edge) => !edge.includes("<text"))).toBe(true);
+  expect(html).toContain("<li>a uses b (2 unit edges)</li>");
+  expect(html).toContain("<li>a uses c</li>");
+  expect(renderDiagram(drawing)).toBe(html);
+  const mixed = renderDiagram({
+    ...drawing,
+    edges: [drawing.edges[0]!, { from: "a", to: "c", kind: "dependsOn" }],
+  });
+  expect(mixed).not.toContain('class="diagram-legend"');
+  expect(groups(mixed, "edge").every((edge) => edge.includes("<text"))).toBe(true);
+  expect(mixed).toContain("dependsOn</text>");
+});
