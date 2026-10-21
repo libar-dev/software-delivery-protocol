@@ -2236,14 +2236,14 @@ export const consumersSpecs = [
           "the trace graph, then `Rests on` and `Rested on by` lists, the second grouped by distance, each row with its units, enabled verifiers and Packs; the panel's element id is `panel.impact`.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.spec-page.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.spec-page.cited-declaration",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A pinned declaration shows the test line that cites it",
     narrative: null,
     sections: {
@@ -2269,7 +2269,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.spec-page.cited-declaration.sdp.md",
   },
   {
@@ -2333,14 +2333,14 @@ export const consumersSpecs = [
           "runtime observation reads not tracked under the binding-language rule; build attestations, deployments and bills of materials show no payload and each reads not tracked until a Spec designs its source.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.verification-panels.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.verification-panels.rule-coverage",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Each keyed rule shows the examples that exercise it, or that none does",
     narrative: null,
     sections: {
@@ -2366,7 +2366,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.verification-panels.rule-coverage.sdp.md",
   },
   {
@@ -4329,7 +4329,7 @@ export const consumersSpecs = [
           "an `sdp-maturity-map` holding a table under a `Maturity map` heading, rows headed `stated idea` to `stated ready`, columns headed `floor none` to `floor ready`, each cell its count and its members as short cards, an empty cell reading None, and a caption saying that a cell right of its row's own rung holds statements the floor already allows.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.pack-page.maturity-map.sdp.md",
   },
   {

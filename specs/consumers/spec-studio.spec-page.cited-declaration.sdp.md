@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.spec-page.cited-declaration
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.spec-page
   verifies:

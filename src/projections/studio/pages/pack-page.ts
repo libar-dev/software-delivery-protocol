@@ -1,3 +1,4 @@
+import { maturityMap } from "./maturity-map.js";
 import type { PackContext, PackMemberSummary } from "../../../reader/reader.js";
 import type { PackTotals } from "../data.js";
 import {
@@ -30,9 +31,9 @@ export function holds(
 }
 
 function memberCard(ctx: PageContext, member: PackMemberSummary, index: number): string {
-  const opening = `<details class="card" id="${escape(member.id)}"><summary>`;
+  const opening = `<sdp-spec-card spec-id="${escape(member.id)}" variant="full"><details class="card" id="${escape(member.id)}"><summary>`;
   if (!member.resolved)
-    return `${opening}${String(index + 1)}. ${code(member.id)}</summary><div class="card-body"><p>The manifest names an id the graph does not hold.</p></div></details>`;
+    return `${opening}${String(index + 1)}. ${code(member.id)}</summary><div class="card-body"><p>The manifest names an id the graph does not hold.</p></div></details></sdp-spec-card>`;
   const design = member.design;
   const next =
     member.statedNextRung === undefined
@@ -56,7 +57,7 @@ function memberCard(ctx: PageContext, member: PackMemberSummary, index: number):
     (member.verifiers?.total ?? 0) > 0 || (member.examples?.total ?? 0) > 0
       ? `${count(member.verifiers?.total ?? 0, "verifier")}, ${String(member.verifiers?.enabled ?? 0)} enabled · ${count(member.examples?.total ?? 0, "verifying example", "verifying examples", false)}, ${String(member.examples?.enabled ?? 0)} enabled`
       : "";
-  return `${opening}<span class="line1">${String(index + 1)}. ${codeSpans(member.title ?? member.id)}</span><span class="line2">${escape(member.specKind)} · ${rungLine(member.statedReadiness, member.derivedReadiness)}${next} · ${String(design?.openQuestions.length ?? 0)} open, ${String(design?.blockingQuestions ?? 0)} blocking questions · implementation binding ${present((member.implementations?.length ?? 0) > 0)} · verifier binding ${present(verifier)}</span></summary><div class="card-body"><p>${link(ctx, member.id)}</p>${holds(ctx, member.statedNextRung, member.statedNextRungFailures)}<h3>Design</h3><p>${count(design?.entries ?? 0, "design entry", "design entries")} · ${count(design?.declarations ?? 0, "pinned declaration", "pinned declarations", false)}</p>${design?.decisions.length ? `<h3>Decisions</h3>${decisions}` : ""}<h3>Open questions</h3>${questions}<h3>Implementation binding: ${present((member.implementations?.length ?? 0) > 0)}</h3>${member.implementations?.length ? unitList(member.implementations) : ""}<h3>Design reference: ${present((member.references?.length ?? 0) > 0)}</h3>${member.references?.length ? unitList(member.references) : ""}<h3>Verifier binding: ${present(verifier)}</h3>${counts ? `<p>${counts}</p>` : ""}</div></details>`;
+  return `${opening}<span class="line1">${String(index + 1)}. ${codeSpans(member.title ?? member.id)}</span><span class="line2">${escape(member.specKind)} · ${rungLine(member.statedReadiness, member.derivedReadiness)}${next} · ${String(design?.openQuestions.length ?? 0)} open, ${String(design?.blockingQuestions ?? 0)} blocking questions · implementation binding ${present((member.implementations?.length ?? 0) > 0)} · verifier binding ${present(verifier)}</span></summary><div class="card-body"><p>${link(ctx, member.id)}</p>${holds(ctx, member.statedNextRung, member.statedNextRungFailures)}<h3>Design</h3><p>${count(design?.entries ?? 0, "design entry", "design entries")} · ${count(design?.declarations ?? 0, "pinned declaration", "pinned declarations", false)}</p>${design?.decisions.length ? `<h3>Decisions</h3>${decisions}` : ""}<h3>Open questions</h3>${questions}<h3>Implementation binding: ${present((member.implementations?.length ?? 0) > 0)}</h3>${member.implementations?.length ? unitList(member.implementations, ctx) : ""}<h3>Design reference: ${present((member.references?.length ?? 0) > 0)}</h3>${member.references?.length ? unitList(member.references, ctx) : ""}<h3>Verifier binding: ${present(verifier)}</h3>${counts ? `<p>${counts}</p>` : ""}</div></details></sdp-spec-card>`;
 }
 
 /**
@@ -105,10 +106,10 @@ export function packPage(ctx: PageContext, pack: PackContext, totals: PackTotals
   return frame(
     ctx,
     pack.title ?? pack.id,
-    `<header class="page-head"><h1>${codeSpans(pack.title ?? pack.id)}</h1><div class="ids"><span>${code(pack.id)}${copy(pack.id)}</span><span>${code(pack.file)}${copy(pack.file)}</span></div><h2>Where the design stands</h2><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header><h2>Framing</h2>${prose(ctx, pack.framing)}${pack.modelRefs.length === 0 ? "" : `<p>Vocabulary: ${pack.modelRefs.map((id) => link(ctx, id)).join(", ")}</p>`}<h2>Members</h2><sdp-expander>${pack.members.map((m, i) => memberCard(ctx, m, i)).join("")}<h2>Boundary</h2>${boundary}<h2>Members with no verifier binding</h2><p class="prose">The graph records bindings and never runs, so no page shows a run result. Decision records are left out: a decision never needs a verifier binding.</p>${list(gaps.map((g) => `${link(ctx, g.id, ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id, codeSpans(ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id))} · ${code(g.id)} · stated ${escape(g.statedReadiness ?? "not recorded")}`))}<h2>Findings</h2>${findingList(
+    `<header class="page-head"><h1>${codeSpans(pack.title ?? pack.id)}</h1><div class="ids"><span>${code(pack.id)}${copy(pack.id)}</span><span>${code(pack.file)}${copy(pack.file)}</span></div><h2>Where the design stands</h2><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header>${maturityMap(pack)}<h2>Framing</h2>${prose(ctx, pack.framing)}${pack.modelRefs.length === 0 ? "" : `<p>Vocabulary: ${pack.modelRefs.map((id) => link(ctx, id)).join(", ")}</p>`}<h2>Members</h2><sdp-expander>${pack.members.map((m, i) => memberCard(ctx, m, i)).join("")}<h2>Boundary</h2>${boundary}<h2>Members with no verifier binding</h2><p class="prose">The graph records bindings and never runs, so run evidence is supplied separately. Decision records are left out: a decision never needs a verifier binding.</p>${list(gaps.map((g) => `${link(ctx, g.id, ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id, codeSpans(ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id))} · ${code(g.id)} · stated ${escape(g.statedReadiness ?? "not recorded")}`))}<h2>Findings</h2><sdp-validation-findings filter="${escape(pack.id)}">${findingList(
       ctx,
       ctx.data.findings.filter((f) => f.subjectId === pack.id),
-    )}</sdp-expander>`,
+    )}</sdp-validation-findings></sdp-expander>`,
     pack.id,
   );
 }

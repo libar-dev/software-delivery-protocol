@@ -930,7 +930,7 @@ it("evaluates each shipped recipe once for its assigned parameters and shares Pa
     expect(spy.mock.calls[0]?.[1].graph).toBe(reader.graph);
     expect(spy.mock.calls[0]?.[1].report).toBe(report);
     const expected = [
-      ...[17, 20, 24, 31, 33, 43, 44].map((number) => ({ number, params: {} })),
+      ...[17, 20, 24, 31, 33, 43, 44, 51].map((number) => ({ number, params: {} })),
       { number: 29, params: { pack: "pack:probe" } },
       { number: 21, params: { spec: "spec:probe.parent" } },
       { number: 30, params: { specs: ["spec:probe.parent"] } },

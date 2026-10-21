@@ -75,11 +75,14 @@ export function findingList(ctx: PageContext, rows: readonly Finding[]): string 
   );
 }
 
-export function unitList(rows: readonly CodeUnitBinding[]): string {
+export function componentLink(ctx: PageContext, id: string): string {
+  return `<a href="${escape(relative(ctx, "architecture.html"))}#${escape(id)}">${code(id)}</a>`;
+}
+export function unitList(rows: readonly CodeUnitBinding[], ctx?: PageContext): string {
   return list(
     rows.map(
       (unit) =>
-        `${code(unit.codeId)}${unit.label === undefined ? "" : ` · ${escape(unit.label)}`} · ${code(location(unit.file, unit.line))}${unit.file === undefined ? "" : copy(location(unit.file, unit.line))}${unit.role === undefined ? "" : ` · role ${escape(unit.role)}`}${unit.component === undefined ? "" : ` · component ${code(unit.component.id)}${unit.component.layer === undefined ? "" : ` · layer ${escape(unit.component.layer)}`}${unit.component.context === undefined ? "" : ` · context ${escape(unit.component.context)}`}`}${unit.layer === undefined ? "" : ` · layer ${escape(unit.layer)}`}${unit.context === undefined ? "" : ` · context ${escape(unit.context)}`}`,
+        `${ctx !== undefined && unit.codeId.startsWith("component:") ? componentLink(ctx, unit.codeId) : code(unit.codeId)}${unit.label === undefined ? "" : ` · ${escape(unit.label)}`} · ${code(location(unit.file, unit.line))}${unit.file === undefined ? "" : copy(location(unit.file, unit.line))}${unit.role === undefined ? "" : ` · role ${escape(unit.role)}`}${unit.component === undefined ? "" : ` · component ${ctx === undefined ? code(unit.component.id) : componentLink(ctx, unit.component.id)}${unit.component.layer === undefined ? "" : ` · layer ${escape(unit.component.layer)}`}${unit.component.context === undefined ? "" : ` · context ${escape(unit.component.context)}`}`}${unit.layer === undefined ? "" : ` · layer ${escape(unit.layer)}`}${unit.context === undefined ? "" : ` · context ${escape(unit.context)}`}`,
     ),
     "units",
   );

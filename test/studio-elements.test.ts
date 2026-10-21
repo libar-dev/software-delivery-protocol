@@ -339,7 +339,7 @@ describe("Studio page interactions", () => {
     expect(stampText({ corpusCommit: 4 })).toBe("");
   });
 
-  it("loads the built classic bundle without imports and defines the seven elements", () => {
+  it("loads the built classic bundle without imports and defines the page and view elements", () => {
     const bundle = readFileSync(new URL("../dist/studio/studio.js", import.meta.url), "utf8");
     const defined: string[] = [];
     expect(bundle).not.toMatch(/^\s*(?:import|export)\s/mu);
@@ -360,11 +360,17 @@ describe("Studio page interactions", () => {
     expect(defined.sort()).toEqual([
       "sdp-copy",
       "sdp-diagram",
+      "sdp-example-space",
       "sdp-expander",
       "sdp-filter",
+      "sdp-impact-view",
+      "sdp-maturity-map",
       "sdp-search",
       "sdp-search-results",
+      "sdp-spec-card",
       "sdp-stamp",
+      "sdp-trace-graph",
+      "sdp-validation-findings",
     ]);
   });
   it("names a question copy control with the full entry address and updates it", () => {

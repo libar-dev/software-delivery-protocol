@@ -65,6 +65,27 @@ export const structuralMembershipExceptions = [
  */
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/projections/studio/pages/spec-verification.ts#verificationPanel",
+    anchorId: "impl:protocol.studio-verification-panels",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/spec-structure.ts#designView",
+    anchorId: "impl:protocol.studio-spec-structure",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/maturity-map.ts#maturityMap",
+    anchorId: "impl:protocol.studio-maturity-map",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/studio-elements/views.ts#registerViews",
+    anchorId: "impl:protocol.studio-view-elements",
+    componentId: "component:protocol.studio-elements",
+  },
+
+  {
     unit: "src/validate/validators.ts#checkSupersededDecisions",
     anchorId: "impl:protocol.superseded-decision-signal",
     componentId: "component:protocol.validate",
