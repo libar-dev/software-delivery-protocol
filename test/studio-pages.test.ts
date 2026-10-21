@@ -214,6 +214,30 @@ function checkLinks(set: readonly StudioPage[]): void {
 }
 
 describe("Studio static pages", () => {
+  it("renders Model definitions without exposing the derived term key map", () => {
+    const graph: GraphSchema = {
+      schemaVersion,
+      nodes: [
+        primitive("spec:probe.terms", {
+          specKind: "model",
+          sections: {
+            model: {
+              terms: { "step key": "Stable step identity." },
+              termKeys: { durableIdentity: "step key" },
+            },
+          },
+        }),
+      ],
+      edges: [],
+    };
+    const page = renderStudio(createStudioData(createReader(graph))).find(
+      (page) => page.path === pagePath("spec:probe.terms"),
+    );
+    expect(page?.content).toContain("Stable step identity.");
+    expect(page?.content).not.toContain("termKeys");
+    expect(page?.content).not.toContain("durableIdentity</dt>");
+  });
+
   it("frames every page with a skip link, labelled search, rail, canvas, classic script and stamp", () => {
     for (const page of pages) {
       expect(page.content).toContain('class="skip-link" href="#main"');

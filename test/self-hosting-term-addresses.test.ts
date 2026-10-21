@@ -50,7 +50,13 @@ registerKeyedTermResolves({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertTermWorld(world);
+    assertTermWorld(
+      world,
+      paramsForStep(
+        keyedTermResolvesContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -91,7 +97,13 @@ registerMalformedTermMarkerRefused({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertTermWorld(world);
+    assertTermWorld(
+      world,
+      paramsForStep(
+        malformedTermMarkerRefusedContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -132,7 +144,13 @@ registerRepeatedTermKeyRefused({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertTermWorld(world);
+    assertTermWorld(
+      world,
+      paramsForStep(
+        repeatedTermKeyRefusedContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -173,7 +191,13 @@ registerTypescriptTermImportsKeyed({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertTermWorld(world);
+    assertTermWorld(
+      world,
+      paramsForStep(
+        typescriptTermImportsKeyedContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -214,6 +238,12 @@ registerUnknownTermKeyRefused({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertTermWorld(world);
+    assertTermWorld(
+      world,
+      paramsForStep(
+        unknownTermKeyRefusedContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });

@@ -60,7 +60,13 @@ registerConflictingExampleKeyWithheld({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        conflictingExampleKeyWithheldContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -101,7 +107,13 @@ registerGherkinKeyedStepStaysBound({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        gherkinKeyedStepStaysBoundContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -142,7 +154,13 @@ registerKeyEqualToASkeletonWithheld({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        keyEqualToASkeletonWithheldContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -183,7 +201,13 @@ registerMalformedMarkerRefused({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        malformedMarkerRefusedContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -224,7 +248,13 @@ registerRenamedKeyBreaks({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        renamedKeyBreaksContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -265,7 +295,13 @@ registerRepeatedKeyRefused({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        repeatedKeyRefusedContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -306,7 +342,13 @@ registerRewordedKeyedStepStaysBound({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        rewordedKeyedStepStaysBoundContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -347,7 +389,13 @@ registerRewordedUnkeyedStepBreaks({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        rewordedUnkeyedStepBreaksContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -388,7 +436,13 @@ registerTwoKeysOnOneStepRefused({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        twoKeysOnOneStepRefusedContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });
 
@@ -429,6 +483,12 @@ registerTypescriptKeyedStepImportsKeyed({
         else expect(world.answer[key], key).toEqual(value);
       }
     }
-    assertStepWorld(world);
+    assertStepWorld(
+      world,
+      paramsForStep(
+        typescriptKeyedStepImportsKeyedContract,
+        "the first extraction finding's message contains {extractMessage}",
+      ).extractMessage,
+    );
   },
 });

@@ -230,7 +230,9 @@ export async function invokeStep(world: StepWorld): Promise<void> {
       const bindings = exports.bindings;
       if (!bindings) throw new Error("Binding source must export its authored handlers");
       await runExamplePlan(planExample(secondContract, bindings), hits);
-      expect(hits).toEqual(firstContract.steps.map((step) => step.key));
+      world.answer.stillBound =
+        hits.length === firstContract.steps.length &&
+        hits.every((key, index) => key === firstContract.steps[index]?.key);
     }
   }
   if (world.point.carrier === "TypeScript") {
@@ -250,12 +252,16 @@ export async function invokeStep(world: StepWorld): Promise<void> {
     world.answer.keptOnImport = isDeepStrictEqual(data.sort(), imported.sort());
   }
 }
-export function assertStepWorld(world: StepWorld): void {
-  if (world.extractMessage)
+export function assertStepWorld(world: StepWorld, expectedMessage: string): void {
+  if (expectedMessage === "") {
+    expect(world.first?.report.findings).toEqual([]);
+  } else {
+    expect(world.extractMessage).toContain(expectedMessage);
     expect(world.first?.report.findings[0]).toMatchObject({
       validatorId: "extract/unrecognized-property",
       severity: "error",
     });
+  }
 }
 
 interface TermPoint {
@@ -349,12 +355,15 @@ export async function invokeTerm(world: TermWorld): Promise<void> {
       JSON.stringify(imported?.nodeType === "Primitive" ? imported.sections?.model : undefined);
   }
 }
-export function assertTermWorld(world: TermWorld): void {
-  if (world.extractMessage)
+export function assertTermWorld(world: TermWorld, expectedMessage: string): void {
+  if (expectedMessage === "") {
+    expect(world.result?.report.findings).toEqual([]);
+  } else {
+    expect(world.extractMessage).toContain(expectedMessage);
     expect(world.result?.report.findings[0]?.path).toMatch(/^model\.terms\./);
-  if (world.extractMessage)
     expect(world.result?.report.findings[0]).toMatchObject({
       validatorId: "extract/unrecognized-property",
       severity: "error",
     });
+  }
 }

@@ -1946,6 +1946,8 @@ marker carries a key, at `openQuestions[<n>].question`, has address `spec:<id>#q
 and that key matches as the row's key; the key is not a row of its own. A keyed rule or flow at
 `rules[<n>]` or `flows[<n>]` under Behavior has address `spec:<id>#rule.<key>`. `description` in
 Design or UI, off-grammar keys, other nested paths, and every other entry have `address: null`.
+A keyed Model term has address `spec:<id>#term.<key>` through `model.termKeys`; its key matches
+as a row key, and every Model term takes its line from its `term[<i>]` location row.
 Each row also carries `line`, the line in the Spec's carrier where the entry starts, from the
 location table the Spec context carries. The table locates a top-level Design or UI key other than
 `description` and the text of an open question, at `openQuestions[<n>].question` or, for a question
@@ -2078,7 +2080,8 @@ a section or entry miss lists the available keys in code-unit order.
 
 Design and UI addresses resolve to their own keys other than `description`. A question address
 resolves to a question's text. A rule address reads `behavior.ruleKeys` and resolves to its
-rule or flow text, whatever the primary behavior owner. These are the rules the mention
+rule or flow text, whatever the primary behavior owner. A term address reads `model.termKeys`
+and resolves to the term's definition at its `term[<i>]` location. These are the rules the mention
 validator applies, carried by `spec:decisions.checked-mentions` and
 `spec:consumers.agent-surface.address-and-cycle-recipes`. Recipe 22 audits addresses inside
 Specs, and this recipe resolves ones written anywhere else.
@@ -3258,7 +3261,8 @@ const location = (id, path) => {
   const context = g.specContext(id);
   const question = /^intent\.openQuestions\[(\d+)\]/u.exec(path);
   const rule = /^behavior\.(rules|flows)\[(\d+)\]/u.exec(path);
-  const entry = question ? `question[${question[1]}]` : rule ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]` : path;
+  const term = path.startsWith("model.terms.") ? Object.keys(context.sections?.model?.terms ?? {}).indexOf(path.slice("model.terms.".length)) : -1;
+  const entry = question ? `question[${question[1]}]` : rule ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]` : term >= 0 ? `term[${term}]` : path;
   const at = context.entryLocations.find((row) => row.entry === entry);
   return { line: at?.line ?? null };
 };
@@ -3266,7 +3270,7 @@ const isPointer = (entry) => entry && typeof entry === "object" && !Array.isArra
   (entry.line === null || typeof entry.line === "number") &&
   Object.keys(entry).length === 1 && Object.hasOwn(entry, "line");
 const address = (id, section, key) => key !== "description" && /^[a-z][A-Za-z0-9]*$/u.test(key) ? `${id}#${section}.${key}` : null;
-const addressesIn = (value) => [...new Set((JSON.stringify(value) ?? "").match(/spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule)\.[a-z][A-Za-z0-9]*(?![A-Za-z0-9_#-]|\.[A-Za-z0-9])/gu) ?? [])];
+const addressesIn = (value) => [...new Set((JSON.stringify(value) ?? "").match(/spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule|term)\.[a-z][A-Za-z0-9]*(?![A-Za-z0-9_#-]|\.[A-Za-z0-9])/gu) ?? [])];
 const reference = (id, path, value, own = null) => {
   const addresses = [...new Set([...(own === null ? [] : [own]), ...addressesIn(value)])];
   if (own !== null) return addresses.length === 1 ? own : addresses;
@@ -3320,7 +3324,12 @@ const cuts = [
           const key = Object.keys(member.sections.behavior.ruleKeys ?? {}).find((key) => member.sections.behavior.ruleKeys[key] === `${rule[1]}[${rule[2]}]`);
           return reference(member.id, path, value, key === undefined ? null : `${member.id}#rule.${key}`);
         }
-        if (path === "behavior.ruleKeys") return value;
+        if (path === "behavior.ruleKeys" || path === "behavior.stepKeys" || path === "model.termKeys") return value;
+        if (path.startsWith("model.terms.")) {
+          const term = path.slice("model.terms.".length);
+          const key = Object.keys(member.sections.model.termKeys ?? {}).find((key) => member.sections.model.termKeys[key] === term);
+          return reference(member.id, path, value, key === undefined ? null : `${member.id}#term.${key}`);
+        }
         if (isPointer(value)) return value;
         if (Array.isArray(value) && value.some(isPointer) && value.every((entry) => isPointer(entry) ||
           typeof entry === "string" && addressesIn(entry).includes(entry))) return value;
@@ -3537,7 +3546,7 @@ const schemaProblems = [];
 const problem = (path, message) => schemaProblems.push({ path, problem: message });
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const specId = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?![\s\S])/u;
-const entryAddress = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*)(?![\s\S])/u;
+const entryAddress = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*)(?![\s\S])/u;
 const scopeRef = (value) => typeof value === "string" && (specId.test(value) || entryAddress.test(value));
 const closed = (value, path, allowed, required) => {
   if (!object(value)) { problem(path, "Expected an object."); return false; }
@@ -3712,6 +3721,7 @@ const resolves = (nodes, ref) => {
   const [section, key] = suffix.split(".");
   if (section === "question") return (node.sections?.intent?.openQuestions ?? []).some((question) => question?.key === key);
   if (section === "rule") return Object.hasOwn(behaviorOf(node.sections?.behavior ?? {}).behavior.ruleKeys ?? {}, key);
+  if (section === "term") return Object.hasOwn(node.sections?.model?.termKeys ?? {}, key);
   return key !== "description" && Object.hasOwn(node.sections?.[section] ?? {}, key);
 };
 const changes = proposal.changes.map((change, index) => {
@@ -3725,8 +3735,15 @@ const changes = proposal.changes.map((change, index) => {
       ? ["decider", "links", "provisional", "trigger"].filter((part) => unsupported.has(part)) : [];
     if (missing.length) return { ...resolution, comparable: false, reason: `Outside the common schema: ${missing.join(", ")}.` };
     const parts = changedParts(id);
+    const termValue = (nodes) => {
+      const model = nodes.get(id)?.sections?.model;
+      const key = suffix.slice("term.".length);
+      const term = model?.termKeys?.[key];
+      return term === undefined ? undefined : model.terms?.[term];
+    };
     const moved = before.has(id) !== after.has(id) || (suffix === undefined
-      ? parts.changed.size > 0 || parts.ordered.size > 0 : parts.changed.has(suffix));
+      ? parts.changed.size > 0 || parts.ordered.size > 0 : suffix.startsWith("term.")
+      ? !same(termValue(before), termValue(after)) : parts.changed.has(suffix));
     if (!moved && suffix === undefined && !parts.crossListOrder) {
       return { ...resolution, comparable: false, reason: "One graph keeps no order across rules and flows." };
     }

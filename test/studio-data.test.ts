@@ -318,6 +318,20 @@ relations: {}
         matchedIn: string[];
       }[];
     }>(23, corpus, { term });
+    if (term === "durableIdentity") {
+      expect(answer.matches).toEqual([
+        {
+          id: "spec:probe.terms",
+          section: "model",
+          entry: "terms.step key",
+          address: "spec:probe.terms#term.durableIdentity",
+          line: row.line,
+          text: "Stable identity across wording changes.",
+          matchedIn: ["key"],
+        },
+      ]);
+      expect(entryMatches(record, row, term)).toBe(true);
+    }
     const rows = record.entries
       .filter((entry) => entryMatches(record, entry, term))
       .map(({ key, ...row }) => {

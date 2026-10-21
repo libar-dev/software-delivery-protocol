@@ -15,7 +15,15 @@ import {
   createRunnableExample,
   completeRunnableExample,
 } from "../src/testing/index.js";
-import { bindingTypechecks, createStepWorld, invokeStep } from "./helpers/key-worlds.js";
+import {
+  bindingTypechecks,
+  createStepWorld,
+  invokeStep,
+  assertStepWorld,
+  createTermWorld,
+  invokeTerm,
+  assertTermWorld,
+} from "./helpers/key-worlds.js";
 
 const keyedContentAnchor = specTest({
   id: testAnchorId("test:protocol.keyed-content"),
@@ -37,6 +45,139 @@ function graph(result: ReturnType<typeof reifyMarkdownCarrier>) {
 }
 
 describe("keyed carrier content", () => {
+  it("records each TypeScript term's own physical line and authored key", () => {
+    const result = reifyTypeScriptCarrier(
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const subject = spec({
+  id: specId("spec:probe.keys"), title: "Keys", kind: "model", altitude: "story", readiness: "idea",
+  model: {
+    terms: {
+      "step key": "[#durableIdentity] Stable identity.",
+      slot: "An unkeyed parameter.",
+    },
+  },
+});`,
+      "keys.sdp.ts",
+    );
+    expect(result.findings).toEqual([]);
+    expect(graph(result).locations).toEqual([
+      {
+        spec: "spec:probe.keys",
+        file: "keys.sdp.ts",
+        entry: "term[0]",
+        key: "durableIdentity",
+        line: 6,
+      },
+      { spec: "spec:probe.keys", file: "keys.sdp.ts", entry: "term[1]", line: 7 },
+    ]);
+  });
+
+  it.each(["exampleSpace", "examples"])(
+    "locates a refused TypeScript %s step below its Spec declaration",
+    (field) => {
+      const steps = `{
+      given: [
+        "[#bad-key] start",
+      ],
+      when: ["run"], then: ["done"],
+    }`;
+      const result = reifyTypeScriptCarrier(
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const subject = spec({
+  id: specId("spec:probe.keys"), title: "Keys", kind: "behavior", altitude: "story", readiness: "idea",
+  behavior: {
+    ${field}: ${field === "examples" ? `[${steps}]` : steps},
+  },
+});`,
+        "keys.sdp.ts",
+      );
+      expect(result.specs).toHaveLength(1);
+      expect(result.findings).toMatchObject([
+        {
+          validatorId: "extract/unrecognized-property",
+          path: `behavior.${field}${field === "examples" ? "[0]" : ""}.given[0]`,
+          line: 7,
+        },
+      ]);
+    },
+  );
+
+  it("rejects unexpected step extraction findings when the example's message slot is empty", async () => {
+    const step = createStepWorld({
+      vocabulary: "[#initial] start",
+      example: "start",
+      before: "start",
+      after: "start",
+    });
+    await invokeStep(step);
+    assertStepWorld(step, "");
+    if (!step.first) throw new Error("Missing first extraction");
+    step.first = {
+      ...step.first,
+      report: {
+        ...step.first.report,
+        findings: [
+          ...step.first.report.findings,
+          {
+            validatorId: "extract/unrecognized-property",
+            family: "conformance",
+            severity: "error",
+            message: "Spurious step refusal",
+            file: "parent.sdp.md",
+            path: "behavior.exampleSpace.given[0]",
+          },
+        ],
+      },
+    };
+    step.extractMessage = "Spurious step refusal";
+    expect(() => {
+      assertStepWorld(step, "");
+    }).toThrow();
+  });
+
+  it("rejects unexpected term extraction findings when the example's message slot is empty", async () => {
+    const term = createTermWorld({
+      specId: "spec:probe.terms",
+      terms: "- **step key** — [#durableIdentity] Stable identity.",
+      address: "spec:probe.terms#term.durableIdentity",
+    });
+    await invokeTerm(term);
+    assertTermWorld(term, "");
+    if (!term.result) throw new Error("Missing term extraction");
+    term.result = {
+      ...term.result,
+      report: {
+        ...term.result.report,
+        findings: [
+          ...term.result.report.findings,
+          {
+            validatorId: "extract/unrecognized-property",
+            family: "conformance",
+            severity: "error",
+            message: "Spurious term refusal",
+            file: "subject.sdp.md",
+            path: "model.terms.step key",
+          },
+        ],
+      },
+    };
+    term.extractMessage = "Spurious term refusal";
+    expect(() => {
+      assertTermWorld(term, "");
+    }).toThrow();
+  });
+
+  it("reports false when unchanged handlers typecheck but the step reach changes", async () => {
+    const world = createStepWorld({
+      vocabulary: "[#first] one; [#second] two",
+      example: "[#first] one; [#second] two",
+      before: "Given [#first] one\nGiven [#second] two",
+      after: "Given [#second] two\nGiven [#first] one",
+    });
+    await expect(invokeStep(world)).resolves.toBeUndefined();
+    expect(world.answer.stillBound).toBe(false);
+  });
+
   it("preserves authored key order, strips markers, records terms and never records steps", () => {
     const result = reifyMarkdownCarrier(
       md(
