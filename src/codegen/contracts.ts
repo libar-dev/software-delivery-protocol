@@ -129,8 +129,7 @@ interface VocabularyEntry {
   readonly skeleton: string;
   /** Slot name → declared type, authored order. Only the ratified type-form declares (`number` /
    *  `string` / `boolean` / a closed union of two or more quoted literals). Every other
-   *  identifier-led form — bare, malformed, or value-form (whose vocabulary reading is the
-   *  grammar session's to rule) — declares nothing and warns
+   *  identifier-led form, bare, malformed, or a value-form binding, declares nothing and warns
    *  (`contracts/untyped-vocabulary-slot`), never silently drops (L2). */
   readonly slots: ReadonlyMap<string, SlotDeclaredType>;
 }
@@ -172,10 +171,8 @@ function vocabularyOf(
           continue;
         }
 
-        // A bare group, a malformed one, or a value-form binding declares no type here — the
-        // value-form's vocabulary reading is a grammar-design question the carrier ruling
-        // session owns, so the codegen refuses to guess. An authored slot must never silently
-        // fall out of the space (L2), so the parent is named.
+        // A value-form group binds one value and declares no dimension, even in a vocabulary.
+        // Keep the parent visible in the warning so the undeclared slot cannot silently vanish.
         findings.push(
           contractsFinding(
             contractsFindingIds.untypedVocabularySlot,

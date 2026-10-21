@@ -2,7 +2,7 @@
 id: spec:carrier.slot-notation.one-literal-binding
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.slot-notation
   verifies: { target: spec:carrier.slot-notation, exercises: [oneLiteralBinding] }

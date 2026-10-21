@@ -184,7 +184,7 @@ describe("the generated Design Review", () => {
     expect(row).toContain(
       ") The Protocol authors and validates itself | behavior | epic | ready | ready | — | 0 | 0 | 0 |",
     );
-    expect(row?.endsWith("| none | none | present |")).toBe(true);
+    expect(row?.endsWith("| none | present | present |")).toBe(true);
   });
 
   it("renders every owned description as escaped prose and omits absent prose artifacts", () => {

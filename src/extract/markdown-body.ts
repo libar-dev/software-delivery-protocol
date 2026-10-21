@@ -1,3 +1,4 @@
+import { extractFindingIds } from "./reify.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
@@ -37,7 +38,7 @@ interface MarkdownOwner {
 }
 
 function structure(file: string, line: number, message: string): Finding {
-  return markdownFinding(file, line, message, "extract/invalid-markdown-structure");
+  return markdownFinding(file, line, message, extractFindingIds.invalidMarkdownStructure);
 }
 
 function asciiTrim(text: string): string {
@@ -92,7 +93,7 @@ function headingFinding(file: string, line: number, text: string): Finding {
     file,
     line,
     `heading "${text}" is not recognized${suffix}`,
-    "extract/unrecognized-heading",
+    extractFindingIds.unrecognizedHeading,
   );
 }
 
@@ -218,7 +219,7 @@ export function parseMarkdownBody(
       mapOwner(data, owner.name, owner.content, file, kind, findings, entryLines);
     }
   }
-  const capped = capMarkdownFindings(findings, file, "extract/invalid-markdown-structure");
+  const capped = capMarkdownFindings(findings, file, extractFindingIds.invalidMarkdownStructure);
   return capped.length === 0
     ? { ok: true, body: { data, entryLines }, findings: capped }
     : { ok: false, findings: capped };

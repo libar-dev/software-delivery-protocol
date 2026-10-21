@@ -1187,7 +1187,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:consumers.impact-graph",
@@ -1212,7 +1212,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:consumers.impact-graph.symbol-reach",

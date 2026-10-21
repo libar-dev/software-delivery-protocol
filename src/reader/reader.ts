@@ -492,8 +492,8 @@ function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
  *
  * @sdpAnchor impl:protocol.pack-design
  * @sdpLabel the Pack design helpers and the Pack context assembly they serve
- * @sdpSatisfies spec:consumers.pack-design, spec:model.design-maturity
- * @sdpReferences spec:extraction.entry-locations, spec:extraction.contract-declarations
+ * @sdpSatisfies spec:consumers.pack-design, spec:model.design-maturity, spec:extraction.contract-declarations
+ * @sdpReferences spec:extraction.entry-locations
  * @sdpComponent component:protocol.reader
  * @sdpRole reader
  */

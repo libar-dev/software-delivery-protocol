@@ -1,3 +1,4 @@
+import { extractFindingIds } from "./reify.js";
 import { isMap, LineCounter, parseAllDocuments } from "yaml";
 
 import { parseId } from "../ids.js";
@@ -118,10 +119,10 @@ export function parseMarkdownFrontmatter(
           line,
           `frontmatter key "${name}" is not accepted`,
           isReservedEnvelopeKey(name)
-            ? "extract/reserved-property"
+            ? extractFindingIds.reservedProperty
             : carrierClass === "spec" && name === "title"
-              ? "extract/invalid-frontmatter"
-              : "extract/unrecognized-property",
+              ? extractFindingIds.invalidFrontmatter
+              : extractFindingIds.unrecognizedProperty,
         );
         continue;
       }
@@ -204,7 +205,7 @@ export function parseMarkdownFrontmatter(
             file,
             line,
             error instanceof Error ? error.message : "invalid id",
-            "extract/invalid-id",
+            extractFindingIds.invalidId,
           );
         }
       } else if (name === "kind" && !specKinds.has(value))
@@ -213,7 +214,7 @@ export function parseMarkdownFrontmatter(
           file,
           line,
           "kind is not a recognized spec kind",
-          "extract/non-static-envelope",
+          extractFindingIds.nonStaticEnvelope,
         );
       else if (name === "altitude" && !specAltitudes.has(value))
         report(
@@ -221,7 +222,7 @@ export function parseMarkdownFrontmatter(
           file,
           line,
           "altitude is not a recognized spec altitude",
-          "extract/non-static-envelope",
+          extractFindingIds.nonStaticEnvelope,
         );
       else if (name === "readiness" && !specReadiness.has(value))
         report(
@@ -229,7 +230,7 @@ export function parseMarkdownFrontmatter(
           file,
           line,
           "readiness is not a recognized spec readiness",
-          "extract/non-static-envelope",
+          extractFindingIds.nonStaticEnvelope,
         );
       else data[name] = value;
     }

@@ -16,7 +16,10 @@ import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 const importsTestAnchor = specTest({
   id: testAnchorId("test:protocol.curation-imports"),
-  verifies: ref("spec:consumers.impact-graph.curation-assist"),
+  verifies: [
+    ref("spec:consumers.impact-graph.curation-assist"),
+    ref("spec:consumers.impact-graph"),
+  ],
 });
 void importsTestAnchor;
 

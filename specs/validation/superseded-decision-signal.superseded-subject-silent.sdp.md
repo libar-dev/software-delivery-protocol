@@ -2,7 +2,7 @@
 id: spec:validation.superseded-decision-signal.superseded-subject-silent
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.superseded-decision-signal
   verifies: { target: spec:validation.superseded-decision-signal, exercises: [liveSubjectsOnly, noSupersedesWarning] }

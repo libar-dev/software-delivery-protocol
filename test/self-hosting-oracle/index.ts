@@ -81,18 +81,6 @@ export const expectedWarnings = [
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:consumers.graph-first-planning",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:consumers.impact-graph",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
     subjectId: "spec:consumers.intent-composition.proposal.memo",
   },
   {
@@ -297,12 +285,6 @@ export const expectedWarnings = [
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:extraction.contract-declarations",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
     subjectId: "spec:extraction.entry-citations",
   },
   {
@@ -310,12 +292,6 @@ export const expectedWarnings = [
     family: "honesty",
     severity: "warning",
     subjectId: "spec:model.spec-sections",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:model.structural-patterns",
   },
   {
     validatorId: "honesty/gaps",
@@ -334,18 +310,6 @@ export const expectedWarnings = [
     family: "honesty",
     severity: "warning",
     subjectId: "spec:validation.external-registers",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:validation.superseded-decision-signal",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:validation.validator-self-testing",
   },
 ] as const;
 

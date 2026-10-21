@@ -1,3 +1,4 @@
+import { extractFindingIds } from "./reify.js";
 import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
 import { parseSlots } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
@@ -29,7 +30,7 @@ export interface MarkdownFence {
 const ASCII_TRIM = /^[\t ]+|[\t ]+$/gu;
 
 function bodyFinding(file: string, line: number, message: string): Finding {
-  return markdownFinding(file, line, message, "extract/invalid-markdown-structure");
+  return markdownFinding(file, line, message, extractFindingIds.invalidMarkdownStructure);
 }
 
 export function normalizeProse(lines: readonly MarkdownLine[]): string {
@@ -253,7 +254,7 @@ export function parseSectionContent(
         file,
         line.line,
         "prose after structured content has no owner",
-        "extract/unowned-prose",
+        extractFindingIds.unownedProse,
       ),
     );
   }

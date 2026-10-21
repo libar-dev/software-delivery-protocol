@@ -24,7 +24,7 @@ export const protocolSpecs = [
         ],
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:protocol.structural-self-binding",
@@ -62,6 +62,6 @@ export const protocolSpecs = [
         },
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
 ] as const;

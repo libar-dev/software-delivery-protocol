@@ -1,3 +1,4 @@
+import { extractFindingIds } from "./reify.js";
 import type { ReifiedEntryLine } from "./reify.js";
 import type { Finding } from "../validate/contracts.js";
 import { parseSectionContent } from "./markdown-body-content.js";
@@ -33,7 +34,7 @@ export function mapConstraints(
         file,
         lines[0]?.line ?? 1,
         "Constraints prose has no owner",
-        "extract/unowned-prose",
+        extractFindingIds.unownedProse,
       ),
     );
   if (parsed.h3 !== undefined || parsed.fences.length > 0)

@@ -2,7 +2,7 @@
 id: spec:validation.validator-self-testing.silent-check-named
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.validator-self-testing
   verifies: { target: spec:validation.validator-self-testing, exercises: [silentAndOvereager, bothDirections] }

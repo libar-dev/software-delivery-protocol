@@ -53,6 +53,7 @@ export const graphValidatorIds = {
   deliveryFacts: "honesty/delivery-facts",
   readinessFloor: "honesty/readiness-floor",
   gaps: "honesty/gaps",
+  supersededDecisions: "conformance/superseded-decisions",
 } as const;
 
 const validationFamiliesAnchor = codeAnchor({
@@ -1782,6 +1783,127 @@ function checkGaps(
   return findings;
 }
 
+/** Tarjan's walk keeps the path into a cycle out of its member list. */
+function replacementLoops(
+  replacements: ReadonlyMap<string, readonly string[]>,
+): ReadonlySet<string> {
+  const positions = new Map<string, number>();
+  const low = new Map<string, number>();
+  const stack: string[] = [];
+  const active = new Set<string>();
+  const loops = new Set<string>();
+  let next = 0;
+  const visit = (id: string): void => {
+    positions.set(id, next);
+    low.set(id, next++);
+    stack.push(id);
+    active.add(id);
+    for (const target of replacements.get(id) ?? []) {
+      if (!positions.has(target)) {
+        visit(target);
+        low.set(id, Math.min(low.get(id) ?? 0, low.get(target) ?? 0));
+      } else if (active.has(target)) {
+        low.set(id, Math.min(low.get(id) ?? 0, positions.get(target) ?? 0));
+      }
+    }
+    if (low.get(id) !== positions.get(id)) return;
+    const members: string[] = [];
+    let member: string | undefined;
+    do {
+      member = stack.pop();
+      if (member === undefined) throw new Error("Replacement walk lost an active decision.");
+      active.delete(member);
+      members.push(member);
+    } while (member !== id);
+    if (members.length > 1 || replacements.get(id)?.includes(id)) {
+      for (const entry of members) loops.add(entry);
+    }
+  };
+  for (const id of replacements.keys()) if (!positions.has(id)) visit(id);
+  return loops;
+}
+
+const supersededDecisionSignalAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.superseded-decision-signal"),
+  label: "walks decision replacements to surface stale shaping relations",
+  satisfies: ref("spec:validation.superseded-decision-signal"),
+  component: componentAnchorId("component:protocol.validate"),
+  role: "validator",
+});
+void supersededDecisionSignalAnchor;
+
+function checkSupersededDecisions(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
+  const replacements = new Map<string, string[]>();
+  for (const edge of graph.edges) {
+    if (
+      edge.type !== "supersedes" ||
+      edge.claim !== "declared" ||
+      index.primitivesById.get(edge.from)?.specKind !== "decision" ||
+      index.primitivesById.get(edge.to)?.specKind !== "decision"
+    )
+      continue;
+    const sources = replacements.get(edge.to) ?? [];
+    sources.push(edge.from);
+    replacements.set(edge.to, sources);
+  }
+  const loops = replacementLoops(replacements);
+  const findings: Finding[] = [];
+  const pairs = new Set<string>();
+  for (const edge of graph.edges) {
+    if (
+      edge.type !== "decidedBy" ||
+      edge.claim !== "declared" ||
+      !index.primitivesById.has(edge.from) ||
+      replacements.has(edge.from) ||
+      !replacements.has(edge.to)
+    )
+      continue;
+    const pair = JSON.stringify([edge.from, edge.to]);
+    if (pairs.has(pair)) continue;
+    pairs.add(pair);
+    const ends: string[] = [];
+    const loopMembers: string[] = [];
+    const visited = new Set<string>();
+    const pending = [edge.to];
+    while (pending.length > 0) {
+      const id = pending.pop();
+      if (id === undefined) break;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      if (loops.has(id)) loopMembers.push(id);
+      const next = replacements.get(id) ?? [];
+      if (id !== edge.to && next.length === 0) ends.push(id);
+      pending.push(...next);
+    }
+    const list = (ids: string[]): string =>
+      ids
+        .sort(compareCodeUnits)
+        .map((id) => `"${id}"`)
+        .join(", ");
+    const prefix = `Spec "${edge.from}" is decided by "${edge.to}"`;
+    const message =
+      loopMembers.length === 0
+        ? `${prefix}, which a later decision supersedes; the chain of replacements ends at ${list(ends)}`
+        : ends.length === 0
+          ? `${prefix}, whose chain of replacements closes on itself through ${list(loopMembers)}`
+          : `${prefix}, whose chain of replacements ends at ${list(ends)} and also closes on itself through ${list(loopMembers)}`;
+    const path = `relation.decidedBy.${edge.to}`;
+    const location = graph.locations?.find((row) => row.spec === edge.from && row.entry === path);
+    findings.push({
+      validatorId: graphValidatorIds.supersededDecisions,
+      family: "conformance",
+      severity: "warning",
+      subjectId: edge.from,
+      relatedId: edge.to,
+      file: fileOf(index, edge.from),
+      path,
+      ...(location === undefined ? {} : { line: location.line }),
+      message: `${message} (informative, never a gate).`,
+    });
+  }
+  return findings;
+}
+
 /* ----- the aggregate ----- */
 
 function compareCodeUnits(left: string, right: string): number {
@@ -1830,6 +1952,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
     ...checkOrphans(graph, index),
     ...checkProseMentions(graph, index),
     ...checkRuleExercises(graph, index),
+    ...checkSupersededDecisions(graph, index),
     ...authoringShapeFindings,
     ...checkDeliveryFacts(graph, derivedFacts),
     ...checkReadinessFloors(graph, index),
