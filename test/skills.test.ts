@@ -159,6 +159,8 @@ function assertPlanningHomes(authoring: string): void {
     "A ruling that awaits its owner is a `decision` Spec below `ready`, with `decidedBy` from each Spec it shapes.",
     "A statement a test checks lives in the Spec that states it, plus an `example` Spec that `verifies` it.",
     "Derive a count, a register, or a review scope each time you need it:",
+    "Group a body of work in a Pack named for its capability, never its plan number; keep its Specs in reading order. Membership confers no readiness, delivery fact or gate; the Pack remains a review aggregate after the work ends.",
+    "A plan file points to the Pack and carrying Specs for intended truth and derived state. It may keep an advisory execution and recovery record; plan numbering, recorded work order and staleness confer no graph structure or workflow authority.",
   ])
     expect(placement).toContain(home);
 }
@@ -180,7 +182,7 @@ void deliverySessionOnRampTestAnchor;
 const graphFirstPlanningImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.graph-first-planning"),
   label: "realizes placement homes and advisory session guidance in the shipped skills",
-  references: [ref("spec:consumers.graph-first-planning")],
+  satisfies: [ref("spec:consumers.graph-first-planning")],
 });
 void graphFirstPlanningImplementationAnchor;
 const graphFirstPlanningTestAnchor = specTest({
@@ -206,6 +208,8 @@ describe("Protocol skill assets", () => {
     "A ruling that awaits",
     "A statement a test checks",
     "Derive a count",
+    "Group a body of work",
+    "A plan file points",
   ])("rejects missing planning guidance: %s", (opening) => {
     const authoring = readSkill(skillPaths[1]).body;
     const withoutHome = authoring.replace(new RegExp(`^- ${opening}[^]*?(?=^\\n|^- )`, "mu"), "");
@@ -544,7 +548,7 @@ const readingOnRampTestAnchor = specTest({
 void readingOnRampTestAnchor;
 
 describe("the graph-reading on-ramp", () => {
-  it("maps a task to every recipe whose skill teaching this lane owns", () => {
+  it("maps a task to every catalog recipe in one sheet", () => {
     const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
     const heading = "### Which recipe answers a task";
     const start = surface.indexOf(heading);

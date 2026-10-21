@@ -26,7 +26,7 @@ wrapper is `npm run --silent sdp:q -- '<body>'`. Never fall through to a global 
 When a session needs human-readable output, the public publishers are `view`, `census`, `mermaid`,
 `gherkin`, and `studio`. Each one's build first removes all five roots, so after one publisher runs
 only its own root is current. The repository's generate/check scripts preserve and publish all five roots
-together. In check mode a prior tree must exist for each root; Design Review checks repeat-render
+together. `sdp generate` publishes all five from one validated graph; vault synchronization awaits its publisher. In check mode a prior tree must exist for each root; Design Review checks repeat-render
 determinism, while census, Mermaid, Gherkin and Studio also compare the prior tree's bytes with
 the current render.
 
@@ -59,7 +59,9 @@ and shaping decisions, dependency footing (recipe 21) for the stated and derived
 every Spec the target rests on, and readiness divergence (recipe 7) across the corpus. Use
 dependency cycles (recipe 26) to see whether the target rests on itself through `dependsOn`.
 Resolve the target's blocking open questions and review the carrying Specs. The open-question
-register (recipe 20) lists every open question in the corpus when the neighbors matter too. A
+register (recipe 20) lists every open question in the corpus when the neighbors matter too. The
+statement queue (recipe 46) orders waiting readiness statements and the selected decider's questions;
+it states no rung. Follow `sdp-authoring` for capability-based Pack names and plan pointers. A
 clear floor is evidence, not an automatic `ready` statement. Use pinned declarations (recipe 24)
 to list every signature, type, validator or table the target and its neighbors pin as a code span
 opening a keyed Design entry, so a test author and a builder working apart read one list. The
@@ -72,7 +74,8 @@ rests on it and the units, verifiers, and Packs the change asks to follow.
 
 A design pass over a Pack runs in a loop. Start from what changed since the last pass, the design
 diff (recipe 35) given the graph `sdp build` wrote at the commit that pass read. Compose the pass's
-reading material with the context bundle (recipe 36) within a stated budget, narrowed to one
+reading material with the context bundle (recipe 36) within a stated budget; `params.part` from
+1 through the returned `part.of` reads the complete scope in parts. Narrow it to one
 perspective's members by the perspective filter (recipe 37) when the pass reads for one concern.
 Hand findings back as a change proposal, the JSON document `spec:consumers.intent-composition.proposal`
 states, and run the proposal check (recipe 38) before an agent applies it: a change whose scope
@@ -102,7 +105,9 @@ For a Pack, use the Pack review backbone (recipe 5) and warn-level signals (reci
 Pack, use the target Spec context (recipe 3) with warn-level signals (recipe 8). To review a
 change, take the scope from changed-file blast radius (recipe 4) over the diff, then run the
 mention audit (recipe 22) with that scope as `params.scope`. Use address resolution (recipe 25) on
-the entry addresses a register, a test, or a page cites outside the Specs. When reviewing
+the entry addresses a register, a test, or a page cites outside the Specs. Entry citations
+(recipe 51) lists anchored source and test lines citing entries and unresolved citations. External
+registers (recipe 50) checks prose tokens against a supplied register and answers as a rules file. When reviewing
 component, architecture, or projection questions, use structural neighborhood (recipe 14), census
 structural coverage (recipe 15), the projection-coverage upper bound (recipe 16), the architecture
 map (recipe 17), and the decision map (recipe 18). For a Pack reviewed from the code side, use

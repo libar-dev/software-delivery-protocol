@@ -79,6 +79,10 @@ runner.
    review; follow `spec:decisions.content-only-sections`.
 5. Give each unsettled truth its graph home, listed under "Place what is not settled" below.
 
+A step may begin with `[#key]` to keep its binding through rewording; follow
+`spec:carrier.step-keys`. A Model definition may begin with `[#key]` after the term separator;
+its address is `spec:<id>#term.<key>`, as `spec:model.term-addresses` states.
+
 ### Capture a cheap idea
 
 Run concept search (recipe 6) first and place the carrier beside the family it finds. In the
@@ -205,6 +209,9 @@ so it needs no extra tag, status key, or side table.
   and a change's review scope from changed-file blast radius (recipe 4).
   In prose, name the recipe and leave the number out.
 
+- Group a body of work in a Pack named for its capability, never its plan number; keep its Specs in reading order. Membership confers no readiness, delivery fact or gate; the Pack remains a review aggregate after the work ends.
+- A plan file points to the Pack and carrying Specs for intended truth and derived state. It may keep an advisory execution and recovery record; plan numbering, recorded work order and staleness confer no graph structure or workflow authority.
+
 Run a project policy, such as a required Design key or a naming rule, as an operator-selected
 rules file through `sdp validate --rules PATH [--params FORM]...`. The file is a local async
 JavaScript body with `g`, `graph`, `report`, `params` and `recipes`, returning `{ findings }`, as
@@ -276,6 +283,10 @@ Each ID still has one canonical carrier surface. Query
 changing this syntax. A `Rule:` title takes the same `[#key]` marker, and `@exercises.<key>` on a
 Scenario names a rule of the Spec it verifies. Gherkin has no form for open questions, their
 fields, or a relation reason; a Spec that needs one is authored in Markdown.
+
+Entry citations (recipe 51) checks anchored source citations of entry addresses. External
+registers (recipe 50) checks prose tokens against a supplied register. Either shipped body may
+run unchanged under `sdp validate --rules`; a rules file can combine registers with `recipes(50, parameters)`.
 
 ## Author a Pack
 

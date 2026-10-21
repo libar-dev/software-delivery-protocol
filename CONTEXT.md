@@ -63,7 +63,9 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **question key** | the optional lower-camel key an open question carries in its marker, as in `[blocking #arcBoundary]`, unique in its Spec, which gives the question the entry address `spec:<id>#question.<key>` (`spec:model.open-question-keys`) | "question id" · "anchor" |
 | **question field** | one of the four optional lines an open question carries beside its text, flag and key: `decider`, `links`, `provisional`, `trigger`; a `trigger` marks a deferral, none moves a floor (`spec:model.open-question-fields`) | "status" · "owner" (of a question) |
 | **rule key** | the optional lower-camel key an entry of a Spec's primary behavior owner carries in its marker, unique among the rule and flow keys of that Spec, giving the entry the address `spec:<id>#rule.<key>`; an example's `verifies` lists the keys it exercises (`spec:model.rule-keys`) | "rule id" |
-| **marker** | the bracketed prefix that opens an open question's or a keyed entry's text in a carrier: `[blocking #key]`, `[non-blocking #key]` or `[#key]`; carrier syntax, never a binding (`spec:model.open-question-keys`, `spec:model.rule-keys`) | "anchor" (the in-code binding) · "flag" (names the blocking part only) |
+| **step key** | the optional lower-camel key at the start of an example or vocabulary step, shared through the vocabulary so its binding survives rewording; it is not an entry address (`spec:carrier.step-keys`) | "step id" · "entry address" |
+| **term key** | the optional lower-camel key at the start of a Model term's definition, unique within its Spec, giving it the entry address `spec:<id>#term.<key>` (`spec:model.term-addresses`) | "term id" · "anchor" |
+| **marker** | the bracketed prefix that opens an open question's, keyed entry's, step's or Model definition's text in a carrier: `[blocking #key]`, `[non-blocking #key]` or `[#key]`; carrier syntax, never a binding (`spec:model.open-question-keys`, `spec:model.rule-keys`) | "anchor" (the in-code binding) · "flag" (names the blocking part only) |
 | **distillation boundary** | the point past which a Design entry may leave its Spec: the Spec is implemented with a verifier and a bound artifact carries the entry; explanatory prose always stays (`spec:model.enrichment-lifecycle`) | "slimming" (the act) |
 
 ## The other authored things  (no system truth — → `spec:model.pack-aggregate`, `spec:model.anchors`)
@@ -120,7 +122,7 @@ facts literal while the canonical recipe reports both audited exclusions.
 | **`extractor`** | the producer — the *only* component that reads source; derives nodes, edges, `claim`s, and the validation report | — |
 | **`nodeType` / `specKind`** | structural class (`Primitive` · `Pack` · `Anchor` · `CodeNode`, a closed set) vs the truth-category on `Primitive` nodes — kept split so they never collide | a single `kind` field |
 | **git is the event log** | history and prior states live in git; the graph carries only current state | audit tables / lifecycle bookkeeping in the graph |
-| **location table** | the graph's table, beside its nodes and edges, of the source line of every keyed Design and UI entry, every rule and flow entry, every open question and its fields, and every authored relation target; a location is never an identity or a binding target, and Primitive and Pack nodes carry no lines (`spec:extraction.entry-locations`) | "source map" · "entry anchor" |
+| **location table** | the graph's table, beside its nodes and edges, of the source line of every keyed Design and UI entry, every rule and flow entry, every Model term, every open question and its fields, and every authored relation target; a location is never an identity or a binding target, and Primitive and Pack nodes carry no lines (`spec:extraction.entry-locations`) | "source map" · "entry anchor" |
 
 ## Validation & honesty  (→ `spec:validation.two-check-families`, `spec:validation.readiness-floor`)
 
@@ -136,7 +138,8 @@ facts literal while the canonical recipe reports both audited exclusions.
 | **derived readiness** | the highest rung whose floor clauses pass, computed from the graph ("structural floor reached"); rendered **beside** the stated rung, never overwriting the author's statement | — |
 | **stated next rung** | the rung above a Spec's stated rung, with the floor clauses that keep the floor from reaching it; with no failing clause the rung waits only for its author's statement, which the Pack page writes as `nothing blocks`, never a promotion. It differs from the floor's next rung, the rung above the floor reached; promotion preflight (recipe 9) reports both, as `aboveStated` and `aboveFloor` (`spec:consumers.pack-design`) | "next rung" alone · "target rung" |
 | **mention** | a `spec:` id written in a Spec's narrative or section text, outside the `gwt` and `gwt-vocabulary` fences; checked for resolution and for a backing declared relation in either direction, and it mints no edge (the checked-mentions decision, `spec:decisions.checked-mentions`) | "reference" · "citation" · "link" |
-| **entry address** | a Spec id followed by `#`, a section name (`design`, `ui`, `question`, or `rule`), a dot, and the entry's lower-camel ASCII key, naming one keyed entry of that Spec's open section, one of its open questions, or one entry of its primary behavior owner that carries that key; admitted in prose and by `parseId` and refused in every id slot, so a Spec's own id never carries `#`; checked in prose by `spec:validation.prose-mentions` | "anchor" (reserved for the in-code binding) · "fragment" · "sub-id" |
+| **entry address** | a Spec id followed by `#`, a section name (`design`, `ui`, `question`, `rule`, or `term`), a dot, and the entry's lower-camel ASCII key, naming one keyed entry of that Spec's open section, one of its open questions, or one entry of its primary behavior owner or one Model term that carries that key; admitted in prose and by `parseId` and refused in every id slot, so a Spec's own id never carries `#`; checked in prose by `spec:validation.prose-mentions` | "anchor" (reserved for the in-code binding) · "fragment" · "sub-id" |
+| **entry citation** | an inferred, located occurrence of an entry address in an anchored source file; it confers no binding, delivery fact, floor or test verdict (`spec:extraction.entry-citations`) | "mention" · "binding" |
 | **dependency cycle** | a set of two or more Specs in which each reaches every other through declared `dependsOn` edges, or a Spec that declares `dependsOn` on itself; recipe 26 reports each and nothing refuses it (`spec:consumers.agent-surface.address-and-cycle-recipes`) | "circular dependency" · "loop" |
 
 `ready` = the floor cleared **plus a human's `declared` statement**; that a review occurred is never a graph
@@ -280,7 +283,7 @@ delivery fact, workflow state, or graph state.
   MD-38 · `question key` · `stated next rung` · `design columns` · `Pack design` · `boundary`
   (rests on, rested on by) · `location table` · `recipe parameter` · `pinned declaration` ·
   `dependency cycle` · `perspective` · `mention` · `entry address` · `primary behavior owner` ·
-  `question field` · `rule key` · `marker` (the bracket prefix) · `distillation boundary` ·
+  `question field` · `rule key` · `step key` · `term key` · `entry citation` · `marker` (the bracket prefix) · `distillation boundary` ·
   `corpus rule` · `census` · `curated graph` · `relation reason` — carried by the named Specs
   cited in their glossary rows; mention and entry address follow the checked-mentions decision.
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,

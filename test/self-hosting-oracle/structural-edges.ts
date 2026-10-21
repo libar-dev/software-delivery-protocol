@@ -849,7 +849,7 @@ export const coarseGrainCoverage = [
 // re-measured under plan 41
 export const expectedUsesEdges = [
   ["impl:protocol.studio-recipes", "impl:protocol.reader"],
-  ["impl:protocol.studio-recipes", "impl:protocol.build-pipeline-query"],
+  ["impl:protocol.studio-recipes", "api:protocol.evaluate-body"],
   ["component:protocol.studio-elements", "component:protocol.reader"],
   ["component:protocol.studio-elements", "component:protocol.projections"],
   ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],

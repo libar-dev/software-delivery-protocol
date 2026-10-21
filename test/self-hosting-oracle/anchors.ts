@@ -3627,7 +3627,7 @@ export const expectedBindingEdges = [
   ["test:protocol.curation-imports", "verifies", "spec:consumers.impact-graph"],
   ["impl:protocol.typescript-imports", "satisfies", "spec:consumers.impact-graph"],
   ["test:protocol.graph-first-planning", "verifies", "spec:consumers.graph-first-planning"],
-  ["impl:protocol.graph-first-planning", "references", "spec:consumers.graph-first-planning"],
+  ["impl:protocol.graph-first-planning", "satisfies", "spec:consumers.graph-first-planning"],
   [
     "test:protocol.kind-evidence.second-entry-untargeted",
     "verifies",

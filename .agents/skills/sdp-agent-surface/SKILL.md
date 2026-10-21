@@ -15,7 +15,7 @@ evaluation sink. There is no verb wall — you script the graph.
 
 The graph is flat: one array of nodes, one array of edges, nothing nested. Hierarchy is edges, so
 every question is a filter or a join, never a tree walk. Beside them, `graph.locations` is the
-location table: the source line of every keyed Design and UI entry, every rule and flow entry,
+location table: the source line of every keyed Design and UI entry, every rule and flow entry, every Model term,
 every open question and each of its fields, and every authored relation target. Nodes carry no
 lines, and a location is never an identity or a binding target. Four node types exist:
 
@@ -104,6 +104,7 @@ and `sdp studio`.
 Each of them, like `sdp build` and `sdp validate`, first removes all five projection roots, so
 after one publisher runs only its own root is current
 (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
+`sdp generate` publishes all five roots from one validated graph; vault synchronization awaits its publisher.
 In this source checkout, `npm run generate:self-hosting` and `npm run check:self-hosting` preserve
 and publish all five roots together. In check mode a prior tree must exist for each root; Design
 Review checks repeat-render determinism, while census, Mermaid, Gherkin and Studio also compare
@@ -157,6 +158,9 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Slim a Spec its bound code now carries                         | slimming candidates (recipe 39)                                                                            |
 | Find files and components the anchors miss                     | the curation report (recipe 40)                                                                            |
 | List a family of keyed values (limits, error messages, tables) | the key-family register (recipe 41)                                                                        |
+| Order waiting readiness statements and owner questions         | the statement queue (recipe 46)                                                                            |
+| Check prose tokens against an outside register                 | external registers (recipe 50)                                                                             |
+| Find source and test lines citing an entry                     | entry citations (recipe 51)                                                                                |
 
 For structural questions, use component membership, uses fan-in and fan-out, structural
 neighborhood, census structural coverage, and the projection-coverage upper bound (recipes 12-16).
@@ -178,7 +182,7 @@ dependency footing (recipe 21) for what one Spec rests on, and the mention audit
 Spec ids in prose. An entry address, `spec:<id>#design.<key>` or `spec:<id>#ui.<key>`, names one
 keyed entry of a Spec's Design or UI section, `spec:<id>#question.<key>` names the open
 question whose marker carries that key, and `spec:<id>#rule.<key>` names the rule or flow entry
-whose `[#key]` marker carries it; it belongs in prose, and `sdp validate` reports an address
+whose `[#key]` marker carries it; `spec:<id>#term.<key>` names a keyed Model term. All belong in prose, and `sdp validate` reports an address
 whose Spec or key does not exist as an error. When you hold addresses written outside the
 Specs, in a register, a test, or a page, address resolution (recipe 25) gives one row per
 address: whether it resolves and, when it does not, why; a resolving row carries the entry's
@@ -216,7 +220,8 @@ To iterate on a design pass after pass:
 - The design diff (recipe 35) compares the graph `sdp build` wrote at a base commit with the
   graph now, by Spec, section and entry key, with anchored changes kept apart.
 - The context bundle (recipe 36) composes one pass's reading material for a Pack or a list of
-  Specs within a budget counted in UTF-16 code units, and says what it left out.
+  Specs within a budget counted in UTF-16 code units, and says what it left out. Pass `params.part`
+  from 1 through the returned `part.of` to read the complete scope in budgeted parts.
 - The perspective filter (recipe 37) selects and orders a Pack's members from a perspective the
   corpus keeps as JSON; pass its member ids to the bundle for one perspective's brief.
 - The proposal check (recipe 38) reads a change proposal, the JSON shape a design pass hands
@@ -232,13 +237,20 @@ realized components (recipe 43) compares component design Specs with their satis
 listing unrealized designs, differing fields and unreadable values. Neither recipe adds a Protocol
 validator. Follow `sdp-authoring` for rules-file invocation and per-file parameter order.
 
+Example-space coverage (recipe 44) lists covered and uncovered enumerable slot values; other
+slot types report non-enumerable. The statement queue (recipe 46) orders waiting readiness
+statements with the Specs they rest on first and lists the selected decider's questions. It states
+no rung. External registers (recipe 50) checks prose tokens against `params.register` using
+`params.pattern`; entry citations (recipe 51) lists anchored source lines and unresolved entry
+addresses, with `testAnchors` identifying test lines. Both answer as rules files.
+
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 
 ## The entry adapters
 
 `g.specContext(id)` lists the units that realize the Spec under `implementations` and the units
 that answer to it under `references`, each with its file, line, and component, and its rows of the
-location table under `entryLocations`. `g.packContext(id)` carries the Pack design: each member's
+location table under `entryLocations`, plus inferred source citations under `entryCitations`. `g.packContext(id)` carries the Pack design: each member's
 stated next rung, design columns, and bindings, and the Pack's boundary. `g.byFile(path)` returns
 every node recorded at a path and the Specs reachable from it. A comment-form anchor is recorded
 at its own site, so a source file with no Protocol import still answers. A node may come back with an

@@ -1,9 +1,5 @@
-import { readFileSync, readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { compileBody } from "../../cli/q-command.js";
+import { evaluateBody } from "../../reader/evaluate-body.js";
 import type { Reader } from "../../reader/reader.js";
-import type { ValidationReport } from "../../validate/contracts.js";
-import { validateGraph } from "../../validate/validators.js";
 
 export interface StudioRecipeAnswers {
   readonly all: ReadonlyMap<number, unknown>;
@@ -11,44 +7,28 @@ export interface StudioRecipeAnswers {
   readonly specs: ReadonlyMap<string, ReadonlyMap<number, unknown>>;
 }
 
-const cache = new WeakMap<
-  Reader,
-  {
-    report: ValidationReport;
-    files: readonly string[];
-    bodies: Map<number, ReturnType<typeof compileBody>>;
-  }
->();
-const directory = (): string =>
-  fileURLToPath(
-    new URL(
-      import.meta.url.endsWith(".ts") ? "../../../dist/recipes/" : "../recipes/",
-      import.meta.url,
-    ),
-  );
+type RecipeCaller = (
+  number: number,
+  params?: Readonly<Record<string, unknown>>,
+) => Promise<unknown>;
+const callers = new WeakMap<Reader, Promise<RecipeCaller>>();
 
-// R1 replaces this adapter with evaluateBody. No page owns an evaluation path.
 export async function evaluateStudioRecipe(
   reader: Reader,
   number: number,
   params: Readonly<Record<string, unknown>> = {},
 ): Promise<unknown> {
-  const dir = directory();
-  let build = cache.get(reader);
-  if (build === undefined) {
-    build = { report: validateGraph(reader.graph), files: readdirSync(dir), bodies: new Map() };
-    cache.set(reader, build);
+  let caller = callers.get(reader);
+  if (caller === undefined) {
+    // Retain one evaluator context for the build so every call shares its graph and report.
+    caller = evaluateBody("return recipes;", { graph: reader.graph }).then((value) => {
+      if (typeof value !== "function")
+        throw new Error("The body evaluator returned no recipe caller.");
+      return value as RecipeCaller;
+    });
+    callers.set(reader, caller);
   }
-  let body = build.bodies.get(number);
-  if (body === undefined) {
-    const file = build.files.find(
-      (name) => name.startsWith(`${String(number).padStart(2, "0")}-`) && name.endsWith(".js"),
-    );
-    if (file === undefined) throw new Error(`Studio recipe ${String(number)} is not shipped`);
-    body = compileBody(readFileSync(`${dir}/${file}`, "utf8"));
-    build.bodies.set(number, body);
-  }
-  return body(reader, reader.graph, build.report, params);
+  return (await caller)(number, params);
 }
 
 /**
@@ -56,7 +36,7 @@ export async function evaluateStudioRecipe(
  * @sdpLabel evaluates shipped recipe bodies once and shares answers between Studio pages
  * @sdpReferences spec:consumers.spec-studio.data.recipe-answers, spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
- * @sdpUses impl:protocol.reader, impl:protocol.build-pipeline-query
+ * @sdpUses impl:protocol.reader, api:protocol.evaluate-body
  * @sdpRole projection
  */
 export async function studioRecipeAnswers(reader: Reader): Promise<StudioRecipeAnswers> {

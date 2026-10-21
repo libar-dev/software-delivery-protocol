@@ -857,8 +857,8 @@ function required<T>(value: T | null | undefined): T {
   return value;
 }
 
-import * as bodyCompiler from "../src/cli/q-command.js";
-import { readFileSync, readdirSync } from "node:fs";
+import * as bodyEvaluator from "../src/reader/evaluate-body.js";
+import { readFileSync } from "node:fs";
 import { vi } from "vitest";
 it("documents the component and member fields recipe 17 adds", () => {
   const catalog = readFileSync(
@@ -892,20 +892,15 @@ it("evaluates each shipped recipe once for its assigned parameters and shares Pa
     ),
     "pack.pack.sdp.md": "---\nid: pack:probe\nspecs: [spec:probe.parent]\n---\n# Probe Pack\n",
   });
-  const directory = new URL("../dist/recipes/", import.meta.url);
-  const numbers = new Map(
-    readdirSync(directory).map((name) => [
-      readFileSync(new URL(name, directory), "utf8"),
-      Number(name.slice(0, 2)),
-    ]),
-  );
   const calls: { number: number; params: unknown }[] = [];
-  const compile = bodyCompiler.compileBody;
-  const spy = vi.spyOn(bodyCompiler, "compileBody").mockImplementation((source) => {
-    const body = compile(source);
-    return async (g, graph, report, params) => {
-      calls.push({ number: required(numbers.get(source)), params });
-      return body(g, graph, report, params);
+  const evaluate = bodyEvaluator.evaluateBody;
+  const spy = vi.spyOn(bodyEvaluator, "evaluateBody").mockImplementation(async (source, input) => {
+    const value = await evaluate(source, input);
+    if (typeof value !== "function") throw new Error("Expected the recipe caller.");
+    const caller = value as (number: number, params: unknown) => Promise<unknown>;
+    return async (number: number, params: unknown) => {
+      calls.push({ number, params });
+      return caller(number, params);
     };
   });
   try {
@@ -918,6 +913,7 @@ it("evaluates each shipped recipe once for its assigned parameters and shares Pa
       { number: 34, params: { spec: "spec:probe.parent" } },
     ];
     expect(calls).toEqual(expected);
+    expect(spy).toHaveBeenCalledTimes(1);
     expect(data.packs[0]?.totals).toBe(
       (data.recipes.packs.get("pack:probe") as { totals: unknown }).totals,
     );

@@ -1,5 +1,10 @@
 # Plan 46 S1 build
 
+Historical record of the initial S1 build at `93b3265`. Review fixes landed at `08e699d`.
+The measurements and gate below describe that earlier tree; the wave-2a integration record is
+[plan46-wave2a-integration.md](plan46-wave2a-integration.md). Commands use the directory
+placeholders defined in the [asset README](assets/plan46-s1/README.md).
+
 Built on `lane/46-build-s1` from `2f2611c3eaf6cecc183e1e912303941271ee9745`.
 The final session report names the delivery commit.
 
@@ -89,12 +94,12 @@ The base engine must live inside its own source checkout: the extractor trusts r
 imports against that engine's package root. Running a copied bundle outside the source checkout
 would silently omit relative constant-form anchors, making a false baseline.
 
-The platform was cloned to `/tmp/s1-platform` and checked out at `b038bd4`; its source checkout
-was never written. The base corpus is a `git archive` of the base commit at `/tmp/s1-base-corpus`,
+The platform was cloned to `$PLATFORM` and checked out at `b038bd4`; its source checkout
+was never written. The base corpus is a `git archive` of the base commit at `$BASE`,
 with its base `dist/` and a dependency symlink. Commands:
 
 ```sh
-node reviews/assets/plan46-s1/measure.mjs /tmp/s1-base-corpus "$PWD" /tmp/s1-platform
+node reviews/assets/plan46-s1/measure.mjs "$BASE" "$HEAD" "$PLATFORM"
 pnpm --silent sdp:q 'return g.specContext("spec:consumers.spec-studio.diagrams")' --json
 npm run check
 ```

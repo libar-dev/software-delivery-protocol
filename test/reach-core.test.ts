@@ -75,6 +75,70 @@ it("calls recipes from a rules file and fails on a dependency cycle", async () =
   expect(capture.readStdout()).toContain("1 errors · 0 warnings · 0 of 1 files failed");
 });
 
+it("combines two external registers in one rules file through the shipped recipe binding", async () => {
+  const root = probe(false);
+  const carrier = join(root, "one.sdp.md");
+  writeFileSync(
+    carrier,
+    readFileSync(carrier, "utf8").replace("Probe recipes.", "Cite E-2 and R-2."),
+  );
+  const file = join(root, "registers.js");
+  writeFileSync(
+    file,
+    `
+    const first = await recipes(50, params.first);
+    const second = await recipes(50, params.second);
+    return { findings: [...first.findings, ...second.findings] };
+  `,
+  );
+  for (const held of [false, true]) {
+    const capture = createCaptureOutput();
+    const params = {
+      first: { register: { tokens: [held ? "E-2" : "E-1"] }, pattern: "\\bE-\\d+\\b" },
+      second: { register: { tokens: [held ? "R-2" : "R-1"] }, pattern: "\\bR-\\d+\\b" },
+    };
+    expect(
+      await runSdpCli(
+        ["validate", root, "--rules", file, "--params", JSON.stringify(params)],
+        capture.output,
+      ),
+    ).toBe(held ? 0 : 1);
+    expect(capture.readStdout()).toContain(
+      `${String(held ? 0 : 2)} errors · 0 warnings · 0 of 1 files failed`,
+    );
+    if (!held) {
+      expect(capture.readStderr()).toContain("spec:probe.one cites E-2");
+      expect(capture.readStderr()).toContain("spec:probe.one cites R-2");
+    }
+  }
+});
+
+it("compiles each shipped recipe once per evaluator context", async () => {
+  const { evaluateBody } = await import("../src/reader/evaluate-body.js");
+  const { extract } = await import("../src/index.js");
+  const { graph } = extract({ root: probe(false) });
+  const file = join(repoRoot, "dist/recipes/26-dependency-cycles.js");
+  const reads = vi.mocked(readFileSync);
+  reads.mockClear();
+  const body = "return [await recipes(26), await recipes(26)];";
+  expect(await evaluateBody(body, { graph })).toMatchObject([{ findings: [] }, { findings: [] }]);
+  expect(reads.mock.calls.filter(([path]) => String(path) === file)).toHaveLength(1);
+  await evaluateBody(body, { graph });
+  expect(reads.mock.calls.filter(([path]) => String(path) === file)).toHaveLength(2);
+});
+
+it("retains immutable reader contexts through repeated recipe calls in one evaluation", async () => {
+  const { evaluateBody } = await import("../src/reader/evaluate-body.js");
+  const { extract } = await import("../src/index.js");
+  const { graph } = extract({ root: probe(false) });
+  const body = `
+    const before = g.specContext("spec:probe.one");
+    await recipes(21, { spec: "spec:probe.one" });
+    return { spec: before === g.specContext("spec:probe.one"), specs: g.specs() === g.specs(), packs: g.packs() === g.packs() };
+  `;
+  expect(await evaluateBody(body, { graph })).toEqual({ spec: true, specs: true, packs: true });
+});
+
 it("lets a called recipe call recipes itself with the same rules-file bindings", async () => {
   const { extract, validateGraph } = await import("../src/index.js");
   const fs = await vi.importActual<typeof import("node:fs")>("node:fs");

@@ -141,7 +141,25 @@ export async function evaluateBody(
   const compiled = compileBody(body);
   const graph = input.graph;
   const report = input.report ?? validateGraph(graph);
-  const g = createReader(graph);
+  const reader = createReader(graph);
+  const specs = reader.specs();
+  const packs = reader.packs();
+  const specContexts = new Map<string, ReturnType<Reader["specContext"]>>();
+  const packContexts = new Map<string, ReturnType<Reader["packContext"]>>();
+  const g: Reader = {
+    ...reader,
+    specs: () => specs,
+    packs: () => packs,
+    specContext: (id) => {
+      if (!specContexts.has(id)) specContexts.set(id, reader.specContext(id));
+      return specContexts.get(id);
+    },
+    packContext: (id) => {
+      if (!packContexts.has(id)) packContexts.set(id, reader.packContext(id));
+      return packContexts.get(id);
+    },
+  };
+  const recipeBodies = new Map<number, CompiledBody>();
   const recipes: RecipeCaller = async (number, parameters = {}) => {
     const directory = recipeDirectory();
     const file = Number.isInteger(number)
@@ -153,13 +171,12 @@ export async function evaluateBody(
       throw new Error(`recipes: the catalog holds no recipe ${String(number)}`);
     if (!plainObject(parameters))
       throw new Error(`recipes: recipe ${String(number)} takes one parameters object`);
-    return compileBody(readFileSync(join(directory, file), "utf8"))(
-      g,
-      graph,
-      report,
-      parameters,
-      recipes,
-    );
+    let recipeBody = recipeBodies.get(number);
+    if (recipeBody === undefined) {
+      recipeBody = compileBody(readFileSync(join(directory, file), "utf8"));
+      recipeBodies.set(number, recipeBody);
+    }
+    return recipeBody(g, graph, report, parameters, recipes);
   };
   return compiled(g, graph, report, params, recipes);
 }

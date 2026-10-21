@@ -131,7 +131,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, the consumer pointers and discipline mapping (06), and the MVP acceptance of record (07); the core model, the one graph, validation & honesty and the consumer law dissolved into the `model.*`, `extraction.*`, `validation.*` and `consumers.*` Spec families; the historical MVP slice record lives in the slice-5 plan under `plans/` and in `examples/checkout-v1`, while forward roadmap intent lives in capture Specs — locate any of them with concept search (recipe 6) | to know *how* it is designed |
 | `docs/concept/DECISIONS.md` | **the lean decision registry** — ratified names, one-line glosses, carrying Specs, and the D1–D6 lookup; historical rationale lives in git, plans, and the Specs themselves | when resolving a decision name or following its canonical pointer |
-| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review, census, Mermaid, Gherkin and Studio) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `studio` · `import` · `new spec` · `q`) · `import` (carrier conversion and import analysis) · `testing` (the registrar runtime exported through `./testing`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
+| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review, census, Mermaid, Gherkin and Studio) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `studio` · `generate` · `import` · `new spec` · `q`) · `import` (carrier conversion and import analysis) · `testing` (the registrar runtime exported through `./testing`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
 | `examples/checkout-v1` | **the worked MVP example** (Markdown carriers; originally the TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `docs/lineage/` | restored historical design documents — the v0 concept set, verbatim with lineage headers; evidence for design reviews, never intended truth | when a review needs superseded design on the table rather than in git history |
@@ -171,13 +171,13 @@ pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready
 pnpm --silent sdp:q "$(cat dist/recipes/06-where-is-this-concept.js)" --params '{"term":"readiness floor"}'
 ```
 
-The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · studio · import · new spec · q`.
+The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · studio · generate · import · new spec · q`.
 `sdp validate --watch` re-runs that same validate path on carrier create, change, delete, or rename
 and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
 with `--check-clean`. `sdp validate --rules PATH [--params FORM]...` runs an operator-selected corpus
 rule, with each `--params` after its own `--rules`, corpus findings and failed files reported apart
 from Protocol findings, and rules reread on each watch cycle. The five projection publishers remain
-independent public verbs; repository
+independent public verbs; `sdp generate` publishes all five roots from one validated graph, with vault synchronization awaiting its publisher. Repository
 generation/check scripts certify all five roots through the private projection-suite driver. The
 runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,

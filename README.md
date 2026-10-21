@@ -131,6 +131,7 @@ pnpm exec sdp q 'return g.specs().map((spec) => spec.id)'
 `build` derives the graph, executable contracts and registrars, `validate` adds conformance and
 honesty checks, `view` generates the Design Review, `census` the census, `mermaid` the Mermaid
 diagrams, `gherkin` the Gherkin-shaped read view, and `studio` the static Spec Studio pages.
+`generate` publishes all five roots from one validated graph; vault synchronization awaits its publisher.
 `new spec` scaffolds an idea-rung Markdown carrier, `import` converts TypeScript Spec carriers to Markdown, and `q` evaluates a local
 JavaScript query body against a freshly derived graph. Run `sdp --help` for the complete option
 contract. Adopters own their root and exclusion policy.
