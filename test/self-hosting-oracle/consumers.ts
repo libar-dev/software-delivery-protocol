@@ -1610,7 +1610,7 @@ export const consumersSpecs = [
         intentPanel:
           "`sdp-intent-panel` with `page-root` and no graph-subject attribute, rendering the gathered intents across their scopes as `spec:consumers.spec-studio.intent-panel` states.",
         composeAction:
-          "`sdp-compose` with `scope` and `action`: a button labelled with what it composes that opens the compose dialog and gathers the intent in the composing panel; `scope` is a Spec id, entry address or Pack id, with a Pack's rendered member ids in `members` and a `Change applies to` choice between member Specs and Pack membership or framing; `action` is one of `resolve-question`, `promote-question`, `edit-example`, `propose-example`, `change-target`, `propose-target`, `propose-values` and `change-entry`; hidden without script.",
+          "`sdp-compose` with `scope` and `action`: a button labelled with what it composes that opens the compose dialog and gathers the intent in the composing panel; `scope` is a Spec id, entry address or Pack id, with a Pack's space-separated resolved member ids in `members`, `members-complete` set to `true` only when every manifest member resolves, and a `Change applies to` choice between member Specs and Pack membership or framing; `action` is one of `resolve-question`, `promote-question`, `edit-example`, `propose-example`, `change-target`, `propose-target`, `propose-values` and `change-entry`; hidden without script.",
         validationFindings:
           "`sdp-validation-findings` with `filter`: the validation report's findings for the Spec or Pack id the filter names; no behavior.",
       },
@@ -1710,6 +1710,7 @@ export const consumersSpecs = [
         rules: [
           "Beside the graph the build reads at most two inputs, each named on the command line: a base graph, the graph object `sdp build` wrote at an earlier commit, which reaches recipe 35 as `params.base`; and run records, each one Common Test Report Format document, which reach recipe 45 as `params.runs`. The build reads neither in any other way.",
           "The studio verb also takes `--base PATH`, naming the base graph, a JSON file `sdp build` wrote; `--base-label TEXT`, the words that name the base graph on its pages; and `--runs PATH`, naming one run record, a JSON file in the Common Test Report Format, repeatable, the records keeping the order of their flags. `--base-label` without `--base`, or `--base` given twice, is refused.",
+          "Before extraction or output cleanup, the command refuses an input path that the build could write or remove, including a path beneath a projection root and an alias resolving to such a path; it reports the flag and path, exits 1 and changes no file.",
           "An input file that cannot be read or does not hold JSON refuses the run before extraction, with exit 1 and one line on stderr naming the flag and the path; a JSON value a recipe cannot read shows on its page as that recipe's diagnostics.",
           "An input adds pages and page sections, never a data file: the base graph adds `diff.html` and the changed-since-base sections of the Spec and Pack pages, and run records add `runs.html` and the run rows of the tests lens and the verification panels.",
           "A page that shows an input names it in words, the base graph by its label when it was given one, its schema version and its Spec count, and a run as `spec:consumers.spec-studio.runs-page` names it; no page holds an input's path.",
@@ -1720,12 +1721,13 @@ export const consumersSpecs = [
         ruleKeys: {
           namedInputs: "rules[0]",
           inputFlags: "rules[1]",
-          unreadableInput: "rules[2]",
-          inputPages: "rules[3]",
-          inputNaming: "rules[4]",
-          inputsNeverGraph: "rules[5]",
-          inputsUntouched: "rules[6]",
-          sameInputsSameBytes: "rules[7]",
+          inputPlacement: "rules[2]",
+          unreadableInput: "rules[3]",
+          inputPages: "rules[4]",
+          inputNaming: "rules[5]",
+          inputsNeverGraph: "rules[6]",
+          inputsUntouched: "rules[7]",
+          sameInputsSameBytes: "rules[8]",
         },
         exampleSpace: {
           given: [
@@ -1790,7 +1792,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.data.inputs.both-given",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Both inputs add their pages, named, and the same inputs write the same bytes",
     narrative: null,
     sections: {
@@ -1819,7 +1821,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.data.inputs.both-given.sdp.md",
   },
   {
@@ -1845,7 +1847,7 @@ export const consumersSpecs = [
           "The panel hands its gathered intents off as one change proposal, on the change-proposal contract, and as the memo recipe 49 renders for it: the person copies the memo or the proposal as text, or saves either as a file. The page opens no pull request, because a static page holds no credentials; any pull request comes from the agent's ordinary source edit.",
           "The memo the panel writes for a proposal is byte for byte the memo recipe 49 returns for the same proposal.",
           "A proposal's base is the commit a present build stamp names, otherwise one the person supplies, and the person gives one reason for the whole proposal; without a base and a reason the panel exports its intents as scoped-intent text, and the agent that receives them writes the proposal against a commit it knows.",
-          "A request scoped to a Pack records the members this page set renders for that Pack, and expands to them at hand-off only when the proposal's base is the commit the page set's stamp names; otherwise it stays scoped-intent text for an agent to resolve against the base. A request that changes a Pack's membership or framing, or names an empty Pack, stays scoped-intent text too, so the change-proposal contract keeps its Spec and entry scopes.",
+          "A request scoped to a Pack records the members this page set renders for that Pack, and expands to them at hand-off only when the proposal's base is the commit the page set's stamp names; otherwise it stays scoped-intent text for an agent to resolve against the base. A request that changes a Pack's membership or framing, names an empty Pack or names a Pack with an unresolved member, stays scoped-intent text too, so the change-proposal contract keeps its Spec and entry scopes.",
           "The proposal holds only the intents its contract can carry; every intent that stays scoped-intent text is listed apart under `Not in the proposal`, and `Copy scoped intent` copies those intents, so the panel drops none.",
           "The panel requests nothing over the network and sends its intents nowhere.",
         ],
@@ -1869,7 +1871,7 @@ export const consumersSpecs = [
         storageKey:
           "`sdp-studio:intents:<root path>`, where the root path is the URL path of the page set's root as the page's `page-root` attribute resolves it, so a page set at `/preview/12/` and one at `/preview/13/` keep apart.",
         intentRecord:
-          "`{ scope: string[]; request: string; text?: string; replaces?: string; follows?: string; pack?: string; action: string }` per gathered intent, in gathering order, where `action` names the composing action that gathered it, such as `edit-example`, and `pack` keeps the Pack a Pack-scoped request named, with `scope` holding the members this page set renders for it.",
+          "`{ scope: string[]; request: string; text?: string; replaces?: string; follows?: string; pack?: string; packMembersComplete?: boolean; action: string }` per gathered intent, in gathering order, where `action` names the composing action that gathered it, such as `edit-example`, and `pack` keeps the Pack a Pack-scoped request named, with `scope` holding the resolved members this page set renders for it and `packMembersComplete` recording whether every manifest member resolved when the request was gathered.",
         savedFiles:
           "`proposal.json` holding the proposal document and `proposal.md` holding its memo, each saved through a link the panel writes with the `download` attribute.",
         baseSource:
@@ -3152,11 +3154,11 @@ export const consumersSpecs = [
           "A vault directory inside the root must lie under a directory discovery skips or under an excluded prefix, so no file in the vault is ever read as a carrier or a source; any other vault directory inside the root refuses the run before the build, writing and removing nothing.",
           "A vault directory that is, lies inside or holds a path the shared build writes or removes, as `spec:consumers.obsidian-vault#design.buildOwnedPaths` lists, refuses the run before the build, writing and removing nothing, so no build ever removes a file in the vault.",
           "The command writes only the generated folder `sdp/` inside the vault; Obsidian's settings, a person's intent notes and every other file of the vault lie outside it and are never written, moved or removed.",
-          "Before the build and before any cleanup, a run inspects `sdp/` and every entry under it, names that begin with a dot included, and refuses when `sdp/` or an entry under it is a symbolic link or neither a file nor a directory, when the file list is not well formed, when a file other than the file list and the command's own temporaries is one the list does not name, or when a listed file's bytes match no content the list records for it; a refused run writes nothing, removes nothing, names each such path and exits 1. Without a file list, every file under `sdp/` is one the list does not name.",
-          "A run that passes the guard writes each generated file whose bytes differ from the file on disk through a temporary sibling renamed into place, leaves every file whose bytes already match untouched, removes each file the list names that the new set no longer holds, removes every directory under `sdp/` left empty, and writes the file list last.",
-          "Before it changes any file, a run records in the file list both the content each path holds and the content it will hold, so a run stopped at any point leaves every generated file matching the list, and the next run recognizes each, and each whole temporary, as its own and completes the synchronization; a temporary cut short while it was written matches no recorded content, so the guard refuses it as unknown and the person deletes it.",
+          "Before the build and before any cleanup, a run inspects `sdp/` and every entry under it, names that begin with a dot included, and refuses when `sdp/` or an entry under it is a symbolic link or neither a file nor a directory, when the file list is not well formed, when a file other than the file list, the command's own temporaries and a `.DS_Store` file is one the list does not name, or when a listed file other than a `.base` file has bytes matching no content the list records for it; a refused run writes nothing, removes nothing, names each such path and exits 1. A `.DS_Store` file under `sdp/` is ignored. A listed `.base` file whose bytes a person changed is kept, even when it leaves the generated set; the run warns with its path and the words `delete it to regenerate`, keeps its recorded content in the list, and goes on. Without a file list, every file under `sdp/` other than `.DS_Store` is one the list does not name.",
+          "A run that passes the guard first removes each file the list names that the new set no longer holds, except a changed `.base` file; then it writes each generated file whose bytes differ from the file on disk through a temporary sibling renamed into place, except a changed `.base` file, leaves every file whose bytes already match untouched, removes every directory under `sdp/` left empty, and writes the file list last.",
+          "Before it changes any file, a run records in the file list both the content each path holds and the content it will hold, so a run stopped at any point leaves every generated file other than a kept, changed `.base` file matching the list, and the next run recognizes each, and each whole temporary, as its own and completes the synchronization; a temporary cut short while it was written matches no recorded content, so the guard refuses it as unknown and the person deletes it.",
           "The vault is not one of the five projection roots the shared build rewrites: the build's invalidation never removes it, and the repository's projection suite does not certify it. The verb that writes every projection root also synchronizes the vault, at the directory `sdp vault` would use for the same root unless that verb names another, through the same directory checks and guard, before it publishes any root; a refusal there leaves the vault untouched and fails that run. `sdp vault` enters the shared build, so it removes the five projection roots as `sdp validate` does.",
-          "Two runs over one graph write byte-identical files under `sdp/`, the file list included, and no file there holds a time, a commit, an absolute path or a host name.",
+          "Without kept, changed `.base` files, two runs over one graph write byte-identical files under `sdp/`, the file list included, and no file there holds a time, a commit, an absolute path or a host name.",
           "Every wikilink, embed and block link a generated note writes resolves to a file the run wrote and, with a block, to a block id that file carries; no note links outside the vault, a carrier or source file is named by its root-relative path in a code span, and text in a code span or a fenced block, where Obsidian reads no link, is no link.",
           "Findings never withhold the vault: a run over a graph with validation findings still synchronizes and returns the validation exit code. A finding whose subject is a Spec or a Pack with a note shows on that note; every other finding shows on the index with its severity, its validator, its file and line when known and its message; and the index counts every finding by severity.",
           "A run whose extraction fails keeps every generated file but the index and the file list: it rewrites the index to open with a warning naming the failure, through the steps `spec:consumers.obsidian-vault#rule.interruptedRun` and `spec:consumers.obsidian-vault#rule.synchronize` state, so the file list ends recording the warning index, and exits 1. The next run that succeeds finds the index matching the list and writes it whole again; with no earlier run, the failed run leaves only that index and the file list under `sdp/`.",
@@ -3883,7 +3885,7 @@ export const consumersSpecs = [
     file: "specs/consumers/obsidian-vault.iteration.sdp.md",
     title: "A design pass is followed and answered from the vault",
     narrative:
-      "A design pass is a loop: an agent edits carriers, the graph changes, a person reads the change and answers it. In a vault the reading half is cheap, because Obsidian reloads a note when its file changes, so a vault regenerated as the carriers change shows each edit where the person is already reading. Rewriting only the notes whose bytes changed keeps every other note, and the person's place in it, as it was.\n\nThe answering half must not become a second write path. The edit model refuses patches to canonical source from a view, and a person's edit to a generated note would never reach the carrier. So a regeneration refuses while a generated note has changed, and a person composes intent in notes of their own beside the generated ones, citing entries by their block links. An agent turns such a note into a change proposal, runs the proposal check, and applies the proposal as an ordinary edit, which git records and validation checks.",
+      "A design pass is a loop: an agent edits carriers, the graph changes, a person reads the change and answers it. In a vault the reading half is cheap, because Obsidian reloads a note when its file changes, so a vault regenerated as the carriers change shows each edit where the person is already reading. Rewriting only the notes whose bytes changed keeps every other note, and the person's place in it, as it was.\n\nThe answering half must not become a second write path. The edit model refuses patches to canonical source from a view, and a person's edit to a generated note would never reach the carrier. So a regeneration refuses while a generated note has changed, and a person composes intent in notes of their own beside the generated ones, citing entries by their block links. An agent turns such a note into a change proposal, runs the proposal check, uses its per-change findings to send moved scopes to a person and apply the remaining changes as ordinary carrier edits, which git records and validation checks.",
     sections: {
       intent: {
         outcome:
@@ -3895,9 +3897,9 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "A person composes intent in notes outside the generated folder, by convention in `intent/` at the top of the vault, citing entries by block link or by entry address; the vault command never writes there.",
-          "An agent turns an intent note into a change proposal on the one proposal contract, runs the proposal check, and applies what the check allows as an ordinary carrier edit; git records the edit and validation checks it. The vault writes no carrier and no proposal.",
-          "`sdp vault --watch` runs once and then again after every create, change, delete or rename of a carrier or an anchored source file, a `.ts` or `.tsx` file other than a `.d.ts`, under the root, outside the directories discovery skips, the exclusions and the vault; it runs the loop `spec:consumers.validate-watch` states, so events during a run coalesce into one pending run, findings, refusals and failed extractions print while the process stays alive, and an operator's SIGINT exits 0 and leaves no temporary under `sdp/`.",
-          "The vault's watch never widens `sdp validate --watch`, which still runs on carrier edits only.",
+          "The vault writes no carrier and no proposal.",
+          "`sdp vault --watch` runs once and then again after every create, change, delete or rename of a carrier or an anchored source file, a `.ts` or `.tsx` file other than a `.d.ts`, under the root, outside the directories discovery skips, the exclusions, the vault and every path the shared build writes; it runs the loop `spec:consumers.validate-watch` states, so events during a run coalesce into one pending run, findings, refusals and failed extractions print while the process stays alive, and an operator's SIGINT exits 0 and leaves no temporary under `sdp/`.",
+          "The vault's source-file watching does not widen `sdp validate --watch`: validation watches carriers and any rules and parameter files explicitly named with `--rules` and its `--params`, but does not watch ordinary source edits.",
           "A regeneration under `--watch` writes only the notes whose bytes change and removes the notes whose node or entry left the graph, so a note a person is reading reloads in place and every other note keeps its bytes and modification time.",
           "Every generated note opens with a banner naming the file to edit instead, and a regeneration that finds a generated note changed refuses as `spec:consumers.obsidian-vault#rule.guard` states, naming it, so a person's edit is never overwritten and the person moves those words into an intent note.",
         ],
@@ -5155,9 +5157,9 @@ export const consumersSpecs = [
         generateRoots:
           "in this order, `generated/design-review/`, `generated/census/`, `generated/mermaid/`, `generated/gherkin/` and `generated/spec-studio/`.",
         generateOutput:
-          "the build and validation summary lines once, then the line each publisher prints for its root, in the order of the roots.",
+          "the build and validation summary lines once, then the vault's `Wrote <out>/sdp (…)` line unless `--check-clean`, then the line each publisher prints for its root, in the order of the roots.",
         vaultRoot:
-          "the verb never removes a vault with the five roots; before it publishes any root it synchronizes the vault at the folder `sdp vault` uses for the same root, or at `--vault DIR`, through the vault's own directory checks and guard, and a refusal there writes no root and exits 1; under `--check-clean` it leaves the vault alone, since the vault has no check mode and its tests hold its determinism.",
+          "the verb never removes a vault with the five roots; before it publishes any root it synchronizes the vault at the folder `sdp vault` uses for the same root, or at `--vault DIR`, resolved against the working directory, through the vault's own directory checks and guard, and a refusal there writes no root and exits 1; under `--check-clean` it leaves the vault alone, since the vault has no check mode and its tests hold its determinism.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],

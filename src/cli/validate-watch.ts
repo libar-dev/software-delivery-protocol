@@ -61,6 +61,7 @@ export interface ValidateWatchCycle {
 
 export interface ValidateWatchHooks {
   readonly watchSources?: boolean;
+  readonly ignoreWatchPath?: (path: string) => boolean;
   readonly watchCommand?: string;
   readonly runWatchCycle?: () =>
     | { readonly exitCode: number }
@@ -507,7 +508,7 @@ function createNamedFileWatchSource(
       (error.code === "EACCES" || error.code === "EPERM");
     for (const file of files) {
       try {
-        targets.set(file, realpathSync(file));
+        targets.set(file, realpathSync.native(file));
       } catch (error) {
         if (!isNotFoundError(error)) fail(error);
       }
@@ -676,7 +677,7 @@ export async function runValidateWatch(
   };
 
   const onEvent = (event: ValidateWatchEvent) => {
-    if (state.closed) {
+    if (state.closed || watchHooks.ignoreWatchPath?.(resolve(parsed.root, event.path))) {
       return;
     }
 

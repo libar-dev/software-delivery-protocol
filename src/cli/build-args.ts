@@ -114,7 +114,7 @@ export function parseBuildArgs(
       if (argument === "--rules") {
         let path = resolve(value);
         try {
-          path = realpathSync(path);
+          path = realpathSync.native(path);
         } catch {
           // An unreadable file remains the runner's failure, with the operator's path.
         }

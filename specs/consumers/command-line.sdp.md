@@ -39,8 +39,8 @@ An adopter meets the command line one verb at a time, and the verb itself is the
 - helpVerbs: `build`, `validate`, `view`, `census`, `mermaid`, `gherkin`, `studio`, `vault`, `stamp`, `generate`, `import`, `new` and `q` answer `--help`.
 - verbHelpText: `Usage:` on its own line, then the verb's usage lines as `sdp --help` writes them, a blank line and the verb's paragraph from the `Commands:` list of `sdp --help`; `sdp new --help` and `sdp new spec --help` then add a blank line and the scaffolder's own paragraph on what `PATH` takes and what the scaffold writes.
 - generateRoots: in this order, `generated/design-review/`, `generated/census/`, `generated/mermaid/`, `generated/gherkin/` and `generated/spec-studio/`.
-- generateOutput: the build and validation summary lines once, then the line each publisher prints for its root, in the order of the roots.
-- vaultRoot: the verb never removes a vault with the five roots; before it publishes any root it synchronizes the vault at the folder `sdp vault` uses for the same root, or at `--vault DIR`, through the vault's own directory checks and guard, and a refusal there writes no root and exits 1; under `--check-clean` it leaves the vault alone, since the vault has no check mode and its tests hold its determinism.
+- generateOutput: the build and validation summary lines once, then the vault's `Wrote <out>/sdp (…)` line unless `--check-clean`, then the line each publisher prints for its root, in the order of the roots.
+- vaultRoot: the verb never removes a vault with the five roots; before it publishes any root it synchronizes the vault at the folder `sdp vault` uses for the same root, or at `--vault DIR`, resolved against the working directory, through the vault's own directory checks and guard, and a refusal there writes no root and exits 1; under `--check-clean` it leaves the vault alone, since the vault has no check mode and its tests hold its determinism.
 
 ## Example space
 ```gwt-vocabulary

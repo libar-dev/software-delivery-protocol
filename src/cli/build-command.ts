@@ -165,7 +165,7 @@ function confinedRegistrarPath(
   let existingParentReal: string;
 
   try {
-    existingParentReal = realpathSync(existingParent);
+    existingParentReal = realpathSync.native(existingParent);
   } catch (error) {
     throw new Error(`unsafe registrar sibling path "${path}": ${errorMessage(error)}`);
   }
@@ -185,7 +185,7 @@ function confinedRegistrarPath(
   let parentReal: string;
 
   try {
-    parentReal = realpathSync(lexicalParent);
+    parentReal = realpathSync.native(lexicalParent);
   } catch (error) {
     throw new Error(`unsafe registrar sibling path "${path}": ${errorMessage(error)}`);
   }
@@ -300,7 +300,7 @@ export function runBuild(
   const importsPath = join(resolvedRoot, buildOutputs.imports);
   const contractsPath = join(resolvedRoot, buildOutputs.contracts);
   const registrarManifestPath = join(resolvedRoot, buildOutputs.registrars);
-  const registrarRootReal = realpathSync(resolvedRoot);
+  const registrarRootReal = realpathSync.native(resolvedRoot);
   let priorRegistrarPaths: readonly string[] = [];
   let nextRegistrarPaths: readonly string[] = [];
   const projectionPaths = projectionOutputs.map((path) => join(resolvedRoot, path));
@@ -487,6 +487,7 @@ export function runBuild(
       }
     }
 
+    const changedRegistrarPaths = new Set<string>();
     for (const [relativePath, content] of contracts.registrars) {
       const createdRegistrarPath = confinedRegistrarPath(
         resolvedRoot,
@@ -506,13 +507,15 @@ export function runBuild(
         throw new Error(`unsafe registrar sibling path "${relativePath}"`);
       }
 
+      if (existsSync(registrarPath) && readFileSync(registrarPath, "utf8") === content) continue;
       write(`${registrarPath}.tmp`, content, "utf8");
+      changedRegistrarPaths.add(relativePath);
     }
 
     const registrarManifestTemporaryPath = `${registrarManifestPath}.tmp`;
     write(registrarManifestTemporaryPath, serializeRegistrarManifest(nextRegistrarPaths), "utf8");
 
-    // Every owed byte now exists in a temporary location. Publish, reconcile, and remove stale
+    // Changed bytes now exist in temporary locations. Publish, reconcile, and remove stale
     // siblings; any later failure falls through failBuild, which removes the whole known set so
     // partially current output cannot survive.
     renameSync(temporaryPath, graphPath);
@@ -529,7 +532,7 @@ export function runBuild(
         rmSync(registrarPath, { force: true });
       }
     }
-    for (const relativePath of nextRegistrarPaths) {
+    for (const relativePath of changedRegistrarPaths) {
       const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, relativePath);
 
       if (registrarPath === undefined) {

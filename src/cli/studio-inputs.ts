@@ -1,5 +1,7 @@
-import { readFileSync, realpathSync } from "node:fs";
-import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { readFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { buildOwnedPaths } from "./build-command.js";
+import { pathWithin, physicalPath } from "./path-identity.js";
 import type { StudioInputs } from "../projections/studio/inputs.js";
 import type { CliOutput } from "./output.js";
 import { writeStderr } from "./output.js";
@@ -17,24 +19,7 @@ export function readStudioBase(
   root: string,
 ): StudioInputs | undefined {
   try {
-    const generated = join(realpathSync(root), "generated");
-    let outputRoot = generated;
-    try {
-      outputRoot = realpathSync(generated);
-    } catch {
-      // A first build has no generated directory yet.
-    }
-    if (
-      isWithin(join(root, "generated"), resolve(path)) ||
-      isWithin(outputRoot, join(realpathSync(dirname(path)), basename(path))) ||
-      isWithin(outputRoot, realpathSync(path))
-    ) {
-      writeStderr(
-        output,
-        `sdp studio: --base ${JSON.stringify(path)} is inside generated output; copy it outside ${JSON.stringify(generated)} before running studio.\n`,
-      );
-      return undefined;
-    }
+    if (!checkStudioInputPlacement(path, "--base", root, output)) return undefined;
     const graph: unknown = JSON.parse(readFileSync(path, "utf8"));
     return { base: { graph, label }, runs: [] };
   } catch {
@@ -43,7 +28,34 @@ export function readStudioBase(
   }
 }
 
-function isWithin(directory: string, file: string): boolean {
-  const path = relative(directory, file);
-  return path === "" || (path !== ".." && !path.startsWith(`..${sep}`) && !isAbsolute(path));
+export function checkStudioInputPlacement(
+  path: string,
+  flag: "--base" | "--runs",
+  root: string,
+  output: CliOutput,
+): boolean {
+  const candidates = [
+    resolve(path),
+    join(physicalPath(dirname(path)), basename(path)),
+    physicalPath(path),
+  ];
+  const owned = buildOwnedPaths;
+  const overlaps = owned.some((entry) =>
+    [resolve(root, entry), physicalPath(join(root, entry))].some((directory) =>
+      candidates.some((candidate) => pathWithin(directory, candidate)),
+    ),
+  );
+  // New registrar siblings are not in the previous manifest yet. Their reserved suffix is
+  // build-owned anywhere under the extraction root, before extraction can discover the next set.
+  const registrar = candidates.some(
+    (candidate) =>
+      pathWithin(physicalPath(root), candidate) &&
+      /\.test\.generated\.ts(?:\.tmp)?$/u.test(candidate),
+  );
+  if (!overlaps && !registrar) return true;
+  writeStderr(
+    output,
+    `sdp studio: ${flag} ${JSON.stringify(path)} is inside generated output or another path the build writes or removes; copy it outside build output before running studio.\n`,
+  );
+  return false;
 }

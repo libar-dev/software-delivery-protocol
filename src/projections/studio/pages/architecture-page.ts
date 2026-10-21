@@ -69,11 +69,17 @@ export function architecturePage(ctx: PageContext): string {
     target: `#${c.id}`,
   }));
   const plannedKey = (p: Planned) =>
-    components.some((c) => c.id === p.componentId) ? p.spec : p.componentId;
+    components.some((c) => c.id === p.componentId) ||
+    plans.unrealized.filter((other) => other.componentId === p.componentId).length > 1
+      ? p.spec
+      : p.componentId;
   boxes.push(
     ...plans.unrealized.map((p) => ({
       id: plannedKey(p),
-      words: `${p.componentId}, planned`,
+      words:
+        plannedKey(p) === p.spec
+          ? `${p.componentId}, planned by ${p.spec}`
+          : `${p.componentId}, planned`,
       context: p.context,
       layer: p.layer,
       planned: true,

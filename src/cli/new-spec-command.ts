@@ -229,7 +229,7 @@ function closestExistingAncestor(path: string): string | undefined {
 
 function workingDirectoryReal(output: CliOutput): string | undefined {
   try {
-    return realpathSync(process.cwd());
+    return realpathSync.native(process.cwd());
   } catch (error) {
     refuse(
       output,
@@ -248,7 +248,7 @@ function assertExistingBoundary(path: string, rootReal: string, output: CliOutpu
   }
 
   try {
-    const existingReal = realpathSync(existing);
+    const existingReal = realpathSync.native(existing);
 
     if (!containedWithin(existingReal, rootReal)) {
       refuse(output, "PATH escapes the current working directory through a parent symlink.");
@@ -418,7 +418,7 @@ export function runNewSpec(
   let restoreCwd: string;
 
   try {
-    restoreCwd = realpathSync(".");
+    restoreCwd = realpathSync.native(".");
     process.chdir(parentPath);
   } catch (error) {
     refuse(
@@ -432,7 +432,7 @@ export function runNewSpec(
     let heldReal: string;
 
     try {
-      heldReal = realpathSync(".");
+      heldReal = realpathSync.native(".");
     } catch (error) {
       refuse(
         output,
@@ -468,7 +468,7 @@ export function runNewSpec(
     // undo a relocated scaffold. The success report happens here, immediately after the check and
     // while the handle is still held, so no operation separates the revalidation from the claim.
     try {
-      if (!containedWithin(realpathSync("."), cwdReal)) {
+      if (!containedWithin(realpathSync.native("."), cwdReal)) {
         unlinkSync(scaffoldName);
         refuse(output, "PATH escapes the current working directory through a parent symlink.");
         return 1;

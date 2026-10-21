@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { physicalPath as physical, pathWithin } from "./path-identity.js";
+import { readFileSync } from "node:fs";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { generateContracts } from "../codegen/contracts.js";
 import { extract } from "../extract/index.js";
 import type { GraphSchema } from "../graph/schema.js";
@@ -37,11 +38,6 @@ const inside = (parent: string, child: string): boolean => {
   const path = relative(parent.toLowerCase(), child.toLowerCase());
   return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path));
 };
-function physical(path: string): string {
-  if (existsSync(path)) return realpathSync.native(path);
-  const parent = dirname(path);
-  return parent === path ? path : resolve(physical(parent), relative(parent, path));
-}
 export function checkVaultDirectory(parsed: BuildArgs, registrars: readonly string[] = []): void {
   const out = vaultDirectory(parsed),
     resolvedOut = physical(out),
@@ -161,6 +157,8 @@ export function publishFailedVault(
   return 1;
 }
 function summarize(parsed: BuildArgs, result: SyncResult, output: CliOutput): void {
+  for (const path of result.preservedBases)
+    writeStderr(output, `sdp vault: warning: sdp/${path} has changed; delete it to regenerate\n`);
   writeStdout(
     output,
     `Wrote ${vaultDirectory(parsed)}/sdp (${String(result.files)} files: ${String(result.written)} written, ${String(result.unchanged)} unchanged, ${String(result.removed)} removed)\n`,
@@ -236,11 +234,27 @@ export function runVaultWatch(
     ...parsed,
     exclude: inside(parsed.root, out) ? [...parsed.exclude, excluded] : parsed.exclude,
   };
+  const owned = new Set<string>();
+  const refreshOwned = (): void => {
+    for (const path of buildOwnedPaths) owned.add(physical(join(parsed.root, path)));
+    try {
+      for (const path of buildOwnedRegistrarPaths(parsed.root))
+        owned.add(physical(join(parsed.root, path)));
+    } catch {
+      // The vault cycle reports a malformed manifest as a refusal while the watcher stays alive.
+    }
+  };
+  refreshOwned();
   return runValidateWatch(watched, output, hooks, {
     ...hooks,
     watchCommand: "vault",
     watchSources: true,
-    runWatchCycle: () => ({ exitCode: runVault(parsed, output, hooks) }),
+    ignoreWatchPath: (path) => [...owned].some((parent) => pathWithin(parent, physical(path))),
+    runWatchCycle: () => {
+      const exitCode = runVault(parsed, output, hooks);
+      refreshOwned();
+      return { exitCode };
+    },
     onWatchStop: () => {
       // Cycles are synchronous; SIGINT is delivered between them. Remove only recognized whole temporaries.
       try {

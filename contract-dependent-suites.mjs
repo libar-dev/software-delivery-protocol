@@ -90,6 +90,7 @@ export const contractDependentSuites = [
       "test/observation.run-evidence.absolute-path-joins.test.generated.ts",
       "test/observation.run-evidence.unanchored-file-unjoined.test.generated.ts",
       "test/consumers.spec-studio.runs-page.external-evidence.test.generated.ts",
+      "test/consumers.spec-studio.data.inputs.both-given.test.generated.ts",
       "test/consumers.spec-studio.data.inputs.graph-only.test.generated.ts",
       "test/consumers.spec-studio.sharing.stamp-written-apart.test.generated.ts",
       "test/consumers.agent-surface.example-space-coverage.uncovered-literal.test.generated.ts",

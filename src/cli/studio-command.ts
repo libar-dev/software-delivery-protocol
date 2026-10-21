@@ -1,6 +1,6 @@
 import { runValidateWatch } from "./validate-watch.js";
 import type { ValidateWatchHooks } from "./validate-watch.js";
-import { readStudioBase } from "./studio-inputs.js";
+import { checkStudioInputPlacement, readStudioBase } from "./studio-inputs.js";
 import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,6 +43,8 @@ export function prepareStudioPublication(
     removeArtifacts([studioPath, temporaryPath], output, command, recoveryRm);
     return 1;
   };
+  for (const path of parsed.runs ?? [])
+    if (!checkStudioInputPlacement(path, "--runs", parsed.root, output)) return undefined;
   const runs: unknown[] = [];
   for (const path of parsed.runs ?? []) {
     try {

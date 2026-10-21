@@ -238,6 +238,8 @@ import {
 import { registerAbsolutePathJoins } from "./observation.run-evidence.absolute-path-joins.test.generated.js";
 import { registerUnanchoredFileUnjoined } from "./observation.run-evidence.unanchored-file-unjoined.test.generated.js";
 import { registerExternalEvidence } from "./consumers.spec-studio.runs-page.external-evidence.test.generated.js";
+import { registerBothGiven } from "./consumers.spec-studio.data.inputs.both-given.test.generated.js";
+import { bothGivenContract } from "../generated/contracts/consumers.spec-studio.data.inputs.both-given.contract.js";
 import { registerGraphOnly } from "./consumers.spec-studio.data.inputs.graph-only.test.generated.js";
 import { registerStampWrittenApart } from "./consumers.spec-studio.sharing.stamp-written-apart.test.generated.js";
 import type { RunnableExampleAdapters } from "@libar-dev/software-delivery-protocol/testing";
@@ -419,7 +421,8 @@ const inputsOracle = specOracle({
 void inputsOracle;
 
 function expectedInputs(point: Partial<InputsConditions>): InputsOutcome {
-  return point.base === "none" && point.runs === "none"
+  return (point.base === "none" && point.runs === "none") ||
+    (point.base === "an earlier graph of the root" && point.runs === "one CTRF report")
     ? { kind: "the two runs wrote byte-identical files: {byteIdentical}", byteIdentical: true }
     : unspecified;
 }
@@ -458,6 +461,63 @@ registerGraphOnly<InputsWorld>({
     );
   },
 });
+const bothGivenAnchor = specTest({
+  id: testAnchorId("test:protocol.studio-inputs-both-given"),
+  verifies: ref("spec:consumers.spec-studio.data.inputs.both-given"),
+});
+void bothGivenAnchor;
+registerBothGiven<InputsWorld & { inputsNamed?: boolean }>({
+  createWorld: (point) => ({ point }),
+  expected: expectedInputs,
+  invoke: async (w) => {
+    const root = fixture();
+    writeFileSync(
+      join(root, "other.sdp.md"),
+      "---\nid: spec:probe.other\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Other\n\n## Intent\n- outcome: Read another Spec.\n",
+    );
+    writeFileSync(
+      join(root, "probe.pack.sdp.md"),
+      "---\nid: pack:probe\nspecs: [spec:probe.page, spec:probe.other]\n---\n# Probe\n",
+    );
+    expect(await cli(["build", root], output())).toBe(0);
+    const inputs = mkdtempSync(join(tmpdir(), "sdp-both-given-"));
+    roots.push(inputs);
+    const base = join(inputs, "base.json"),
+      runs = join(inputs, "runs.json");
+    writeFileSync(base, readFileSync(join(root, "generated/graph.json")));
+    writeFileSync(
+      join(root, "third.sdp.md"),
+      "---\nid: spec:probe.third\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Third\n\n## Intent\n- outcome: Read the added Spec.\n",
+    );
+    writeFileSync(runs, JSON.stringify(report(["test/page.test.ts"])));
+    const graph = extract({ root }).graph;
+    const flags = ["studio", root, "--base", base, "--base-label", "before", "--runs", runs];
+    const beforeInputs = [readFileSync(base, "utf8"), readFileSync(runs, "utf8")];
+    expect(await cli(flags, output())).toBe(0);
+    w.first = snapshot(join(root, "generated/spec-studio"));
+    expect(await cli(flags, output())).toBe(0);
+    w.second = snapshot(join(root, "generated/spec-studio"));
+    expect(extract({ root }).graph).toEqual(graph);
+    expect([readFileSync(base, "utf8"), readFileSync(runs, "utf8")]).toEqual(beforeInputs);
+    w.inputsNamed =
+      required(w.first)["diff.html"]?.includes("before") === true &&
+      required(w.first)["runs.html"]?.includes("vitest") === true &&
+      Object.values(required(w.first)).every(
+        (content) => !content.includes(base) && !content.includes(runs),
+      );
+  },
+  observe: (w) => ({
+    kind: "the two runs wrote byte-identical files: {byteIdentical}",
+    byteIdentical: JSON.stringify(w.first) === JSON.stringify(w.second),
+  }),
+  assertions: (w) => {
+    const declared = thenValues(bothGivenContract);
+    expect("diff.html" in required(w.first)).toBe(declared.diffPage);
+    expect("runs.html" in required(w.first)).toBe(declared.runsPage);
+    expect(w.inputsNamed).toBe(declared.inputsNamed);
+  },
+});
+
 const stampOracle = specOracle({
   id: oracleAnchorId("oracle:protocol.studio-sharing"),
   models: ref("spec:consumers.spec-studio.sharing"),
