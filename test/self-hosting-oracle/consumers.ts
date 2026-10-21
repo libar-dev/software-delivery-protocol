@@ -3440,11 +3440,11 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "A waiting statement is a Spec whose floor reaches a rung above the rung it states; the queue lists every such Spec once, with the rung its floor allows, and no other Spec.",
-          "A waiting Spec rests on each waiting Spec it names by `dependsOn`, `constrainedBy`, `decidedBy` or `refines`, the four relations the ready floor reads.",
+          "A waiting Spec rests on each other waiting Spec it names by `dependsOn`, `constrainedBy`, `decidedBy` or `refines`, the four relations the ready floor reads; no Spec rests on itself.",
           "A `refines` from a Spec to a Spec that names it by `dependsOn`, `constrainedBy` or `decidedBy` orders nothing, so a decision comes before the Spec it shapes and a part before the parent that rests on it.",
           "A waiting Spec that rests on no waiting Spec is in round 1, the statements a person can make first; any other waiting Spec is in the round after the latest round among the waiting Specs it rests on.",
           "The queue lists the waiting Specs by round, and within a round by id in code-unit order, numbering each by its place, so each comes after every waiting Spec it rests on unless the two share a cycle.",
-          "Waiting Specs that rest on each other through a chain of those relations form a cycle; its members share one round, the round after the latest round among the waiting Specs outside the cycle that any member rests on, or round 1 when there is none, and the planner lists each cycle with one closed path through it and refuses nothing.",
+          "Waiting Specs that reach each other through those rests-on links form a cycle; its members share one round, the round after the latest round among the waiting Specs outside the cycle that any member rests on, or round 1 when there is none, and the planner lists each cycle with one closed path through it and refuses nothing.",
           "Apart from the statements, the planner lists each open question whose `decider` names the person the caller gives, the owner by default, blocking questions first, each with the Specs it holds: a blocking question holds its own Spec below `defined` and every Spec whose `ready` the typed-dependency clause refuses because that Spec states below `defined`.",
           "The planner counts the open questions that carry no `decider`, and how many of them block, so an empty list of the owner's questions never reads as nothing waiting on the owner.",
           "The planner is a catalog recipe that reads the graph and states, records and gates nothing; each statement it lists stays a person's edit of the carrier, and a Spec stated out of its order is never a finding.",
@@ -3706,7 +3706,7 @@ export const consumersSpecs = [
         adoptionRecipe:
           "recipe 47, capability adoption, takes `params.detail`, `false` by default, `true` for every Spec row or a list of Spec ids for those rows, and `params.perspectives`, the list of perspective objects the corpus keeps, absent by default; another `detail` value returns `{ diagnostics: [{ parameter, problem }] }`.",
         adoptionAnswer:
-          "`{ totals, capabilities, packs, specs, leftOut }`, where `totals` is `{ specs, packs, examples, decisions, componentUnits, statedReady, floorReady }`, `capabilities` holds one row per capability in the order below, `packs` one row per Pack in id order, `specs` the Spec rows `detail` asks for, empty by default, and `leftOut` names what `detail: true` adds whenever Spec rows are left out.",
+          "`{ totals, capabilities, packs, specs, leftOut }`, where `totals` is `{ specs, packs, examples, decisions, componentUnits, statedReady, floorReady }`, `capabilities` holds one row per capability in the order below, `packs` one row per Pack in id order, `specs` the Spec rows `detail` asks for, empty by default, and `leftOut` holds the one line `Spec rows; pass detail: true or a list of Spec ids.` whenever a Spec row is left out, and is empty otherwise.",
         capabilityRow:
           "`{ capability, inUse, applicable, carriedBy }`, where `inUse` counts the places that use the capability, `applicable` the places it could apply, and `carriedBy` is the id of the Spec that carries its law; a count the graph cannot give is null.",
         capabilityList:

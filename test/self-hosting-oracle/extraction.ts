@@ -947,7 +947,7 @@ export const extractionSpecs = [
         citationsRecipe:
           'recipe 51, entry citations, takes at most one scope, `params.pack` or `params.specs`, the whole corpus with neither, and `params.severity`, `"error"` by default or `"warning"`; both scopes, an id that does not resolve or another severity returns `{ diagnostics: [{ parameter, problem }] }` and no findings.',
         citationsAnswer:
-          "`{ scope, totals: { citations, citedEntries, declarations, citedDeclarations, unresolved }, entries, unresolved, findings }`, where `scope` is `{ corpus: true }`, `{ pack }` or `{ specs }`.",
+          "`{ scope, totals: { citations, citedEntries, declarations, citedDeclarations, unresolved }, entries, unresolved, findings }`, where `scope` is `{ corpus: true }`, `{ pack }` or `{ specs }`, and the totals count within the scope: the citations whose Spec part names a Spec in it, the entry rows that some citation names, the pinned declarations, those an anchored line cites, and the unresolved rows.",
         entryRow:
           "`{ address, spec, pinned, line, citedBy: [{ file, line, anchors }] }`, one per pinned declaration in scope and per other entry in scope that a citation names, sorted by `address`; `line` is the entry's own recorded line or null, `citedBy` sorts by `file`, then `line`, and an uncited pinned declaration has an empty `citedBy`.",
         unresolvedRow:
