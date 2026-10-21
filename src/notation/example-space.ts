@@ -437,9 +437,6 @@ function decode(graph: GraphSchema) {
   const nodes = graph.nodes
     .filter((node): node is PrimitiveNode => node.nodeType === "Primitive")
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const complete = new Set(
-    nodes.filter((node) => structuredEntriesOf(node).some(isCompleteEntry)).map((node) => node.id),
-  );
   for (const parent of nodes) {
     const vocabulary = vocabularyOf(parent, findings);
     if (vocabulary === undefined) continue;
@@ -468,9 +465,7 @@ function decode(graph: GraphSchema) {
         ...(d.type.kind === "enum" ? { values: d.type.values } : {}),
         step: d.label,
       })),
-      points: bound
-        .filter((point) => complete.has(point.spec))
-        .map((p) => ({ example: p.spec, values: Object.fromEntries(p.point) })),
+      points: bound.map((p) => ({ example: p.spec, values: Object.fromEntries(p.point) })),
     });
   }
   return { spaces, points, contexts, findings, withheldSpaces };

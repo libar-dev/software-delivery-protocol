@@ -2576,7 +2576,7 @@ export const consumersSpecs = [
           "Slot-value coverage is a catalog recipe, recipe 44, over the decoded reader values, listing each literal-union value with the example children that bind it and each value no child binds.",
           "The recipe enumerates slots typed as closed unions of quoted literals. It reports every other slot type, a boolean included, as not enumerable by this recipe, never as covered or as missing a value.",
           "Coverage is reported per slot value; the recipe reports no combination of two or more slots until a design pass asks which combinations no example exercises.",
-          "The examples counted are the space owner's example children that declare `refines` on it and carry a given, when and then entry, the same children its space contract collects.",
+          "The examples counted are the children its space contract collects.",
           "An example that binds no value for a slot is listed under that slot as unbound, never as covering a value of it.",
           "Slot-value coverage reports and confers nothing: it moves no readiness, records no verdict and emits no validation finding.",
         ],
