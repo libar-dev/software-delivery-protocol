@@ -288,7 +288,7 @@ function spec(
 function edge(from: string, type: GraphEdge["type"], to: string): GraphEdge {
   return { from: `spec:probe.${from}`, type, to: `spec:probe.${to}`, claim: "declared" };
 }
-function graph(nodes: PrimitiveNode[], edges: GraphEdge[] = []): GraphSchema {
+function graph(nodes: GraphSchema["nodes"], edges: GraphEdge[] = []): GraphSchema {
   return { schemaVersion, nodes, edges };
 }
 
@@ -303,7 +303,29 @@ describe("statement queue details", () => {
   );
   it("orders SCCs by longest dependency chain, ignores non-ordering and self edges, and sorts ids by code unit", async () => {
     const input = graph(
-      [spec("a"), spec("Z"), spec("b"), spec("c"), spec("d"), spec("e")],
+      [
+        spec("a"),
+        spec("Z"),
+        spec("b"),
+        spec("c"),
+        spec("d"),
+        {
+          ...spec("e"),
+          specKind: "decision",
+          title: "A waiting decision",
+          sections: {
+            intent: { outcome: "Choose the probe." },
+            decision: { context: "A probe choice.", decision: "Choose the probe." },
+          },
+        },
+        ...["pack:probe.a", "pack:probe.Z"].map((id) => ({
+          id,
+          nodeType: "Pack" as const,
+          claim: "declared" as const,
+          members: ["spec:probe.a", "spec:probe.e"],
+          file: "probe.pack.sdp.md",
+        })),
+      ],
       [
         edge("a", "dependsOn", "Z"),
         edge("b", "dependsOn", "a"),
@@ -313,6 +335,14 @@ describe("statement queue details", () => {
         edge("d", "dependsOn", "Z"),
         edge("e", "verifies", "d"),
         edge("Z", "dependsOn", "Z"),
+        ...["pack:probe.a", "pack:probe.Z"].flatMap((to) =>
+          ["spec:probe.a", "spec:probe.e"].map((from) => ({
+            from,
+            type: "belongsTo" as const,
+            to,
+            claim: "declared" as const,
+          })),
+        ),
       ],
     );
     const before = JSON.stringify(input);
@@ -324,6 +354,21 @@ describe("statement queue details", () => {
       ["spec:probe.b", 2],
       ["spec:probe.c", 3],
       ["spec:probe.d", 4],
+    ]);
+    expect(result.statements[1]).toEqual({
+      place: 2,
+      round: 1,
+      id: "spec:probe.e",
+      title: "A waiting decision",
+      specKind: "decision",
+      packs: ["pack:probe.Z", "pack:probe.a"],
+      statedReadiness: "defined",
+      floorReached: "ready",
+      restsOn: [],
+    });
+    expect(result.statements.find((row) => row.id === "spec:probe.a")?.restsOn).toEqual([
+      "spec:probe.Z",
+      "spec:probe.b",
     ]);
     expect(result.cycles).toEqual([
       {
@@ -436,6 +481,7 @@ describe("statement queue details", () => {
       ],
       [
         edge("dependent", "dependsOn", "subject"),
+        edge("dependent", "dependsOn", "settled"),
         edge("subject", "refines", "dependent"),
         edge("transitive", "dependsOn", "dependent"),
         edge("other", "refines", "dependent"),
@@ -455,7 +501,15 @@ describe("statement queue details", () => {
       ["spec:probe.settled", 0, ["spec:probe.settled"]],
       ["spec:probe.other", 1, []],
     ]);
-    expect(result.questions[0]?.address).toBe("spec:probe.subject#question.big");
+    expect(result.questions[0]).toEqual({
+      address: "spec:probe.subject#question.big",
+      spec: "spec:probe.subject",
+      index: 0,
+      question: "A choice",
+      blocking: true,
+      decider: "owner",
+      holds: ["spec:probe.subject", "spec:probe.dependent"],
+    });
     const delegated = await catalogRecipe<Queue>(46, input, { decider: "team-lead" });
     expect(delegated.questions).toMatchObject([
       { address: "spec:probe.other#question.delegate", holds: [] },

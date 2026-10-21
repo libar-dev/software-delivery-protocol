@@ -131,8 +131,14 @@ registerPartsCoverThePack({
       expect(part.used).toBe(JSON.stringify(part).length);
       expect(part.used).toBeLessThanOrEqual(part.budget);
       expect(part.tokenEstimate.value).toBe(Math.ceil(part.used / 4));
-      expect(part.scope).toEqual(world.parts[0]?.scope);
-      expect(part.pack).toEqual(world.parts[0]?.pack);
+      expect(part.scope).toEqual({ pack: "pack:probe.parts", subset: false, members: ids });
+      expect(part.budget).toBe(10000);
+      expect(part.declarations).toBe("whole");
+      expect(part.pack).toEqual({
+        id: "pack:probe.parts",
+        title: "Probe parts",
+        framing: "The whole probe.",
+      });
       expect(part.leftOut).toEqual([]);
       expect(part.boundary === null).toBe(index !== 0);
     }
@@ -291,33 +297,66 @@ describe("bundle part budgets", () => {
     });
     expect(reduced.used).toBeLessThanOrEqual(4000);
   });
-  it("names an oversized boundary and gives an empty scope one complete part when it fits", async () => {
+  it("gives an empty scope one complete part when it fits", async () => {
     const empty: GraphSchema = { schemaVersion, nodes: [], edges: [] };
     expect(await catalogRecipe(36, empty, { specs: [], part: 1 })).toMatchObject({
       part: { index: 1, of: 1 },
       members: [],
       boundary: { restsOn: [], restedOnBy: [], verifiedBy: [], supersededBy: [] },
     });
+  });
+  it("names every item when the repeated Pack framing alone exceeds the budget", async () => {
+    const members = graphOf(2, 0);
     const graph: GraphSchema = {
-      ...empty,
+      ...members,
       nodes: [
+        ...members.nodes,
         {
-          id: "pack:probe.empty",
+          id: "pack:probe.framing",
           nodeType: "Pack",
           claim: "declared",
-          members: [],
-          file: "empty.pack.sdp.md",
+          members: members.nodes.map((node) => node.id),
+          file: "framing.pack.sdp.md",
           framing: "p".repeat(12000),
         },
       ],
     };
     const result = await catalogRecipe<Oversized>(36, graph, {
-      pack: "pack:probe.empty",
+      pack: "pack:probe.framing",
       budget: 10000,
       part: 1,
     });
+    expect(result).toMatchObject({ budgetExceeded: true, part: { index: 1, of: null } });
+    expect(result.oversized.map((row) => row.item)).toEqual([
+      "boundary",
+      ...members.nodes.map((node) => node.id),
+    ]);
+    for (const row of result.oversized) expect(row.length).toBeGreaterThan(12000);
+    expect(result).not.toHaveProperty("members");
+    expect(result).not.toHaveProperty("boundary");
+  });
+  it("names an oversized boundary when its outside neighbour ids exceed the budget after every cut", async () => {
+    const neighbours = graphOf(601, 0);
+    const member = neighbours.nodes[0];
+    if (member === undefined) throw new Error("Expected the probe member.");
+    const graph: GraphSchema = {
+      ...neighbours,
+      edges: neighbours.nodes.slice(1).map((node) => ({
+        from: node.id,
+        type: "dependsOn",
+        to: member.id,
+        claim: "declared",
+      })),
+    };
+    const result = await catalogRecipe<Oversized>(36, graph, {
+      specs: [member.id],
+      budget: 10000,
+      part: 1,
+    });
+    expect(result).toMatchObject({ budgetExceeded: true, part: { index: 1, of: null } });
     expect(result.oversized.map((row) => row.item)).toEqual(["boundary"]);
-    expect(result.oversized[0]?.length).toBeGreaterThan(12000);
+    expect(result.oversized[0]?.length).toBeGreaterThan(10000);
+    expect(result.leftOut).toHaveLength(6);
     expect(result).not.toHaveProperty("members");
     expect(result).not.toHaveProperty("boundary");
   });
