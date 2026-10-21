@@ -308,12 +308,6 @@ describe("sdp cli", () => {
       }
       for (const [file, line, target, specId] of [
         [
-          "specs/consumers/obsidian-vault.iteration.sdp.md",
-          30,
-          "spec:consumers.validate-watch",
-          "spec:consumers.obsidian-vault.iteration",
-        ],
-        [
           "specs/consumers/spec-studio.lenses.sdp.md",
           30,
           "spec:consumers.structural-mermaid",
@@ -343,7 +337,7 @@ describe("sdp cli", () => {
         );
       }
       // Re-measured from the refreshed carriers and their retained warning pairs.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 6 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 5 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
