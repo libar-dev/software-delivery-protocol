@@ -209,6 +209,7 @@ describe("published package surface", () => {
         ".agents/skills/sdp-authoring/SKILL.md",
         ".agents/skills/sdp-sessions/SKILL.md",
         "docs/agent-surface/recipes.md",
+        "docs/agent-surface/upgrade-guide.md",
         "docs/agent-surface/architecture.md",
       ];
 

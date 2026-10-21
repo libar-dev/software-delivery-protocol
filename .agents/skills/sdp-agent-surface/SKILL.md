@@ -104,7 +104,7 @@ and `sdp studio`.
 Each of them, like `sdp build` and `sdp validate`, first removes all five projection roots, so
 after one publisher runs only its own root is current
 (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
-`sdp generate` publishes all five roots from one validated graph; vault synchronization awaits its publisher.
+`sdp generate` publishes all five roots from one validated graph; it synchronizes the vault first and leaves it alone under `--check-clean`.
 In this source checkout, `npm run generate:self-hosting` and `npm run check:self-hosting` preserve
 and publish all five roots together. In check mode a prior tree must exist for each root; Design
 Review checks repeat-render determinism, while census, Mermaid, Gherkin and Studio also compare
@@ -160,6 +160,8 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Find files and components the anchors miss                     | the curation report (recipe 40)                                                                            |
 | List a family of keyed values (limits, error messages, tables) | the key-family register (recipe 41)                                                                        |
 | Order waiting readiness statements and owner questions         | the statement queue (recipe 46)                                                                            |
+| Measure capabilities in use and where they could apply         | capability adoption (recipe 47)                                                                            |
+| Propose rule keys for review                                   | the rule-key proposal (recipe 48), then the proposal check (recipe 38)                                     |
 | Check prose tokens against an outside register                 | external registers (recipe 50)                                                                             |
 | Find source and test lines citing an entry                     | entry citations (recipe 51)                                                                                |
 
@@ -244,6 +246,10 @@ statements with the Specs they rest on first and lists the selected decider's qu
 no rung. External registers (recipe 50) checks prose tokens against `params.register` using
 `params.pattern`; entry citations (recipe 51) lists anchored source lines and unresolved entry
 addresses, with `testAnchors` identifying test lines. Both answer as rules files.
+
+For a corpus upgrade, capability adoption (recipe 47) measures use and applicability; the rule-key
+proposal (recipe 48) proposes keys for review through recipe 38. Neither edits a carrier. Follow
+`docs/agent-surface/upgrade-guide.md` for the upgrade steps.
 
 Reach for the files only when you need the authored prose itself — the exact words to edit.
 

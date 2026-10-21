@@ -308,7 +308,7 @@ describe("sdp cli", () => {
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
       // Re-measured from the refreshed carriers: no prose-mention pair is retained.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 11 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
@@ -1310,7 +1310,7 @@ export const probe = spec({
         "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
       );
       expect(capture.readStdout()).toContain(
-        "validate: 0 errors · 14 warnings (conformance + honesty over the one graph)",
+        "validate: 0 errors · 11 warnings (conformance + honesty over the one graph)",
       );
       expect(capture.readStderr()).toBe("");
       expect(existsSync(join(root, "generated", "graph.json"))).toBe(true);
@@ -1377,7 +1377,7 @@ export const probe = spec({
 
       expect(exitCode).toBe(0);
       expect(capture.readStdout()).toContain(
-        "validate: 0 errors · 14 warnings (conformance + honesty over the one graph)",
+        "validate: 0 errors · 11 warnings (conformance + honesty over the one graph)",
       );
       expect(capture.readStdout()).toContain("(13 pages)");
 

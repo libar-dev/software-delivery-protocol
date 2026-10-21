@@ -26,7 +26,7 @@ wrapper is `npm run --silent sdp:q -- '<body>'`. Never fall through to a global 
 When a session needs human-readable output, the public publishers are `view`, `census`, `mermaid`,
 `gherkin`, and `studio`. Each one's build first removes all five roots, so after one publisher runs
 only its own root is current. The repository's generate/check scripts preserve and publish all five roots
-together. `sdp generate` publishes all five from one validated graph; vault synchronization awaits its publisher. In check mode a prior tree must exist for each root; Design Review checks repeat-render
+together. `sdp generate` publishes all five from one validated graph; it synchronizes the vault first and leaves it alone under `--check-clean`. In check mode a prior tree must exist for each root; Design Review checks repeat-render
 determinism, while census, Mermaid, Gherkin and Studio also compare the prior tree's bytes with
 the current render.
 
@@ -41,6 +41,10 @@ Pass a parameterized recipe its subject as JSON data with `--params` (or `--para
 file), never by editing the body; each recipe names its parameter, and the build ships every body
 as `dist/recipes/<NN>-<slug>.js`. The recipe result informs the session; it never grants
 permission or records a verdict.
+
+For a corpus upgrade, measure capability adoption (recipe 47), then review the rule-key proposal
+(recipe 48) through recipe 38 before an agent applies it. Follow
+`docs/agent-surface/upgrade-guide.md` for the upgrade steps.
 
 ## Choose an advisory work shape
 

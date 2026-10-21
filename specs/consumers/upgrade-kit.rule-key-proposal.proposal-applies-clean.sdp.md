@@ -2,7 +2,7 @@
 id: spec:consumers.upgrade-kit.rule-key-proposal.proposal-applies-clean
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.upgrade-kit.rule-key-proposal
   verifies:

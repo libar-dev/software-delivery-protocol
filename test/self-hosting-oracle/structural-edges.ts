@@ -27,6 +27,9 @@ export const expectedComponentIds = [
 export const structuralMembershipExceptions = [
   "impl:protocol.run-evidence-recipe",
   "impl:protocol.studio-preview-workflow",
+  "impl:protocol.upgrade-guide",
+  "impl:protocol.capability-adoption-recipe",
+  "impl:protocol.rule-key-proposal-recipe",
   "impl:protocol.graph-first-planning",
   "impl:protocol.self-hosting",
   "impl:protocol.structural-self-binding",
