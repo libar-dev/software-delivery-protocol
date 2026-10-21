@@ -11,7 +11,7 @@ relations:
     - spec:model.rule-keys
     - spec:model.open-question-fields
     - target: spec:validation.kind-evidence
-      reason: the open constraint-cardinality question concerns the law that reads every constraint entry
+      reason: its evidence clauses read every constraint entry a Spec carries, whichever carrier wrote it
   constrainedBy: spec:validation.authored-honesty
   decidedBy:
     - spec:decisions.carrier-ruling
@@ -22,12 +22,6 @@ relations:
 ## Intent
 - problem: Without a stated body grammar, an author learns the default carrier by probing refusals and keeps a private copy that drifts when the parser changes.
 - outcome: State what each section of a Markdown Spec body accepts and refuses, and name the Spec that owns each field's values, so an author can write a lawful carrier from this Spec and the Specs it depends on.
-
-### Open questions
-- [non-blocking #constraintEntryCount] Should the held ruling of one Constraints entry per Spec be applied to the TypeScript carrier, or should the cross-carrier cardinality be reconsidered? A `constrainedBy` edge targets a Spec and does not specify its entry count.
-  - decider: owner
-  - provisional: Markdown admits one Constraints entry; TypeScript admits several while the cross-carrier revision remains held.
-  - links: spec:validation.kind-evidence
 
 ## Behavior
 - rule: The body opens with one H1 title. Text between the title and the first H2 is the Spec's narrative, and narrative accepts plain paragraphs only.
@@ -40,7 +34,8 @@ relations:
 - rule: [#singleH3] Intent accepts `actor`, `problem`, `outcome`, and `value` once each and `risk` and `assumption` repeatedly. One `### Open questions` heading may follow those fields, each of its entries opens with `[blocking]` or `[non-blocking]`, optionally with a lower-camel key after one space and `#` inside the brackets, unique within the Spec, and it is the only H3 any section accepts. Under a question's line may follow its `decider`, `links`, `provisional` and `trigger` fields, one line each and each at most once; their values follow `spec:model.open-question-fields`.
 - rule: Behavior entries are keyed `rule` or `flow`. Rule and Contract entries are plain bullets, each one rule. Workflow entries are plain bullets, each one flow, plus keyed `rule` entries. Any entry of the primary behavior owner may open its text, after its label where it has one, with a rule key marker, `[#key]` and a space, and the key follows `spec:model.rule-keys`. Verification entries are plain criteria.
 - rule: [#keyedEntryShape] A keyed entry is one ASCII word, a colon, and a space before its value. Where a section takes plain bullets, a bullet of that shape is read as a key and refused unless the section names that key, so a plain bullet never opens with a single word and a colon.
-- rule: [#constraintFields] Constraints accept one flat entry of `statement`, `flavor`, `target`, and `measurableBy`, each at most once, with `statement` required and no prose. A second entry is refused by this carrier; the cross-carrier revision is held at `spec:carrier.markdown-body-grammar#question.constraintEntryCount`.
+- rule: [#constraintFields] Constraints accept one flat entry of `statement`, `flavor`, `target`, and `measurableBy`, each at most once, with `statement` required and no prose. A second entry is refused by this carrier.
+- rule: [#constraintEntryCount] The TypeScript carrier may give one Spec several constraint entries, and the evidence clauses read every entry a Spec carries, whichever carrier wrote it. A `constrainedBy` edge names the constraint Spec whole, whatever its entry count, so a Markdown author with two measurable targets writes two constraint Specs.
 - rule: [#modelEntries] A Model entry is a bold term, the em dash character with a space on each side, and the definition; a hyphen is refused, terms are unique, and an integer-like term is refused. Decision accepts `context` and `decision` once each and `rationale`, `alternative`, and `consequence` repeatedly.
 - rule: [#openSectionKeys] Design and UI are open sections. Each entry is a lower-camel ASCII key, unique within its section, and a one-line value; the same key may appear once under Design and once under UI.
 - rule: The keys `implemented`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo`, and `models` are refused in every keyed section, under `spec:validation.authored-honesty`. In Design and UI, an otherwise lawful lower-camel key outside this set is ordinary content, including `dependsOn`, `references`, `uses` and `memberOf`; it creates no edge. Every closed section still admits only its own fields.
