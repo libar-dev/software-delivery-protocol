@@ -1,0 +1,314 @@
+{
+  "sourceCommit": "95d136b813c45ce2036e7f9f5a998813f6350883",
+  "node": "v24.21.0",
+  "copyCommit": "b038bd4",
+  "commands": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3",
+      "status": 0,
+      "seconds": 0.021084666000000002
+    },
+    {
+      "command": [
+        "git",
+        "clone",
+        "-q",
+        "/Users/darkomijic/dev-libar/libar-platform/.git",
+        "/tmp/build-s3-platform-measured"
+      ],
+      "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3",
+      "status": 0,
+      "seconds": 0.210256417
+    },
+    {
+      "command": [
+        "git",
+        "-C",
+        "/tmp/build-s3-platform-measured",
+        "checkout",
+        "-q",
+        "b038bd4"
+      ],
+      "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3",
+      "status": 0,
+      "seconds": 0.08380141699999996
+    },
+    {
+      "command": [
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3/dist/cli/sdp.js",
+        "build",
+        "/tmp/build-s3-platform-measured"
+      ],
+      "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3",
+      "status": 0,
+      "seconds": 1.248891833
+    },
+    {
+      "command": [
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3/dist/cli/sdp.js",
+        "q",
+        "return g.specContext(\"spec:advanced.coalesced-recomputation\")",
+        "--root",
+        "/tmp/build-s3-platform-measured",
+        "--json"
+      ],
+      "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3",
+      "status": 0,
+      "seconds": 1.22140275
+    },
+    {
+      "command": [
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3/dist/cli/sdp.js",
+        "studio",
+        "/tmp/build-s3-platform-measured",
+        "--base",
+        "/tmp/build-s3-platform-measured-base.json",
+        "--base-label",
+        "platform b038bd4 before the S3 probe"
+      ],
+      "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3",
+      "status": 0,
+      "seconds": 1.8770921670000003
+    },
+    {
+      "command": [
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3/dist/cli/sdp.js",
+        "studio",
+        "/tmp/build-s3-platform-measured",
+        "--base",
+        "/tmp/build-s3-platform-measured-base.json",
+        "--base-label",
+        "platform b038bd4 before the S3 probe",
+        "--check-clean"
+      ],
+      "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3",
+      "status": 0,
+      "seconds": 3.324337291
+    },
+    {
+      "command": [
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3/dist/cli/sdp.js",
+        "q",
+        "return {diff:await recipes(35,{base:params.base,detail:true}),queue:await recipes(46)}",
+        "--root",
+        "/tmp/build-s3-platform-measured",
+        "--params",
+        "base=@/tmp/build-s3-platform-measured-base.json",
+        "--json"
+      ],
+      "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s3",
+      "status": 0,
+      "seconds": 1.2814142089999996
+    }
+  ],
+  "edit": {
+    "address": "spec:advanced.coalesced-recomputation#design.deferred",
+    "file": "design/specs/advanced/coalesced-recomputation.sdp.md",
+    "before": "the dirty-mark table with its scoped key, the recompute scheduling, the staleness field on the view and the validation of captured versions, written by the build after the activation record (D18)",
+    "after": "the coalesced dirty-mark table with its scoped key, the recompute scheduling, the staleness field on the view and the validation of captured versions, written by the build after the activation record (D18)"
+  },
+  "studio": {
+    "files": 263,
+    "buildSeconds": 1.8770921670000003,
+    "checkClean": true,
+    "inputUnchanged": true,
+    "queueMatchesRecipe": true
+  },
+  "diff": {
+    "base": {
+      "schemaVersion": "0.11.0",
+      "specs": 243
+    },
+    "head": {
+      "schemaVersion": "0.11.0",
+      "specs": 243
+    },
+    "totals": {
+      "added": 0,
+      "removed": 0,
+      "changed": 1,
+      "packs": 0,
+      "bindings": 0
+    },
+    "changed": [
+      {
+        "id": "spec:advanced.coalesced-recomputation",
+        "parts": [
+          {
+            "part": "design.deferred",
+            "change": "changed",
+            "from": "the dirty-mark table with its scoped key, the recompute scheduling, the staleness field on the view and the validation of captured versions, written by the build after the activation record (D18)",
+            "to": "the coalesced dirty-mark table with its scoped key, the recompute scheduling, the staleness field on the view and the validation of captured versions, written by the build after the activation record (D18)"
+          }
+        ]
+      }
+    ]
+  },
+  "queue": {
+    "totals": {
+      "waiting": 221,
+      "firstRound": 11,
+      "rounds": 19,
+      "cycles": 3,
+      "questions": 0,
+      "blockingQuestions": 0,
+      "withoutDecider": 166,
+      "blockingWithoutDecider": 10
+    },
+    "firstRound": [
+      {
+        "place": 1,
+        "round": 1,
+        "id": "spec:laws.law01-sanctioned-writes-only",
+        "title": "Business writes go only through sanctioned operations",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 2,
+        "round": 1,
+        "id": "spec:laws.law02-state-and-events-commit-together",
+        "title": "State and its required events commit together",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 3,
+        "round": 1,
+        "id": "spec:laws.law03-events-only-source-of-state",
+        "title": "Events are the only source of the next state",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 4,
+        "round": 1,
+        "id": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "title": "Authorization comes before execution and disclosure",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 5,
+        "round": 1,
+        "id": "spec:laws.law06-technical-failure-never-a-rejection",
+        "title": "A technical failure is never stored as a rejection",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 6,
+        "round": 1,
+        "id": "spec:laws.law07-deferred-work-never-reported-early",
+        "title": "Deferred work is never reported as done early",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 7,
+        "round": 1,
+        "id": "spec:laws.law08-durable-capability-ships-operations",
+        "title": "Every durable capability ships with its operations",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 8,
+        "round": 1,
+        "id": "spec:laws.law09-no-invariant-on-late-read-model",
+        "title": "No invariant depends on a late read model",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 9,
+        "round": 1,
+        "id": "spec:laws.law10-replay-never-runs-commands-or-effects",
+        "title": "Replay never runs commands or repeats effects",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 10,
+        "round": 1,
+        "id": "spec:laws.law11-tenant-scope-named",
+        "title": "Every command and query names its tenant scope",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      },
+      {
+        "place": 11,
+        "round": 1,
+        "id": "spec:laws.law12-one-retry-owner",
+        "title": "Each retried piece of work has one retry owner",
+        "specKind": "rule",
+        "packs": [
+          "pack:foundation"
+        ],
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "restsOn": []
+      }
+    ]
+  }
+}
