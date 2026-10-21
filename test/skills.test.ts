@@ -562,11 +562,7 @@ describe("the graph-reading on-ramp", () => {
     for (const row of rows.slice(1)) {
       expect({ row, namesRecipe: /\(recipe \d+\)/u.test(row) }).toEqual({ row, namesRecipe: true });
     }
-    // Plan 46's integration lane owns skill edits. R23 ships recipe 50 first; integration
-    // removes this explicit exception when it adds the external-registers task row.
-    expect([...new Set(ordinals)].sort((left, right) => left - right)).toEqual(
-      catalogOrdinals().filter((ordinal) => ordinal !== 50),
-    );
+    expect([...new Set(ordinals)].sort((left, right) => left - right)).toEqual(catalogOrdinals());
   });
 
   it("links the Specs that own the graph contract, the claims and the sink", () => {

@@ -37,7 +37,7 @@
 | 33 | The design backlog | none | Pick defined design work |
 | 34 | Rule coverage | spec or pack | Find keyed rules no example exercises |
 | 35 | The design diff | base, pack, detail | Compare design at entry grain |
-| 36 | The context bundle | pack or specs, members, budget, declarations | Compose one pass within a budget |
+| 36 | The context bundle | pack or specs, members, budget, declarations, part | Compose one pass within a budget |
 | 37 | The perspective filter | pack, perspective | Select and order Pack members |
 | 38 | The proposal check | proposal, base | Resolve proposal scopes and compare intent |
 | 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
@@ -45,6 +45,7 @@
 | 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
 | 42 | The architecture walk | forbidden, isolated, severity | Check anchored architecture rules |
 | 43 | Planned against realized components | none | Compare component designs with anchors |
+| 46 | The statement queue | decider | Order waiting readiness statements and questions |
 | 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
 
@@ -3178,10 +3179,11 @@ Supply exactly one scope: `params.pack`, a Pack id, or `params.specs`, an ordere
 returns. The Pack's framing and full boundary stay visible. `params.budget` defaults to 100,000
 UTF-16 code units and accepts a non-negative integer, including zero. `params.declarations` defaults
 to `"whole"`; `"addresses"` allows the final cut to reduce pinned declarations to entry addresses.
-Any other value returns diagnostics. There is no sample scope.
+Any other value returns diagnostics. `params.part`, a positive integer, requests one part of the
+whole scope. There is no sample scope.
 
 ```js
-const accepts = ["pack", "specs", "members", "budget", "declarations"];
+const accepts = ["pack", "specs", "members", "budget", "declarations", "part"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 const packId = params.pack;
@@ -3189,12 +3191,14 @@ const specIds = params.specs;
 const subset = params.members;
 const budget = params.budget ?? 100000;
 const declarationMode = params.declarations ?? "whole";
+const requestedPart = params.part;
 const diagnostics = [];
 const bad = (scope, problem) => diagnostics.push({ scope, problem });
 const strings = (value) => Array.isArray(value) && value.every((item) => typeof item === "string");
 if ((packId !== undefined) === (specIds !== undefined)) bad("scope", "Supply exactly one of pack or specs.");
 if (!Number.isInteger(budget) || budget < 0) bad("budget", "Expected a non-negative integer in UTF-16 code units.");
 if (params.declarations === null || (declarationMode !== "whole" && declarationMode !== "addresses")) bad("declarations", "Expected \"whole\" or \"addresses\".");
+if (requestedPart !== undefined && (!Number.isInteger(requestedPart) || requestedPart <= 0)) bad("part", "Expected a positive integer.");
 let pack = null, ids = [];
 if (packId !== undefined) {
   pack = typeof packId === "string" ? g.packContext(packId) : undefined;
@@ -3283,13 +3287,13 @@ const members = ids.map((id) => {
 });
 const answer = { scope, budget, declarations: declarationMode, used: 0, tokenEstimate: { value: 0, method: "UTF-16 code units divided by four, an estimate" }, leftOut: [],
   pack: pack ? { id: packId, title: pack.title ?? null, framing: pack.framing ?? null } : null, members, boundary };
-const measure = () => {
+const measure = (value = answer) => {
   for (;;) {
-    const length = JSON.stringify(answer).length;
+    const length = JSON.stringify(value).length;
     const estimate = Math.ceil(length / 4);
-    if (answer.used === length && answer.tokenEstimate.value === estimate) return length;
-    answer.used = length;
-    answer.tokenEstimate.value = estimate;
+    if (value.used === length && value.tokenEstimate.value === estimate) return length;
+    value.used = length;
+    value.tokenEstimate.value = estimate;
   }
 };
 // The enclosing member names the Spec and file; the entry position names its path.
@@ -3386,6 +3390,47 @@ if (declarationMode === "addresses") cuts.push(() => {
   }
   answer.leftOut.push("Pinned declaration text; entry addresses kept.");
 });
+if (requestedPart !== undefined) {
+  // Item zero is the boundary, even when it is empty. Later items are whole members.
+  const itemCount = members.length + 1;
+  const partOf = (start, end, index, of) => {
+    const value = { scope, budget, declarations: declarationMode, part: { index, of }, used: 0,
+      tokenEstimate: { ...answer.tokenEstimate }, leftOut: [...answer.leftOut], pack: answer.pack,
+      members: members.slice(Math.max(0, start - 1), end - 1), boundary: start === 0 ? answer.boundary : null };
+    measure(value);
+    return value;
+  };
+  const split = () => {
+    let of = 1;
+    for (;;) {
+      const parts = [];
+      let start = 0;
+      for (let end = 1; end <= itemCount; end += 1) {
+        const candidate = partOf(start, end, parts.length + 1, of);
+        if (candidate.used > budget && end > start + 1) {
+          parts.push(partOf(start, end - 1, parts.length + 1, of));
+          start = end - 1;
+        }
+      }
+      parts.push(partOf(start, itemCount, parts.length + 1, of));
+      // More parts can widen `of`, which can move the next boundary. Measure again until stable.
+      if (parts.length === of) return parts;
+      of = parts.length;
+    }
+  };
+  let parts;
+  for (let stage = 0; stage <= cuts.length; stage += 1) {
+    if (stage > 0) cuts[stage - 1]();
+    parts = split();
+    if (parts.every((part) => part.used <= budget)) {
+      if (requestedPart > parts.length) return { diagnostics: [{ scope: "part", problem: `The bundle has ${parts.length} parts.` }] };
+      return parts[requestedPart - 1];
+    }
+  }
+  const oversized = parts.filter((part) => part.used > budget).map((part) => ({
+    item: part.boundary !== null ? "boundary" : part.members[0].id, length: part.used }));
+  return { scope, budget, declarations: declarationMode, part: { index: requestedPart, of: null }, budgetExceeded: true, oversized, leftOut: answer.leftOut };
+}
 if (measure() <= budget) return answer;
 for (const cut of cuts) { cut(); if (measure() <= budget) return answer; }
 return { scope, budget, declarations: declarationMode, budgetExceeded: true, protectedLength: answer.used, leftOut: answer.leftOut };
@@ -3416,7 +3461,16 @@ unlocated.
 itself, `scope`, `budget`, `tokenEstimate` and `leftOut`. The estimate divides code units by four,
 rounded up. A successful bundle always fits the requested budget. A budget-exceeded result carries
 only the scope, budget, declaration mode, protected length and omission list, and the CLI exits 0. Invalid or unknown
-scopes return diagnostics without a bundle. The law is `spec:consumers.context-bundle`.
+scopes return diagnostics without a bundle.
+
+With `part`, the recipe tries no cuts first and partitions the boundary followed by the members,
+taking the longest run that fits each part. It measures every part whole, including its final
+`part: { index, of }`. Only part 1 carries the boundary; later parts carry `boundary: null`.
+Each part repeats the scope, budget, declaration mode, cuts and Pack framing. The recipe advances
+one cut at a time only if some item still cannot fit alone. If no permitted stage fits, the answer
+names every `oversized` item with the length of its whole single-item part, and carries no members
+or boundary. A part above the final count returns a diagnostic. The law is
+`spec:consumers.context-bundle`.
 
 ## 37. The perspective filter
 
@@ -4231,6 +4285,128 @@ return { totals: { designs: designs.length, realized: realizedCount, matching, u
 An anchor without an anchored `satisfies` edge stays unrealized. `differing` counts rows; `matching`
 counts realized designs with neither differences nor unreadable fields. The law is
 `spec:model.planned-architecture`.
+
+## 46. The statement queue
+
+*When you need this: a corpus has more waiting readiness statements than a person can review in
+one sitting, and you need the Specs they rest on first.*
+
+`params.decider` selects the questions to list, `"owner"` by default. It takes one lowercase token,
+such as `"team-lead"`. The queue reads stated readiness and the reader's computed floor; it makes
+no readiness edit and reports no finding.
+
+```js
+const accepts = ["decider"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const decider = params.decider ?? "owner";
+if (params.decider === null || typeof decider !== "string" || !/^[a-z][a-z0-9-]*$/u.test(decider)) return { diagnostics: [{ parameter: "decider", problem: "Expected a lowercase token." }] };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const rungs = ["idea", "scoped", "defined", "ready"];
+const contexts = new Map(g.specs().map((spec) => [spec.id, g.specContext(spec.id)]));
+const ids = [...contexts.values()].filter((spec) => rungs.indexOf(spec.derivedReadiness) > rungs.indexOf(spec.statedReadiness)).map((spec) => spec.id).sort(compare);
+const waiting = new Set(ids);
+const types = ["dependsOn", "constrainedBy", "decidedBy", "refines"];
+const targets = new Map(ids.map((id) => [id, []]));
+for (const id of ids) {
+  const context = contexts.get(id);
+  const restsOn = context.relationsOut.filter((end) => end.claim === "declared" && types.includes(end.type) && end.otherId !== id && waiting.has(end.otherId) &&
+    !(end.type === "refines" && contexts.get(end.otherId).relationsOut.some((back) => back.claim === "declared" && back.otherId === id && types.slice(0, 3).includes(back.type))));
+  targets.set(id, [...new Set(restsOn.map((end) => end.otherId))].sort(compare));
+}
+
+// An explicit frame stack also serves corpora whose dependency chains exceed the call stack.
+const order = new Map(), low = new Map(), stack = [], onStack = new Set(), sets = [];
+const visit = (id) => { order.set(id, order.size); low.set(id, order.get(id)); stack.push(id); onStack.add(id); };
+for (const root of ids) {
+  if (order.has(root)) continue;
+  visit(root);
+  const frames = [{ id: root, at: 0 }];
+  while (frames.length) {
+    const frame = frames[frames.length - 1];
+    const list = targets.get(frame.id);
+    if (frame.at < list.length) {
+      const next = list[frame.at++];
+      if (!order.has(next)) { visit(next); frames.push({ id: next, at: 0 }); }
+      else if (onStack.has(next)) low.set(frame.id, Math.min(low.get(frame.id), order.get(next)));
+      continue;
+    }
+    frames.pop();
+    if (low.get(frame.id) === order.get(frame.id)) {
+      const members = [];
+      let member;
+      do { member = stack.pop(); onStack.delete(member); members.push(member); } while (member !== frame.id);
+      sets.push(members.sort(compare));
+    }
+    const parent = frames[frames.length - 1];
+    if (parent !== undefined) low.set(parent.id, Math.min(low.get(parent.id), low.get(frame.id)));
+  }
+}
+const groupOf = new Map(sets.flatMap((members, group) => members.map((id) => [id, group])));
+const dependencies = sets.map((members, group) => new Set(members.flatMap((id) => targets.get(id).map((target) => groupOf.get(target))).filter((target) => target !== group)));
+const dependents = sets.map(() => []);
+for (const [group, links] of dependencies.entries()) for (const target of links) dependents[target].push(group);
+const remaining = dependencies.map((links) => links.size);
+const rounds = sets.map(() => 1);
+const pending = remaining.flatMap((count, group) => count === 0 ? [group] : []);
+for (let at = 0; at < pending.length; at += 1) {
+  const group = pending[at];
+  for (const dependent of dependents[group]) {
+    rounds[dependent] = Math.max(rounds[dependent], rounds[group] + 1);
+    if (--remaining[dependent] === 0) pending.push(dependent);
+  }
+}
+const cycleThrough = (members) => {
+  const inside = new Set(members), start = members[0], parent = new Map(), queue = [start];
+  const seen = new Set([start]);
+  for (let at = 0; at < queue.length; at += 1) {
+    const current = queue[at];
+    for (const next of targets.get(current)) {
+      if (!inside.has(next)) continue;
+      if (next === start) {
+        const path = [start];
+        for (let step = current; step !== start; step = parent.get(step)) path.splice(1, 0, step);
+        return [...path, start];
+      }
+      if (!seen.has(next)) { seen.add(next); parent.set(next, current); queue.push(next); }
+    }
+  }
+  return [];
+};
+const cycles = sets.filter((members) => members.length > 1).sort((a, b) => compare(a[0], b[0])).map((members) => ({ members, cycle: cycleThrough(members) }));
+const statements = ids.map((id) => {
+  const spec = contexts.get(id);
+  return { round: rounds[groupOf.get(id)], id, title: spec.title ?? null, specKind: spec.specKind,
+    packs: [...spec.packs].sort(compare), statedReadiness: spec.statedReadiness,
+    floorReached: spec.derivedReadiness, restsOn: targets.get(id) };
+}).sort((a, b) => a.round - b.round || compare(a.id, b.id)).map((row, index) => ({ place: index + 1, ...row }));
+const allQuestions = [...contexts.values()].flatMap((spec) => spec.designColumns.openQuestions.map((question) => ({ spec, question })));
+const questions = allQuestions.filter(({ question }) => question.decider === decider).map(({ spec, question }) => {
+  const dependentIds = rungs.indexOf(spec.statedReadiness) < rungs.indexOf("defined")
+    ? [...new Set(spec.relationsIn.filter((end) => end.claim === "declared" && types.includes(end.type) && end.otherId !== spec.id && contexts.has(end.otherId)).map((end) => end.otherId))].sort(compare) : [];
+  return { address: question.key === undefined ? null : `${spec.id}#question.${question.key}`, spec: spec.id,
+    index: question.index, question: question.question, blocking: question.blocking, decider,
+    holds: question.blocking ? [spec.id, ...dependentIds] : [] };
+}).sort((a, b) => Number(b.blocking) - Number(a.blocking) || b.holds.length - a.holds.length || compare(a.spec, b.spec) || a.index - b.index);
+const withoutDecider = allQuestions.filter(({ question }) => question.decider === undefined);
+return { decider, totals: { waiting: statements.length, firstRound: statements.filter((row) => row.round === 1).length,
+  rounds: rounds.reduce((highest, round) => Math.max(highest, round), 0), cycles: cycles.length,
+  questions: questions.length, blockingQuestions: questions.filter((row) => row.blocking).length,
+  withoutDecider: withoutDecider.length, blockingWithoutDecider: withoutDecider.filter(({ question }) => question.blocking).length },
+  statements, cycles, questions };
+```
+
+`statements` lists every Spec whose floor reaches above its stated rung, ordered by round and id.
+`restsOn` names only other waiting Specs, through the four typed relations. A `refines` yields to
+a reverse `dependsOn`, `constrainedBy` or `decidedBy`; self links order nothing. A cycle's members
+share the round after their latest outside dependency and appear together in `cycles`, with one
+shortest closed path from the first member.
+
+`questions` lists the selected decider's questions, blocking first, then by how many Specs each
+holds, Spec id and authored position. Blocking questions hold their own Spec and, while it states
+below `defined`, its direct typed dependents. `totals.withoutDecider` and
+`totals.blockingWithoutDecider` count questions that name nobody, so an empty owner list does not
+hide them. The law is `spec:consumers.readiness-planner`.
 
 ## 50. External registers
 

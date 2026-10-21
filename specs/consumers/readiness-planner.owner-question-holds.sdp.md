@@ -2,7 +2,7 @@
 id: spec:consumers.readiness-planner.owner-question-holds
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.readiness-planner
   verifies:

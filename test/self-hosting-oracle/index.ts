@@ -105,12 +105,6 @@ export const expectedWarnings = [
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:consumers.readiness-planner",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
     subjectId: "spec:consumers.spec-studio.components",
   },
   {
