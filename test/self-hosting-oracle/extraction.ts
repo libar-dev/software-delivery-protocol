@@ -887,16 +887,179 @@ export const extractionSpecs = [
     id: "spec:extraction.entry-citations",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/extraction/entry-citations.sdp.md",
     title: "The graph records where anchored source cites an entry address",
+    narrative:
+      "A test that checks a pinned declaration names the entry in its own text, often as the test's title, and the graph does not see that link: a reader of the declaration finds the suite's file through its anchor but not the assertion. The first adopter's type test names each comparison by the address of the Design entry it binds (`libar-platform/tests/types/pinned.test-d.ts`), and a reader of its pages could not find the comparison for one declaration. The extractor already reads every anchored source file for its anchors, so it records where such a file writes an entry address, and a page or a recipe shows the line that checks a declaration.\n\nA citation is where text names an entry, read by the machine from comments and strings. It carries the `inferred` claim and confers nothing, and it sits in a table beside the location table, as a position does. It is neither a node nor an edge nor a delivery fact, it moves no floor, feeds no Protocol validator and records no verdict on the test that writes it, so a citation never stands as graph data with a meaning of its own, a delivery fact or a verdict.",
+    sections: {
+      intent: {
+        problem:
+          "A test that checks one pinned declaration names its entry address only in its own text, so no view links the declaration to the line that checks it, and a reader holding the declaration cannot find its assertion.",
+        outcome:
+          "Record each entry address an anchored source file cites, with its file and line, as an inferred citation that confers nothing, so a view can show the test line that checks a pinned declaration.",
+      },
+      behavior: {
+        rules: [
+          "The extractor reads citations from each source file it reads for anchors that carries at least one anchor, of either form and any namespace, after the same exclusions; a file that carries no anchor, a carrier and any other file is not read for citations.",
+          "A citation is a token the prose-mention scan would read as a mention, found anywhere in such a file's text, in a comment, a string or a template literal, that holds `#`; a bare Spec id is not a citation.",
+          "Each citation records the address as written, the file's root-relative path and the 1-based line the token starts on; one address written twice on one line is one row.",
+          "The citations ride in a table of their own beside the location table, sorted and deterministic as the graph is, and Primitive and Pack nodes stay free of them.",
+          "The table's definition gives every citation the `inferred` claim, and every reader row of a citation carries it, so no consumer reads a citation as an authored binding.",
+          "A citation mints no node or edge, confers no delivery fact, moves no readiness floor, feeds no Protocol validator and records no verdict on the citing file; removing every citation changes no node, edge, fact, floor or finding.",
+          "The reader resolves each citation by the rules address resolution applies, and the Spec context carries the citations whose address names that Spec as its entry citations, each with the entry it names, whether it resolves and why not, the citing file and line, and the anchors recorded at that file.",
+          "Those rows let a view show, beside each pinned declaration of a Spec, the anchored lines that cite it and the test anchors at their files, with no join of its own.",
+          "Entry citations, recipe 51, lists for a Pack, a list of Specs or the corpus each pinned declaration and every other cited entry with the lines that cite it, and every citation that does not resolve, and answers each of those as a finding, so a corpus may name the shipped file as a rules file.",
+          "An unresolved citation stays in the table and reports only through the reader's rows and the recipe's answer, never as a Protocol finding: whether it fails a gate is the corpus's choice of rules file.",
+        ],
+        exampleSpace: {
+          given: [
+            "a probe corpus whose Spec pins the declaration {declaration:string}",
+            'a test file that {anchored:"carries a test anchor"|"carries no anchor"} and names the address {address:string} in a test title on line {line:number}',
+          ],
+          when: ["the graph is derived"],
+          then: [
+            "the Spec context lists {citations:number} entry citations",
+            'the citation {recorded:"resolves"|"does not resolve"|"is not recorded"}',
+            "the shipped entry-citations file named as a rules file exits {exitCode:number}",
+          ],
+        },
+        ruleKeys: {
+          anchoredFilesOnly: "rules[0]",
+          citationToken: "rules[1]",
+          citationRow: "rules[2]",
+          citationTable: "rules[3]",
+          inferredClaim: "rules[4]",
+          confersNothing: "rules[5]",
+          readerRows: "rules[6]",
+          declarationLines: "rules[7]",
+          citationRecipe: "rules[8]",
+          unresolvedReports: "rules[9]",
+        },
+      },
+      design: {
+        citationTable:
+          "`citations?: readonly { address: string; file: string; line: number }[]` on the graph schema beside `locations`, rows sorted by `file`, then `line`, then `address`, in code-unit order; an absent table reads as empty, and the field is additive, so the schema version's minor part rises.",
+        citationAddress:
+          "`address` is the token as the prose-mention scan cuts it, its trailing punctuation removed; the sections it may name are the package's exported `ENTRY_ADDRESS_SECTIONS`, so an address section the grammar gains is read with no change here.",
+        readerCitation:
+          '`entryCitations: readonly { address: string; entry: string | null; resolves: boolean; reason: "malformed" | "section" | "entry" | null; file: string; line: number; anchors: readonly string[]; claim: "inferred" }[]` on the Spec context, for every row whose address\'s Spec part, the text before its `#`, is this Spec\'s id, where `entry` is the location-table entry the address names, such as `design.<key>` or `rule[<i>]`, or null when it does not resolve, `reason` is address resolution\'s reason for a miss, and `anchors` lists the ids of the anchors recorded at `file` in code-unit order; rows sort by `address`, then `file`, then `line`.',
+        citationsRecipe:
+          'recipe 51, entry citations, takes at most one scope, `params.pack` or `params.specs`, the whole corpus with neither, and `params.severity`, `"error"` by default or `"warning"`; both scopes, an id that does not resolve or another severity returns `{ diagnostics: [{ parameter, problem }] }` and no findings.',
+        citationsAnswer:
+          "`{ scope, totals: { citations, citedEntries, declarations, citedDeclarations, unresolved }, entries, unresolved, findings }`, where `scope` is `{ corpus: true }`, `{ pack }` or `{ specs }`.",
+        entryRow:
+          "`{ address, spec, pinned, line, citedBy: [{ file, line, anchors }] }`, one per pinned declaration in scope and per other entry in scope that a citation names, sorted by `address`; `line` is the entry's own recorded line or null, `citedBy` sorts by `file`, then `line`, and an uncited pinned declaration has an empty `citedBy`.",
+        unresolvedRow:
+          "`{ address, reason, file, line }`, one per citation that does not resolve whose Spec part names a Spec in scope, or every such citation with no scope, `reason` being address resolution's, `spec` for an absent Spec; rows sort by `file`, then `line`, then `address`.",
+        citationFinding:
+          '`{ validatorId: "unresolved-citation", subjectId, severity, message, file, line }` for each unresolved row, in that order, where `subjectId` is the address, `file` and `line` the citing site, and `message` reads `<address> cited at <file>:<line> does not resolve: <why>`, `<why>` as address resolution\'s finding words it.',
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:extraction.entry-citations.test-title-cites-declaration",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/extraction/entry-citations.test-title-cites-declaration.sdp.md",
+    title: "A test title in an anchored file cites a pinned declaration",
     narrative: null,
     sections: {
       intent: {
         outcome:
-          "Record each entry address an anchored source file cites, with its file and line, as an inferred citation that confers nothing, so a view can show the test line that checks a pinned declaration.",
+          "Execute the citation record on a test file that carries a test anchor and names a pinned declaration's address as a test title.",
+        assumptions: [
+          "The world writes a probe corpus of one story-altitude behavior Spec stating `idea` with an Intent outcome and one Design entry, `typeOne`, whose value opens with the code span `type One = string`. It writes a test file that carries a constant-form test anchor verifying that Spec and, on the line the step names, calls `test` with the address as its title. It derives the graph, reads the Spec context's entry citations and the row's `resolves`, then runs `sdp validate` on the probe root with `dist/recipes/51-entry-citations.js` named by `--rules`.",
+        ],
       },
-      behavior: {},
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec pins the declaration {declaration: "spec:probe.one#design.typeOne"}',
+              'a test file that {anchored: "carries a test anchor"} and names the address {address: "spec:probe.one#design.typeOne"} in a test title on line {line: 9}',
+            ],
+            when: ["the graph is derived"],
+            then: [
+              "the Spec context lists {citations: 1} entry citations",
+              'the citation {recorded: "resolves"}',
+              "the shipped entry-citations file named as a rules file exits {exitCode: 0}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:extraction.entry-citations.unanchored-file-unread",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/extraction/entry-citations.unanchored-file-unread.sdp.md",
+    title: "A file that carries no anchor is not read for citations",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the anchored-file rule on a test file with no anchor that names a pinned declaration's address.",
+        assumptions: [
+          "The world writes the probe corpus of the test-title example and the same test file without its test anchor, derives the graph and reads the Spec context's entry citations.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec pins the declaration {declaration: "spec:probe.one#design.typeOne"}',
+              'a test file that {anchored: "carries no anchor"} and names the address {address: "spec:probe.one#design.typeOne"} in a test title on line {line: 9}',
+            ],
+            when: ["the graph is derived"],
+            then: [
+              "the Spec context lists {citations: 0} entry citations",
+              'the citation {recorded: "is not recorded"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:extraction.entry-citations.unresolved-citation",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/extraction/entry-citations.unresolved-citation.sdp.md",
+    title:
+      "A citation of an entry its Spec lacks reports through the recipe, never as a Protocol finding",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the unresolved path on an anchored test file that names a Design key its Spec does not carry.",
+        assumptions: [
+          "The world writes the probe corpus and anchored test file of the test-title example, the title naming the address below. It derives the graph and reads the Spec context's entry citations, checks that the validation report holds no finding about the citation, then runs the shipped entry-citations file as a rules file as that example does.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec pins the declaration {declaration: "spec:probe.one#design.typeOne"}',
+              'a test file that {anchored: "carries a test anchor"} and names the address {address: "spec:probe.one#design.typeTwo"} in a test title on line {line: 9}',
+            ],
+            when: ["the graph is derived"],
+            then: [
+              "the Spec context lists {citations: 1} entry citations",
+              'the citation {recorded: "does not resolve"}',
+              "the shipped entry-citations file named as a rules file exits {exitCode: 1}",
+            ],
+          },
+        ],
+      },
     },
     deliveryFacts: [],
   },

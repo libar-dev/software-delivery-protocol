@@ -102,6 +102,9 @@ specs:
   - spec:extraction.pack-member-order.manifest-order-kept
   - spec:extraction.entry-locations
   - spec:extraction.entry-citations
+  - spec:extraction.entry-citations.test-title-cites-declaration
+  - spec:extraction.entry-citations.unanchored-file-unread
+  - spec:extraction.entry-citations.unresolved-citation
   - spec:validation.readiness-floor
   - spec:validation.readiness-floor.unrelated-scoped-spec
   - spec:validation.readiness-floor.blocking-open-question
@@ -161,6 +164,8 @@ specs:
   - spec:validation.corpus-rules.malformed-finding-fails
   - spec:validation.corpus-rules.warning-finding-informs
   - spec:validation.external-registers
+  - spec:validation.external-registers.unknown-and-retired
+  - spec:validation.external-registers.uncited-on-request
   - spec:consumers.projections-model
   - spec:consumers.projections-model.roadmap-views
   - spec:consumers.impact-graph
@@ -171,6 +176,9 @@ specs:
   - spec:consumers.agent-surface.demand-map-entries
   - spec:consumers.agent-surface.answer-shapes
   - spec:consumers.agent-surface.evaluation-sink
+  - spec:consumers.agent-surface.evaluation-sink.recipe-call
+  - spec:consumers.agent-surface.evaluation-sink.unknown-recipe
+  - spec:consumers.agent-surface.evaluation-sink.exported-evaluator
   - spec:consumers.design-review
   - spec:consumers.design-review.pure-projection
   - spec:consumers.census-page
@@ -202,6 +210,9 @@ specs:
   - spec:consumers.wholesale-view-rewrite.failed-run-view-removed
   - spec:consumers.wholesale-view-rewrite.build-invalidates-view
   - spec:consumers.agent-surface.address-and-cycle-recipes
+  - spec:consumers.agent-surface.address-and-cycle-recipes.cycle-fails-a-rules-run
+  - spec:consumers.agent-surface.address-and-cycle-recipes.unresolved-address-fails-a-rules-run
+  - spec:consumers.agent-surface.address-and-cycle-recipes.chain-reports-nothing
   - spec:consumers.spec-studio
   - spec:consumers.spec-studio.index-page
   - spec:consumers.spec-studio.pack-page
@@ -227,6 +238,8 @@ specs:
   - spec:consumers.agent-surface.example-space-coverage
   - spec:consumers.review-perspectives
   - spec:consumers.context-bundle
+  - spec:consumers.context-bundle.parts-cover-the-pack
+  - spec:consumers.context-bundle.oversized-member-named
   - spec:consumers.design-diff
   - spec:consumers.intent-composition.proposal
   - spec:consumers.reference-projection
@@ -236,7 +249,19 @@ specs:
   - spec:consumers.obsidian-vault.bases
   - spec:consumers.obsidian-vault.iteration
   - spec:consumers.readiness-planner
+  - spec:consumers.readiness-planner.dependency-order
+  - spec:consumers.readiness-planner.decision-first
+  - spec:consumers.readiness-planner.cycle-shares-a-round
+  - spec:consumers.readiness-planner.owner-question-holds
   - spec:consumers.upgrade-kit
+  - spec:consumers.upgrade-kit.capability-adoption
+  - spec:consumers.upgrade-kit.capability-adoption.counts-a-corpus
+  - spec:consumers.upgrade-kit.rule-key-proposal
+  - spec:consumers.upgrade-kit.rule-key-proposal.proposal-applies-clean
+  - spec:consumers.upgrade-kit.rule-key-proposal.collision-and-unkeyable
+  - spec:consumers.command-line
+  - spec:consumers.command-line.generate-writes-every-root
+  - spec:consumers.command-line.verb-help-touches-nothing
   - spec:observation.runtime-overlay
   - spec:observation.run-evidence
   - spec:protocol.self-hosting
