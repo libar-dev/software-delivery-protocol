@@ -745,6 +745,18 @@ export const modelSpecs = [
           fieldFailureError: "rules[4]",
           droppedListWarning: "rules[5]",
         },
+        exampleSpace: {
+          given: [
+            'a TypeScript Spec carrier whose blocking open question meets {construct:"a non-static question text"|"a non-static blocking flag"|"a spread in the list"}',
+          ],
+          when: ["the extractor reifies the carrier"],
+          then: [
+            'the extractor reports {findingId:string} at severity {severity:"warning"|"error"}',
+            "the Spec stays in the graph with {questionCount:number} open questions",
+          ],
+        },
+        description:
+          "The world writes one TypeScript carrier for a story-altitude rule Spec stating `idea`, with a title, an Intent outcome, one rule and an open-question list holding one blocking question. Every value is static apart from the construct the point names: a question text or blocking flag written as a function call, or a spread of another list beside the question.",
       },
       design: {
         subItemLine:
@@ -764,6 +776,36 @@ export const modelSpecs = [
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:model.open-question-fields.dropped-list-warns",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/model/open-question-fields.dropped-list-warns.sdp.md",
+    title: "A TypeScript question list that cannot be read drops whole with a warning",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the lossy drop on a blocking question whose text is not static, so the question leaves the graph with only a warning.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a TypeScript Spec carrier whose blocking open question meets {construct: "a non-static question text"}',
+            ],
+            when: ["the extractor reifies the carrier"],
+            then: [
+              'the extractor reports {findingId: "extract/non-static-section"} at severity {severity: "warning"}',
+              "the Spec stays in the graph with {questionCount: 0} open questions",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:model.rule-keys",

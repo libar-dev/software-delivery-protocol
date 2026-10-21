@@ -15,6 +15,7 @@ relations:
 ```gwt
 Given a {subject: "live Spec"} names the probe decision through {relation: "dependsOn"}
 Given the probe decision is replaced by {replacement: "one decision"}
+Given every replacing decision states {replacementRung: "ready"}
 When the graph is validated
 Then the report holds {warnings: 0} superseded-decision warnings
 Then the warnings name {named: "nothing"}

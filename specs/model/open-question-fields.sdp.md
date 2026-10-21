@@ -39,6 +39,16 @@ A TypeScript open-question list that cannot be read statically drops whole, bloc
 - An open question carries no status, date, blocked work unit or record of who checked it. A settled question leaves the Spec, a ruling that passes the ADR three-part test lands as a decision Spec the shaped Specs name through `decidedBy`, and the rest of the history stays in git and in the adopter's own records.
 - Whether a question holds the readiness floor stays its `[blocking]` flag alone; none of the four fields moves a floor.
 
+## Example space
+The world writes one TypeScript carrier for a story-altitude rule Spec stating `idea`, with a title, an Intent outcome, one rule and an open-question list holding one blocking question. Every value is static apart from the construct the point names: a question text or blocking flag written as a function call, or a spread of another list beside the question.
+
+```gwt-vocabulary
+Given a TypeScript Spec carrier whose blocking open question meets {construct:"a non-static question text"|"a non-static blocking flag"|"a spread in the list"}
+When the extractor reifies the carrier
+Then the extractor reports {findingId:string} at severity {severity:"warning"|"error"}
+Then the Spec stays in the graph with {questionCount:number} open questions
+```
+
 ## Design
 
 - subItemLine: a field is one line of exactly two spaces, `- `, a label from `decider`, `links`, `provisional` and `trigger`, a colon, a space and the value, directly under its question's line or a sibling field; any other indented line stays refused, as is a field under an entry that is not an open question.

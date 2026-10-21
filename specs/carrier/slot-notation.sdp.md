@@ -23,10 +23,13 @@ A closed union takes two or more literals because a dimension with one value var
 - [#localDegradation] Lexical degradation stays local: a stray or unterminated brace group is prose only up to the next candidate, so it never swallows a well-formed binding that follows it.
 
 ## Example space
+A bound value cannot hold a double quote, so a point writes each double quote its step text needs as a single quote, and the world restores them before it parses. The world also runs contract generation over a parent whose example space holds the restored step text as its one Given step; the generation finding is `nothing` when generation reports none.
+
 ```gwt-vocabulary
 Given the step text {stepText:string}
 When the notation parses the step text
 Then the notation finds {slotCount:number} slot groups
 Then the first group has the form {form:"bare"|"typed"|"bound"|"malformed"} and the name {slotName:string}
 Then the step skeleton is {skeleton:string}
+Then contract generation declares {dimensionCount:number} dimensions and reports {generationFinding:string}
 ```

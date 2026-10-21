@@ -49,6 +49,7 @@ specs:
   - spec:carrier.slot-notation
   - spec:carrier.slot-notation.typed-declaration
   - spec:carrier.slot-notation.refused-guess
+  - spec:carrier.slot-notation.one-literal-binding
   - spec:carrier.step-keys
   - spec:model.core-model
   - spec:model.enrichment-lifecycle
@@ -73,6 +74,7 @@ specs:
   - spec:model.planned-architecture.differing-layer-and-uses
   - spec:model.planned-architecture.matching-design
   - spec:model.open-question-fields
+  - spec:model.open-question-fields.dropped-list-warns
   - spec:model.rule-keys
   - spec:model.relation-reasons
   - spec:model.term-addresses
@@ -143,6 +145,7 @@ specs:
   - spec:validation.kind-evidence.constraints-alone
   - spec:validation.kind-evidence.untargeted-constraint
   - spec:validation.kind-evidence.empty-promoted-child
+  - spec:validation.kind-evidence.second-entry-untargeted
   - spec:validation.diagnostic-rendering
   - spec:validation.diagnostic-rendering.composed-location
   - spec:validation.diagnostic-rendering.table-cell-location
@@ -151,6 +154,8 @@ specs:
   - spec:validation.validator-self-testing.silent-check-named
   - spec:validation.validator-self-testing.overeager-check-named
   - spec:validation.validator-self-testing.unpaired-check-named
+  - spec:validation.validator-self-testing.duplicate-pair-named
+  - spec:validation.validator-self-testing.unregistered-id-named
   - spec:validation.next-rung-floor
   - spec:validation.next-rung-floor.typed-dependency-targets
   - spec:validation.next-rung-floor.blocking-question
@@ -162,6 +167,8 @@ specs:
   - spec:validation.superseded-decision-signal.dependency-unread
   - spec:validation.superseded-decision-signal.superseded-subject-silent
   - spec:validation.superseded-decision-signal.replacement-below-ready-named
+  - spec:validation.superseded-decision-signal.live-replacement-warns
+  - spec:validation.superseded-decision-signal.end-and-loop-named
   - spec:validation.architecture-constraints
   - spec:validation.architecture-constraints.forbidden-layer-pair
   - spec:validation.architecture-constraints.isolated-context-as-rule

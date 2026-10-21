@@ -147,7 +147,7 @@ export const validationSpecs = [
         exampleSpace: {
           given: [
             'the graph holds a {kind:"behavior"|"constraint"} spec {specId:string} stating readiness {readiness:"scoped"|"defined"}',
-            'its only evidence is {evidence:"a constraints entry carrying a target"|"a constraints entry with no target"|"an empty promoted rule child"}',
+            'its only evidence is {evidence:"a constraints entry carrying a target"|"a constraints entry with no target"|"a targeted constraints entry and an untargeted second entry"|"an empty promoted rule child"}',
           ],
           when: ["the graph is validated"],
           then: [
@@ -223,6 +223,38 @@ export const validationSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.kind-evidence.second-entry-untargeted",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/kind-evidence.second-entry-untargeted.sdp.md",
+    title: "A constraint whose second entry has no target is not complete",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the constraint row where a Spec carries two entries and only the first carries a target, so the evidence clauses read every entry.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a {kind: "constraint"} spec {specId: "spec:probe.second-entry-untargeted"} stating readiness {readiness: "defined"}',
+              'its only evidence is {evidence: "a targeted constraints entry and an untargeted second entry"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
+              'the finding names the unmet floor clause {clauseId: "kind-evidence-complete"}',
+              "the report holds {errorCount: 1} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:validation.kind-evidence.empty-promoted-child",
@@ -1158,9 +1190,10 @@ export const validationSpecs = [
           "The discipline is evidence over the two check families, never a check of its own; no validator checks whether another validator carries tests, and no report, graph fact or delivery fact records the audit.",
           "The audit covers every finding id a validation run can report: each graph validator's and each extraction finding's, the Markdown and Gherkin carriers' included. Contract generation and import report outside a validation run and stay outside the audit.",
           "The audit holds one probe pair per finding id: a refusing probe the id must report, and an accepting probe, a near miss that differs from the refusing probe only in the construct the check reads, that the id must leave unreported.",
-          "The audit's table and the engine's registries agree exactly: a registered id without a pair, a pair for an id no registry lists, and a finding id written in the engine's source outside every registry each fail the audit.",
+          "The audit's table and the engine's registries agree exactly: a registered id without a pair, an id paired twice, a pair for an id no registry lists, a finding id written in the engine's source outside every registry, and a finding id a probe run reports outside every registry each fail the audit.",
+          "The audit reads the engine's source as code, so a comment never counts and every quote form does, and it fails on a finding id it cannot read whole, such as an id prefix joined to a value at run time.",
           "The audit runs every probe through the entry a validation run uses, graph validation for a graph probe and extraction for a carrier probe, and fails for each id its refusing probe does not report and each id its accepting probe reports; it reads the finding id alone, never the message.",
-          "The audit is a test in the repository's own suite, so the gate runs it on every change; it fails by naming each id at fault and writes nothing.",
+          "The audit is a test in the repository's own suite, so the gate runs it on every change. It fails by naming each id at fault, writes no tracked file and no durable result, and may create and remove a temporary extraction root for a carrier probe.",
         ],
         ruleKeys: {
           bothDirections: "rules[0]",
@@ -1168,22 +1201,24 @@ export const validationSpecs = [
           auditScope: "rules[2]",
           probePairs: "rules[3]",
           closedTable: "rules[4]",
-          silentAndOvereager: "rules[5]",
-          auditInGate: "rules[6]",
+          sourceReadWhole: "rules[5]",
+          silentAndOvereager: "rules[6]",
+          auditInGate: "rules[7]",
         },
         exampleSpace: {
           given: [
-            'the audit reads {table:"the shipped probe table"|"the shipped table without one pair"}',
+            'the audit reads {table:"the shipped probe table"|"the shipped table without one pair"|"the shipped table with one pair twice"}',
             'the check {findingId:string} behaves {behavior:"as shipped"|"silently"|"overeagerly"}',
+            "the engine source also writes {extraSourceId:string}",
           ],
           when: ["the audit runs"],
           then: [
             'the audit {verdict:"passes"|"fails"}',
-            'the audit names {named:string} as {list:"none"|"unpaired"|"silent"|"overeager"}',
+            'the audit names {named:string} as {list:"none"|"unpaired"|"duplicatePairs"|"unregistered"|"silent"|"overeager"}',
           ],
         },
         description:
-          "The world runs the audit function on the shipped probe table, or on that table without the pair for the named check, over the shipped registries and source ids. A check that behaves silently has its findings removed from every probe's run; one that behaves overeagerly has a finding added to every probe's run. The named ids are joined by a comma and a space, or `nothing` when the audit names none.",
+          "The world runs the audit function on the shipped probe table, on that table without the pair for the named check, or on that table with the named check's pair written twice, over the shipped registries and the scanned source. A check that behaves silently has its findings removed from every probe's run; one that behaves overeagerly has a finding added to every probe's run. A source that also writes an id adds it to the scanned source ids, and `nothing` adds none. The named ids are joined by a comma and a space, or `nothing` when the audit names none.",
       },
       design: {
         registries:
@@ -1191,11 +1226,11 @@ export const validationSpecs = [
         probeEntry:
           "`{ id: string; refusing: Probe; accepting: Probe }`, with `type Probe = { graph: GraphSchema } | { carriers: Readonly<Record<string, string>> }`, a graph for a graph validator and root-relative carrier files for an extraction finding.",
         auditFunction:
-          "`auditValidatorEvidence(table: readonly ProbeEntry[], run: (probe: Probe) => readonly Finding[], registered: readonly string[], sourceIds: readonly string[]): AuditAnswer`, where `run` is graph validation or extraction as the probe needs, so a world can wrap it to silence one id or report it everywhere.",
+          "`auditValidatorEvidence(table: readonly ProbeEntry[], run: (probe: Probe) => readonly Finding[], registered: readonly string[], source: SourceScan): AuditAnswer`, where `run` is graph validation or extraction as the probe needs, so a world can wrap it to silence one id or report it everywhere; every finding id any probe run reports outside `registered` is `unregistered`.",
         auditAnswer:
-          "`{ unpaired: string[]; strayPairs: string[]; unregistered: string[]; silent: string[]; overeager: string[] }`, each sorted in code-unit order; the audit passes when all five are empty and otherwise fails with the non-empty lists in its message.",
+          "`{ unpaired: string[]; duplicatePairs: string[]; strayPairs: string[]; unregistered: string[]; unresolved: string[]; silent: string[]; overeager: string[] }`, each sorted in code-unit order and each id listed once; the audit passes when all seven are empty and otherwise fails with the non-empty lists in its message.",
         sourceScan:
-          "`sourceIds` are the double-quoted string literals in the `.ts` files under `src/` that match `^(conformance|honesty|extract)/[a-z][a-z-]*$`; one outside every registry is `unregistered`.",
+          "`scanFindingIds(srcRoot: string): SourceScan`, with `type SourceScan = { ids: string[]; unresolved: string[] }`, reads every `.ts` file under `src/` with the TypeScript scanner, so comments are skipped. A string literal or a template literal without substitutions whose whole text matches `^(conformance|honesty|extract)/[a-z][a-z-]*$` is an id, and one outside every registry is `unregistered`. A literal whose text matches `^(conformance|honesty|extract)/[a-z-]*$` but is no whole id, or a template literal whose text before its first substitution matches it, is `unresolved`, named `<file>:<line>`. The gate suite scans the real source tree.",
       },
     },
     deliveryFacts: [],
@@ -1218,6 +1253,7 @@ export const validationSpecs = [
             given: [
               'the audit reads {table: "the shipped probe table"}',
               'the check {findingId: "conformance/orphans"} behaves {behavior: "as shipped"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
             ],
             when: ["the audit runs"],
             then: [
@@ -1248,11 +1284,43 @@ export const validationSpecs = [
             given: [
               'the audit reads {table: "the shipped probe table"}',
               'the check {findingId: "conformance/orphans"} behaves {behavior: "silently"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
             ],
             when: ["the audit runs"],
             then: [
               'the audit {verdict: "fails"}',
               'the audit names {named: "conformance/orphans"} as {list: "silent"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.validator-self-testing.duplicate-pair-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/validator-self-testing.duplicate-pair-named.sdp.md",
+    title: "A check paired twice is named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the audit on a table that holds one check's probe pair twice.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the audit reads {table: "the shipped table with one pair twice"}',
+              'the check {findingId: "conformance/orphans"} behaves {behavior: "as shipped"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
+            ],
+            when: ["the audit runs"],
+            then: [
+              'the audit {verdict: "fails"}',
+              'the audit names {named: "conformance/orphans"} as {list: "duplicatePairs"}',
             ],
           },
         ],
@@ -1278,6 +1346,7 @@ export const validationSpecs = [
             given: [
               'the audit reads {table: "the shipped probe table"}',
               'the check {findingId: "conformance/orphans"} behaves {behavior: "overeagerly"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
             ],
             when: ["the audit runs"],
             then: [
@@ -1308,11 +1377,43 @@ export const validationSpecs = [
             given: [
               'the audit reads {table: "the shipped table without one pair"}',
               'the check {findingId: "conformance/orphans"} behaves {behavior: "as shipped"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
             ],
             when: ["the audit runs"],
             then: [
               'the audit {verdict: "fails"}',
               'the audit names {named: "conformance/orphans"} as {list: "unpaired"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.validator-self-testing.unregistered-id-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/validator-self-testing.unregistered-id-named.sdp.md",
+    title: "A finding id the source writes outside every registry is named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the audit on a source that writes a finding id no registry lists.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the audit reads {table: "the shipped probe table"}',
+              'the check {findingId: "conformance/orphans"} behaves {behavior: "as shipped"}',
+              'the engine source also writes {extraSourceId: "conformance/unlisted-check"}',
+            ],
+            when: ["the audit runs"],
+            then: [
+              'the audit {verdict: "fails"}',
+              'the audit names {named: "conformance/unlisted-check"} as {list: "unregistered"}',
             ],
           },
         ],
@@ -1780,9 +1881,9 @@ export const validationSpecs = [
           "A corpus may keep a replaced decision while its text explains something a reader still needs; keeping it is lawful, and a deleted decision leaves a dangling `decidedBy` that referential integrity reports and this signal does not read.",
           "A live Spec that names through `decidedBy` a decision another decision supersedes carries one warning for that pair, with the shaped Spec as its subject and the superseded decision as its related Spec; a Spec shaped by two superseded decisions carries two warnings.",
           "The warning names the decision at the end of each replacement chain: from the superseded decision the walk follows `supersedes` to the decisions that replace it, and on from each of those, and a decision it reaches that no decision supersedes is an end. Where the chain branches, the warning names every end.",
-          "The walk visits each decision once. When it reaches no end, because every decision it reaches is itself superseded, the warning says the chain of replacements closes on itself and names every decision the walk visited; a closed chain is never an error and is never followed twice.",
+          "The walk visits each decision once. A loop is a set of decisions the walk reaches, the superseded decision included, that supersede one another in a cycle, or one decision that supersedes itself. When the walk reaches a loop, the warning says the chain of replacements closes on itself and names each decision in a loop it reaches, and no other decision it passes through; when it also reaches an end, it names the ends as well. A loop is never an error and is never followed twice.",
           "The signal reads every `supersedes` edge whatever rung either decision states, so a replacement still below `ready` is named as it stands and its rung is read where the reader looks it up.",
-          "A Spec that a decision supersedes is not live and carries no warning for the decisions it names, and neither does a decision the walk visits, since it is itself a replacement of the record it names.",
+          "A Spec that a resolving `supersedes` edge targets is not live and carries no warning for the decisions it names. A decision that supersedes another stays live until it is itself superseded, so its own `decidedBy` relations warn as any live Spec's do, even when the walk from the decision it names reaches it.",
           "The warning never fails validation, as the orphan and gap signals never do; the Protocol fixes its severity and no setting changes it.",
           "The `supersedes` edge itself is never warned, and a superseded decision is never warned for being superseded.",
           "The signal judges no content: it never asks whether the newer ruling fits the shaped Spec, and moving the `decidedBy` to the end of the chain, or deleting the replaced record, is the author's edit.",
@@ -1801,19 +1902,23 @@ export const validationSpecs = [
         },
         exampleSpace: {
           given: [
-            'a {subject:"live Spec"|"superseded decision"} names the probe decision through {relation:"decidedBy"|"dependsOn"}',
-            'the probe decision is replaced by {replacement:"no decision"|"one decision"|"a chain of two decisions"|"two decisions at once"|"a chain that closes on itself"}',
+            'a {subject:"live Spec"|"superseded decision"|"replacing decision"} names the probe decision through {relation:"decidedBy"|"dependsOn"}',
+            'the probe decision is replaced by {replacement:"no decision"|"one decision"|"a chain of two decisions"|"two decisions at once"|"a chain that closes on itself"|"an end and a loop at once"}',
             'every replacing decision states {replacementRung:"idea"|"ready"}',
           ],
           when: ["the graph is validated"],
           then: [
             "the report holds {warnings:number} superseded-decision warnings",
             "the warnings name {named:string}",
+            "the warning is {validatorId:string} in the {family:string} family at severity {severity:string}",
+            "the warning has the subject {subjectId:string} and the related Spec {relatedId:string}",
+            "the warning sits at {path:string} in {file:string} on line {line:number}",
+            'the warning message follows {template:"message"|"closedChainMessage"|"mixedChainMessage"}',
             "the report holds {errorCount:number} errors",
           ],
         },
         description:
-          "Each world builds its graph in memory, and every probe Spec carries its kind's evidence, so only the signal moves the findings. The subject is a behavior Spec, or, for a superseded subject, the decision `decision-s`, which `decision-b` supersedes. The subject names the probe decision `decision-a`, and the replacing decisions are `decision-b` and `decision-c`, which state `ready` unless a point binds their rung. One replacement is `decision-b` superseding `decision-a`; a chain of two adds `decision-c` superseding `decision-b`; two at once are `decision-b` and `decision-c` each superseding `decision-a`; a closed chain is `decision-b` superseding `decision-a` and `decision-a` superseding `decision-b`. The named decisions are full ids joined by a comma and a space in code-unit order, or `nothing` when no warning names any.",
+          "Each world builds its graph in memory, and every probe Spec carries its kind's evidence, so only the signal moves the findings. Each probe's full id joins the `probe` family and its name, as `probe.decision-a` does. A live subject is the behavior Spec `shaped` in the file `shaped.sdp.md`, whose location table records its `decidedBy` row on line 7. A superseded subject is the decision `decision-s`, which `decision-b` supersedes, and a replacing subject is `decision-b` itself. The subject names the probe decision `decision-a`, and the replacing decisions are `decision-b`, `decision-c` and `decision-d`, which state the rung the point binds. One replacement is `decision-b` superseding `decision-a`; a chain of two adds `decision-c` superseding `decision-b`; two at once are `decision-b` and `decision-c` each superseding `decision-a`; a closed chain is `decision-b` superseding `decision-a` and `decision-a` superseding `decision-b`; an end and a loop at once are `decision-b` and `decision-c` each superseding `decision-a`, with `decision-c` and `decision-d` superseding each other. The named decisions are the ends and loop members the warnings name, full ids joined by a comma and a space in code-unit order, or `nothing` when no warning names any. The field and message steps read the one warning the point reports, and the message step fills the Design entry it names with that warning's ids.",
       },
       design: {
         validatorId:
@@ -1826,13 +1931,15 @@ export const validationSpecs = [
         message:
           '`Spec "<subjectId>" is decided by "<relatedId>", which a later decision supersedes; the chain of replacements ends at "<end>" (informative, never a gate).`, with `ends at "<end>", "<end>"` when the chain branches.',
         closedChainMessage:
-          '`Spec "<subjectId>" is decided by "<relatedId>", whose chain of replacements closes on itself through "<id>", "<id>" (informative, never a gate).`, naming every decision the walk visited, `relatedId` included.',
+          '`Spec "<subjectId>" is decided by "<relatedId>", whose chain of replacements closes on itself through "<loop-id>", "<loop-id>" (informative, never a gate).`, used when the walk reaches no end, naming each decision in a loop it reaches.',
+        mixedChainMessage:
+          '`Spec "<subjectId>" is decided by "<relatedId>", whose chain of replacements ends at "<end>" and also closes on itself through "<loop-id>", "<loop-id>" (informative, never a gate).`, used when the walk reaches both, with every end and every loop member listed as the other two messages list them.',
         chainWalk:
-          "start at the superseded decision; for each visited decision, visit each decision whose `supersedes` edge targets it, once; an end is a visited decision other than the start that no resolving `supersedes` edge targets; a `supersedes` edge whose source or target is no decision Spec in the graph is not followed.",
+          "read the resolving, declared `supersedes` edges whose source and target are both decision Specs, and index each by its target; from the superseded decision, visit each decision reachable along those edges from target to source once; an end is a reached decision other than the start that no such edge targets; a loop member is a reached decision, the start included, in a strongly connected component of two or more decisions or with an edge to itself; ends and loop members are collected apart.",
         idOrder:
           "the ids a message lists sort in code-unit order, and the findings sort as every report's findings do.",
         skippedPairs:
-          "no warning for a `decidedBy` whose target does not resolve or is not a decision, for a subject a resolving `supersedes` edge targets, or for a subject the walk visits.",
+          "no warning for a `decidedBy` whose target does not resolve, is not a decision, or is targeted by no `supersedes` edge the walk reads, and none for a subject a resolving `supersedes` edge targets; a subject the walk reaches is still checked.",
       },
     },
     deliveryFacts: [],
@@ -1855,11 +1962,16 @@ export const validationSpecs = [
             given: [
               'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
               'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "ready"}',
             ],
             when: ["the graph is validated"],
             then: [
               "the report holds {warnings: 1} superseded-decision warnings",
               'the warnings name {named: "spec:probe.decision-b"}',
+              'the warning is {validatorId: "conformance/superseded-decisions"} in the {family: "conformance"} family at severity {severity: "warning"}',
+              'the warning has the subject {subjectId: "spec:probe.shaped"} and the related Spec {relatedId: "spec:probe.decision-a"}',
+              'the warning sits at {path: "relation.decidedBy.spec:probe.decision-a"} in {file: "shaped.sdp.md"} on line {line: 7}',
+              'the warning message follows {template: "message"}',
               "the report holds {errorCount: 0} errors",
             ],
           },
@@ -1886,6 +1998,7 @@ export const validationSpecs = [
             given: [
               'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
               'the probe decision is replaced by {replacement: "a chain of two decisions"}',
+              'every replacing decision states {replacementRung: "ready"}',
             ],
             when: ["the graph is validated"],
             then: [
@@ -1917,11 +2030,13 @@ export const validationSpecs = [
             given: [
               'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
               'the probe decision is replaced by {replacement: "two decisions at once"}',
+              'every replacing decision states {replacementRung: "ready"}',
             ],
             when: ["the graph is validated"],
             then: [
               "the report holds {warnings: 1} superseded-decision warnings",
               'the warnings name {named: "spec:probe.decision-b, spec:probe.decision-c"}',
+              'the warning message follows {template: "message"}',
               "the report holds {errorCount: 0} errors",
             ],
           },
@@ -1948,11 +2063,80 @@ export const validationSpecs = [
             given: [
               'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
               'the probe decision is replaced by {replacement: "a chain that closes on itself"}',
+              'every replacing decision states {replacementRung: "ready"}',
             ],
             when: ["the graph is validated"],
             then: [
               "the report holds {warnings: 1} superseded-decision warnings",
               'the warnings name {named: "spec:probe.decision-a, spec:probe.decision-b"}',
+              'the warning message follows {template: "closedChainMessage"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.end-and-loop-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/superseded-decision-signal.end-and-loop-named.sdp.md",
+    title: "A chain of replacements that reaches an end and a loop names both",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the chain walk where one branch ends and the other closes on itself.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "an end and a loop at once"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-b, spec:probe.decision-c, spec:probe.decision-d"}',
+              'the warning message follows {template: "mixedChainMessage"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.live-replacement-warns",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/superseded-decision-signal.live-replacement-warns.sdp.md",
+    title: "A decision still decided by the record it replaces warns",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the live-subject rule on a replacing decision that names the decision it supersedes through decidedBy.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "replacing decision"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-b"}',
+              'the warning has the subject {subjectId: "spec:probe.decision-b"} and the related Spec {relatedId: "spec:probe.decision-a"}',
               "the report holds {errorCount: 0} errors",
             ],
           },
@@ -1980,6 +2164,7 @@ export const validationSpecs = [
             given: [
               'a {subject: "live Spec"} names the probe decision through {relation: "dependsOn"}',
               'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "ready"}',
             ],
             when: ["the graph is validated"],
             then: [
@@ -2011,6 +2196,7 @@ export const validationSpecs = [
             given: [
               'a {subject: "superseded decision"} names the probe decision through {relation: "decidedBy"}',
               'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "ready"}',
             ],
             when: ["the graph is validated"],
             then: [

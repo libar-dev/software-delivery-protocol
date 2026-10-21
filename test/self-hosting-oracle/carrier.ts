@@ -813,11 +813,44 @@ export const carrierSpecs = [
             "the notation finds {slotCount:number} slot groups",
             'the first group has the form {form:"bare"|"typed"|"bound"|"malformed"} and the name {slotName:string}',
             "the step skeleton is {skeleton:string}",
+            "contract generation declares {dimensionCount:number} dimensions and reports {generationFinding:string}",
           ],
         },
+        description:
+          "A bound value cannot hold a double quote, so a point writes each double quote its step text needs as a single quote, and the world restores them before it parses. The world also runs contract generation over a parent whose example space holds the restored step text as its one Given step; the generation finding is `nothing` when generation reports none.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:carrier.slot-notation.one-literal-binding",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/slot-notation.one-literal-binding.sdp.md",
+    title: "A one-literal group in a vocabulary is a binding that declares nothing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the one-literal reading on a vocabulary step, from the parse to contract generation.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [`the step text {stepText: "the cart is in {mode: 'only'} mode"}`],
+            when: ["the notation parses the step text"],
+            then: [
+              "the notation finds {slotCount: 1} slot groups",
+              'the first group has the form {form: "bound"} and the name {slotName: "mode"}',
+              'the step skeleton is {skeleton: "the cart is in {mode} mode"}',
+              'contract generation declares {dimensionCount: 0} dimensions and reports {generationFinding: "contracts/untyped-vocabulary-slot"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
   },
   {
     id: "spec:carrier.slot-notation.typed-declaration",

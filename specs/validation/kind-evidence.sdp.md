@@ -31,7 +31,7 @@ relations:
 ## Example space
 ```gwt-vocabulary
 Given the graph holds a {kind:"behavior"|"constraint"} spec {specId:string} stating readiness {readiness:"scoped"|"defined"}
-Given its only evidence is {evidence:"a constraints entry carrying a target"|"a constraints entry with no target"|"an empty promoted rule child"}
+Given its only evidence is {evidence:"a constraints entry carrying a target"|"a constraints entry with no target"|"a targeted constraints entry and an untargeted second entry"|"an empty promoted rule child"}
 When the graph is validated
 Then the report names {findingId:string} at severity {severity:"warning"|"error"}
 Then the finding names the unmet floor clause {clauseId:string}

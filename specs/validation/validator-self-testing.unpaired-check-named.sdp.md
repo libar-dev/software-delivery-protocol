@@ -15,6 +15,7 @@ relations:
 ```gwt
 Given the audit reads {table: "the shipped table without one pair"}
 Given the check {findingId: "conformance/orphans"} behaves {behavior: "as shipped"}
+Given the engine source also writes {extraSourceId: "nothing"}
 When the audit runs
 Then the audit {verdict: "fails"}
 Then the audit names {named: "conformance/orphans"} as {list: "unpaired"}

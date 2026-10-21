@@ -306,6 +306,14 @@ export const expectedDeclaredRelations: readonly (readonly [
     null,
     ["typeForm", "skeletonIdentity"],
   ],
+  ["spec:carrier.slot-notation.one-literal-binding", "refines", "spec:carrier.slot-notation"],
+  [
+    "spec:carrier.slot-notation.one-literal-binding",
+    "verifies",
+    "spec:carrier.slot-notation",
+    null,
+    ["oneLiteralBinding"],
+  ],
   ["spec:carrier.slot-notation.refused-guess", "refines", "spec:carrier.slot-notation"],
   [
     "spec:carrier.slot-notation.refused-guess",
@@ -354,6 +362,23 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:validation.kind-evidence.untargeted-constraint",
     "verifies",
     "spec:validation.kind-evidence",
+  ],
+  [
+    "spec:validation.kind-evidence.second-entry-untargeted",
+    "refines",
+    "spec:validation.kind-evidence",
+  ],
+  [
+    "spec:validation.kind-evidence.second-entry-untargeted",
+    "verifies",
+    "spec:validation.kind-evidence",
+  ],
+  [
+    "spec:validation.kind-evidence.second-entry-untargeted",
+    "verifies",
+    "spec:carrier.markdown-body-grammar",
+    null,
+    ["constraintEntryCount"],
   ],
   [
     "spec:validation.kind-evidence.empty-promoted-child",
@@ -775,6 +800,30 @@ export const expectedDeclaredRelations: readonly (readonly [
     ["readsDecidedBy", "onePerPair", "chainEnd", "informative", "noSupersedesWarning"],
   ],
   [
+    "spec:validation.superseded-decision-signal.live-replacement-warns",
+    "refines",
+    "spec:validation.superseded-decision-signal",
+  ],
+  [
+    "spec:validation.superseded-decision-signal.live-replacement-warns",
+    "verifies",
+    "spec:validation.superseded-decision-signal",
+    null,
+    ["onePerPair", "liveSubjectsOnly"],
+  ],
+  [
+    "spec:validation.superseded-decision-signal.end-and-loop-named",
+    "refines",
+    "spec:validation.superseded-decision-signal",
+  ],
+  [
+    "spec:validation.superseded-decision-signal.end-and-loop-named",
+    "verifies",
+    "spec:validation.superseded-decision-signal",
+    null,
+    ["chainEnd", "closedChain"],
+  ],
+  [
     "spec:validation.superseded-decision-signal.chain-end-named",
     "refines",
     "spec:validation.superseded-decision-signal",
@@ -888,6 +937,30 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:validation.validator-self-testing",
     null,
     ["silentAndOvereager", "bothDirections"],
+  ],
+  [
+    "spec:validation.validator-self-testing.duplicate-pair-named",
+    "refines",
+    "spec:validation.validator-self-testing",
+  ],
+  [
+    "spec:validation.validator-self-testing.duplicate-pair-named",
+    "verifies",
+    "spec:validation.validator-self-testing",
+    null,
+    ["closedTable", "probePairs"],
+  ],
+  [
+    "spec:validation.validator-self-testing.unregistered-id-named",
+    "refines",
+    "spec:validation.validator-self-testing",
+  ],
+  [
+    "spec:validation.validator-self-testing.unregistered-id-named",
+    "verifies",
+    "spec:validation.validator-self-testing",
+    null,
+    ["closedTable"],
   ],
   [
     "spec:validation.validator-self-testing.unpaired-check-named",
@@ -1142,7 +1215,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "verifies",
     "spec:carrier.markdown-body-grammar",
     null,
-    ["constraintFields"],
+    ["constraintFields", "constraintEntryCount"],
   ],
   [
     "spec:carrier.markdown-body-grammar.unrecognized-heading-refused",
@@ -1571,6 +1644,18 @@ export const expectedDeclaredRelations: readonly (readonly [
   ],
   ["spec:model.planned-architecture", "decidedBy", "spec:decisions.architectural-annotation"],
   ["spec:model.open-question-fields", "refines", "spec:model.open-question-keys"],
+  [
+    "spec:model.open-question-fields.dropped-list-warns",
+    "refines",
+    "spec:model.open-question-fields",
+  ],
+  [
+    "spec:model.open-question-fields.dropped-list-warns",
+    "verifies",
+    "spec:model.open-question-fields",
+    null,
+    ["droppedListWarning"],
+  ],
   [
     "spec:model.open-question-fields",
     "decidedBy",
