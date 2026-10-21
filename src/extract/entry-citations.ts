@@ -1,5 +1,5 @@
 import type { EntryCitationLocation } from "../graph/schema.js";
-import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
+import { codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { mentionTokens } from "../validate/validators.js";
 
@@ -13,15 +13,23 @@ const entryCitationsAnchor = codeAnchor({
 void entryCitationsAnchor;
 
 export function scanEntryCitations(text: string, file: string): readonly EntryCitationLocation[] {
-  return text.split(/\r\n|[\r\n\u2028\u2029]/u).flatMap((line, index) =>
-    [
-      ...new Set(mentionTokens(line.replaceAll("\\", " ")).filter((token) => token.includes("#"))),
-    ].map((address) => ({
-      address,
-      file,
-      line: index + 1,
-    })),
-  );
+  return text.split(/\r\n|[\r\n\u2028\u2029]/u).flatMap((line, index) => {
+    const source = line.replaceAll("\\", " ");
+    const addresses = mentionTokens(source).flatMap((token) => {
+      if (!token.includes("#")) return [];
+      if (token.endsWith("$") && source.includes(`${token}{`)) {
+        const address = token.slice(0, -1);
+        try {
+          // An interpolated key has no entry address yet.
+          return parseId(address).subpath === undefined ? [] : [address];
+        } catch {
+          return [];
+        }
+      }
+      return [token];
+    });
+    return [...new Set(addresses)].map((address) => ({ address, file, line: index + 1 }));
+  });
 }
 
 export function compareCitations(
