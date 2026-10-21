@@ -255,7 +255,7 @@ the answer prints, and which failures refuse.
 
 `sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | @PATH | KEY=@PATH]... [--json]`
 
-Four bindings are injected:
+Five bindings are injected:
 
 - `g` — the reader over the derived graph (the same `createReader` the package exports)
 - `graph` — the raw graph schema (nodes, edges, claims)
@@ -264,6 +264,9 @@ Four bindings are injected:
   merge at the top level, and `KEY=@PATH` binds a file's JSON to `params.KEY`, so a base graph or
   an imports file rides beside the other parameters. A value that is not lawful, a key given
   twice, or a file that cannot be read is refused before the body runs
+- `recipes` — `recipes(number, parameters?)` calls a shipped recipe over the same graph and report
+
+The package exports `evaluateBody(body, { graph, report?, params? })` for a graph already held.
 
 Body rules: a plain JavaScript **async function body**. No `import`/`export`, no TypeScript-only
 syntax; `await` is fine. `return` is the machine output contract, but `sdp q` does not suppress

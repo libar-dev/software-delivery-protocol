@@ -64,8 +64,8 @@ runner.
    delete, or rename. Findings print and the process stays alive; operator stop (SIGINT) exits 0.
    `--watch` is validate-only and cannot combine with `--check-clean`. The watcher ignores
    `generated`, `dist`, `node_modules`, `coverage`, dot-directories, configured `--exclude` prefixes,
-   and non-carrier paths. Events during a run coalesce to one pending rerun. In this source
-   checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
+   and non-carrier paths, except named rules and parameter files. Events during a run coalesce to
+   one pending rerun. In this source checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
    not invent extra watch flags:
 
    ```sh
@@ -207,7 +207,7 @@ so it needs no extra tag, status key, or side table.
 
 Run a project policy, such as a required Design key or a naming rule, as an operator-selected
 rules file through `sdp validate --rules PATH [--params FORM]...`. The file is a local async
-JavaScript body with `g`, `graph`, `report` and `params`, returning `{ findings }`, as
+JavaScript body with `g`, `graph`, `report`, `params` and `recipes`, returning `{ findings }`, as
 `spec:validation.corpus-rules` states. Each `--params` follows its own `--rules`; the query grammar
 admits JSON, `@PATH` and `KEY=@PATH`, and repeatable parameters merge within that file only:
 
@@ -217,8 +217,8 @@ pnpm exec sdp validate . --rules design/policy.js --params '{"requiredKey":"id"}
 
 Corpus findings name their rule and rules file and print apart from Protocol conformance and
 honesty findings. The corpus summary also counts failed files; any Protocol error, corpus error
-or failed rules file exits 1. Under `--watch`, each carrier cycle rereads the rules files, but a
-rules-file edit alone starts no cycle. The architecture walk is recipe 42; planned against
+or failed rules file exits 1. Under `--watch`, every cycle rereads rules and parameter files;
+edits to either start a cycle wherever they live. The architecture walk is recipe 42; planned against
 realized components is recipe 43. These are corpus guidance, never Protocol validators.
 
 ### Say why a relation holds
@@ -394,8 +394,8 @@ export async function rebuild(stream: string): Promise<void> {
 - The file is the binding grain of both forms. A block names no declaration, and the graph records
   no symbol, so keep a file's blocks together rather than writing one block above each
   declaration.
-- `sdp validate --watch` re-runs on carrier edits only, never on source edits. After editing an
-  anchor, run `sdp validate` or query the graph again.
+- `sdp validate --watch` re-runs on edits to carriers and named rules and parameter files,
+  never on source edits. After editing an anchor, run `sdp validate` or query the graph again.
 
 The law is `spec:decisions.anchor-comment-form`. The decorator form stays an unextracted
 representation and mints nothing.

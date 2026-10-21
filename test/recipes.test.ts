@@ -195,6 +195,12 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function answerWithoutFindings(value: unknown): Record<string, unknown> {
+  const { findings, ...answer } = asRecord(value);
+  expect(Array.isArray(findings)).toBe(true);
+  return answer;
+}
+
 function asArray(value: unknown): readonly unknown[] {
   if (!Array.isArray(value)) {
     throw new Error(`expected an array, got ${JSON.stringify(value)}`);
@@ -3572,7 +3578,7 @@ describe("address resolution and dependency cycles", () => {
       (row) => row.spec === "spec:consumers.design-review" && row.entry === "ui.packPage",
     );
     expect(location).toBeDefined();
-    expect(await runRecipe(recipeByOrdinal(25))).toEqual({
+    expect(answerWithoutFindings(await runRecipe(recipeByOrdinal(25)))).toEqual({
       totals: { addresses: 4, resolved: 1, malformed: 1, spec: 1, section: 0, entry: 1 },
       rows: [
         {
@@ -3639,7 +3645,7 @@ describe("address resolution and dependency cycles", () => {
   it("reports the probe's one set and one self-dependent Spec, and nothing for a Spec that only reaches a set", async () => {
     const extraction = cycleProbe();
     const result = asRecord(await runRecipe(recipeByOrdinal(26), undefined, extraction));
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { sets: 1, selfDependent: 1, specsInCycles: 4 },
       cycles: [
         {
@@ -3683,7 +3689,7 @@ describe("address resolution and dependency cycles", () => {
       "lower.sdp.md": cycleProbeSpec("b", ["A"]),
     });
     const result = asRecord(await runRecipe(recipeByOrdinal(26), undefined, extraction));
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { sets: 1, selfDependent: 0, specsInCycles: 3 },
       cycles: [
         {
@@ -3701,6 +3707,7 @@ describe("address resolution and dependency cycles", () => {
       await runRecipe(recipeByOrdinal(26), undefined, dependencyChain(10_000)),
     );
     expect(chain).toEqual({
+      findings: [],
       totals: { sets: 0, selfDependent: 0, specsInCycles: 0 },
       cycles: [],
     });
@@ -3748,7 +3755,7 @@ relations: {}
       },
       extraction,
     );
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { addresses: 2, resolved: 1, malformed: 0, spec: 0, section: 0, entry: 1 },
       rows: [
         {
@@ -3791,7 +3798,7 @@ relations: {}
       },
       cycleProbe(),
     );
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { addresses: 4, resolved: 1, malformed: 1, spec: 1, section: 1, entry: 0 },
       rows: [
         {
@@ -3895,7 +3902,7 @@ relations: {}
       },
       extraction,
     );
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { addresses: 10, resolved: 4, malformed: 3, spec: 0, section: 0, entry: 3 },
       rows: [
         resolved(
@@ -4347,7 +4354,7 @@ describe("design references and the architecture taxonomy", () => {
     expect(asArray(valueRow("layers", "domain")?.units)).toContain("component:probe.studio-seam");
   });
 
-  // The sink compiles a body this way and calls it with the same four bindings; calling the
+  // The sink compiles a body this way and calls it with the same bindings; calling the
   // compiled body directly keeps the count to the body alone.
   it("creates each taxonomy bucket once, however many units share the value", async () => {
     const ids = Array.from(
@@ -4530,7 +4537,9 @@ describe("recipe parameters and the shipped recipe files", () => {
           !(recipe.ordinal === 42 && name !== "severity");
         expect({
           recipe: recipe.ordinal,
-          fallback: recipe.body.includes(`params.${name} ?? `),
+          fallback:
+            recipe.body.includes(`params.${name} ?? `) ||
+            recipe.body.includes(`Object.hasOwn(params, "${name}") ? params.${name} : `),
         }).toEqual({ recipe: recipe.ordinal, fallback: hasSample });
         expect({
           recipe: recipe.ordinal,
@@ -6805,6 +6814,7 @@ describe("authoring grammar recipes", () => {
     expect(await runRecipe(recipeByOrdinal(25), { addresses: [] }, extraction)).toEqual({
       totals: { addresses: 0, resolved: 0, malformed: 0, spec: 0, section: 0, entry: 0 },
       rows: [],
+      findings: [],
     });
   });
   it("counts rule coverage from bound examples and reports unbound intent beside it", async () => {

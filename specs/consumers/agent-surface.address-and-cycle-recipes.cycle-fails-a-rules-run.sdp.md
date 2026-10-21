@@ -2,7 +2,7 @@
 id: spec:consumers.agent-surface.address-and-cycle-recipes.cycle-fails-a-rules-run
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.agent-surface.address-and-cycle-recipes
   verifies:

@@ -70,6 +70,22 @@ function readSkill(path: string) {
   };
 }
 
+it("teaches the named-file exception to both carrier-watch descriptions", () => {
+  const { body } = readSkill(".agents/skills/sdp-authoring/SKILL.md");
+  const discovery = body.slice(
+    body.indexOf("The watcher ignores"),
+    body.indexOf("Events during a run"),
+  );
+  const anchors = body.slice(
+    body.indexOf("- `sdp validate --watch`"),
+    body.indexOf("The law is `spec:decisions.anchor-comment-form`"),
+  );
+  for (const paragraph of [discovery, anchors]) {
+    expect(paragraph).toContain("named rules and parameter files");
+    expect(paragraph).not.toContain("carrier edits only");
+  }
+});
+
 // A fence inside a numbered step is indented, so fences are matched after trimming.
 function shellFenceLines(body: string): readonly string[] {
   const lines: string[] = [];
@@ -661,7 +677,7 @@ const adopterClauses = [
     /Corpus findings name their rule and rules file and print apart from Protocol/u,
   ],
   ["policy failures", /any Protocol error, corpus error or failed rules file exits 1/u],
-  ["watch policy rereads", /each carrier cycle rereads the rules files/u],
+  ["watch policy rereads", /every cycle rereads rules and parameter files/u],
   [
     "Constraints leading-prose exception",
     /A section may open with paragraphs, except Constraints, which takes its entries only/u,

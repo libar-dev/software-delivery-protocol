@@ -2,7 +2,7 @@
 id: spec:validation.corpus-rules.params-edit-starts-a-cycle
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.corpus-rules
   verifies:

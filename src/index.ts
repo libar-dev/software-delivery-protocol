@@ -31,3 +31,5 @@ export * from "./validate/contracts.js";
 export * from "./validate/graph-index.js";
 export * from "./validate/readiness-floor.js";
 export * from "./validate/validators.js";
+
+export { evaluateBody } from "./reader/evaluate-body.js";

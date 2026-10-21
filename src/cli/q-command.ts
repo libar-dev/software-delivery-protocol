@@ -2,20 +2,18 @@ import { mergeParams } from "./params.js";
 import { readFileSync } from "node:fs";
 import { isatty } from "node:tty";
 import { inspect } from "node:util";
-import { Script } from "node:vm";
+import { evaluateBody } from "../reader/evaluate-body.js";
+export { compileBody } from "../reader/evaluate-body.js";
 
 import { InvalidExcludePathError, normalizeExcludes } from "../extract/discover.js";
 import { extract } from "../extract/index.js";
 import type { GraphSchema } from "../graph/schema.js";
-import { createReader } from "../reader/reader.js";
-import type { Reader } from "../reader/reader.js";
-import type { ValidationReport } from "../validate/contracts.js";
 import { validateGraph } from "../validate/validators.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { resolveExtractionRoot } from "./build-args.js";
 import type { CliOutput } from "./output.js";
-import { errorMessage, formatFinding, oneLine, writeStderr, writeStdout } from "./output.js";
+import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
 
 /**
  * The agent front door (`spec:decisions.agent-front-door`): one evaluation sink over the same
@@ -61,76 +59,6 @@ export interface QueryHooks {
   readonly isStdinTty?: () => boolean;
   readonly readStdin?: () => string;
 }
-
-type CompiledBody = (
-  g: Reader,
-  graph: GraphSchema,
-  report: ValidationReport,
-  params: unknown,
-) => Promise<unknown>;
-
-type AsyncBodyConstructor = new (...parameterNamesThenBody: readonly string[]) => CompiledBody;
-
-/** Never called: it exists only so its prototype yields the async-function constructor. */
-async function asyncBodyShape(): Promise<void> {
-  await Promise.resolve();
-}
-
-/**
- * The body is a plain JavaScript async function body — no `import`/`export`, no TypeScript-only
- * syntax — so the runner never has to resolve a module on the operator's behalf and no staleness
- * switch exists to forget. `return` is the output contract. The binding names, in order, are the
- * scripted contract every recipe and skill depends on.
- */
-export function compileBody(source: string): CompiledBody {
-  const { constructor: AsyncBody } = Object.getPrototypeOf(asyncBodyShape) as {
-    readonly constructor: AsyncBodyConstructor;
-  };
-
-  try {
-    return new AsyncBody("g", "graph", "report", "params", source);
-  } catch (error) {
-    // The function constructor omits positions. Compile the same body in a named wrapper
-    // only on refusal, so evaluation keeps the constructor's existing runtime behavior.
-    try {
-      new Script(`(async function(g, graph, report, params) {\n${source}\n})`, {
-        filename: "sdp-q-body",
-      });
-    } catch (syntaxError) {
-      const stack = syntaxError instanceof Error ? (syntaxError.stack ?? "") : "";
-      const position = /^sdp-q-body:(\d+)\n[^\n]*\n([^\n]*)\^/u.exec(stack);
-      const lines = source.split("\n");
-      const wrapperLine = Number(position?.[1] ?? 2);
-      const line = Math.max(1, Math.min(lines.length, wrapperLine - 1));
-      // An error on the wrapper's closing line means the body stopped short; the engine would
-      // name the wrapper's own brace, a token the caller never wrote.
-      const pastEnd = wrapperLine - 1 > lines.length;
-      const column = pastEnd
-        ? (lines[line - 1]?.length ?? 0) + 1
-        : (position?.[2]?.length ?? 0) + 1;
-      const message = pastEnd
-        ? "the body ends before it is complete"
-        : oneLine(errorMessage(syntaxError));
-      throw new BodyParseError(line, column, message);
-    }
-    throw error;
-  }
-}
-
-class BodyParseError extends Error {
-  constructor(line: number, column: number, message: string) {
-    super(`the body does not parse at line ${String(line)}, column ${String(column)}: ${message}`);
-  }
-}
-
-const queryAnswerShapeAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.query-answer-shapes"),
-  label: "reports parse positions in the caller's query body",
-  satisfies: ref("spec:consumers.agent-surface.evaluation-sink"),
-  component: componentAnchorId("component:protocol.cli"),
-  role: "service",
-});
-void queryAnswerShapeAnchor;
 
 function defaultIsStdinTty(): boolean {
   return isatty(0);
@@ -336,7 +264,7 @@ export async function runQuery(
 
   try {
     const report = validateGraph(graph);
-    value = await compileBody(body)(createReader(graph), graph, report, parsed.params);
+    value = await evaluateBody(body, { graph, report, params: parsed.params });
   } catch (error) {
     writeStderr(output, `sdp q: ${errorMessage(error)}\n`);
     return 1;

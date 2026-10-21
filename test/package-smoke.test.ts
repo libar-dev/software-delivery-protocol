@@ -56,6 +56,7 @@ const expectedRootExports = [
   "GHERKIN_KIND_LIE_REASONS",
   "gherkinKindLieReason",
   "evaluateReadinessFloor",
+  "evaluateBody",
   "extract",
   "extractAnchor",
   "extractFindingIds",
@@ -157,6 +158,9 @@ if (
 ) {
   throw new Error("Installed package did not reify both carriers into a graph.");
 }
+
+const cycleAnswer = await protocol.evaluateBody("return recipes(26)", { graph });
+if (cycleAnswer.findings.length !== 0) throw new Error("Installed evaluator could not run its shipped recipe.");
 
 console.log(
   JSON.stringify({

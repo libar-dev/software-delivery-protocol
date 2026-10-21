@@ -2,7 +2,7 @@
 id: spec:consumers.agent-surface.evaluation-sink.unknown-recipe
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.agent-surface.evaluation-sink
   verifies:

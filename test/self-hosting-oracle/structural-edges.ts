@@ -66,6 +66,11 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.validate",
   },
   {
+    unit: "src/reader/evaluate-body.ts#evaluateBody",
+    anchorId: "api:protocol.evaluate-body",
+    componentId: "component:protocol.reader",
+  },
+  {
     unit: "src/cli/validate-view-command.ts#runValidateRules",
     anchorId: "impl:protocol.corpus-rules",
     componentId: "component:protocol.cli",
@@ -651,9 +656,9 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.cli",
   },
   {
-    unit: "src/cli/q-command.ts#runQuery",
+    unit: "src/reader/evaluate-body.ts#compileBody",
     anchorId: "impl:protocol.query-answer-shapes",
-    componentId: "component:protocol.cli",
+    componentId: "component:protocol.reader",
   },
   {
     unit: "src/extract/key-markers.ts#normalizeKeyedContent",

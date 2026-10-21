@@ -2420,7 +2420,7 @@ describe("sdp --version", () => {
     expect(SDP_HELP_TEXT).toContain("  sdp --version\n");
     expect(SDP_HELP_TEXT).toContain("sdp <package version> (<commit>)");
     expect(SDP_HELP_TEXT).toContain("[--params JSON | --params @PATH | --params KEY=@PATH]...");
-    expect(SDP_HELP_TEXT).toContain("Four bindings are injected");
+    expect(SDP_HELP_TEXT).toContain("Five bindings are injected");
     expect(SDP_HELP_TEXT).toContain("dist/recipes/NN-slug.js");
   });
 

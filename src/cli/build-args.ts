@@ -16,6 +16,8 @@ export interface BuildArgs {
 }
 
 export interface RulesInput {
+  readonly paramForms?: readonly string[];
+  readonly rereadParams?: boolean;
   readonly rulesFile: string;
   readonly params: Readonly<Record<string, unknown>>;
 }
@@ -168,7 +170,7 @@ export function parseBuildArgs(
   for (const item of rawRules) {
     const params = mergeParams(item.forms, output, "validate");
     if (params === undefined) return undefined;
-    rules.push({ rulesFile: item.rulesFile, params });
+    rules.push({ rulesFile: item.rulesFile, params, paramForms: item.forms });
   }
 
   const resolvedRoot = resolveExtractionRoot(root, output, command);

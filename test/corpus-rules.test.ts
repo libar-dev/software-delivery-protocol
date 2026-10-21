@@ -433,7 +433,7 @@ return { findings: [] };`,
   15000,
 );
 
-it("rereads rules on the next carrier cycle and ignores a rules-file event", async () => {
+it("rereads rules when its file changes", async () => {
   const root = probe();
   const file = rules(root, "rules.js", "return { findings: [] };");
   const capture = createCaptureOutput();
@@ -458,7 +458,6 @@ it("rereads rules on the next carrier cycle and ignores a rules-file event", asy
       if (cycle.index === 1) {
         writeFileSync(file, `return { findings: [${finding()}] };`);
         listener?.({ type: "change", path: "rules.js" });
-        queueMicrotask(() => listener?.({ type: "change", path: "first.sdp.md" }));
       } else abort.abort();
     },
   });
