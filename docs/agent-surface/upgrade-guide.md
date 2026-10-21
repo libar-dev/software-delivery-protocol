@@ -13,6 +13,7 @@ pnpm exec sdp --version
 
 Run capability adoption, recipe 47. It reports the corpus totals, each Pack's counts, and the
 places each capability could apply. A count does not ask you to fill every place.
+Follow `spec:consumers.upgrade-kit.capability-adoption` for the report's contract.
 
 ```sh
 pnpm exec sdp q 'return await recipes(47, params)' --params '{"detail":true}' --json
@@ -26,7 +27,8 @@ arguments where needed. The catalog is
 
 Choose one Pack first. Write its base graph with `pnpm exec sdp build .` and save
 `generated/graph.json` outside the generated roots before another build. Record the commit
-whose corpus it contains. Pass that commit and your Pack id to the rule-key proposal, recipe 48:
+whose corpus it contains. Pass that commit and your Pack id to the rule-key proposal, recipe 48.
+Follow `spec:consumers.upgrade-kit.rule-key-proposal` for the proposal's contract:
 
 ```sh
 pnpm exec sdp q 'return await recipes(48, params)' --params @key-scope.json --json
@@ -49,8 +51,8 @@ The proposal contract is `spec:consumers.intent-composition.proposal`.
 
 ### ruleKeys
 
-Recipe 47 measures this row. Use the proposal above to add keys, then use rule coverage,
-recipe 34, to find keyed rules no example exercises. The law is `spec:model.rule-keys`.
+Recipe 47 measures this row. Use the rule-key proposal, recipe 48, as shown above to add keys.
+The law is `spec:model.rule-keys`.
 
 ### questionKeys
 
@@ -114,7 +116,7 @@ recipe 42, external registers, recipe 50, or entry citations, recipe 51, where t
 corpus's policy. Pass each call its own parameters. A rules file can combine their findings:
 
 ```js
-const addresses = await recipes(25, { addresses: params.addresses });
+const addresses = await recipes(25, { addresses: params.addresses ?? [] });
 const citations = await recipes(51);
 return { findings: [...addresses.findings, ...citations.findings] };
 ```
@@ -137,7 +139,8 @@ Follow `spec:consumers.command-line` for publishing and checking the generated o
 
 ## Pass subjects as data
 
-Pass a recipe's subject through `--params`, as the README's recipe-caller guidance teaches.
+Pass a recipe's subject through `--params`, as the README's recipe-caller guidance teaches
+under `spec:consumers.adopter-on-ramp`.
 Keep the shipped body unchanged. You can run a shipped file directly:
 
 ```sh

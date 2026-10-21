@@ -4471,6 +4471,7 @@ hide them. The law is `spec:consumers.readiness-planner`.
 
 Use this to measure a corpus before choosing which capabilities to adopt. Counts describe places
 a capability could apply. They give no score and produce no findings.
+The law is `spec:consumers.upgrade-kit.capability-adoption`.
 
 `params.detail` defaults to `false`; pass `true` for every Spec row or a list of Spec ids for a
 selection. `params.perspectives` is the list of perspective objects kept outside the graph.
@@ -4515,6 +4516,11 @@ const realized = new Map(specs.map((spec) => [spec.id, new Set()]));
 for (const edge of graph.edges) if (edge.claim === "anchored" && edge.type === "satisfies" && components.has(edge.from)) realized.get(edge.to)?.add(edge.from);
 const cited = new Set((graph.citations ?? []).map((row) => row.address));
 const count = (inUse, applicable) => ({ inUse, applicable });
+const skeleton = (text) => text.replace(/\{(?:[^{}"]|"[^"]*")*\}/gu, (group) => {
+  const name = group.slice(1, -1).split(":")[0].trim();
+  return /^[A-Za-z_][A-Za-z0-9_]*$/u.test(name) ? `{${name}}` : group;
+});
+const stepTexts = (item) => item !== null && typeof item === "object" ? ["given", "when", "then"].flatMap((phase) => item[phase] ?? []) : [];
 const perSpec = new Map(specs.map((spec) => {
   const sections = spec.sections ?? {}, behavior = sections.behavior ?? {};
   const questions = sections.intent?.openQuestions ?? [];
@@ -4522,7 +4528,13 @@ const perSpec = new Map(specs.map((spec) => {
   const verifies = spec.specKind === "example" ? edges.filter((edge) => edge.type === "verifies") : [];
   const entries = Object.entries(sections.design ?? {}).filter(([key]) => key !== "description");
   const pinned = entries.filter(([, value]) => typeof value === "string" && span.test(value));
-  const steps = [behavior.exampleSpace, ...(behavior.examples ?? [])].filter((item) => item !== null && typeof item === "object").flatMap((item) => ["given", "when", "then"].flatMap((phase) => item[phase] ?? []));
+  const steps = new Set([behavior.exampleSpace, ...(behavior.examples ?? [])].flatMap(stepTexts).map(skeleton));
+  const keyedSteps = new Set(Object.values(behavior.stepKeys ?? {}));
+  if (spec.specKind === "example") for (const edge of edges.filter((edge) => edge.type === "verifies" || edge.type === "refines")) {
+    const parent = byId.get(edge.to)?.sections?.behavior;
+    const vocabulary = new Set(stepTexts(parent?.exampleSpace).map(skeleton));
+    for (const step of Object.values(parent?.stepKeys ?? {})) if (vocabulary.has(step)) keyedSteps.add(step);
+  }
   return [spec.id, {
     ruleKeys: count(Object.keys(behavior.ruleKeys ?? {}).length, (behavior.rules?.length ?? 0) + (behavior.flows?.length ?? 0)),
     questionKeys: count(questions.filter((question) => question?.key !== undefined).length, questions.length),
@@ -4530,7 +4542,7 @@ const perSpec = new Map(specs.map((spec) => {
     relationReasons: count(edges.filter((edge) => edge.reason !== undefined).length, edges.length),
     exercises: count(verifies.filter((edge) => edge.exercises !== undefined).length, verifies.length),
     pinnedDeclarations: count(pinned.length, entries.length),
-    stepKeys: count(Object.keys(behavior.stepKeys ?? {}).length, steps.length),
+    stepKeys: count([...steps].filter((step) => keyedSteps.has(step)).length, steps.size),
     termKeys: count(Object.keys(sections.model?.termKeys ?? {}).length, Object.keys(sections.model?.terms ?? {}).length),
     entryCitations: count(pinned.filter(([key]) => cited.has(`${spec.id}#design.${key}`)).length, pinned.length),
   }];
@@ -4566,6 +4578,7 @@ return {
 ## 48. The rule-key proposal
 
 Use this to propose rule keys for review. It preserves every entry's text and writes no carrier.
+The law is `spec:consumers.upgrade-kit.rule-key-proposal`.
 
 `params.commit` is required and names the commit whose graph you read. Limit the proposal with
 `params.pack` or `params.specs`, a list of Spec ids, or omit both for the corpus. Check the returned
@@ -4591,7 +4604,6 @@ const ids = [...new Set(packNode ? packNode.members.filter((id) => byId.has(id))
 const scope = packNode ? { pack } : requested !== undefined ? { specs: ids } : { corpus: true };
 const label = packNode ? pack : requested !== undefined ? ids.join(", ") : "the corpus";
 const stop = new Set("a an the and or but nor so then than if when while where of to in on at by for with from into onto as per via over under about is are was were be been being do does did has have had can could may might must shall should will would it its this that these those there their they them which who whom whose what each every any also only own".split(" "));
-const refused = new Set(["implemented", "hasVerifier", "observed", "claim", "deliveryFacts", "nodeType", "specKind", "satisfies", "verifies", "belongsTo", "models"]);
 const coin = (text) => {
   const words = text.normalize("NFD").replace(/\p{M}/gu, "").replace(/^(?:\[[^\]]*\]\s*)+/u, "").replace(/([a-z0-9])([A-Z])/gu, "$1 $2").toLowerCase().split(/[^a-z0-9]+/u).filter(Boolean);
   const kept = words.filter((word) => !stop.has(word));
@@ -4615,7 +4627,7 @@ for (const id of ids) {
       const stem = coin(text);
       if (!stem) { unkeyable.push({ spec: id, entry, file: spec.file, line, reason: "no word to coin a key from" }); continue; }
       let key = stem, suffix = 2;
-      while (used.has(key) || refused.has(key)) key = `${stem}${suffix++}`;
+      while (used.has(key)) key = `${stem}${suffix++}`;
       used.add(key);
       changes.push({ scope: [id], request: `Add the key marker [#${key}] and one space at the start of the text of ${entry} of ${id}, at ${spec.file}${line === null ? "" : ` line ${line}`}, after its rule: or flow: label where it has one.`, text: `[#${key}] ${text}`, reason: `Gives the entry the address ${id}#rule.${key}.` });
     }

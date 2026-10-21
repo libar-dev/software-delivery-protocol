@@ -98,6 +98,79 @@ const guideTestAnchor = specTest({
 void guideTestAnchor;
 
 describe("upgrade kit", () => {
+  const guide = readFileSync(
+    new URL("../docs/agent-surface/upgrade-guide.md", import.meta.url),
+    "utf8",
+  );
+  it("names a carrying Spec in every guide section", () => {
+    for (const section of guide.split(/^## /mu).slice(1)) {
+      expect(section, section.split("\n")[0]).toMatch(/`spec:[a-z0-9.-]+`/u);
+    }
+  });
+  it("teaches the upgrade steps in the pinned order", () => {
+    expect([...guide.matchAll(/^## (.+)$/gmu)].map((match) => match[1])).toEqual([
+      "Measure the corpus",
+      "Propose and apply rule keys",
+      "Choose capabilities to adopt",
+      "Move rules files onto shipped recipes",
+      "Read large Packs and waiting statements",
+      "Publish the roots",
+      "Pass subjects as data",
+    ]);
+    expect(guide.slice(0, guide.indexOf("## Measure"))).toContain("pnpm exec sdp --version");
+    const section = (heading: string) => guide.split(`## ${heading}\n`)[1]?.split(/^## /mu)[0];
+    expect(section("Measure the corpus")).toContain("recipes(47, params)");
+    expect(section("Propose and apply rule keys")).toContain("recipes(48, params)");
+    expect(section("Propose and apply rule keys")).toContain("recipes(38, params)");
+    for (const ordinal of [25, 26, 42, 50, 51]) {
+      expect(section("Move rules files onto shipped recipes")).toContain(
+        `recipe ${String(ordinal)}`,
+      );
+    }
+    expect(section("Read large Packs and waiting statements")).toContain("part.of");
+    expect(section("Read large Packs and waiting statements")).toContain("recipe 36");
+    expect(section("Read large Packs and waiting statements")).toContain("recipe 46");
+    expect(section("Publish the roots")).toContain("pnpm exec sdp generate .");
+    expect(section("Pass subjects as data")).toContain("--params @adoption.json");
+    expect(section("Pass subjects as data")).toContain("--params KEY=@PATH");
+  });
+  it("runs the guide's rules file on a clean corpus with no address parameters", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-guide-rules-"));
+    try {
+      writeFileSync(join(root, "first.sdp.md"), document("first", ["Probe rule."], "{}"));
+      const snippet = guide
+        .split("## Move rules files onto shipped recipes\n")[1]
+        ?.match(/```js\n([\s\S]*?)\n```/u)?.[1];
+      expect(snippet).toBeDefined();
+      const file = join(root, "rules.js");
+      writeFileSync(file, snippet ?? "");
+      const capture = createCaptureOutput();
+      expect(
+        await runSdpCli(["validate", root, "--rules", file], capture.output),
+        capture.readStdout(),
+      ).toBe(0);
+      expect(capture.readStdout()).toContain("validate: 0 errors");
+      expect(capture.readStdout()).not.toContain("unresolved-address");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  it("names the recipes' carrying Specs and teaches rule-key proposal as the rule-key action", () => {
+    const catalog = readFileSync(
+      new URL("../docs/agent-surface/recipes.md", import.meta.url),
+      "utf8",
+    );
+    for (const [ordinal, law] of [
+      [47, "capability-adoption"],
+      [48, "rule-key-proposal"],
+    ] as const) {
+      const prose = catalog.split(`## ${String(ordinal)}. `)[1]?.split("```js")[0];
+      expect(prose).toContain(`spec:consumers.upgrade-kit.${law}`);
+    }
+    const ruleKeys = guide.split("### ruleKeys\n")[1]?.split(/^### /mu)[0];
+    expect(ruleKeys).toContain("recipe 48");
+    expect(ruleKeys).not.toContain("recipe 34");
+  });
   it("ships the guide and names every reported capability's law and measurement", async () => {
     const guide = readFileSync(
       new URL("../docs/agent-surface/upgrade-guide.md", import.meta.url),
@@ -404,44 +477,111 @@ const adoptionAnchor = codeAnchor({
 void adoptionAnchor;
 
 describe("capability adoption details", () => {
-  it("counts all capabilities and deduplicates shared components and repeated Pack members", async () => {
-    const first = probe("first", {
-      intent: {
-        outcome: "Probe",
-        openQuestions: [
-          "Plain question",
-          { key: "choice", question: "Choose", links: ["spec:probe.second"], decider: "owner" },
-        ],
-      },
-      behavior: {
-        rules: ["One rule", "Another"],
-        flows: ["A flow"],
-        ruleKeys: { flow: "flows[0]" },
-        examples: [{ given: ["A step"], when: ["It runs"], then: ["It works"] }],
-        stepKeys: { runs: "It runs" },
-      },
-      model: {
-        terms: { first: "First term", second: "Second term" },
-        termKeys: { first: "first" },
-      },
-      design: {
-        description: "Not an entry",
-        id: "`component:probe.shared` describes it",
-        pinned: "``a ` b`` explains it",
-        plain: "Plain value",
-      },
+  it.each(["refines", "verifies"] as const)(
+    "counts distinct step skeletons and vocabulary keys inherited through %s",
+    async (relation) => {
+      const root = mkdtempSync(join(tmpdir(), "sdp-adoption-steps-"));
+      try {
+        writeFileSync(
+          join(root, "parent.sdp.md"),
+          `${document("parent", ["Probe rule."], "{}")}\n## Example space\n\`\`\`gwt-vocabulary\nGiven [#items] A cart with {items:number} items\nWhen [#runs] The probe runs\nThen [#ends] The probe ends with {result:string}\n\`\`\`\n`,
+        );
+        writeFileSync(
+          join(root, "child.sdp.md"),
+          `---\nid: spec:probe.child\nkind: example\naltitude: story\nreadiness: idea\nrelations: { ${relation}: spec:probe.parent }\n---\n# Child\n\n## Intent\n- outcome: Probe vocabulary inheritance.\n\n\`\`\`gwt\nGiven A cart with {items: 2} items\nAnd A cart with {items: 2} items\nWhen The probe runs\nThen The probe ends with {result: "done"}\n\`\`\`\n`,
+        );
+        writeFileSync(
+          join(root, "steps.pack.sdp.md"),
+          "---\nid: pack:probe.steps\nspecs: [spec:probe.parent, spec:probe.child]\n---\n# Steps\n",
+        );
+        const input = extract({ root }).graph;
+        expect(
+          validateGraph(input).findings.filter((finding) => finding.severity === "error"),
+        ).toEqual([]);
+        const answer = await catalogRecipe<Adoption>(47, input, { detail: true });
+        expect(answer.capabilities.find((row) => row.capability === "stepKeys")).toMatchObject({
+          inUse: 6,
+          applicable: 6,
+        });
+        expect(answer.specs.find((row) => row.id === "spec:probe.child")).toMatchObject({
+          inUse: { stepKeys: 3 },
+        });
+        expect(
+          answer.specs.find((row) => row.id === "spec:probe.child")?.couldApply,
+        ).not.toHaveProperty("stepKeys");
+        expect(answer.packs[0]?.capabilities.stepKeys).toEqual({ inUse: 6, applicable: 6 });
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+  );
+  it("counts repeated vocabulary and example steps once per skeleton within a Spec", async () => {
+    const input = graph([
+      probe("repeat", {
+        behavior: {
+          exampleSpace: { given: ["A value {value:string}", "A value {value:string}"] },
+          examples: [
+            {
+              given: ['A value {value: "{done}"}', 'A value {value: "other"}'],
+              when: [],
+              then: [],
+            },
+          ],
+          stepKeys: { value: "A value {value}" },
+        },
+      }),
+    ]);
+    const answer = await catalogRecipe<Adoption>(47, input, { detail: true });
+    expect(answer.capabilities.find((row) => row.capability === "stepKeys")).toMatchObject({
+      inUse: 1,
+      applicable: 1,
     });
+  });
+  it("counts all capabilities and deduplicates shared components and repeated Pack members", async () => {
+    const first = {
+      ...probe("first", {
+        intent: {
+          outcome: "Probe",
+          openQuestions: [
+            "Plain question",
+            { key: "choice", question: "Choose", links: ["spec:probe.second"], decider: "owner" },
+          ],
+        },
+        behavior: {
+          rules: ["One rule", "Another"],
+          flows: ["A flow"],
+          ruleKeys: { flow: "flows[0]" },
+          examples: [{ given: ["A step"], when: ["It runs"], then: ["It works"] }],
+          stepKeys: { runs: "It runs" },
+        },
+        model: {
+          terms: { first: "First term", second: "Second term" },
+          termKeys: { first: "first" },
+        },
+        design: {
+          description: "Not an entry",
+          id: "`component:probe.shared` describes it",
+          pinned: "``a ` b`` explains it",
+          plain: "Plain value",
+        },
+      }),
+      readiness: "ready" as const,
+    };
     const second = {
       ...probe("second", { design: { id: "component:probe.shared", uncited: "`Uncited`" } }),
       specKind: "example" as const,
     };
-    const third = probe("third", {
-      design: { id: "component:probe.planned" },
-      behavior: {
-        exampleSpace: { given: ["A vocabulary step"] },
-        stepKeys: { vocab: "A vocabulary step" },
-      },
-    });
+    const third = {
+      ...probe("third", {
+        design: { id: "component:probe.planned" },
+        behavior: {
+          exampleSpace: { given: ["A vocabulary step"] },
+          stepKeys: { vocab: "A vocabulary step" },
+        },
+      }),
+      readiness: "ready" as const,
+      specKind: "decision" as const,
+    };
     const input: GraphSchema = {
       ...graph([
         first,
@@ -449,6 +589,13 @@ describe("capability adoption details", () => {
         third,
         component("shared"),
         component("bare"),
+        {
+          id: "test:probe.verifier",
+          nodeType: "Anchor",
+          claim: "anchored",
+          file: "test.ts",
+          line: 1,
+        },
         pack("z", [first.id, second.id, first.id]),
         pack("a", [first.id, second.id, "spec:missing"]),
       ]),
@@ -458,6 +605,10 @@ describe("capability adoption details", () => {
         { from: second.id, type: "verifies", to: first.id, claim: "declared", exercises: ["flow"] },
         { from: first.id, type: "dependsOn", to: third.id, claim: "declared", reason: "Probe" },
         { from: first.id, type: "belongsTo", to: "pack:probe.z", claim: "declared" },
+        { from: "test:probe.verifier", type: "verifies", to: first.id, claim: "anchored" },
+        { from: first.id, type: "verifies", to: third.id, claim: "declared", exercises: [] },
+        // A malformed binding must still stay outside the authored-relation counts.
+        { from: first.id, type: "verifies", to: third.id, claim: "anchored" },
       ],
       citations: [
         { address: `${first.id}#design.pinned`, file: "source.ts", line: 10 },
@@ -470,11 +621,20 @@ describe("capability adoption details", () => {
       detail: true,
       perspectives: [{ name: "security" }],
     });
+    expect(answer.totals).toEqual({
+      specs: 3,
+      packs: 2,
+      examples: 1,
+      decisions: 1,
+      componentUnits: 2,
+      statedReady: 2,
+      floorReady: 1,
+    });
     expect(answer.capabilities.map((row) => [row.capability, row.inUse, row.applicable])).toEqual([
       ["ruleKeys", 1, 3],
       ["questionKeys", 1, 2],
       ["questionFields", 1, 2],
-      ["relationReasons", 1, 2],
+      ["relationReasons", 1, 3],
       ["exercises", 1, 1],
       ["pinnedDeclarations", 3, 6],
       ["componentDesigns", 2, 3],
@@ -507,6 +667,7 @@ describe("capability adoption details", () => {
         ruleKeys: 2,
         questionKeys: 1,
         questionFields: 1,
+        relationReasons: 1,
         pinnedDeclarations: 1,
         stepKeys: 2,
         termKeys: 1,
@@ -544,7 +705,7 @@ const proposalAnchor = codeAnchor({
 void proposalAnchor;
 
 describe("rule-key proposal details", () => {
-  it("preserves scope and entry order, skips existing keys and tags, and avoids refused keys", async () => {
+  it("preserves scope and entry order and skips existing keys and tags", async () => {
     const a = probe("a", {
       behavior: {
         rules: [
@@ -576,14 +737,21 @@ describe("rule-key proposal details", () => {
       "otherRule",
       "partFitsBudget2",
       "partFitsBudget3",
-      "implemented2",
+      "implemented",
       "theAnd",
       "cafeLowerCamel",
       "dejaVuWorks",
       "partFitsBudget4",
     ]);
-    expect(answer.proposal?.changes[1]?.request).toBe(
-      "Add the key marker [#partFitsBudget2] and one space at the start of the text of rule[1] of spec:probe.a, at a.sdp.md line 12, after its rule: or flow: label where it has one.",
+    expect(answer.proposal?.changes[1]).toEqual({
+      scope: [a.id],
+      request:
+        "Add the key marker [#partFitsBudget2] and one space at the start of the text of rule[1] of spec:probe.a, at a.sdp.md line 12, after its rule: or flow: label where it has one.",
+      text: "[#partFitsBudget2] [extension] Part fits the budget.",
+      reason: `Gives the entry the address ${a.id}#rule.partFitsBudget2.`,
+    });
+    expect(answer.proposal?.changes[0]?.request).toBe(
+      "Add the key marker [#otherRule] and one space at the start of the text of rule[0] of spec:probe.b, at b.sdp.md, after its rule: or flow: label where it has one.",
     );
     expect(answer.proposal?.reason).toContain("in pack:probe.ordered");
     expect(JSON.stringify(input)).toBe(snapshot);
@@ -595,9 +763,28 @@ describe("rule-key proposal details", () => {
       specs: [b.id, a.id],
     });
     expect(selected.scope).toEqual({ specs: [b.id, a.id] });
+    expect(selected.proposal?.reason).toBe(
+      "Key every rule and flow entry in spec:probe.b, spec:probe.a so a review, a register row or an example can cite it.",
+    );
+    expect((await catalogRecipe<Proposed>(48, input, { commit: "abc" })).proposal?.reason).toBe(
+      "Key every rule and flow entry in the corpus so a review, a register row or an example can cite it.",
+    );
     expect(
       (await catalogRecipe<Proposed>(48, graph([probe("empty")]), { commit: "abc" })).proposal,
     ).toBeNull();
+  });
+  it("diagnoses both scopes even when each resolves", async () => {
+    const first = probe("first");
+    const input = graph([first, pack("first", [first.id])]);
+    expect(
+      await catalogRecipe(48, input, {
+        commit: "abc",
+        pack: "pack:probe.first",
+        specs: [first.id],
+      }),
+    ).toEqual({
+      diagnostics: [{ parameter: "scope", problem: "Supply pack or specs, not both." }],
+    });
   });
   it.each([
     {},
