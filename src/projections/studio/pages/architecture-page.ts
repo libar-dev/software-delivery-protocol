@@ -76,6 +76,8 @@ export function architecturePage(ctx: PageContext): string {
   boxes.push(
     ...plans.unrealized.map((p) => ({
       id: plannedKey(p),
+      edgeLabel:
+        plannedKey(p) === p.spec ? `${p.componentId} (planned by ${p.spec})` : p.componentId,
       words:
         plannedKey(p) === p.spec
           ? `${p.componentId}, planned by ${p.spec}`
@@ -91,17 +93,14 @@ export function architecturePage(ctx: PageContext): string {
       .filter((e) => components.some((t) => t.id === e.component))
       .map((e) => ({ from: c.id, to: e.component, kind: "uses", count: e.edges })),
   );
-  const targetOf = (id: string): string | undefined => {
-    if (components.some((c) => c.id === id)) return id;
-    const planned = plans.unrealized.find((p) => p.componentId === id);
-    return planned === undefined ? undefined : plannedKey(planned);
+  const targetsOf = (id: string): string[] => {
+    if (components.some((c) => c.id === id)) return [id];
+    return plans.unrealized.filter((p) => p.componentId === id).map(plannedKey);
   };
   for (const p of plans.unrealized)
-    for (const use of p.uses ?? []) {
-      const target = targetOf(use);
-      if (target !== undefined)
+    for (const use of p.uses ?? [])
+      for (const target of targetsOf(use))
         edges.push({ from: plannedKey(p), to: target, kind: "plans to use" });
-    }
   const diagrams = architectureDiagrams({ boxes, edges });
   const contexts = new Set(
     boxes.flatMap((b) => (b.context === null || b.context === undefined ? [] : [b.context])),

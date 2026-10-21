@@ -28,6 +28,26 @@ export function readStudioBase(
   }
 }
 
+export function readStudioRuns(
+  paths: readonly string[],
+  root: string,
+  output: CliOutput,
+  command = "studio",
+): unknown[] | undefined {
+  for (const path of paths)
+    if (!checkStudioInputPlacement(path, "--runs", root, output)) return undefined;
+  const runs: unknown[] = [];
+  for (const path of paths) {
+    try {
+      runs.push(JSON.parse(readFileSync(path, "utf8")) as unknown);
+    } catch {
+      writeStderr(output, `sdp ${command}: cannot read --runs ${JSON.stringify(path)} as JSON.\n`);
+      return undefined;
+    }
+  }
+  return runs;
+}
+
 export function checkStudioInputPlacement(
   path: string,
   flag: "--base" | "--runs",

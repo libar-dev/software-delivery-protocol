@@ -238,7 +238,14 @@ export function synchronizeVault(
   const prune = (directory: string): void => {
     for (const entry of readdirSync(directory, { withFileTypes: true }))
       if (entry.isDirectory()) prune(join(directory, entry.name));
-    if (directory !== folder && readdirSync(directory).length === 0) rmdirSync(directory);
+    const remaining = readdirSync(directory, { withFileTypes: true });
+    if (
+      directory !== folder &&
+      remaining.every((entry) => entry.isFile() && entry.name === ".DS_Store")
+    ) {
+      for (const entry of remaining) rmSync(join(directory, entry.name));
+      rmdirSync(directory);
+    }
   };
   mkdirSync(folder, { recursive: true });
   prune(folder);

@@ -138,26 +138,37 @@ for (const [beforeId, afterId] of [
   ["spec:probe.Member", "spec:probe.member"],
   ["spec:Probe.member", "spec:probe.member"],
 ]) {
-  it(`keeps a note after a case-only rename of ${beforeId ?? ""}`, async (context) => {
-    const root = fixture();
-    if (!caseInsensitive(root)) context.skip();
-    rmSync(join(root, "other.sdp.md"));
-    const change = (id: string) => {
-      put(join(root, "member.sdp.md"), carrier(id));
-      put(join(root, "probe.pack.sdp.md"), `---\nid: pack:probe\nspecs: [${id}]\n---\n# Probe\n`);
-    };
-    change(beforeId ?? "");
-    expect(await run(["vault", root])).toBe(0);
-    change(afterId ?? "");
-    expect(await run(["vault", root])).toBe(0);
-    expect(
-      readFileSync(
-        join(root, "generated/obsidian-vault/sdp/specs/probe/spec.probe.member.md"),
-        "utf8",
-      ),
-    ).toContain("spec:probe.member");
-    expect(await run(["vault", root])).toBe(0);
-  });
+  for (const finder of [false, true])
+    it(`keeps a note after a case-only rename of ${beforeId ?? ""}, Finder file: ${String(finder)}`, async (context) => {
+      const root = fixture();
+      if (!caseInsensitive(root)) context.skip();
+      rmSync(join(root, "other.sdp.md"));
+      const change = (id: string) => {
+        put(join(root, "member.sdp.md"), carrier(id));
+        put(join(root, "probe.pack.sdp.md"), `---\nid: pack:probe\nspecs: [${id}]\n---\n# Probe\n`);
+      };
+      change(beforeId ?? "");
+      expect(await run(["vault", root])).toBe(0);
+      if (finder)
+        put(
+          join(
+            root,
+            "generated/obsidian-vault/sdp/specs",
+            (beforeId ?? "").slice(5).split(".")[0] ?? "",
+            ".DS_Store",
+          ),
+          "Finder bytes",
+        );
+      change(afterId ?? "");
+      expect(await run(["vault", root])).toBe(0);
+      expect(
+        readFileSync(
+          join(root, "generated/obsidian-vault/sdp/specs/probe/spec.probe.member.md"),
+          "utf8",
+        ),
+      ).toContain("spec:probe.member");
+      expect(await run(["vault", root])).toBe(0);
+    });
 }
 
 it("refuses the same rules file under a case alias", async (context) => {
@@ -195,12 +206,27 @@ for (const flag of ["--base", "--runs"])
 it.each(["--base", "--runs"])(
   "refuses direct and symbolic build-owned %s inputs without changing a file",
   async (flag) => {
-    for (const alias of [false, true]) {
+    for (const alias of ["direct", "file-link", "root-alias-with-outward-link"]) {
       const root = fixture();
       const owned = join(root, "generated/spec-studio/report.json");
-      put(owned, "{}\n");
-      const input = alias ? join(root, "alias.json") : owned;
-      if (alias) symlinkSync(owned, input);
+      let input = owned;
+      if (alias === "root-alias-with-outward-link") {
+        const outside = mkdtempSync(join(tmpdir(), "sdp-x2b-alias-"));
+        roots.push(outside);
+        const target = join(outside, "report.json");
+        put(target, "{}\n");
+        put(owned, "");
+        rmSync(owned);
+        symlinkSync(target, owned);
+        symlinkSync(root, join(outside, "root-alias"));
+        input = join(outside, "root-alias/generated/spec-studio/report.json");
+      } else {
+        put(owned, "{}\n");
+        if (alias === "file-link") {
+          input = join(root, "alias.json");
+          symlinkSync(owned, input);
+        }
+      }
       const before = bytes(root);
       const out = createCaptureOutput();
       let extracted = false;
@@ -218,6 +244,54 @@ it.each(["--base", "--runs"])(
       expect(out.readStderr()).toContain(input);
       expect(bytes(root)).toEqual(before);
     }
+  },
+);
+
+it.each(["build-owned", "missing", "invalid JSON"])(
+  "refuses a %s --runs input before starting the Studio watcher",
+  async (kind) => {
+    const root = fixture();
+    const valid = join(root, "valid.json");
+    put(valid, "{}");
+    const input = join(
+      root,
+      kind === "build-owned" ? "generated/spec-studio/report.json" : "bad.json",
+    );
+    if (kind !== "missing") put(input, kind === "invalid JSON" ? "not JSON" : "{}");
+    const before = bytes(root);
+    const out = createCaptureOutput();
+    const stop = new AbortController();
+    let watching = false;
+    const exit = await runSdpCli(
+      ["studio", root, "--watch", "--runs", valid, "--runs", input],
+      out.output,
+      {
+        studioAssets: assets,
+        abortSignal: stop.signal,
+        createWatchSource: () => {
+          watching = true;
+          return {
+            on() {
+              // No filesystem events are needed to exercise the first watch cycle.
+            },
+            onError() {
+              // This source has no filesystem failure to report.
+            },
+            close() {
+              // This source owns no native handles.
+            },
+          };
+        },
+        onWatchCycleComplete: () => {
+          stop.abort();
+        },
+      },
+    );
+    expect(exit, out.readStderr()).toBe(1);
+    expect(watching).toBe(false);
+    expect(out.readStderr()).toContain("--runs");
+    expect(out.readStderr()).toContain(input);
+    expect(bytes(root)).toEqual(before);
   },
 );
 
@@ -276,7 +350,7 @@ it("refuses a future registrar input before extraction", async () => {
   expect(bytes(root)).toEqual(before);
 });
 it("states the working-directory resolution of generate --vault in help", () => {
-  expect(verbHelpText("generate")).toContain("--vault DIR, resolved against cwd");
+  expect(verbHelpText("generate")).toContain("--vault DIR, resolved against the working directory");
 });
 
 it("keeps the vault watcher alive after a malformed registrar manifest refusal", async () => {

@@ -490,14 +490,31 @@ registerBothGiven<InputsWorld & { inputsNamed?: boolean }>({
       "---\nid: spec:probe.third\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Third\n\n## Intent\n- outcome: Read the added Spec.\n",
     );
     writeFileSync(runs, JSON.stringify(report(["test/page.test.ts"])));
-    const graph = extract({ root }).graph;
+    expect(await cli(["build", root], output())).toBe(0);
+    const graphBytes = readFileSync(join(root, "generated/graph.json"), "utf8");
+    const graph = JSON.parse(graphBytes) as ReturnType<typeof extract>["graph"];
+    const specPages = graph.nodes
+      .filter((node) => node.nodeType === "Primitive")
+      .map((node) => `specs/${node.id.slice(5)}.html`)
+      .sort();
     const flags = ["studio", root, "--base", base, "--base-label", "before", "--runs", runs];
     const beforeInputs = [readFileSync(base, "utf8"), readFileSync(runs, "utf8")];
     expect(await cli(flags, output())).toBe(0);
     w.first = snapshot(join(root, "generated/spec-studio"));
+    expect(
+      Object.keys(w.first)
+        .filter((path) => path.startsWith("specs/"))
+        .sort(),
+    ).toEqual(specPages);
+    expect(readFileSync(join(root, "generated/graph.json"), "utf8")).toBe(graphBytes);
     expect(await cli(flags, output())).toBe(0);
     w.second = snapshot(join(root, "generated/spec-studio"));
-    expect(extract({ root }).graph).toEqual(graph);
+    expect(
+      Object.keys(w.second)
+        .filter((path) => path.startsWith("specs/"))
+        .sort(),
+    ).toEqual(specPages);
+    expect(readFileSync(join(root, "generated/graph.json"), "utf8")).toBe(graphBytes);
     expect([readFileSync(base, "utf8"), readFileSync(runs, "utf8")]).toEqual(beforeInputs);
     w.inputsNamed =
       required(w.first)["diff.html"]?.includes("before") === true &&

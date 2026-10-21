@@ -193,6 +193,33 @@ it("keys and names each design planning the same unanchored component", async ()
   }
 });
 
+it("draws planned uses to every design of the named component and names the component in text", async () => {
+  const root = fixture();
+  for (const name of ["one", "two", "three"])
+    put(
+      join(root, `${name}.sdp.md`),
+      carrier(
+        `spec:probe.${name}`,
+        `Plan ${name}`,
+        "behavior",
+        "idea",
+        `\n## Design\n- id: component:probe.${name === "three" ? "user" : "planned"}\n- context: core\n- layer: domain\n${name === "three" ? "- uses: component:probe.planned\n" : ""}`,
+      ),
+    );
+  const html = required((await pages(root)).find((p) => p.path === "architecture.html")).content;
+  for (const name of ["one", "two"]) {
+    expect(html).toContain(
+      `data-from="component:probe.user" data-to="spec:probe.${name}" data-kind="plans to use"`,
+    );
+    expect(html).toContain(
+      `component:probe.user plans to use component:probe.planned (planned by spec:probe.${name})`,
+    );
+  }
+  expect(html.match(/data-kind="plans to use"/gu)).toHaveLength(2);
+  expect(html.match(/stroke-dasharray="6 4" marker-end/gu)).toHaveLength(2);
+  expect(html).not.toContain("component:probe.user plans to use spec:probe.");
+});
+
 it("prints a diagram whole and restores its zoom after printing", () => {
   const events = new Map<string, () => void>();
   const definitions = new Map<string, new () => Element>();

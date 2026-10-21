@@ -214,6 +214,7 @@ function svg(d: Diagram, textId: string, diagramId: string): string {
 export function renderDiagram(d: Diagram, diagramId = d.subject): string {
   const textId = `diagram.${diagramId}.text`,
     fits = withinBound(d);
+  const edgeLabels = new Map(d.boxes.map((box) => [box.id, box.edgeLabel ?? box.id]));
   const words = (b: DiagramBox) =>
     `${b.words}${b.planned && !b.words.includes("planned") ? ", planned" : ""}${b.folded && !b.words.includes("folded") ? ", folded" : ""}`;
   const normalized = {
@@ -223,7 +224,7 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
       (a, b) => compare(a.from, b.from) || compare(a.to, b.to) || compare(a.kind, b.kind),
     ),
   };
-  const text = `<details${fits ? "" : " open"} id="${escape(textId)}"><summary>The diagram as text</summary><ul>${normalized.boxes.map((b) => `<li>${escape(b.id)}: ${escape(b.words)}</li>`).join("")}${normalized.edges.map((e) => `<li>${escape(e.from)} ${escape(e.kind)} ${escape(e.to)}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}</li>`).join("")}</ul></details>`;
+  const text = `<details${fits ? "" : " open"} id="${escape(textId)}"><summary>The diagram as text</summary><ul>${normalized.boxes.map((b) => `<li>${escape(b.id)}: ${escape(b.words)}</li>`).join("")}${normalized.edges.map((e) => `<li>${escape(edgeLabels.get(e.from) ?? e.from)} ${escape(e.kind)} ${escape(edgeLabels.get(e.to) ?? e.to)}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}</li>`).join("")}</ul></details>`;
   const sectionId = d.sectionId === undefined ? d.subject : d.sectionId;
   return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${fits ? `<div class="diagram-scroll">${svg(normalized, textId, diagramId)}</div>` : "<p>Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.</p>"}${text}</figure></sdp-diagram></section>`;
 }

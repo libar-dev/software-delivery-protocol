@@ -1,6 +1,7 @@
 export interface DiagramBox {
   readonly id: string;
   readonly words: string;
+  readonly edgeLabel?: string;
   readonly target: string;
   readonly context?: string | null;
   readonly layer?: string | null;

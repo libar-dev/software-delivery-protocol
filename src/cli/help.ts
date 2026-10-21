@@ -101,8 +101,8 @@ const commands = {
              view and Studio from that graph. --check-clean applies each publisher's checks,
              removing only roots that fail. Studio is written without optional inputs. Synchronizes
              the vault through its directory checks and guard before publishing any root, at the
-             default vault directory or --vault DIR, resolved against cwd. --check-clean leaves the
-             vault alone.`,
+             default vault directory or --vault DIR, resolved against the working directory.
+             --check-clean leaves the vault alone.`,
   },
   import: {
     name: "import",

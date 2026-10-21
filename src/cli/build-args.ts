@@ -1,4 +1,4 @@
-import { readStudioBase } from "./studio-inputs.js";
+import { readStudioBase, readStudioRuns } from "./studio-inputs.js";
 import type { StudioInputs } from "../projections/studio/inputs.js";
 import { mergeParams } from "./params.js";
 import { realpathSync, statSync } from "node:fs";
@@ -286,6 +286,7 @@ export function parseBuildArgs(
   const studioInputs =
     base === undefined ? undefined : readStudioBase(base, baseLabel ?? null, output, resolvedRoot);
   if (base !== undefined && studioInputs === undefined) return undefined;
+  if (readStudioRuns(runs, resolvedRoot, output, command) === undefined) return undefined;
 
   return {
     ...(studioInputs === undefined ? {} : { studioInputs }),
