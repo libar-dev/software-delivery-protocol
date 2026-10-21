@@ -162,6 +162,7 @@ export const expectedPackMembers = [
   "spec:validation.superseded-decision-signal.closed-chain-named",
   "spec:validation.superseded-decision-signal.dependency-unread",
   "spec:validation.superseded-decision-signal.superseded-subject-silent",
+  "spec:validation.superseded-decision-signal.replacement-below-ready-named",
   "spec:validation.architecture-constraints",
   "spec:validation.architecture-constraints.forbidden-layer-pair",
   "spec:validation.architecture-constraints.isolated-context-as-rule",

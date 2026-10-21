@@ -48,11 +48,12 @@ Only `decidedBy` says that a ruling shapes a Spec now. A `refines` between decis
 - skippedPairs: no warning for a `decidedBy` whose target does not resolve or is not a decision, for a subject a resolving `supersedes` edge targets, or for a subject the walk visits.
 
 ## Example space
-Each world builds its graph in memory, and every probe Spec carries its kind's evidence, so only the signal moves the findings. The subject is a behavior Spec, or, for a superseded subject, the decision `decision-s`, which `decision-b` supersedes. The subject names the probe decision `decision-a`, and the replacing decisions are `decision-b` and `decision-c`. One replacement is `decision-b` superseding `decision-a`; a chain of two adds `decision-c` superseding `decision-b`; two at once are `decision-b` and `decision-c` each superseding `decision-a`; a closed chain is `decision-b` superseding `decision-a` and `decision-a` superseding `decision-b`. The named decisions are full ids joined by a comma and a space in code-unit order, or `nothing` when no warning names any.
+Each world builds its graph in memory, and every probe Spec carries its kind's evidence, so only the signal moves the findings. The subject is a behavior Spec, or, for a superseded subject, the decision `decision-s`, which `decision-b` supersedes. The subject names the probe decision `decision-a`, and the replacing decisions are `decision-b` and `decision-c`, which state `ready` unless a point binds their rung. One replacement is `decision-b` superseding `decision-a`; a chain of two adds `decision-c` superseding `decision-b`; two at once are `decision-b` and `decision-c` each superseding `decision-a`; a closed chain is `decision-b` superseding `decision-a` and `decision-a` superseding `decision-b`. The named decisions are full ids joined by a comma and a space in code-unit order, or `nothing` when no warning names any.
 
 ```gwt-vocabulary
 Given a {subject:"live Spec"|"superseded decision"} names the probe decision through {relation:"decidedBy"|"dependsOn"}
 Given the probe decision is replaced by {replacement:"no decision"|"one decision"|"a chain of two decisions"|"two decisions at once"|"a chain that closes on itself"}
+Given every replacing decision states {replacementRung:"idea"|"ready"}
 When the graph is validated
 Then the report holds {warnings:number} superseded-decision warnings
 Then the warnings name {named:string}

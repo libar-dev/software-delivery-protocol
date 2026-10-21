@@ -1803,6 +1803,7 @@ export const validationSpecs = [
           given: [
             'a {subject:"live Spec"|"superseded decision"} names the probe decision through {relation:"decidedBy"|"dependsOn"}',
             'the probe decision is replaced by {replacement:"no decision"|"one decision"|"a chain of two decisions"|"two decisions at once"|"a chain that closes on itself"}',
+            'every replacing decision states {replacementRung:"idea"|"ready"}',
           ],
           when: ["the graph is validated"],
           then: [
@@ -1812,7 +1813,7 @@ export const validationSpecs = [
           ],
         },
         description:
-          "Each world builds its graph in memory, and every probe Spec carries its kind's evidence, so only the signal moves the findings. The subject is a behavior Spec, or, for a superseded subject, the decision `decision-s`, which `decision-b` supersedes. The subject names the probe decision `decision-a`, and the replacing decisions are `decision-b` and `decision-c`. One replacement is `decision-b` superseding `decision-a`; a chain of two adds `decision-c` superseding `decision-b`; two at once are `decision-b` and `decision-c` each superseding `decision-a`; a closed chain is `decision-b` superseding `decision-a` and `decision-a` superseding `decision-b`. The named decisions are full ids joined by a comma and a space in code-unit order, or `nothing` when no warning names any.",
+          "Each world builds its graph in memory, and every probe Spec carries its kind's evidence, so only the signal moves the findings. The subject is a behavior Spec, or, for a superseded subject, the decision `decision-s`, which `decision-b` supersedes. The subject names the probe decision `decision-a`, and the replacing decisions are `decision-b` and `decision-c`, which state `ready` unless a point binds their rung. One replacement is `decision-b` superseding `decision-a`; a chain of two adds `decision-c` superseding `decision-b`; two at once are `decision-b` and `decision-c` each superseding `decision-a`; a closed chain is `decision-b` superseding `decision-a` and `decision-a` superseding `decision-b`. The named decisions are full ids joined by a comma and a space in code-unit order, or `nothing` when no warning names any.",
       },
       design: {
         validatorId:
@@ -2015,6 +2016,39 @@ export const validationSpecs = [
             then: [
               "the report holds {warnings: 0} superseded-decision warnings",
               'the warnings name {named: "nothing"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.replacement-below-ready-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/validation/superseded-decision-signal.replacement-below-ready-named.sdp.md",
+    title: "A replacement still below ready is named as it stands",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the signal where the decision that supersedes the shaping decision states `idea`.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "idea"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-b"}',
               "the report holds {errorCount: 0} errors",
             ],
           },

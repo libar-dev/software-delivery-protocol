@@ -823,6 +823,18 @@ export const expectedDeclaredRelations: readonly (readonly [
     ["readsDecidedBy"],
   ],
   [
+    "spec:validation.superseded-decision-signal.replacement-below-ready-named",
+    "refines",
+    "spec:validation.superseded-decision-signal",
+  ],
+  [
+    "spec:validation.superseded-decision-signal.replacement-below-ready-named",
+    "verifies",
+    "spec:validation.superseded-decision-signal",
+    null,
+    ["anyRung"],
+  ],
+  [
     "spec:validation.superseded-decision-signal.superseded-subject-silent",
     "refines",
     "spec:validation.superseded-decision-signal",
