@@ -25,6 +25,7 @@ export const expectedComponentIds = [
 // outside the engine source seams and therefore have no truthful owner among the accepted
 // component set.
 export const structuralMembershipExceptions = [
+  "impl:protocol.example-space-coverage-recipe",
   "impl:protocol.architecture-walk-recipe",
   "impl:protocol.planned-components-recipe",
   "impl:protocol.authoring-on-ramp",
@@ -51,12 +52,47 @@ export const structuralMembershipExceptions = [
 
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/notation/example-space.ts#decodeExampleSpaces",
+    anchorId: "impl:protocol.example-space-decoding",
+    componentId: "component:protocol.notation",
+  },
+  {
+    unit: "src/projections/studio/recipes.ts#studioRecipeAnswers",
+    anchorId: "impl:protocol.studio-recipes",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/svg.ts#renderDiagram",
+    anchorId: "impl:protocol.studio-diagrams",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/studio-elements/diagram.ts#registerDiagram",
+    anchorId: "impl:protocol.studio-diagram-element",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/projections/studio/pages/architecture-page.ts#architecturePage",
+    anchorId: "impl:protocol.studio-architecture-lens",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/tests-page.ts#testsPage",
+    anchorId: "impl:protocol.studio-tests-lens",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/evidence-page.ts#evidencePage",
+    anchorId: "impl:protocol.studio-evidence-lens",
+    componentId: "component:protocol.projections",
+  },
+  {
     unit: "src/cli/validate-view-command.ts#runValidateRules",
     anchorId: "impl:protocol.corpus-rules",
     componentId: "component:protocol.cli",
   },
   {
-    unit: "src/projections/studio/data.ts#packTotals",
+    unit: "src/projections/studio/data.ts#createStudioData",
     anchorId: "impl:protocol.studio-data",
     componentId: "component:protocol.projections",
   },
@@ -753,6 +789,7 @@ export const coarseGrainCoverage = [
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
 // re-measured under plan 41
 export const expectedUsesEdges = [
+  ["impl:protocol.studio-recipes", "impl:protocol.reader"],
   ["component:protocol.studio-elements", "component:protocol.reader"],
   ["component:protocol.studio-elements", "component:protocol.projections"],
   ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],

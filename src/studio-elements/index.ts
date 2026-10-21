@@ -1,3 +1,4 @@
+import { registerDiagram } from "./diagram.js";
 import { registerCopy } from "./copy.js";
 import { registerExpander } from "./expander.js";
 import { registerFilter } from "./filter.js";
@@ -20,3 +21,5 @@ registerFilter();
 registerExpander();
 registerCopy();
 registerStamp();
+
+registerDiagram();

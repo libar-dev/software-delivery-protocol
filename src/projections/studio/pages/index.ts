@@ -1,3 +1,6 @@
+import { architecturePage } from "./architecture-page.js";
+import { testsPage } from "./tests-page.js";
+import { evidencePage } from "./evidence-page.js";
 import type { StudioData } from "../data.js";
 import { pagePath } from "../paths.js";
 import { indexPage } from "./index-page.js";
@@ -13,6 +16,9 @@ export interface StudioPage {
 export function renderStudio(data: StudioData): readonly StudioPage[] {
   return [
     { path: "index.html", content: indexPage({ data, path: "index.html" }) },
+    { path: "architecture.html", content: architecturePage({ data, path: "architecture.html" }) },
+    { path: "tests.html", content: testsPage({ data, path: "tests.html" }) },
+    { path: "evidence.html", content: evidencePage({ data, path: "evidence.html" }) },
     { path: "search.html", content: searchPage({ data, path: "search.html" }) },
     ...data.packs.map(({ context, totals }) => {
       const path = pagePath(context.id);

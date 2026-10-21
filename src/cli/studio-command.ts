@@ -33,7 +33,11 @@ export interface StudioHooks extends ValidationViewHooks {
  * @sdpComponent component:protocol.cli
  * @sdpRole publisher
  */
-export function runStudio(parsed: BuildArgs, output: CliOutput, hooks: StudioHooks = {}): number {
+export async function runStudio(
+  parsed: BuildArgs,
+  output: CliOutput,
+  hooks: StudioHooks = {},
+): Promise<number> {
   const studioPath = join(parsed.root, "generated", "spec-studio");
   const temporaryPath = `${studioPath}.tmp`;
   const recoveryRm = hooks.rmSync ?? rmSync;
@@ -61,9 +65,15 @@ export function runStudio(parsed: BuildArgs, output: CliOutput, hooks: StudioHoo
       script: fileURLToPath(new URL("../studio/studio.js", import.meta.url)),
       stylesheet: fileURLToPath(new URL("../studio/studio.css", import.meta.url)),
     };
-    const files = studioFiles(render(createStudioData(createReader(validated.graph))), assets);
+    const files = studioFiles(
+      render(await createStudioData(createReader(validated.graph))),
+      assets,
+    );
     if (parsed.checkClean) {
-      const twin = studioFiles(render(createStudioData(createReader(validated.graph))), assets);
+      const twin = studioFiles(
+        render(await createStudioData(createReader(validated.graph))),
+        assets,
+      );
       if (!studioFilesEqual(files, twin))
         return fail("sdp studio --check-clean: two independent renders diverged.\n");
       if (prior === undefined || !studioFilesEqual(prior, files))

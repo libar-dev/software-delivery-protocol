@@ -1,3 +1,5 @@
+import { studioRecipeAnswers } from "./recipes.js";
+import type { StudioRecipeAnswers } from "./recipes.js";
 import type { GraphNodeType } from "../../graph/schema.js";
 import type { PackContext, Reader, SpecContext } from "../../reader/reader.js";
 import type { Finding } from "../../validate/contracts.js";
@@ -66,49 +68,12 @@ export interface SearchIndex {
 }
 
 export interface StudioData {
+  readonly recipes: StudioRecipeAnswers;
   readonly specs: readonly SpecContext[];
   readonly packs: readonly { readonly context: PackContext; readonly totals: PackTotals }[];
   readonly findings: readonly Finding[];
   readonly rail: RailValues;
   readonly search: SearchIndex;
-}
-
-/**
- * @sdpAnchor impl:protocol.studio-data
- * @sdpLabel assembles reader contexts, Pack totals, rails and search records for static pages
- * @sdpSatisfies spec:consumers.spec-studio.data
- * @sdpComponent component:protocol.projections
- * @sdpRole projection
- */
-export function packTotals(pack: PackContext): PackTotals {
-  const resolved = pack.members.filter((member) => member.resolved);
-  return {
-    members: pack.members.length,
-    unresolved: pack.members.length - resolved.length,
-    heldBelowNextRung: resolved.filter((member) => (member.statedNextRungFailures?.length ?? 0) > 0)
-      .length,
-    waitingForAuthor: resolved.filter(
-      (member) =>
-        member.statedNextRung !== undefined && member.statedNextRungFailures?.length === 0,
-    ).length,
-    entries: resolved.reduce((sum, member) => sum + (member.design?.entries ?? 0), 0),
-    declarations: resolved.reduce((sum, member) => sum + (member.design?.declarations ?? 0), 0),
-    openQuestions: resolved.reduce(
-      (sum, member) => sum + (member.design?.openQuestions.length ?? 0),
-      0,
-    ),
-    blockingQuestions: resolved.reduce(
-      (sum, member) => sum + (member.design?.blockingQuestions ?? 0),
-      0,
-    ),
-    withImplementations: resolved.filter((member) => (member.implementations?.length ?? 0) > 0)
-      .length,
-    withReferences: resolved.filter((member) => (member.references?.length ?? 0) > 0).length,
-    restsOn: pack.boundary.restsOn.length,
-    restedOnBy: pack.boundary.restedOnBy.length,
-    verifiedBy: pack.boundary.verifiedBy.length,
-    supersededBy: pack.boundary.supersededBy.length,
-  };
 }
 
 export function railValues(reader: Reader): RailValues {
@@ -291,13 +256,40 @@ function specContext(reader: Reader, id: string): SpecContext {
   return context;
 }
 
-export function createStudioData(reader: Reader): StudioData {
+/**
+ * @sdpAnchor impl:protocol.studio-data
+ * @sdpLabel assembles reader contexts, Pack totals, rails and search records for static pages
+ * @sdpSatisfies spec:consumers.spec-studio.data
+ * @sdpComponent component:protocol.projections
+ * @sdpRole projection
+ */
+export async function createStudioData(source: Reader): Promise<StudioData> {
+  // Every consumer in one build reads the same immutable context values.
+  const specRows = source.specs(),
+    packRows = source.packs();
+  const specContexts = new Map<string, SpecContext | undefined>();
+  const packContexts = new Map<string, PackContext | undefined>();
+  const reader: Reader = {
+    ...source,
+    specs: () => specRows,
+    packs: () => packRows,
+    specContext: (id) => {
+      if (!specContexts.has(id)) specContexts.set(id, source.specContext(id));
+      return specContexts.get(id);
+    },
+    packContext: (id) => {
+      if (!packContexts.has(id)) packContexts.set(id, source.packContext(id));
+      return packContexts.get(id);
+    },
+  };
+  const recipes = await studioRecipeAnswers(reader);
   return {
+    recipes,
     specs: reader.specs().map((spec) => specContext(reader, spec.id)),
     packs: reader.packs().map((pack) => {
       const context = reader.packContext(pack.id);
       if (context === undefined) throw new Error(`Studio cannot resolve Pack ${pack.id}`);
-      return { context, totals: packTotals(context) };
+      return { context, totals: (recipes.packs.get(pack.id) as { totals: PackTotals }).totals };
     }),
     findings: reader.findings(),
     rail: railValues(reader),

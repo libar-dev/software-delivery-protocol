@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { ref, specTest, testAnchorId } from "../src/anchors.js";
 import { rowMatches } from "../src/studio-elements/filter.js";
@@ -339,7 +339,7 @@ describe("Studio page interactions", () => {
     expect(stampText({ corpusCommit: 4 })).toBe("");
   });
 
-  it("loads the built classic bundle without imports and defines the six elements", () => {
+  it("loads the built classic bundle without imports and defines the seven elements", () => {
     const bundle = readFileSync(new URL("../dist/studio/studio.js", import.meta.url), "utf8");
     const defined: string[] = [];
     expect(bundle).not.toMatch(/^\s*(?:import|export)\s/mu);
@@ -359,6 +359,7 @@ describe("Studio page interactions", () => {
     }).not.toThrow();
     expect(defined.sort()).toEqual([
       "sdp-copy",
+      "sdp-diagram",
       "sdp-expander",
       "sdp-filter",
       "sdp-search",
@@ -507,4 +508,104 @@ describe("Studio page interactions", () => {
     listeners.get("click")?.();
     expect(status?.textContent).toBe("Showing 60 of 60 nodes");
   });
+});
+
+it("enhances a diagram through its view box, preserves links on click and removes handlers", () => {
+  type Listener = (event: Record<string, unknown>) => void;
+  const created: FakeElement[] = [];
+  class FakeElement {
+    textContent = "";
+    type = "";
+    className = "";
+    style = { touchAction: "" };
+    removed = false;
+    attributes = new Map<string, string>();
+    listeners = new Map<string, Listener>();
+    children: FakeElement[] = [];
+    ownerDocument = {
+      createElement: () => {
+        const element = new FakeElement();
+        created.push(element);
+        return element;
+      },
+    };
+    viewBox = { baseVal: { x: 0, y: 0, width: 1000, height: 500 } };
+    captures: number[] = [];
+    append(node: FakeElement) {
+      this.children.push(node);
+    }
+    after(node: FakeElement) {
+      this.children.push(node);
+    }
+    remove() {
+      this.removed = true;
+    }
+    setAttribute(name: string, value: string) {
+      this.attributes.set(name, value);
+    }
+    addEventListener(name: string, listener: Listener) {
+      this.listeners.set(name, listener);
+    }
+    removeEventListener(name: string, listener: Listener) {
+      if (this.listeners.get(name) === listener) this.listeners.delete(name);
+    }
+    setPointerCapture(id: number) {
+      this.captures.push(id);
+    }
+    getBoundingClientRect() {
+      return { width: 1000, height: 500 };
+    }
+    querySelector(name: string) {
+      return name === "svg" ? svg : name === "figcaption" ? caption : null;
+    }
+  }
+  const svg = new FakeElement(),
+    caption = new FakeElement();
+  const constructors = new Map<
+    string,
+    new () => FakeElement & { connectedCallback(): void; disconnectedCallback(): void }
+  >();
+  runInNewContext(readFileSync(new URL("../dist/studio/studio.js", import.meta.url), "utf8"), {
+    HTMLElement: FakeElement,
+    customElements: {
+      get: (name: string) => constructors.get(name),
+      define: (
+        name: string,
+        type: new () => FakeElement & { connectedCallback(): void; disconnectedCallback(): void },
+      ) => {
+        constructors.set(name, type);
+      },
+    },
+  });
+  const Constructor = constructors.get("sdp-diagram");
+  if (!Constructor) throw new Error("Missing diagram element");
+  const host = new Constructor();
+  host.connectedCallback();
+  const controls = created.filter((element) => element.textContent !== "");
+  expect(controls.map((c) => c.textContent)).toEqual(["Zoom in", "Zoom out", "Reset"]);
+  controls[0]?.listeners.get("click")?.({});
+  expect(svg.attributes.get("viewBox")).toBe("100 50 800 400");
+  controls[2]?.listeners.get("click")?.({});
+  expect(svg.attributes.get("viewBox")).toBe("0 0 1000 500");
+  const preventDefault = vi.fn();
+  svg.listeners.get("wheel")?.({ ctrlKey: false, metaKey: false, deltaY: 1, preventDefault });
+  expect(preventDefault).not.toHaveBeenCalled();
+  svg.listeners.get("wheel")?.({ ctrlKey: true, metaKey: false, deltaY: 1, preventDefault });
+  expect(preventDefault).toHaveBeenCalledOnce();
+  controls[2]?.listeners.get("click")?.({});
+  svg.listeners.get("pointerdown")?.({ pointerId: 1, button: 0, clientX: 0, clientY: 0 });
+  svg.listeners.get("click")?.({ preventDefault });
+  expect(preventDefault).toHaveBeenCalledOnce();
+  expect(svg.captures).toEqual([]);
+  svg.listeners.get("pointermove")?.({ pointerId: 1, clientX: 100, clientY: 50 });
+  expect(svg.attributes.get("viewBox")).toBe("-100 -50 1000 500");
+  svg.listeners.get("click")?.({ preventDefault });
+  expect(preventDefault).toHaveBeenCalledTimes(2);
+  svg.listeners.get("pointerdown")?.({ pointerId: 2, button: 0, clientX: 200, clientY: 50 });
+  svg.listeners.get("pointermove")?.({ pointerId: 2, clientX: 300, clientY: 50 });
+  expect(svg.attributes.get("viewBox")).toBe("150 75 500 250");
+  expect([...svg.attributes.keys()]).toEqual(["viewBox"]);
+  host.disconnectedCallback();
+  expect(svg.listeners.size).toBe(0);
+  expect(svg.style.touchAction).toBe("");
 });
