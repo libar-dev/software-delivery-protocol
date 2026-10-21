@@ -703,3 +703,43 @@ sdp-diagram details {
     display: none;
   }
 }
+
+sdp-spec-card,
+sdp-maturity-map,
+sdp-example-space,
+sdp-trace-graph,
+sdp-impact-view,
+sdp-validation-findings {
+  display: block;
+  min-width: 0;
+}
+sdp-compose:empty {
+  display: none;
+}
+.example-card {
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--muted);
+}
+.example-card h4 {
+  margin-block: 0 0.5rem;
+}
+.citations,
+.rule-coverage {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+sdp-maturity-map table {
+  min-width: 48rem;
+}
+sdp-maturity-map td {
+  min-width: 9rem;
+  vertical-align: top;
+}
+sdp-maturity-map td > p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+sdp-maturity-map sdp-spec-card + sdp-spec-card {
+  margin-top: 1rem;
+}

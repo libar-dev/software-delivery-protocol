@@ -1,3 +1,4 @@
+import { registerViews } from "./views.js";
 import { registerDiagram } from "./diagram.js";
 import { registerCopy } from "./copy.js";
 import { registerExpander } from "./expander.js";
@@ -23,3 +24,5 @@ registerCopy();
 registerStamp();
 
 registerDiagram();
+
+registerViews();

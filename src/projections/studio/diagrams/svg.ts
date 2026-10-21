@@ -129,10 +129,10 @@ function layout(d: Diagram) {
     height: Math.max(120, bottom + 20),
   };
 }
-function svg(d: Diagram, textId: string): string {
+function svg(d: Diagram, textId: string, diagramId: string): string {
   const l = layout(d),
     positions = new Map(l.boxes.map((b) => [b.box.id, b]));
-  const marker = `diagram.${d.subject}.arrow`;
+  const marker = `diagram.${diagramId}.arrow`;
   const edges = d.edges
     .map((e) => {
       const a = positions.get(e.from),
@@ -211,8 +211,8 @@ function svg(d: Diagram, textId: string): string {
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
-export function renderDiagram(d: Diagram): string {
-  const textId = `diagram.${d.subject}.text`,
+export function renderDiagram(d: Diagram, diagramId = d.subject): string {
+  const textId = `diagram.${diagramId}.text`,
     fits = withinBound(d);
   const words = (b: DiagramBox) =>
     `${b.words}${b.planned && !b.words.includes("planned") ? ", planned" : ""}${b.folded && !b.words.includes("folded") ? ", folded" : ""}`;
@@ -225,5 +225,5 @@ export function renderDiagram(d: Diagram): string {
   };
   const text = `<details${fits ? "" : " open"} id="${escape(textId)}"><summary>The diagram as text</summary><ul>${normalized.boxes.map((b) => `<li>${escape(b.id)}: ${escape(b.words)}</li>`).join("")}${normalized.edges.map((e) => `<li>${escape(e.from)} ${escape(e.kind)} ${escape(e.to)}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}</li>`).join("")}</ul></details>`;
   const sectionId = d.sectionId === undefined ? d.subject : d.sectionId;
-  return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${fits ? `<div class="diagram-scroll">${svg(normalized, textId)}</div>` : "<p>Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.</p>"}${text}</figure></sdp-diagram></section>`;
+  return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${fits ? `<div class="diagram-scroll">${svg(normalized, textId, diagramId)}</div>` : "<p>Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.</p>"}${text}</figure></sdp-diagram></section>`;
 }

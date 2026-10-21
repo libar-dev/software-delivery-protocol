@@ -2,15 +2,15 @@ import { liveOutput } from "./dom.js";
 
 export function rowMatches(
   row: Readonly<Record<string, string>>,
-  facets: Readonly<Record<string, string>>,
+  filters: Readonly<Record<string, string>>,
 ): boolean {
-  return Object.entries(facets).every(
+  return Object.entries(filters).every(
     ([name, chosen]) => chosen === "any" || (row[name] ?? "").split(/\s+/u).includes(chosen),
   );
 }
 
 /**
- * Reads each row's facet attributes and changes only its hidden state.
+ * Reads each row's filter attributes and changes only its hidden state.
  *
  * @sdpAnchor impl:protocol.studio-filter
  * @sdpSatisfies spec:consumers.spec-studio.page-elements
@@ -21,18 +21,18 @@ export function rowMatches(
 export function registerFilter(): void {
   class Filter extends globalThis.HTMLElement {
     private readonly update = (): void => {
-      const facets = Object.fromEntries(
-        Array.from(this.querySelectorAll<HTMLSelectElement>("select[data-facet]"), (select) => [
-          select.getAttribute("data-facet") ?? "",
+      const filters = Object.fromEntries(
+        Array.from(this.querySelectorAll<HTMLSelectElement>("select[data-filter]"), (select) => [
+          select.getAttribute("data-filter") ?? "",
           select.value,
         ]),
       );
       const rows = Array.from(this.querySelectorAll<HTMLElement>("[data-row]"));
       for (const row of rows) {
         const values = Object.fromEntries(
-          Object.keys(facets).map((name) => [name, row.getAttribute(`data-${name}`) ?? ""]),
+          Object.keys(filters).map((name) => [name, row.getAttribute(`data-${name}`) ?? ""]),
         );
-        row.hidden = !rowMatches(values, facets);
+        row.hidden = !rowMatches(values, filters);
       }
       liveOutput(this).textContent =
         `${String(rows.filter((row) => !row.hidden).length)} of ${String(rows.length)} shown`;

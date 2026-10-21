@@ -21,6 +21,75 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.studio-verification-panels",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/spec-verification.ts",
+    site: "export function verificationPanel(",
+    label:
+      "renders rule coverage, example cards, constraint targets, verifiers and example-space coverage",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-spec-structure",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/spec-structure.ts",
+    site: "export function designView(",
+    label: "renders realization and trace diagrams and the recorded structural neighborhood",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-maturity-map",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/maturity-map.ts",
+    site: "export function maturityMap(",
+    label: "places resolved Pack members by their stated rung and floor in authored order",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-view-elements",
+    nodeType: "CodeNode",
+    file: "src/studio-elements/views.ts",
+    site: "export function registerViews(",
+    label: "registers build-rendered cards, maps, spaces, trace graphs, impact and findings",
+    role: "utility",
+  },
+  {
+    id: "test:protocol.studio-cited-declaration",
+    nodeType: "Anchor",
+    file: "test/studio-s2.test.ts",
+    constant: "cited",
+    site: "registerCitedDeclaration(",
+  },
+  {
+    id: "test:protocol.studio-rule-coverage",
+    nodeType: "Anchor",
+    file: "test/studio-s2.test.ts",
+    constant: "coverageExampleAnchor",
+    site: "registerRuleCoverage(",
+  },
+  {
+    id: "oracle:protocol.studio-citations",
+    nodeType: "Anchor",
+    file: "test/studio-s2.test.ts",
+    constant: "citationsOracle",
+    site: "interface CitationWorld",
+  },
+  {
+    id: "oracle:protocol.studio-rule-coverage",
+    nodeType: "Anchor",
+    file: "test/studio-s2.test.ts",
+    constant: "coverageOracle",
+    site: "interface CoverageWorld",
+  },
+  {
+    id: "test:protocol.studio-panels",
+    nodeType: "Anchor",
+    file: "test/studio-s2.test.ts",
+    constant: "panels",
+    site: 'describe("Spec panels"',
+  },
+
+  {
     id: "oracle:protocol.kind-evidence",
     nodeType: "Anchor",
     file: "test/self-hosting-validators.test.ts",
@@ -3607,6 +3676,46 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  [
+    "impl:protocol.studio-verification-panels",
+    "references",
+    "spec:consumers.spec-studio.verification-panels",
+  ],
+  [
+    "impl:protocol.studio-verification-panels",
+    "references",
+    "spec:consumers.spec-studio.components",
+  ],
+  ["impl:protocol.studio-spec-structure", "references", "spec:consumers.spec-studio.spec-page"],
+  ["impl:protocol.studio-spec-structure", "references", "spec:consumers.spec-studio.components"],
+  [
+    "impl:protocol.studio-maturity-map",
+    "satisfies",
+    "spec:consumers.spec-studio.pack-page.maturity-map",
+  ],
+  ["impl:protocol.studio-maturity-map", "references", "spec:consumers.spec-studio.components"],
+  ["impl:protocol.studio-view-elements", "references", "spec:consumers.spec-studio.components"],
+  ["impl:protocol.studio-view-elements", "references", "spec:decisions.studio-build-renders"],
+  [
+    "test:protocol.studio-cited-declaration",
+    "verifies",
+    "spec:consumers.spec-studio.spec-page.cited-declaration",
+  ],
+  [
+    "test:protocol.studio-rule-coverage",
+    "verifies",
+    "spec:consumers.spec-studio.verification-panels.rule-coverage",
+  ],
+  ["oracle:protocol.studio-citations", "models", "spec:consumers.spec-studio.spec-page"],
+  [
+    "oracle:protocol.studio-rule-coverage",
+    "models",
+    "spec:consumers.spec-studio.verification-panels",
+  ],
+  ["test:protocol.studio-panels", "verifies", "spec:consumers.spec-studio.spec-page"],
+  ["test:protocol.studio-panels", "verifies", "spec:consumers.spec-studio.verification-panels"],
+  ["test:protocol.studio-panels", "verifies", "spec:consumers.spec-studio.pack-page.maturity-map"],
+
   ["oracle:protocol.kind-evidence", "models", "spec:validation.kind-evidence"],
   ["oracle:protocol.open-question-fields", "models", "spec:model.open-question-fields"],
   ["oracle:protocol.slot-notation", "models", "spec:carrier.slot-notation"],
@@ -4950,6 +5059,11 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.studio-verification-panels",
+  "impl:protocol.studio-spec-structure",
+  "impl:protocol.studio-maturity-map",
+  "impl:protocol.studio-view-elements",
+
   "impl:protocol.structural-self-binding",
   "impl:protocol.validator-probe-table",
   "impl:protocol.validator-self-testing",

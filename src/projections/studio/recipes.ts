@@ -48,8 +48,9 @@ export async function studioRecipeAnswers(
   const all = new Map<number, unknown>();
   const packs = new Map<string, unknown>();
   const specs = new Map<string, ReadonlyMap<number, unknown>>();
-  // Recipes 46 and 51 ship; lane S3 adds them for its register and queue pages.
-  for (const number of [17, 20, 24, 31, 33, 43, 44]) all.set(number, await evaluate(number, {}));
+  // Lane S3 adds recipe 46 for the queue.
+  for (const number of [17, 20, 24, 31, 33, 43, 44, 51])
+    all.set(number, await evaluate(number, {}));
   for (const pack of reader.packs()) packs.set(pack.id, await evaluate(29, { pack: pack.id }));
   for (const spec of reader.specs()) {
     const answers = new Map<number, unknown>();

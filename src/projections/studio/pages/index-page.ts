@@ -72,7 +72,7 @@ export function indexPage(ctx: PageContext): string {
               ? 1
               : 0,
       );
-      return `<label>${label}<select data-facet="${name}"><option value="any">Any</option>${values.map((v) => `<option value="${escape(v)}">${escape(v)}</option>`).join("")}</select></label>`;
+      return `<label>${label}<select data-filter="${name}"><option value="any">Any</option>${values.map((v) => `<option value="${escape(v)}">${escape(v)}</option>`).join("")}</select></label>`;
     })
     .join("");
   const specRows = specs
