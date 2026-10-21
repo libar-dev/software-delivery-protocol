@@ -173,12 +173,18 @@ pnpm --silent sdp:q "$(cat dist/recipes/06-where-is-this-concept.js)" --params '
 
 The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · studio · vault · stamp · generate · import · new spec · q`.
 `sdp validate --watch` re-runs that same validate path on carrier create, change, delete, or rename
-and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
+and stays alive after findings; operator stop exits 0. `validate --watch` cannot combine
 with `--check-clean`. `sdp validate --rules PATH [--params FORM]...` runs an operator-selected corpus
 rule, with each `--params` after its own `--rules`, corpus findings and failed files reported apart
 from Protocol findings, and rules reread on each watch cycle. The five projection publishers remain
 independent public verbs; `sdp generate` publishes all five roots from one validated graph, synchronizing the vault first and leaving it alone under `--check-clean`. Repository
 generation/check scripts certify all five roots through the private projection-suite driver. The
+Studio also takes `--base PATH` with optional `--base-label TEXT`, repeatable `--runs PATH` for
+CTRF evidence, and `--watch` for carrier changes, with no server; source and input edits start no
+Studio cycle. Keep a base graph outside `generated/`. `sdp stamp` writes publishing metadata after
+the build. `sdp vault --out DIR` synchronizes linked notes in its owned `sdp/` folder, and its
+`--watch` follows carriers and source anchors. The vault stays outside the five rewritten roots.
+The upgrade guide is `docs/agent-surface/upgrade-guide.md`. The
 runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
 `sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the

@@ -30,6 +30,13 @@ together. `sdp generate` publishes all five from one validated graph; it synchro
 determinism, while census, Mermaid, Gherkin and Studio also compare the prior tree's bytes with
 the current render.
 
+Use `sdp studio --watch` to rebuild after carrier edits. `--base PATH` with optional
+`--base-label TEXT` adds a design comparison; repeatable `--runs PATH` adds external CTRF runs.
+Follow `spec:consumers.spec-studio.publisher.watch` and `spec:consumers.spec-studio.data.inputs`.
+After building, `sdp stamp` records the publishing metadata. For linked notes use
+`sdp vault --out DIR`; its `--watch` also follows source anchors. Follow
+`spec:consumers.spec-studio.sharing` and `spec:consumers.obsidian-vault.iteration`.
+
 An adopter selects its root and exclusions through its installed package runner:
 
 ```sh
@@ -41,6 +48,8 @@ Pass a parameterized recipe its subject as JSON data with `--params` (or `--para
 file), never by editing the body; each recipe names its parameter, and the build ships every body
 as `dist/recipes/<NN>-<slug>.js`. The recipe result informs the session; it never grants
 permission or records a verdict.
+Bodies receive `g`, `graph`, `report`, `params` and `recipes`; call a shipped body with
+`recipes(number, parameters?)`, following `spec:consumers.agent-surface.evaluation-sink`.
 
 For a corpus upgrade, measure capability adoption (recipe 47), then review the rule-key proposal
 (recipe 48) through recipe 38 before an agent applies it, and render its review memo with recipe 49. Follow
@@ -55,6 +64,8 @@ search (recipe 23) when you hold a key or a term and need the entry that already
 lower ladder (recipe 11) to see current stated and derived readiness, then promotion preflight
 (recipe 9) before a human changes a rung. Follow `sdp-authoring` for the minimal lawful `idea`
 carrier, `sdp new spec`, the `validate --watch` loop, and the one-kind rule.
+For stable step keys and term addresses, follow `sdp-authoring` and the carrying Specs,
+`spec:carrier.step-keys` and `spec:model.term-addresses`.
 
 ### Design
 

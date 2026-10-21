@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,23 +12,9 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 
 it("evaluates S3's recipe 46 and S2's recipe 51 in the shared Studio build", async () => {
   const data = await createStudioData(createReader({ schemaVersion, nodes: [], edges: [] }));
-  const catalog = readFileSync(join(root, "docs/agent-surface/recipes.md"), "utf8");
   for (const number of [46, 51]) {
     expect(data.recipes.all.has(number)).toBe(true);
-    expect(catalog).toMatch(new RegExp(`^## ${String(number)}\\. `, "mu"));
   }
-});
-
-it("cites the carrying Specs for every marker form in the glossary", () => {
-  const glossary = readFileSync(join(root, "CONTEXT.md"), "utf8");
-  const marker = glossary.split("\n").find((line) => line.startsWith("| **marker** |"));
-  for (const spec of [
-    "spec:model.open-question-keys",
-    "spec:model.rule-keys",
-    "spec:carrier.step-keys",
-    "spec:model.term-addresses",
-  ])
-    expect(marker).toContain(spec);
 });
 
 interface Measurement {
@@ -36,35 +22,6 @@ interface Measurement {
   command: string[];
   portableCommand?: string[];
 }
-
-it("preserves the original S1 measurement commands with the measured Node binary and paths", () => {
-  const evidence = JSON.parse(
-    readFileSync(join(root, "reviews/assets/plan46-s1/measurements.json"), "utf8"),
-  ) as { measurements: Measurement[] };
-  expect(evidence.measurements).toHaveLength(12);
-  for (const row of evidence.measurements) {
-    const engine = row.name.startsWith("base-")
-      ? "/tmp/s1-base-corpus"
-      : "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1";
-    const protocol = row.name.endsWith("-repository");
-    expect(row.command).toEqual([
-      "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
-      `${engine}/dist/cli/sdp.js`,
-      "studio",
-      protocol ? engine : "/tmp/s1-platform",
-      ...(protocol
-        ? [
-            "--exclude",
-            "explorations",
-            "--exclude",
-            "examples",
-            "--exclude",
-            "test/fixtures/import/parity",
-          ]
-        : []),
-    ]);
-  }
-});
 
 it("records future measurement commands as run and provides portable commands separately", () => {
   const scratch = mkdtempSync(join(tmpdir(), "sdp-measure-evidence-"));

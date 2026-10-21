@@ -124,6 +124,11 @@ pnpm exec sdp build .
 pnpm exec sdp validate .
 pnpm exec sdp view .
 pnpm exec sdp studio .
+pnpm exec sdp studio . --base ../base-graph.json --base-label "last design pass" --runs ../ctrf.json
+pnpm exec sdp studio . --watch
+pnpm exec sdp stamp . --commit <sha>
+pnpm exec sdp vault . --out ../design-vault
+pnpm exec sdp generate .
 pnpm exec sdp validate . --rules design/policy.js --params @design/policy.json
 pnpm exec sdp q 'return g.specs().map((spec) => spec.id)'
 ```
@@ -137,6 +142,20 @@ diagrams, `gherkin` the Gherkin-shaped read view, and `studio` the static Spec S
 JavaScript query body against a freshly derived graph. Run `sdp --help` for the complete option
 contract. Adopters own their root and exclusion policy.
 
+The Studio's phase 1 adds static SVG diagrams, the architecture and tests lenses, all Spec-page
+panels, registers, the owner queue and a glossary. A base graph adds a design diff; CTRF reports
+add external run evidence. The composing panel hands off scoped proposals, every Pack downloads
+as one HTML file, and pages print as documents. Open `generated/spec-studio/index.html` through
+`file://` or a static host. `studio --watch` rebuilds on carrier changes, with no server; source
+and input edits start no cycle. Copy a base graph outside `generated/` before using `--base`.
+Run `stamp` after building to record publishing metadata. The reusable
+[preview workflow](.github/workflows/studio-preview.yml) uploads stamped pull-request pages as a
+CI artifact; deployment follows the caller's enabled host and explicit workflow option.
+
+For an Obsidian vault, open the directory `--out` names. Keep personal notes beside its generated
+`sdp/` folder, by convention under `intent/`. `vault --watch` follows carriers and source anchors;
+the vault refuses changed or unknown generated files before writing.
+
 `validate --rules PATH [--params FORM]...` runs a local async graph body returning `{ findings }`.
 Repeat `--rules` for more files and put each file's parameters after that flag. Corpus findings
 and failed files print apart from Protocol findings; a corpus error or failed file exits 1.
@@ -146,6 +165,10 @@ The five projection publishers each replace their own root after the build clear
 roots. The repository's generation and check scripts publish all five together.
 
 ### Upgrade recipe callers
+
+The [upgrade guide](docs/agent-surface/upgrade-guide.md) measures capability adoption with recipe
+47, proposes rule keys with recipe 48, and follows the proposal check before an agent applies
+them. It also covers shipped recipes in rules files, bundles in parts and waiting statements.
 
 Recipe 25, address resolution, now reads `params.addresses`. A script that replaces the recipe's
 sample address array with a regular expression can silently stop matching. Remove that rewrite

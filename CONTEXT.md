@@ -64,7 +64,9 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **question field** | one of the four optional lines an open question carries beside its text, flag and key: `decider`, `links`, `provisional`, `trigger`; a `trigger` marks a deferral, none moves a floor (`spec:model.open-question-fields`) | "status" · "owner" (of a question) |
 | **rule key** | the optional lower-camel key an entry of a Spec's primary behavior owner carries in its marker, unique among the rule and flow keys of that Spec, giving the entry the address `spec:<id>#rule.<key>`; an example's `verifies` lists the keys it exercises (`spec:model.rule-keys`) | "rule id" |
 | **step key** | the optional lower-camel key at the start of an example or vocabulary step, shared through the vocabulary so its binding survives rewording; it is not an entry address (`spec:carrier.step-keys`) | "step id" · "entry address" |
+| **contract key** | the name a generated contract, test handler and Then outcome use for a step: its step key when present, otherwise its skeleton, the text with each slot reduced to its name (`spec:carrier.step-keys#rule.contractKey`) | "step text" · "step id" |
 | **term key** | the optional lower-camel key at the start of a Model term's definition, unique within its Spec, giving it the entry address `spec:<id>#term.<key>` (`spec:model.term-addresses`) | "term id" · "anchor" |
+| **term address** | the entry address `spec:<id>#term.<key>` naming a keyed Model term's definition; glossary rows have no address (`spec:model.term-addresses`) | "term id" · "glossary anchor" |
 | **marker** | the bracketed prefix that opens an open question's, keyed entry's, step's or Model definition's text in a carrier: `[blocking #key]`, `[non-blocking #key]` or `[#key]`; carrier syntax, never a binding (`spec:model.open-question-keys`, `spec:model.rule-keys`, `spec:carrier.step-keys`, `spec:model.term-addresses`) | "anchor" (the in-code binding) · "flag" (names the blocking part only) |
 | **distillation boundary** | the point past which a Design entry may leave its Spec: the Spec is implemented with a verifier and a bound artifact carries the entry; explanatory prose always stays (`spec:model.enrichment-lifecycle`) | "slimming" (the act) |
 
@@ -118,7 +120,7 @@ facts literal while the canonical recipe reports both audited exclusions.
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
-| **the one graph** | the single *derived* read model — a flat, typed, deterministic, regenerable snapshot-projection of the repo at a commit; the sole read model for current authored intent and bindings. A recipe or view whose contract admits it may read explicitly supplied input beside the graph (a base graph, imports, a perspective, a proposal, run records), identified apart from the graph and never answering in its name; validators and the shipped projections stay graph-only | "second store" (forbidden) · "sole input" (recipes take `--params`) |
+| **the one graph** | the single *derived* read model — a flat, typed, deterministic, regenerable snapshot-projection of the repo at a commit; the sole read model for current authored intent and bindings. A recipe or view whose contract admits it may read explicitly supplied input beside the graph (a base graph, imports, a perspective, a proposal, run records), identified apart from the graph and never answering in its name; Protocol validators and the four frozen projections stay graph-only | "second store" (forbidden) · "sole input" (recipes take `--params`) |
 | **`extractor`** | the producer — the *only* component that reads source; derives nodes, edges, `claim`s, and the validation report | — |
 | **`nodeType` / `specKind`** | structural class (`Primitive` · `Pack` · `Anchor` · `CodeNode`, a closed set) vs the truth-category on `Primitive` nodes — kept split so they never collide | a single `kind` field |
 | **git is the event log** | history and prior states live in git; the graph carries only current state | audit tables / lifecycle bookkeeping in the graph |
@@ -156,7 +158,7 @@ validated," never "provably correct."**
 | **agent surface** | a **visible typed graph the agent *scripts*** via the typed CLI — no verb wall; the schema *is* the contract (under-typing hides a capability) | a 30-verb API · raw-JSON-you-rejoin |
 | **`reader`** | the thin typed loader: joins + `claim` decode done once, returns composable data; authors/persists nothing — a front door, not a store | "handle" |
 | **agent front door** | the CLI-facing realization of the agent surface (MD-22): **two entrances over one seam** — the package exports the `reader` constructor, and the CLI carries the evaluation sink; a composite naming both entrances, distinct from the `reader`'s own "front door, not a store" gloss above, which names the reader's role over the graph | a query API · a verb wall |
-| **evaluation sink** | the front door's CLI entrance, the verb `sdp q`: derives the graph in process on every invocation, injects `g` / `graph` / `report` / `params`, evaluates the operator-supplied async body, prints its `return`; writes nothing and mints no query vocabulary (`spec:consumers.agent-surface.evaluation-sink`) | a REPL · a second read model |
+| **evaluation sink** | the front door's CLI entrance, the verb `sdp q`: derives the graph in process on every invocation, injects `g` / `graph` / `report` / `params` / `recipes`, evaluates the operator-supplied async body, prints its `return`; writes nothing and mints no query vocabulary (`spec:consumers.agent-surface.evaluation-sink`) | a REPL · a second read model |
 | **demand map** | the ruled statement of how agents actually arrive — holding a **string**, a **file**, or a **changeset**, never the Spec id they are looking for — carried as clauses on `spec:consumers.agent-surface`; the reason the frozen entry adapters are `findByConcept` · `byFile` · `blastRadius` | — |
 | **recipe** | a runnable, documented `sdp q` body composing the frozen adapters — the growth valve past them: when a question is not answered, script it, and a join freezes into the `reader` only at the second-caller bar; catalog at `docs/agent-surface/recipes.md`, every body executed as written by the recipe check | a new query verb |
 | **recipe parameter** | the input a caller passes a recipe as data through `--params`, after the body under `sdp q` or after its file's `--rules` under `sdp validate`, read by the body from `params`, falling back to the catalog's sample when the catalog gives one (`spec:consumers.agent-surface.recipe-parameters`) | "argument" · "recipe flag" |
@@ -173,12 +175,22 @@ validated," never "provably correct."**
 | **impact graph** | the mechanical code structure derived beside the curated graph under the `inferred` claim: file-level imports feed the curation report, and exhaustive symbol reach stays designed-in and deferred; divergence from the curated graph is **curation, not drift** (`spec:consumers.impact-graph`) | "mechanical substrate" |
 | **intent composition** | the write-affordance: compose **scoped intent**, hand it to an agent that edits source; git records it; conformance checks gate — no patch loop | patch-back / codemod-from-view |
 | **scoped intent** | *what* is composed: an explicit change bounded by a `Spec` / its neighbors / a `Pack` / open questions | — |
+| **change proposal** | the addressed JSON hand-off of scoped changes against a named base commit, checked before an agent applies ordinary source edits (`spec:consumers.intent-composition.proposal`) | "patch" · "approval" |
+| **proposal memo** | the Markdown rendering of a change proposal a person reviews, including its exact JSON document, shared by recipe 49 and the composing panel (`spec:consumers.intent-composition.proposal.memo`) | "review verdict" |
+| **statement queue** | the ordered answer of waiting readiness statements and a selected decider's questions, with the Specs they rest on first; it states no rung (`spec:consumers.readiness-planner`) | "promotion queue" · "approval gate" |
+| **upgrade kit** | the recipes and guide that measure capability adoption and propose rule keys for an agent's edit, without editing carriers or stating readiness (`spec:consumers.upgrade-kit`) | "migration tool" · "codemod" |
+| **capability adoption** | the per-corpus, Pack and Spec counts of places a Protocol capability is used and could apply, with its carrying Spec; a report without a score or quota (`spec:consumers.upgrade-kit.capability-adoption`) | "adoption score" · "coverage target" |
+| **stamp** | the publishing metadata in `stamp.json` beside a Studio page set, written after the build with its engine, corpus commit, UTC publishing time and optional source template; never graph data (`spec:consumers.spec-studio.sharing`) | "build attestation" · "delivery fact" |
+| **run evidence** | caller-supplied CTRF test results shown beside verifier bindings at test-file grain, labelled with their input and commit; never a verdict on one verifier or a delivery fact (`spec:observation.run-evidence`) | "verifier verdict" · "observed" |
+| **Pack export** | one self-contained HTML file holding a Pack page and its members in authored order, with inline style and diagrams, no script and no external loads (`spec:consumers.spec-studio.export`) | "bundle" · "snapshot graph" |
+| **text equivalent** | the words beside a Studio diagram that state every box and edge, retained when the drawing exceeds its bound (`spec:consumers.spec-studio.diagrams`) | "tooltip" · "diagram summary" |
+| **vault** | Obsidian's folder of linked notes; the Protocol synchronizes its generated notes and Bases in the owned `sdp/` folder, beside a person's notes (`spec:consumers.obsidian-vault`) | "Studio local mode" · "sixth projection root" |
 
 ## The executable half  (carrier-independent machinery)
 
 | Term | Definition | Aliases to avoid |
 |---|---|---|
-| **step contract** | a derived, regenerable typed module emitted per `example` spec from the graph (the generated-union pattern): the union of the example's literal step strings; tests bind handlers against it, so spec-side drift is a compile error — derived, never authored, importable *because* it is a projection | importing the authored spec |
+| **step contract** | a derived, regenerable typed module emitted per `example` spec from the graph (the generated-union pattern): its steps with their contract keys and typed parameters; tests bind handlers against it, so spec-side drift is a compile error — derived, never authored, importable *because* it is a projection | importing the authored spec |
 | **example space** | the typed parameter vocabulary a parent spec's steps declare — typically a `behavior` spec; any kind may own the space when the vocabulary parameterizes its own law (`rule` and `model` parents are lawful); the space its child examples bind points in — the sibling set shares one vocabulary | "variables" |
 | **parameter slot** (short: **slot**) | one typed placeholder in a step's text | — |
 | **bound point** | the concrete slot values an `example` child binds for the steps it uses; partial points are honest — an unbound slot in a *used* step caps the example below `defined` (the **concreteness law**, one structural floor clause) | — |
@@ -260,9 +272,9 @@ delivery fact, workflow state, or graph state.
   external `doc:` ADR is a **named deferral** (MD-16, stated in `spec:decisions.carried-evidence`);
   revisit when `doc:`-target
   relations or pack-targeting arrive.
-- **"vault"** is Obsidian's word for a folder of linked notes. The built projection in
-  `pack:obsidian-vault-v1` stands alone beside the Studio (`spec:consumers.obsidian-vault`).
-  Adopting the word into the Protocol's glossary still awaits the owner's review.
+
+The vault ambiguity is resolved by adopting Obsidian's established noun in the glossary above.
+Its owned-folder decision remains `defined` for the owner's ratification.
 
 ## Term ledger  (locked / rejected / resolved)
 
@@ -281,7 +293,9 @@ delivery fact, workflow state, or graph state.
   MD-38 · `question key` · `stated next rung` · `design columns` · `Pack design` · `boundary`
   (rests on, rested on by) · `location table` · `recipe parameter` · `pinned declaration` ·
   `dependency cycle` · `perspective` · `mention` · `entry address` · `primary behavior owner` ·
-  `question field` · `rule key` · `step key` · `term key` · `entry citation` · `marker` (the bracket prefix) · `distillation boundary` ·
+  `question field` · `rule key` · `step key` · `contract key` · `term key` · `term address` · `entry citation` · `marker` (the bracket prefix) · `distillation boundary` ·
+  `change proposal` · `proposal memo` · `statement queue` · `upgrade kit` · `capability adoption` ·
+  `stamp` · `run evidence` · `Pack export` · `text equivalent` · `vault` ·
   `corpus rule` · `census` · `curated graph` · `relation reason` — carried by the named Specs
   cited in their glossary rows; mention and entry address follow the checked-mentions decision.
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,

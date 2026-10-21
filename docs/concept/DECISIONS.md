@@ -52,6 +52,17 @@ positions and are never reused.
 | MD-41 | the Studio renders derived HTML | durable | The Spec Studio's surface is generated HTML that is never committed, standing beside the frozen Markdown Design Review; its case rests on search, filters, navigation and progressive disclosure, and richer interactions wait for later phases. | [Spec](../../specs/decisions/studio-html-surface.sdp.md) (`spec:decisions.studio-html-surface`) |
 | MD-42 | the Studio is built from custom elements | durable | The Studio's views are Web Components written without a framework, so each works in any HTML page that loads the element script and supplies its graph data; a host that strips scripts shows a static link; an element that needs richer state may use a small reactive primitive inside itself. | [Spec](../../specs/decisions/studio-web-components.sdp.md) (`spec:decisions.studio-web-components`) |
 
+### Decisions awaiting ratification
+
+These use the registry's `held` convention, as the annotations arc did at `ea9c550`. They state
+`defined` and await the owner's `ready`; none is a ratified ruling.
+
+| ID | Proposed name | Curation | Gloss | Spec pointer |
+|---|---|---|---|---|
+| MD-43 | the build renders Studio views | held | The build writes each view into markup, and its custom element adds interaction; a host supplies that markup rather than graph data. | [Spec](../../specs/decisions/studio-build-renders.sdp.md) (`spec:decisions.studio-build-renders`) |
+| MD-44 | the engine lays out Studio diagrams | held | Deterministic build-time layout writes inline SVG with a text equivalent; the element adds pan, zoom and pinch. | [Spec](../../specs/decisions/studio-diagram-renderer.sdp.md) (`spec:decisions.studio-diagram-renderer`) |
+| MD-45 | the vault owns one folder | held | A guarded file list owns `sdp/`; synchronization preserves unchanged files and refuses edits or unknown files before writing. | [Spec](../../specs/decisions/vault-owned-folder.sdp.md) (`spec:decisions.vault-owned-folder`) |
+
 ### Decision Specs without a registry code
 
 - [The plain-language references decision](../../specs/decisions/plain-language-references.sdp.md) (`spec:decisions.plain-language-references`).

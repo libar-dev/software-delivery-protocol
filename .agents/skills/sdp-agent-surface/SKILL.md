@@ -105,6 +105,13 @@ Each of them, like `sdp build` and `sdp validate`, first removes all five projec
 after one publisher runs only its own root is current
 (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
 `sdp generate` publishes all five roots from one validated graph; it synchronizes the vault first and leaves it alone under `--check-clean`.
+Use `sdp studio --watch` for carrier changes; `--base PATH` with optional `--base-label TEXT`
+adds the design diff, and repeatable `--runs PATH` adds CTRF evidence. Inputs and source edits
+start no Studio cycle. Follow `spec:consumers.spec-studio.publisher.watch` and
+`spec:consumers.spec-studio.data.inputs`. `sdp stamp` records publishing metadata after the build,
+as `spec:consumers.spec-studio.sharing` states. For linked notes, `sdp vault [root] --out DIR`
+synchronizes its owned folder; its `--watch` also follows source anchors. Follow
+`spec:consumers.obsidian-vault` and `spec:consumers.obsidian-vault.iteration`.
 In this source checkout, `npm run generate:self-hosting` and `npm run check:self-hosting` preserve
 and publish all five roots together. In check mode a prior tree must exist for each root; Design
 Review checks repeat-render determinism, while census, Mermaid, Gherkin and Studio also compare
@@ -241,6 +248,9 @@ realized components (recipe 43) compares component design Specs with their satis
 listing unrealized designs, differing fields and unreadable values. Neither recipe adds a Protocol
 validator. Follow `sdp-authoring` for rules-file invocation and per-file parameter order.
 
+Step keys name generated contract steps, not entry addresses; term keys give Model terms an
+address. Follow `spec:carrier.step-keys` and `spec:model.term-addresses` when authoring either.
+
 Example-space coverage (recipe 44) lists covered and uncovered enumerable slot values; other
 slot types report non-enumerable. The statement queue (recipe 46) orders waiting readiness
 statements with the Specs they rest on first and lists the selected decider's questions. It states
@@ -302,12 +312,12 @@ rows, and `leftOut` naming what `detail: true` adds (changed-file impact, recipe
 recipe 29; the design diff, recipe 35). To filter any shipped answer, run it inside your own body:
 
 ```sh
-pnpm --silent sdp:q "const answer = await (async (params) => { $(cat dist/recipes/29-pack-design.js) })({ pack: params.pack }); return answer.members.filter((member) => member.blockingQuestions > 0)" --params '{"pack":"pack:design-iteration-v1"}' --json
+pnpm --silent sdp:q 'const answer = await recipes(29, { pack: params.pack }); return answer.members.filter((member) => member.blockingQuestions > 0)' --params '{"pack":"pack:design-iteration-v1"}' --json
 ```
 
-Pass the inner body only its recipe's parameters. An unknown parameter name replaces a shipped
+Pass each call only its recipe's parameters. An unknown parameter name replaces a shipped
 recipe's whole answer with `{ unknownParams, accepts }`, listing the unknown names and the names
-it takes. Keep your own part of such a body free of `$` and backticks, because the shell expands them.
+it takes.
 
 The graph is derived on every invocation, so a Spec you just authored is queryable immediately and
 no committed artifact answers in the graph's name. The sink writes nothing. It evaluates local
