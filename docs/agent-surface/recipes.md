@@ -26,8 +26,8 @@
 | 22 | Mention audit | scope, intended | Audit prose mentions |
 | 23 | Entry search | term | Find entries by term |
 | 24 | Pinned declarations | none | List pinned declarations |
-| 25 | Address resolution | addresses | Resolve entry addresses |
-| 26 | Dependency cycles | none | Find dependency cycles |
+| 25 | Address resolution | addresses, severity | Resolve entry addresses |
+| 26 | Dependency cycles | severity | Find dependency cycles |
 | 27 | References into a design | pack | Read code references into a Pack |
 | 28 | Roles, layers and contexts | none | List architecture vocabulary |
 | 29 | Pack design | pack, detail | Review Pack design |
@@ -134,7 +134,7 @@ The caller's part must hold no shell expansion. Single-quote it as above so the 
 the shipped body, while the sink evaluates the whole body once.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
-you supply; `return` is the output contract. Four bindings are injected:
+you supply; `return` is the output contract. Five bindings are injected:
 
 | Binding | What it is |
 |---|---|
@@ -142,6 +142,10 @@ you supply; `return` is the output contract. Four bindings are injected:
 | `graph` | the raw graph schema object (nodes, edges, claims) |
 | `report` | the validation report, so findings are queryable data and never a gate |
 | `params` | the JSON object `--params` supplies, or `{}` without it; input to the body, never a verb |
+| `recipes` | `recipes(number, parameters?)` runs a shipped body over the same graph and report |
+
+The package also exports `evaluateBody(body, { graph, report?, params? })` to run a body without
+deriving the graph again.
 
 **Body rules.** A body is a plain JavaScript async function body — no `import`/`export`, no
 TypeScript-only syntax. It may `await`. Default output is bounded `util.inspect`; `--json` prints
@@ -1991,11 +1995,16 @@ or a page, and want to know which still resolve.*
 
 The parameter is `params.addresses`, the list of addresses you hold; an empty list returns no
 rows. A long list belongs in a file passed as `--params @PATH`.
+`params.severity` is `"error"` by default or `"warning"`; another value returns diagnostics.
 
 ```js
-const accepts = ["addresses"];
+const accepts = ["addresses", "severity"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const severity = Object.hasOwn(params, "severity") ? params.severity : "error";
+if (severity !== "error" && severity !== "warning") {
+  return { diagnostics: [{ parameter: "severity", problem: "Expected error or warning." }] };
+}
 const addresses = params.addresses ?? [
   "spec:consumers.design-review#ui.packPage",
   "spec:consumers.design-review#ui.memberTable",
@@ -2045,6 +2054,15 @@ return {
   totals: {addresses: rows.length, resolved: rows.filter((row) => row.resolves).length,
     malformed: count("malformed"), spec: count("spec"), section: count("section"), entry: count("entry")},
   rows,
+  findings: rows.filter(row => !row.resolves).map(row => {
+    const subjectId = typeof row.address === "string" && row.address.length > 0 ? row.address : JSON.stringify(row.address);
+    const why = row.reason === "malformed" ? "not an entry address"
+      : row.reason === "spec" ? `no Spec ${row.id}`
+      : row.reason === "section" ? `${row.id} has no ${row.section} entries`
+      : `${row.id} has no ${row.section} entry ${row.key}`;
+    return { validatorId: "unresolved-address", subjectId, severity,
+      message: `${subjectId} does not resolve: ${why}` };
+  }),
 };
 ```
 
@@ -2067,9 +2085,13 @@ Specs, and this recipe resolves ones written anywhere else.
 through `dependsOn`.*
 
 ```js
-const accepts = [];
+const accepts = ["severity"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const severity = Object.hasOwn(params, "severity") ? params.severity : "error";
+if (severity !== "error" && severity !== "warning") {
+  return { diagnostics: [{ parameter: "severity", problem: "Expected error or warning." }] };
+}
 const ids = g.specs().map((spec) => spec.id);
 const known = new Set(ids);
 const targets = new Map(ids.map((id) => [id, []]));
@@ -2160,10 +2182,18 @@ return {
     specsInCycles: cycles.reduce((sum, entry) => sum + entry.members.length, 0),
   },
   cycles,
+  findings: cycles.map(({ members, cycle }) => {
+    const subjectId = members[0];
+    const context = g.specContext(subjectId);
+    const location = context.entryLocations.find(row => row.entry === `relation.dependsOn.${cycle[1]}`);
+    return { validatorId: "dependency-cycle", subjectId, severity,
+      message: `${subjectId} rests on itself through dependsOn: ${cycle.join(" -> ")}`,
+      file: context.file, ...(location === undefined ? {} : { line: location.line }) };
+  }),
 };
 ```
 
-The body takes no parameter and reads the whole graph. The walk keeps its own frame stack, so a
+The body reads the whole graph. The walk keeps its own frame stack, so a
 dependency chain of any length runs without recursing. Each entry of `cycles` is a set of two or
 more Specs in which each Spec reaches every other through declared `dependsOn` edges, or one Spec
 that declares `dependsOn` on itself and belongs to no such set. A Spec that reaches a set without
@@ -2176,6 +2206,10 @@ rest only on themselves, and `totals.specsInCycles` every member of either. The 
 never refuses: a cycle is data about the authored dependencies, and the readiness floor reads each
 `dependsOn` target's stated rung without walking a chain. The law is
 `spec:consumers.agent-surface.address-and-cycle-recipes`.
+
+Both recipes add `findings` beside their rows or cycles and take `params.severity`, `"error"`
+by default or `"warning"`. Another severity returns diagnostics. Each unresolved address and each
+cycle yields one finding, so either shipped file can run unchanged under `sdp validate --rules`.
 
 ## 27. References into a design
 

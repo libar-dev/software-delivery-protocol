@@ -207,7 +207,7 @@ so it needs no extra tag, status key, or side table.
 
 Run a project policy, such as a required Design key or a naming rule, as an operator-selected
 rules file through `sdp validate --rules PATH [--params FORM]...`. The file is a local async
-JavaScript body with `g`, `graph`, `report` and `params`, returning `{ findings }`, as
+JavaScript body with `g`, `graph`, `report`, `params` and `recipes`, returning `{ findings }`, as
 `spec:validation.corpus-rules` states. Each `--params` follows its own `--rules`; the query grammar
 admits JSON, `@PATH` and `KEY=@PATH`, and repeatable parameters merge within that file only:
 
@@ -217,8 +217,8 @@ pnpm exec sdp validate . --rules design/policy.js --params '{"requiredKey":"id"}
 
 Corpus findings name their rule and rules file and print apart from Protocol conformance and
 honesty findings. The corpus summary also counts failed files; any Protocol error, corpus error
-or failed rules file exits 1. Under `--watch`, each carrier cycle rereads the rules files, but a
-rules-file edit alone starts no cycle. The architecture walk is recipe 42; planned against
+or failed rules file exits 1. Under `--watch`, every cycle rereads rules and parameter files;
+edits to either start a cycle wherever they live. The architecture walk is recipe 42; planned against
 realized components is recipe 43. These are corpus guidance, never Protocol validators.
 
 ### Say why a relation holds

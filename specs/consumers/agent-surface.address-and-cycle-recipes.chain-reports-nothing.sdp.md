@@ -2,7 +2,7 @@
 id: spec:consumers.agent-surface.address-and-cycle-recipes.chain-reports-nothing
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.agent-surface.address-and-cycle-recipes
   verifies:

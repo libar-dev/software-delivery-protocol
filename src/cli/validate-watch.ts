@@ -1,8 +1,9 @@
-import { lstatSync, readdirSync, watch } from "node:fs";
+import { lstatSync, readdirSync, realpathSync, watch } from "node:fs";
 import type { Stats } from "node:fs";
-import { isAbsolute, join, relative } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import { isExcludedDiscoveryDirectory } from "../extract/discover.js";
+import { parameterFiles } from "./params.js";
 import type { BuildArgs } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { writeStderr } from "./output.js";
@@ -63,6 +64,7 @@ export interface ValidateWatchHooks {
   readonly createWatchSource?: (input: {
     readonly root: string;
     readonly exclude: readonly string[];
+    readonly files: readonly string[];
   }) => ValidateWatchEventSource;
   readonly createNativeWatch?: NativeWatchFactory;
   readonly lstatWatchPath?: (path: string) => Stats;
@@ -471,10 +473,96 @@ function createFilesystemWatchSource(input: {
   };
 }
 
+function createNamedFileWatchSource(
+  files: readonly string[],
+  createNativeWatch: NativeWatchFactory,
+): ValidateWatchEventSource {
+  const watchers = new Map<string, NativeWatchHandle>();
+  const targets = new Map<string, string>();
+  let listener: ((event: ValidateWatchEvent) => void) | undefined;
+  let onError: ((error: unknown) => void) | undefined;
+  let pendingError: unknown;
+  let closed = false;
+  const fail = (error: unknown) => {
+    if (onError) onError(error);
+    else pendingError = error;
+  };
+  const reconcile = () => {
+    const directories = new Set<string>();
+    for (const file of files) {
+      try {
+        targets.set(file, realpathSync(file));
+      } catch (error) {
+        if (!isNotFoundError(error)) fail(error);
+      }
+    }
+    // Keep a symlink's last target while it is missing, so recreating it is still visible.
+    for (const file of new Set([...files, ...targets.values()])) {
+      let directory = dirname(file);
+      for (;;) {
+        try {
+          if (lstatSync(directory).isDirectory()) directories.add(directory);
+        } catch (error) {
+          if (!isNotFoundError(error)) fail(error);
+        }
+        const parent = dirname(directory);
+        if (parent === directory) break;
+        directory = parent;
+      }
+    }
+    for (const [directory, handle] of watchers) {
+      if (!directories.has(directory)) {
+        handle.close();
+        watchers.delete(directory);
+      }
+    }
+    for (const directory of directories) {
+      if (closed || watchers.has(directory)) continue;
+      try {
+        const handle = createNativeWatch(directory, (_type, filename) => {
+          if (closed) return;
+          const path = filename ? resolve(directory, filename) : directory;
+          const affected = files.filter((file) =>
+            [file, targets.get(file)].some(
+              (target) =>
+                target !== undefined && (path === target || isDescendantPath(path, target)),
+            ),
+          );
+          if (affected.length === 0) return;
+          // Reopen directory handles after renames, including saves that replace a parent.
+          for (const current of watchers.values()) current.close();
+          watchers.clear();
+          reconcile();
+          for (const file of affected) listener?.({ type: "change", path: file });
+        });
+        handle.on("error", fail);
+        watchers.set(directory, handle);
+      } catch (error) {
+        fail(error);
+      }
+    }
+  };
+  reconcile();
+  return {
+    on(next) {
+      listener = next;
+    },
+    onError(next) {
+      onError = next;
+      if (pendingError !== undefined) next(pendingError);
+    },
+    close() {
+      closed = true;
+      for (const handle of watchers.values()) handle.close();
+      watchers.clear();
+    },
+  };
+}
+
 /**
  * @sdpAnchor impl:protocol.validate-watch
  * @sdpLabel watches carrier directories and coalesces events into a pending validation rerun
- * @sdpSatisfies spec:consumers.validate-watch
+ * @sdpSatisfies spec:consumers.validate-watch, spec:validation.corpus-rules
  * @sdpComponent component:protocol.cli
  * @sdpRole service
  */
@@ -484,14 +572,25 @@ export async function runValidateWatch(
   hooks: ValidationViewHooks,
   watchHooks: ValidateWatchHooks,
 ): Promise<number> {
+  const files = [
+    ...new Set(
+      (parsed.rules ?? [])
+        .flatMap((file) => [file.rulesFile, ...parameterFiles(file.paramForms ?? [])])
+        .map((file) => resolve(file)),
+    ),
+  ];
   const source =
-    watchHooks.createWatchSource?.({ root: parsed.root, exclude: parsed.exclude }) ??
+    watchHooks.createWatchSource?.({ root: parsed.root, exclude: parsed.exclude, files }) ??
     createFilesystemWatchSource({
       root: parsed.root,
       exclude: parsed.exclude,
       createNativeWatch: watchHooks.createNativeWatch,
       lstatWatchPath: watchHooks.lstatWatchPath,
     });
+  const namedSource =
+    watchHooks.createWatchSource === undefined
+      ? createNamedFileWatchSource(files, watchHooks.createNativeWatch ?? defaultNativeWatch)
+      : undefined;
   const waiter = createCycleWaiter();
   const state: WatchLoopState = {
     closed: false,
@@ -509,6 +608,7 @@ export async function runValidateWatch(
 
     state.closed = true;
     source.close();
+    namedSource?.close();
     waiter.wake();
   };
 
@@ -545,7 +645,7 @@ export async function runValidateWatch(
     }).unref();
   };
 
-  source.on((event) => {
+  const onEvent = (event: ValidateWatchEvent) => {
     if (state.closed) {
       return;
     }
@@ -553,15 +653,18 @@ export async function runValidateWatch(
     if (
       event.subtreeRemoved !== true &&
       event.unattributed !== true &&
+      !files.includes(resolve(parsed.root, event.path)) &&
       !isWatchedCarrierPath(parsed.root, event.path, parsed.exclude)
     ) {
       return;
     }
 
     noteCarrierEvent();
-  });
+  };
+  source.on(onEvent);
+  namedSource?.on(onEvent);
 
-  source.onError((error) => {
+  const onError = (error: unknown) => {
     if (state.closed) {
       return;
     }
@@ -569,7 +672,9 @@ export async function runValidateWatch(
     state.failure =
       error instanceof ValidateWatchSourceError ? error : new ValidateWatchSourceError(error);
     close();
-  });
+  };
+  source.onError(onError);
+  namedSource?.onError(onError);
 
   try {
     while (!isWatchClosed(state)) {
@@ -582,7 +687,17 @@ export async function runValidateWatch(
         const outcome =
           parsed.rules === undefined
             ? runValidate(parsed, output, "validate", hooks)
-            : await runValidateRules(parsed, output, hooks);
+            : await runValidateRules(
+                {
+                  ...parsed,
+                  rules: parsed.rules.map((file) => ({
+                    ...file,
+                    rereadParams: state.cycleIndex > 1,
+                  })),
+                },
+                output,
+                hooks,
+              );
         watchHooks.onWatchCycleComplete?.({
           index: state.cycleIndex,
           exitCode: outcome.exitCode,

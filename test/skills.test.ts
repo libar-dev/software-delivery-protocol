@@ -608,7 +608,7 @@ const adopterClauses = [
     /Corpus findings name their rule and rules file and print apart from Protocol/u,
   ],
   ["policy failures", /any Protocol error, corpus error or failed rules file exits 1/u],
-  ["watch policy rereads", /each carrier cycle rereads the rules files/u],
+  ["watch policy rereads", /every cycle rereads rules and parameter files/u],
   [
     "Constraints leading-prose exception",
     /A section may open with paragraphs, except Constraints, which takes its entries only/u,

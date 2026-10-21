@@ -145,3 +145,13 @@ export function mergeParams(
   }
   return params;
 }
+
+/** File references in already validated parameter forms, for the validate watcher. */
+export function parameterFiles(forms: readonly string[]): readonly string[] {
+  return forms.flatMap((value) => {
+    if (value.startsWith("@")) return [value.slice(1)];
+    if (/^[ \t\r\n]*[{["]/u.test(value)) return [];
+    const keyed = /^[^=]+=@(.*)$/su.exec(value);
+    return keyed?.[1] === undefined ? [] : [keyed[1]];
+  });
+}

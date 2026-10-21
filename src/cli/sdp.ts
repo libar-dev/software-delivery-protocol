@@ -71,11 +71,11 @@ Commands:
              --watch re-runs the same validate path on carrier create/change/delete/rename
              and stays alive after findings; operator stop (SIGINT) exits 0. --watch cannot
              be combined with --check-clean. --rules PATH runs an operator-selected JavaScript
-             async body with g, graph, report and params after the Protocol checks. Repeat --rules;
+             async body with g, graph, report, params and recipes after the Protocol checks. Repeat --rules;
              each --params belongs to the preceding file, with the q grammar: JSON, @PATH or
              KEY=@PATH. Each file receives its own copies. Corpus findings print separately;
-             any corpus error or failed file exits 1. --watch rereads rules on each carrier cycle;
-             editing a rules file alone starts no cycle. --rules combines with --check-clean.
+             any corpus error or failed file exits 1. --watch rereads rules and parameter files each cycle;
+             edits to either start a cycle wherever they live. --rules combines with --check-clean.
   view       validate, then generate the Design Review — the contextual read-only human view —
              into <root>/generated/design-review/ (rewritten wholesale). Findings remain data;
              exit code follows validate. --check-clean independently re-renders.
@@ -108,11 +108,12 @@ Commands:
              positional argument, or stdin when stdin is not a terminal; with neither, q refuses
              with a usage note and exits 1 rather than waiting. It is a plain JavaScript async function
              body — no import/export, no TypeScript-only syntax — and \`return\` is the output
-             contract. Four bindings are injected: \`g\`, the reader over the derived graph (the
+             contract. Five bindings are injected: \`g\`, the reader over the derived graph (the
              same createReader the package exports); \`graph\`, the raw graph schema object;
              \`report\`, the validation report, so findings are queryable data rather than a
-             gate — checks never gate the read path; and \`params\`, the JSON object --params
-             supplies, or {} without it. Repeat --params with JSON objects, @PATH for a file
+             gate — checks never gate the read path; \`params\`, the JSON object --params
+             supplies, or {} without it; and \`recipes(number, parameters?)\`, which runs a shipped
+             body over the same graph and report. Repeat --params with JSON objects, @PATH for a file
              holding one, or KEY=@PATH for any JSON value under a lower-camel key. Objects merge
              at the top level; a repeated key, invalid JSON or an unreadable file refuses before
              the body runs. A recipe reads its parameter from \`params\` and falls back to the
@@ -293,6 +294,10 @@ export function runSdpCli(
   }
 
   if (command === "q") {
+    if (rest.includes("--help")) {
+      writeStdout(output, `${SDP_HELP_TEXT}\n`);
+      return 0;
+    }
     const parsed = parseQueryArgs(rest, output);
 
     return parsed === undefined ? 1 : runQuery(parsed, output, hooks.query);

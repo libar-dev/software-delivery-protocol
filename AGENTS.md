@@ -155,9 +155,10 @@ load `.agents/skills/sdp-authoring/SKILL.md`. Before routing delivery work, load
 questions.
 
 `sdp q` is the agent front door (MD-22): it derives the graph in process and evaluates a plain
-JavaScript async-function body you supply, with four bindings injected — `g` (the reader),
-`graph` (the raw schema), `report` (the validation report), and `params` (the JSON a caller passes
-with `--params`, `{}` without it). `return` is the output contract; add `--json` for
+JavaScript async-function body you supply, with five bindings injected — `g` (the reader),
+`graph` (the raw schema), `report` (the validation report), `params` (the JSON a caller passes
+with `--params`, `{}` without it), and `recipes(number, parameters?)` (a shipped body over the same
+graph). `return` is the output contract; add `--json` for
 machine-readable output. For any corpus question — what a Spec guarantees, what is
 ready but unimplemented, what a change touches, where a concept lives — script the graph instead
 of reading `.sdp.md` files by hand:

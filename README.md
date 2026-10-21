@@ -138,7 +138,8 @@ contract. Adopters own their root and exclusion policy.
 `validate --rules PATH [--params FORM]...` runs a local async graph body returning `{ findings }`.
 Repeat `--rules` for more files and put each file's parameters after that flag. Corpus findings
 and failed files print apart from Protocol findings; a corpus error or failed file exits 1.
-With `--watch`, carrier changes reread the rules files; editing a rules file alone starts no cycle.
+With `--watch`, each cycle rereads rules and parameter files; edits to either start a cycle wherever
+they live. Bodies can call shipped recipes with `recipes(number, parameters?)`.
 The five projection publishers each replace their own root after the build clears the previous
 roots. The repository's generation and check scripts publish all five together.
 
