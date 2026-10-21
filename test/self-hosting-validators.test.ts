@@ -1,4 +1,26 @@
-import { expect } from "vitest";
+import type {
+  SupersededDecisionSignalConditions,
+  SupersededDecisionSignalOutcome,
+} from "../generated/contracts/validation.superseded-decision-signal.space.js";
+import { replacedRulingWarnsContract } from "../generated/contracts/validation.superseded-decision-signal.replaced-ruling-warns.contract.js";
+import { registerReplacedRulingWarns } from "./validation.superseded-decision-signal.replaced-ruling-warns.test.generated.js";
+import { chainEndNamedContract } from "../generated/contracts/validation.superseded-decision-signal.chain-end-named.contract.js";
+import { registerChainEndNamed } from "./validation.superseded-decision-signal.chain-end-named.test.generated.js";
+import { branchNamesEveryEndContract } from "../generated/contracts/validation.superseded-decision-signal.branch-names-every-end.contract.js";
+import { registerBranchNamesEveryEnd } from "./validation.superseded-decision-signal.branch-names-every-end.test.generated.js";
+import { closedChainNamedContract } from "../generated/contracts/validation.superseded-decision-signal.closed-chain-named.contract.js";
+import { registerClosedChainNamed } from "./validation.superseded-decision-signal.closed-chain-named.test.generated.js";
+import { dependencyUnreadContract } from "../generated/contracts/validation.superseded-decision-signal.dependency-unread.contract.js";
+import { registerDependencyUnread } from "./validation.superseded-decision-signal.dependency-unread.test.generated.js";
+import { supersededSubjectSilentContract } from "../generated/contracts/validation.superseded-decision-signal.superseded-subject-silent.contract.js";
+import { registerSupersededSubjectSilent } from "./validation.superseded-decision-signal.superseded-subject-silent.test.generated.js";
+import { replacementBelowReadyNamedContract } from "../generated/contracts/validation.superseded-decision-signal.replacement-below-ready-named.contract.js";
+import { registerReplacementBelowReadyNamed } from "./validation.superseded-decision-signal.replacement-below-ready-named.test.generated.js";
+import { liveReplacementWarnsContract } from "../generated/contracts/validation.superseded-decision-signal.live-replacement-warns.contract.js";
+import { registerLiveReplacementWarns } from "./validation.superseded-decision-signal.live-replacement-warns.test.generated.js";
+import { endAndLoopNamedContract } from "../generated/contracts/validation.superseded-decision-signal.end-and-loop-named.contract.js";
+import { registerEndAndLoopNamed } from "./validation.superseded-decision-signal.end-and-loop-named.test.generated.js";
+import { expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
@@ -1383,4 +1405,375 @@ registerSplitReport({
     });
     familyReports(world, "honesty", { findingId: honestyId, severity: honestySeverity });
   },
+});
+
+/* ----- spec:validation.superseded-decision-signal ----- */
+
+type SupersededContract =
+  | typeof replacedRulingWarnsContract
+  | typeof chainEndNamedContract
+  | typeof branchNamesEveryEndContract
+  | typeof closedChainNamedContract
+  | typeof dependencyUnreadContract
+  | typeof supersededSubjectSilentContract
+  | typeof replacementBelowReadyNamedContract
+  | typeof liveReplacementWarnsContract
+  | typeof endAndLoopNamedContract;
+
+function createSupersededWorld(point: Partial<SupersededDecisionSignalConditions>): ValidatorWorld {
+  const world = validatorWorld();
+  const decision = (name: string, readiness: SpecReadiness = "ready"): void => {
+    const id = `spec:probe.${name}`;
+    const node = probeSpec(id, { kind: "decision", readiness });
+    world.nodes.push({
+      ...node,
+      sections: { ...node.sections, decision: { decision: "Keep the probe ruling." } },
+    });
+    world.edges.push({ from: id, type: "dependsOn", to: "spec:probe.shaped", claim: "declared" });
+  };
+  world.nodes.push({
+    ...probeSpec("spec:probe.shaped", { readiness: "defined" }),
+    file: "shaped.sdp.md",
+  });
+  decision("decision-a");
+  world.edges.push({
+    from: "spec:probe.shaped",
+    type: "dependsOn",
+    to: "spec:probe.decision-a",
+    claim: "declared",
+  });
+  const supersedes = (from: string, to: string): void => {
+    world.edges.push({
+      from: `spec:probe.${from}`,
+      type: "supersedes",
+      to: `spec:probe.${to}`,
+      claim: "declared",
+    });
+  };
+  if (point.replacement !== "no decision") {
+    decision("decision-b", point.replacementRung);
+    supersedes("decision-b", "decision-a");
+  }
+  switch (point.replacement) {
+    case "a chain of two decisions":
+      decision("decision-c", point.replacementRung);
+      supersedes("decision-c", "decision-b");
+      break;
+    case "two decisions at once":
+      decision("decision-c", point.replacementRung);
+      supersedes("decision-c", "decision-a");
+      break;
+    case "a chain that closes on itself":
+      supersedes("decision-a", "decision-b");
+      break;
+    case "an end and a loop at once":
+      decision("decision-c", point.replacementRung);
+      decision("decision-d", point.replacementRung);
+      supersedes("decision-c", "decision-a");
+      supersedes("decision-d", "decision-c");
+      supersedes("decision-c", "decision-d");
+      break;
+  }
+  world.subjectId =
+    point.subject === "superseded decision"
+      ? "spec:probe.decision-s"
+      : point.subject === "replacing decision"
+        ? "spec:probe.decision-b"
+        : "spec:probe.shaped";
+  if (point.subject === "superseded decision") {
+    decision("decision-s");
+    supersedes("decision-b", "decision-s");
+  }
+  world.edges.push({
+    from: world.subjectId,
+    type: point.relation ?? "decidedBy",
+    to: "spec:probe.decision-a",
+    claim: "declared",
+  });
+  return world;
+}
+
+function validateSuperseded(world: ValidatorWorld): void {
+  world.report = validateGraph({
+    schemaVersion,
+    nodes: world.nodes,
+    edges: world.edges,
+    locations: [
+      {
+        spec: "spec:probe.shaped",
+        file: "shaped.sdp.md",
+        entry: "relation.decidedBy.spec:probe.decision-a",
+        line: 7,
+      },
+    ],
+  });
+}
+
+function supersededFindings(world: ValidatorWorld): readonly Finding[] {
+  return findingsOf(world, "conformance/superseded-decisions");
+}
+
+function observeSuperseded(world: ValidatorWorld): SupersededDecisionSignalOutcome {
+  return {
+    kind: "the report holds {warnings} superseded-decision warnings",
+    warnings: supersededFindings(world).length,
+  };
+}
+
+function expectedSuperseded(
+  point: Partial<SupersededDecisionSignalConditions>,
+): SupersededDecisionSignalOutcome {
+  if (Object.keys(point).length !== 4) return unspecified;
+  return {
+    kind: "the report holds {warnings} superseded-decision warnings",
+    warnings:
+      point.subject === "superseded decision" ||
+      point.relation !== "decidedBy" ||
+      point.replacement === "no decision"
+        ? 0
+        : 1,
+  };
+}
+
+function assertSuperseded(world: ValidatorWorld, contract: SupersededContract): void {
+  const warnings = supersededFindings(world);
+  const warning = warnings[0];
+  for (const step of contract.steps) {
+    switch (step.text) {
+      case "the warnings name {named}": {
+        const ids = [
+          ...new Set(
+            warnings.flatMap((f) =>
+              [...f.message.slice(f.message.indexOf(", ")).matchAll(/"(spec:[^"]+)"/g)]
+                .map((m) => m[1])
+                .filter((id): id is string => id !== undefined),
+            ),
+          ),
+        ].sort();
+        expect(ids.join(", ") || "nothing").toBe(step.params.named);
+        break;
+      }
+      case "the warning is {validatorId} in the {family} family at severity {severity}":
+        expect(warning).toMatchObject(step.params);
+        break;
+      case "the warning has the subject {subjectId} and the related Spec {relatedId}":
+      case "the warning sits at {path} in {file} on line {line}":
+        expect(warning).toMatchObject(step.params);
+        break;
+      case "the warning message follows {template}": {
+        if (!warning) throw new Error("Expected the warning whose message is compared.");
+        const prefix = `Spec "${warning.subjectId ?? ""}" is decided by "${warning.relatedId ?? ""}"`;
+        const suffix = " (informative, never a gate).";
+        const expected =
+          step.params.template === "closedChainMessage"
+            ? `${prefix}, whose chain of replacements closes on itself through "spec:probe.decision-a", "spec:probe.decision-b"${suffix}`
+            : step.params.template === "mixedChainMessage"
+              ? `${prefix}, whose chain of replacements ends at "spec:probe.decision-b" and also closes on itself through "spec:probe.decision-c", "spec:probe.decision-d"${suffix}`
+              : `${prefix}, which a later decision supersedes; the chain of replacements ends at ${contract.spec.includes("branch-names") ? '"spec:probe.decision-b", "spec:probe.decision-c"' : '"spec:probe.decision-b"'}${suffix}`;
+        expect(warning.message).toBe(expected);
+        break;
+      }
+      case "the report holds {errorCount} errors":
+        holdsErrorCount(world, step.params);
+        break;
+    }
+  }
+}
+
+const replacedRulingWarnsAnchor = specTest({
+  id: testAnchorId("test:protocol.superseded-decision-signal.replaced-ruling-warns"),
+  verifies: ref("spec:validation.superseded-decision-signal.replaced-ruling-warns"),
+});
+void replacedRulingWarnsAnchor;
+registerReplacedRulingWarns({
+  createWorld: createSupersededWorld,
+  invoke: validateSuperseded,
+  observe: observeSuperseded,
+  expected: expectedSuperseded,
+  assertions: (world) => {
+    assertSuperseded(world, replacedRulingWarnsContract);
+  },
+});
+
+const chainEndNamedAnchor = specTest({
+  id: testAnchorId("test:protocol.superseded-decision-signal.chain-end-named"),
+  verifies: ref("spec:validation.superseded-decision-signal.chain-end-named"),
+});
+void chainEndNamedAnchor;
+registerChainEndNamed({
+  createWorld: createSupersededWorld,
+  invoke: validateSuperseded,
+  observe: observeSuperseded,
+  expected: expectedSuperseded,
+  assertions: (world) => {
+    assertSuperseded(world, chainEndNamedContract);
+  },
+});
+
+const branchNamesEveryEndAnchor = specTest({
+  id: testAnchorId("test:protocol.superseded-decision-signal.branch-names-every-end"),
+  verifies: ref("spec:validation.superseded-decision-signal.branch-names-every-end"),
+});
+void branchNamesEveryEndAnchor;
+registerBranchNamesEveryEnd({
+  createWorld: createSupersededWorld,
+  invoke: validateSuperseded,
+  observe: observeSuperseded,
+  expected: expectedSuperseded,
+  assertions: (world) => {
+    assertSuperseded(world, branchNamesEveryEndContract);
+  },
+});
+
+const closedChainNamedAnchor = specTest({
+  id: testAnchorId("test:protocol.superseded-decision-signal.closed-chain-named"),
+  verifies: ref("spec:validation.superseded-decision-signal.closed-chain-named"),
+});
+void closedChainNamedAnchor;
+registerClosedChainNamed({
+  createWorld: createSupersededWorld,
+  invoke: validateSuperseded,
+  observe: observeSuperseded,
+  expected: expectedSuperseded,
+  assertions: (world) => {
+    assertSuperseded(world, closedChainNamedContract);
+  },
+});
+
+const dependencyUnreadAnchor = specTest({
+  id: testAnchorId("test:protocol.superseded-decision-signal.dependency-unread"),
+  verifies: ref("spec:validation.superseded-decision-signal.dependency-unread"),
+});
+void dependencyUnreadAnchor;
+registerDependencyUnread({
+  createWorld: createSupersededWorld,
+  invoke: validateSuperseded,
+  observe: observeSuperseded,
+  expected: expectedSuperseded,
+  assertions: (world) => {
+    assertSuperseded(world, dependencyUnreadContract);
+  },
+});
+
+const supersededSubjectSilentAnchor = specTest({
+  id: testAnchorId("test:protocol.superseded-decision-signal.superseded-subject-silent"),
+  verifies: ref("spec:validation.superseded-decision-signal.superseded-subject-silent"),
+});
+void supersededSubjectSilentAnchor;
+registerSupersededSubjectSilent({
+  createWorld: createSupersededWorld,
+  invoke: validateSuperseded,
+  observe: observeSuperseded,
+  expected: expectedSuperseded,
+  assertions: (world) => {
+    assertSuperseded(world, supersededSubjectSilentContract);
+  },
+});
+
+const replacementBelowReadyNamedAnchor = specTest({
+  id: testAnchorId("test:protocol.superseded-decision-signal.replacement-below-ready-named"),
+  verifies: ref("spec:validation.superseded-decision-signal.replacement-below-ready-named"),
+});
+void replacementBelowReadyNamedAnchor;
+registerReplacementBelowReadyNamed({
+  createWorld: createSupersededWorld,
+  invoke: validateSuperseded,
+  observe: observeSuperseded,
+  expected: expectedSuperseded,
+  assertions: (world) => {
+    assertSuperseded(world, replacementBelowReadyNamedContract);
+  },
+});
+
+const liveReplacementWarnsAnchor = specTest({
+  id: testAnchorId("test:protocol.superseded-decision-signal.live-replacement-warns"),
+  verifies: ref("spec:validation.superseded-decision-signal.live-replacement-warns"),
+});
+void liveReplacementWarnsAnchor;
+registerLiveReplacementWarns({
+  createWorld: createSupersededWorld,
+  invoke: validateSuperseded,
+  observe: observeSuperseded,
+  expected: expectedSuperseded,
+  assertions: (world) => {
+    assertSuperseded(world, liveReplacementWarnsContract);
+  },
+});
+
+const endAndLoopNamedAnchor = specTest({
+  id: testAnchorId("test:protocol.superseded-decision-signal.end-and-loop-named"),
+  verifies: ref("spec:validation.superseded-decision-signal.end-and-loop-named"),
+});
+void endAndLoopNamedAnchor;
+registerEndAndLoopNamed({
+  createWorld: createSupersededWorld,
+  invoke: validateSuperseded,
+  observe: observeSuperseded,
+  expected: expectedSuperseded,
+  assertions: (world) => {
+    assertSuperseded(world, endAndLoopNamedContract);
+  },
+});
+
+it("deduplicates stale pairs, names self loops and leaves absent locations absent", () => {
+  const world = createSupersededWorld({
+    subject: "live Spec",
+    relation: "decidedBy",
+    replacement: "one decision",
+    replacementRung: "ready",
+  });
+  world.edges.push({
+    from: "spec:probe.decision-b",
+    type: "supersedes",
+    to: "spec:probe.decision-b",
+    claim: "declared",
+  });
+  world.edges.push({
+    from: world.subjectId,
+    type: "decidedBy",
+    to: "spec:probe.decision-a",
+    claim: "declared",
+  });
+  validate(world);
+  expect(supersededFindings(world)).toHaveLength(1);
+  expect(supersededFindings(world)[0]).toMatchObject({
+    message:
+      'Spec "spec:probe.shaped" is decided by "spec:probe.decision-a", whose chain of replacements closes on itself through "spec:probe.decision-b" (informative, never a gate).',
+  });
+  expect(supersededFindings(world)[0]).not.toHaveProperty("line");
+});
+
+it("warns once for each stale decision and ignores unresolved and wrongly typed replacements", () => {
+  const world = createSupersededWorld({
+    subject: "live Spec",
+    relation: "decidedBy",
+    replacement: "a chain of two decisions",
+    replacementRung: "ready",
+  });
+  world.edges.push({
+    from: world.subjectId,
+    type: "decidedBy",
+    to: "spec:probe.decision-b",
+    claim: "declared",
+  });
+  validate(world);
+  expect(supersededFindings(world).map((f) => f.relatedId)).toEqual([
+    "spec:probe.decision-a",
+    "spec:probe.decision-b",
+  ]);
+  world.edges.splice(0, world.edges.length, ...world.edges.filter((e) => e.type !== "supersedes"));
+  world.edges.push({
+    from: "spec:probe.absent",
+    type: "supersedes",
+    to: "spec:probe.decision-a",
+    claim: "declared",
+  });
+  world.edges.push({
+    from: world.subjectId,
+    type: "supersedes",
+    to: "spec:probe.decision-b",
+    claim: "declared",
+  });
+  validate(world);
+  expect(supersededFindings(world)).toEqual([]);
 });

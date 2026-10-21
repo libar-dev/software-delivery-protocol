@@ -51,6 +51,11 @@ export const structuralMembershipExceptions = [
 
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/validate/validators.ts#checkSupersededDecisions",
+    anchorId: "impl:protocol.superseded-decision-signal",
+    componentId: "component:protocol.validate",
+  },
+  {
     unit: "src/cli/validate-view-command.ts#runValidateRules",
     anchorId: "impl:protocol.corpus-rules",
     componentId: "component:protocol.cli",

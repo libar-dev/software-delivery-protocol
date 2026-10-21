@@ -226,13 +226,13 @@ describe("the self-hosting corpus", () => {
     // Re-measured from the refreshed tree: 399 Markdown Specs and four Gherkin Specs,
     // 403 in the self-hosting Pack; seven Pack manifests and 339 source anchors.
     // The excluded-root validate run corroborates 749 nodes and 2206 edges.
-    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 339 });
+    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 349 });
     expect(expectedSpecs).toHaveLength(403);
     expect(expectedPackMembers).toHaveLength(403);
-    expect(expectedAnchors).toHaveLength(339);
-    expect(expectedBindingEdges).toHaveLength(393);
-    expect(result.graph.nodes).toHaveLength(749);
-    expect(result.graph.edges).toHaveLength(2206);
+    expect(expectedAnchors).toHaveLength(349);
+    expect(expectedBindingEdges).toHaveLength(403);
+    expect(result.graph.nodes).toHaveLength(759);
+    expect(result.graph.edges).toHaveLength(2217);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -294,7 +294,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 102, idea: 5, ready: 295, scoped: 1 });
+    ).toEqual({ defined: 93, idea: 5, ready: 304, scoped: 1 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -347,7 +347,7 @@ describe("the self-hosting corpus", () => {
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedMemberOfEdges).toHaveLength(125);
+    expect(expectedMemberOfEdges).toHaveLength(126);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>

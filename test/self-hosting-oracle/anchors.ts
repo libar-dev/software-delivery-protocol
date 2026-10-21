@@ -21,6 +21,78 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.superseded-decision-signal.end-and-loop-named",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerEndAndLoopNamed(",
+    constant: "endAndLoopNamedAnchor",
+  },
+  {
+    id: "test:protocol.superseded-decision-signal.live-replacement-warns",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerLiveReplacementWarns(",
+    constant: "liveReplacementWarnsAnchor",
+  },
+  {
+    id: "test:protocol.superseded-decision-signal.replacement-below-ready-named",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerReplacementBelowReadyNamed(",
+    constant: "replacementBelowReadyNamedAnchor",
+  },
+  {
+    id: "test:protocol.superseded-decision-signal.superseded-subject-silent",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerSupersededSubjectSilent(",
+    constant: "supersededSubjectSilentAnchor",
+  },
+  {
+    id: "test:protocol.superseded-decision-signal.dependency-unread",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerDependencyUnread(",
+    constant: "dependencyUnreadAnchor",
+  },
+  {
+    id: "test:protocol.superseded-decision-signal.closed-chain-named",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerClosedChainNamed(",
+    constant: "closedChainNamedAnchor",
+  },
+  {
+    id: "test:protocol.superseded-decision-signal.branch-names-every-end",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerBranchNamesEveryEnd(",
+    constant: "branchNamesEveryEndAnchor",
+  },
+  {
+    id: "test:protocol.superseded-decision-signal.chain-end-named",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerChainEndNamed(",
+    constant: "chainEndNamedAnchor",
+  },
+  {
+    id: "test:protocol.superseded-decision-signal.replaced-ruling-warns",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerReplacedRulingWarns(",
+    constant: "replacedRulingWarnsAnchor",
+  },
+  {
+    id: "impl:protocol.superseded-decision-signal",
+    nodeType: "CodeNode",
+    file: "src/validate/validators.ts",
+    site: "function checkSupersededDecisions(",
+    constant: "supersededDecisionSignalAnchor",
+    label: "walks decision replacements to surface stale shaping relations",
+    role: "validator",
+  },
+  {
     id: "impl:protocol.corpus-rules",
     nodeType: "CodeNode",
     file: "src/cli/validate-view-command.ts",
@@ -2812,6 +2884,56 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  [
+    "test:protocol.superseded-decision-signal.end-and-loop-named",
+    "verifies",
+    "spec:validation.superseded-decision-signal.end-and-loop-named",
+  ],
+  [
+    "test:protocol.superseded-decision-signal.live-replacement-warns",
+    "verifies",
+    "spec:validation.superseded-decision-signal.live-replacement-warns",
+  ],
+  [
+    "test:protocol.superseded-decision-signal.replacement-below-ready-named",
+    "verifies",
+    "spec:validation.superseded-decision-signal.replacement-below-ready-named",
+  ],
+  [
+    "test:protocol.superseded-decision-signal.superseded-subject-silent",
+    "verifies",
+    "spec:validation.superseded-decision-signal.superseded-subject-silent",
+  ],
+  [
+    "test:protocol.superseded-decision-signal.dependency-unread",
+    "verifies",
+    "spec:validation.superseded-decision-signal.dependency-unread",
+  ],
+  [
+    "test:protocol.superseded-decision-signal.closed-chain-named",
+    "verifies",
+    "spec:validation.superseded-decision-signal.closed-chain-named",
+  ],
+  [
+    "test:protocol.superseded-decision-signal.branch-names-every-end",
+    "verifies",
+    "spec:validation.superseded-decision-signal.branch-names-every-end",
+  ],
+  [
+    "test:protocol.superseded-decision-signal.chain-end-named",
+    "verifies",
+    "spec:validation.superseded-decision-signal.chain-end-named",
+  ],
+  [
+    "test:protocol.superseded-decision-signal.replaced-ruling-warns",
+    "verifies",
+    "spec:validation.superseded-decision-signal.replaced-ruling-warns",
+  ],
+  [
+    "impl:protocol.superseded-decision-signal",
+    "satisfies",
+    "spec:validation.superseded-decision-signal",
+  ],
   ["impl:protocol.corpus-rules", "satisfies", "spec:validation.corpus-rules"],
   [
     "impl:protocol.architecture-walk-recipe",

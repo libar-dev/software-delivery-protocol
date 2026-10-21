@@ -24,6 +24,16 @@ export const contractDependentSuites = [
     contracts: "generated/contracts",
     generation: "npm run generate:self-hosting",
     testPaths: [
+      "test/validation.superseded-decision-signal.replaced-ruling-warns.test.generated.ts",
+      "test/validation.superseded-decision-signal.chain-end-named.test.generated.ts",
+      "test/validation.superseded-decision-signal.branch-names-every-end.test.generated.ts",
+      "test/validation.superseded-decision-signal.closed-chain-named.test.generated.ts",
+      "test/validation.superseded-decision-signal.dependency-unread.test.generated.ts",
+      "test/validation.superseded-decision-signal.superseded-subject-silent.test.generated.ts",
+      "test/validation.superseded-decision-signal.replacement-below-ready-named.test.generated.ts",
+      "test/validation.superseded-decision-signal.live-replacement-warns.test.generated.ts",
+      "test/validation.superseded-decision-signal.end-and-loop-named.test.generated.ts",
+
       "test/self-hosting-corpus-checks.test.ts",
       "test/validation.corpus-rules.copies-contain-changes.test.generated.ts",
       "test/validation.corpus-rules.error-finding-fails.test.generated.ts",

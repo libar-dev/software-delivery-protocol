@@ -339,12 +339,6 @@ export const expectedWarnings = [
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:validation.superseded-decision-signal",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
     subjectId: "spec:validation.validator-self-testing",
   },
 ] as const;
