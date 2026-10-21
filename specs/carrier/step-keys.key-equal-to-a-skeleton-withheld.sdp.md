@@ -2,7 +2,7 @@
 id: spec:carrier.step-keys.key-equal-to-a-skeleton-withheld
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.step-keys
   verifies:

@@ -98,7 +98,7 @@ describe("the contracts codegen stage", () => {
       'readonly "a customer has a cart with {n} line items": { readonly n: number };',
     );
     expect(contract).toContain(
-      '{ kind: "given", text: "a customer has a cart with {n} line items", params: { n: 2 } }',
+      '{ kind: "given", key: "a customer has a cart with {n} line items", text: "a customer has a cart with {n} line items", params: { n: 2 } }',
     );
     expect(contract).toContain("params: { total: 100 }");
   });

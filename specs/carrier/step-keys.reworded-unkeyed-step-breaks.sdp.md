@@ -2,7 +2,7 @@
 id: spec:carrier.step-keys.reworded-unkeyed-step-breaks
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.step-keys
   verifies:

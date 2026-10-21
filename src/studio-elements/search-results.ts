@@ -79,6 +79,9 @@ function matchesEntry(
 ): boolean {
   return (
     (entry.key !== null && hasTokens(entry.key, wanted)) ||
+    (entry.section === "model" &&
+      entry.address?.includes("#term.") === true &&
+      hasTokens(entry.address.split("#term.")[1] ?? "", wanted)) ||
     ((entry.section === "narrative" ||
       strings.has(JSON.stringify([entry.section, entry.entry, entry.text]))) &&
       hasTokens(entry.text, wanted))

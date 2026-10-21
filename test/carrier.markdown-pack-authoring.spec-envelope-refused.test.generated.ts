@@ -48,6 +48,7 @@ export function registerSpecEnvelopeRefused<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report names the refusal {findingId} and the graph holds no pack node",
         text: "the report names the refusal {findingId} and the graph holds no pack node",
         params,
       });

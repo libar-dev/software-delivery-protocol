@@ -34,7 +34,7 @@ export function mapOwner(
   }
   if (owner === "Example space") {
     const behavior: Record<string, unknown> = isRecord(target.behavior) ? target.behavior : {};
-    mapExampleSpace(behavior, lines, file, findings);
+    mapExampleSpace(behavior, lines, file, findings, entryLines);
     target.behavior = behavior;
     return;
   }
@@ -44,7 +44,7 @@ export function mapOwner(
   }
   if (owner === "Model") {
     const model: Record<string, unknown> = {};
-    mapModel(model, lines, file, findings);
+    mapModel(model, lines, file, findings, entryLines);
     target.model = model;
     return;
   }

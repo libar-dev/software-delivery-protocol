@@ -47,6 +47,7 @@ export function registerUnstatedLayerUnclassified<World>(
     "the walk reports {findings} findings with the rule ids {ruleIds}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the walk reports {findings} findings with the rule ids {ruleIds}",
         text: "the walk reports {findings} findings with the rule ids {ruleIds}",
         params,
       });
@@ -54,6 +55,7 @@ export function registerUnstatedLayerUnclassified<World>(
     "the walk lists {unclassified} unclassified edges": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the walk lists {unclassified} unclassified edges",
         text: "the walk lists {unclassified} unclassified edges",
         params,
       });
@@ -61,6 +63,7 @@ export function registerUnstatedLayerUnclassified<World>(
     "the command exits {exitCode}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the command exits {exitCode}",
         text: "the command exits {exitCode}",
         params,
       });

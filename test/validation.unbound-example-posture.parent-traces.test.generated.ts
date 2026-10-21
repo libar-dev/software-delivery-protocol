@@ -46,6 +46,7 @@ export function registerParentTraces<World>(
       (execution, params) => {
         compareContractOutcome(execution, {
           kind: "then",
+          key: "the matrix reports {warnings} linkage warnings and {gaps} parent gaps and {oracleErrors} oracle errors",
           text: "the matrix reports {warnings} linkage warnings and {gaps} parent gaps and {oracleErrors} oracle errors",
           params,
         });

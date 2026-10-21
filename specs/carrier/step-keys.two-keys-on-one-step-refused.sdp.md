@@ -2,7 +2,7 @@
 id: spec:carrier.step-keys.two-keys-on-one-step-refused
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.step-keys
   verifies:

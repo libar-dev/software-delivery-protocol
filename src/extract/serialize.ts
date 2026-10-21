@@ -88,6 +88,7 @@ function canonicalBehavior(
     ...(section.exampleSpace === undefined
       ? {}
       : { exampleSpace: canonicalGwt(section.exampleSpace) }),
+    ...(section.stepKeys === undefined ? {} : { stepKeys: section.stepKeys }),
   };
 }
 
@@ -103,7 +104,12 @@ function canonicalConstraint(constraint: ConstraintSection): Record<string, unkn
 const openSectionOrderAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.open-section-order"),
   label: "preserves authored open-section and model-term order",
-  satisfies: [ref("spec:extraction.open-section-order"), ref("spec:model.open-question-keys")],
+  satisfies: [
+    ref("spec:extraction.open-section-order"),
+    ref("spec:model.open-question-keys"),
+    ref("spec:carrier.step-keys"),
+    ref("spec:model.term-addresses"),
+  ],
   component: componentAnchorId("component:protocol.extract"),
   role: "codec",
 });
@@ -163,6 +169,7 @@ function canonicalSections(sections: SpecSections): Record<string, unknown> {
       ...(sections.model.terms === undefined
         ? {}
         : { terms: canonicalDynamicSection(sections.model.terms) }),
+      ...(sections.model.termKeys === undefined ? {} : { termKeys: sections.model.termKeys }),
     };
   }
 

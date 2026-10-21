@@ -40,6 +40,7 @@ export function registerPack<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "matched spans preserve {accepted} carriers and exposed HTML refuses {refused} carriers",
         text: "matched spans preserve {accepted} carriers and exposed HTML refuses {refused} carriers",
         params,
       });

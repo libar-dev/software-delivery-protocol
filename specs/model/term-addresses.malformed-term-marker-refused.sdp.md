@@ -2,7 +2,7 @@
 id: spec:model.term-addresses.malformed-term-marker-refused
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.term-addresses
   verifies:

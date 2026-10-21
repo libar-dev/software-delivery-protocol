@@ -1,3 +1,5 @@
+import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
+import { deriveGraph } from "../src/extract/derive.js";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -265,4 +267,68 @@ it("preserves coined non-string entries, question and rule addresses and their l
         entry.entry?.includes("ruleKeys") === true || entry.entry?.endsWith(".key") === true,
     ),
   ).toBe(false);
+});
+
+it("keeps term addresses, keys and physical lines aligned with recipe 23", async () => {
+  const source = `---
+id: spec:probe.terms
+kind: model
+altitude: story
+readiness: scoped
+relations: {}
+---
+# Terms
+
+## Intent
+- outcome: Address terms.
+
+## Model
+- **step key** — [#durableIdentity] Stable identity across wording changes.
+- **slot** — An unkeyed parameter.
+`;
+  const reified = reifyMarkdownCarrier(source, "terms.sdp.md");
+  const graph = deriveGraph(reified.specs, [], []);
+  const corpus = {
+    name: "terms",
+    root,
+    exclude: [],
+    extracted: {
+      graph,
+      report: { validatorId: "extract", findings: reified.findings },
+      counts: { specs: 1, packs: 0, anchors: 0 },
+    },
+  };
+  const index = searchIndex(createReader(graph));
+  const record = required(index.records[0]);
+  const row = required(record.entries.find((entry) => entry.entry === "terms.step key"));
+  expect(row.address).toBe("spec:probe.terms#term.durableIdentity");
+  expect(row.line).toBe(
+    source.split("\n").findIndex((line) => line.startsWith("- **step key**")) + 1,
+  );
+  expect(record.entries.some((entry) => entry.entry?.startsWith("termKeys"))).toBe(false);
+  for (const term of ["step key", "durableIdentity", "slot"]) {
+    const answer = await recipe<{
+      matches: {
+        id: string;
+        section: string;
+        entry: string;
+        address: string | null;
+        line: number | null;
+        text: string;
+        matchedIn: string[];
+      }[];
+    }>(23, corpus, { term });
+    const rows = record.entries
+      .filter((entry) => entryMatches(record, entry, term))
+      .map(({ key, ...row }) => {
+        void key;
+        return { id: record.id, ...row };
+      });
+    expect(rows).toEqual(
+      answer.matches.map(({ matchedIn, ...row }) => {
+        void matchedIn;
+        return row;
+      }),
+    );
+  }
 });

@@ -37,6 +37,7 @@ export function registerDeclaredVersion<World>(
     "the payload declares the schema version {schemaVersion}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the payload declares the schema version {schemaVersion}",
         text: "the payload declares the schema version {schemaVersion}",
         params,
       });

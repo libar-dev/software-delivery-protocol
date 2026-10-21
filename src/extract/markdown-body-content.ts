@@ -19,6 +19,11 @@ export interface MarkdownFence {
   readonly kind: "gwt" | "gwt-vocabulary";
   readonly line: number;
   readonly endLine: number;
+  readonly stepLines: readonly {
+    readonly phase: "given" | "when" | "then";
+    readonly index: number;
+    readonly line: number;
+  }[];
   readonly steps: {
     readonly given: readonly string[];
     readonly when: readonly string[];
@@ -93,6 +98,7 @@ function parseFence(
     when: [],
     result: [],
   };
+  const stepLines: { phase: "given" | "when" | "then"; index: number; line: number }[] = [];
   let phase: "given" | "when" | "result" | undefined;
   for (const line of body) {
     if (line.text.length === 0 || /^[\t ]/u.test(line.text)) {
@@ -140,6 +146,11 @@ function parseFence(
     }
     phase = next;
     parseSlots(text);
+    stepLines.push({
+      phase: next === "result" ? "then" : next,
+      index: steps[next].length,
+      line: line.line,
+    });
     steps[next].push(text);
   }
   if (steps.given.length === 0 || steps.when.length !== 1 || steps.result.length === 0)
@@ -152,7 +163,13 @@ function parseFence(
       ),
     );
   return {
-    fence: { kind, line: opening.line, endLine: lines[end]?.line ?? opening.line, steps },
+    fence: {
+      kind,
+      line: opening.line,
+      endLine: lines[end]?.line ?? opening.line,
+      steps,
+      stepLines,
+    },
     end: end + 1,
   };
 }

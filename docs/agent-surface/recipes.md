@@ -1571,7 +1571,7 @@ const escapePattern = /\\([!-/:-@[-`{-~])/gu;
 const idPattern =
   /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"\u0027()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 const mentionPattern =
-  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*))?$/u;
+  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*))?$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const declared = new Map();
 
@@ -1619,6 +1619,12 @@ for (const spec of g.specs()) {
   collect(context.narrative, "narrative");
 
   for (const [section, content] of Object.entries(context.sections ?? {})) {
+    if (section === "model" && typeof content === "object" && content !== null && !Array.isArray(content)) {
+      for (const [key, value] of Object.entries(content)) {
+        if (key !== "termKeys") collect(value, section, key);
+      }
+      continue;
+    }
     if (section !== "behavior" || typeof content !== "object" || content === null) {
       collect(content, section);
       continue;
@@ -1627,7 +1633,7 @@ for (const spec of g.specs()) {
     // The two fences are skipped by position, never by key name alone: `behavior.exampleSpace`
     // is the gwt-vocabulary fence, and an object entry of `behavior.examples` is a gwt fence.
     for (const [key, entry] of Object.entries(content)) {
-      if (key === "exampleSpace") continue;
+      if (key === "exampleSpace" || key === "stepKeys") continue;
       if (key === "examples" && Array.isArray(entry)) {
         entry.forEach((example, index) => {
           if (typeof example !== "object" || example === null || Array.isArray(example))
@@ -1666,7 +1672,9 @@ for (const spec of g.specs()) {
               questions.some((entry) => typeof entry === "object" && entry !== null && entry.key === key)
             : section === "rule"
               ? Object.hasOwn(sections.behavior?.ruleKeys ?? {}, key)
-              : key !== "description" && Object.hasOwn(sections[section] ?? {}, key);
+              : section === "term"
+                ? Object.hasOwn(sections.model?.termKeys ?? {}, key)
+                : key !== "description" && Object.hasOwn(sections[section] ?? {}, key);
         if (!holds) record(unresolvedPairs, spec.id, token, at, "entry");
       }
       if (to !== spec.id) record(pairs, spec.id, to, at);
@@ -1729,12 +1737,12 @@ inside `entry`, and counts token occurrences in `totals.occurrences`.
 `unresolved` groups by mentioning Spec and token, with `reason: "malformed"` for a refused id or
 address, `"spec"` for an absent Spec, and `"entry"` for an absent own section key, `description`
 in Design or UI, a question key no open question of the Spec carries, or a rule key no rule or
-flow carries.
+flow carries, or a term key no Model term carries.
 An entry address is `spec:<id>#design.<key>` or `spec:<id>#ui.<key>`, with a key matching
 `^[a-z][A-Za-z0-9]*$`. It resolves against the named Spec's own section keys. An entry address may
 also be `spec:<id>#question.<key>`, which resolves when one of the named Spec's open questions
 carries that key in its marker, or `spec:<id>#rule.<key>`, which resolves when the Spec's
-`behavior.ruleKeys` carries that key; there `description` is an ordinary key.
+`behavior.ruleKeys` carries that key; there `description` is an ordinary key. A `spec:<id>#term.<key>` address resolves when `model.termKeys` carries its key.
 
 `unbacked` and `reverseOnly` group valid mentions by mentioning Spec and target Spec, combining
 Spec-level mentions and addresses, including missing entries. Self-addresses never enter these
@@ -1800,7 +1808,14 @@ for (const spec of g.specs()) {
   };
   const ruleKeys = context.sections?.behavior?.ruleKeys ?? {};
   const ruleKeyOf = (entry) => Object.keys(ruleKeys).find((key) => ruleKeys[key] === entry) ?? null;
+  const termKeys = context.sections?.model?.termKeys ?? {};
+  const terms = context.sections?.model?.terms ?? {};
+  const termKeyOf = (entry) => Object.keys(termKeys).find((key) => `terms.${termKeys[key]}` === entry) ?? null;
   const addressOf = (section, entry) => {
+    if (section === "model") {
+      const key = termKeyOf(entry);
+      return key === null ? null : `${spec.id}#term.${key}`;
+    }
     if (section === "behavior") {
       const key = ruleKeyOf(entry);
       return key === null ? null : `${spec.id}#rule.${key}`;
@@ -1823,7 +1838,8 @@ for (const spec of g.specs()) {
     const question = /^openQuestions\[(\d+)\](?:\.(question|decider|links|provisional|trigger)(?:\[\d+\])?)?$/u.exec(entry ?? "");
     const index = question?.[1];
     const rule = /^(rules|flows)\[(\d+)\]$/u.exec(entry ?? "");
-    const located =
+    const termIndex = section === "model" ? Object.keys(terms).findIndex((term) => `terms.${term}` === entry) : -1;
+    const located = termIndex >= 0 ? `term[${termIndex}]` :
       section === "intent" && index !== undefined
         ? `question[${index}]${question[2] && question[2] !== "question" ? "." + question[2] : ""}`
         : section === "behavior" && rule !== null
@@ -1844,7 +1860,7 @@ for (const spec of g.specs()) {
   });
   const visit = (section, entry, key, text, topKey) => {
     const matchedIn = [
-      ...(key !== null && hits(key) ? ["key"] : []),
+      ...(key !== null && (hits(key) || (section === "model" && hits(termKeyOf(entry) ?? ""))) ? ["key"] : []),
       ...(hits(text) ? ["text"] : []),
     ];
     if (matchedIn.length > 0) matches.push(row(section, entry, matchedIn, text, topKey));
@@ -1871,7 +1887,8 @@ for (const spec of g.specs()) {
         section === "design" || section === "ui" || (section === "model" && entry === "terms");
       for (const [name, item] of Object.entries(value)) {
         const path = entry === null ? name : `${entry}.${name}`;
-        if (section === "behavior" && entry === null && name === "ruleKeys") continue;
+        if (section === "behavior" && entry === null && (name === "ruleKeys" || name === "stepKeys")) continue;
+        if (section === "model" && entry === null && name === "termKeys") continue;
         if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(path)) continue;
         walk(
           section,
@@ -2002,8 +2019,8 @@ const addresses = params.addresses ?? [
   "spec:consumers.absent#design.anyKey",
   "spec:consumers.design-review",
 ];
-const expected = "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII";
-const pattern = /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*)$/u;
+const expected = "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII";
+const pattern = /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*)$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const rows = addresses.map((address) => {
   const parsed = typeof address === "string" ? pattern.exec(address) : null;
@@ -2015,11 +2032,12 @@ const rows = addresses.map((address) => {
   const context = g.specContext(id);
   const sections = context.sections ?? {};
   const entries = section === "question" ? sections.intent?.openQuestions
-    : section === "rule" ? sections.behavior?.ruleKeys : sections[section];
+    : section === "rule" ? sections.behavior?.ruleKeys
+    : section === "term" ? sections.model?.termKeys : sections[section];
   if (entries === undefined || entries === null || typeof entries !== "object") return miss("section", {available: []});
   const available = (section === "question"
     ? entries.flatMap((entry) => typeof entry?.key === "string" ? [entry.key] : [])
-    : Object.keys(entries).filter((name) => section === "rule" || name !== "description")).sort();
+    : Object.keys(entries).filter((name) => section === "rule" || section === "term" || name !== "description")).sort();
   if (!available.includes(key)) return miss("entry", {available});
   let entry;
   let value;
@@ -2032,6 +2050,10 @@ const rows = addresses.map((address) => {
     const match = /^(rules|flows)\[(\d+)\]$/u.exec(path);
     value = sections.behavior[match[1]][Number(match[2])];
     entry = `${match[1] === "rules" ? "rule" : "flow"}[${match[2]}]`;
+  } else if (section === "term") {
+    const term = entries[key];
+    entry = `term[${Object.keys(sections.model?.terms ?? {}).indexOf(term)}]`;
+    value = sections.model?.terms?.[term];
   } else {
     entry = `${section}.${key}`;
     value = entries[key];

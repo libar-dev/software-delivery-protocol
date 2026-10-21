@@ -37,6 +37,7 @@ export function registerManifestOrderKept<World>(
     "the serialized Pack node lists the members {serializedMembers}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the serialized Pack node lists the members {serializedMembers}",
         text: "the serialized Pack node lists the members {serializedMembers}",
         params,
       });
@@ -44,6 +45,7 @@ export function registerManifestOrderKept<World>(
     "the serialized belongsTo edges run from {edgeSources}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the serialized belongsTo edges run from {edgeSources}",
         text: "the serialized belongsTo edges run from {edgeSources}",
         params,
       });
@@ -51,6 +53,7 @@ export function registerManifestOrderKept<World>(
     "the reader's Pack context lists the members {readerMembers}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the reader's Pack context lists the members {readerMembers}",
         text: "the reader's Pack context lists the members {readerMembers}",
         params,
       });

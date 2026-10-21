@@ -641,6 +641,11 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.cli",
   },
   {
+    unit: "src/extract/key-markers.ts#normalizeKeyedContent",
+    anchorId: "impl:protocol.key-markers",
+    componentId: "component:protocol.extract",
+  },
+  {
     unit: "src/extract/authoring-normalization.ts#normalizeAuthoring",
     anchorId: "impl:protocol.authoring-normalization",
     componentId: "component:protocol.extract",

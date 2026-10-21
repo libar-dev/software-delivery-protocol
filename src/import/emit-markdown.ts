@@ -1,3 +1,4 @@
+import { stepSkeleton } from "../notation/slots.js";
 import type { ReifiedSpec } from "../extract/reify.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
@@ -29,12 +30,22 @@ function section(
     .join("\n\n");
 }
 
-function fence(kind: "gwt" | "gwt-vocabulary", value: unknown): string | undefined {
+function fence(
+  kind: "gwt" | "gwt-vocabulary",
+  value: unknown,
+  stepKeys?: unknown,
+): string | undefined {
   const example = importData(value);
   if (example === undefined) return undefined;
-  const given = importTexts(example.given);
-  const when = importTexts(example.when);
-  const outcome = importTexts(example.then);
+  const marked = (text: string): string => {
+    const key = Object.entries(importData(stepKeys) ?? {}).find(
+      ([, skeleton]) => skeleton === stepSkeleton(text),
+    )?.[0];
+    return `${key === undefined ? "" : `[#${key}] `}${text}`;
+  };
+  const given = importTexts(example.given).map(marked);
+  const when = importTexts(example.when).map(marked);
+  const outcome = importTexts(example.then).map(marked);
   const action = when[0];
   if (given.length === 0 || action === undefined || outcome.length === 0) return undefined;
   const steps = [
@@ -94,7 +105,8 @@ function behaviorSection(data: ImportData, behavior: ImportData): string | undef
   const ruleKeys = importData(behavior.ruleKeys);
   const lists = { rules: importTexts(behavior.rules), flows: importTexts(behavior.flows) };
   const kind = importText(data.kind);
-  const ownsExampleSpace = fence("gwt-vocabulary", behavior.exampleSpace) !== undefined;
+  const ownsExampleSpace =
+    fence("gwt-vocabulary", behavior.exampleSpace, behavior.stepKeys) !== undefined;
   if (
     kind === "behavior" &&
     ownsExampleSpace &&
@@ -150,7 +162,7 @@ function exampleSpaceSection(
   behavior: ImportData,
   hasPrimaryBehavior: boolean,
 ): string | undefined {
-  const vocabulary = fence("gwt-vocabulary", behavior.exampleSpace);
+  const vocabulary = fence("gwt-vocabulary", behavior.exampleSpace, behavior.stepKeys);
   return vocabulary === undefined
     ? undefined
     : section("Example space", hasPrimaryBehavior ? undefined : behavior.description, [vocabulary]);
@@ -174,7 +186,12 @@ function modelSection(model: ImportData | undefined): string | undefined {
       ? []
       : Object.entries(terms).flatMap(([term, definition]) => {
           const value = importText(definition);
-          return value === undefined ? [] : [`- **${term}** — ${value}`];
+          const key = Object.entries(importData(model?.termKeys) ?? {}).find(
+            ([, target]) => target === term,
+          )?.[0];
+          return value === undefined
+            ? []
+            : [`- **${term}** — ${key === undefined ? "" : `[#${key}] `}${value}`];
         });
   return section("Model", model?.description, items);
 }
@@ -236,7 +253,12 @@ function scaffoldBehaviorHeading(kind: string | undefined): string | undefined {
 const sdpImportMarkdownEmitAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.sdp-import-markdown-emit"),
   label: "emits the Markdown document twin for an imported Spec",
-  satisfies: [ref("spec:carrier.sdp-import"), ref("spec:model.open-question-keys")],
+  satisfies: [
+    ref("spec:carrier.sdp-import"),
+    ref("spec:model.open-question-keys"),
+    ref("spec:carrier.step-keys"),
+    ref("spec:model.term-addresses"),
+  ],
   component: componentAnchorId("component:protocol.import"),
   role: "codec",
 });
@@ -305,7 +327,8 @@ export function emitMarkdownSpec(reified: ReifiedSpec, options: EmitMarkdownOpti
   ].join("\n");
   const behavior = importData(data.behavior);
   const examples = Array.isArray(behavior?.examples) ? behavior.examples : [];
-  const example = importText(data.kind) === "example" ? fence("gwt", examples[0]) : undefined;
+  const example =
+    importText(data.kind) === "example" ? fence("gwt", examples[0], behavior?.stepKeys) : undefined;
   const primaryBehavior = behavior === undefined ? undefined : behaviorSection(data, behavior);
   const kind = importText(data.kind);
   const scaffoldHeading =

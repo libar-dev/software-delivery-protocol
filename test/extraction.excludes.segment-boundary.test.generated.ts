@@ -41,6 +41,7 @@ export function registerSegmentBoundary<World>(
     "the discovery attempt {outcome}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the discovery attempt {outcome}",
         text: "the discovery attempt {outcome}",
         params,
       });
@@ -49,6 +50,7 @@ export function registerSegmentBoundary<World>(
       (execution, params) => {
         compareContractOutcome(execution, {
           kind: "then",
+          key: "the surviving spec carrier is {specCarrier} and the surviving anchor candidate is {anchorCandidate}",
           text: "the surviving spec carrier is {specCarrier} and the surviving anchor candidate is {anchorCandidate}",
           params,
         });

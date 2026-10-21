@@ -43,6 +43,7 @@ export function registerValidCart<World>(
     "an order is created with total {total}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "an order is created with total {total}",
         text: "an order is created with total {total}",
         params,
       });
@@ -50,6 +51,7 @@ export function registerValidCart<World>(
     "the order contains the original cart lines": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the order contains the original cart lines",
         text: "the order contains the original cart lines",
         params,
       });

@@ -312,7 +312,7 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            then: ['the payload declares the schema version {schemaVersion: "0.10.0"}'],
+            then: ['the payload declares the schema version {schemaVersion: "0.11.0"}'],
           },
         ],
       },

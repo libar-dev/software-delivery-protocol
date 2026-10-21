@@ -40,6 +40,7 @@ export function registerCollapsedEdgeClaim<World>(
     "the report names {findingId} at severity {severity}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report names {findingId} at severity {severity}",
         text: "the report names {findingId} at severity {severity}",
         params,
       });
@@ -47,6 +48,7 @@ export function registerCollapsedEdgeClaim<World>(
     "the finding message states {phrase}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the finding message states {phrase}",
         text: "the finding message states {phrase}",
         params,
       });
@@ -54,6 +56,7 @@ export function registerCollapsedEdgeClaim<World>(
     "the report holds {floorCount} readiness-floor findings": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report holds {floorCount} readiness-floor findings",
         text: "the report holds {floorCount} readiness-floor findings",
         params,
       });

@@ -51,6 +51,7 @@ export function registerUnboundExample<World>(
     "the report names {findingId} at severity {severity}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report names {findingId} at severity {severity}",
         text: "the report names {findingId} at severity {severity}",
         params,
       });
@@ -58,6 +59,7 @@ export function registerUnboundExample<World>(
     "the parent earns the delivery fact has-verifier: {conferred}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the parent earns the delivery fact has-verifier: {conferred}",
         text: "the parent earns the delivery fact has-verifier: {conferred}",
         params,
       });

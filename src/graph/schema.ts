@@ -4,7 +4,7 @@ import type { CodeAnchorLayer } from "../model/anchors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.10.0" as const;
+export const schemaVersion = "0.11.0" as const;
 
 const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
@@ -173,10 +173,10 @@ export interface GraphEdge {
  * One row of the location table (`spec:extraction.entry-locations`): where a Spec entry is
  * written. `entry` is `design.<key>` or `ui.<key>` for keys other than `description`,
  * `rule[<index>]` or `flow[<index>]` for entries of the primary behavior owner,
- * `question[<index>]` for an open question, `question[<index>].<field>` for each optional
+ * `term[<index>]` for a Model term, `question[<index>]` for an open question, `question[<index>].<field>` for each optional
  * `decider`, `links`, `provisional` or `trigger` field, or `relation.<type>.<target>` for an
- * authored relation target. Indexes count from 0 within authored lists; a keyed rule, flow or
- * question carries `key` beside its entry. The table rides beside the nodes, so Primitive and
+ * authored relation target. Indexes count from 0 within authored lists; a keyed rule, flow,
+ * question or term carries `key` beside its entry. The table rides beside the nodes, so Primitive and
  * Pack nodes stay line-free. A missing row means not located, never absent.
  */
 export interface EntryLocation {
