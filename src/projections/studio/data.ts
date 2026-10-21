@@ -1,3 +1,4 @@
+import type { StudioInputs } from "./inputs.js";
 import { studioRecipeAnswers } from "./recipes.js";
 import type { StudioRecipeAnswers } from "./recipes.js";
 import type { GraphNodeType } from "../../graph/schema.js";
@@ -70,6 +71,7 @@ export interface SearchIndex {
 
 export interface StudioData {
   readonly recipes: StudioRecipeAnswers;
+  readonly inputs: StudioInputs;
   readonly specs: readonly SpecContext[];
   readonly packs: readonly { readonly context: PackContext; readonly totals: PackTotals }[];
   readonly findings: readonly Finding[];
@@ -283,6 +285,7 @@ function specContext(reader: Reader, id: string): SpecContext {
 export async function createStudioData(
   source: Reader,
   report: ValidationReport = { validatorId: graphReportId, findings: source.findings() },
+  inputs: StudioInputs = { runs: [] },
 ): Promise<StudioData> {
   // Studio owns these values for one build and shares their joins across shipped recipes.
   const specRows = source.specs(),
@@ -302,9 +305,10 @@ export async function createStudioData(
       return packContexts.get(id);
     },
   };
-  const recipes = await studioRecipeAnswers(reader, report);
+  const recipes = await studioRecipeAnswers(reader, report, inputs);
   return {
     recipes,
+    inputs,
     specs: reader.specs().map((spec) => specContext(reader, spec.id)),
     packs: reader.packs().map((pack) => {
       const context = reader.packContext(pack.id);

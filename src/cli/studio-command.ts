@@ -60,7 +60,11 @@ export function prepareStudioPublication(
       };
       const files = studioFiles(
         render(
-          await createStudioData(createReader(validated.graph, validated.report), validated.report),
+          await createStudioData(
+            createReader(validated.graph, validated.report),
+            validated.report,
+            parsed.studioInputs,
+          ),
         ),
         assets,
       );
@@ -70,6 +74,7 @@ export function prepareStudioPublication(
             await createStudioData(
               createReader(validated.graph, validated.report),
               validated.report,
+              parsed.studioInputs,
             ),
           ),
           assets,

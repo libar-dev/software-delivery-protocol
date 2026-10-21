@@ -5767,14 +5767,14 @@ export const consumersSpecs = [
           "the title linked, the id as code, then as plain text the kind, altitude, floor in words, the unmet clauses by id, `<e> entries, <d> declarations, <q> open, <b> blocking`, and the referencing units by id.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.registers.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.registers.blocking-first",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The questions page lists the Specs with a blocking question first",
     narrative: null,
     sections: {
@@ -5797,7 +5797,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.registers.blocking-first.sdp.md",
   },
   {
@@ -5848,14 +5848,14 @@ export const consumersSpecs = [
           "`blocking` or `non-blocking` in words, the address as a link with a copy action, the text, the provisional reading on its own labelled line, then `holds` and the held Specs as links.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.owner-queue.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.owner-queue.dependency-first",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The owner queue lists a waiting statement after the one it rests on",
     narrative: null,
     sections: {
@@ -5881,7 +5881,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.owner-queue.dependency-first.sdp.md",
   },
   {
@@ -5937,14 +5937,14 @@ export const consumersSpecs = [
           "`Changed since the base graph <label>:` and the changed parts as code, linked to the Spec's row on the diff page.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diff-page.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.diff-page.changed-entry",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The diff page shows a changed entry's base and built values",
     narrative: null,
     sections: {
@@ -5971,7 +5971,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.diff-page.changed-entry.sdp.md",
   },
   {
@@ -6018,14 +6018,14 @@ export const consumersSpecs = [
           "the term in bold, its definition as text with inline code spans as code, then the Spec's title linked and, when keyed, `term.<key>` as a link with a copy action for the full address.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.glossary-page.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.glossary-page.same-word-twice",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A word two Specs define appears once per Spec on the glossary page",
     narrative: null,
     sections: {
@@ -6051,7 +6051,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.glossary-page.same-word-twice.sdp.md",
   },
   {

@@ -7,9 +7,9 @@ import { expect, it } from "vitest";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
-it("documents S3's recipe 46 hand-off after S2 adopts recipe 51", () => {
+it("evaluates S3's recipe 46 and S2's recipe 51 in the shared Studio build", () => {
   const source = readFileSync(join(root, "src/projections/studio/recipes.ts"), "utf8");
-  expect(source).toMatch(/\/\/ Lane S3 adds recipe 46 for the queue\./);
+  expect(source).toContain("[17, 20, 24, 31, 33, 43, 44, 46, 51]");
   for (const number of [46, 51]) {
     const catalog = readFileSync(join(root, "docs/agent-surface/recipes.md"), "utf8");
     expect(catalog).toMatch(new RegExp(`^## ${String(number)}\\. `, "mu"));

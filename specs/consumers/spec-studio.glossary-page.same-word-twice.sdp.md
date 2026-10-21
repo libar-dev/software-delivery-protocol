@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.glossary-page.same-word-twice
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.glossary-page
   verifies:

@@ -1,3 +1,5 @@
+import { readStudioBase } from "./studio-inputs.js";
+import type { StudioInputs } from "../projections/studio/inputs.js";
 import { mergeParams } from "./params.js";
 import { realpathSync, statSync } from "node:fs";
 import { resolve } from "node:path";
@@ -7,6 +9,7 @@ import type { CliOutput } from "./output.js";
 import { writeStderr } from "./output.js";
 
 export interface BuildArgs {
+  readonly studioInputs?: StudioInputs;
   readonly root: string;
   readonly exclude: readonly string[];
   readonly checkClean: boolean;
@@ -28,6 +31,8 @@ export function parseBuildArgs(
   output: CliOutput,
   command: string,
 ): BuildArgs | undefined {
+  let base: string | undefined;
+  let baseLabel: string | undefined;
   let root: string | undefined;
   let checkClean = false;
   let watchMode = false;
@@ -41,6 +46,32 @@ export function parseBuildArgs(
     const argument = args[index];
 
     if (argument === undefined) {
+      continue;
+    }
+
+    if (argument === "--base" || argument === "--base-label") {
+      if (command !== "studio") {
+        writeStderr(output, `sdp ${command}: ${argument} is only valid on studio.\n`);
+        return undefined;
+      }
+      const value = args[index + 1];
+      if (value === undefined || value.trim() === "" || value.startsWith("--")) {
+        writeStderr(
+          output,
+          `sdp studio: ${argument} requires ${argument === "--base" ? "a path" : "text"}.\n`,
+        );
+        return undefined;
+      }
+      if (
+        (argument === "--base" && base !== undefined) ||
+        (argument === "--base-label" && baseLabel !== undefined)
+      ) {
+        writeStderr(output, `sdp studio: ${argument} may be supplied only once.\n`);
+        return undefined;
+      }
+      if (argument === "--base") base = value;
+      else baseLabel = value;
+      index += 1;
       continue;
     }
 
@@ -169,6 +200,10 @@ export function parseBuildArgs(
     root = argument;
   }
 
+  if (baseLabel !== undefined && base === undefined) {
+    writeStderr(output, "sdp studio: --base-label requires --base.\n");
+    return undefined;
+  }
   let exclude: readonly string[];
 
   try {
@@ -195,18 +230,21 @@ export function parseBuildArgs(
   }
 
   const resolvedRoot = resolveExtractionRoot(root, output, command);
+  if (resolvedRoot === undefined) return undefined;
+  const studioInputs =
+    base === undefined ? undefined : readStudioBase(base, baseLabel ?? null, output, resolvedRoot);
+  if (base !== undefined && studioInputs === undefined) return undefined;
 
-  return resolvedRoot === undefined
-    ? undefined
-    : {
-        root: resolvedRoot,
-        exclude,
-        checkClean,
-        ...(rules.length === 0 ? {} : { rules }),
-        watch: watchMode,
-        ...(imports === undefined ? {} : { imports }),
-        ...(vault === undefined ? {} : { vault }),
-      };
+  return {
+    ...(studioInputs === undefined ? {} : { studioInputs }),
+    root: resolvedRoot,
+    exclude,
+    checkClean,
+    ...(rules.length === 0 ? {} : { rules }),
+    watch: watchMode,
+    ...(imports === undefined ? {} : { imports }),
+    ...(vault === undefined ? {} : { vault }),
+  };
 }
 
 /**

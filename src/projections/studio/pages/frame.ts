@@ -7,7 +7,7 @@ import { codeSpans, plainTitle } from "./code-spans.js";
  * Writes the shared navigation and the rail appropriate to the selected graph node.
  * @sdpAnchor impl:protocol.studio-frame
  * @sdpSatisfies spec:consumers.spec-studio.shell
- * @sdpReferences spec:consumers.spec-studio, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.lenses
+ * @sdpReferences spec:consumers.spec-studio, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.navigation
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
@@ -51,6 +51,13 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
       ["architecture.html", "Architecture"],
       ["tests.html", "Tests"],
       ["evidence.html", "Evidence"],
+      ["queue.html", "Queue"],
+      ["questions.html", "Questions"],
+      ["decisions.html", "Decisions"],
+      ["declarations.html", "Declarations"],
+      ["backlog.html", "Backlog"],
+      ["glossary.html", "Glossary"],
+      ...(ctx.data.inputs.base === undefined ? [] : [["diff.html", "Diff"] as const]),
     ] as const
   )
     .map(

@@ -86,6 +86,31 @@ export const acceptedArchitecturalUnits = [
   },
 
   {
+    unit: "src/projections/studio/pages/registers-page.ts#questionsPage",
+    anchorId: "impl:protocol.studio-registers",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/queue-page.ts#queuePage",
+    anchorId: "impl:protocol.studio-owner-queue",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/diff-page.ts#diffPage",
+    anchorId: "impl:protocol.studio-diff",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/glossary-page.ts#glossaryPage",
+    anchorId: "impl:protocol.studio-glossary",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/cli/studio-inputs.ts#readStudioBase",
+    anchorId: "impl:protocol.studio-base-input",
+    componentId: "component:protocol.cli",
+  },
+  {
     unit: "src/validate/validators.ts#checkSupersededDecisions",
     anchorId: "impl:protocol.superseded-decision-signal",
     componentId: "component:protocol.validate",

@@ -62,10 +62,14 @@ const commands = {
   },
   studio: {
     name: "studio",
-    usage: "  sdp studio [root] [--exclude PATH]... [--check-clean]",
+    usage:
+      "  sdp studio [root] [--exclude PATH]... [--base PATH [--base-label TEXT]] [--check-clean]",
     paragraph: `validate, then publish static Studio pages into <root>/generated/spec-studio/.
              Findings remain visible; exit code follows validate. --check-clean independently
-             re-renders and refuses missing or drifted output. Pages open through file://.`,
+             re-renders and refuses missing or drifted output. --base PATH reads the graph JSON from
+             an earlier sdp build and adds the design diff; --base-label TEXT names that base.
+             Keep the base outside <root>/generated/; paths resolving inside it are refused.
+             Pages open through file://.`,
   },
   generate: {
     name: "generate",
