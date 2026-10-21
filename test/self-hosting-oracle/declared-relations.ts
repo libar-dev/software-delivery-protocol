@@ -1283,7 +1283,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "verifies",
     "spec:carrier.inline-code-spans",
     null,
-    ["literalSpan", "lineScoped", "rawHtmlRefused"],
+    ["literalSpan", "lineScoped", "noEscape", "spanBeforeTag", "rawHtmlRefused"],
   ],
   ["spec:carrier.inline-code-spans.description", "refines", "spec:carrier.inline-code-spans"],
   [
@@ -1291,7 +1291,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "verifies",
     "spec:carrier.inline-code-spans",
     null,
-    ["literalSpan", "lineScoped", "rawHtmlRefused"],
+    ["literalSpan", "lineScoped", "noEscape", "spanBeforeTag", "rawHtmlRefused"],
   ],
   ["spec:carrier.inline-code-spans.list", "refines", "spec:carrier.inline-code-spans"],
   [
@@ -1299,7 +1299,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "verifies",
     "spec:carrier.inline-code-spans",
     null,
-    ["literalSpan", "lineScoped", "rawHtmlRefused"],
+    ["literalSpan", "lineScoped", "noEscape", "spanBeforeTag", "rawHtmlRefused"],
   ],
   ["spec:carrier.inline-code-spans.pack", "refines", "spec:carrier.inline-code-spans"],
   [
@@ -1307,7 +1307,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "verifies",
     "spec:carrier.inline-code-spans",
     null,
-    ["literalSpan", "lineScoped", "rawHtmlRefused"],
+    ["literalSpan", "lineScoped", "noEscape", "spanBeforeTag", "rawHtmlRefused"],
   ],
   [
     "spec:validation.unbound-example-posture.lower-rungs",

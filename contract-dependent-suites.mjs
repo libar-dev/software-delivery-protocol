@@ -24,6 +24,9 @@ export const contractDependentSuites = [
     contracts: "generated/contracts",
     generation: "npm run generate:self-hosting",
     testPaths: [
+      "test/carrier.slot-notation.one-literal-binding.test.generated.ts",
+      "test/model.open-question-fields.dropped-list-warns.test.generated.ts",
+      "test/validation.kind-evidence.second-entry-untargeted.test.generated.ts",
       "test/validator-audit.test.ts",
       "test/validation.validator-self-testing.shipped-checks-paired.test.generated.ts",
       "test/validation.validator-self-testing.silent-check-named.test.generated.ts",

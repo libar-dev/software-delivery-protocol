@@ -781,7 +781,7 @@ export const modelSpecs = [
     id: "spec:model.open-question-fields.dropped-list-warns",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/model/open-question-fields.dropped-list-warns.sdp.md",
     title: "A TypeScript question list that cannot be read drops whole with a warning",
     narrative: null,
@@ -805,7 +805,7 @@ export const modelSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:model.rule-keys",

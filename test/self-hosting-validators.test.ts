@@ -1,3 +1,5 @@
+import { secondEntryUntargetedContract } from "../generated/contracts/validation.kind-evidence.second-entry-untargeted.contract.js";
+import { registerSecondEntryUntargeted } from "./validation.kind-evidence.second-entry-untargeted.test.generated.js";
 import type {
   SupersededDecisionSignalConditions,
   SupersededDecisionSignalOutcome,
@@ -402,6 +404,23 @@ function placeKindEvidence(
   world: ValidatorWorld,
   evidence: KindEvidenceConditions["evidence"],
 ): void {
+  if (evidence === "a targeted constraints entry and an untargeted second entry") {
+    reviseSubject(
+      world,
+      (node) => ({
+        ...node,
+        sections: {
+          ...node.sections,
+          constraints: [
+            { statement: "The probe answers within its budget.", target: "p95 < 200ms" },
+            { statement: "The second entry has no target." },
+          ],
+        },
+      }),
+      "The constraint probe must be present.",
+    );
+    return;
+  }
   if (evidence === "an empty promoted rule child") {
     // Promotion moves content out, so a stub child carrying none of its own kind's evidence is
     // not a promotion: it resolves, it refines, and it still confers nothing.
@@ -1776,4 +1795,27 @@ it("warns once for each stale decision and ignores unresolved and wrongly typed 
   });
   validate(world);
   expect(supersededFindings(world)).toEqual([]);
+});
+
+const secondEntryUntargetedAnchor = specTest({
+  id: testAnchorId("test:protocol.kind-evidence.second-entry-untargeted"),
+  verifies: ref("spec:validation.kind-evidence.second-entry-untargeted"),
+});
+void secondEntryUntargetedAnchor;
+registerSecondEntryUntargeted({
+  createWorld: createKindEvidenceWorld,
+  invoke: invokeKindEvidenceValidate,
+  observe: observeNamedFinding,
+  expected: (point) => expectedNamedFinding(point, "honesty/readiness-floor", "error"),
+  assertions: (world) => {
+    const { clauseId } = paramsForStep(
+      secondEntryUntargetedContract,
+      "the finding names the unmet floor clause {clauseId}",
+    );
+    const { errorCount } = paramsForStep(
+      secondEntryUntargetedContract,
+      "the report holds {errorCount} errors",
+    );
+    assertKindEvidenceFloor(world, clauseId, errorCount);
+  },
 });

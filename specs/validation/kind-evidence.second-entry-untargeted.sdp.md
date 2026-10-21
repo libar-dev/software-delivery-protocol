@@ -2,7 +2,7 @@
 id: spec:validation.kind-evidence.second-entry-untargeted
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.kind-evidence
   verifies:

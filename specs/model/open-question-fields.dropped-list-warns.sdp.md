@@ -2,7 +2,7 @@
 id: spec:model.open-question-fields.dropped-list-warns
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.open-question-fields
   verifies: { target: spec:model.open-question-fields, exercises: [droppedListWarning] }

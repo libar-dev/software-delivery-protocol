@@ -21,6 +21,27 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.kind-evidence.second-entry-untargeted",
+    nodeType: "Anchor",
+    file: "test/self-hosting-validators.test.ts",
+    site: "registerSecondEntryUntargeted(",
+    constant: "secondEntryUntargetedAnchor",
+  },
+  {
+    id: "test:protocol.open-question-fields.dropped-list-warns",
+    nodeType: "Anchor",
+    file: "test/self-hosting-carrier.test.ts",
+    site: "registerDroppedListWarns(",
+    constant: "droppedListWarnsAnchor",
+  },
+  {
+    id: "test:protocol.slot-notation.one-literal-binding",
+    nodeType: "Anchor",
+    file: "test/self-hosting-carrier.test.ts",
+    site: "registerOneLiteralBinding(",
+    constant: "oneLiteralBindingAnchor",
+  },
+  {
     id: "test:protocol.validator-self-testing.unregistered-id-named",
     nodeType: "Anchor",
     file: "test/validator-audit.test.ts",
@@ -2934,6 +2955,21 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  [
+    "test:protocol.kind-evidence.second-entry-untargeted",
+    "verifies",
+    "spec:validation.kind-evidence.second-entry-untargeted",
+  ],
+  [
+    "test:protocol.open-question-fields.dropped-list-warns",
+    "verifies",
+    "spec:model.open-question-fields.dropped-list-warns",
+  ],
+  [
+    "test:protocol.slot-notation.one-literal-binding",
+    "verifies",
+    "spec:carrier.slot-notation.one-literal-binding",
+  ],
   [
     "test:protocol.validator-self-testing.unregistered-id-named",
     "verifies",

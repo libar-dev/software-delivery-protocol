@@ -228,7 +228,7 @@ export const validationSpecs = [
     id: "spec:validation.kind-evidence.second-entry-untargeted",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/kind-evidence.second-entry-untargeted.sdp.md",
     title: "A constraint whose second entry has no target is not complete",
     narrative: null,
@@ -254,7 +254,7 @@ export const validationSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.kind-evidence.empty-promoted-child",

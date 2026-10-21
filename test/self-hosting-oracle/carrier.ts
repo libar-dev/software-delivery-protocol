@@ -827,7 +827,7 @@ export const carrierSpecs = [
     id: "spec:carrier.slot-notation.one-literal-binding",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/carrier/slot-notation.one-literal-binding.sdp.md",
     title: "A one-literal group in a vocabulary is a binding that declares nothing",
     narrative: null,
@@ -851,7 +851,7 @@ export const carrierSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:carrier.slot-notation.typed-declaration",
@@ -1013,7 +1013,7 @@ export const carrierSpecs = [
           ],
         },
         description:
-          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.\n\nParagraph probes run in narrative, section-description and Pack-framing locations; the list-entry location uses only the single-line matrix. The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.',
+          'The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter. It also includes ``Use \\`<b>\\` here.``, whose backslashes escape nothing, and ``Use <a title=\"`\">x` here.``, whose tag closes inside a matched span, as accepted text.\n\nParagraph probes run in narrative, section-description and Pack-framing locations; the list-entry location uses only the single-line matrix. The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.',
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -1455,7 +1455,7 @@ export const carrierSpecs = [
             given: ['the code-span matrix in {location: "narrative"}'],
             when: ["the extractor reifies the probes"],
             then: [
-              "matched spans preserve {accepted: 13} carriers and exposed HTML refuses {refused: 20} carriers",
+              "matched spans preserve {accepted: 15} carriers and exposed HTML refuses {refused: 20} carriers",
             ],
           },
         ],
@@ -1485,7 +1485,7 @@ export const carrierSpecs = [
             given: ['the code-span matrix in {location: "description"}'],
             when: ["the extractor reifies the probes"],
             then: [
-              "matched spans preserve {accepted: 13} carriers and exposed HTML refuses {refused: 20} carriers",
+              "matched spans preserve {accepted: 15} carriers and exposed HTML refuses {refused: 20} carriers",
             ],
           },
         ],
@@ -1515,7 +1515,7 @@ export const carrierSpecs = [
             given: ['the code-span matrix in {location: "list"}'],
             when: ["the extractor reifies the probes"],
             then: [
-              "matched spans preserve {accepted: 12} carriers and exposed HTML refuses {refused: 18} carriers",
+              "matched spans preserve {accepted: 14} carriers and exposed HTML refuses {refused: 18} carriers",
             ],
           },
         ],
@@ -1545,7 +1545,7 @@ export const carrierSpecs = [
             given: ['the code-span matrix in {location: "pack"}'],
             when: ["the extractor reifies the probes"],
             then: [
-              "matched spans preserve {accepted: 13} carriers and exposed HTML refuses {refused: 20} carriers",
+              "matched spans preserve {accepted: 15} carriers and exposed HTML refuses {refused: 20} carriers",
             ],
           },
         ],
