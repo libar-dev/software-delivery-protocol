@@ -1,3 +1,4 @@
+import { extractFindingIds } from "./reify.js";
 import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, markdownFinding } from "./markdown-support.js";
 
@@ -20,7 +21,7 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function structureFinding(file: string, line: number, message: string): Finding {
-  return markdownFinding(file, line, message, "extract/invalid-markdown-structure");
+  return markdownFinding(file, line, message, extractFindingIds.invalidMarkdownStructure);
 }
 
 export function propertyFinding(file: string, line: number, name: string): Finding {
@@ -29,8 +30,8 @@ export function propertyFinding(file: string, line: number, name: string): Findi
     line,
     `property "${name}" is not accepted`,
     reservedMarkdownProperties.has(name)
-      ? "extract/reserved-property"
-      : "extract/unrecognized-property",
+      ? extractFindingIds.reservedProperty
+      : extractFindingIds.unrecognizedProperty,
   );
 }
 

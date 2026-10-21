@@ -57,6 +57,9 @@ import { setOwn } from "./set-own.js";
  */
 export const extractFindingIds = {
   parseError: "extract/parse-error",
+  invalidMarkdownStructure: "extract/invalid-markdown-structure",
+  unrecognizedHeading: "extract/unrecognized-heading",
+  invalidFrontmatter: "extract/invalid-frontmatter",
   gherkinSyntax: "extract/gherkin-syntax",
   gherkinGrammar: "extract/gherkin-grammar",
   tooManyGherkinFindings: "extract/too-many-gherkin-findings",

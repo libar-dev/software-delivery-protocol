@@ -21,6 +21,56 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.validator-self-testing.unregistered-id-named",
+    nodeType: "Anchor",
+    file: "test/validator-audit.test.ts",
+    site: "registerUnregisteredIdNamed(",
+    constant: "unregisteredIdNamedAnchor",
+  },
+  {
+    id: "test:protocol.validator-self-testing.duplicate-pair-named",
+    nodeType: "Anchor",
+    file: "test/validator-audit.test.ts",
+    site: "registerDuplicatePairNamed(",
+    constant: "duplicatePairNamedAnchor",
+  },
+  {
+    id: "test:protocol.validator-self-testing.unpaired-check-named",
+    nodeType: "Anchor",
+    file: "test/validator-audit.test.ts",
+    site: "registerUnpairedCheckNamed(",
+    constant: "unpairedCheckNamedAnchor",
+  },
+  {
+    id: "test:protocol.validator-self-testing.overeager-check-named",
+    nodeType: "Anchor",
+    file: "test/validator-audit.test.ts",
+    site: "registerOvereagerCheckNamed(",
+    constant: "overeagerCheckNamedAnchor",
+  },
+  {
+    id: "test:protocol.validator-self-testing.silent-check-named",
+    nodeType: "Anchor",
+    file: "test/validator-audit.test.ts",
+    site: "registerSilentCheckNamed(",
+    constant: "silentCheckNamedAnchor",
+  },
+  {
+    id: "test:protocol.validator-self-testing.shipped-checks-paired",
+    nodeType: "Anchor",
+    file: "test/validator-audit.test.ts",
+    site: "registerShippedChecksPaired(",
+    constant: "shippedChecksPairedAnchor",
+  },
+  {
+    id: "impl:protocol.validator-self-testing",
+    nodeType: "CodeNode",
+    file: "test/helpers/validator-audit.ts",
+    site: "export function auditValidatorEvidence(",
+    label: "audits the finding registries against source literals and paired probes",
+    role: "utility",
+  },
+  {
     id: "test:protocol.superseded-decision-signal.end-and-loop-named",
     nodeType: "Anchor",
     file: "test/self-hosting-validators.test.ts",
@@ -2885,6 +2935,37 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 // re-measured under plan 41
 export const expectedBindingEdges = [
   [
+    "test:protocol.validator-self-testing.unregistered-id-named",
+    "verifies",
+    "spec:validation.validator-self-testing.unregistered-id-named",
+  ],
+  [
+    "test:protocol.validator-self-testing.duplicate-pair-named",
+    "verifies",
+    "spec:validation.validator-self-testing.duplicate-pair-named",
+  ],
+  [
+    "test:protocol.validator-self-testing.unpaired-check-named",
+    "verifies",
+    "spec:validation.validator-self-testing.unpaired-check-named",
+  ],
+  [
+    "test:protocol.validator-self-testing.overeager-check-named",
+    "verifies",
+    "spec:validation.validator-self-testing.overeager-check-named",
+  ],
+  [
+    "test:protocol.validator-self-testing.silent-check-named",
+    "verifies",
+    "spec:validation.validator-self-testing.silent-check-named",
+  ],
+  [
+    "test:protocol.validator-self-testing.shipped-checks-paired",
+    "verifies",
+    "spec:validation.validator-self-testing.shipped-checks-paired",
+  ],
+  ["impl:protocol.validator-self-testing", "satisfies", "spec:validation.validator-self-testing"],
+  [
     "test:protocol.superseded-decision-signal.end-and-loop-named",
     "verifies",
     "spec:validation.superseded-decision-signal.end-and-loop-named",
@@ -3829,6 +3910,7 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.validator-self-testing",
   "impl:protocol.corpus-rules",
   "impl:protocol.studio-data",
   "impl:protocol.studio-paths",

@@ -24,6 +24,14 @@ export const contractDependentSuites = [
     contracts: "generated/contracts",
     generation: "npm run generate:self-hosting",
     testPaths: [
+      "test/validator-audit.test.ts",
+      "test/validation.validator-self-testing.shipped-checks-paired.test.generated.ts",
+      "test/validation.validator-self-testing.silent-check-named.test.generated.ts",
+      "test/validation.validator-self-testing.overeager-check-named.test.generated.ts",
+      "test/validation.validator-self-testing.unpaired-check-named.test.generated.ts",
+      "test/validation.validator-self-testing.duplicate-pair-named.test.generated.ts",
+      "test/validation.validator-self-testing.unregistered-id-named.test.generated.ts",
+
       "test/validation.superseded-decision-signal.replaced-ruling-warns.test.generated.ts",
       "test/validation.superseded-decision-signal.chain-end-named.test.generated.ts",
       "test/validation.superseded-decision-signal.branch-names-every-end.test.generated.ts",

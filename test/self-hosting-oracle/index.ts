@@ -335,12 +335,6 @@ export const expectedWarnings = [
     severity: "warning",
     subjectId: "spec:validation.external-registers",
   },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:validation.validator-self-testing",
-  },
 ] as const;
 
 export type { ExpectedAnchor } from "./anchors.js";

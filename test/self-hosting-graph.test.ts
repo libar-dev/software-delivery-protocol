@@ -226,13 +226,13 @@ describe("the self-hosting corpus", () => {
     // Re-measured from the refreshed tree: 399 Markdown Specs and four Gherkin Specs,
     // 403 in the self-hosting Pack; seven Pack manifests and 339 source anchors.
     // The excluded-root validate run corroborates 749 nodes and 2206 edges.
-    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 349 });
+    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 356 });
     expect(expectedSpecs).toHaveLength(403);
     expect(expectedPackMembers).toHaveLength(403);
-    expect(expectedAnchors).toHaveLength(349);
-    expect(expectedBindingEdges).toHaveLength(403);
-    expect(result.graph.nodes).toHaveLength(759);
-    expect(result.graph.edges).toHaveLength(2217);
+    expect(expectedAnchors).toHaveLength(356);
+    expect(expectedBindingEdges).toHaveLength(410);
+    expect(result.graph.nodes).toHaveLength(766);
+    expect(result.graph.edges).toHaveLength(2224);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -294,7 +294,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 93, idea: 5, ready: 304, scoped: 1 });
+    ).toEqual({ defined: 87, idea: 5, ready: 310, scoped: 1 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -507,7 +507,7 @@ describe("the self-hosting corpus", () => {
 
   it("finds every converted comment anchor at its block's first line", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedCommentAnchorIds).toHaveLength(52);
+    expect(expectedCommentAnchorIds).toHaveLength(53);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)
