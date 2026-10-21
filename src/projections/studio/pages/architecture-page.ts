@@ -1,7 +1,8 @@
+import { codeSpans, plainTitle } from "./code-spans.js";
 import { architectureDiagrams, memberDiagram, renderDiagram } from "../diagrams/index.js";
 import type { DiagramBox, DiagramEdge } from "../diagrams/index.js";
 import { frame } from "./frame.js";
-import { code, copy, escape, link, list } from "./html.js";
+import { code, copy, count, escape, link, list } from "./html.js";
 import type { PageContext } from "./html.js";
 interface Member {
   id: string;
@@ -62,7 +63,7 @@ export function architecturePage(ctx: PageContext): string {
   const components = architecture.components.filter((c) => c.declared);
   const boxes: DiagramBox[] = components.map((c) => ({
     id: c.id,
-    words: `${c.label === null ? "" : `${c.label}, `}${String(c.members.length)} ${c.members.length === 1 ? "member" : "members"}`,
+    words: `${c.label === null ? "" : `${plainTitle(c.label)}, `}${String(c.members.length)} ${c.members.length === 1 ? "member" : "members"}`,
     context: c.context,
     layer: c.layer,
     target: `#${c.id}`,
@@ -123,7 +124,7 @@ export function architecturePage(ctx: PageContext): string {
       const memberBoxes: DiagramBox[] = [
         ...c.members.map((m) => ({
           id: m.id,
-          words: `${m.label ?? m.id}${m.role === null ? "" : `, role ${m.role}`}`,
+          words: `${plainTitle(m.label ?? m.id)}${m.role === null ? "" : `, role ${m.role}`}`,
           target: `#${c.id}`,
         })),
         ...external.map((id) => ({
@@ -134,7 +135,8 @@ export function architecturePage(ctx: PageContext): string {
         })),
       ];
       const diagram = memberDiagram({
-        subject: `members.${c.id}`,
+        subject: c.id,
+        sectionId: null,
         boxes: memberBoxes,
         edges: uses.map((e) => ({ ...e, kind: "uses" })),
       });
@@ -146,7 +148,7 @@ export function architecturePage(ctx: PageContext): string {
           ),
         );
       const diff = plans.differing.filter((d) => d.componentId === c.id);
-      return `<section id="${escape(c.id)}"><h2>${code(c.id)}${c.label === null ? "" : ` ${escape(c.label)}`}</h2><p>Layer ${escape(c.layer ?? "not stated")}, context ${escape(c.context ?? "not stated")}, role ${escape(c.role ?? "not stated")}.</p><p>${code(location(c))}${c.file === null ? "" : copy(location(c))}</p><h3>Members</h3>${list(c.members.map((m) => `${code(m.id)} ${escape(m.label ?? "")} · role ${escape(m.role ?? "not stated")} · ${code(location(m))}${m.file === null ? "" : copy(location(m))}`))}<h3>Uses</h3>${directions(c.usesCounts)}<h3>Used by</h3>${directions(c.usedByCounts)}<h3>Satisfies</h3>${list(c.satisfiedSpecs.map((s) => link(ctx, s)))}<h3>References</h3>${list(c.referencedSpecs.map((s) => link(ctx, s)))}${diff.length ? `<h3>Design differences</h3>${list(diff.map((d) => `${link(ctx, d.spec)} ${code(d.field)}: planned ${code(JSON.stringify(d.planned))}; realized ${code(JSON.stringify(d.realized))}`))}` : ""}${renderDiagram(diagram)}</section>`;
+      return `<section id="${escape(c.id)}"><h2>${code(c.id)}${c.label === null ? "" : ` ${codeSpans(c.label)}`}</h2><p>Layer ${escape(c.layer ?? "not stated")}, context ${escape(c.context ?? "not stated")}, role ${escape(c.role ?? "not stated")}.</p><p>${code(location(c))}${c.file === null ? "" : copy(location(c))}</p><h3>Members</h3>${list(c.members.map((m) => `${code(m.id)} ${codeSpans(m.label ?? "")} · role ${escape(m.role ?? "not stated")} · ${code(location(m))}${m.file === null ? "" : copy(location(m))}`))}<h3>Uses</h3>${directions(c.usesCounts)}<h3>Used by</h3>${directions(c.usedByCounts)}<h3>Satisfies</h3>${list(c.satisfiedSpecs.map((s) => link(ctx, s)))}<h3>References</h3>${list(c.referencedSpecs.map((s) => link(ctx, s)))}${diff.length ? `<h3>Design differences</h3>${list(diff.map((d) => `${link(ctx, d.spec)} ${code(d.field)}: planned ${code(JSON.stringify(d.planned))}; realized ${code(JSON.stringify(d.realized))}`))}` : ""}${c.members.length === 0 ? "<p>None.</p>" : renderDiagram(diagram)}</section>`;
     })
     .join("");
   const unresolved = [
@@ -161,7 +163,7 @@ export function architecturePage(ctx: PageContext): string {
   return frame(
     ctx,
     "Architecture",
-    `<header class="page-head"><h1>Architecture</h1><p>Components and planned designs from recipes 17 and 43.</p><p>${String(components.length)} components realized and ${String(plans.unrealized.length)} planned. They state ${String(contexts.size)} contexts and ${String(layers.size)} layers. ${String(edges.filter((e) => e.kind === "uses").length)} uses edges between components. ${String(new Set(plans.differing.map((d) => d.spec)).size)} designs differ from their components.</p></header>${diagrams.drawings.map(renderDiagram).join("")}${designed}${details}${unresolved.length ? `<section><h2>Unresolved structure</h2>${list(unresolved)}</section>` : ""}`,
+    `<header class="page-head"><h1>Architecture</h1><p>Components, their members and uses, and planned component designs.</p><p>${String(components.length)} components realized and ${String(plans.unrealized.length)} planned. They state ${count(contexts.size, "context", "contexts", false)} and ${count(layers.size, "layer", "layers", false)}. ${String(edges.filter((e) => e.kind === "uses").length)} uses edges between components. ${String(new Set(plans.differing.map((d) => d.spec)).size)} designs differ from their components.</p></header>${diagrams.drawings.map(renderDiagram).join("")}${designed}${details}${unresolved.length ? `<section><h2>Unresolved structure</h2>${list(unresolved)}</section>` : ""}`,
   );
 }
 function linkTarget(ctx: PageContext, id: string): string {

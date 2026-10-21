@@ -510,7 +510,7 @@ describe("Studio page interactions", () => {
   });
 });
 
-it("enhances a diagram through its view box, preserves links on click and removes handlers", () => {
+it("enhances a diagram through its view box, preserves links on click and removes handlers", async () => {
   type Listener = (event: Record<string, unknown>) => void;
   const created: FakeElement[] = [];
   class FakeElement {
@@ -567,6 +567,7 @@ it("enhances a diagram through its view box, preserves links on click and remove
   >();
   runInNewContext(readFileSync(new URL("../dist/studio/studio.js", import.meta.url), "utf8"), {
     HTMLElement: FakeElement,
+    queueMicrotask,
     customElements: {
       get: (name: string) => constructors.get(name),
       define: (
@@ -605,6 +606,13 @@ it("enhances a diagram through its view box, preserves links on click and remove
   svg.listeners.get("pointermove")?.({ pointerId: 2, clientX: 300, clientY: 50 });
   expect(svg.attributes.get("viewBox")).toBe("150 75 500 250");
   expect([...svg.attributes.keys()]).toEqual(["viewBox"]);
+  svg.listeners.get("pointerup")?.({ pointerId: 1 });
+  svg.listeners.get("pointerup")?.({ pointerId: 2 });
+  svg.listeners.get("click")?.({ preventDefault });
+  expect(preventDefault).toHaveBeenCalledTimes(3);
+  await Promise.resolve();
+  svg.listeners.get("click")?.({ detail: 0, preventDefault });
+  expect(preventDefault).toHaveBeenCalledTimes(3);
   host.disconnectedCallback();
   expect(svg.listeners.size).toBe(0);
   expect(svg.style.touchAction).toBe("");

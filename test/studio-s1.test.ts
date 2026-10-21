@@ -52,6 +52,48 @@ import { renderStudio } from "../src/projections/studio/pages/index.js";
 import { createReader } from "../src/reader/reader.js";
 import { schemaVersion } from "../src/graph/schema.js";
 import type { GraphSchema } from "../src/graph/schema.js";
+import type { Diagram } from "../src/projections/studio/diagrams/model.js";
+
+function groups(html: string, className: string, label?: string): string[] {
+  const stack: { start: number; tag: string }[] = [];
+  const found: string[] = [];
+  for (const match of html.matchAll(/<\/?g\b[^>]*>/gu)) {
+    if (!match[0].startsWith("</")) stack.push({ start: match.index, tag: match[0] });
+    else {
+      const start = required(stack.pop());
+      if (
+        start.tag.includes(`class="${className}"`) &&
+        (label === undefined || start.tag.includes(`data-label="${label}"`))
+      )
+        found.push(html.slice(start.start, match.index + match[0].length));
+    }
+  }
+  return found;
+}
+function gridMembership(drawing: Diagram): void {
+  const html = renderDiagram(drawing);
+  if (!html.includes("<svg")) return;
+  const boxes = drawing.boxes.filter((b) => !b.folded);
+  const contexts = [...new Set(boxes.map((b) => b.context ?? "not stated"))].sort((a, b) =>
+    a === "not stated" ? 1 : b === "not stated" ? -1 : a < b ? -1 : a > b ? 1 : 0,
+  );
+  expect(groups(html, "lane").map((g) => /data-label="([^"]+)"/u.exec(g)?.[1])).toEqual(contexts);
+  const layers = [
+    "edge",
+    "application",
+    "domain",
+    "adapter",
+    "infrastructure",
+    "not stated",
+  ].filter((l) => boxes.some((b) => (b.layer ?? "not stated") === l));
+  for (const lane of groups(html, "lane"))
+    expect(groups(lane, "band").map((g) => /data-label="([^"]+)"/u.exec(g)?.[1])).toEqual(layers);
+  for (const box of drawing.boxes.filter((b) => !b.folded)) {
+    const lane = required(groups(html, "lane", box.context ?? "not stated")[0]);
+    const band = required(groups(lane, "band", box.layer ?? "not stated")[0]);
+    expect(band).toContain(`data-id="${box.id}"`);
+  }
+}
 
 export const architectureInput = (n: number, contexts: number, layers: number, edges = 0) => {
   const boxes = Array.from({ length: n }, (_, i) => ({
@@ -94,6 +136,114 @@ describe("Studio diagrams", () => {
     expect(html).not.toContain("<svg");
     expect(html).toContain("<details open");
     expect(last.edges).toHaveLength(110);
+    expect(html).toContain(
+      "Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.",
+    );
+  });
+  it("orders grid contexts and layers and wraps after six boxes with pinned label metrics", () => {
+    const input = architectureInput(12, 1, 1);
+    const drawing = required(
+      architectureDiagrams({
+        ...input,
+        boxes: [
+          ...input.boxes,
+          { id: "component:probe.unstated", words: "Unstated", target: "#u" },
+          { id: "component:probe.z", words: "Z", context: "z", layer: "domain", target: "#z" },
+          { id: "component:probe.a", words: "A", context: "a", layer: "application", target: "#a" },
+        ],
+      }).drawings[0],
+    );
+    gridMembership(drawing);
+    const html = renderDiagram(drawing);
+    expect(groups(html, "lane").map((g) => /data-label="([^"]+)"/u.exec(g)?.[1])).toEqual([
+      "a",
+      "c0",
+      "z",
+      "not stated",
+    ]);
+    const c0 = required(groups(html, "lane", "c0")[0]);
+    expect(groups(c0, "band").map((g) => /data-label="([^"]+)"/u.exec(g)?.[1])).toEqual([
+      "edge",
+      "application",
+      "domain",
+      "not stated",
+    ]);
+    const nodes = groups(c0, "node");
+    const y = (i: number) => /<rect x="\d+" y="(\d+)"/u.exec(required(nodes[i]))?.[1];
+    expect(y(0)).toBe(y(5));
+    expect(Number(y(6))).toBeGreaterThan(Number(y(5)));
+    expect(y(6)).toBe(y(11));
+    expect(labelLines("component:probe.a-very-long-identifier")).toEqual([
+      "component:probe.",
+      "a-very-long-identifier",
+    ]);
+    expect(labelLines("a-very-long-identifier-with-hyphens-only")).toEqual([
+      "a-very-long-identifier-with-",
+      "hyphens-only",
+    ]);
+    const node = required(nodes[0]);
+    const width = Number(/width="(\d+)"/u.exec(node)?.[1]);
+    expect(width).toBe(Math.ceil("component:probe.c01".length * 7.5) + 24);
+    expect(html).toContain('role="img"');
+    expect(html).toContain('aria-describedby="diagram.architecture.text"');
+  });
+  it("draws planned-use edges dashed independently of planned box outlines", () => {
+    const boxes = architectureInput(2, 1, 1).boxes;
+    const html = renderDiagram({
+      subject: "probe",
+      caption: "Probe",
+      boxes,
+      edges: [{ from: required(boxes[0]).id, to: required(boxes[1]).id, kind: "plans to use" }],
+    });
+    expect(required(groups(html, "edge")[0])).toContain('stroke-dasharray="6 4"');
+  });
+  it("checks the edge bound even when boxes fit", () => {
+    const input = architectureInput(12, 1, 1, 101);
+    const html = renderDiagram({ ...input, subject: "probe", caption: "Probe" });
+    expect(html).not.toContain("<svg");
+    expect(html.match(/<li>/gu)).toHaveLength(113);
+  });
+  it("places folded contexts and layers in their own bands below the grid", () => {
+    const result = architectureDiagrams(architectureInput(45, 3, 5, 1));
+    expect(required(result.drawings[0]).edges).toEqual([
+      { from: "context.c0", to: "context.c1", kind: "uses", count: 1 },
+    ]);
+    expect(result.drawings.map((d) => d.subject)).toEqual([
+      "architecture",
+      "context.c0",
+      "context.c1",
+      "context.c2",
+    ]);
+    const context = required(result.drawings[1]);
+    const html = renderDiagram(context);
+    const folded = required(groups(html, "band", "Other contexts")[0]);
+    expect(folded).toContain('data-id="context.c1"');
+    expect(html.indexOf(folded)).toBeGreaterThan(html.lastIndexOf('data-label="not stated"'));
+    expect(
+      groups(html, "lane").every((g) => !g.startsWith('<g class="lane" data-label="Other')),
+    ).toBe(true);
+    const layer = required(architectureDiagrams(architectureInput(50, 1, 5, 1)).drawings[1]);
+    expect(required(groups(renderDiagram(layer), "band", "Other layers")[0])).toContain(
+      'data-id="context.c0.layer.application"',
+    );
+  });
+  it("places outgoing relation bands above the subject and folds ties in relation order", () => {
+    const subject = { id: "spec:probe.subject", words: "Subject", target: "#s" };
+    const kinds = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
+    const boxes = kinds.flatMap((kind) =>
+      Array.from({ length: 11 }, (_, i) => ({
+        id: `spec:probe.${kind}${String(i)}`,
+        words: kind,
+        target: "#relations",
+      })),
+    );
+    const edges = boxes.map((box) => ({ from: subject.id, to: box.id, kind: box.words }));
+    const trace = traceDiagram({ subject: subject.id, boxes: [subject, ...boxes], edges });
+    expect(trace.boxes.filter((b) => b.folded).map((b) => b.band)).toEqual(["Outgoing refines"]);
+    const bands = groups(renderDiagram(trace), "band").map(
+      (g) => /data-label="([^"]+)"/u.exec(g)?.[1],
+    );
+    expect(bands).toEqual([...kinds.map((kind) => `Outgoing ${kind}`), "Subject"]);
   });
   it("folds trace relation groups and leaves member and realization overflow as text", () => {
     const boxes = architectureInput(50, 1, 1).boxes;
@@ -123,15 +273,191 @@ const lensAnchor = specTest({
 });
 void lensAnchor;
 describe("Studio lenses", () => {
+  it("keeps recipe and diagram edges in code-unit order under forced Czech collation", async () => {
+    const reader = fixture({
+      "root.sdp.md": carrier(
+        "spec:probe.root",
+        "behavior",
+        "\n  dependsOn: [spec:probe.check, spec:probe.delta]",
+        "\n## Behavior\n- rule: Root.\n",
+      ),
+      "check.sdp.md": carrier(
+        "spec:probe.check",
+        "behavior",
+        "{}",
+        "\n## Behavior\n- rule: Check.\n",
+      ),
+      "delta.sdp.md": carrier(
+        "spec:probe.delta",
+        "behavior",
+        "{}",
+        "\n## Behavior\n- rule: Delta.\n",
+      ),
+      "component.ts": "/**\n * @sdpAnchor component:probe.core\n */\nexport const core=1;\n",
+      "members.ts": ["check", "delta", "target"]
+        .map(
+          (name) =>
+            `/**\n * @sdpAnchor impl:probe.${name}\n * @sdpComponent component:probe.core\n${name === "target" ? "" : " * @sdpUses impl:probe.target\n"} */\nexport const ${name}=1;\n`,
+        )
+        .join(""),
+    });
+    const normal = required(
+      renderStudio(await createStudioData(reader)).find((p) => p.path === "architecture.html"),
+    ).content;
+    const collator = new Intl.Collator("cs");
+    const spy = vi.spyOn(String.prototype, "localeCompare").mockImplementation(function (
+      this: string,
+      other: string,
+    ) {
+      return collator.compare(this, other);
+    });
+    try {
+      const architecture = (await evaluateStudioRecipe(reader, 17)) as {
+        usesEdges: { from: string }[];
+      };
+      expect(architecture.usesEdges.map((e) => e.from)).toEqual([
+        "impl:probe.check",
+        "impl:probe.delta",
+      ]);
+      const footing = (await evaluateStudioRecipe(reader, 21, { spec: "spec:probe.root" })) as {
+        footing: { id: string }[];
+      };
+      expect(footing.footing.map((e) => e.id)).toEqual(["spec:probe.check", "spec:probe.delta"]);
+      const forced = required(
+        renderStudio(await createStudioData(reader)).find((p) => p.path === "architecture.html"),
+      ).content;
+      expect(forced).toBe(normal);
+      const boxes = architectureInput(3, 1, 1).boxes;
+      const edges = [
+        { from: required(boxes[1]).id, to: required(boxes[2]).id, kind: "uses" },
+        { from: required(boxes[0]).id, to: required(boxes[2]).id, kind: "uses" },
+      ];
+      expect(renderDiagram({ subject: "probe", caption: "Probe", boxes, edges })).toBe(
+        renderDiagram({ subject: "probe", caption: "Probe", boxes, edges: [...edges].reverse() }),
+      );
+    } finally {
+      spy.mockRestore();
+    }
+  });
   it("publishes all four ordered lenses and honest evidence without script", async () => {
-    const data = await createStudioData(createReader(empty));
+    const data = await createStudioData(
+      fixture({
+        "a.sdp.md": carrier("spec:probe.a", "behavior", "{}", "\n## Behavior\n- rule: A.\n"),
+        "b.sdp.md": carrier("spec:probe.b", "behavior", "{}", "\n## Behavior\n- rule: B.\n"),
+        "unpacked.sdp.md": carrier(
+          "spec:probe.unpacked",
+          "behavior",
+          "{}",
+          "\n## Behavior\n- rule: Unpacked.\n",
+        ),
+        "z.pack.sdp.md": "---\nid: pack:probe.z\nspecs: [spec:probe.a]\n---\n# Z Pack\n",
+        "a.pack.sdp.md":
+          "---\nid: pack:probe.a\nspecs: [spec:probe.b, spec:probe.a]\n---\n# A Pack\n",
+      }),
+    );
     const pages = renderStudio(data);
     for (const path of ["index.html", "architecture.html", "tests.html", "evidence.html"])
       expect(pages.some((p) => p.path === path)).toBe(true);
     const evidence = required(pages.find((p) => p.path === "evidence.html")).content;
     expect(evidence.match(/not tracked/g)).toHaveLength(4);
-    const nav = evidence.slice(evidence.indexOf('<nav aria-label="Studio">'));
-    expect(nav.indexOf("Packs")).toBeLessThan(nav.indexOf("Architecture"));
+    expect(evidence).toContain(
+      "An observation the graph records against a measurable target would bring it in.",
+    );
+    expect(evidence.match(/A Spec that designs this source would bring it in\./gu)).toHaveLength(3);
+    const nav = required(/<nav aria-label="Studio">(.*?)<\/nav>/u.exec(evidence)?.[1]);
+    expect([...nav.matchAll(/<a[^>]*>(.*?)<\/a>/gu)].map((m) => m[1])).toEqual([
+      "Packs",
+      "Architecture",
+      "Tests",
+      "Evidence",
+    ]);
+    const index = required(pages.find((p) => p.path === "index.html")).content;
+    const packs = required(/<section id="packs">(.*?)<\/section>/u.exec(index)?.[1]);
+    expect([...packs.matchAll(/<summary>(.*?)<\/summary>/gu)].map((m) => m[1])).toEqual([
+      "A Pack · <code>pack:probe.a</code> · 2 members",
+      "Z Pack · <code>pack:probe.z</code> · 1 member",
+    ]);
+    expect(packs).not.toContain("<details open");
+    const first = required(/<ol>(.*?)<\/ol>/u.exec(packs)?.[1]);
+    expect([...first.matchAll(/href="([^"]+)"/gu)].map((m) => m[1])).toEqual([
+      "specs/probe.b.html",
+      "specs/probe.a.html",
+    ]);
+    expect(first.match(/badge rung-defined/gu)).toHaveLength(2);
+    const specs = required(/<section id="specs">(.*?)<\/section>/u.exec(index)?.[1]);
+    expect(specs).toContain("spec:probe.unpacked");
+  });
+  it("reads verifier binding from the delivery fact and gives absent coverage its own filter value", async () => {
+    const reader = fixture({
+      "parent.sdp.md": carrier(
+        "spec:probe.parent",
+        "behavior",
+        "{}",
+        "\n## Behavior\n- rule: Parent.\n",
+      ).replace("# Probe", "# `sdp studio` publishes"),
+      "child.sdp.md": carrier(
+        "spec:probe.child",
+        "example",
+        "\n  refines: spec:probe.parent\n  verifies: spec:probe.parent",
+        "\n```gwt\nGiven a parent\nWhen it runs\nThen it works\n```\n",
+      ),
+    });
+    const page = required(
+      renderStudio(await createStudioData(reader)).find((p) => p.path === "tests.html"),
+    ).content;
+    expect.soft(page).toContain("verifier binding none: 1 verifiers, 0 enabled");
+    expect.soft(page).toContain('data-binding="none" data-rules="none" data-values="none"');
+    expect.soft(page).toContain("0 Specs with a verifier binding and 1 without.");
+    expect.soft(page).toContain("<code>sdp studio</code> publishes</a>");
+    expect.soft(page).not.toContain('<option value="present">');
+    expect.soft(page).not.toContain('<option value="exercised">');
+    expect.soft(page).not.toContain('<option value="covered">');
+  });
+  it("renders member subjects, code spans, used-by counts, differences and empty components", async () => {
+    const reader = fixture({
+      "design.sdp.md": carrier(
+        "spec:probe.design",
+        "model",
+        "{}",
+        "\n## Model\n- **Component** — The component.\n\n## Design\n- id: component:probe.core\n- context: changed\n- layer: domain\n",
+      ),
+      "components.ts":
+        "/**\n * @sdpAnchor component:probe.core\n * @sdpLabel `sdp studio` core\n * @sdpSatisfies spec:probe.design\n * @sdpContext orders\n * @sdpLayer domain\n */\nexport const core=1;\n/**\n * @sdpAnchor component:probe.empty\n * @sdpContext orders\n * @sdpLayer domain\n * @sdpUses component:probe.core\n */\nexport const empty=1;\n/**\n * @sdpAnchor impl:probe.member\n * @sdpLabel `sdp census`\n * @sdpComponent component:probe.core\n */\nexport const member=1;\n",
+    });
+    const page = required(
+      renderStudio(await createStudioData(reader)).find((p) => p.path === "architecture.html"),
+    ).content;
+    expect.soft(page).toContain('<sdp-diagram subject="component:probe.core">');
+    expect.soft(page).toContain('id="diagram.component:probe.core.text"');
+    const ids = [...page.matchAll(/\sid="([^"]+)"/gu)].map((m) => m[1]);
+    expect(ids).toEqual([...new Set(ids)]);
+    expect.soft(page).not.toContain('<sdp-diagram subject="component:probe.empty">');
+    expect.soft(page).toContain("<code>sdp census</code>");
+    expect.soft(page).toContain("<code>sdp studio</code> core");
+    expect
+      .soft(page)
+      .toContain(
+        '<h3>Used by</h3><ul class="plain-list"><li><a href="#component:probe.empty"><code>component:probe.empty</code></a> (1 unit edges)',
+      );
+    expect.soft(page).toContain("<h3>Design differences</h3>");
+    expect
+      .soft(page)
+      .toContain(
+        "<code>context</code>: planned <code>&quot;changed&quot;</code>; realized <code>&quot;orders&quot;</code>",
+      );
+    expect.soft(page).toContain("They state 1 context and 1 layer.");
+    expect.soft(page).not.toContain("from recipes 17 and 43");
+  });
+  it("describes evidence sources as not tracked", async () => {
+    const page = required(
+      renderStudio(await createStudioData(createReader(empty))).find(
+        (p) => p.path === "evidence.html",
+      ),
+    ).content;
+    expect.soft(page).not.toContain("Sources of runtime evidence recorded by the graph.");
+    expect
+      .soft(page)
+      .toContain("Sources of runtime evidence and what would bring each into the Studio.");
   });
 });
 
@@ -210,6 +536,38 @@ function diagramAdapters(
         drawn: required(required(world.result).drawings[0]).boxes.length,
         named: (required(world.first).match(/<li>/g) ?? []).length,
       }).toEqual(a);
+      const result = required(world.result);
+      for (const drawing of result.drawings.filter((d) => d.grid)) gridMembership(drawing);
+      const p = world.point;
+      const input = architectureInput(
+        required(p.components),
+        required(p.contexts),
+        required(p.layers),
+        required(p.edges),
+      );
+      if (result.fold === "nothing") {
+        expect(result.drawings).toHaveLength(1);
+        expect(required(result.drawings[0]).boxes.map((b) => b.id)).toEqual(
+          input.boxes.map((b) => b.id),
+        );
+      } else if (result.fold === "context") {
+        expect(result.drawings.map((d) => d.subject)).toEqual([
+          "architecture",
+          ...Array.from({ length: required(p.contexts) }, (_, i) => `context.c${String(i)}`),
+        ]);
+        for (const drawing of result.drawings.slice(1))
+          expect(drawing.boxes.filter((b) => !b.folded).map((b) => b.id)).toEqual(
+            input.boxes.filter((b) => `context.${b.context}` === drawing.subject).map((b) => b.id),
+          );
+        const cross = input.edges.filter(
+          (e) =>
+            input.boxes.find((b) => b.id === e.from)?.context !==
+            input.boxes.find((b) => b.id === e.to)?.context,
+        );
+        expect(required(result.drawings[0]).edges.reduce((n, e) => n + (e.count ?? 1), 0)).toBe(
+          cross.length,
+        );
+      }
     },
   };
 }
@@ -502,6 +860,28 @@ function required<T>(value: T | null | undefined): T {
 import * as bodyCompiler from "../src/cli/q-command.js";
 import { readFileSync, readdirSync } from "node:fs";
 import { vi } from "vitest";
+it("documents the component and member fields recipe 17 adds", () => {
+  const catalog = readFileSync(
+    new URL("../docs/agent-surface/recipes.md", import.meta.url),
+    "utf8",
+  );
+  const prose =
+    required(required(catalog.split("## 17. Architecture map")[1]).split("## 18.")[0])
+      .split("```\n")
+      .at(-1) ?? "";
+  for (const name of [
+    "label",
+    "file",
+    "line",
+    "role",
+    "layer",
+    "context",
+    "referencedSpecs",
+    "usesCounts",
+    "usedByCounts",
+  ])
+    expect(prose).toContain(`\`${name}\``);
+});
 it("evaluates each shipped recipe once for its assigned parameters and shares Pack totals", async () => {
   const reader = fixture({
     "parent.sdp.md": carrier(

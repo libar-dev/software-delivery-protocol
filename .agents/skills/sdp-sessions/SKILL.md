@@ -77,7 +77,8 @@ perspective's members by the perspective filter (recipe 37) when the pass reads 
 Hand findings back as a change proposal, the JSON document `spec:consumers.intent-composition.proposal`
 states, and run the proposal check (recipe 38) before an agent applies it: a change whose scope
 moved since the base goes to a person. The design backlog (recipe 33) lists what is designed and
-unbuilt; rule coverage (recipe 34) lists keyed rules no example exercises.
+unbuilt; rule coverage (recipe 34) lists keyed rules no example exercises. Example-space coverage
+(recipe 44) lists slot values no example binds and slots that are not enumerable.
 
 ### Implement
 

@@ -1,6 +1,7 @@
 import { frame } from "./frame.js";
 import { code, escape, link } from "./html.js";
 import type { PageContext } from "./html.js";
+import { codeSpans } from "./text.js";
 export interface CoverageSpace {
   spec: string;
   examples: string[];
@@ -48,7 +49,7 @@ export function testsPage(ctx: PageContext): string {
             n + (slot.enumerable ? slot.values.filter((v) => v.examples.length === 0).length : 0),
           0,
         ) ?? 0;
-      const binding = s.verifiers.length > 0 ? "present" : "none",
+      const binding = s.deliveryFacts.includes("has-verifier") ? "present" : "none",
         enabled = s.verifiers.filter((v) => v.enabled).length;
       const spaceDetails = space?.slots
         .map(
@@ -63,29 +64,36 @@ export function testsPage(ctx: PageContext): string {
             }${slot.unbound.length ? `; unbound ${slot.unbound.map((id) => link(ctx, id)).join(", ")}` : ""}`,
         )
         .join("; ");
-      const target = link(ctx, s.id, s.title ?? s.id).replace(
+      const target = link(ctx, s.id, s.title ?? s.id, codeSpans(s.title ?? s.id)).replace(
         /href="([^"]+)"/u,
         'href="$1#verification"',
       );
-      return `<li class="spec-row" data-row data-binding="${binding}" data-rules="${totals.unexercised > 0 ? "unexercised" : "exercised"}" data-values="${missing > 0 ? "uncovered" : "covered"}" data-pack="${escape(s.packs.join(" "))}">${target} · ${code(s.id)} · verifier binding ${binding}: ${String(s.verifiers.length)} verifiers, ${String(enabled)} enabled · ${String(totals.exercised)} of ${String(totals.keyedRules)} keyed rules exercised · ${String(totals.unkeyedRules)} unkeyed rules${space ? ` · ${String(missing)} uncovered values` : ""}${s.verifiers.length ? `<ul>${s.verifiers.map((v) => `<li>${link(ctx, v.verifierId)} · ${v.enabled ? "enabled" : "not enabled"}${v.file ? ` · ${code(v.file + (v.line === undefined ? "" : `:${String(v.line)}`))}` : ""}</li>`).join("")}</ul>` : ""}${spaceDetails ? `<p>${spaceDetails}</p>` : ""}</li>`;
+      return `<li class="spec-row" data-row data-binding="${binding}" data-rules="${totals.keyedRules === 0 ? "none" : totals.unexercised > 0 ? "unexercised" : "exercised"}" data-values="${space === undefined ? "none" : missing > 0 ? "uncovered" : "covered"}" data-pack="${escape(s.packs.join(" "))}">${target} · ${code(s.id)} · verifier binding ${binding}: ${String(s.verifiers.length)} verifiers, ${String(enabled)} enabled · ${String(totals.exercised)} of ${String(totals.keyedRules)} keyed rules exercised · ${String(totals.unkeyedRules)} unkeyed rules${space ? ` · ${String(missing)} uncovered values` : ""}${s.verifiers.length ? `<ul>${s.verifiers.map((v) => `<li>${link(ctx, v.verifierId)} · ${v.enabled ? "enabled" : "not enabled"}${v.file ? ` · ${code(v.file + (v.line === undefined ? "" : `:${String(v.line)}`))}` : ""}</li>`).join("")}</ul>` : ""}${spaceDetails ? `<p>${spaceDetails}</p>` : ""}</li>`;
     })
     .join("");
   const filters = [
     {
       name: "binding",
       label: "Verifier binding",
-      values: [...new Set(specs.map((s) => (s.verifiers.length ? "present" : "none")))],
+      values: [
+        ...new Set(
+          specs.map((s) => (s.deliveryFacts.includes("has-verifier") ? "present" : "none")),
+        ),
+      ],
     },
     {
       name: "rules",
       label: "Keyed rules",
       values: [
         ...new Set(
-          specs.map((s) =>
-            (ctx.data.recipes.specs.get(s.id)?.get(34) as RuleCoverage).totals.unexercised > 0
-              ? "unexercised"
-              : "exercised",
-          ),
+          specs.map((s) => {
+            const { totals } = ctx.data.recipes.specs.get(s.id)?.get(34) as RuleCoverage;
+            return totals.keyedRules === 0
+              ? "none"
+              : totals.unexercised > 0
+                ? "unexercised"
+                : "exercised";
+          }),
         ),
       ],
     },
@@ -94,21 +102,22 @@ export function testsPage(ctx: PageContext): string {
       label: "Example-space values",
       values: [
         ...new Set(
-          specs.map((s) =>
-            coverage.spaces
-              .find((p) => p.spec === s.id)
-              ?.slots.some(
-                (slot) => slot.enumerable && slot.values.some((v) => v.examples.length === 0),
-              )
-              ? "uncovered"
-              : "covered",
-          ),
+          specs.map((s) => {
+            const space = coverage.spaces.find((p) => p.spec === s.id);
+            return space === undefined
+              ? "none"
+              : space.slots.some(
+                    (slot) => slot.enumerable && slot.values.some((v) => v.examples.length === 0),
+                  )
+                ? "uncovered"
+                : "covered";
+          }),
         ),
       ],
     },
     { name: "pack", label: "Pack", values: ctx.data.packs.map((p) => p.context.id) },
   ];
-  const present = specs.filter((s) => s.verifiers.length > 0).length;
+  const present = specs.filter((s) => s.deliveryFacts.includes("has-verifier")).length;
   const withMissing = coverage.spaces.filter((space) =>
     space.slots.some((slot) => slot.enumerable && slot.values.some((v) => v.examples.length === 0)),
   ).length;

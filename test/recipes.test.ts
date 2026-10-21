@@ -26,7 +26,11 @@ import {
   validateGraph,
 } from "../src/index.js";
 import type { ExtractionResult, GraphEdge, GraphNode, GraphSchema } from "../src/index.js";
-import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
+import {
+  expectedComponentIds,
+  expectedMemberOfEdges,
+  expectedUsesEdges,
+} from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { countMapSets } from "./helpers/map-sets.js";
 
@@ -1153,7 +1157,10 @@ describe("the agent-surface recipe corpus", () => {
   it("returns exact component uses fan-in and fan-out from the structural oracle", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(13)));
     const rows = asArray(result.components).map(asRecord);
-    const expectedUses = expectedUsesEdges.map(([from, to]) => ({ from, to }));
+    const owners = new Map<string, string>(expectedMemberOfEdges);
+    const expectedUses = expectedUsesEdges
+      .map(([from, to]) => ({ from: owners.get(from) ?? from, to: owners.get(to) ?? to }))
+      .filter((edge) => edge.from !== edge.to);
 
     expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual([...expectedComponentIds].sort());
 
@@ -1161,14 +1168,12 @@ describe("the agent-surface recipe corpus", () => {
       const id = stringAt(row, "id");
       const usesOut = asArray(row.usesOut).map((target) => stringAt({ target }, "target"));
       const usedBy = asArray(row.usedBy).map((source) => stringAt({ source }, "source"));
-      const expectedOut = expectedUses
-        .filter((edge) => edge.from === id)
-        .map((edge) => edge.to)
-        .sort();
-      const expectedIn = expectedUses
-        .filter((edge) => edge.to === id)
-        .map((edge) => edge.from)
-        .sort();
+      const expectedOut = [
+        ...new Set(expectedUses.filter((edge) => edge.from === id).map((edge) => edge.to)),
+      ].sort();
+      const expectedIn = [
+        ...new Set(expectedUses.filter((edge) => edge.to === id).map((edge) => edge.from)),
+      ].sort();
 
       expect(usesOut).toEqual(expectedOut);
       expect(usedBy).toEqual(expectedIn);

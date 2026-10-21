@@ -25,21 +25,23 @@ interface Positioned {
   readonly width: number;
   readonly height: number;
 }
+const foldedBand = (b: DiagramBox): boolean =>
+  b.folded === true && (b.band === "Other contexts" || b.band === "Other layers");
 function layout(d: Diagram) {
   const boxes: Positioned[] = [];
   const labels: { kind: "lane" | "band"; label: string; x: number; y: number }[] = [];
   const columns = d.grid
-    ? [...new Set(d.boxes.map((b) => b.band ?? contextOf(b)))].sort((a, b) =>
+    ? [...new Set(d.boxes.filter((b) => !foldedBand(b)).map(contextOf))].sort((a, b) =>
         a === "not stated" ? 1 : b === "not stated" ? -1 : compare(a, b),
       )
     : [""];
   const bands = d.grid
-    ? layers.filter((l) => d.boxes.some((b) => layerOf(b) === l))
+    ? layers.filter((l) => d.boxes.some((b) => !foldedBand(b) && layerOf(b) === l))
     : [...new Set(d.boxes.map((b) => b.band ?? "Units"))];
   const cell = (c: string, b: string) =>
     d.boxes.filter((box) =>
       d.grid
-        ? (box.band ?? contextOf(box)) === c && layerOf(box) === b
+        ? !foldedBand(box) && contextOf(box) === c && layerOf(box) === b
         : (box.band ?? "Units") === b,
     );
   const dimensions = (box: DiagramBox) => {
@@ -99,15 +101,32 @@ function layout(d: Diagram) {
     }
     x += (widths.get(column) ?? 180) + 28;
   }
+  let bottom = (d.grid ? 60 : 12) + [...heights.values()].reduce((a, b) => a + b, 0);
+  if (d.grid)
+    for (const band of ["Other layers", "Other contexts"]) {
+      const items = d.boxes
+        .filter((b) => foldedBand(b) && b.band === band)
+        .sort((a, b) => compare(a.id, b.id));
+      if (items.length === 0) continue;
+      labels.push({ kind: "band", label: band, x: 32, y: bottom + 20 });
+      const stride = Math.max(60, ...items.map((b) => dimensions(b).height + 26));
+      items.forEach((box, i) =>
+        boxes.push({
+          box,
+          x: 32 + (i % 6) * boxStride,
+          y: bottom + 36 + Math.floor(i / 6) * stride,
+          ...dimensions(box),
+        }),
+      );
+      bottom += Math.ceil(items.length / 6) * stride + 36;
+      x = Math.max(x, 44 + Math.min(6, items.length) * boxStride);
+    }
   return {
     boxes,
     labels,
     width: Math.max(240, x),
     boxStride,
-    height: Math.max(
-      120,
-      (d.grid ? 60 : 12) + [...heights.values()].reduce((a, b) => a + b, 0) + 20,
-    ),
+    height: Math.max(120, bottom + 20),
   };
 }
 function svg(d: Diagram, textId: string): string {
@@ -137,18 +156,39 @@ function svg(d: Diagram, textId: string): string {
         .map(
           (lane) =>
             `<g class="lane" data-label="${escape(lane.label)}"><text x="${String(lane.x)}" y="${String(lane.y)}">${escape(lane.label)}</text>${l.labels
-              .filter((b) => b.kind === "band" && b.x === lane.x)
+              .filter(
+                (b) =>
+                  b.kind === "band" &&
+                  b.x === lane.x &&
+                  b.label !== "Other contexts" &&
+                  b.label !== "Other layers",
+              )
               .map(
                 (band) =>
                   `<g class="band" data-label="${escape(band.label)}"><text x="${String(band.x)}" y="${String(band.y)}">${escape(band.label)}</text>${l.boxes
                     .filter(
                       (p) =>
-                        (p.box.band ?? contextOf(p.box)) === lane.label &&
+                        !foldedBand(p.box) &&
+                        contextOf(p.box) === lane.label &&
                         layerOf(p.box) === band.label,
                     )
                     .map(node)
                     .join("")}</g>`,
               )
+              .join("")}</g>`,
+        )
+        .join("") +
+      l.labels
+        .filter(
+          (label) =>
+            label.kind === "band" &&
+            (label.label === "Other layers" || label.label === "Other contexts"),
+        )
+        .map(
+          (band) =>
+            `<g class="band" data-label="${escape(band.label)}"><text x="${String(band.x)}" y="${String(band.y)}">${escape(band.label)}</text>${l.boxes
+              .filter((p) => foldedBand(p.box) && p.box.band === band.label)
+              .map(node)
               .join("")}</g>`,
         )
         .join("")
@@ -176,7 +216,14 @@ export function renderDiagram(d: Diagram): string {
     fits = withinBound(d);
   const words = (b: DiagramBox) =>
     `${b.words}${b.planned && !b.words.includes("planned") ? ", planned" : ""}${b.folded && !b.words.includes("folded") ? ", folded" : ""}`;
-  const normalized = { ...d, boxes: d.boxes.map((b) => ({ ...b, words: words(b) })) };
-  const text = `<details${fits ? "" : " open"} id="${escape(textId)}"><summary>The diagram as text</summary><ul>${normalized.boxes.map((b) => `<li>${escape(b.id)}: ${escape(b.words)}</li>`).join("")}${d.edges.map((e) => `<li>${escape(e.from)} ${escape(e.kind)} ${escape(e.to)}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}</li>`).join("")}</ul></details>`;
-  return `<section id="${escape(d.subject)}"><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${fits ? `<div class="diagram-scroll">${svg(normalized, textId)}</div>` : "<p>Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.</p>"}${text}</figure></sdp-diagram></section>`;
+  const normalized = {
+    ...d,
+    boxes: d.boxes.map((b) => ({ ...b, words: words(b) })),
+    edges: [...d.edges].sort(
+      (a, b) => compare(a.from, b.from) || compare(a.to, b.to) || compare(a.kind, b.kind),
+    ),
+  };
+  const text = `<details${fits ? "" : " open"} id="${escape(textId)}"><summary>The diagram as text</summary><ul>${normalized.boxes.map((b) => `<li>${escape(b.id)}: ${escape(b.words)}</li>`).join("")}${normalized.edges.map((e) => `<li>${escape(e.from)} ${escape(e.kind)} ${escape(e.to)}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}</li>`).join("")}</ul></details>`;
+  const sectionId = d.sectionId === undefined ? d.subject : d.sectionId;
+  return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${fits ? `<div class="diagram-scroll">${svg(normalized, textId)}</div>` : "<p>Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.</p>"}${text}</figure></sdp-diagram></section>`;
 }

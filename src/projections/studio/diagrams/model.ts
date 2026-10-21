@@ -22,6 +22,7 @@ export interface Diagram extends DiagramInput {
   readonly subject: string;
   readonly caption: string;
   readonly grid?: boolean;
+  readonly sectionId?: string | null;
 }
 export const layers = ["edge", "application", "domain", "adapter", "infrastructure", "not stated"];
 export const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);

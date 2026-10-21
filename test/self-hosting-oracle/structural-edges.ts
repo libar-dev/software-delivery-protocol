@@ -52,6 +52,16 @@ export const structuralMembershipExceptions = [
 
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/projections/studio/diagrams/architecture.ts#architectureDiagrams",
+    anchorId: "impl:protocol.studio-architecture-diagrams",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/bands.ts#traceDiagram",
+    anchorId: "impl:protocol.studio-relation-diagrams",
+    componentId: "component:protocol.projections",
+  },
+  {
     unit: "src/notation/example-space.ts#decodeExampleSpaces",
     anchorId: "impl:protocol.example-space-decoding",
     componentId: "component:protocol.notation",
@@ -720,7 +730,7 @@ export const acceptedArchitecturalUnits = [
 
 // re-measured under plan 41
 export const expectedMemberOfEdges = acceptedArchitecturalUnits
-  .map((row) => [row.anchorId, row.componentId])
+  .map((row) => [row.anchorId, row.componentId] as const)
   .filter(
     ([anchorId, componentId], position, rows) =>
       rows.findIndex(([anchor, component]) => anchor === anchorId && component === componentId) ===
@@ -790,6 +800,7 @@ export const coarseGrainCoverage = [
 // re-measured under plan 41
 export const expectedUsesEdges = [
   ["impl:protocol.studio-recipes", "impl:protocol.reader"],
+  ["impl:protocol.studio-recipes", "impl:protocol.build-pipeline-query"],
   ["component:protocol.studio-elements", "component:protocol.reader"],
   ["component:protocol.studio-elements", "component:protocol.projections"],
   ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],

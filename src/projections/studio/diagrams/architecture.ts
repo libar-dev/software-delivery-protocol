@@ -1,6 +1,13 @@
 import { aggregate, compare, contextOf, layerOf, layers, withinBound } from "./model.js";
 import type { Diagram, DiagramInput, DiagramBox } from "./model.js";
 
+/**
+ * @sdpAnchor impl:protocol.studio-architecture-diagrams
+ * @sdpLabel architecture grids and bounded context and layer folds
+ * @sdpSatisfies spec:consumers.spec-studio.diagrams
+ * @sdpComponent component:protocol.projections
+ * @sdpRole projection
+ */
 export function architectureDiagrams(input: DiagramInput): {
   fold: "nothing" | "context" | "layer";
   drawings: Diagram[];

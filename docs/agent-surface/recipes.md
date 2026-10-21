@@ -932,6 +932,7 @@ satisfied Specs, and shaping decisions in one map.*
 const accepts = [];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const nodes = graph.nodes;
 const edges = graph.edges;
 const codeNodesById = new Map(
@@ -1039,7 +1040,7 @@ const components = [...componentIds].sort().map((id) => {
       .filter((edge) => edge.type === "satisfies" && anchors.has(edge.from))
       .map((edge) => ({ from: edge.from, to: edge.to, claim: edge.claim })),
     shapingDecisions: [...decisionSubjects]
-      .sort(([left], [right]) => left.localeCompare(right))
+      .sort(([left], [right]) => compare(left, right))
       .map(([decisionId, subjects]) => ({
         id: decisionId,
         subjects: [...new Set(subjects)].sort(),
@@ -1053,9 +1054,9 @@ const usesEdges = edges
   .filter((edge) => edge.type === "uses")
   .map((edge) => ({ from: edge.from, to: edge.to, claim: edge.claim }))
   .sort((left, right) =>
-    left.from.localeCompare(right.from) ||
-    left.to.localeCompare(right.to) ||
-    left.claim.localeCompare(right.claim),
+    compare(left.from, right.from) ||
+    compare(left.to, right.to) ||
+    compare(left.claim, right.claim),
   );
 const subjectIds = [...new Set(components.flatMap((component) => component.satisfiedSpecs))].sort();
 const subjects = subjectIds.map((id) => {
@@ -1073,6 +1074,11 @@ const subjects = subjectIds.map((id) => {
 
 return { components, subjects, usesEdges, unresolvedUses };
 ```
+
+Each component row includes its recorded `label`, `file`, `line`, `role`, `layer` and `context`,
+each null when unstated. `referencedSpecs` lists the Specs it and its members reference.
+`usesCounts` and `usedByCounts` give the unit-edge count for each other component in id order,
+while every member row also carries its recorded `role`, or null.
 
 Membership, uses, and satisfies remain the derived structural edges; shaping decisions are the
 `decidedBy` targets of Specs those members realize. Fan counts are graph-side composition, not a
@@ -1495,6 +1501,7 @@ The parameter is `params.spec`, the Spec you are weighing; an unknown id returns
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const id = params.spec ?? "spec:extraction.derive-graph";
 const context = g.specContext(id);
 
@@ -1522,7 +1529,7 @@ const footing = context.relationsOut
   })
   .sort(
     (left, right) =>
-      types.indexOf(left.type) - types.indexOf(right.type) || left.id.localeCompare(right.id),
+      types.indexOf(left.type) - types.indexOf(right.type) || compare(left.id, right.id),
   );
 const count = (key, value) => footing.filter((row) => row[key] === value).length;
 

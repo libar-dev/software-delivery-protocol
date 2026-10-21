@@ -1,7 +1,18 @@
 import { aggregate, compare, withinBound } from "./model.js";
 import type { Diagram, DiagramBox, DiagramInput } from "./model.js";
 const relations = ["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"];
-type Rooted = DiagramInput & { readonly subject: string };
+const relationIndex = (kind: string): number => {
+  const index = relations.indexOf(kind);
+  return index < 0 ? relations.length : index;
+};
+type Rooted = DiagramInput & Pick<Diagram, "subject" | "sectionId">;
+/**
+ * @sdpAnchor impl:protocol.studio-relation-diagrams
+ * @sdpLabel relation, member and realization bands and bounded relation folds
+ * @sdpSatisfies spec:consumers.spec-studio.diagrams
+ * @sdpComponent component:protocol.projections
+ * @sdpRole projection
+ */
 export function traceDiagram(input: Rooted): Diagram {
   const groups = new Map<string, DiagramBox[]>();
   const boxes = [...input.boxes]
@@ -10,7 +21,7 @@ export function traceDiagram(input: Rooted): Diagram {
       if (box.id === input.subject) return { ...box, band: "Subject" };
       const edges = input.edges
         .filter((e) => e.from === box.id || e.to === box.id)
-        .sort((a, b) => relations.indexOf(a.kind) - relations.indexOf(b.kind));
+        .sort((a, b) => relationIndex(a.kind) - relationIndex(b.kind) || compare(a.kind, b.kind));
       const edge = edges[0];
       const direction = edge?.from === input.subject ? "Outgoing" : "Incoming";
       const band = `${direction} ${edge?.kind ?? "relations"}`;
@@ -21,7 +32,12 @@ export function traceDiagram(input: Rooted): Diagram {
     });
   let drawing: Diagram = { ...input, boxes, caption: `Relations of ${input.subject}` };
   const ids = new Map(boxes.map((b) => [b.id, b.id]));
-  const sorted = [...groups].sort(([a, aa], [b, bb]) => bb.length - aa.length || compare(a, b));
+  const groupOrder = (band: string) =>
+    (band.startsWith("Outgoing ") ? 0 : relations.length + 1) +
+    relationIndex(band.slice(band.indexOf(" ") + 1));
+  const sorted = [...groups].sort(
+    ([a, aa], [b, bb]) => bb.length - aa.length || groupOrder(a) - groupOrder(b) || compare(a, b),
+  );
   for (const [band, members] of sorted) {
     if (withinBound(drawing)) break;
     const id = `${input.subject}.fold.${band.replaceAll(" ", ".")}`;
@@ -48,9 +64,10 @@ export function traceDiagram(input: Rooted): Diagram {
   ];
   return {
     ...drawing,
-    boxes: [...drawing.boxes].sort(
-      (a, b) => order.indexOf(a.band ?? "") - order.indexOf(b.band ?? "") || compare(a.id, b.id),
-    ),
+    boxes: [...drawing.boxes].sort((a, b) => {
+      const index = (band: string) => (order.includes(band) ? order.indexOf(band) : order.length);
+      return index(a.band ?? "") - index(b.band ?? "") || compare(a.id, b.id);
+    }),
   };
 }
 export function memberDiagram(input: Rooted): Diagram {

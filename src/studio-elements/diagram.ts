@@ -98,6 +98,10 @@ export function registerDiagram(): void {
     };
     private readonly up = (e: PointerEvent): void => {
       this.pointers.delete(e.pointerId);
+      if (this.pointers.size === 0)
+        queueMicrotask(() => {
+          this.dragged = false;
+        });
     };
     private readonly move = (e: PointerEvent): void => {
       const before = this.pointers.get(e.pointerId),

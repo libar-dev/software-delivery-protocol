@@ -37,6 +37,22 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     role: "projection",
   },
   {
+    id: "impl:protocol.studio-architecture-diagrams",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/diagrams/architecture.ts",
+    site: "export function architectureDiagrams(",
+    label: "architecture grids and bounded context and layer folds",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-relation-diagrams",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/diagrams/bands.ts",
+    site: "export function traceDiagram(",
+    label: "relation, member and realization bands and bounded relation folds",
+    role: "projection",
+  },
+  {
     id: "impl:protocol.studio-diagrams",
     nodeType: "CodeNode",
     file: "src/projections/studio/diagrams/svg.ts",
@@ -2967,6 +2983,12 @@ export const expectedBindingEdges = [
   ],
   ["impl:protocol.studio-recipes", "references", "spec:consumers.spec-studio.data.recipe-answers"],
   ["impl:protocol.studio-recipes", "references", "spec:decisions.studio-build-renders"],
+  [
+    "impl:protocol.studio-architecture-diagrams",
+    "satisfies",
+    "spec:consumers.spec-studio.diagrams",
+  ],
+  ["impl:protocol.studio-relation-diagrams", "satisfies", "spec:consumers.spec-studio.diagrams"],
   ["impl:protocol.studio-diagrams", "satisfies", "spec:consumers.spec-studio.diagrams"],
   ["impl:protocol.studio-diagrams", "references", "spec:decisions.studio-diagram-renderer"],
   ["impl:protocol.studio-diagrams", "references", "spec:decisions.studio-build-renders"],
@@ -3938,6 +3960,8 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.studio-architecture-diagrams",
+  "impl:protocol.studio-relation-diagrams",
   "impl:protocol.example-space-decoding",
   "impl:protocol.studio-recipes",
   "impl:protocol.studio-diagrams",

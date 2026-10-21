@@ -56,7 +56,7 @@ export async function evaluateStudioRecipe(
  * @sdpLabel evaluates shipped recipe bodies once and shares answers between Studio pages
  * @sdpReferences spec:consumers.spec-studio.data.recipe-answers, spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
- * @sdpUses impl:protocol.reader
+ * @sdpUses impl:protocol.reader, impl:protocol.build-pipeline-query
  * @sdpRole projection
  */
 export async function studioRecipeAnswers(reader: Reader): Promise<StudioRecipeAnswers> {
