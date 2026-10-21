@@ -10,7 +10,8 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import * as validators from "../src/validate/validators.js";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import { runSdpCli, SDP_HELP_TEXT } from "../src/cli/sdp.js";
@@ -84,6 +85,16 @@ function seed(path: string) {
 }
 
 describe("Studio publication", () => {
+  it("validates once and passes the build report through the reader and recipe evaluations", async () => {
+    const c = corpus();
+    const validate = vi.spyOn(validators, "validateGraph");
+    try {
+      expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
+      expect(validate).toHaveBeenCalledTimes(1);
+    } finally {
+      validate.mockRestore();
+    }
+  });
   it("publishes the layout, copies fixture assets and replaces stale pages and temporary siblings", async () => {
     const c = corpus();
     seed(c.studio);

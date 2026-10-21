@@ -6,8 +6,11 @@ pair and hashes paths and bytes for every file in each page set. The platform co
 `b038bd4`. Times include extraction, generation and publishing, under concurrent lane load.
 
 Set `BASE` to the base checkout, `HEAD` to the measured S1 checkout, `PLATFORM` to a disposable
-platform copy and `RENDERER` to a disposable renderer install. Recorded commands use those
-placeholders; timings, counts and hashes retain the original measurements.
+platform copy and `RENDERER` to a disposable renderer install. The commands below use those
+portable placeholders. `measurements.json` preserves the commands as they ran, including the
+Node binary and checkout paths. Future runs of `measure.mjs` record those exact commands and
+a separate `portableCommand` with placeholders. Timings, counts and hashes retain the original
+measurements.
 
 ```sh
 node reviews/assets/plan46-s1/measure.mjs "$BASE" "$HEAD" "$PLATFORM"

@@ -3,6 +3,8 @@
 Integrated on `lane/46-integrate-2a` from `2f2611c3eaf6cecc183e1e912303941271ee9745`.
 This closes integration of these seven build lanes only. Plan 46 remains executing.
 Each lane was reviewed by Opus 5.5 and fixed before integration. Nothing was pushed.
+This original record describes `f06fe2a`; the review corrections below supersede its evaluator,
+measurement-command and open-question statements.
 
 | Order | Lane | Reviewed and fixed lane head | Merge commit |
 | --- | --- | --- | --- |
@@ -137,5 +139,75 @@ pnpm --silent sdp:q 'return report.findings.map(({validatorId, subjectId, severi
 | Public previews, adopter capture publication and decision ratification | These remain owner decisions under plan 46. Existing assets stay in the branch; no host was enabled, no PR published and no push performed. |
 | Future symbol realization binding | When symbol reach is built, its unit must join the impact-graph satisfying set. The current imports binding covers current realization. |
 
-The wave-2a integration introduces no new owner ruling and changes no Spec promise or readiness
+At `f06fe2a`, the wave-2a integration introduces no new owner ruling and changes no Spec promise or readiness
 statement beyond the reviewed lanes. It leaves `.omo/`, other worktrees and the platform untouched.
+
+
+## Review corrections after `f06fe2a`
+
+The merge chain stays intact. **K through BQ, `d1ca4f8`, `4fdb60c`, `40c387c`, `6a044f9`
+and `0cfc7a5`, do not typecheck and are not bisect points.** The self-hosting tests after
+those merges did not check TypeScript. S1's merge `4d4e7a4` adapted G's two generated-step
+adapters to `step.key`; that repair was unrelated to S1's conflicts. An adopter adapter that
+narrows on `step.text` must likewise narrow on `step.key`. The executing thread must carry
+this caveat into the PR record.
+
+Review finding 1 removed the public evaluator's memoized reader values. `evaluateBody`, `sdp q`
+and rules files bind a plain reader again. The internal `evaluateBodyWithReader` accepts the
+reader, graph and validation report already held by a projection, keeping only a compile cache
+per evaluation. Studio owns one reader-value cache in `createStudioData` and one evaluator per
+build. The publisher passes its report through reader construction and recipe evaluation.
+The adapter's weak-map cache is gone. Its broader recipe-answer Spec remains a reference,
+because later Studio slices still own their promised evaluations.
+
+Review findings 3 to 5 corrected the S3 hand-off comment for shipped recipes 46 and 51,
+restored S1's recorded commands verbatim from `08e699d`, and added the step-key and term-address
+Specs to the marker glossary row. Future S1 measurements record the actual `command` and a
+separate `portableCommand`; the README supplies portable examples. The historical timings,
+hashes and images are unchanged.
+
+The follow-up request ruled the two questions formerly left to the owner:
+
+| Ruling | Carrying entry |
+| --- | --- |
+| An unresolved-address finding uses a string input as its subject only when it holds a character that is not white space; otherwise it uses the input's JSON text. | `spec:consumers.agent-surface.address-and-cycle-recipes#design.addressFinding` |
+| An oversized repeated part header is the one oversized item, named `header`, and returns no part. Otherwise oversized members and boundary items keep their existing answer. Header length measures an empty part with a null boundary and `part: { index: 1, of: 1 }`. | `spec:consumers.context-bundle#rule.oversizedItem`; `spec:consumers.context-bundle#design.partsExceeded` |
+
+Both carrier changes are transcribed in `test/self-hosting-oracle/consumers.ts`. The existing
+address-recipe and bundle realization bindings still cover their promises; no readiness or
+binding change is needed. The three glossary terms, step key, term key and entry citation, still
+belong in the PR's delegated-rulings table for owner review.
+
+Every correction first failed a regression:
+
+| Item | Test | First failure |
+| --- | --- | --- |
+| Evaluator caching | `test/reach-core.test.ts`, `keeps recipe answers unchanged after mutating reader results through %s`, for evaluator, q and rules | All three fail when recipe 1 changes after reader-array and context mutation. |
+| Reader identity wording | `test/reach-core.test.ts`, `returns fresh reader arrays and contexts through repeated recipe calls in one evaluation` | The old evaluator returns shared identities. |
+| Studio reuse | `test/studio-s1.test.ts`, `reuses the build's reader and validation findings during Studio recipe evaluation` | The old adapter validates twice after a reader already exists. |
+| Build report reuse | `test/studio-publisher.test.ts`, `validates once and passes the build report through the reader and recipe evaluations` | Reader construction adds a second validation. |
+| S3 hand-off comment | `test/integration-review.test.ts`, `documents S3's hand-off for the already shipped Studio recipes 46 and 51` | The comment still waits for the recipes to ship. |
+| Measurement evidence | `test/integration-review.test.ts`, `preserves the original S1 measurement commands with the measured Node binary and paths` and `records future measurement commands as run and provides portable commands separately` | Recorded and newly emitted commands contain placeholders in place of their actual argv. |
+| Marker citations | `test/integration-review.test.ts`, `cites the carrying Specs for every marker form in the glossary` | The step-key and term-address citations are absent. |
+| Whitespace address | `test/reach-core.test.ts`, `quotes whitespace-only address subjects so recipe 25 remains a lawful rules file` | Spaces, tabs, newlines and a non-breaking space remain unquoted subjects. |
+| Oversized header | `test/self-hosting-bundle-parts.test.ts`, `names only the part header when the repeated Pack framing alone exceeds the budget` | The answer names the boundary and both members instead of `header`. |
+
+The original Studio recipe-call test retains its once-per-parameter and no-calls-during-render
+checks and now checks graph and report identity at the internal evaluator. The compile-cache
+regression still checks one shipped-body read per evaluation and a reload in the next one.
+
+On this repository, three Studio CLI builds before the fix took 3.548062 s, 3.449809 s and
+3.294733 s, median **3.449809 s**. After the fix they took 3.404811 s, 3.214128 s and 3.231558 s,
+median **3.231558 s**. Both sets used Node v24.21.0 and included extraction, generation and
+publication. Workstation load varies; these are measurements, not a speed guarantee.
+[The raw measurements](assets/plan46-integrate-2a/studio-build-times.json) preserve argv,
+working directory and Node version. Re-run from a built checkout with:
+
+```sh
+node dist/cli/sdp.js studio . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+```
+
+The focused run passed 139 tests across six suites, including the self-hosting oracle. Lint and
+standalone typecheck passed before commit. Re-run `npm run check` and `npm run typecheck` at the
+follow-up commit for the final gate; the delivery report records those results. No history was
+rewritten, no merge was added, and no platform or other worktree was edited.

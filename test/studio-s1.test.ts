@@ -858,6 +858,25 @@ function required<T>(value: T | null | undefined): T {
 }
 
 import * as bodyEvaluator from "../src/reader/evaluate-body.js";
+import * as validators from "../src/validate/validators.js";
+
+it("reuses the build's reader and validation findings during Studio recipe evaluation", async () => {
+  const reader = fixture({
+    "probe.sdp.md": carrier(
+      "spec:probe.parent",
+      "behavior",
+      "{}",
+      "\n## Behavior\n- rule: Probe.\n",
+    ),
+  });
+  const spy = vi.spyOn(validators, "validateGraph");
+  try {
+    await createStudioData(reader);
+    expect(spy).not.toHaveBeenCalled();
+  } finally {
+    spy.mockRestore();
+  }
+});
 import { readFileSync } from "node:fs";
 import { vi } from "vitest";
 it("documents the component and member fields recipe 17 adds", () => {
@@ -893,18 +912,23 @@ it("evaluates each shipped recipe once for its assigned parameters and shares Pa
     "pack.pack.sdp.md": "---\nid: pack:probe\nspecs: [spec:probe.parent]\n---\n# Probe Pack\n",
   });
   const calls: { number: number; params: unknown }[] = [];
-  const evaluate = bodyEvaluator.evaluateBody;
-  const spy = vi.spyOn(bodyEvaluator, "evaluateBody").mockImplementation(async (source, input) => {
-    const value = await evaluate(source, input);
-    if (typeof value !== "function") throw new Error("Expected the recipe caller.");
-    const caller = value as (number: number, params: unknown) => Promise<unknown>;
-    return async (number: number, params: unknown) => {
-      calls.push({ number, params });
-      return caller(number, params);
-    };
-  });
+  const evaluate = bodyEvaluator.evaluateBodyWithReader;
+  const spy = vi
+    .spyOn(bodyEvaluator, "evaluateBodyWithReader")
+    .mockImplementation(async (source, input) => {
+      const value = await evaluate(source, input);
+      if (typeof value !== "function") throw new Error("Expected the recipe caller.");
+      const caller = value as (number: number, params: unknown) => Promise<unknown>;
+      return async (number: number, params: unknown) => {
+        calls.push({ number, params });
+        return caller(number, params);
+      };
+    });
   try {
-    const data = await createStudioData(reader);
+    const report = validators.validateGraph(reader.graph);
+    const data = await createStudioData(reader, report);
+    expect(spy.mock.calls[0]?.[1].graph).toBe(reader.graph);
+    expect(spy.mock.calls[0]?.[1].report).toBe(report);
     const expected = [
       ...[17, 20, 24, 31, 33, 43, 44].map((number) => ({ number, params: {} })),
       { number: 29, params: { pack: "pack:probe" } },

@@ -33,7 +33,7 @@ import type { CodeAnchorLayer } from "../model/anchors.js";
 import { SPEC_KIND_DISPLAY_LABELS, SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
-import type { Finding } from "../validate/contracts.js";
+import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { buildGraphIndex } from "../validate/graph-index.js";
 import type { GraphIndex } from "../validate/graph-index.js";
 import { deriveReadiness, evaluateReadinessFloor } from "../validate/readiness-floor.js";
@@ -693,11 +693,11 @@ function packBoundary(
  * @sdpRole reader
  */
 
-export function createReader(graph: GraphSchema): Reader {
+export function createReader(graph: GraphSchema, report?: ValidationReport): Reader {
   const exampleSpaces = decodeExampleSpaces(graph).contexts;
   const index = buildGraphIndex(graph);
   const recomputedFacts = computeDeliveryFacts(graph.nodes, graph.edges);
-  const allFindings = validateGraph(graph).findings;
+  const allFindings = (report ?? validateGraph(graph)).findings;
   const oracleEdgesByTarget = new Map<string, GraphEdge[]>();
 
   for (const edge of graph.edges) {

@@ -2,7 +2,8 @@ import { studioRecipeAnswers } from "./recipes.js";
 import type { StudioRecipeAnswers } from "./recipes.js";
 import type { GraphNodeType } from "../../graph/schema.js";
 import type { PackContext, Reader, SpecContext } from "../../reader/reader.js";
-import type { Finding } from "../../validate/contracts.js";
+import { graphReportId } from "../../validate/validators.js";
+import type { Finding, ValidationReport } from "../../validate/contracts.js";
 import { pagePath } from "./paths.js";
 
 export interface PackTotals {
@@ -279,8 +280,11 @@ function specContext(reader: Reader, id: string): SpecContext {
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
-export async function createStudioData(source: Reader): Promise<StudioData> {
-  // Every consumer in one build reads the same immutable context values.
+export async function createStudioData(
+  source: Reader,
+  report: ValidationReport = { validatorId: graphReportId, findings: source.findings() },
+): Promise<StudioData> {
+  // Studio owns these values for one build and shares their joins across shipped recipes.
   const specRows = source.specs(),
     packRows = source.packs();
   const specContexts = new Map<string, SpecContext | undefined>();
@@ -298,7 +302,7 @@ export async function createStudioData(source: Reader): Promise<StudioData> {
       return packContexts.get(id);
     },
   };
-  const recipes = await studioRecipeAnswers(reader);
+  const recipes = await studioRecipeAnswers(reader, report);
   return {
     recipes,
     specs: reader.specs().map((spec) => specContext(reader, spec.id)),

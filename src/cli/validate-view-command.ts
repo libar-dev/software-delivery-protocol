@@ -5,7 +5,7 @@ import { renderDesignReview } from "../projections/design-review.js";
 import { createReader } from "../reader/reader.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
-import type { CorpusValidationReport, Finding } from "../validate/contracts.js";
+import type { CorpusValidationReport, Finding, ValidationReport } from "../validate/contracts.js";
 import { validateGraph } from "../validate/validators.js";
 import { removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
@@ -40,12 +40,16 @@ function writeProtocolValidation(output: CliOutput, findings: readonly Finding[]
   return errorCount;
 }
 
+export interface ProtocolValidationOutcome extends BuildOutcome {
+  readonly report?: ValidationReport;
+}
+
 export function runValidate(
   parsed: BuildArgs,
   output: CliOutput,
   command: string,
   hooks: ValidationViewHooks,
-): BuildOutcome {
+): ProtocolValidationOutcome {
   const build = runBuild(parsed, output, command, hooks);
 
   if (build.graph === undefined) {
@@ -55,11 +59,12 @@ export function runValidate(
   const runValidateGraph = hooks.validateGraph ?? validateGraph;
 
   try {
-    const findings = runValidateGraph(build.graph).findings;
+    const report = runValidateGraph(build.graph);
+    const { findings } = report;
 
     const errorCount = writeProtocolValidation(output, findings);
 
-    return { exitCode: errorCount > 0 ? 1 : 0, graph: build.graph };
+    return { exitCode: errorCount > 0 ? 1 : 0, graph: build.graph, report };
   } catch (error) {
     const detail = error instanceof Error ? error.message : errorMessage(error);
     writeStderr(output, `sdp ${command}: ${detail}\n`);

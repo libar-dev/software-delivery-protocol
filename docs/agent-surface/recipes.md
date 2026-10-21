@@ -2103,7 +2103,7 @@ return {
     malformed: count("malformed"), spec: count("spec"), section: count("section"), entry: count("entry")},
   rows,
   findings: rows.filter(row => !row.resolves).map(row => {
-    const subjectId = typeof row.address === "string" && row.address.length > 0 ? row.address : JSON.stringify(row.address);
+    const subjectId = typeof row.address === "string" && /\S/u.test(row.address) ? row.address : JSON.stringify(row.address);
     const why = row.reason === "malformed" ? "not an entry address"
       : row.reason === "spec" ? `no Spec ${row.id}`
       : row.reason === "section" ? `${row.id} has no ${row.section} entries`
@@ -3448,7 +3448,8 @@ if (requestedPart !== undefined) {
       return parts[requestedPart - 1];
     }
   }
-  const oversized = parts.filter((part) => part.used > budget).map((part) => ({
+  const header = partOf(1, 1, 1, 1);
+  const oversized = header.used > budget ? [{ item: "header", length: header.used }] : parts.filter((part) => part.used > budget).map((part) => ({
     item: part.boundary !== null ? "boundary" : part.members[0].id, length: part.used }));
   return { scope, budget, declarations: declarationMode, part: { index: requestedPart, of: null }, budgetExceeded: true, oversized, leftOut: answer.leftOut };
 }
@@ -3489,8 +3490,10 @@ taking the longest run that fits each part. It measures every part whole, includ
 `part: { index, of }`. Only part 1 carries the boundary; later parts carry `boundary: null`.
 Each part repeats the scope, budget, declaration mode, cuts and Pack framing. The recipe advances
 one cut at a time only if some item still cannot fit alone. If no permitted stage fits, the answer
-names every `oversized` item with the length of its whole single-item part, and carries no members
-or boundary. A part above the final count returns a diagnostic. The law is
+names `"header"` as the one `oversized` item if the repeated fields alone exceed the budget,
+measured as a part with `part: { index: 1, of: 1 }`, no members and a null boundary. Otherwise it
+names every oversized item with the length of its whole single-item part. Either answer carries
+no members or boundary. A part above the final count returns a diagnostic. The law is
 `spec:consumers.context-bundle`.
 
 ## 37. The perspective filter

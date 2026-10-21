@@ -16,7 +16,7 @@ The first adopter's design passes assemble the same reading material by hand: th
 
 At an adopter's scale a bundle is mostly structure, so its shape is compact. Each member and each example row names its carrier file once. A cut entry without an entry address keeps only its line, since its row and its place in the bundle already name it. A question, a pinned value or a member example's steps appears in one place. Pinned declarations stay whole by default, because a builder and a test author hold to them. A caller whose scope still does not fit may let the bundle cut them to their entry addresses, and then reads each one in its Spec when the pass needs it. A partial bundle stays refused, because a bundle missing members would read as the whole scope.
 
-A scope can hold more design than one budget allows after every cut, as the first adopter's largest Packs do. A caller then reads the bundle in parts: the same bundle, split between members into ordered parts that each fit the budget, whose members together are the whole scope. In parts a cut is taken only when an item, a member or the boundary, does not fit a part by itself, so a part keeps the design a single bundle would have cut. An item that exceeds the budget alone is named, and no part is returned.
+A scope can hold more design than one budget allows after every cut, as the first adopter's largest Packs do. A caller then reads the bundle in parts: the same bundle, split between members into ordered parts that each fit the budget, whose members together are the whole scope. In parts a cut is taken only when an item, a member or the boundary, does not fit a part by itself, so a part keeps the design a single bundle would have cut. A repeated header that exceeds the budget alone is named as one oversized item; otherwise each item that exceeds the budget alone is named. No part is returned in either case.
 
 ## Intent
 - actor: An agent starting one design pass over a Pack or an ordered list of Specs.
@@ -42,7 +42,7 @@ A scope can hold more design than one budget allows after every cut, as the firs
 - rule: [#partCuts] In parts the bundle tries the cut order one cut at a time, starting from no cut, splits the scope at each stage and takes the first stage at which every part fits the budget, each part measured whole in the shape it returns: its repeated fields, its `leftOut`, the boundary in part 1 and the final `part.of`; every part takes that stage's cuts and lists them in `leftOut`.
 - rule: [#partHeader] Every part repeats the scope, the budget, the declaration mode, the cuts taken, its own place among the parts and, for a Pack scope, the Pack's id, title and framing, so each part reads on its own; only the first part carries the boundary.
 - rule: [#sameParts] The split depends on the graph and on every parameter but `part`, so a caller that asks for each part in turn over one graph reads one bundle.
-- rule: [#oversizedItem] When an item alone exceeds the budget after every permitted cut, the recipe returns a budget-exceeded result that names each such item with its length and returns no part, and `sdp q` exits 0.
+- rule: [#oversizedItem] When the repeated part header alone exceeds the budget after every permitted cut, the recipe names `"header"` as its one oversized item and returns no part. Otherwise, when an item alone exceeds the budget after every permitted cut, the recipe names each such item with its length and returns no part. In both cases `sdp q` exits 0.
 
 ## Design
 
@@ -62,7 +62,7 @@ A scope can hold more design than one budget allows after every cut, as the firs
 - budgetExceeded: `{ scope, budget, declarations, budgetExceeded: true, protectedLength, leftOut }` is the whole result when the protected content alone exceeds the budget after every permitted cut, with `protectedLength` in the budget's unit.
 - partShape: a part is the bundle shape with `part: { index, of }` after `declarations`, where `of` is the number of parts; its `members` hold its run of members, its `boundary` holds the scope's boundary in part 1 and is null in every later part, and its `used` and `tokenEstimate` measure the part.
 - partDiagnostic: a `part` above the number of parts returns `{ diagnostics: [{ scope: "part", problem: "The bundle has <of> parts." }] }`, in the `{ scope, problem }` row the recipe's other diagnostics use.
-- partsExceeded: `{ scope, budget, declarations, part: { index, of: null }, budgetExceeded: true, oversized: [{ item, length }], leftOut }` is the whole result when an item exceeds the budget alone after every permitted cut, where `item` is a member id or `"boundary"`, in scope order, and `length` counts the code units of a part that holds that item alone.
+- partsExceeded: `{ scope, budget, declarations, part: { index, of: null }, budgetExceeded: true, oversized: [{ item, length }], leftOut }` is the whole result when an item exceeds the budget alone after every permitted cut, where `item` is `"header"` alone when the repeated header exceeds the budget, and otherwise a member id or `"boundary"`, in scope order. For `"header"`, `length` counts the code units of a part with `part: { index: 1, of: 1 }`, no members and a null boundary after every permitted cut; otherwise it counts a part that holds that item alone.
 
 ## Example space
 ```gwt-vocabulary

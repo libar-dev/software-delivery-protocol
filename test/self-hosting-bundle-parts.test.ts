@@ -305,7 +305,7 @@ describe("bundle part budgets", () => {
       boundary: { restsOn: [], restedOnBy: [], verifiedBy: [], supersededBy: [] },
     });
   });
-  it("names every item when the repeated Pack framing alone exceeds the budget", async () => {
+  it("names only the part header when the repeated Pack framing alone exceeds the budget", async () => {
     const members = graphOf(2, 0);
     const graph: GraphSchema = {
       ...members,
@@ -327,11 +327,24 @@ describe("bundle part budgets", () => {
       part: 1,
     });
     expect(result).toMatchObject({ budgetExceeded: true, part: { index: 1, of: null } });
-    expect(result.oversized.map((row) => row.item)).toEqual([
-      "boundary",
-      ...members.nodes.map((node) => node.id),
-    ]);
+    expect(result.oversized.map((row) => row.item)).toEqual(["header"]);
     for (const row of result.oversized) expect(row.length).toBeGreaterThan(12000);
+    const whole = await catalogRecipe<BundlePart>(36, graph, {
+      pack: "pack:probe.framing",
+      part: 1,
+    });
+    const length = result.oversized[0]?.length;
+    if (length === undefined) throw new Error("Expected the header's measured length.");
+    const header = {
+      ...whole,
+      budget: 10000,
+      used: length,
+      tokenEstimate: { ...whole.tokenEstimate, value: Math.ceil(length / 4) },
+      leftOut: result.leftOut,
+      members: [],
+      boundary: null,
+    };
+    expect(JSON.stringify(header).length).toBe(length);
     expect(result).not.toHaveProperty("members");
     expect(result).not.toHaveProperty("boundary");
   });

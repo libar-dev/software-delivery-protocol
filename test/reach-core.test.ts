@@ -127,7 +127,7 @@ it("compiles each shipped recipe once per evaluator context", async () => {
   expect(reads.mock.calls.filter(([path]) => String(path) === file)).toHaveLength(2);
 });
 
-it("retains immutable reader contexts through repeated recipe calls in one evaluation", async () => {
+it("returns fresh reader arrays and contexts through repeated recipe calls in one evaluation", async () => {
   const { evaluateBody } = await import("../src/reader/evaluate-body.js");
   const { extract } = await import("../src/index.js");
   const { graph } = extract({ root: probe(false) });
@@ -136,7 +136,90 @@ it("retains immutable reader contexts through repeated recipe calls in one evalu
     await recipes(21, { spec: "spec:probe.one" });
     return { spec: before === g.specContext("spec:probe.one"), specs: g.specs() === g.specs(), packs: g.packs() === g.packs() };
   `;
-  expect(await evaluateBody(body, { graph })).toEqual({ spec: true, specs: true, packs: true });
+  expect(await evaluateBody(body, { graph })).toEqual({ spec: false, specs: false, packs: false });
+});
+
+it.each(["evaluator", "q", "rules"])(
+  "keeps recipe answers unchanged after mutating reader results through %s",
+  async (entrance) => {
+    const { evaluateBody, extract, validateGraph } = await import("../src/index.js");
+    const root = probe(false);
+    const extracted = extract({ root });
+    const { graph } = extracted;
+    const node = graph.nodes.find((node) => node.nodeType === "Primitive");
+    if (node?.nodeType !== "Primitive") throw new Error("Expected a probe Spec.");
+    const readyGraph = {
+      ...graph,
+      nodes: graph.nodes.map((candidate) =>
+        candidate === node ? { ...node, readiness: "ready" as const } : candidate,
+      ),
+    };
+    const body = `
+      const before = await recipes(1);
+      const context = g.specContext("${node.id}");
+      context.designColumns.entries = 999;
+      g.specs().length = 0;
+      g.packs().push({ id: "pack:invented" });
+      const after = await recipes(1);
+      if (JSON.stringify(before) !== JSON.stringify(after)) throw Error("reader mutation changed recipe 1");
+      return { before, after, findings: [] };
+    `;
+    if (entrance === "evaluator") {
+      const answer = (await evaluateBody(body, { graph: readyGraph })) as {
+        before: unknown;
+        after: unknown;
+      };
+      expect(answer.after).toEqual(answer.before);
+    } else if (entrance === "q") {
+      const capture = createCaptureOutput();
+      expect(
+        await runSdpCli(["q", body, "--json"], capture.output, {
+          query: { extract: () => ({ ...extracted, graph: readyGraph }) },
+        }),
+      ).toBe(0);
+      const answer = JSON.parse(capture.readStdout()) as { before: unknown; after: unknown };
+      expect(answer.after).toEqual(answer.before);
+    } else {
+      const file = join(root, "mutation.js");
+      writeFileSync(file, body);
+      const answer = await runCorpusRules(readyGraph, validateGraph(readyGraph), [
+        { rulesFile: file, params: {} },
+      ]);
+      expect(answer.corpusFailures).toEqual([]);
+    }
+  },
+);
+
+it("quotes whitespace-only address subjects so recipe 25 remains a lawful rules file", async () => {
+  const { evaluateBody, extract, validateGraph } = await import("../src/index.js");
+  const root = probe(false);
+  const { graph } = extract({ root });
+  const addresses = ["", " ", "\t\n", "\u00a0", " x ", null, 42];
+  const answer = (await evaluateBody("return recipes(25, params)", {
+    graph,
+    params: { addresses },
+  })) as {
+    findings: { subjectId: string; message: string }[];
+  };
+  expect(answer.findings.map((row) => row.subjectId)).toEqual([
+    '""',
+    '" "',
+    '"\\t\\n"',
+    '"\u00a0"',
+    " x ",
+    "null",
+    "42",
+  ]);
+  for (const finding of answer.findings)
+    expect(finding.message).toBe(`${finding.subjectId} does not resolve: not an entry address`);
+  const report = await runCorpusRules(graph, validateGraph(graph), [
+    {
+      rulesFile: join(repoRoot, "dist/recipes/25-address-resolution.js"),
+      params: { addresses },
+    },
+  ]);
+  expect(report.corpusFailures).toEqual([]);
+  expect(report.corpusFindings).toHaveLength(addresses.length);
 });
 
 it("lets a called recipe call recipes itself with the same rules-file bindings", async () => {

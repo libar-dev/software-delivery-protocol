@@ -14,11 +14,10 @@ import type { StudioAssets, StudioFile } from "../projections/studio/publish.js"
 import { createReader } from "../reader/reader.js";
 import { removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
-import type { BuildOutcome } from "./build-command.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
 import { runValidate } from "./validate-view-command.js";
-import type { ValidationViewHooks } from "./validate-view-command.js";
+import type { ProtocolValidationOutcome, ValidationViewHooks } from "./validate-view-command.js";
 
 export type { StudioAssets } from "../projections/studio/publish.js";
 
@@ -32,7 +31,7 @@ export function prepareStudioPublication(
   output: CliOutput,
   hooks: StudioHooks = {},
   command = "studio",
-): ((validated: BuildOutcome) => Promise<number>) | undefined {
+): ((validated: ProtocolValidationOutcome) => Promise<number>) | undefined {
   const studioPath = join(parsed.root, "generated", "spec-studio");
   const temporaryPath = `${studioPath}.tmp`;
   const recoveryRm = hooks.rmSync ?? rmSync;
@@ -60,12 +59,19 @@ export function prepareStudioPublication(
         stylesheet: fileURLToPath(new URL("../studio/studio.css", import.meta.url)),
       };
       const files = studioFiles(
-        render(await createStudioData(createReader(validated.graph))),
+        render(
+          await createStudioData(createReader(validated.graph, validated.report), validated.report),
+        ),
         assets,
       );
       if (parsed.checkClean) {
         const twin = studioFiles(
-          render(await createStudioData(createReader(validated.graph))),
+          render(
+            await createStudioData(
+              createReader(validated.graph, validated.report),
+              validated.report,
+            ),
+          ),
           assets,
         );
         if (!studioFilesEqual(files, twin))

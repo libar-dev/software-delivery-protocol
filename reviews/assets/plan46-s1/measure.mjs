@@ -31,7 +31,7 @@ for (let trial = 1; trial <= 3; trial++) {
     const hash = createHash("sha256");
     let bytes = 0;
     for (const path of pages) { const content = readFileSync(path); bytes += content.length; hash.update(relative(root, path)); hash.update("\0"); hash.update(content); }
-    const row = { name: item.name, trial, seconds, files: pages.length, bytes, sha256: hash.digest("hex"), command: ["node", `${item.name.startsWith("base-") ? "$BASE" : "$HEAD"}/dist/cli/sdp.js`, "studio", item.protocol ? (item.name.startsWith("base-") ? "$BASE" : "$HEAD") : "$PLATFORM", ...args.slice(3)] };
+    const row = { name: item.name, trial, seconds, files: pages.length, bytes, sha256: hash.digest("hex"), command: [process.execPath, ...args], portableCommand: ["node", `${item.name.startsWith("base-") ? "$BASE" : "$HEAD"}/dist/cli/sdp.js`, "studio", item.protocol ? (item.name.startsWith("base-") ? "$BASE" : "$HEAD") : "$PLATFORM", ...args.slice(3)] };
     measurements.push(row);
     process.stderr.write(`${item.name} ${trial}: ${seconds.toFixed(3)}s, ${bytes} bytes\n`);
   }

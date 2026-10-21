@@ -136,29 +136,26 @@ export async function evaluateBody(
     params?: Readonly<Record<string, unknown>>;
   },
 ): Promise<unknown> {
-  const { params = {} } = input;
+  return evaluateBodyWithReader(body, {
+    ...input,
+    reader: createReader(input.graph),
+    report: input.report ?? validateGraph(input.graph),
+  });
+}
+
+/** Internal entry for projections that already hold the build's reader and report. */
+export async function evaluateBodyWithReader(
+  body: string,
+  input: {
+    reader: Reader;
+    graph: GraphSchema;
+    report: ValidationReport;
+    params?: Readonly<Record<string, unknown>>;
+  },
+): Promise<unknown> {
+  const { reader: g, graph, report, params = {} } = input;
   if (!plainObject(params)) throw new Error("evaluateBody: params takes one parameters object");
   const compiled = compileBody(body);
-  const graph = input.graph;
-  const report = input.report ?? validateGraph(graph);
-  const reader = createReader(graph);
-  const specs = reader.specs();
-  const packs = reader.packs();
-  const specContexts = new Map<string, ReturnType<Reader["specContext"]>>();
-  const packContexts = new Map<string, ReturnType<Reader["packContext"]>>();
-  const g: Reader = {
-    ...reader,
-    specs: () => specs,
-    packs: () => packs,
-    specContext: (id) => {
-      if (!specContexts.has(id)) specContexts.set(id, reader.specContext(id));
-      return specContexts.get(id);
-    },
-    packContext: (id) => {
-      if (!packContexts.has(id)) packContexts.set(id, reader.packContext(id));
-      return packContexts.get(id);
-    },
-  };
   const recipeBodies = new Map<number, CompiledBody>();
   const recipes: RecipeCaller = async (number, parameters = {}) => {
     const directory = recipeDirectory();

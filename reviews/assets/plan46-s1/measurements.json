@@ -8,10 +8,10 @@
       "bytes": 32165515,
       "sha256": "dd6aab0db8955c19998e3389d57bc71e035002aff5f250c56dc14201de979d85",
       "command": [
-        "node",
-        "$BASE/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/tmp/s1-base-corpus/dist/cli/sdp.js",
         "studio",
-        "$BASE",
+        "/tmp/s1-base-corpus",
         "--exclude",
         "explorations",
         "--exclude",
@@ -28,10 +28,10 @@
       "bytes": 32572337,
       "sha256": "a877c1c089433095100bdd4d07d657aea593d655415e718d21796f367b9b0eb5",
       "command": [
-        "node",
-        "$HEAD/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1/dist/cli/sdp.js",
         "studio",
-        "$HEAD",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1",
         "--exclude",
         "explorations",
         "--exclude",
@@ -48,10 +48,10 @@
       "bytes": 9710213,
       "sha256": "b3809b33a7f39347b9a2ea3e4f648b4d89450cabab08bb76f5d59c937fb5e73b",
       "command": [
-        "node",
-        "$BASE/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/tmp/s1-base-corpus/dist/cli/sdp.js",
         "studio",
-        "$PLATFORM"
+        "/tmp/s1-platform"
       ]
     },
     {
@@ -62,10 +62,10 @@
       "bytes": 9939294,
       "sha256": "9c98a9b1ef7c76684f72131cd581755fa04da5744ea8ef7bfe1d8e35abac4f74",
       "command": [
-        "node",
-        "$HEAD/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1/dist/cli/sdp.js",
         "studio",
-        "$PLATFORM"
+        "/tmp/s1-platform"
       ]
     },
     {
@@ -76,10 +76,10 @@
       "bytes": 32165515,
       "sha256": "dd6aab0db8955c19998e3389d57bc71e035002aff5f250c56dc14201de979d85",
       "command": [
-        "node",
-        "$BASE/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/tmp/s1-base-corpus/dist/cli/sdp.js",
         "studio",
-        "$BASE",
+        "/tmp/s1-base-corpus",
         "--exclude",
         "explorations",
         "--exclude",
@@ -96,10 +96,10 @@
       "bytes": 32572337,
       "sha256": "a877c1c089433095100bdd4d07d657aea593d655415e718d21796f367b9b0eb5",
       "command": [
-        "node",
-        "$HEAD/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1/dist/cli/sdp.js",
         "studio",
-        "$HEAD",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1",
         "--exclude",
         "explorations",
         "--exclude",
@@ -116,10 +116,10 @@
       "bytes": 9710213,
       "sha256": "b3809b33a7f39347b9a2ea3e4f648b4d89450cabab08bb76f5d59c937fb5e73b",
       "command": [
-        "node",
-        "$BASE/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/tmp/s1-base-corpus/dist/cli/sdp.js",
         "studio",
-        "$PLATFORM"
+        "/tmp/s1-platform"
       ]
     },
     {
@@ -130,10 +130,10 @@
       "bytes": 9939294,
       "sha256": "9c98a9b1ef7c76684f72131cd581755fa04da5744ea8ef7bfe1d8e35abac4f74",
       "command": [
-        "node",
-        "$HEAD/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1/dist/cli/sdp.js",
         "studio",
-        "$PLATFORM"
+        "/tmp/s1-platform"
       ]
     },
     {
@@ -144,10 +144,10 @@
       "bytes": 32165515,
       "sha256": "dd6aab0db8955c19998e3389d57bc71e035002aff5f250c56dc14201de979d85",
       "command": [
-        "node",
-        "$BASE/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/tmp/s1-base-corpus/dist/cli/sdp.js",
         "studio",
-        "$BASE",
+        "/tmp/s1-base-corpus",
         "--exclude",
         "explorations",
         "--exclude",
@@ -164,10 +164,10 @@
       "bytes": 32572337,
       "sha256": "a877c1c089433095100bdd4d07d657aea593d655415e718d21796f367b9b0eb5",
       "command": [
-        "node",
-        "$HEAD/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1/dist/cli/sdp.js",
         "studio",
-        "$HEAD",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1",
         "--exclude",
         "explorations",
         "--exclude",
@@ -184,10 +184,10 @@
       "bytes": 9710213,
       "sha256": "b3809b33a7f39347b9a2ea3e4f648b4d89450cabab08bb76f5d59c937fb5e73b",
       "command": [
-        "node",
-        "$BASE/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/tmp/s1-base-corpus/dist/cli/sdp.js",
         "studio",
-        "$PLATFORM"
+        "/tmp/s1-platform"
       ]
     },
     {
@@ -198,10 +198,10 @@
       "bytes": 9939294,
       "sha256": "9c98a9b1ef7c76684f72131cd581755fa04da5744ea8ef7bfe1d8e35abac4f74",
       "command": [
-        "node",
-        "$HEAD/dist/cli/sdp.js",
+        "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+        "/Users/darkomijic/dev-libar/sdp-plan46-lanes/build-s1/dist/cli/sdp.js",
         "studio",
-        "$PLATFORM"
+        "/tmp/s1-platform"
       ]
     }
   ],
