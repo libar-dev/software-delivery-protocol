@@ -246,6 +246,21 @@ import type {
 } from "../generated/contracts/consumers.spec-studio.sharing.space.js";
 import type { RunEvidence } from "../src/projections/studio/pages/run-rows.js";
 
+import { absolutePathJoinsContract } from "../generated/contracts/observation.run-evidence.absolute-path-joins.contract.js";
+import { unanchoredFileUnjoinedContract } from "../generated/contracts/observation.run-evidence.unanchored-file-unjoined.contract.js";
+import { externalEvidenceContract } from "../generated/contracts/consumers.spec-studio.runs-page.external-evidence.contract.js";
+import { graphOnlyContract } from "../generated/contracts/consumers.spec-studio.data.inputs.graph-only.contract.js";
+import { stampWrittenApartContract } from "../generated/contracts/consumers.spec-studio.sharing.stamp-written-apart.contract.js";
+interface BoundContract {
+  readonly steps: readonly { readonly kind: string; readonly params: unknown }[];
+}
+function thenValues(contract: BoundContract): Record<string, unknown> {
+  return Object.assign(
+    {},
+    ...contract.steps.filter((step) => step.kind === "then").map((step) => step.params),
+  ) as Record<string, unknown>;
+}
+
 function required<T>(value: T | null | undefined): T {
   if (value === undefined || value === null) throw new Error("Expected a value");
   return value;
@@ -270,11 +285,9 @@ interface RunWorld {
   answer?: RunEvidence;
   factsUnchanged?: boolean;
 }
-function runAdapters(): RunnableExampleAdapters<
-  RunWorld,
-  RunEvidenceConditions,
-  RunEvidenceOutcome
-> {
+function runAdapters(
+  contract: BoundContract,
+): RunnableExampleAdapters<RunWorld, RunEvidenceConditions, RunEvidenceOutcome> {
   return {
     createWorld: (point) => ({ point }),
     expected: expectedRun,
@@ -306,13 +319,11 @@ function runAdapters(): RunnableExampleAdapters<
       joinedFile: w.answer?.files?.[0]?.file ?? "",
     }),
     assertions: (w) => {
-      expect(w.factsUnchanged).toBe(true);
-      const expected = expectedRun(w.point);
-      if (expected.kind !== "the test joins the file {joinedFile}")
-        throw new Error("Unbound point");
-      expect(w.answer?.unjoined?.[0]?.reason ?? "none").toBe(
-        expected.joinedFile ? "none" : "noTestAnchor",
-      );
+      expect({
+        joinedFile: w.answer?.files?.[0]?.file ?? "",
+        reason: w.answer?.unjoined?.[0]?.reason ?? "none",
+        factsUnchanged: w.factsUnchanged,
+      }).toEqual(thenValues(contract));
     },
   };
 }
@@ -322,14 +333,14 @@ const absoluteAnchor = specTest({
 });
 void absoluteAnchor;
 
-registerAbsolutePathJoins(runAdapters());
+registerAbsolutePathJoins(runAdapters(absolutePathJoinsContract));
 const unjoinedAnchor = specTest({
   id: testAnchorId("test:protocol.run-unjoined"),
   verifies: ref("spec:observation.run-evidence.unanchored-file-unjoined"),
 });
 void unjoinedAnchor;
 
-registerUnanchoredFileUnjoined(runAdapters());
+registerUnanchoredFileUnjoined(runAdapters(unanchoredFileUnjoinedContract));
 const pageOracle = specOracle({
   id: oracleAnchorId("oracle:protocol.runs-page"),
   models: ref("spec:consumers.spec-studio.runs-page"),
@@ -380,11 +391,11 @@ registerExternalEvidence<PageWorld>({
   }),
   assertions: (w) => {
     const runs = required(required(w.pages).find((p) => p.path === "runs.html")).content;
-    expect(runs.match(/data-run-result/g)).toHaveLength(
-      required(w.point.passed) + required(w.point.failed),
+    const declared = thenValues(externalEvidenceContract);
+    expect((runs.match(/data-run-result/g) ?? []).length).toBe(declared.rows);
+    expect(required(w.pages).some((page) => /(?:Spec|verifier) passed/u.test(page.content))).toBe(
+      declared.verdict,
     );
-    for (const page of required(w.pages))
-      expect(page.content).not.toMatch(/(?:Spec|verifier) passed/u);
   },
 });
 const inputsOracle = specOracle({
@@ -425,9 +436,12 @@ registerGraphOnly<InputsWorld>({
     byteIdentical: JSON.stringify(w.first) === JSON.stringify(w.second),
   }),
   assertions: (w) => {
-    expect(w.first).not.toHaveProperty("runs.html");
-    expect(w.first).not.toHaveProperty("diff.html");
-    expect(Object.values(required(w.first)).join("\n")).not.toMatch(/base graph|run evidence/u);
+    const declared = thenValues(graphOnlyContract);
+    expect("runs.html" in required(w.first)).toBe(declared.runsPage);
+    expect("diff.html" in required(w.first)).toBe(declared.diffPage);
+    expect(!/base graph|run evidence/u.test(Object.values(required(w.first)).join("\n"))).toBe(
+      declared.inputsNamed,
+    );
   },
 });
 const stampOracle = specOracle({
@@ -480,8 +494,9 @@ registerStampWrittenApart<StampWorld>({
     corpusCommit: String(w.stamp?.corpusCommit),
   }),
   assertions: (w) => {
-    expect(w.pagesUntouched).toBe(true);
-    expect(w.stampSurvives).toBe(false);
+    const declared = thenValues(stampWrittenApartContract);
+    expect(w.pagesUntouched).toBe(declared.pagesUntouched);
+    expect(w.stampSurvives).toBe(declared.stampSurvives);
     expect(w.stamp?.source).toBe(w.point.source);
   },
 });
