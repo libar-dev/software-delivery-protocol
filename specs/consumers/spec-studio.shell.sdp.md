@@ -34,7 +34,7 @@ The shell carries what every page shares, including the rules that keep a page r
 - rule: [#keyboard] Every link and control is reachable from the keyboard in reading order and shows where the focus is.
 - rule: [#lineLength] Prose runs no wider than about 80 characters, and a table wider than the canvas scrolls inside its own box, never the page.
 - rule: [#text] Authored text renders as plain text with each inline code span as code, and no other Markdown is read. A mention the prose-mentions validator reads links to its target's page when the target resolves, and to the entry when the mention is an entry address.
-- rule: [#withoutScript] The index, every Pack page and every Spec page read in full without their script: their collapsible parts are native disclosure elements, and only filtering, copying and the stamp need the script. The search page needs its script to match, and without it says so and links to the index.
+- rule: [#withoutScript] Every page but the search page reads in full without its script: its collapsible parts are native disclosure elements, and only filtering, copying, the stamp, pan and zoom, and the composing panel need the script. The search page needs its script to match, and without it says so and links to the index.
 
 ## UI
 The parts of the shell, top to bottom and left to right.

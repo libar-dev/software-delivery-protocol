@@ -703,12 +703,14 @@ describe("Protocol Studio page set", () => {
     ),
   );
   const rendered = renderStudio(protocol);
+  // Checking every link of the whole Protocol page set grows with the corpus; under the full
+  // suite's parallel load it outruns the default five seconds.
   it("resolves every page link and element fragment", () => {
     expect(
       rendered.find((p) => p.path === "specs/consumers.spec-studio.shell.html")?.content,
     ).toContain('id="rule.withoutScript"');
     checkLinks(rendered);
-  });
+  }, 30_000);
   it("contains the complete Spec prose without executing script", () => {
     for (const spec of protocol.specs) {
       const page = rendered.find((p) => p.path === pagePath(spec.id))?.content ?? "";

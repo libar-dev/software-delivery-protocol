@@ -49,38 +49,10 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
   (family) => family.specs,
 );
 
-// Four intended prose-mention pairs have no declared relation either way. The owner retains
+// No intended prose-mention pair is left without a declared relation. The owner retains
 // the honesty gap on spec:model.spec-sections. The built corpus-check and Studio designs
 // have verifier bindings, so their former gaps are absent.
 export const expectedWarnings = [
-  {
-    validatorId: "conformance/prose-mentions",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:consumers.spec-studio.lenses",
-    relatedId: "spec:consumers.structural-mermaid",
-  },
-  {
-    validatorId: "conformance/prose-mentions",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:consumers.spec-studio.lenses",
-    relatedId: "spec:observation.run-evidence",
-  },
-  {
-    validatorId: "conformance/prose-mentions",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:consumers.spec-studio.verification-panels",
-    relatedId: "spec:observation.run-evidence",
-  },
-  {
-    validatorId: "conformance/prose-mentions",
-    family: "conformance",
-    severity: "warning",
-    subjectId: "spec:consumers.structural-mermaid",
-    relatedId: "spec:consumers.spec-studio.lenses",
-  },
   {
     validatorId: "honesty/gaps",
     family: "honesty",

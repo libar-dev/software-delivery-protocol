@@ -306,38 +306,9 @@ describe("sdp cli", () => {
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
-      for (const [file, line, target, specId] of [
-        [
-          "specs/consumers/spec-studio.lenses.sdp.md",
-          30,
-          "spec:consumers.structural-mermaid",
-          "spec:consumers.spec-studio.lenses",
-        ],
-        [
-          "specs/consumers/spec-studio.lenses.sdp.md",
-          37,
-          "spec:observation.run-evidence",
-          "spec:consumers.spec-studio.lenses",
-        ],
-        [
-          "specs/consumers/spec-studio.verification-panels.sdp.md",
-          28,
-          "spec:observation.run-evidence",
-          "spec:consumers.spec-studio.verification-panels",
-        ],
-        [
-          "specs/consumers/structural-mermaid.sdp.md",
-          23,
-          "spec:consumers.spec-studio.lenses",
-          "spec:consumers.structural-mermaid",
-        ],
-      ] as const) {
-        expect(stderr).toContain(
-          `${file}:${String(line)} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
-        );
-      }
-      // Re-measured from the refreshed carriers and their retained warning pairs.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 5 warnings");
+      expect(stderr).not.toContain("conformance/prose-mentions");
+      // Re-measured from the refreshed carriers: no prose-mention pair is retained.
+      expect(capture.readStdout()).toContain("validate: 0 errors · 1 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
