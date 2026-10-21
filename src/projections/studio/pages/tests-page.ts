@@ -25,8 +25,9 @@ export interface RuleCoverage {
 }
 /**
  * @sdpAnchor impl:protocol.studio-tests-lens
+ * @sdpSatisfies spec:consumers.spec-studio.lenses.tests, spec:consumers.spec-studio.lenses
  * @sdpLabel renders shared rule and example-space coverage with filters and verifier bindings
- * @sdpReferences spec:consumers.spec-studio.lenses.tests, spec:consumers.spec-studio.lenses, spec:decisions.studio-build-renders
+ * @sdpReferences spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
@@ -81,7 +82,7 @@ export function testsPage(ctx: PageContext): string {
           : `<p>external run evidence: ${statuses.map((status) => `${String(counts[status])} ${status}`).join(", ")} from test files.</p>`;
       const target = link(ctx, s.id, s.title ?? s.id, codeSpans(s.title ?? s.id)).replace(
         /href="([^"]+)"/u,
-        'href="$1#verification"',
+        'href="$1#panel.verification"',
       );
       return `<li class="spec-row" data-row data-binding="${binding}" data-rules="${totals.keyedRules === 0 ? "none" : totals.unexercised > 0 ? "unexercised" : "exercised"}" data-values="${space === undefined ? "none" : missing > 0 ? "uncovered" : "covered"}" data-pack="${escape(s.packs.join(" "))}">${target} · ${code(s.id)} · verifier binding ${binding}: ${String(s.verifiers.length)} verifiers, ${String(enabled)} enabled · ${String(totals.exercised)} of ${String(totals.keyedRules)} keyed rules exercised · ${String(totals.unkeyedRules)} unkeyed rules${space ? ` · ${String(missing)} uncovered values` : ""}${s.verifiers.length ? `<ul>${s.verifiers.map((v) => `<li>${link(ctx, v.verifierId)} · ${v.enabled ? "enabled" : "not enabled"}${v.file ? ` · ${sourceCode(v.file, v.line)}` : ""}</li>`).join("")}</ul>` : ""}${spaceDetails ? `<p>${spaceDetails}</p>` : ""}${runSummary}</li>`;
     })

@@ -5,8 +5,8 @@ import { runEvidence, runHeader, runRows } from "./run-rows.js";
 
 /**
  * @sdpAnchor impl:protocol.studio-runs-page
+ * @sdpSatisfies spec:consumers.spec-studio.runs-page, spec:observation.run-evidence
  * @sdpLabel renders readable CTRF inputs, file results, unjoined records and diagnostics
- * @sdpReferences spec:consumers.spec-studio.runs-page, spec:observation.run-evidence
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

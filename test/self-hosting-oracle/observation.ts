@@ -107,7 +107,7 @@ export const observationSpecs = [
           "`{ inputs: number; tests: number; joined: number; unjoined: number; files: number; specs: number }`, counting the readable reports, every test they hold, the tests joined and unjoined, the files joined, and the distinct Specs those files verify.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:observation.run-evidence.absolute-path-joins",

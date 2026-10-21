@@ -3,8 +3,8 @@ import type { PageContext } from "./html.js";
 /**
  * @sdpAnchor impl:protocol.studio-evidence-lens
  * @sdpLabel names the four evidence sources and what would bring each into the Studio
- * @sdpSatisfies spec:consumers.spec-studio.lenses.evidence
- * @sdpReferences spec:consumers.spec-studio.lenses, spec:decisions.studio-build-renders
+ * @sdpSatisfies spec:consumers.spec-studio.lenses.evidence, spec:consumers.spec-studio.lenses
+ * @sdpReferences spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

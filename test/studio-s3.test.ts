@@ -314,6 +314,12 @@ registerSameWordTwice<World<GlossaryPageConditions>>({
   },
 });
 
+const navigationAnchor = specTest({
+  id: testAnchorId("test:protocol.studio-navigation"),
+  verifies: ref("spec:consumers.spec-studio.navigation"),
+});
+void navigationAnchor;
+
 describe("Studio register pages", () => {
   it("renders declaration citations, decision reasons and design backlog from the shipped answers", async () => {
     const root = corpus({

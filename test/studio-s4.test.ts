@@ -665,7 +665,7 @@ import { parse } from "yaml";
 const workflowAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.studio-preview-workflow"),
   label: "asserts the reusable Studio preview workflow and Protocol CI caller",
-  references: [ref("spec:consumers.spec-studio.sharing")],
+  satisfies: ref("spec:consumers.spec-studio.sharing"),
 });
 void workflowAnchor;
 it("ships a reusable preview and calls it on pull requests with runs and diff, deployment disabled", () => {

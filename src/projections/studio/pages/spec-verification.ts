@@ -73,8 +73,8 @@ export function constraintTarget(
 
 /**
  * @sdpAnchor impl:protocol.studio-verification-panels
+ * @sdpSatisfies spec:consumers.spec-studio.verification-panels, spec:consumers.spec-studio.components
  * @sdpLabel renders rule coverage, example cards, constraint targets, verifiers and example-space coverage
- * @sdpReferences spec:consumers.spec-studio.verification-panels, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
@@ -136,5 +136,6 @@ export function scenarioTemplate(spec: SpecContext, mode: "edit" | "propose"): s
   const example = spec.sections?.behavior?.examples?.find((e) => typeof e !== "string");
   const vocabulary = spec.sections?.behavior?.exampleSpace;
   const steps = mode === "edit" && example ? example : vocabulary;
-  return `<template data-scenario-for="${escape(spec.id)}"><sdp-scenario-editor spec-id="${escape(spec.id)}" mode="${mode}">${(["given", "when", "then"] as const).map((phase) => `<pre data-step="${phase}">${escape(steps?.[phase]?.join("\n") ?? "")}</pre>`).join("")}<p>Composing needs the script.</p></sdp-scenario-editor></template>`;
+  const editor = `<sdp-scenario-editor spec-id="${escape(spec.id)}" mode="${mode}">${(["given", "when", "then"] as const).map((phase) => `<p>${phase.charAt(0).toUpperCase()}${phase.slice(1)}</p><pre data-step="${phase}">${escape(steps?.[phase]?.join("\n") ?? "")}</pre>`).join("")}<p>Composing needs the script.</p></sdp-scenario-editor>`;
+  return `<noscript>${editor}</noscript><template data-scenario-for="${escape(spec.id)}">${editor}</template>`;
 }

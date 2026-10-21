@@ -96,8 +96,7 @@ export function entryMatches(record: SearchRecord, entry: SearchEntry, term: str
  * Keeps concept hits in their existing order and appends key/file-only hits by id.
  *
  * @sdpAnchor impl:protocol.studio-search-results
- * @sdpSatisfies spec:consumers.spec-studio.search, spec:consumers.spec-studio.page-elements
- * @sdpReferences spec:consumers.spec-studio.components
+ * @sdpSatisfies spec:consumers.spec-studio.search, spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole projection
  */

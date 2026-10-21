@@ -31,8 +31,7 @@ export function sourceUrl(template: string, file: string, line: string): string 
  * Checks the document's protocol before requesting the optional stamp.
  *
  * @sdpAnchor impl:protocol.studio-stamp
- * @sdpSatisfies spec:consumers.spec-studio.page-elements
- * @sdpReferences spec:consumers.spec-studio.sharing
+ * @sdpSatisfies spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.sharing
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility
  */

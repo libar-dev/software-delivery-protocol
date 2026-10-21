@@ -74,6 +74,8 @@ binary.
 
 The same CLI publishes five independent read roots with `view`, `census`, `mermaid`, `gherkin`, and `studio`.
 Each publisher's build removes all five projection roots first.
+`sdp generate` publishes all five from one validated graph, synchronizing the vault first;
+`--check-clean` checks the five roots and leaves the vault alone.
 The repository's generate/check scripts preserve and publish all five roots together. They save
 the prior trees before the individual publishers run, preserve each result across the next build's
 invalidation, and restore all five results at the end. In check mode a prior tree must exist for
@@ -130,16 +132,14 @@ pnpm --silent sdp:q "$(cat dist/recipes/25-address-resolution.js)" --params @add
 This catalog stays the one owner of the bodies. The files are derived from it, and the recipe
 check holds each one byte for byte to its body here.
 
-To filter a shipped answer, wrap its body in an async arrow function and return the part you need.
-Give the inner body only its own parameters, so an outer caller's parameters do not become unknown
-names in the recipe:
+To filter a shipped answer, call it through `recipes` with only its own parameters:
 
 ```sh
-pnpm --silent sdp:q "$(printf '%s\n' 'const answer = await (async (params) => {'; cat dist/recipes/33-the-design-backlog.js; printf '%s\n' '})({});' 'return answer.rows.filter((row) => row.specKind === "behavior");')" --json
+pnpm --silent sdp:q 'const answer = await recipes(33); return answer.rows.filter((row) => row.specKind === "behavior")' --json
 ```
 
-The caller's part must hold no shell expansion. Single-quote it as above so the shell inserts only
-the shipped body, while the sink evaluates the whole body once.
+The caller and recipe share one graph and validation report. Each call takes its own parameters.
+The caller's part must hold no shell expansion. Single-quote it as above.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
 you supply; `return` is the output contract. Five bindings are injected:
@@ -938,6 +938,8 @@ refusal or inclusion can therefore make rendered output smaller than these count
 
 *When you need this: you want every declared component with its members, uses neighbors,
 satisfied Specs, and shaping decisions in one map.*
+
+Takes no parameters. Returns `{ components, subjects, usesEdges, unresolvedUses }`.
 
 ```js
 const accepts = [];
@@ -2043,6 +2045,8 @@ or a page, and want to know which still resolve.*
 The parameter is `params.addresses`, the list of addresses you hold; an empty list returns no
 rows. A long list belongs in a file passed as `--params @PATH`.
 `params.severity` is `"error"` by default or `"warning"`; another value returns diagnostics.
+Returns `{ totals, rows, findings }`; every unresolved row yields an `unresolved-address`
+finding. The shipped body also runs unchanged under `sdp validate --rules`.
 
 ```js
 const accepts = ["addresses", "severity"];
@@ -2136,6 +2140,10 @@ Specs, and this recipe resolves ones written anywhere else.
 
 *When you need this: you want every place where Specs rest on each other, or on themselves,
 through `dependsOn`.*
+
+`params.severity` is `"error"` by default or `"warning"`. Returns
+`{ totals, cycles, findings }`, with a `dependency-cycle` finding per cycle, or `{ diagnostics }`
+for another severity. The shipped body also runs unchanged under `sdp validate --rules`.
 
 ```js
 const accepts = ["severity"];
@@ -2260,9 +2268,7 @@ never refuses: a cycle is data about the authored dependencies, and the readines
 `dependsOn` target's stated rung without walking a chain. The law is
 `spec:consumers.agent-surface.address-and-cycle-recipes`.
 
-Both recipes add `findings` beside their rows or cycles and take `params.severity`, `"error"`
-by default or `"warning"`. Another severity returns diagnostics. Each unresolved address and each
-cycle yields one finding, so either shipped file can run unchanged under `sdp validate --rules`.
+A cycle is reported by the recipe; the corpus chooses whether its findings fail a rules run.
 
 ## 27. References into a design
 
@@ -4319,6 +4325,10 @@ counts realized designs with neither differences nor unreadable fields. The law 
 Report each slot value and the examples that bind it, with uncovered literals and unbound
 children kept visible. Pass `params.spec` or `params.pack`, or neither for every space.
 Coverage is per value and confers nothing. Only closed quoted-literal unions are enumerable.
+Returns `{ scope, totals, spaces }`, with each space's eligible examples and slots, each slot's
+value rows and unbound examples, and totals for spaces, slots, enumerable slots, declared values
+and uncovered values. An absent subject, both scopes or a Spec without a space returns
+`{ diagnostics }`. The law is `spec:consumers.agent-surface.example-space-coverage`.
 
 ```js
 const accepts = ["spec", "pack"];
@@ -4528,7 +4538,8 @@ return { decider, totals: { waiting: statements.length, firstRound: statements.f
   statements, cycles, questions };
 ```
 
-`statements` lists every Spec whose floor reaches above its stated rung, ordered by round and id.
+The answer is `{ decider, totals, statements, cycles, questions }`; an invalid decider returns
+`{ diagnostics }`. `statements` lists every Spec whose floor reaches above its stated rung, ordered by round and id.
 `restsOn` names only other waiting Specs, through the four typed relations. A `refines` yields to
 a reverse `dependsOn`, `constrainedBy` or `decidedBy`; self links order nothing. A cycle's members
 share the round after their latest outside dependency and appear together in `cycles`, with one
@@ -4549,6 +4560,9 @@ The law is `spec:consumers.upgrade-kit.capability-adoption`.
 `params.detail` defaults to `false`; pass `true` for every Spec row or a list of Spec ids for a
 selection. `params.perspectives` is the list of perspective objects kept outside the graph.
 Without it, perspectives read `null`, since the graph cannot count those files.
+Returns `{ totals, capabilities, packs, specs, leftOut }`: corpus totals, each capability's
+`inUse`, `applicable` and `carriedBy`, Pack counts, and the requested Spec detail. Invalid input
+returns `{ diagnostics }`.
 
 ```js
 const accepts = ["detail", "perspectives"];
@@ -4656,6 +4670,9 @@ The law is `spec:consumers.upgrade-kit.rule-key-proposal`.
 `params.commit` is required and names the commit whose graph you read. Limit the proposal with
 `params.pack` or `params.specs`, a list of Spec ids, or omit both for the corpus. Check the returned
 proposal with recipe 38 against that commit's graph before an agent applies it.
+Returns `{ scope, totals: { specs, entries, keyed, proposed, unkeyable }, proposal, unkeyable }`.
+The proposal is null when no entry needs a key. Unkeyable rows keep the entry, file, line and
+reason; invalid input returns `{ diagnostics }` without a proposal.
 
 ```js
 const accepts = ["commit", "pack", "specs"];
@@ -4714,6 +4731,7 @@ return { scope, totals: { specs: ids.length, entries, keyed, proposed: changes.l
 *When you need this:* Render a change proposal as the memo a person reviews and hands to an agent.
 
 The law is `spec:consumers.intent-composition.proposal.memo`. Pass `params.proposal`, the change-proposal document. This recipe reads no graph value and writes nothing. A malformed document returns the same schema problems as recipe 38; a valid one returns the Markdown memo the Studio panel hands off.
+The answer is `{ schemaProblems, memo }`, with `memo: null` when the document is malformed.
 
 ```js
 const accepts = ["proposal"];
@@ -5011,6 +5029,12 @@ Use this to find anchored source lines that cite a pinned declaration or another
 report citations that no longer resolve. Pass at most one of `params.pack` and `params.specs`;
 without either, the scope is the corpus. `params.severity` is `error` by default or `warning`.
 Only a non-empty `testAnchors` identifies a test line. A citation records no test verdict.
+Returns `{ scope, totals, entries, unresolved, findings }`. Totals count citations, cited entries,
+pinned declarations, cited declarations and unresolved citations. Entry rows keep their address,
+Spec, pinned flag, carrier line and `citedBy` source lines with anchor and test-anchor ids;
+unresolved rows keep the citing file, line and resolution reason. Each yields an
+`unresolved-citation` finding. Invalid input returns `{ diagnostics }` without findings.
+The law is `spec:extraction.entry-citations`.
 
 ```js
 const accepts = ["pack", "specs", "severity"];

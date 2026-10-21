@@ -13,8 +13,7 @@ export function rowMatches(
  * Reads each row's filter attributes and changes only its hidden state.
  *
  * @sdpAnchor impl:protocol.studio-filter
- * @sdpSatisfies spec:consumers.spec-studio.page-elements
- * @sdpReferences spec:consumers.spec-studio.components
+ * @sdpSatisfies spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility
  */

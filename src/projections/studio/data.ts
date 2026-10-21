@@ -278,7 +278,7 @@ function specContext(reader: Reader, id: string): SpecContext {
 /**
  * @sdpAnchor impl:protocol.studio-data
  * @sdpLabel assembles reader contexts, Pack totals, rails and search records for static pages
- * @sdpSatisfies spec:consumers.spec-studio.data
+ * @sdpSatisfies spec:consumers.spec-studio.data, spec:consumers.spec-studio
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

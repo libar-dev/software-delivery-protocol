@@ -23,7 +23,7 @@ export function zoomViewBox(
 /**
  * @sdpAnchor impl:protocol.studio-diagram-element
  * @sdpLabel adds view-box pan, zoom and pinch to build-rendered SVG without changing its layout
- * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.export
+ * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.export, spec:consumers.spec-studio.components
  * @sdpReferences spec:decisions.studio-diagram-renderer, spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility

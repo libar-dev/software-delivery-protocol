@@ -1,7 +1,8 @@
 /**
  * @sdpAnchor impl:protocol.studio-view-elements
+ * @sdpSatisfies spec:consumers.spec-studio.components
  * @sdpLabel registers build-rendered cards, maps, spaces, trace graphs, impact and findings
- * @sdpReferences spec:consumers.spec-studio.components, spec:decisions.studio-build-renders
+ * @sdpReferences spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility
  */

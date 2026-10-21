@@ -1343,7 +1343,7 @@ export const decisionsSpecs = [
       },
       decision: {
         context:
-          "The Studio's pages read in full without script and open from `file://`, two builds of one graph write the same bytes, and the custom-elements decision admits a framework runtime only through a decision that refines it. The architecture lens, a component's members, a Spec's relations and the code that realizes a Spec all need a drawing. A prototype over the Protocol's own components and the first adopter's, read through `sdp q`, measured how large those drawings are (`explorations/studio-diagram-prototype/`).",
+          "The Studio's pages read in full without script and open from `file://`, two builds of one graph write the same bytes, and the custom-elements decision admits a framework runtime only through a decision that refines it. The architecture lens, a component's members, a Spec's relations and the code that realizes a Spec all need a drawing. A prototype over the Protocol's own components and the first adopter's, read through `sdp q`, measured how large those drawings are (`reviews/assets/plan46-prototypes/studio-diagrams/`).",
         decision:
           "The engine lays out every Studio diagram at build time with its own deterministic layered layout and writes it into the page as inline SVG followed by a text equivalent. The custom element that holds a diagram adds only pan, zoom and pinch, by changing the SVG's view box. One diagram draws at most the bound `spec:consumers.spec-studio.diagrams#design.bound` names, and above it the diagram folds, by context and then by layer, as that Spec states.",
         rationale: [

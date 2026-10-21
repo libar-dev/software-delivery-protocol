@@ -7,8 +7,7 @@ import { codeSpans } from "./text.js";
 /**
  * Counts reader values and writes native Pack disclosures and filterable Spec rows.
  * @sdpAnchor impl:protocol.studio-index-page
- * @sdpSatisfies spec:consumers.spec-studio.index-page, spec:consumers.spec-studio.lenses.packs
- * @sdpReferences spec:consumers.spec-studio.navigation
+ * @sdpSatisfies spec:consumers.spec-studio.index-page, spec:consumers.spec-studio.lenses.packs, spec:consumers.spec-studio.navigation
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

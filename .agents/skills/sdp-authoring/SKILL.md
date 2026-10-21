@@ -62,7 +62,7 @@ runner.
    After the carrier exists, `sdp validate --watch [root]` is the authoring loop: it installs the
    watcher first, then re-runs the same `validate` path from scratch on carrier create, change,
    delete, or rename. Findings print and the process stays alive; operator stop (SIGINT) exits 0.
-   `--watch` is validate-only and cannot combine with `--check-clean`. The watcher ignores
+   `validate --watch` cannot combine with `--check-clean`. The watcher ignores
    `generated`, `dist`, `node_modules`, `coverage`, dot-directories, configured `--exclude` prefixes,
    and non-carrier paths, except named rules and parameter files. Events during a run coalesce to
    one pending rerun. In this source checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
@@ -82,6 +82,9 @@ runner.
 A step may begin with `[#key]` to keep its binding through rewording; follow
 `spec:carrier.step-keys`. A Model definition may begin with `[#key]` after the term separator;
 its address is `spec:<id>#term.<key>`, as `spec:model.term-addresses` states.
+Before adding keys across a corpus, measure capability adoption with recipe 47 and review
+recipe 48's rule-key proposal through recipe 38; recipe 49 renders its memo. Follow
+`docs/agent-surface/upgrade-guide.md` and `spec:consumers.upgrade-kit`.
 
 ### Capture a cheap idea
 
@@ -287,6 +290,7 @@ fields, or a relation reason; a Spec that needs one is authored in Markdown.
 Entry citations (recipe 51) checks anchored source citations of entry addresses. External
 registers (recipe 50) checks prose tokens against a supplied register. Either shipped body may
 run unchanged under `sdp validate --rules`; a rules file can combine registers with `recipes(50, parameters)`.
+Recipes 25 and 26 also run as rules files unchanged; pass addresses and severity as data.
 
 ## Author a Pack
 
@@ -529,8 +533,9 @@ coverage-unknown for the Markdown file. This repository binds its own skills exa
    Repository generation also publishes the independent Design Review, census, Mermaid,
    Gherkin-shaped read roots, and Studio pages. Use the repository generate/check scripts to certify
    the complete projection suite; do not treat the Gherkin read root as an authored carrier. In an adopter,
-   each publisher leaves only its own root current, because every build first removes all five;
-   run the publisher for the root you need to read.
+   each publisher leaves only its own root current, because every build first removes all five.
+   `sdp generate` publishes all five together and synchronizes the vault first; `--check-clean`
+   leaves the vault alone. Follow `spec:consumers.command-line`.
 
 4. Author the oracle for the space and bind it with a top-level `specOracle` anchor whose `models`
    names the parent. Eligibility follows example-space ownership, not kind: a missing target, a
@@ -569,6 +574,15 @@ not infer `implemented` through their parent.
 Regenerate the Design Review, inspect the Spec in context, and run recipes 7–11. Tooling never
 confers `ready`: after the floor clears and the evidence is reviewed, a human may state it by
 editing the canonical carrier.
+
+For a large review, read recipe 36's complete scope with `params.part` from 1 through `part.of`;
+use recipe 46 to order waiting statements and questions. Recipe 44 reports example-space coverage,
+recipe 45 reads external runs, and recipe 51 locates entry citations. Follow
+`spec:consumers.context-bundle` and `spec:consumers.readiness-planner`.
+`sdp studio --watch` rebuilds pages after carrier edits; `--base PATH` and repeatable `--runs PATH`
+add named comparison and run inputs. Use `sdp stamp` after publication and `sdp vault --out DIR`
+for linked notes, following `spec:consumers.spec-studio.data.inputs`,
+`spec:consumers.spec-studio.sharing` and `spec:consumers.obsidian-vault`.
 
 The graph outranks this skill. If a recipe or instruction disagrees with current graph data or a
 carrying Spec, report the skill as drift and follow the graph and Spec.
