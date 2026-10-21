@@ -2457,11 +2457,11 @@ export const consumersSpecs = [
     id: "spec:consumers.obsidian-vault",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/consumers/obsidian-vault.sdp.md",
     title: "An Obsidian vault lets a person iterate on designs from the one graph",
     narrative:
-      "The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio is designed for both a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view would let a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive. It is a projection of its own, not the Studio's local half: the Studio's page set serves a reader who holds a link, the vault serves a person who iterates in a notes app, and each has its own verb and root. It waits for a reader who asks for it once the Studio's page set exists.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. The prototype in `explorations/obsidian-vault/` wrote notes from dumped graph and reader values, with relations and checked mentions as wikilinks, entry addresses as block links, and Bases for Pack members and standing queries. Pack members could be read as a sortable table. The prototype joined relation lists and computed flat properties itself, and its dump renamed `statedNextRungFailures` to `nextRungFailures`; those shortcuts are evidence for the product design, not the reader's contract.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two builds of one graph are byte-identical, so no note names a commit or a time: a publishing step may write a stamp beside the vault, as the Studio's sharing rule does. Intent is still written only in the carriers.",
+      "The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio serves a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view lets a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive. It is a projection of its own, not the Studio's local half: the Studio's page set serves a reader who holds a link, the vault serves a person who iterates in a notes app, and each has its own verb.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. The first prototype, in `explorations/obsidian-vault/`, wrote notes from dumped graph and reader values, with relations and checked mentions as wikilinks, entry addresses as block links, and Bases for Pack members and standing queries. The second, in `explorations/obsidian-vault-prototype/`, writes the vault this Pack designs from the built engine and checks it on the Protocol's corpus and the first adopter's: links that resolve, Bases whose views select what their recipes select, two identical renders, and a person's notes that survive.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two runs over one graph write the same bytes, so no note names a commit or a time. Intent is still written only in the carriers. One thing sets the vault apart from the other projections: a person keeps it open and writes notes of their own in it. So the command owns one folder of the vault and a list of what it wrote there, and synchronizes that folder instead of rewriting a root wholesale; the vault's owned-folder decision, `spec:decisions.vault-owned-folder`, says why.\n\nThe default vault sits under `generated/`, which discovery skips and an adopter usually keeps out of git. A person who wants to keep the intent notes they write in the vault points `--out` at a directory of their own.",
     sections: {
       intent: {
         actor:
@@ -2471,37 +2471,220 @@ export const consumersSpecs = [
         outcome:
           "Generate an Obsidian vault from the one graph, in which a person reads, navigates and filters the corpus and follows each pass's edits, while the carriers stay the only place intent is written.",
         risks: [
-          "A notes app invites editing, and an edit to a generated note is lost at the next regeneration without reaching the carrier.",
-        ],
-        openQuestions: [
-          {
-            question:
-              "Does the vault keep to the wikilinks and properties other notes tools read, or use Obsidian's Bases freely?",
-            blocking: false,
-            key: "otherNotesTools",
-            provisional:
-              "notes and links stay plain Markdown with wikilinks any such tool reads, and the Bases are Obsidian's alone",
-            decider: "owner",
-          },
-          {
-            question:
-              "Which files does the generator own, how are stale generated files removed, and where do Obsidian settings and a person's intent notes live so that regeneration and build invalidation never remove them?",
-            blocking: true,
-            key: "regenerationScope",
-            decider: "owner",
-            provisional:
-              "the generator owns only its generated note folders and Bases; Obsidian settings and authored intent notes sit outside that owned set, and a completed regeneration removes stale generated notes",
-            trigger: "a person asks for a vault beside the Studio's static page set",
-          },
+          "A notes app invites editing, and an edit to a generated note never reaches the carrier.",
         ],
       },
       behavior: {
         rules: [
-          "The vault is a projection of its own, written by its own verb under `generated/obsidian-vault/`, and no part of the Studio's page set.",
+          "The vault is a projection of its own, written only by `sdp vault`, and no part of the Studio's page set.",
+          "`sdp vault [root] [--exclude PATH]... [--out DIR] [--watch]` validates the graph as `sdp validate` does and then synchronizes the vault at `DIR`, by default `generated/obsidian-vault/` under the root; `root` defaults to the working directory, each exclusion is a root-relative path prefix as for the publishers, `--out` resolves against the working directory, and any other option refuses the run.",
+          "A vault directory inside the root must lie under a directory discovery skips or under an excluded prefix, so no file in the vault is ever read as a carrier or a source; any other vault directory inside the root refuses the run before the build.",
+          "The command writes only the generated folder `sdp/` inside the vault; Obsidian's settings, a person's intent notes and every other file of the vault lie outside it and are never written, moved or removed.",
+          "Before the build, a run reads every file under `sdp/` whose path holds no name that begins with a dot; a file the file list does not name, or whose bytes match no content the list records for it, refuses the run, which then writes nothing, removes nothing, names each such path and exits 1.",
+          "A run that passes the guard writes each generated file whose bytes differ from the file on disk through a temporary sibling renamed into place, leaves every file whose bytes already match untouched, removes each file the list names that the new set no longer holds, removes the directories under `sdp/` it leaves empty, and writes the file list last.",
+          "Before it changes any file, a run records in the file list both the content each path holds and the content it will hold, so a run stopped at any point leaves every generated file matching the list, and the next run recognizes each as its own.",
+          "The vault is not a projection root of the shared build: the build's invalidation never removes it, the verb that writes every projection root leaves it out, and the repository's projection suite does not certify it; `sdp vault` enters the shared build, so it removes the five projection roots as `sdp validate` does.",
+          "Two runs over one graph write byte-identical files under `sdp/`, the file list included, and no file there holds a time, a commit, an absolute path or a host name.",
+          "Every wikilink, embed and block link a generated note writes resolves to a file the run wrote and, with a block, to a block id that file carries; no note links outside the vault, a carrier or source file is named by its root-relative path in a code span, and text in a code span or a fenced block, where Obsidian reads no link, is no link.",
+          "Findings never withhold the vault: a run over a graph with validation findings still synchronizes and returns the validation exit code, each finding shows on the note of the Spec or Pack it names, and the index note counts them by severity.",
+          "A run whose extraction fails keeps every generated note but the index, which it rewrites to open with a warning naming the failure, and exits 1; the next run that succeeds writes the index whole again.",
+          "Notes are plain Markdown with YAML properties, wikilinks and block ids, which other notes tools read; only the `.base` files are Obsidian's own.",
+          "A person opens the vault directory itself as an Obsidian vault, and every link and Base filter names its target by a path from that directory.",
         ],
+        exampleSpace: {
+          given: [
+            "an extraction root holding a Pack and its member Specs, among them {member:string}",
+            'a vault whose generated folder holds {generated:"nothing"|"the files an earlier run wrote"}',
+            'the vault holds {extra:"no other file"|"an intent note and Obsidian settings outside the generated folder"|"a note a person wrote inside the generated folder"|"a generated note a person changed"}',
+            'the member {change:"stays in the corpus"|"leaves the corpus"}',
+          ],
+          when: ["the vault command runs at that root"],
+          then: [
+            "the run exits {exitCode:number}",
+            'the run refuses the path {refusedPath:string} as {refusal:"unknown"|"changed"}',
+            "a second run over the same graph leaves every generated file byte-identical: {byteIdentical:boolean}",
+            "the member's note is present: {memberNote:boolean}",
+            "every file the person wrote is byte-identical: {personFilesKept:boolean}",
+            "every link a generated note writes resolves inside the vault: {linksResolve:boolean}",
+          ],
+        },
         ruleKeys: {
           ownProjection: "rules[0]",
+          verb: "rules[1]",
+          outsideExtraction: "rules[2]",
+          ownedFolder: "rules[3]",
+          guard: "rules[4]",
+          synchronize: "rules[5]",
+          interruptedRun: "rules[6]",
+          standsApart: "rules[7]",
+          deterministic: "rules[8]",
+          linksResolve: "rules[9]",
+          findingsShown: "rules[10]",
+          failedExtraction: "rules[11]",
+          plainNotes: "rules[12]",
+          openAsVault: "rules[13]",
         },
+        description:
+          "The world writes a probe corpus of one Pack and its member Specs, runs the vault command with the vault under the root's `generated/` directory, and reads the vault from disk; a second run reads the same graph.",
+      },
+      design: {
+        layout:
+          "the generated folder `sdp/` holds `index.md`, `specs.base`, `specs/<family>/<note>.md`, `packs/<note>.md` beside `packs/<note>.base`, `code/<namespace>/<note>.md`, `terms/<note>.md` and the file list `.sdp-vault.json`; `<family>` is the first segment of a Spec's path, `<namespace>` a code unit's or anchor's namespace, and `<note>` the note name `spec:consumers.obsidian-vault.notes#design.noteName` states.",
+        fileList:
+          '`{ "schema": "sdp-vault/1", "files": { "<path under sdp/>": ["<sha256 hex of the file\'s bytes>"] } }` in `sdp/.sdp-vault.json`, paths sorted in code-unit order, JSON with two-space indentation and a closing newline; a path lists one content after a completed run and at most two while a run is under way.',
+        temporaryName:
+          "a file is written as `.<name>.sdp-tmp` in its own directory and renamed over `<name>`; a run removes any such temporary it finds under `sdp/`.",
+        guardMessage:
+          "one stderr line per refused path, `sdp vault: <path> is not a file this command wrote (unknown)` or `sdp vault: <path> has changed since this command wrote it (changed)`, with `<path>` relative to the vault, then `sdp vault: nothing was written; move a note you wrote out of sdp/, or delete a generated note you changed after keeping what you wrote`.",
+        outsideExtractionMessage:
+          "`sdp vault: the vault <out> lies inside the root and would be read as source; choose a directory under generated/, under an excluded prefix, or outside the root`.",
+        summaryLine:
+          "on stdout after a synchronization, `Wrote <out>/sdp (<n> files: <w> written, <u> unchanged, <r> removed)`.",
+        exitCodes:
+          "0 when the vault is synchronized over a graph with no validation error; the validation exit code when it is synchronized over one with errors; 1 on a guard refusal, a vault inside the extraction, a failed extraction or a write that fails.",
+        indexNote:
+          "`sdp/index.md` opens with `` > [!info] Generated by `sdp vault` from the graph. Every file under `sdp/` is regenerated: write your own notes outside it, and intent notes in `intent/`. ``, then `# Spec graph`, the finding counts by severity, the corpus Base embedded, and a link to each Pack note in id order.",
+        failedIndex:
+          "after a failed extraction, `sdp/index.md` opens with `> [!warning] The last regeneration failed, and the notes show the graph of the last one that succeeded.` followed by one line per extraction error, its root-relative file and its message.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.fresh-vault",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.fresh-vault.sdp.md",
+    title: "A fresh vault is written the same way twice and every link resolves",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the verb, the generated folder, determinism and link resolution on a vault the command writes for the first time.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding a Pack and its member Specs, among them {member: "spec:probe.member"}',
+              'a vault whose generated folder holds {generated: "nothing"}',
+              'the vault holds {extra: "no other file"}',
+              'the member {change: "stays in the corpus"}',
+            ],
+            when: ["the vault command runs at that root"],
+            then: [
+              "the run exits {exitCode: 0}",
+              "a second run over the same graph leaves every generated file byte-identical: {byteIdentical: true}",
+              "the member's note is present: {memberNote: true}",
+              "every link a generated note writes resolves inside the vault: {linksResolve: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.person-notes-survive",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.person-notes-survive.sdp.md",
+    title: "A regeneration removes a note that left the graph and keeps a person's notes",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute synchronization on a vault holding a person's intent note and Obsidian's settings while a Spec leaves the corpus.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding a Pack and its member Specs, among them {member: "spec:probe.member"}',
+              'a vault whose generated folder holds {generated: "the files an earlier run wrote"}',
+              'the vault holds {extra: "an intent note and Obsidian settings outside the generated folder"}',
+              'the member {change: "leaves the corpus"}',
+            ],
+            when: ["the vault command runs at that root"],
+            then: [
+              "the run exits {exitCode: 0}",
+              "the member's note is present: {memberNote: false}",
+              "every file the person wrote is byte-identical: {personFilesKept: true}",
+              "every link a generated note writes resolves inside the vault: {linksResolve: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.unknown-note-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.unknown-note-refused.sdp.md",
+    title: "A note a person wrote inside the generated folder refuses the regeneration",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the guard on a file the command never wrote, left inside its generated folder.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding a Pack and its member Specs, among them {member: "spec:probe.member"}',
+              'a vault whose generated folder holds {generated: "the files an earlier run wrote"}',
+              'the vault holds {extra: "a note a person wrote inside the generated folder"}',
+              'the member {change: "leaves the corpus"}',
+            ],
+            when: ["the vault command runs at that root"],
+            then: [
+              "the run exits {exitCode: 1}",
+              'the run refuses the path {refusedPath: "sdp/specs/probe/mine.md"} as {refusal: "unknown"}',
+              "the member's note is present: {memberNote: true}",
+              "every file the person wrote is byte-identical: {personFilesKept: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.changed-note-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.changed-note-refused.sdp.md",
+    title: "A generated note a person changed refuses the regeneration and keeps the edit",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the guard on a generated note whose bytes a person changed after the command wrote it.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'an extraction root holding a Pack and its member Specs, among them {member: "spec:probe.member"}',
+              'a vault whose generated folder holds {generated: "the files an earlier run wrote"}',
+              'the vault holds {extra: "a generated note a person changed"}',
+              'the member {change: "stays in the corpus"}',
+            ],
+            when: ["the vault command runs at that root"],
+            then: [
+              "the run exits {exitCode: 1}",
+              'the run refuses the path {refusedPath: "sdp/specs/probe/spec.probe.member.md"} as {refusal: "changed"}',
+              "every file the person wrote is byte-identical: {personFilesKept: true}",
+            ],
+          },
+        ],
       },
     },
     deliveryFacts: [],
@@ -2510,67 +2693,156 @@ export const consumersSpecs = [
     id: "spec:consumers.obsidian-vault.notes",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/consumers/obsidian-vault.notes.sdp.md",
-    title: "Every Spec, Pack, code unit and term is a note, and every relation is a link",
+    title: "Every Spec, Pack, code unit and keyed term is a note, and every relation is a link",
     narrative:
-      "The prototype wrote a note for each Spec, Pack, code unit and test anchor, and for each term a Model section defines. A note carries the reader's values as flat properties, so Obsidian's tables filter on them, and the Spec's sections in authored order. Each declared relation became a wikilink in both directions with its reason, each mention in prose became a wikilink to its Spec or to its entry's block, and each keyed Design, UI, question and rule entry carried a block id named for its address. Backlinks and the graph view then show what rests on a Spec without a query.\n\nTwo findings shape the questions below. Obsidian refuses a colon in a note's name, so a note cannot be named by its id as written. And Obsidian renders a Spec id in a property as a link to an external address, because the namespace reads as a URL scheme.",
+      "A note carries the reader's values as flat properties, so Obsidian's tables filter on them, and the Spec's sections in the graph's order. Each declared relation is a wikilink in both directions with its reason, each mention in prose is a wikilink to its Spec or to its entry's block, and each keyed entry carries a block id named for its address. Backlinks and the graph view then show what rests on a Spec without a query.\n\nTwo findings from the prototypes shape the names and properties. Obsidian refuses a colon in a note's name, so a note cannot be named by its id as written. And Obsidian renders a text or list property as a link to an external address whenever its value holds no space and parses as a URL, which `spec:` followed by a path does, while it renders an alias as plain text. Every link also names the note's `.md` extension, so an id whose last segment reads like another file type's extension, such as `base`, still links to its note.",
     sections: {
       intent: {
         outcome:
-          "Write one note per Spec, Pack, code unit, test anchor, oracle anchor and Model term, with graph and reader values as properties and every declared relation and checked mention as a wikilink, so a person follows the graph in both directions.",
-        openQuestions: [
+          "Write one note per Spec, Pack, code unit, test anchor, oracle anchor and keyed Model term, with graph and reader values as properties and every declared relation and checked mention as a wikilink, so a person follows the graph in both directions.",
+      },
+      behavior: {
+        rules: [
+          "The vault holds one note per Spec, Pack, code unit, test anchor and oracle anchor, and one per Model term that carries a key, which `spec:model.term-addresses` gives an address; a term without a key appears only in its Spec's note, since no address can name it, and a ratified glossary term gains a note only where a Spec's Model section defines it with a key.",
+          "A term defined in several Specs gets one note per defining Spec and term, so each definition keeps its authored owner; the term's aliases bring the notes together when a person types it.",
+          "A note is named by its id with the colon after the namespace replaced by a dot, and a term note by `term.`, its Spec's path, a dot and its key; one vault holds the notes of one corpus.",
+          "Two notes whose paths differ only in case refuse the run before it writes, naming both ids, so no two names collide on a file system that ignores case.",
+          "A note's id, colon included, is written only in its `aliases` property and in the code span of its head line, since Obsidian shows an alias as plain text; no other property holds a value Obsidian would read as an address.",
+          "A Spec note's properties are the reader's values for that Spec, listed under `spec:consumers.obsidian-vault.notes#design.specProperties`; every join, delivery fact, floor and rung among them is one the reader computed, and the generator computes none.",
+          "A Spec's bindings are two booleans, `implementationBinding` true where the reader's delivery facts hold `implemented` and `verifierBinding` true where they hold `has-verifier`, and the note's body renders the four binding lines `spec:consumers.binding-language-views` states, so no rendered label is a delivery-fact name.",
+          "Each declared relation is a link on the notes at both ends, with its type, its reason, and for an example's `verifies` a link to the block of each rule it exercises in the verified Spec's note.",
+          "Each keyed Design and UI entry, keyed open question, keyed rule or flow, and keyed Model term ends its line in its Spec's note with the block id `^<section>-<key>`, with section `design`, `ui`, `question`, `rule` or `term`.",
+          "A mention in any text the vault renders from the graph, found by the scanner the prose-mention validator uses, becomes a link when its Spec resolves and, for an entry address, its entry does; a mention that does not resolve stays as written. A code span holding exactly one mention becomes that link, and any other code span stays code.",
+          "Text from the graph renders as written, except that the generator escapes what Obsidian would read as a link, an embed, a tag, a block id, a comment, a highlight or math, so no note holds a link, tag or block id the graph does not.",
+          "Every note name and block id converts back to what it names: a note name to its id by restoring the colon after the namespace, a term note's name to its term address, and a block id in a Spec's note to its entry address, so an agent reading a link a person wrote names the entry it cites.",
+        ],
+        exampleSpace: {
+          given: [
+            "a corpus holding the Spec {source:string} whose narrative mentions {mention:string}",
+            "the Spec {target:string} keys the Design entry {key:string}",
+          ],
+          when: ["the vault command writes the vault"],
+          then: [
+            "the mentioning Spec's note is {notePath:string}",
+            "the mention renders as {rendered:string}",
+            "the note's aliases open with {alias:string}",
+            "no property but aliases holds a value Obsidian reads as an address: {plainProperties:boolean}",
+          ],
+        },
+        ruleKeys: {
+          oneNotePer: "rules[0]",
+          termNoteGrain: "rules[1]",
+          noteNames: "rules[2]",
+          caseCollision: "rules[3]",
+          idInAliases: "rules[4]",
+          readerProperties: "rules[5]",
+          bindingProperties: "rules[6]",
+          relationsBothWays: "rules[7]",
+          blockIds: "rules[8]",
+          mentionLinks: "rules[9]",
+          textEscaped: "rules[10]",
+          addressRoundTrip: "rules[11]",
+        },
+        description:
+          "The world writes a probe corpus whose Specs mention each other, runs the vault command, and reads the mentioning Spec's note from disk.",
+      },
+      design: {
+        noteName:
+          "`<namespace>.<path>` for an id `<namespace>:<path>`, as `spec.model.rule-keys`, `pack.design-iteration-v1` and `impl.protocol.reader`; `term.<path>.<key>` for the term address `spec:<path>#term.<key>`.",
+        linkForm:
+          "`[[<path from the vault>.md|<id or address>]]`, with `#^<block id>` after `.md` for an entry; every link names the file's extension, and an embedded Base is `![[sdp/packs/<note>.base]]` or `![[sdp/specs.base]]`.",
+        blockId:
+          "`<section>-<key>`, written as ` ^<section>-<key>` at the end of the entry's line, so `spec:<id>#design.limit` opens as `[[sdp/specs/<family>/<note>.md#^design-limit|spec:<id>#design.limit]]`.",
+        propertyEncoding:
+          "the properties sit between two `---` lines at the top of the note, one per line as `<key>: <JSON value>`, in the order listed below; a property the graph does not hold is left out.",
+        specProperties:
+          "`aliases` (the id, then the title), `title`, `specKind`, `altitude`, `statedReadiness`, `derivedReadiness` (`none` when no rung derives), `statedNextRung` (left out when the Spec states `ready`), `statedNextRungFailures` (the failing clause ids), `implementationBinding`, `verifierBinding`, `designEntries`, `declarations`, `openQuestions` (a count), `blockingQuestions`, `decisions` (links to the notes of the resolving decisions the design columns name), `packs` (links to the Pack notes), `carrier` (the root-relative carrier path).",
+        packProperties:
+          "`aliases` (the id, then the title), `title`, `manifest` (the root-relative manifest path).",
+        codeProperties:
+          "`aliases` (the id), `label`, `role`, `layer`, `context`, `component` (a link to the component's note), `sourceFile` (root-relative), `sourceLine`.",
+        termProperties:
+          "`aliases` (the term, then its address), `definedIn` (a link to the defining Spec's note).",
+        banner:
+          "the first line after the properties, `` > [!info] Generated by `sdp vault` from the graph. Edit the <carrier|Pack manifest|source file> `<root-relative path>`, never this note: a regeneration refuses while a note it wrote has changed. ``, naming the Spec's carrier, the Pack's manifest or the unit's source file.",
+        headLine:
+          "under a Spec note's title, `` `<id>` · <kind display label> · <altitude> · stated <rung> · floor <rung or none> ``, then ` · <stated next rung>: <failing clause ids, or nothing blocks>` when the Spec states less than `ready`.",
+        specNoteBody:
+          "the banner, `# <title>`, the head line, the narrative's paragraphs, each section under `## <Section>` in the graph's order with Intent's open questions under `### Open questions` and an example's steps or an example space's vocabulary in a fenced `gherkin` block, then `## Relations` with `### From this Spec` and `### Toward this Spec`, `## Bindings`, `## Packs` and `## Findings`, each heading left out when it has nothing under it.",
+        bindingLines:
+          "under `## Bindings`, `- Implementation binding: present` or `none` with each realizing unit, the units that reference the Spec, `- Verifier binding: present` or `none` with each verifier, `- Expected-outcome oracle: present` or `none`, and `- Runtime observation: not tracked`.",
+        packNoteBody:
+          "the banner, `# <title>`, the framing, `## Members, filterable` with the Pack's Base embedded, `## Members, in reading order` as a numbered list in manifest order, each a link with its stated rung, floor and stated next rung or `nothing blocks`, then `## Boundary` with the reader's four boundary lists and `## Findings`.",
+        codeNoteBody:
+          "the banner, `# <id>`, the label, `` `<file>:<line>` ``, then link lists under `## Member of`, `## Members`, `## Uses`, `## Used by`, `## Satisfies`, `## References`, `## Verifies` and `## Models`, each left out when empty.",
+        termNoteBody:
+          "the banner, `# <term>`, the definition, and `Defined in [[<Spec note>.md#^term-<key>|<term address>]].`",
+        escapes:
+          "a backslash before `[[`, `%%`, `==`, `$`, a `#` that opens a tag after a space or at a line's start, and a `^` that would end a line as a block id; text inside a code span is left as written.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.notes.entry-address-link",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.notes.entry-address-link.sdp.md",
+    title: "An entry address in prose opens the entry's block in its Spec's note",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute note naming, the id alias and a mention of an entry address rendered as a block link.",
+      },
+      behavior: {
+        examples: [
           {
-            question:
-              "How is a note named, when Obsidian refuses a colon and a vault may also hold notes of another corpus?",
-            blocking: true,
-            key: "noteNames",
-            decider: "owner",
-            provisional:
-              "within one corpus, preserve the full id and replace its namespace colon with a dot, as spec.model.rule-keys, pack.design-iteration-v1 and impl.protocol.reader, keeping the full id and title as aliases; filenames must remain distinct on the target filesystem, and naming across multiple corpora remains open",
-          },
-          {
-            question: "Which reader values become properties?",
-            blocking: true,
-            key: "propertySet",
-            decider: "owner",
-            provisional:
-              "kind, altitude, stated rung, floor reached, `statedNextRung` and `statedNextRungFailures` under their reader names, internal delivery-fact booleans whose rendered labels are Implementation binding and Verifier binding, each displayed as present or none under spec:consumers.binding-language-views, design columns, Pack links and the repository-relative carrier path; a Base may select where `statedNextRung` is present and `statedNextRungFailures` is empty, while semantic joins and floor computation stay with the reader",
-          },
-          {
-            question:
-              "Which property form keeps a Spec id plain text where Obsidian would render it as an external link?",
-            blocking: false,
-            key: "idProperty",
-          },
-          {
-            question:
-              "A term note comes only from a Model section, and no note links a term by matching words; does a term of the ratified glossary, which is not graph data, get a note too?",
-            blocking: false,
-            key: "termNotes",
-            provisional:
-              "no; a glossary term gains a note when a Spec defines it in a Model section",
-          },
-          {
-            question:
-              "Does a term defined in several Specs get one note per defining Spec and term, or one note that explicitly lists every defining Spec and its definition?",
-            blocking: true,
-            key: "termNoteGrain",
-            decider: "owner",
-            provisional:
-              "one note per defining Spec and term, so each definition retains its authored owner; term-address syntax and keys remain the separate term-addresses design",
-          },
-          {
-            question:
-              "Prose mentions reach no reader value: the validator checks them and recipe 22 lists their pairs by section and entry. Which value turns a mention into a wikilink, a mention scanner the validator and the vault share, or recipe 22's rows?",
-            blocking: true,
-            key: "mentionSource",
-            decider: "owner",
-            provisional: "one mention scanner the validator and the vault share",
+            given: [
+              'a corpus holding the Spec {source: "spec:probe.source"} whose narrative mentions {mention: "spec:probe.target#design.limit"}',
+              'the Spec {target: "spec:probe.target"} keys the Design entry {key: "limit"}',
+            ],
+            when: ["the vault command writes the vault"],
+            then: [
+              'the mentioning Spec\'s note is {notePath: "sdp/specs/probe/spec.probe.source.md"}',
+              'the mention renders as {rendered: "[[sdp/specs/probe/spec.probe.target.md#^design-limit|spec:probe.target#design.limit]]"}',
+              'the note\'s aliases open with {alias: "spec:probe.source"}',
+              "no property but aliases holds a value Obsidian reads as an address: {plainProperties: true}",
+            ],
           },
         ],
       },
-      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.notes.unresolved-mention-stays",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.notes.unresolved-mention-stays.sdp.md",
+    title: "A mention of an entry that does not exist stays as written",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the mention rule on an entry address whose key its Spec does not carry, which validation reports and the vault leaves unlinked.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a corpus holding the Spec {source: "spec:probe.source"} whose narrative mentions {mention: "spec:probe.target#design.missing"}',
+              'the Spec {target: "spec:probe.target"} keys the Design entry {key: "limit"}',
+            ],
+            when: ["the vault command writes the vault"],
+            then: ['the mention renders as {rendered: "spec:probe.target#design.missing"}'],
+          },
+        ],
+      },
     },
     deliveryFacts: [],
   },
@@ -2578,35 +2850,97 @@ export const consumersSpecs = [
     id: "spec:consumers.obsidian-vault.bases",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/consumers/obsidian-vault.bases.sdp.md",
     title: "A Pack's members and the standing queries are tables over the reader's values",
     narrative:
-      "A Base is Obsidian's table, card or list view over notes, filtered and sorted by their properties. The prototype gave each Pack a Base of its members and the corpus one Base whose views are standing queries: the build backlog, the design backlog, the Specs waiting only for their author's statement, the Specs with blocking questions, and the decisions. In Obsidian a Pack's members read as one sortable table with implementation and verifier bindings displayed as present or none, where the Design Review's Pack page is a table too wide for its page.\n\nA view is a filter over values the generator wrote from the reader, so it agrees with the recipe it mirrors only while its predicate stays that simple. A view that would need a join waits until the reader carries the joined value.",
+      "A Base is Obsidian's table, card or list view over notes, filtered and sorted by their properties. Each Pack gets a Base of its members and the corpus one Base whose views are standing queries: the build backlog, the design backlog, the Specs whose next rung waits only for their author's statement, the Specs with blocking questions, and the decisions. In Obsidian a Pack's members read as one sortable table with implementation and verifier bindings shown as present or none, where the Design Review's Pack page is a table too wide for its page.\n\nA view is a filter over values the generator wrote from the reader, so it agrees with the query it mirrors only while its predicate stays that simple. A view that would need a join waits until the reader carries the joined value. Keeping every filter inside a small closed grammar lets a test read each view's selection from the written files, without Obsidian, and compare it with its source over the same graph.",
     sections: {
       intent: {
         outcome:
-          "Give each Pack a Base of its members and the corpus a Base of standing queries, so a person filters and sorts a design by rung, floor, delivery facts and design columns.",
-        openQuestions: [
+          "Give each Pack a Base of its members and the corpus a Base of standing queries, so a person filters and sorts a design by rung, floor, bindings and design columns.",
+      },
+      behavior: {
+        rules: [
+          "The corpus has one Base, `sdp/specs.base`, over every Spec note, whose views are the standing queries `spec:consumers.obsidian-vault.bases#design.standingViews` lists, embedded in the index note.",
+          "Each Pack has a Base beside its note that selects the Spec notes whose `packs` property links the Pack, with the views `spec:consumers.obsidian-vault.bases#design.packViews` lists, embedded in the Pack's note.",
+          "Each standing view selects, over one graph, exactly the Specs its source selects, as `spec:consumers.obsidian-vault.bases#design.viewSources` pairs them.",
+          "Every filter is an `and` list of clauses from the closed grammar `spec:consumers.obsidian-vault.bases#design.filterClauses` states, over properties the notes hold, so no view computes a join, a fact or a floor.",
+          "A Base shows the two binding properties through formulas as present or none, under the column names Implementation binding and Verifier binding, never under a delivery-fact name.",
+          "A Pack's note lists its members in manifest order beside its embedded Base, since a Base sorts by property and keeps no authored order.",
+        ],
+        exampleSpace: {
+          given: [
+            "a corpus holding a Pack of {members:number} Specs, with a Spec in every standing view",
+          ],
+          when: ["the vault command writes the vault"],
+          then: [
+            "each standing view of the corpus Base selects the Specs its source selects: {viewsMatch:boolean}",
+            "the Pack's Base selects every member and nothing else: {packMatches:boolean}",
+            "every filter clause belongs to the closed grammar: {closedClauses:boolean}",
+          ],
+        },
+        ruleKeys: {
+          corpusBase: "rules[0]",
+          packBase: "rules[1]",
+          viewsMirrorSources: "rules[2]",
+          closedClauses: "rules[3]",
+          bindingDisplay: "rules[4]",
+          memberOrder: "rules[5]",
+        },
+        description:
+          "The world writes a probe corpus with a Pack whose members put at least one Spec in every standing view, runs the vault command, reads the Bases and the Spec notes' properties from disk, applies each view's clauses to those properties, and runs each view's source over the same graph.",
+      },
+      design: {
+        filterClauses:
+          'a clause is one of `<property> == "<text>"`, `<property> != "<text>"`, `<property> == true`, `<property> == false`, `<property> > 0`, `<property>.isEmpty()`, `!<property>.isEmpty()`, `<property>.contains(link("<path>.md"))` and `file.inFolder("<folder>")`, each written as one double-quoted YAML string.',
+        corpusFilter: '`sdp/specs.base` filters on `file.inFolder("sdp/specs")`.',
+        standingViews:
+          'table views in this order, `All Specs` with no further clause; `Build backlog` with `statedReadiness == "ready"`, `specKind != "example"`, `specKind != "decision"` and `implementationBinding == false`; `Design backlog` with `statedReadiness == "defined"`, `specKind != "example"`, `specKind != "decision"` and `implementationBinding == false`; `Nothing blocks the next rung` with `!statedNextRung.isEmpty()` and `statedNextRungFailures.isEmpty()`; `Blocking questions` with `blockingQuestions > 0`; `Decisions` with `specKind == "decision"`.',
+        viewSources:
+          "`Build backlog` the rows of the build backlog recipe; `Design backlog` the rows of the design backlog recipe; `Nothing blocks the next rung` the Specs whose reader context has a `statedNextRung` and an empty `statedNextRungFailures`; `Blocking questions` the Specs with a blocking question in the open-question register; `Decisions` the rows of the decision register; each compared by Spec id over the same graph.",
+        packFilter:
+          '`sdp/packs/<note>.base` filters on `file.inFolder("sdp/specs")` and `packs.contains(link("sdp/packs/<note>.md"))`.',
+        packViews:
+          "table views in this order, `Members` with no further clause and `Nothing blocks the next rung` with the clauses of the corpus view of that name.",
+        memberColumns:
+          "`Members` and `All Specs` show `file.name`, `title`, `specKind`, `statedReadiness`, `derivedReadiness`, `statedNextRung`, `statedNextRungFailures`, `formula.implementation`, `formula.verifier`, `designEntries`, `declarations`, `openQuestions` and `blockingQuestions`; the other views show `file.name`, `title` and the properties their clauses read.",
+        bindingFormulas:
+          '`implementation: \'if(implementationBinding, "present", "none")\'` and `verifier: \'if(verifierBinding, "present", "none")\'` under `formulas:` in every Base.',
+        columnNames:
+          "every Base names its columns under `properties:` with `displayName`, keyed `note.<property>` or `formula.<name>`: Title, Kind, Stated, Floor reached, Next rung, What holds it, Implementation binding, Verifier binding, Design entries, Declarations, Open questions, Blocking.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.bases.views-match-sources",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.bases.views-match-sources.sdp.md",
+    title: "Each standing view selects what its source selects",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the corpus Base, a Pack's Base and the closed clause grammar against the sources the views mirror, over one graph.",
+      },
+      behavior: {
+        examples: [
           {
-            question:
-              "Which standing queries become views, and how is each kept equal to the recipe it mirrors?",
-            blocking: true,
-            key: "standingViews",
-            decider: "owner",
-            provisional:
-              "corpus-wide views for build backlog, design backlog, Specs whose stated next rung has no failing clause, Specs with blocking questions, and decisions; tests compare the first two selections with recipes 1 and 33, the no-failing-clause selection with each Spec context's `statedNextRung` and `statedNextRungFailures`, blocking Specs with the deduplicated Spec ids in recipe 20's blocking rows, and decisions with recipe 31's ids, all over the same graph",
-          },
-          {
-            question:
-              "A Base sorts by property and keeps no authored order; how does a person read a Pack in its reading order?",
-            blocking: false,
-            key: "memberOrder",
-            provisional: "the Pack's note lists the members in order beside the embedded Base",
+            given: [
+              "a corpus holding a Pack of {members: 6} Specs, with a Spec in every standing view",
+            ],
+            when: ["the vault command writes the vault"],
+            then: [
+              "each standing view of the corpus Base selects the Specs its source selects: {viewsMatch: true}",
+              "the Pack's Base selects every member and nothing else: {packMatches: true}",
+              "every filter clause belongs to the closed grammar: {closedClauses: true}",
+            ],
           },
         ],
       },
-      behavior: {},
     },
     deliveryFacts: [],
   },
@@ -2614,11 +2948,11 @@ export const consumersSpecs = [
     id: "spec:consumers.obsidian-vault.iteration",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/consumers/obsidian-vault.iteration.sdp.md",
     title: "A design pass is followed and answered from the vault",
     narrative:
-      "A design pass is a loop: an agent edits carriers, the graph changes, a person reads the change and answers it. In a vault the reading half is cheap, because Obsidian reloads a note when its file changes, so a vault regenerated as the carriers change shows each edit where the person is already reading. The answering half must not become a second write path. A person who edits a generated note loses the edit at the next regeneration, and the edit model refuses patches to canonical source from a view. A person composes intent beside the generated notes instead, citing entries by their block links, and an agent turns it into a change proposal that the proposal check reads before the agent applies it.",
+      "A design pass is a loop: an agent edits carriers, the graph changes, a person reads the change and answers it. In a vault the reading half is cheap, because Obsidian reloads a note when its file changes, so a vault regenerated as the carriers change shows each edit where the person is already reading. Rewriting only the notes whose bytes changed keeps every other note, and the person's place in it, as it was.\n\nThe answering half must not become a second write path. The edit model refuses patches to canonical source from a view, and a person's edit to a generated note would never reach the carrier. So a regeneration refuses while a generated note has changed, and a person composes intent in notes of their own beside the generated ones, citing entries by their block links. An agent turns such a note into a change proposal, runs the proposal check, and applies the proposal as an ordinary edit, which git records and validation checks.",
     sections: {
       intent: {
         outcome:
@@ -2626,35 +2960,65 @@ export const consumersSpecs = [
         risks: [
           "Regenerating the vault while a person reads could move them off their place or overwrite a note they are editing.",
         ],
-        openQuestions: [
+      },
+      behavior: {
+        rules: [
+          "A person composes intent in notes outside the generated folder, by convention in `intent/` at the top of the vault, citing entries by block link or by entry address; the vault command never writes there.",
+          "An agent turns an intent note into a change proposal on the one proposal contract, runs the proposal check, and applies what the check allows as an ordinary carrier edit; git records the edit and validation checks it. The vault writes no carrier and no proposal.",
+          "`sdp vault --watch` runs once and then again after every create, change, delete or rename of a carrier or an anchored source file, a `.ts` or `.tsx` file other than a `.d.ts`, under the root, outside the directories discovery skips, the exclusions and the vault; it runs the loop `spec:consumers.validate-watch` states, so events during a run coalesce into one pending run, findings, refusals and failed extractions print while the process stays alive, and an operator's SIGINT exits 0.",
+          "The vault's watch never widens `sdp validate --watch`, which still runs on carrier edits only.",
+          "A regeneration under `--watch` writes only the notes whose bytes change and removes the notes whose node or entry left the graph, so a note a person is reading reloads in place and every other note keeps its bytes and modification time.",
+          "Every generated note opens with a banner naming the file to edit instead, and a regeneration that finds a generated note changed refuses as `spec:consumers.obsidian-vault#rule.guard` states, naming it, so a person's edit is never overwritten and the person moves those words into an intent note.",
+        ],
+        exampleSpace: {
+          given: ["a vault the vault command wrote from an extraction root and now watches"],
+          when: ["the title of {specId:string} changes in its carrier"],
+          then: [
+            "the note of that Spec shows the new title: {shown:boolean}",
+            "every note whose bytes the change leaves alone keeps its modification time: {othersUntouched:boolean}",
+            "the watch process stays alive and exits {exitCode:number} on SIGINT",
+          ],
+        },
+        ruleKeys: {
+          composeHome: "rules[0]",
+          handOff: "rules[1]",
+          watch: "rules[2]",
+          carriersOnlyForValidate: "rules[3]",
+          inPlace: "rules[4]",
+          editGuard: "rules[5]",
+        },
+        description:
+          "The world writes a probe corpus and starts the vault command with `--watch`, waits for the first run, edits one carrier, waits for the next run, records each generated file's bytes and modification time before and after, and stops the process with SIGINT.",
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.obsidian-vault.iteration.watch-rewrites-changed-notes",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/consumers/obsidian-vault.iteration.watch-rewrites-changed-notes.sdp.md",
+    title: "A carrier edit under watch rewrites only the notes it changes",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the vault's watch on one carrier edit and show that every note the edit leaves alone keeps its modification time.",
+      },
+      behavior: {
+        examples: [
           {
-            question: "Where does a person compose intent in the vault?",
-            blocking: true,
-            key: "composeHome",
-            decider: "owner",
-            links: ["spec:consumers.intent-composition.proposal"],
-            provisional:
-              "a folder of intent notes the generator never writes, each citing entries by block link, which an agent turns into a proposal and runs through the proposal check",
-          },
-          {
-            question: "What regenerates the vault while a pass runs?",
-            blocking: true,
-            key: "regenerationTrigger",
-            decider: "owner",
-            provisional:
-              "a separate vault watcher responds to carrier changes and source-anchor changes under the extraction root, replacing generated notes whose values changed and removing notes whose nodes or entries left the graph; it never extends `sdp validate --watch` to source edits",
-            links: ["spec:consumers.validate-watch"],
-          },
-          {
-            question: "How does the vault discourage editing a generated note?",
-            blocking: false,
-            key: "editGuard",
-            provisional:
-              "a read-only banner naming the carrier on every note, and a regeneration that reports any generated note changed since it last wrote it",
+            given: ["a vault the vault command wrote from an extraction root and now watches"],
+            when: ['the title of {specId: "spec:probe.member"} changes in its carrier'],
+            then: [
+              "the note of that Spec shows the new title: {shown: true}",
+              "every note whose bytes the change leaves alone keeps its modification time: {othersUntouched: true}",
+              "the watch process stays alive and exits {exitCode: 0} on SIGINT",
+            ],
           },
         ],
       },
-      behavior: {},
     },
     deliveryFacts: [],
   },

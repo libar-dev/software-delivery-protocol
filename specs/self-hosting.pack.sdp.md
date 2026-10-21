@@ -232,9 +232,17 @@ specs:
   - spec:consumers.reference-projection
   - spec:consumers.structural-mermaid
   - spec:consumers.obsidian-vault
+  - spec:consumers.obsidian-vault.fresh-vault
+  - spec:consumers.obsidian-vault.person-notes-survive
+  - spec:consumers.obsidian-vault.unknown-note-refused
+  - spec:consumers.obsidian-vault.changed-note-refused
   - spec:consumers.obsidian-vault.notes
+  - spec:consumers.obsidian-vault.notes.entry-address-link
+  - spec:consumers.obsidian-vault.notes.unresolved-mention-stays
   - spec:consumers.obsidian-vault.bases
+  - spec:consumers.obsidian-vault.bases.views-match-sources
   - spec:consumers.obsidian-vault.iteration
+  - spec:consumers.obsidian-vault.iteration.watch-rewrites-changed-notes
   - spec:consumers.readiness-planner
   - spec:consumers.upgrade-kit
   - spec:observation.runtime-overlay
@@ -282,6 +290,7 @@ specs:
   - spec:decisions.anchor-binding-grain
   - spec:decisions.architectural-annotation
   - spec:decisions.pack-design-page
+  - spec:decisions.vault-owned-folder
 modelRefs:
   - spec:model.core-model
 ---
