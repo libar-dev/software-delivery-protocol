@@ -164,18 +164,45 @@ and term addresses. Examples stay `defined` until a build binds them. The three 
 `spec:decisions.vault-owned-folder`, stay `defined` for the owner to ratify. Each new `ready`
 Spec reports an honest verifier gap until wave 2 binds it.
 
-## Rulings during wave 2b integration
+## Rulings after wave 2 and at close
+
+Wave 2 built thirteen lanes on GPT-6.1-Sol through Relay (R1, R23, D, BQ, K, G and S1; then V, U,
+S2, S3 and S4; then S5), each reviewed by Opus 5.5 and fixed with tests that failed first, and
+integrated in two passes, each reviewed by Opus and fixed. The close added the catalog, skills,
+vocabulary and bindings (X1), made CI's route green on a clean checkout (X0), and fixed four
+adversarial reviews (three Opus code areas, GPT-6-Astra on the design's honesty) in two lanes,
+each re-reviewed by Opus and fixed again, then a last verified pass. The records are
+`reviews/plan46-wave2a-integration.md`, `reviews/plan46-wave2b-integration.md`,
+`reviews/plan46-close-x1.md` and `reviews/plan46-x2b-rereview-fixes.md`. Two warts are recorded,
+not rewritten: the wave-2a merges from K to BQ do not typecheck, and four wave-2b merges fail two
+CLI tests the closing commit repaired; bisect from the merges either side of them.
 
 Made by the executing thread on the owner's delegation; each awaits the owner's review.
 
 | Ruling | Carrying entry |
 | --- | --- |
-| A second diagram view of one subject inserts the view's name in its text and arrow ids; the Spec page's realization drawing uses `.realization.text` and `.realization.arrow`. | `spec:consumers.spec-studio.diagrams#design.elementIds` |
-| The owner queue reads provisional readings from reader questions by Spec and key, using position for an unkeyed question; recipe 46 keeps its shape. | `spec:consumers.spec-studio.owner-queue#rule.ownerQuestions` |
-| `vault` and `stamp` join the other verbs in the help contract. | `spec:consumers.command-line#design.helpVerbs` |
-
-The merge chain, conflicts, tests and close measurements are recorded in
-`reviews/plan46-wave2b-integration.md`. Plan 46 remains executing.
+| A body's `g` in `sdp q`, rules files and `evaluateBody` is a plain reader over the graph; the Studio evaluates its recipes over the reader and report its build derived | `spec:consumers.agent-surface.evaluation-sink#rule.recipeCall`, `spec:consumers.spec-studio.data.recipe-answers` |
+| A non-integer recipe number is refused as not a recipe number | `spec:consumers.agent-surface.evaluation-sink#design.callRejections` |
+| Recipe 25 names an address by its text only when it holds a non-blank character, by its JSON text otherwise | `spec:consumers.agent-surface.address-and-cycle-recipes#design.addressFinding` |
+| When the part header alone exceeds the budget, the bundle names the header as its one oversized item | `spec:consumers.context-bundle` |
+| A second diagram view of one subject inserts the view's name in its ids | `spec:consumers.spec-studio.diagrams#design.elementIds` |
+| The owner queue reads provisional readings from reader questions by Spec and key; recipe 46 keeps its shape | `spec:consumers.spec-studio.owner-queue#rule.ownerQuestions` |
+| `vault` and `stamp` join the help contract | `spec:consumers.command-line#design.helpVerbs` |
+| The filter element's attribute is `data-filter`: "facet" is a rejected term | `spec:consumers.spec-studio.page-elements#design.filter` |
+| A composing action may scope to a Pack with its resolved members; the scenario editor shows its steps as text without script | `spec:consumers.spec-studio.components` |
+| A command refuses an input path the build could write or remove, an alias included, and compares paths by their native real path | `spec:consumers.spec-studio.data.inputs#rule.inputPlacement` |
+| The memo writes requests in fenced blocks and reasons as inline code, so no field can open HTML or forge structure | `spec:consumers.intent-composition.proposal.memo` |
+| A token an interpolation continues records no citation | `spec:extraction.entry-citations#rule.citationToken` |
+| Recipe 44 and the reader take the children the space contract collects | `spec:consumers.agent-surface.example-space-coverage#rule.eligibleChildren` |
+| Coined keys drop a possessive before splitting | `spec:consumers.upgrade-kit.rule-key-proposal#design.keyCoining` |
+| A proposal is applied per change: a change whose scope moved goes to a person and the rest apply; the check grants no approval | `spec:consumers.upgrade-kit.rule-key-proposal#rule.applyAfterCheck` |
+| The impact graph's own promise is the stance that inferred structure stays apart; symbol reach is its deferred child's | `spec:consumers.impact-graph` |
+| The build leaves an unchanged registrar sibling untouched, and the vault's watch ignores what the build writes | `spec:extraction.build-pipeline#rule.stagedPublication`, `spec:consumers.obsidian-vault.iteration#rule.watch` |
+| The vault keeps a Base a person changed, with a warning, and ignores `.DS_Store`; its iteration Spec promises only what the vault does | `spec:decisions.vault-owned-folder`, `spec:consumers.obsidian-vault.iteration` |
+| Sharing's stakeholder and agent conduct is narrative, not a promise | `spec:consumers.spec-studio.sharing` |
+| CI's gate checks the pull request's merge commit, and the preview records runs for and stamps that commit | `spec:consumers.spec-studio.sharing#rule.previewWorkflow` |
+| The package declares no Vitest peer: npm 10 crashes installing any package with an optional Vitest peer; the `./vitest` subpath's need is documented | `spec:consumers.adopter-on-ramp#rule.installGuidance` |
+| `edit-model` and `intent-composition` stay referenced: their open promises belong to the agent that applies a change | — |
 
 ## Rulings by the coordinating session during the close
 
