@@ -734,6 +734,7 @@ registerCoverageRow<TestsWorld>({
     });
     expect(w.page).toContain("verifier binding present: 1 verifiers, 1 enabled");
     expect(w.page).toContain("1 unkeyed rules");
+    expect(w.page).toContain('href="specs/probe.parent.html#panel.verification"');
   },
 });
 interface CoverageWorld {

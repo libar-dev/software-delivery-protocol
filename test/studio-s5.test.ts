@@ -38,6 +38,7 @@ import { schemaVersion } from "../src/graph/schema.js";
 import { readPublishedStudio, studioFilesEqual } from "../src/projections/studio/publish.js";
 import { studioDom } from "./helpers/studio-dom.js";
 import { parse as parseCss } from "postcss";
+import { scenarioTemplate } from "../src/projections/studio/pages/spec-verification.js";
 
 const assets = {
   script: fileURLToPath(new URL("../dist/studio/studio.js", import.meta.url)),
@@ -1171,3 +1172,35 @@ it("introduces studio before its watch option and gives recipe 49 a use case", a
     "*When you need this:*",
   );
 });
+
+it.each(["edit", "propose"] as const)(
+  "renders %s scenario steps outside inert templates without script",
+  (mode) => {
+    const steps = { given: ["a <cart>"], when: ["submit `cart`"], then: ["accepted", "recorded"] };
+    const spec = createReader({
+      schemaVersion,
+      nodes: [
+        {
+          nodeType: "Primitive",
+          id: "spec:probe.example",
+          claim: "declared",
+          specKind: "example",
+          altitude: "story",
+          readiness: "idea",
+          title: "Example",
+          file: "example.sdp.md",
+          sections: { behavior: mode === "edit" ? { examples: [steps] } : { exampleSpace: steps } },
+        },
+      ],
+      edges: [],
+    }).specContext("spec:probe.example");
+    if (!spec) throw new Error("Expected scenario subject.");
+    const markup = scenarioTemplate(spec, mode);
+    const visible = markup.replaceAll(/<template\b[^>]*>[\s\S]*?<\/template>/gu, "");
+    expect(visible).toContain("a &lt;cart&gt;");
+    expect(visible).toContain("submit `cart`");
+    expect(visible).toContain("accepted\nrecorded");
+    expect(visible).toContain("Composing needs the script.");
+    expect(markup).toContain(`<sdp-scenario-editor spec-id="spec:probe.example" mode="${mode}">`);
+  },
+);
