@@ -302,6 +302,11 @@ describe("entry citation extraction and reader", () => {
       { address: "spec:probe.one#design.$", file: "source.ts", line: 1 },
     ]);
   });
+  it("keeps a malformed literal before a separate template interpolation", () => {
+    expect(scanEntryCitations('test("spec:probe.one#design.$", `${key}`);', "source.ts")).toEqual([
+      { address: "spec:probe.one#design.$", file: "source.ts", line: 1 },
+    ]);
+  });
   it("removes trailing punctuation from a complete prefix before interpolation", () => {
     expect(
       scanEntryCitations("const title = `spec:probe.one#design.typeOne.${key}`;", "source.ts"),

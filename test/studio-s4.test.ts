@@ -970,7 +970,7 @@ it("preview still stamps and uploads rendered pages when evidence is absent and 
       EXCLUDE: "",
       SDP: sdp,
       DIFF: "false",
-      HEAD_SHA: "abc",
+      CORPUS_COMMIT: "abc",
       SOURCE_SERVER: "https://github.com",
       SOURCE_REPO: "owner/repo",
       RUNS_ARTIFACT: "missing",
@@ -983,6 +983,8 @@ it("preview still stamps and uploads rendered pages when evidence is absent and 
   expect(result.status, result.stderr).toBe(0);
   const args = readFileSync(calls, "utf8");
   expect(args).toContain("stamp");
+  expect(args).toContain("--commit abc");
+  expect(args).toContain("/blob/abc/");
   expect(args).not.toContain("--runs");
   expect(readFileSync(summary, "utf8")).toContain("validation");
 });

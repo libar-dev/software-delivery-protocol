@@ -106,6 +106,7 @@ describe("upgrade kit", () => {
     expect(guide).toContain("Send each change whose scope moved since the base to a person");
     expect(guide).toMatch(/ask an agent to apply the remaining changes/u);
     expect(guide).toContain("The recipes write no carriers and grant no approval.");
+    expect(guide).not.toMatch(/check is clear|only after/u);
   });
   it("names a carrying Spec in every guide section", () => {
     for (const section of guide.split(/^## /mu).slice(1)) {
