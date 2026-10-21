@@ -68,6 +68,7 @@ const commands = {
              Findings remain visible; exit code follows validate. --check-clean independently
              re-renders and refuses missing or drifted output. --base PATH reads the graph JSON from
              an earlier sdp build and adds the design diff; --base-label TEXT names that base.
+             Keep the base outside <root>/generated/; paths resolving inside it are refused.
              Pages open through file://.`,
   },
   generate: {

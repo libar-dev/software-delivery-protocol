@@ -3,7 +3,7 @@ import { specTest, testAnchorId, ref } from "@libar-dev/software-delivery-protoc
 import { specOracle, oracleAnchorId } from "@libar-dev/software-delivery-protocol";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { extract } from "../src/extract/index.js";
@@ -119,6 +119,9 @@ registerBlockingFirst<World<RegistersConditions>>({
     expect(html).toContain("deferral");
     expect(html).toContain("Provisional:");
     expect(html).toContain("Keep it.");
+    expect(html).toContain("1 blocking question.");
+    expect(html).toContain("1 non-blocking question.");
+    expect(html).toContain("1 deferral.");
     expect(html).not.toContain("<b>Links:</b> </span>");
     expect(html).toContain('href="specs/probe.zeta.html#question.choice"');
     expect(html).toContain('text="spec:probe.zeta#question.choice"');
@@ -181,6 +184,13 @@ registerDependencyFirst<World<OwnerQueueConditions>>({
     );
     expect(html).toContain("can be made now");
     expect(html).toContain("Round 1");
+    const filters = [...html.matchAll(/<sdp-filter>(.*?)<\/sdp-filter>/gsu)].map((m) => m[1]);
+    expect(filters).toHaveLength(2);
+    expect(filters[0]).toContain('data-facet="pack"');
+    expect(filters[0]).toContain('data-facet="floor"');
+    expect(filters[1]).toContain('data-facet="pack"');
+    expect(alpha).toContain('data-pack=""');
+    expect(alpha).toContain('data-floor="defined"');
   },
 });
 const diffOracle = specOracle({
@@ -338,6 +348,7 @@ describe("Studio register pages", () => {
     expect(declarations).toContain("no citation recorded");
     expect(declarations).toContain('href="specs/probe.model.html#design.limit"');
     expect(declarations).toContain('data-citation="recorded"');
+    expect(declarations).toContain("1 Spec pins declarations.");
     const decisions = main(content(result, "decisions.html"));
     for (const value of [
       "Supersedes",
@@ -348,13 +359,20 @@ describe("Studio register pages", () => {
       "Questions",
       "Replaces the older choice.",
       "Narrows the part.",
-      "superseded",
     ])
       expect(decisions).toContain(value);
+    const oldRow = required(
+      [...decisions.matchAll(/<section class="spec-row">(.*?)<\/section>/gsu)]
+        .map((m) => m[1])
+        .find((row) => row?.includes("<code>spec:probe.old</code>")),
+    );
+    expect(oldRow).toContain(" · superseded</p>");
+    expect(decisions).toContain("1 superseded decision.");
     const backlog = main(content(result, "backlog.html"));
     expect(backlog).toContain("impl:probe.use");
     expect(backlog).toContain("2 decisions left out");
     expect(backlog).toContain("2 entries, 2 declarations, 0 open, 0 blocking");
+    expect(backlog).toContain("1 Spec in the design backlog.");
   });
   it("reaches each page in order, marks it current and omits every diff reference without a base", async () => {
     const result = await pages(corpus({}));
@@ -398,6 +416,125 @@ describe("Studio register pages", () => {
 });
 
 describe("Studio base comparison", () => {
+  it.each(["graph", "nested", "file alias", "root alias", "input alias"])(
+    "refuses a base in generated output before writing through %s",
+    async (variant) => {
+      const root = corpus({ "a.sdp.md": carrier("spec:probe.alpha", "", "{}", "idea") });
+      const capture = createCaptureOutput();
+      expect(await runSdpCli(["build", root], capture.output)).toBe(0);
+      const graph = join(root, "generated/graph.json");
+      const bytes = readFileSync(graph);
+      mkdirSync(join(root, "generated/spec-studio"));
+      const outside = corpus({});
+      let base = graph;
+      let commandRoot = root;
+      if (variant === "nested") {
+        base = join(root, "generated/spec-studio/base.json");
+        writeFileSync(base, bytes);
+      } else if (variant === "file alias") {
+        base = join(outside, "base.json");
+        symlinkSync(graph, base);
+      } else if (variant === "root alias") {
+        commandRoot = join(outside, "root");
+        symlinkSync(root, commandRoot);
+      } else if (variant === "input alias") {
+        const target = join(outside, "base.json");
+        writeFileSync(target, bytes);
+        base = join(root, "generated/spec-studio/base.json");
+        symlinkSync(target, base);
+      }
+      const sentinel = join(root, "generated/spec-studio/diff.html");
+      writeFileSync(sentinel, "Prior publication");
+      writeFileSync(
+        join(root, "a.sdp.md"),
+        carrier("spec:probe.alpha", "\n## Design\n- limit: Changed.\n", "{}", "idea"),
+      );
+      const assets = { script: join(root, "fixture.js"), stylesheet: join(root, "fixture.css") };
+      writeFileSync(assets.script, "");
+      writeFileSync(assets.stylesheet, "");
+      for (const flags of [[], ["--check-clean"]]) {
+        const refusal = createCaptureOutput();
+        expect(
+          await runSdpCli(["studio", commandRoot, "--base", base, ...flags], refusal.output, {
+            studioAssets: assets,
+          }),
+        ).toBe(1);
+        expect(refusal.readStderr().trim().split("\n")).toHaveLength(1);
+        expect(refusal.readStderr()).toContain("--base");
+        expect(refusal.readStderr()).toContain(base);
+        expect(readFileSync(base)).toEqual(bytes);
+        expect(readFileSync(graph)).toEqual(bytes);
+        expect(readFileSync(sentinel, "utf8")).toBe("Prior publication");
+      }
+    },
+  );
+  it("renders only existing sides for added and removed entries and one value for moved entries", async () => {
+    const root = corpus({
+      "a.sdp.md": carrier(
+        "spec:probe.alpha",
+        "\n## Design\n- limit: before\n- gone: old entry\n- first: first value\n- second: second value\n",
+        "{}",
+        "idea",
+      ),
+    });
+    const base = extract({ root }).graph;
+    writeFileSync(
+      join(root, "a.sdp.md"),
+      carrier(
+        "spec:probe.alpha",
+        "\n## Design\n- limit: after\n- fresh: null\n- second: second value\n- first: first value\n",
+        "{}",
+        "idea",
+      ),
+    );
+    const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+      base: { graph: base, label: null },
+      runs: [],
+    });
+    const diff = main(content(renderStudio(data), "diff.html"));
+    const entry = (key: string) =>
+      required(
+        [...diff.matchAll(/<div class="entry">(.*?)<\/div>/gsu)]
+          .map((m) => m[1])
+          .find((row) => row?.includes(`<code>design.${key}</code>`)),
+      );
+    expect(entry("limit")).toContain("<b>Base</b><pre>before</pre><b>Now</b><pre>after</pre>");
+    expect(entry("fresh")).toContain("<b>Now</b><pre>null</pre>");
+    expect(entry("fresh")).not.toContain("<b>Base</b>");
+    expect(entry("gone")).toContain("<b>Base</b><pre>old entry</pre>");
+    expect(entry("gone")).not.toContain("<b>Now</b>");
+    expect(entry("first")).toContain("moved");
+    expect([...entry("first").matchAll(/<pre>/gu)]).toHaveLength(1);
+  });
+  it.each(["invalid graph", "different schema"])(
+    "shows per-Pack diagnostics without no-change claims for %s",
+    async (variant) => {
+      const root = corpus({
+        "a.sdp.md": carrier("spec:probe.alpha", "", "{}", "idea"),
+        "p.pack.sdp.md": "---\nid: pack:probe\nspecs: [spec:probe.alpha]\n---\n# Probe\n",
+      });
+      const graph = extract({ root }).graph;
+      const base =
+        variant === "invalid graph" ? { nodes: "oops" } : { ...graph, schemaVersion: "0.9.0" };
+      const data = await createStudioData(createReader(graph), undefined, {
+        base: { graph: base, label: "First pass" },
+        runs: [],
+      });
+      const pack = main(content(renderStudio(data), "packs/probe.html"));
+      const changes = required(
+        /<section id="changed-since-base">(.*?)<\/section>/su.exec(pack)?.[1],
+      );
+      expect(changes).toContain("First pass");
+      expect(changes).toContain("Diagnostics");
+      expect(changes).toContain(
+        variant === "invalid graph"
+          ? "Supply the graph written at the base commit."
+          : "schemaVersion",
+      );
+      expect(changes).not.toContain("No membership or order change.");
+      expect(changes).not.toContain("<p>None.</p>");
+    },
+  );
   it("keeps additions, removals, Pack order and anchor bindings apart and escapes compared values", async () => {
     const root = corpus({
       "a.sdp.md": carrier(
@@ -434,11 +571,11 @@ describe("Studio base comparison", () => {
     const first = renderStudio(data);
     expect(renderStudio(await createStudioData(reader, undefined, inputs))).toEqual(first);
     const diff = main(content(first, "diff.html"));
-    expect(diff).toContain("1 Specs added.");
-    expect(diff).toContain("1 Specs removed.");
-    expect(diff).toContain("1 Specs changed.");
-    expect(diff).toContain("1 Packs with membership or order changes.");
-    expect(diff).toContain("1 Specs with binding changes.");
+    expect(diff).toContain("1 Spec added.");
+    expect(diff).toContain("1 Spec removed.");
+    expect(diff).toContain("1 Spec changed.");
+    expect(diff).toContain("1 Pack with membership or order changes.");
+    expect(diff).toContain("1 Spec with binding changes.");
     expect(diff).toContain("&lt;script&gt;before&lt;/script&gt;");
     expect(diff).not.toContain("<script>");
     expect(diff).not.toContain('href="specs/probe.removed.html"');
@@ -522,9 +659,9 @@ describe("Studio base comparison", () => {
     const queue = main(content(await pages(root), "queue.html"));
     expect(queue).toContain("2 statements in round 1");
     expect(queue).toContain("0 statements rest on no waiting Spec");
-    expect(queue).toContain("1 dependency cycles");
+    expect(queue).toContain("1 dependency cycle.");
     expect(queue).toContain("1 blocking and 0 non-blocking owner questions");
-    expect(queue).toContain("1 questions have no decider");
+    expect(queue).toContain("1 question has no decider");
     expect(queue).toContain('href="specs/probe.question.html#question.choice"');
     expect(queue).toContain("holds <a");
   });
@@ -543,5 +680,79 @@ describe("Studio base comparison", () => {
     expect(page).toContain('href="#letter.other"');
     expect(page.indexOf('data-term="Alpha"')).toBeLessThan(page.indexOf('data-term="zeta"'));
     expect(page).toContain("A <code>z</code>.");
+    expect(page).toContain("3 terms defined by 1 Spec.");
+  });
+  it("orders queue floor options by rung and carries the Pack and floor on each row", async () => {
+    const root = corpus({
+      "scoped.sdp.md": carrier(
+        "spec:probe.scoped",
+        "\n### Open questions\n- [blocking #choice] Which choice?\n  - decider: owner\n\n## Behavior\n- rule: Scoped.\n",
+        "\n  dependsOn: spec:probe.defined",
+        "idea",
+      ),
+      "defined.sdp.md": carrier(
+        "spec:probe.defined",
+        "\n## Behavior\n- rule: Defined.\n",
+        "\n  dependsOn: spec:probe.scoped",
+        "idea",
+      ),
+      "ready.sdp.md": carrier(
+        "spec:probe.ready",
+        "\n## Behavior\n- rule: Ready.\n",
+        "\n  dependsOn: spec:probe.settled",
+        "idea",
+      ),
+      "settled.sdp.md": carrier(
+        "spec:probe.settled",
+        "\n## Behavior\n- rule: Settled.\n",
+        "\n  dependsOn: spec:probe.defined",
+        "defined",
+      ),
+      "p.pack.sdp.md":
+        "---\nid: pack:probe\nspecs: [spec:probe.scoped, spec:probe.defined, spec:probe.ready]\n---\n# Probe\n",
+    });
+    const queue = main(content(await pages(root), "queue.html"));
+    const floor = required(/<select data-facet="floor">(.*?)<\/select>/su.exec(queue)?.[1]);
+    expect([...floor.matchAll(/<option value="([^"]+)"/gu)].map((m) => m[1])).toEqual([
+      "any",
+      "scoped",
+      "defined",
+      "ready",
+    ]);
+    for (const rung of ["scoped", "defined", "ready"]) {
+      const row =
+        required(queue.split(`data-statement="spec:probe.${rung}"`)[1]).split("</li>")[0] ?? "";
+      expect(row).toContain('data-pack="pack:probe"');
+      expect(row).toContain(`data-floor="${rung}"`);
+    }
+    const questions = required(queue.split("<h2>Owner questions</h2>")[1]);
+    expect(questions).toContain('data-row data-pack="pack:probe"');
+  });
+  it("uses authored term keys and orders duplicate terms by Spec id", async () => {
+    const root = corpus({
+      "a.sdp.md": carrier(
+        "spec:probe.zeta",
+        "\n## Model\n- **order** — The zeta definition.\n",
+        "{}",
+        "idea",
+        "model",
+      ),
+      "z.sdp.md": carrier(
+        "spec:probe.alpha",
+        "\n## Model\n- **order** — [#purchase] The alpha definition.\n",
+        "{}",
+        "idea",
+        "model",
+      ),
+    });
+    const result = await pages(root);
+    const page = main(content(result, "glossary.html"));
+    expect(page).toContain('href="specs/probe.alpha.html#term.purchase"');
+    expect(page).toContain('text="spec:probe.alpha#term.purchase"');
+    expect(page).not.toContain("#term.order");
+    expect(page.indexOf("The alpha definition.")).toBeLessThan(
+      page.indexOf("The zeta definition."),
+    );
+    expect(main(content(result, "specs/probe.alpha.html"))).toContain('id="term.purchase"');
   });
 });

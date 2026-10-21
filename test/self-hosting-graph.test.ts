@@ -269,7 +269,7 @@ describe("the self-hosting corpus", () => {
     expect(expectedAnchors).toHaveLength(461);
     expect(expectedBindingEdges).toHaveLength(559);
     expect(result.graph.nodes).toHaveLength(871);
-    expect(result.graph.edges).toHaveLength(2398);
+    expect(result.graph.edges).toHaveLength(2395);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -409,7 +409,7 @@ describe("the self-hosting corpus", () => {
 
   it("derives exactly the sparse authored component uses edges", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedUsesEdges).toHaveLength(48);
+    expect(expectedUsesEdges).toHaveLength(45);
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "uses")

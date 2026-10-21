@@ -2,7 +2,7 @@ import { frame } from "./frame.js";
 import { copy, escape, link } from "./html.js";
 import type { PageContext } from "./html.js";
 import { codeSpans } from "./text.js";
-import { titleLink } from "./register-common.js";
+import { titleLink, total } from "./register-common.js";
 
 /**
  * @sdpAnchor impl:protocol.studio-glossary
@@ -34,7 +34,7 @@ export function glossaryPage(ctx: PageContext): string {
   return frame(
     ctx,
     "Glossary",
-    `<header class="page-head"><h1>Glossary</h1><p>${String(terms.length)} terms defined by ${String(new Set(terms.map((t) => t.spec)).size)} Specs.</p><nav aria-label="Term letters">${letters.map((l) => `<a href="#${escape(letterId(l))}">${escape(l)}</a>`).join(" · ")}</nav></header>${
+    `<header class="page-head"><h1>Glossary</h1><p>${total(terms.length, "term")} defined by ${total(new Set(terms.map((t) => t.spec)).size, "Spec")}.</p><nav aria-label="Term letters">${letters.map((l) => `<a href="#${escape(letterId(l))}">${escape(l)}</a>`).join(" · ")}</nav></header>${
       letters
         .map(
           (letter) =>

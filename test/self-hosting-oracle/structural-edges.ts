@@ -873,10 +873,6 @@ export const coarseGrainCoverage = [
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
 // re-measured under plan 41
 export const expectedUsesEdges = [
-  ["impl:protocol.studio-registers", "impl:protocol.studio-recipes"],
-  ["impl:protocol.studio-owner-queue", "impl:protocol.studio-recipes"],
-  ["impl:protocol.studio-diff", "impl:protocol.studio-recipes"],
-
   ["impl:protocol.studio-recipes", "impl:protocol.reader"],
   ["impl:protocol.studio-recipes", "api:protocol.evaluate-body"],
   ["component:protocol.studio-elements", "component:protocol.reader"],

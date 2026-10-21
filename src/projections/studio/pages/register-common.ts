@@ -9,16 +9,23 @@ export function titleLink(ctx: PageContext, id: string): string {
 export function summary(lines: readonly string[]): string {
   return `<ul class="summary">${lines.map((line) => `<li>${line}</li>`).join("")}</ul>`;
 }
+export const total = (n: number, singular: string, plural = `${singular}s`): string =>
+  `${String(n)} ${n === 1 ? singular : plural}`;
 export function filterBar(
-  facets: Readonly<Record<string, { readonly label: string; readonly values: readonly string[] }>>,
+  facets: Readonly<
+    Record<
+      string,
+      { readonly label: string; readonly values: readonly string[]; readonly ordered?: boolean }
+    >
+  >,
 ): string {
   return `<form hidden class="filter-bar">${Object.entries(facets)
     .map(
       ([key, facet]) =>
-        `<label>${escape(facet.label)}<select data-facet="${escape(key)}"><option value="any">Any</option>${[
-          ...new Set(facet.values),
-        ]
-          .sort()
+        `<label>${escape(facet.label)}<select data-facet="${escape(key)}"><option value="any">Any</option>${(facet.ordered
+          ? [...new Set(facet.values)]
+          : [...new Set(facet.values)].sort()
+        )
           .map((value) => `<option value="${escape(value)}">${escape(value)}</option>`)
           .join("")}</select></label>`,
     )
