@@ -66,7 +66,10 @@ describe("help before argument parsing", () => {
     expect(capture.readStdout().startsWith("Usage:\n")).toBe(true);
     const [usage = "", description = ""] = (verbHelpText(command) ?? "").split("\n\n");
     expect(SDP_HELP_TEXT).toContain(usage.replace("Usage:\n", ""));
-    expect(SDP_HELP_TEXT).toContain(description);
+    expect(description.trim()).not.toBe("");
+    const name = command === "new" ? "new spec" : command;
+    expect(SDP_HELP_TEXT).toContain(`  ${name.padEnd(11)}${description.trimStart()}`);
+    expect(description.split("\n").every((line) => line.startsWith(" ".repeat(13)))).toBe(true);
     expect(derive).not.toHaveBeenCalled();
     expect(read).not.toHaveBeenCalled();
     expect(existsSync(join(root, "generated"))).toBe(false);
@@ -78,6 +81,9 @@ describe("help before argument parsing", () => {
     expect(await runSdpCli(["new", "spec", "--help"], second.output)).toBe(0);
     expect(first.readStdout()).toBe(second.readStdout());
     expect(first.readStdout()).toContain("PATH is cwd-relative");
+    expect(first.readStdout().match(/Scaffold an honest idea-rung Markdown Spec/gu)).toHaveLength(
+      1,
+    );
     expect(SDP_HELP_TEXT).toContain("docs/agent-surface/upgrade-guide.md");
   });
 });
@@ -197,6 +203,9 @@ describe("one-build generation", () => {
         renderDesignReview: render,
       }),
     ).toBe(1);
+    expect(capture.readStderr()).toContain(
+      "sdp generate --check-clean: two independent renders diverged",
+    );
     expect(existsSync(join(root, "generated", "design-review"))).toBe(false);
     expect(roots.slice(1).every((name) => existsSync(join(root, "generated", name)))).toBe(true);
   });
@@ -214,6 +223,8 @@ describe("one-build generation", () => {
       expect(roots.filter((name) => existsSync(join(root, "generated", name)))).toEqual(
         roots.filter((name) => name !== missing),
       );
+      expect(capture.readStderr()).toContain("sdp generate --check-clean:");
+      expect(capture.readStderr()).not.toMatch(/^sdp (?:census|mermaid|gherkin|studio) /mu);
     },
   );
   it.each([

@@ -29,7 +29,7 @@ import { verbHelpTouchesNothingContract } from "../generated/contracts/consumers
 import { registerGenerateWritesEveryRoot } from "./consumers.command-line.generate-writes-every-root.test.generated.js";
 import { registerGenerateCheckFailure } from "./consumers.command-line.generate-check-failure.test.generated.js";
 import { registerVerbHelpTouchesNothing } from "./consumers.command-line.verb-help-touches-nothing.test.generated.js";
-import { runSdpCli } from "../src/cli/sdp.js";
+import { runSdpCli, SDP_HELP_TEXT } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { writeProbeCorpus } from "./helpers/probe-corpus.js";
 
@@ -145,7 +145,13 @@ const adapters = (contract: Contract) => ({
         absentRoots: absent.join(", "),
         firstLine: help ? (capture.readStdout().split("\n")[0] ?? "") : "",
       };
-      if (help) expect(capture.readStdout()).toContain("sdp view [root]");
+      if (help) {
+        const paragraph = /^ {2}view {7}(.+(?:\n {13}.+)*)/mu.exec(SDP_HELP_TEXT)?.[1];
+        expect(paragraph).toBeTruthy();
+        expect(capture.readStdout()).toBe(
+          `Usage:\n  sdp view [root] [--exclude PATH]... [--check-clean]\n\n             ${paragraph ?? ""}\n`,
+        );
+      }
       if (!help) expect(capture.readStdout().match(/^validate:/gmu)).toHaveLength(1);
       if (check) expect(capture.readStderr()).toContain("generated census differs");
     } finally {

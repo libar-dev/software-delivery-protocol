@@ -125,6 +125,12 @@ function requiredFlags(
 }
 
 describe("sdp new spec", () => {
+  it("leaves help to the command dispatcher and parses only scaffold arguments", () => {
+    const capture = createCaptureOutput();
+    expect(parseNewSpecArgs(["--help"], capture.output)).toBeUndefined();
+    expect(capture.readStdout()).toBe("");
+    expect(capture.readStderr()).toContain("unknown option --help");
+  });
   it("documents the scaffolder on the public help surface", () => {
     const capture = createCaptureOutput();
 

@@ -44,11 +44,11 @@ export function runGenerate(
   // Preparation captures every prior tree before runBuild invalidates the five roots.
   const publishers = [
     (validated: Parameters<typeof publishDesignReview>[0]) =>
-      publishDesignReview(validated, parsed, output, hooks),
-    prepareCensusPublication(parsed, output, hooks),
-    prepareMermaidPublication(parsed, output, hooks),
-    prepareGherkinPublication(parsed, output, hooks),
-    prepareStudioPublication(parsed, output, hooks),
+      publishDesignReview(validated, parsed, output, hooks, "generate"),
+    prepareCensusPublication(parsed, output, hooks, "generate"),
+    prepareMermaidPublication(parsed, output, hooks, "generate"),
+    prepareGherkinPublication(parsed, output, hooks, "generate"),
+    prepareStudioPublication(parsed, output, hooks, "generate"),
   ];
   const validated = runValidate(parsed, output, "generate", hooks);
   if (validated.graph === undefined) return 1;

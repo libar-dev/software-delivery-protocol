@@ -77,6 +77,7 @@ export function prepareCensusPublication(
   parsed: BuildArgs,
   output: CliOutput,
   hooks: CensusHooks,
+  command = "census",
 ): ((validated: BuildOutcome) => number) | undefined {
   const render = hooks.renderCensus ?? renderCensus;
   const recoveryRm = hooks.rmSync ?? rmSync;
@@ -88,20 +89,23 @@ export function prepareCensusPublication(
     publishedBeforeBuild = parsed.checkClean ? readPublishedPages(censusPath) : undefined;
   } catch (error) {
     const detail = error instanceof Error ? error.message : errorMessage(error);
-    writeStderr(output, `sdp census --check-clean: cannot read generated census (${detail}).\n`);
-    removeArtifacts([censusPath, temporaryPath], output, "census", recoveryRm);
+    writeStderr(
+      output,
+      `sdp ${command} --check-clean: cannot read generated census (${detail}).\n`,
+    );
+    removeArtifacts([censusPath, temporaryPath], output, command, recoveryRm);
     return undefined;
   }
 
   return (validate) => {
     if (validate.graph === undefined) {
-      removeArtifacts([censusPath, temporaryPath], output, "census", recoveryRm);
+      removeArtifacts([censusPath, temporaryPath], output, command, recoveryRm);
       return validate.exitCode;
     }
 
     const failCensus = (message: string): number => {
       writeStderr(output, message);
-      removeArtifacts([censusPath, temporaryPath], output, "census", recoveryRm);
+      removeArtifacts([censusPath, temporaryPath], output, command, recoveryRm);
       return 1;
     };
 
@@ -113,13 +117,13 @@ export function prepareCensusPublication(
 
         if (!pagesEqual(second, pages)) {
           return failCensus(
-            "sdp census --check-clean: two independent renders diverged — the census is not deterministic.\n",
+            `sdp ${command} --check-clean: two independent renders diverged — the census is not deterministic.\n`,
           );
         }
 
         if (publishedBeforeBuild === undefined || !pagesEqual(publishedBeforeBuild, pages)) {
           return failCensus(
-            "sdp census --check-clean: generated census differs from the current projection.\n",
+            `sdp ${command} --check-clean: generated census differs from the current projection.\n`,
           );
         }
       }
@@ -138,7 +142,7 @@ export function prepareCensusPublication(
       return validate.exitCode;
     } catch (error) {
       const detail = error instanceof Error ? error.message : errorMessage(error);
-      return failCensus(`sdp census: ${detail}\n`);
+      return failCensus(`sdp ${command}: ${detail}\n`);
     }
   };
 }

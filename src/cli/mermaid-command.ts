@@ -93,6 +93,7 @@ export function prepareMermaidPublication(
   parsed: BuildArgs,
   output: CliOutput,
   hooks: MermaidHooks,
+  command = "mermaid",
 ): ((validated: BuildOutcome) => number) | undefined {
   const render: MermaidRenderer = hooks.renderMermaid ?? renderMermaid;
   const recoveryRm = hooks.rmSync ?? rmSync;
@@ -104,20 +105,23 @@ export function prepareMermaidPublication(
     publishedBeforeBuild = parsed.checkClean ? readPublishedPages(mermaidPath) : undefined;
   } catch (error) {
     const detail = error instanceof Error ? error.message : errorMessage(error);
-    writeStderr(output, `sdp mermaid --check-clean: cannot read generated Mermaid (${detail}).\n`);
-    removeArtifacts([mermaidPath, temporaryPath], output, "mermaid", recoveryRm);
+    writeStderr(
+      output,
+      `sdp ${command} --check-clean: cannot read generated Mermaid (${detail}).\n`,
+    );
+    removeArtifacts([mermaidPath, temporaryPath], output, command, recoveryRm);
     return undefined;
   }
 
   return (validate) => {
     if (validate.graph === undefined) {
-      removeArtifacts([mermaidPath, temporaryPath], output, "mermaid", recoveryRm);
+      removeArtifacts([mermaidPath, temporaryPath], output, command, recoveryRm);
       return validate.exitCode;
     }
 
     const failMermaid = (message: string): number => {
       writeStderr(output, message);
-      removeArtifacts([mermaidPath, temporaryPath], output, "mermaid", recoveryRm);
+      removeArtifacts([mermaidPath, temporaryPath], output, command, recoveryRm);
       return 1;
     };
 
@@ -129,13 +133,13 @@ export function prepareMermaidPublication(
 
         if (!pagesEqual(second, pages)) {
           return failMermaid(
-            "sdp mermaid --check-clean: two independent renders diverged — Mermaid is not deterministic.\n",
+            `sdp ${command} --check-clean: two independent renders diverged — Mermaid is not deterministic.\n`,
           );
         }
 
         if (publishedBeforeBuild === undefined || !pagesEqual(publishedBeforeBuild, pages)) {
           return failMermaid(
-            "sdp mermaid --check-clean: generated Mermaid differs from the current projection.\n",
+            `sdp ${command} --check-clean: generated Mermaid differs from the current projection.\n`,
           );
         }
       }
@@ -154,7 +158,7 @@ export function prepareMermaidPublication(
       return validate.exitCode;
     } catch (error) {
       const detail = error instanceof Error ? error.message : errorMessage(error);
-      return failMermaid(`sdp mermaid: ${detail}\n`);
+      return failMermaid(`sdp ${command}: ${detail}\n`);
     }
   };
 }

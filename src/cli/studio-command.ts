@@ -31,25 +31,26 @@ export function prepareStudioPublication(
   parsed: BuildArgs,
   output: CliOutput,
   hooks: StudioHooks = {},
+  command = "studio",
 ): ((validated: BuildOutcome) => number) | undefined {
   const studioPath = join(parsed.root, "generated", "spec-studio");
   const temporaryPath = `${studioPath}.tmp`;
   const recoveryRm = hooks.rmSync ?? rmSync;
   const fail = (message: string): number => {
     writeStderr(output, message);
-    removeArtifacts([studioPath, temporaryPath], output, "studio", recoveryRm);
+    removeArtifacts([studioPath, temporaryPath], output, command, recoveryRm);
     return 1;
   };
   let prior: readonly StudioFile[] | undefined;
   try {
     if (parsed.checkClean) prior = readPublishedStudio(studioPath);
   } catch (error) {
-    fail(`sdp studio --check-clean: cannot read generated Studio (${errorMessage(error)}).\n`);
+    fail(`sdp ${command} --check-clean: cannot read generated Studio (${errorMessage(error)}).\n`);
     return undefined;
   }
   return (validated) => {
     if (validated.graph === undefined) {
-      removeArtifacts([studioPath, temporaryPath], output, "studio", recoveryRm);
+      removeArtifacts([studioPath, temporaryPath], output, command, recoveryRm);
       return validated.exitCode;
     }
     try {
@@ -62,17 +63,17 @@ export function prepareStudioPublication(
       if (parsed.checkClean) {
         const twin = studioFiles(render(createStudioData(createReader(validated.graph))), assets);
         if (!studioFilesEqual(files, twin))
-          return fail("sdp studio --check-clean: two independent renders diverged.\n");
+          return fail(`sdp ${command} --check-clean: two independent renders diverged.\n`);
         if (prior === undefined || !studioFilesEqual(prior, files))
           return fail(
-            "sdp studio --check-clean: generated Studio differs from the current projection.\n",
+            `sdp ${command} --check-clean: generated Studio differs from the current projection.\n`,
           );
       }
       publishStudio(studioPath, files);
       writeStdout(output, `Wrote ${studioPath} (${String(files.length)} files)\n`);
       return validated.exitCode;
     } catch (error) {
-      return fail(`sdp studio: ${errorMessage(error)}\n`);
+      return fail(`sdp ${command}: ${errorMessage(error)}\n`);
     }
   };
 }

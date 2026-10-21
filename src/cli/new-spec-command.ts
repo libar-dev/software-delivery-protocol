@@ -12,7 +12,6 @@ import type { SpecAltitude, SpecKind } from "../model/descriptors.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
 
-import { NEW_SPEC_HELP_TEXT } from "./help.js";
 export { NEW_SPEC_HELP_TEXT } from "./help.js";
 
 const requiredFlags = ["--id", "--kind", "--altitude", "--title", "--outcome"] as const;
@@ -72,11 +71,6 @@ export function parseNewSpecArgs(
   args: readonly string[],
   output: CliOutput,
 ): NewSpecArgs | undefined {
-  if (args.includes("--help")) {
-    writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
-    return undefined;
-  }
-
   let path: string | undefined;
   const values: Partial<Record<(typeof requiredFlags)[number], string>> = {};
 

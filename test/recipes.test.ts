@@ -503,9 +503,9 @@ describe("the agent-surface recipe corpus", () => {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    // Wave-2 recipes use pre-assigned numbers with gaps; integration owns their skill teaching.
+    // Integration owns teaching recipe 50. Later recipes must still name their task here.
     for (const { ordinal } of recipes.filter(
-      (recipe) => recipe.ordinal >= 12 && recipe.ordinal <= 43,
+      (recipe) => recipe.ordinal >= 12 && recipe.ordinal !== 50,
     )) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }

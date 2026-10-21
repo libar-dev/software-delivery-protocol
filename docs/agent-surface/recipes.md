@@ -4160,6 +4160,8 @@ counts realized designs with neither differences nor unreadable fields. The law 
 
 ## 50. External registers
 
+*When you need this:* Check the outside register tokens a corpus cites, or find held tokens no Spec cites.
+
 Check a corpus's prose tokens against its own JSON register. Pass the file as
 `--params register=@PATH`, bound to `params.register`, and a JavaScript regular-expression source as `params.pattern`.
 The register has a `tokens` array of strings or `{ token, retired }` objects; other columns are
@@ -4192,12 +4194,12 @@ if (!record(register) || !Array.isArray(register.tokens)) {
   for (const [index, item] of register.tokens.entries()) {
     const token = typeof item === "string" ? item : record(item) ? item.token : undefined;
     if (typeof token !== "string" || token.trim() === "" ||
-        (typeof item !== "string" && typeof item.retired !== "boolean")) {
-      diagnose("register", `tokens[${index}] must be a non-empty string or a token and retired boolean`);
+        (typeof item !== "string" && item.retired !== undefined && typeof item.retired !== "boolean")) {
+      diagnose("register", `tokens[${index}] must be a non-empty string or a token with an optional retired boolean`);
       continue;
     }
     if (held.has(token)) diagnose("register", `token ${token} is listed twice`);
-    held.set(token, typeof item === "string" ? false : item.retired);
+    held.set(token, typeof item !== "string" && item.retired === true);
   }
 }
 let pattern;
@@ -4244,8 +4246,8 @@ for (const spec of specs) {
       ? `question[${question[1]}]${question[2] && question[2] !== "question" ? "." + question[2] : ""}`
       : section === "behavior" && rule !== null
         ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]`
-        : (section === "design" || section === "ui") && topKey !== null
-          ? `${section}.${topKey}` : path;
+        : section === "design" || section === "ui"
+          ? entry === topKey ? path : undefined : path;
     if (typeof value === "string") {
       const key = section === "behavior" ? Object.keys(ruleKeys).find((key) => ruleKeys[key] === entry)
         : section === "intent" ? questionKey(entry) : undefined;
@@ -4261,7 +4263,7 @@ for (const spec of specs) {
         if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(next)) continue;
         const nextTop = entry === null ? key : topKey;
         if (coined && !(entry === null && key === "description"))
-          add(`${section}.${next}`, key, (section === "design" || section === "ui") ? `${section}.${nextTop}` : `${section}.${next}`);
+          add(`${section}.${next}`, key, (section === "design" || section === "ui") && entry !== null ? undefined : `${section}.${next}`);
         walk(section, item, next, nextTop);
       }
     }
@@ -4278,9 +4280,9 @@ for (const spec of specs) {
   for (const text of texts) {
     for (const match of text.text.matchAll(pattern)) {
       const token = match[0];
-      if (token === "") { diagnose("pattern", "must not match the empty string"); continue; }
+      if (token === "") { diagnose("pattern", "must not match the empty string"); return { diagnostics }; }
       citations += 1;
-      const row = cited.get(token) ?? { token, held: held.has(token), retired: held.get(token) === true, citations: 0, specs: new Set() };
+      const row = cited.get(token) ?? { token, held: held.get(token) === false, retired: held.get(token) === true, citations: 0, specs: new Set() };
       row.citations += 1;
       row.specs.add(spec.id);
       cited.set(token, row);

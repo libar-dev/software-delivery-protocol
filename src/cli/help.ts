@@ -119,7 +119,7 @@ const commands = {
   },
 } as const;
 
-const scaffoldParagraph = `Scaffold an honest idea-rung Markdown Spec. PATH is cwd-relative and must end
+const scaffoldParagraph = `PATH is cwd-relative and must end
 in .sdp.md; parent directories are created as needed. The file is never
 overwritten. Readiness is always idea; relations are always empty. The kind's
 typed section is a bare heading with no invented content. constraint emits
@@ -129,7 +129,7 @@ envelope, title, and Intent only, with no twin section.`;
 export function verbHelpText(command: string): string | undefined {
   if (!Object.hasOwn(commands, command)) return undefined;
   const entry = commands[command as keyof typeof commands];
-  return `Usage:\n${entry.usage}\n\n${entry.paragraph}${command === "new" ? `\n\n${scaffoldParagraph}` : ""}`;
+  return `Usage:\n${entry.usage}\n\n             ${entry.paragraph}${command === "new" ? `\n\n${scaffoldParagraph}` : ""}`;
 }
 
 export const NEW_SPEC_HELP_TEXT = verbHelpText("new") ?? "";

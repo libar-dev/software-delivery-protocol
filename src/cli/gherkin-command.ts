@@ -77,6 +77,7 @@ export function prepareGherkinPublication(
   parsed: BuildArgs,
   output: CliOutput,
   hooks: GherkinViewHooks,
+  command = "gherkin",
 ): ((validated: BuildOutcome) => number) | undefined {
   const render = hooks.renderGherkinView ?? renderGherkinView;
   const recoveryRm = hooks.rmSync ?? rmSync;
@@ -90,21 +91,21 @@ export function prepareGherkinPublication(
     const detail = error instanceof Error ? error.message : errorMessage(error);
     writeStderr(
       output,
-      `sdp gherkin --check-clean: cannot read generated Gherkin view (${detail}).\n`,
+      `sdp ${command} --check-clean: cannot read generated Gherkin view (${detail}).\n`,
     );
-    removeArtifacts([viewPath, temporaryPath], output, "gherkin", recoveryRm);
+    removeArtifacts([viewPath, temporaryPath], output, command, recoveryRm);
     return undefined;
   }
 
   return (validate) => {
     if (validate.graph === undefined) {
-      removeArtifacts([viewPath, temporaryPath], output, "gherkin", recoveryRm);
+      removeArtifacts([viewPath, temporaryPath], output, command, recoveryRm);
       return validate.exitCode;
     }
 
     const failView = (message: string): number => {
       writeStderr(output, message);
-      removeArtifacts([viewPath, temporaryPath], output, "gherkin", recoveryRm);
+      removeArtifacts([viewPath, temporaryPath], output, command, recoveryRm);
       return 1;
     };
 
@@ -116,13 +117,13 @@ export function prepareGherkinPublication(
 
         if (!pagesEqual(second, pages)) {
           return failView(
-            "sdp gherkin --check-clean: two independent renders diverged — the Gherkin view is not deterministic.\n",
+            `sdp ${command} --check-clean: two independent renders diverged — the Gherkin view is not deterministic.\n`,
           );
         }
 
         if (publishedBeforeBuild === undefined || !pagesEqual(publishedBeforeBuild, pages)) {
           return failView(
-            "sdp gherkin --check-clean: generated Gherkin view differs from the current projection.\n",
+            `sdp ${command} --check-clean: generated Gherkin view differs from the current projection.\n`,
           );
         }
       }
@@ -141,7 +142,7 @@ export function prepareGherkinPublication(
       return validate.exitCode;
     } catch (error) {
       const detail = error instanceof Error ? error.message : errorMessage(error);
-      return failView(`sdp gherkin: ${detail}\n`);
+      return failView(`sdp ${command}: ${detail}\n`);
     }
   };
 }
