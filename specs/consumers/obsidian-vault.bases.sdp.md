@@ -19,9 +19,9 @@ A view is a filter over values the generator wrote from the reader, so it agrees
 - outcome: Give each Pack a Base of its members and the corpus a Base of standing queries, so a person filters and sorts a design by rung, floor, bindings and design columns.
 
 ## Behavior
-- rule: [#corpusBase] The corpus has one Base, `sdp/specs.base`, over every Spec note, whose views are the standing queries `spec:consumers.obsidian-vault.bases#design.standingViews` lists, embedded in the index note.
-- rule: [#packBase] Each Pack has a Base beside its note that selects the Spec notes whose `packs` property links the Pack, with the views `spec:consumers.obsidian-vault.bases#design.packViews` lists, embedded in the Pack's note.
-- rule: [#viewsMirrorSources] Each standing view selects, over one graph, exactly the Specs its source selects, as `spec:consumers.obsidian-vault.bases#design.viewSources` pairs them.
+- rule: [#corpusBase] A corpus Base the command writes, `sdp/specs.base`, is over every Spec note, with the standing views `spec:consumers.obsidian-vault.bases#design.standingViews` lists; the index embeds it.
+- rule: [#packBase] A Pack Base the command writes beside its note selects the Spec notes whose `packs` property links the Pack, with the views `spec:consumers.obsidian-vault.bases#design.packViews` lists; the Pack's note embeds it.
+- rule: [#viewsMirrorSources] Each standing view of a Base the command writes selects, over one graph, exactly the Specs its source selects, as `spec:consumers.obsidian-vault.bases#design.viewSources` pairs them.
 - rule: [#closedClauses] Every filter is an `and` list of clauses from the closed grammar `spec:consumers.obsidian-vault.bases#design.filterClauses` states, over properties the notes hold, so no view computes a join, a fact or a floor.
 - rule: [#bindingDisplay] A Base shows the two binding properties through formulas as present or none, under the column names Implementation binding and Verifier binding, never under a delivery-fact name.
 - rule: [#memberOrder] A Pack's note lists its members in manifest order beside its embedded Base, since a Base sorts by property and keeps no authored order.
