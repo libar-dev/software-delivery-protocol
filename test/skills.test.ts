@@ -70,6 +70,22 @@ function readSkill(path: string) {
   };
 }
 
+it("teaches the named-file exception to both carrier-watch descriptions", () => {
+  const { body } = readSkill(".agents/skills/sdp-authoring/SKILL.md");
+  const discovery = body.slice(
+    body.indexOf("The watcher ignores"),
+    body.indexOf("Events during a run"),
+  );
+  const anchors = body.slice(
+    body.indexOf("- `sdp validate --watch`"),
+    body.indexOf("The law is `spec:decisions.anchor-comment-form`"),
+  );
+  for (const paragraph of [discovery, anchors]) {
+    expect(paragraph).toContain("named rules and parameter files");
+    expect(paragraph).not.toContain("carrier edits only");
+  }
+});
+
 // A fence inside a numbered step is indented, so fences are matched after trimming.
 function shellFenceLines(body: string): readonly string[] {
   const lines: string[] = [];

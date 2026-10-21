@@ -489,6 +489,11 @@ function createNamedFileWatchSource(
   };
   const reconcile = () => {
     const directories = new Set<string>();
+    const requiredDirectories = new Set<string>();
+    const permissionDenied = (error: unknown) =>
+      error instanceof Error &&
+      "code" in error &&
+      (error.code === "EACCES" || error.code === "EPERM");
     for (const file of files) {
       try {
         targets.set(file, realpathSync(file));
@@ -499,11 +504,16 @@ function createNamedFileWatchSource(
     // Keep a symlink's last target while it is missing, so recreating it is still visible.
     for (const file of new Set([...files, ...targets.values()])) {
       let directory = dirname(file);
+      let foundParent = false;
       for (;;) {
         try {
-          if (lstatSync(directory).isDirectory()) directories.add(directory);
+          if (lstatSync(directory).isDirectory()) {
+            directories.add(directory);
+            if (!foundParent) requiredDirectories.add(directory);
+            foundParent = true;
+          }
         } catch (error) {
-          if (!isNotFoundError(error)) fail(error);
+          if (!isNotFoundError(error) && !(foundParent && permissionDenied(error))) fail(error);
         }
         const parent = dirname(directory);
         if (parent === directory) break;
@@ -535,10 +545,17 @@ function createNamedFileWatchSource(
           reconcile();
           for (const file of affected) listener?.({ type: "change", path: file });
         });
-        handle.on("error", fail);
+        handle.on("error", (error) => {
+          if (requiredDirectories.has(directory) || !permissionDenied(error)) fail(error);
+          else {
+            handle.close();
+            watchers.delete(directory);
+          }
+        });
         watchers.set(directory, handle);
       } catch (error) {
-        fail(error);
+        // A readable immediate parent covers file edits even when an ancestor cannot be watched.
+        if (requiredDirectories.has(directory) || !permissionDenied(error)) fail(error);
       }
     }
   };

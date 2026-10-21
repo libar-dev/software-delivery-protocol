@@ -64,8 +64,8 @@ runner.
    delete, or rename. Findings print and the process stays alive; operator stop (SIGINT) exits 0.
    `--watch` is validate-only and cannot combine with `--check-clean`. The watcher ignores
    `generated`, `dist`, `node_modules`, `coverage`, dot-directories, configured `--exclude` prefixes,
-   and non-carrier paths. Events during a run coalesce to one pending rerun. In this source
-   checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
+   and non-carrier paths, except named rules and parameter files. Events during a run coalesce to
+   one pending rerun. In this source checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
    not invent extra watch flags:
 
    ```sh
@@ -394,8 +394,8 @@ export async function rebuild(stream: string): Promise<void> {
 - The file is the binding grain of both forms. A block names no declaration, and the graph records
   no symbol, so keep a file's blocks together rather than writing one block above each
   declaration.
-- `sdp validate --watch` re-runs on carrier edits only, never on source edits. After editing an
-  anchor, run `sdp validate` or query the graph again.
+- `sdp validate --watch` re-runs on edits to carriers and named rules and parameter files,
+  never on source edits. After editing an anchor, run `sdp validate` or query the graph again.
 
 The law is `spec:decisions.anchor-comment-form`. The decorator form stays an unextracted
 representation and mints nothing.

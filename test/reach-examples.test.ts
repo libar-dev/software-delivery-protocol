@@ -23,12 +23,12 @@ import { paramsEditStartsACycleContract } from "../generated/contracts/validatio
 import { registerParamsEditStartsACycle } from "./validation.corpus-rules.params-edit-starts-a-cycle.test.generated.js";
 import { unreadableParamsFailOneFileContract } from "../generated/contracts/validation.corpus-rules.unreadable-params-fail-one-file.contract.js";
 import { registerUnreadableParamsFailOneFile } from "./validation.corpus-rules.unreadable-params-fail-one-file.test.generated.js";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
-import { expect } from "vitest";
+import { expect, it, onTestFinished } from "vitest";
 import { evaluateBody, extract } from "../src/index.js";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import type {
@@ -43,7 +43,6 @@ import type {
   CorpusRulesConditions,
   CorpusRulesOutcome,
 } from "../generated/contracts/validation.corpus-rules.space.js";
-import type { ValidateWatchEvent } from "../src/cli/validate-watch.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -174,6 +173,16 @@ void addressandcyclerecipesOracleAnchor;
 function addressOracle(
   point: Partial<AddressAndCycleRecipesConditions>,
 ): AddressAndCycleRecipesOutcome {
+  const knownCycle =
+    point.recipe === "dependency cycles" &&
+    point.addresses === "none" &&
+    (point.corpus === "two Specs depend on each other through dependsOn" ||
+      point.corpus === "one Spec depends on another");
+  const knownAddress =
+    point.recipe === "address resolution" &&
+    point.corpus === "one Spec depends on another" &&
+    point.addresses === "spec:probe.one#design.absent";
+  if (!knownCycle && !knownAddress) return unspecified;
   return {
     kind: "the answer carries {findings} findings with the rule ids {ruleIds}",
     findings: addressExpected(point).findings,
@@ -235,12 +244,16 @@ const watchedParametersOracleAnchor = specOracle({
 });
 void watchedParametersOracleAnchor;
 function watchExpected(point: Partial<CorpusRulesConditions>) {
-  const first = point.first ?? "";
-  const counts = first.startsWith("is rewritten")
-    ? "1 errors · 0 warnings · 0"
-    : first.includes("gains a key")
-      ? "0 errors · 2 warnings · 0"
-      : "0 errors · 0 warnings · 1";
+  const summaries: Partial<Record<CorpusRulesConditions["first"], string>> = {
+    "is rewritten to return one error finding after the first cycle under --watch":
+      "1 errors · 0 warnings · 0",
+    "reads a parameter file that gains a key after the first cycle under --watch":
+      "0 errors · 2 warnings · 0",
+    "reads a parameter file that stops being JSON after the first cycle under --watch":
+      "0 errors · 0 warnings · 1",
+  };
+  const counts = point.first === undefined ? undefined : summaries[point.first];
+  if (counts === undefined) return undefined;
   return {
     corpusSummary: `corpus rules: ${counts} of 2 files failed (the corpus's own rules)`,
     running: true,
@@ -252,9 +265,9 @@ const watchAdapters = (contract: Contract) => ({
     const root = mkdtempSync(join(tmpdir(), "sdp-watch-example-"));
     const outside = mkdtempSync(join(tmpdir(), "sdp-watch-params-"));
     const abort = new AbortController();
-    const timer = setTimeout(() => {
+    onTestFinished(() => {
       abort.abort();
-    }, 1000);
+    });
     try {
       probe(root, false);
       const file = join(root, "node_modules/probe/policy.js");
@@ -275,21 +288,21 @@ const watchAdapters = (contract: Contract) => ({
       if (!rulesEdit) args.push("--params", `@${params}`);
       args.push("--rules", second);
       const capture = createCaptureOutput();
-      let emit: ((event: ValidateWatchEvent) => void) | undefined;
+      const callbacks = new Map<string, (event: string, filename: string | null) => void>();
       let cycles = 0;
       await runSdpCli(args, capture.output, {
         abortSignal: abort.signal,
-        createWatchSource: () => ({
-          on(listener) {
-            emit = listener;
-          },
-          onError() {
-            return undefined;
-          },
-          close() {
-            return undefined;
-          },
-        }),
+        createNativeWatch(directory, listener) {
+          callbacks.set(directory, listener);
+          return {
+            on() {
+              return undefined;
+            },
+            close() {
+              return undefined;
+            },
+          };
+        },
         onWatchCycleComplete(cycle) {
           cycles = cycle.index;
           if (cycle.index === 1) {
@@ -299,21 +312,25 @@ const watchAdapters = (contract: Contract) => ({
                 params,
                 world.point.first?.includes("gains a key") ? '{"one":1,"two":2}' : "invalid",
               );
-            emit?.({ type: "change", path: rulesEdit ? file : params });
-          } else {
+            const changed = rulesEdit ? file : params;
+            const emit = callbacks.get(realpathSync(dirname(changed)));
+            expect(emit).toBeDefined();
+            emit?.("change", rulesEdit ? "policy.js" : "params.json");
+          } else if (cycle.index === 2) {
             world.answer = {
               corpusSummary: capture.readStdout().trim().split("\n").at(-1),
-              running: !abort.signal.aborted,
             };
-            abort.abort();
-          }
+            // A later event must still reach the loop after a failed second cycle.
+            const notify = callbacks.get(realpathSync(dirname(file)));
+            setImmediate(() => notify?.("change", "policy.js"));
+          } else abort.abort();
         },
       });
-      expect(cycles).toBe(2);
+      world.answer.running = cycles === 3;
+      expect(cycles).toBe(3);
       if (world.point.first?.includes("stops being JSON"))
         expect(capture.readStderr()).toContain("failed: its parameters cannot be read (");
     } finally {
-      clearTimeout(timer);
       abort.abort();
       rmSync(root, { recursive: true, force: true });
       rmSync(outside, { recursive: true, force: true });
@@ -323,13 +340,43 @@ const watchAdapters = (contract: Contract) => ({
     kind: "the second cycle's corpus summary line reads {corpusSummary}",
     corpusSummary: String(world.answer.corpusSummary),
   }),
-  expected: (point: Partial<CorpusRulesConditions>): CorpusRulesOutcome => ({
-    kind: "the second cycle's corpus summary line reads {corpusSummary}",
-    corpusSummary: watchExpected(point).corpusSummary,
-  }),
-  assertions: (world: World<CorpusRulesConditions>) => {
-    assertThens(contract, world.answer, watchExpected(world.point));
+  expected: (point: Partial<CorpusRulesConditions>): CorpusRulesOutcome => {
+    const expected = watchExpected(point);
+    return expected === undefined
+      ? unspecified
+      : {
+          kind: "the second cycle's corpus summary line reads {corpusSummary}",
+          corpusSummary: expected.corpusSummary,
+        };
   },
+  assertions: (world: World<CorpusRulesConditions>) => {
+    const expected = watchExpected(world.point);
+    if (expected === undefined) throw new Error("the watch oracle does not specify this point");
+    assertThens(contract, world.answer, expected);
+  },
+});
+it("leaves non-watch corpus-rule points and incomplete points unspecified", () => {
+  for (const first of [
+    "returns one error finding",
+    "returns one warning finding",
+    "returns a finding with no subject",
+    "empties the graph it receives",
+    undefined,
+  ] as const) {
+    expect(watchAdapters({ steps: [] }).expected({ first })).toEqual(unspecified);
+  }
+});
+
+it("leaves address points outside the oracle's bound probes unspecified", () => {
+  expect(addressOracle({})).toEqual(unspecified);
+  expect(
+    addressOracle({
+      corpus: "one Spec depends on another",
+      addresses: "none",
+      recipe: "address resolution",
+      invocation: "as a rules file named by sdp validate --rules",
+    }),
+  ).toEqual(unspecified);
 });
 const recipeCallAnchor = specTest({
   id: testAnchorId("test:protocol.consumers.agent-surface.evaluation-sink.recipe-call"),

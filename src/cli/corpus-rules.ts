@@ -99,7 +99,9 @@ export async function runCorpusRules(
       if (reread === undefined) {
         corpusFailures.push({
           rulesFile,
-          reason: `its parameters cannot be read (${oneLine(diagnostic).trim()})`,
+          reason: `its parameters cannot be read (${oneLine(diagnostic)
+            .replace(/^sdp validate: /u, "")
+            .replace(/\.$/u, "")})`,
         });
         continue;
       }

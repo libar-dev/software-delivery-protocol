@@ -1,11 +1,17 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, onTestFinished, vi } from "vitest";
 import { runSdpCli } from "../src/cli/sdp.js";
 import type { ValidateWatchEvent } from "../src/cli/validate-watch.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { runCorpusRules } from "../src/cli/corpus-rules.js";
+
+vi.mock("node:fs", async (importOriginal) => {
+  const fs = await importOriginal<typeof import("node:fs")>();
+  return { ...fs, readFileSync: vi.fn(fs.readFileSync) };
+});
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const roots: string[] = [];
@@ -59,6 +65,180 @@ it("runs the shipped address recipe unchanged as a rules file", async () => {
   expect(capture.readStdout()).toContain("1 errors · 0 warnings · 0 of 1 files failed");
 });
 
+it("calls recipes from a rules file and fails on a dependency cycle", async () => {
+  const root = probe();
+  const file = join(root, "policy.js");
+  writeFileSync(file, "return { findings: (await recipes(26)).findings };");
+  const capture = createCaptureOutput();
+  expect(await runSdpCli(["validate", root, "--rules", file], capture.output)).toBe(1);
+  expect(capture.readStderr()).toContain("[error] dependency-cycle");
+  expect(capture.readStdout()).toContain("1 errors · 0 warnings · 0 of 1 files failed");
+});
+
+it("lets a called recipe call recipes itself with the same rules-file bindings", async () => {
+  const { extract, validateGraph } = await import("../src/index.js");
+  const fs = await vi.importActual<typeof import("node:fs")>("node:fs");
+  const root = probe();
+  const file = join(root, "policy.js");
+  writeFileSync(file, 'return recipes(26, { severity: "warning" });');
+  const { graph } = extract({ root });
+  const report = validateGraph(graph);
+  const readFile = fs.readFileSync;
+  const spy = vi.mocked(readFileSync).mockImplementation((path, options) => {
+    if (String(path) === join(repoRoot, "dist/recipes/26-dependency-cycles.js")) {
+      return `
+        if (params.severity !== "warning" || !g.specContext("spec:probe.one")) throw Error("lost bindings");
+        graph.sentinel = params;
+        report.sentinel = params;
+        g.sentinel = params;
+        return recipes(25, { addresses: ["spec:probe.one#design.absent"] });
+      `;
+    }
+    if (String(path) === join(repoRoot, "dist/recipes/25-address-resolution.js")) {
+      return `
+        if (g.sentinel !== graph.sentinel || report.sentinel !== graph.sentinel) throw Error("copied bindings");
+        return { findings: [{ validatorId: "nested-recipe", subjectId: params.addresses[0], severity: graph.sentinel.severity, message: "nested recipe ran" }] };
+      `;
+    }
+    return readFile(path, options);
+  });
+  try {
+    const answer = await runCorpusRules(graph, report, [{ rulesFile: file, params: {} }]);
+    expect(answer.corpusFailures).toEqual([]);
+    expect(answer.corpusFindings).toEqual([
+      {
+        rulesFile: file,
+        validatorId: "nested-recipe",
+        subjectId: "spec:probe.one#design.absent",
+        severity: "warning",
+        message: "nested recipe ran",
+      },
+    ]);
+    expect(graph).not.toHaveProperty("sentinel");
+    expect(report).not.toHaveProperty("sentinel");
+  } finally {
+    spy.mockImplementation(readFile);
+  }
+});
+
+it("reports a parameter reread cause without a nested CLI diagnostic", async () => {
+  const { extract, validateGraph } = await import("../src/index.js");
+  const root = probe(false);
+  const file = join(root, "policy.js");
+  const params = join(root, "params.json");
+  writeFileSync(file, "return {findings:[]};");
+  writeFileSync(params, "[]");
+  const { graph } = extract({ root });
+  const answer = await runCorpusRules(graph, validateGraph(graph), [
+    {
+      rulesFile: file,
+      params: {},
+      paramForms: [`@${params}`],
+      rereadParams: true,
+    },
+  ]);
+  expect(answer.corpusFailures).toEqual([
+    {
+      rulesFile: file,
+      reason: `its parameters cannot be read (--params file ${JSON.stringify(params)} must be a JSON object, got an array)`,
+    },
+  ]);
+});
+
+it.each(["EACCES", "EPERM"])(
+  "keeps watching when an optional ancestor refuses %s",
+  async (code) => {
+    const { realpathSync } = await import("node:fs");
+    const root = probe(false);
+    const outside = probe(false);
+    const locked = join(outside, "locked");
+    const directory = join(locked, "sub");
+    mkdirSync(directory, { recursive: true });
+    const file = join(directory, "policy.js");
+    writeFileSync(file, "return {findings:[]};");
+    const callbacks = new Map<string, (event: string, file: string | null) => void>();
+    const abort = new AbortController();
+    onTestFinished(() => {
+      abort.abort();
+    });
+    const capture = createCaptureOutput();
+    const cycles: number[] = [];
+    try {
+      expect(
+        await runSdpCli(["validate", root, "--watch", "--rules", file], capture.output, {
+          abortSignal: abort.signal,
+          createNativeWatch(path, listener) {
+            if (path === realpathSync(locked))
+              throw Object.assign(new Error("ancestor denied"), { code });
+            callbacks.set(path, listener);
+            return {
+              on() {
+                return undefined;
+              },
+              close() {
+                return undefined;
+              },
+            };
+          },
+          onWatchCycleComplete(cycle) {
+            cycles.push(cycle.index);
+            if (cycle.index === 1) {
+              writeFileSync(
+                file,
+                'return {findings:[{validatorId:"probe",subjectId:"probe",severity:"warning",message:"changed"}]};',
+              );
+              callbacks.get(realpathSync(directory))?.("change", "policy.js");
+            } else abort.abort();
+          },
+        }),
+      ).toBe(0);
+      expect(cycles).toEqual([1, 2]);
+      expect(capture.readStdout()).toContain("0 errors · 1 warnings · 0 of 1 files failed");
+    } finally {
+      abort.abort();
+    }
+  },
+);
+
+it.each(["EACCES", "EPERM", "EIO"])(
+  "reports %s when the named file's immediate parent cannot be watched",
+  async (code) => {
+    const { realpathSync } = await import("node:fs");
+    const root = probe(false);
+    const outside = probe(false);
+    const file = join(outside, "policy.js");
+    writeFileSync(file, "return {findings:[]};");
+    const abort = new AbortController();
+    onTestFinished(() => {
+      abort.abort();
+    });
+    const capture = createCaptureOutput();
+    try {
+      expect(
+        await runSdpCli(["validate", root, "--watch", "--rules", file], capture.output, {
+          abortSignal: abort.signal,
+          createNativeWatch(path) {
+            if (path === realpathSync(outside))
+              throw Object.assign(new Error("parent denied"), { code });
+            return {
+              on() {
+                return undefined;
+              },
+              close() {
+                return undefined;
+              },
+            };
+          },
+        }),
+      ).toBe(1);
+      expect(capture.readStderr()).toContain("watch failed — parent denied");
+      expect(capture.readStdout()).toBe("");
+    } finally {
+      abort.abort();
+    }
+  },
+);
+
 it.each(["rules", "params", "keyed", "unreadable"])(
   "watches and rereads %s outside discovery",
   async (mode) => {
@@ -74,11 +254,11 @@ it.each(["rules", "params", "keyed", "unreadable"])(
       `return {findings: Object.keys(${mode === "keyed" ? "params.bundle" : "params"}).map(() => (${row}))};`,
     );
     const abort = new AbortController();
+    onTestFinished(() => {
+      abort.abort();
+    });
     const capture = createCaptureOutput();
     let emit: ((event: ValidateWatchEvent) => void) | undefined;
-    const timer = setTimeout(() => {
-      abort.abort();
-    }, 1000);
     const cycles: number[] = [];
     try {
       await runSdpCli(
@@ -127,7 +307,6 @@ it.each(["rules", "params", "keyed", "unreadable"])(
       if (mode === "unreadable")
         expect(capture.readStderr()).toContain("its parameters cannot be read (");
     } finally {
-      clearTimeout(timer);
       abort.abort();
     }
   },
@@ -234,11 +413,11 @@ it.each([false, true])(
     const nativeDirectory = realpathSync(directory);
     const callbacks = new Map<string, (event: string, file: string | null) => void>();
     const abort = new AbortController();
+    onTestFinished(() => {
+      abort.abort();
+    });
     const capture = createCaptureOutput();
     const exits: number[] = [];
-    const timer = setTimeout(() => {
-      abort.abort();
-    }, 1000);
     try {
       await runSdpCli(["validate", root, "--watch", "--rules", file], capture.output, {
         abortSignal: abort.signal,
@@ -271,7 +450,6 @@ it.each([false, true])(
       expect(exits).toEqual([0, 1, 0]);
       expect(capture.readStderr()).toContain("cannot be read (");
     } finally {
-      clearTimeout(timer);
       abort.abort();
     }
   },
@@ -280,6 +458,10 @@ it.each([false, true])(
 it("pins findings text, subjects, locations and input order beside the unchanged recipe answers", async () => {
   const { evaluateBody, extract } = await import("../src/index.js");
   const root = probe();
+  writeFileSync(
+    join(root, "two.sdp.md"),
+    readFileSync(join(root, "two.sdp.md"), "utf8") + "\n## Design\n- present: A known entry.\n",
+  );
   const { graph } = extract({ root });
   const cycle = await evaluateBody("return recipes(26)", { graph });
   expect(cycle).toEqual({
@@ -305,7 +487,13 @@ it("pins findings text, subjects, locations and input order beside the unchanged
   const address = await evaluateBody("return recipes(25, params)", {
     graph,
     params: {
-      addresses: ["", 42, "spec:probe.absent#design.key", "spec:probe.one#design.absent"],
+      addresses: [
+        "",
+        42,
+        "spec:probe.absent#design.key",
+        "spec:probe.one#design.absent",
+        "spec:probe.two#design.absent",
+      ],
       severity: "warning",
     },
   });
@@ -335,6 +523,54 @@ it("pins findings text, subjects, locations and input order beside the unchanged
         severity: "warning",
         message:
           "spec:probe.one#design.absent does not resolve: spec:probe.one has no design entries",
+      },
+      {
+        validatorId: "unresolved-address",
+        subjectId: "spec:probe.two#design.absent",
+        severity: "warning",
+        message:
+          "spec:probe.two#design.absent does not resolve: spec:probe.two has no design entry absent",
+      },
+    ],
+  });
+});
+
+it("locates three-member cycles and self-loops at the relation to the path's second id", async () => {
+  const { evaluateBody, extract } = await import("../src/index.js");
+  const root = mkdtempSync(join(tmpdir(), "sdp-reach-cycles-"));
+  roots.push(root);
+  for (const [name, relations] of [
+    ["a", "  dependsOn:\n    - spec:cycle.d\n    - spec:cycle.b"],
+    ["b", "  dependsOn: spec:cycle.c"],
+    ["c", "  dependsOn: spec:cycle.a"],
+    ["d", "  dependsOn: []"],
+    ["s", "\n  dependsOn: spec:cycle.s"],
+  ] as const) {
+    writeFileSync(
+      join(root, `${name}.sdp.md`),
+      `---\nid: spec:cycle.${name}\nkind: behavior\naltitude: story\nreadiness: idea\nrelations:\n${relations}\n---\n# Cycle ${name}\n\n## Intent\n- outcome: Locate cycle findings.\n`,
+    );
+  }
+  const { graph } = extract({ root });
+  expect(await evaluateBody("return recipes(26)", { graph })).toMatchObject({
+    totals: { sets: 1, selfDependent: 1, specsInCycles: 4 },
+    findings: [
+      {
+        validatorId: "dependency-cycle",
+        subjectId: "spec:cycle.a",
+        severity: "error",
+        message:
+          "spec:cycle.a rests on itself through dependsOn: spec:cycle.a -> spec:cycle.b -> spec:cycle.c -> spec:cycle.a",
+        file: "a.sdp.md",
+        line: 9,
+      },
+      {
+        validatorId: "dependency-cycle",
+        subjectId: "spec:cycle.s",
+        severity: "error",
+        message: "spec:cycle.s rests on itself through dependsOn: spec:cycle.s -> spec:cycle.s",
+        file: "s.sdp.md",
+        line: 8,
       },
     ],
   });

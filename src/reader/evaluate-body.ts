@@ -9,7 +9,14 @@ import type { ValidationReport } from "../validate/contracts.js";
 import { validateGraph } from "../validate/validators.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
-import { errorMessage, oneLine } from "../cli/output.js";
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function oneLine(message: string): string {
+  return message.replace(/\s+/gu, " ").trim();
+}
 
 type RecipeCaller = (
   number: number,
