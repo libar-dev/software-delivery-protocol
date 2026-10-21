@@ -21,7 +21,7 @@ interface Component extends Member {
   satisfiedSpecs: string[];
   referencedSpecs: string[];
 }
-interface Architecture {
+export interface Architecture {
   components: Component[];
   usesEdges: { from: string; to: string; claim: string }[];
   unresolvedUses: { from: string; to: string }[];

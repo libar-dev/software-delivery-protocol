@@ -1,6 +1,6 @@
 import { studioRecipeAnswers } from "./recipes.js";
 import type { StudioRecipeAnswers } from "./recipes.js";
-import type { GraphSchema, GraphNodeType } from "../../graph/schema.js";
+import type { GraphNodeType } from "../../graph/schema.js";
 import type { PackContext, Reader, SpecContext } from "../../reader/reader.js";
 import { graphReportId } from "../../validate/validators.js";
 import type { Finding, ValidationReport } from "../../validate/contracts.js";
@@ -69,7 +69,6 @@ export interface SearchIndex {
 }
 
 export interface StudioData {
-  readonly graph: GraphSchema;
   readonly recipes: StudioRecipeAnswers;
   readonly specs: readonly SpecContext[];
   readonly packs: readonly { readonly context: PackContext; readonly totals: PackTotals }[];
@@ -306,7 +305,6 @@ export async function createStudioData(
   const recipes = await studioRecipeAnswers(reader, report);
   return {
     recipes,
-    graph: reader.graph,
     specs: reader.specs().map((spec) => specContext(reader, spec.id)),
     packs: reader.packs().map((pack) => {
       const context = reader.packContext(pack.id);

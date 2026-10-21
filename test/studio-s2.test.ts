@@ -51,6 +51,9 @@ function entry(page: string, key: string) {
     )?.[1] ?? ""
   );
 }
+function panel(page: string, name: string): string {
+  return page.split(`id="panel.${name}"`)[1]?.split("</details>")[0] ?? "";
+}
 const citationsOracle = specOracle({
   id: oracleAnchorId("oracle:protocol.studio-citations"),
   models: ref("spec:consumers.spec-studio.spec-page"),
@@ -129,7 +132,7 @@ function coverageFiles(p: Partial<VerificationPanelsConditions>): Record<string,
       "spec:orders",
       "behavior",
       "{}",
-      `\n## Behavior\n- rule: [#${p.exercisedKey ?? "paid"}] Paid.\n- flow: [#${p.otherKey ?? "refunded"}] Refunded.\n- rule: Unkeyed.\n\n## Example space\n\`\`\`gwt-vocabulary\nGiven status {status:"paid"|"refunded"}\nWhen it runs {amount:number}\nThen it works\n\`\`\`\n`,
+      `\n## Behavior\n- rule: [#${p.exercisedKey ?? "paid"}] Paid.\n- rule: [#${p.otherKey ?? "refunded"}] Refunded.\n- rule: Unkeyed.\n\n## Example space\n\`\`\`gwt-vocabulary\nGiven status {status:"paid"|"refunded"}\nWhen it runs {amount:number}\nThen it works\n\`\`\`\n`,
     ),
     "child.sdp.md": carrier(
       "spec:orders.example",
@@ -216,6 +219,10 @@ describe("Spec panels", () => {
       '<sdp-compose scope="spec:orders.example" action="edit-example"></sdp-compose>',
     );
     expect(page).not.toContain("passed");
+    expect(panel(page, "evidence")).toContain("<p>Runtime observation: not tracked.</p>");
+    expect(panel(page, "verification")).toContain(
+      '<tr><th scope="row"><code>&quot;refunded&quot;</code></th><td>no example</td></tr>',
+    );
     const idsInPage = [...page.matchAll(/\sid="([^"]+)"/gu)].map((m) => m[1]);
     expect(idsInPage).toEqual([...new Set(idsInPage)]);
   });
@@ -240,15 +247,28 @@ describe("Spec panels", () => {
     expect(page).not.toContain("<dt>termKeys</dt>");
   });
   it("places resolved Pack members in stated/floor cells in authored order", async () => {
-    const files = coverageFiles({});
-    files["another.sdp.md"] = carrier(
-      "spec:another",
-      "behavior",
-      "{}",
-      "\n## Behavior\n- rule: Another.\n",
-    );
+    const files: Record<string, string> = {
+      "basis.sdp.md": carrier(
+        "spec:basis",
+        "behavior",
+        "{}",
+        "\n## Behavior\n- rule: Foundation.\n",
+      ),
+    };
+    for (const id of ["another", "orders", "equal", "above"]) {
+      files[`${id}.sdp.md`] = carrier(
+        `spec:${id}`,
+        "behavior",
+        "\n  dependsOn: spec:basis",
+        "\n## Behavior\n- rule: Works.\n\n## Verification — reviewed\n- Read the rule.\n",
+      ).replace(
+        "readiness: defined",
+        `readiness: ${id === "equal" || id === "above" ? "ready" : "idea"}`,
+      );
+    }
+    files["above.sdp.md"] = files["above.sdp.md"]?.replace("- rule: Works.", "") ?? "";
     files["pack.pack.sdp.md"] =
-      "---\nid: pack:orders\nspecs: [spec:another, spec:orders, spec:orders.example, spec:missing]\n---\n# Orders\n";
+      "---\nid: pack:orders\nspecs: [spec:another, spec:orders, spec:equal, spec:above, spec:missing]\n---\n# Orders\n";
     const page = (await pages(files)).find((p) => p.path === "packs/orders.html")?.content ?? "";
     expect(page).toContain('<sdp-maturity-map pack-id="pack:orders">');
     const map = page.split("<sdp-maturity-map")[1]?.split("</sdp-maturity-map>")[0] ?? "";
@@ -257,6 +277,121 @@ describe("Spec panels", () => {
     expect(map.indexOf('href="#spec:another"')).toBeLessThan(map.indexOf('href="#spec:orders"'));
     expect(map).not.toContain("spec:missing");
     expect(page).toContain('<sdp-spec-card spec-id="spec:orders" variant="full">');
+    const rows = [...map.matchAll(/<tr><th scope="row">(.*?)<\/th>(.*?)<\/tr>/gsu)];
+    expect(rows).toHaveLength(4);
+    const expected = [
+      [[], [], [], [], ["spec:another", "spec:orders"]],
+      [[], [], [], [], []],
+      [[], [], [], [], []],
+      [[], ["spec:above"], [], [], ["spec:equal"]],
+    ];
+    const relations = [
+      [
+        "statement above floor",
+        "statement matches floor",
+        "floor above statement",
+        "floor above statement",
+        "floor above statement",
+      ],
+      [
+        "statement above floor",
+        "statement above floor",
+        "statement matches floor",
+        "floor above statement",
+        "floor above statement",
+      ],
+      [
+        "statement above floor",
+        "statement above floor",
+        "statement above floor",
+        "statement matches floor",
+        "floor above statement",
+      ],
+      [
+        "statement above floor",
+        "statement above floor",
+        "statement above floor",
+        "statement above floor",
+        "statement matches floor",
+      ],
+    ];
+    rows.forEach((row, rowIndex) => {
+      const cells = [...(row[2] ?? "").matchAll(/<td>(.*?)<\/td>/gsu)].map((cell) => cell[1] ?? "");
+      expect(cells).toHaveLength(5);
+      cells.forEach((cell, column) => {
+        const members = expected[rowIndex]?.[column] ?? [];
+        expect([...cell.matchAll(/<sdp-spec-card spec-id="([^"]+)"/gu)].map((m) => m[1])).toEqual(
+          members,
+        );
+        expect(cell).toContain(
+          `<p>${String(members.length)} · ${relations[rowIndex]?.[column] ?? ""}</p>`,
+        );
+        if (!members.length) expect(cell).toContain("None");
+      });
+    });
+    for (const id of ["another", "orders", "equal", "above"])
+      expect(map.match(new RegExp(`<sdp-spec-card spec-id="spec:${id}"`, "gu"))).toHaveLength(1);
+  });
+  it("keeps the maturity heading and axis explanations inside the embeddable element", async () => {
+    const files = coverageFiles({});
+    files["pack.pack.sdp.md"] = "---\nid: pack:orders\nspecs: [spec:orders]\n---\n# Orders\n";
+    const page = (await pages(files)).find((p) => p.path === "packs/orders.html")?.content ?? "";
+    const map = page.split("<sdp-maturity-map")[1]?.split("</sdp-maturity-map>")[0] ?? "";
+    expect(map).toContain("<h2>Maturity map</h2>");
+    const labels = [...map.matchAll(/<th[^>]*>(.*?)<\/th>/gsu)].map((m) => m[1]).join(" ");
+    expect(labels).toContain("floor above statement");
+    expect(labels).toContain("statement above floor");
+  });
+  it("distinguishes test lines from citations by files with unrelated anchors", async () => {
+    const files = coverageFiles({});
+    files["parent.sdp.md"] =
+      (files["parent.sdp.md"] ?? "") + "\n## Design\n- first: `First` declaration.\n";
+    files["unrelated.sdp.md"] = carrier(
+      "spec:unrelated",
+      "behavior",
+      "{}",
+      "\n## Behavior\n- rule: Other behavior.\n",
+    );
+    files["test/orders.test.ts"] =
+      (files["test/orders.test.ts"] ?? "").replace(
+        "@sdpVerifies spec:orders.example",
+        "@sdpVerifies spec:unrelated",
+      ) + "// spec:orders#design.first\n";
+    files["test/direct.test.ts"] =
+      "/**\n * @sdpAnchor test:orders.direct\n * @sdpVerifies spec:orders\n */\n// spec:orders#design.first\nexport const x = 1;\n";
+    files["cite.ts"] =
+      "/**\n * @sdpAnchor impl:cites\n */\n// spec:orders#design.first\nexport const x = 1;\n";
+    const page = (await pages(files)).find((p) => p.path === "specs/orders.html")?.content ?? "";
+    const citations = entry(page, "design.first");
+    expect(citations).toContain("test/orders.test.ts:6");
+    expect(citations).toContain("cite.ts:4");
+    expect(citations).not.toContain("<code>test:orders.example</code>");
+    expect(citations).not.toContain("<code>impl:cites</code>");
+    expect(citations).toContain("Test line");
+    expect(citations).toContain("<code>test:orders.direct</code>");
+  });
+  it("renders composing slots beside unkeyed questions using the Spec scope", async () => {
+    const files = {
+      "parent.sdp.md": carrier(
+        "spec:orders",
+        "behavior",
+        "{}",
+        "\n### Open questions\n- [non-blocking] Which form?\n\n## Behavior\n- rule: Works.\n",
+      ),
+    };
+    const page = (await pages(files)).find((p) => p.path === "specs/orders.html")?.content ?? "";
+    const question = /<ul class="questions">(.*?)<\/ul>/su.exec(page)?.[1] ?? "";
+    for (const action of ["resolve-question", "promote-question"])
+      expect(question).toContain(
+        `<sdp-compose scope="spec:orders" action="${action}"></sdp-compose>`,
+      );
+  });
+  it("keeps the unbound-verifier sentence to graph bindings without run input", async () => {
+    const files = coverageFiles({});
+    files["pack.pack.sdp.md"] = "---\nid: pack:orders\nspecs: [spec:orders]\n---\n# Orders\n";
+    const page = (await pages(files)).find((p) => p.path === "packs/orders.html")?.content ?? "";
+    expect(page).toContain("The graph records bindings and never runs.");
+    expect(page).not.toContain("run evidence is supplied separately");
   });
 });
 
@@ -329,6 +464,41 @@ describe("Structural panels and targets", () => {
     expect(page).toContain("A latency probe.");
     expect(page).toContain('action="propose-target"');
     expect(page).toContain("<dt>Measured value</dt><dd>not tracked</dd>");
+    const unbound =
+      /<article class="example-card"><sdp-spec-card spec-id="spec:unwritten".*?<\/article>/su.exec(
+        page,
+      )?.[0] ?? "";
+    expect(unbound).toContain("No verifier binding");
+    expect(unbound).not.toContain("Executable Spec");
+  });
+  it("labels a keyed rule's unbound example as not enabled", async () => {
+    const files = coverageFiles({});
+    delete files["test/orders.test.ts"];
+    const page = (await pages(files)).find((p) => p.path === "specs/orders.html")?.content ?? "";
+    expect(entry(page, "rule.paid")).toContain(" · not enabled");
+    const card = /<article class="example-card">.*?<\/article>/su.exec(page)?.[0] ?? "";
+    expect(card).toContain("No verifier binding");
+    expect(card).not.toContain("Executable Spec");
+  });
+  it("renders structure from recipe answers and reader records without exposing raw graph data", async () => {
+    const files = coverageFiles({});
+    files["units.ts"] =
+      "/**\n * @sdpAnchor impl:orders\n * @sdpSatisfies spec:orders\n */\nexport const orders = 1;\n/**\n * @sdpAnchor impl:repository\n */\nexport const repository = 1;\n";
+    const data = await createStudioData(fixture(files));
+    expect(data).not.toHaveProperty("graph");
+    const answers = new Map(data.recipes.all);
+    const architecture = answers.get(17) as { usesEdges: unknown[] };
+    answers.set(17, {
+      ...architecture,
+      usesEdges: [{ from: "impl:orders", to: "impl:repository", claim: "anchored" }],
+    });
+    const page =
+      renderStudio({ ...data, recipes: { ...data.recipes, all: answers } }).find(
+        (p) => p.path === "specs/orders.html",
+      )?.content ?? "";
+    expect(panel(page, "runtime")).toContain("impl:repository");
+    expect(panel(page, "runtime")).toContain("units.ts:6");
+    expect(panel(page, "design-view")).toContain("impl:orders uses impl:repository");
   });
 });
 

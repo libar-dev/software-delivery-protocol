@@ -706,6 +706,16 @@ describe("Studio static pages", () => {
       pages.map((p) => (p.path === "search.html" ? { ...p, content: p.content + results } : p)),
     );
   });
+  it("keeps unresolved component bindings as text and resolves every remaining link", async () => {
+    const graph: GraphSchema = {
+      ...probe,
+      nodes: probe.nodes.filter((node) => node.id !== "component:probe"),
+    };
+    const rendered = renderStudio(await createStudioData(createReader(graph)));
+    const spec = rendered.find((page) => page.path === "specs/probe.all.html")?.content ?? "";
+    expect(spec).toContain("<code>component:probe</code>");
+    checkLinks(rendered);
+  });
   it("renders deterministically with no time or commit metadata", () => {
     expect(renderStudio(data)).toEqual(pages);
     expect(html("pack:probe")).toContain("The Pack framing");

@@ -20,7 +20,7 @@ export function entryCitations(ctx: PageContext, spec: SpecContext, address: str
   if (!row) return "";
   if (row.citedBy.length === 0)
     return row.pinned ? '<p class="citations">no citation recorded</p>' : "";
-  return `<div class="citations"><p>Cited at</p>${list(row.citedBy.map((c) => `${code(location(c.file, c.line))}${copy(location(c.file, c.line))}${c.anchors.map((id) => ` · ${code(id)}`).join("")}`))}</div>`;
+  return `<div class="citations"><p>Cited at</p>${list(row.citedBy.map((c) => `${c.testAnchors.length ? "Test line · " : ""}${code(location(c.file, c.line))}${copy(location(c.file, c.line))}${c.testAnchors.map((id) => ` · ${code(id)}`).join("")}`))}</div>`;
 }
 
 export function ruleCoverage(ctx: PageContext, spec: SpecContext, key: string): string {

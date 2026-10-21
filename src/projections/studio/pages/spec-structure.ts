@@ -1,5 +1,5 @@
 import type { SpecContext } from "../../../reader/reader.js";
-import type { CodeNode } from "../../../graph/schema.js";
+import type { Architecture } from "./architecture-page.js";
 import { realizationDiagram, renderDiagram, traceDiagram } from "../diagrams/index.js";
 import type { DiagramBox, DiagramEdge } from "../diagrams/index.js";
 import type { PageContext } from "./html.js";
@@ -8,18 +8,36 @@ import { plainTitle } from "./code-spans.js";
 import { codeSpans, prose } from "./text.js";
 
 const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-function source(ctx: PageContext, unit: CodeNode): string {
-  return `${unit.id.startsWith("component:") ? componentLink(ctx, unit.id) : code(unit.id)}${unit.label === undefined ? "" : ` · ${codeSpans(unit.label)}`} · ${code(location(unit.file, unit.line))}${copy(location(unit.file, unit.line))}${unit.layer === undefined ? "" : ` · layer ${escape(unit.layer)}`}${unit.context === undefined ? "" : ` · context ${escape(unit.context)}`}`;
+interface StructuralUnit {
+  readonly id: string;
+  readonly label?: string | null;
+  readonly file?: string | null;
+  readonly line?: number | null;
+  readonly layer?: string | null;
+  readonly context?: string | null;
+}
+function source(ctx: PageContext, unit: StructuralUnit): string {
+  const at = location(unit.file ?? undefined, unit.line ?? undefined);
+  return `${unit.id.startsWith("component:") ? componentLink(ctx, unit.id) : code(unit.id)}${unit.label == null ? "" : ` · ${codeSpans(unit.label)}`} · ${code(at)}${unit.file == null ? "" : copy(at)}${unit.layer == null ? "" : ` · layer ${escape(unit.layer)}`}${unit.context == null ? "" : ` · context ${escape(unit.context)}`}`;
 }
 function structure(ctx: PageContext, spec: SpecContext) {
-  const graph = ctx.data.graph;
-  const units = new Map(
-    graph.nodes.filter((n): n is CodeNode => n.nodeType === "CodeNode").map((n) => [n.id, n]),
+  const architecture = ctx.data.recipes.all.get(17) as Architecture;
+  const units = new Map<string, StructuralUnit>(
+    ctx.data.search.records.filter((n) => n.nodeType === "CodeNode").map((n) => [n.id, n]),
   );
+  for (const component of architecture.components)
+    if (component.declared) units.set(component.id, component);
+  for (const unit of spec.implementations) units.set(unit.codeId, { ...unit, id: unit.codeId });
   const own = new Set(spec.implementations.map((i) => i.codeId));
-  const components = graph.edges.filter((e) => e.type === "memberOf" && own.has(e.from));
+  const components = spec.implementations.flatMap((unit) =>
+    unit.component === undefined
+      ? []
+      : [{ from: unit.codeId, to: unit.component.id, type: "memberOf" }],
+  );
   const roots = new Set([...own, ...components.map((e) => e.to)]);
-  const uses = graph.edges.filter((e) => e.type === "uses" && roots.has(e.from));
+  const uses = architecture.usesEdges
+    .filter((edge) => roots.has(edge.from))
+    .map((edge) => ({ ...edge, type: "uses" }));
   return { units, own, components, uses };
 }
 /**
@@ -37,11 +55,12 @@ export function designView(ctx: PageContext, spec: SpecContext): string {
     return {
       id,
       words: unit
-        ? `${plainTitle(unit.label ?? "")} ${location(unit.file, unit.line)}`.trim()
+        ? `${plainTitle(unit.label ?? "")} ${location(unit.file ?? undefined, unit.line ?? undefined)}`.trim()
         : "unresolved",
-      target: id.startsWith("component:")
-        ? `${relative(ctx, "architecture.html")}#${id}`
-        : "#panel.runtime",
+      target:
+        id.startsWith("component:") && units.has(id)
+          ? `${relative(ctx, "architecture.html")}#${id}`
+          : "#panel.runtime",
       band: own.has(id)
         ? "Satisfying units"
         : components.some((e) => e.to === id)

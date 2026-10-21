@@ -3,6 +3,7 @@ import type { StudioData } from "../data.js";
 import { pagePath } from "../paths.js";
 import type { Finding } from "../../../validate/contracts.js";
 import type { CodeUnitBinding, PackMemberQuestion } from "../../../reader/reader.js";
+import type { Architecture } from "./architecture-page.js";
 
 export interface PageContext {
   readonly data: StudioData;
@@ -76,6 +77,9 @@ export function findingList(ctx: PageContext, rows: readonly Finding[]): string 
 }
 
 export function componentLink(ctx: PageContext, id: string): string {
+  const architecture = ctx.data.recipes.all.get(17) as Architecture;
+  if (!architecture.components.some((component) => component.declared && component.id === id))
+    return code(id);
   return `<a href="${escape(relative(ctx, "architecture.html"))}#${escape(id)}">${code(id)}</a>`;
 }
 export function unitList(rows: readonly CodeUnitBinding[], ctx?: PageContext): string {
