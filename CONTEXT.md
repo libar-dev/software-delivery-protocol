@@ -243,8 +243,8 @@ a git-tag projection) · **baseline** (a named approved snapshot; the **signed g
 artifact** — approval remains outside the model, never an authored primitive).
 
 **Guidance-only labels:** `delivery session` and `work shape` describe an agent interaction and
-its advisory entry in `sdp-sessions`; `design pass`, `design diff`, `change proposal`, `design
-backlog` and `curation report` name a design activity or a recipe's answer, and their carrying
+its advisory entry in `sdp-sessions`; `design pass`, `design diff`, `design backlog` and
+`curation report` name a design activity or a recipe's answer, and their carrying
 Specs supply their meaning. None of them names a Protocol primitive, descriptor, relation,
 delivery fact, workflow state, or graph state.
 
