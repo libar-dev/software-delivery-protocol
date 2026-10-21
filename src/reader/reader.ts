@@ -1,3 +1,8 @@
+import { resolveEntryAddress } from "../graph/entry-address.js";
+import type { AddressResolution } from "../graph/entry-address.js";
+import { entryCitationsBySpec } from "./entry-citations.js";
+import type { EntryCitation } from "./entry-citations.js";
+export type { EntryCitation } from "./entry-citations.js";
 import { matchConcept } from "./concept-match.js";
 import type { ConceptMatch } from "./concept-match.js";
 export { matchConcept } from "./concept-match.js";
@@ -174,6 +179,7 @@ export interface SpecContext extends SpecSummary {
    * locates none; a missing row reads as not located, never as absent.
    */
   readonly entryLocations: readonly EntryLocation[];
+  readonly entryCitations: readonly EntryCitation[];
   /** The graph findings naming this spec (as subject or related) — the holes beside the assertions. */
   readonly findings: readonly Finding[];
 }
@@ -401,6 +407,8 @@ export interface Reader {
   byFile(path: string): FileEntry;
   /** The grep→graph bridge from a changeset — file-level, `coverage-unknown` honest (`06` §2). */
   blastRadius(changedFiles: readonly string[]): BlastRadius;
+  /** Resolves an entry address with the same grammar and entry rules as prose validation. */
+  resolveEntryAddress(address: string): AddressResolution;
   specContext(id: string): SpecContext | undefined;
   packContext(id: string): PackContext | undefined;
 }
@@ -724,6 +732,8 @@ export function createReader(graph: GraphSchema): Reader {
 
   const locationsOf = (id: string): readonly EntryLocation[] => locationsBySpec.get(id) ?? [];
 
+  const citationsBySpec = entryCitationsBySpec(graph, index);
+
   /** The unit's component: its `memberOf` target (the first by id, should a foreign graph hold more). */
   const componentOf = (codeId: string): CodeUnitComponent | undefined => {
     const [componentId] = (index.edgesByFrom.get(codeId) ?? [])
@@ -935,6 +945,7 @@ export function createReader(graph: GraphSchema): Reader {
       verifiers,
       ...(oracle === undefined ? {} : { oracle }),
       entryLocations: locationsOf(id),
+      entryCitations: citationsBySpec.get(id) ?? [],
       findings: findingsNaming(id),
     };
   };
@@ -1190,6 +1201,8 @@ export function createReader(graph: GraphSchema): Reader {
     findByConcept,
     byFile,
     blastRadius,
+    resolveEntryAddress: (address) =>
+      resolveEntryAddress(index.primitivesById.get(address.split("#")[0] ?? ""), address),
     specContext,
     packContext,
   };

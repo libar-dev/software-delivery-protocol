@@ -43,6 +43,12 @@ export const contractDependentSuites = [
       "test/validation.superseded-decision-signal.replacement-below-ready-named.test.generated.ts",
       "test/validation.superseded-decision-signal.live-replacement-warns.test.generated.ts",
       "test/validation.superseded-decision-signal.end-and-loop-named.test.generated.ts",
+      "test/entry-citations.test.ts",
+      "test/extraction.entry-citations.test-title-cites-declaration.test.generated.ts",
+      "test/extraction.entry-citations.code-comment-cites-declaration.test.generated.ts",
+      "test/extraction.entry-citations.unanchored-file-unread.test.generated.ts",
+      "test/extraction.entry-citations.unresolved-citation.test.generated.ts",
+
       "test/self-hosting-corpus-checks.test.ts",
       "test/self-hosting-term-addresses.test.ts",
       "test/model.term-addresses.keyed-term-resolves.test.generated.ts",

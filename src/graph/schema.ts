@@ -189,10 +189,19 @@ export interface EntryLocation {
   readonly line: number;
 }
 
+/** An inferred citation position; it is neither a binding nor a verdict. */
+export interface EntryCitationLocation {
+  readonly address: string;
+  readonly file: string;
+  readonly line: number;
+}
+
 export interface GraphSchema {
   readonly schemaVersion: typeof schemaVersion;
   readonly nodes: readonly GraphNode[];
   readonly edges: readonly GraphEdge[];
   /** Absent reads as empty: no entry is located. */
   readonly locations?: readonly EntryLocation[];
+  /** The table defines every row's claim as inferred. Absent reads as empty. */
+  readonly citations?: readonly EntryCitationLocation[];
 }

@@ -30,6 +30,7 @@ export const structuralMembershipExceptions = [
   "impl:protocol.structural-self-binding",
   "impl:protocol.validator-self-testing",
   "impl:protocol.validator-probe-table",
+  "impl:protocol.entry-citation-recipe",
   "impl:protocol.architecture-walk-recipe",
   "impl:protocol.planned-components-recipe",
   "impl:protocol.authoring-on-ramp",
@@ -70,6 +71,22 @@ export const acceptedArchitecturalUnits = [
     anchorId: "api:protocol.evaluate-body",
     componentId: "component:protocol.reader",
   },
+  {
+    unit: "src/graph/entry-address.ts#resolveEntryAddress",
+    anchorId: "impl:protocol.entry-address-resolution",
+    componentId: "component:protocol.graph",
+  },
+  {
+    unit: "src/extract/entry-citations.ts#scanEntryCitations",
+    anchorId: "impl:protocol.entry-citation-scan",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/reader/entry-citations.ts#entryCitationsBySpec",
+    anchorId: "impl:protocol.entry-citation-reader",
+    componentId: "component:protocol.reader",
+  },
+
   {
     unit: "src/cli/validate-view-command.ts#runValidateRules",
     anchorId: "impl:protocol.corpus-rules",

@@ -2,7 +2,7 @@
 id: spec:extraction.entry-citations.test-title-cites-declaration
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:extraction.entry-citations
   verifies:
