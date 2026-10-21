@@ -18,7 +18,7 @@ function fenced(value: string, language = ""): string {
  * @sdpRole projection
  */
 export function renderMemo(proposal: Proposal): string {
-  let memo = `# Change proposal\n\nBase: ${span(proposal.base)}\nReason: ${proposal.reason}\n\n`;
+  let memo = `# Change proposal\n\nBase: ${span(proposal.base)}\nReason: ${span(proposal.reason)}\n\n`;
   proposal.changes.forEach((change, index) => {
     memo += `## Change ${String(index + 1)}\n\nScope: ${change.scope.map(span).join(", ")}\nRequest:\n\n${fenced(change.request, "text")}`;
     if (change.replaces !== undefined) memo += `Replaces: ${span(change.replaces)}\n`;
@@ -27,7 +27,7 @@ export function renderMemo(proposal: Proposal): string {
       const r = change.relation;
       memo += `Relation: ${r.action} ${span(r.from)} ${r.type} ${span(r.target)}\n`;
     }
-    if (change.reason !== undefined) memo += `Reason: ${change.reason}\n`;
+    if (change.reason !== undefined) memo += `Reason: ${span(change.reason)}\n`;
     if (change.text !== undefined) memo += `\n${fenced(change.text)}`;
     memo += "\n";
   });

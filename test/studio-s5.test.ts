@@ -1043,7 +1043,7 @@ it("matches the literal memo for the shared proposal, including the full relatio
     "# Change proposal",
     "",
     "Base: `abc`",
-    "Reason: Review the design.",
+    "Reason: `Review the design.`",
     "",
     "## Change 1",
     "",
@@ -1211,6 +1211,42 @@ it.each(["edit", "propose"] as const)(
     expect(visible).toContain("accepted\nrecorded");
     expect(visible).toContain("Composing needs the script.");
     expect(markup).toContain(`<sdp-scenario-editor spec-id="spec:probe.example" mode="${mode}">`);
+  },
+);
+
+it.each([
+  [
+    "<details>Review the design.</details>",
+    "`Keep` the ``literal`` reason`",
+    [
+      "Reason: `<details>Review the design.</details>`",
+      "Reason: ``` `Keep` the ``literal`` reason` ```",
+    ],
+  ],
+  [
+    "`Review` the ``design`` reason`",
+    "<details>Keep the change.</details>",
+    [
+      "Reason: ``` `Review` the ``design`` reason` ```",
+      "Reason: `<details>Keep the change.</details>`",
+    ],
+  ],
+])(
+  "writes both memo reasons as code spans: %j, %j",
+  async (reason, changeReason, expectedReasons) => {
+    const document = {
+      ...proposal,
+      reason,
+      changes: [{ scope: ["spec:probe.s1"], request: "Change the entry", reason: changeReason }],
+    };
+    const memo = renderMemo(document);
+    expect(memo.split("\n").filter((line) => line.startsWith("Reason: "))).toEqual(expectedReasons);
+    expect(
+      await evaluateBody("return recipes(49, params)", {
+        graph: { schemaVersion, nodes: [], edges: [] },
+        params: { proposal: document },
+      }),
+    ).toEqual({ schemaProblems: [], memo });
   },
 );
 
