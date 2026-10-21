@@ -41,6 +41,7 @@ export function registerPureProjection<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the page set holds the index page {indexPage}, one page per Spec, and one page per Pack",
         text: "the page set holds the index page {indexPage}, one page per Spec, and one page per Pack",
         params,
       });
@@ -48,6 +49,7 @@ export function registerPureProjection<World>(
     "the page {packPage} renders its members in context": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the page {packPage} renders its members in context",
         text: "the page {packPage} renders its members in context",
         params,
       });
@@ -55,6 +57,7 @@ export function registerPureProjection<World>(
     "the page {specPage} renders the finding {findingId} as data": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the page {specPage} renders the finding {findingId} as data",
         text: "the page {specPage} renders the finding {findingId} as data",
         params,
       });
@@ -65,6 +68,7 @@ export function registerPureProjection<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "a second render from a freshly derived graph is byte-identical: {byteIdentical}",
         text: "a second render from a freshly derived graph is byte-identical: {byteIdentical}",
         params,
       });
@@ -75,6 +79,7 @@ export function registerPureProjection<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the render leaves the extraction root byte-identical: {rootUntouched}",
         text: "the render leaves the extraction root byte-identical: {rootUntouched}",
         params,
       });

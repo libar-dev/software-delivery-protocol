@@ -2,7 +2,7 @@
 id: spec:carrier.step-keys.malformed-marker-refused
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.step-keys
   verifies:

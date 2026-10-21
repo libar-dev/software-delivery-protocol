@@ -146,7 +146,13 @@ function searchEntries(context: SpecContext): readonly SearchEntry[] {
   const ruleKeys = context.sections?.behavior?.ruleKeys ?? {};
   const ruleKeyOf = (entry: string | null): string | null =>
     Object.keys(ruleKeys).find((key) => ruleKeys[key] === entry) ?? null;
+  const terms = context.sections?.model?.terms ?? {};
+  const termKeys = context.sections?.model?.termKeys ?? {};
   const addressOf = (section: string, entry: string | null): string | null => {
+    if (section === "model") {
+      const key = Object.keys(termKeys).find((key) => `terms.${termKeys[key] ?? ""}` === entry);
+      return key === undefined ? null : `${context.id}#term.${key}`;
+    }
     if (section === "behavior" || section === "intent") {
       const key = section === "behavior" ? ruleKeyOf(entry) : questionKeyOf(entry);
       return key === null
@@ -167,14 +173,18 @@ function searchEntries(context: SpecContext): readonly SearchEntry[] {
         entry ?? "",
       );
     const rule = /^(rules|flows)\[(\d+)\]$/u.exec(entry ?? "");
+    const termIndex =
+      section === "model" ? Object.keys(terms).findIndex((term) => `terms.${term}` === entry) : -1;
     const located =
-      section === "intent" && question?.[1] !== undefined
-        ? `question[${question[1]}]${question[2] !== undefined && question[2] !== "question" ? `.${question[2]}` : ""}`
-        : section === "behavior" && rule !== null
-          ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2] ?? ""}]`
-          : (section === "design" || section === "ui") && topKey !== null
-            ? `${section}.${topKey}`
-            : null;
+      termIndex >= 0
+        ? `term[${String(termIndex)}]`
+        : section === "intent" && question?.[1] !== undefined
+          ? `question[${question[1]}]${question[2] !== undefined && question[2] !== "question" ? `.${question[2]}` : ""}`
+          : section === "behavior" && rule !== null
+            ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2] ?? ""}]`
+            : (section === "design" || section === "ui") && topKey !== null
+              ? `${section}.${topKey}`
+              : null;
     return located === null ? null : (lines.get(located) ?? null);
   };
   const walk = (
@@ -204,7 +214,13 @@ function searchEntries(context: SpecContext): readonly SearchEntry[] {
         section === "design" || section === "ui" || (section === "model" && entry === "terms");
       for (const [name, item] of Object.entries(value)) {
         const path = entry === null ? name : `${entry}.${name}`;
-        if (section === "behavior" && entry === null && name === "ruleKeys") continue;
+        if (
+          section === "behavior" &&
+          entry === null &&
+          (name === "ruleKeys" || name === "stepKeys")
+        )
+          continue;
+        if (section === "model" && entry === null && name === "termKeys") continue;
         if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(path)) continue;
         walk(
           section,

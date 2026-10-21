@@ -51,6 +51,7 @@ export function registerShippedChecksPaired<World>(
     "the audit {verdict}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the audit {verdict}",
         text: "the audit {verdict}",
         params,
       });
@@ -58,6 +59,7 @@ export function registerShippedChecksPaired<World>(
     "the audit names {named} as {list}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the audit names {named} as {list}",
         text: "the audit names {named} as {list}",
         params,
       });

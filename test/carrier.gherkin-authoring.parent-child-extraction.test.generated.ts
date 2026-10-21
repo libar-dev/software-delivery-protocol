@@ -37,6 +37,7 @@ export function registerParentChildExtraction<World>(
     "extraction reports {findingCount} findings": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "extraction reports {findingCount} findings",
         text: "extraction reports {findingCount} findings",
         params,
       });
@@ -44,6 +45,7 @@ export function registerParentChildExtraction<World>(
     "the graph contains exactly {specCount} Specs": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph contains exactly {specCount} Specs",
         text: "the graph contains exactly {specCount} Specs",
         params,
       });
@@ -51,6 +53,7 @@ export function registerParentChildExtraction<World>(
     "the graph contains the Spec {specId} with kind {specKind}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph contains the Spec {specId} with kind {specKind}",
         text: "the graph contains the Spec {specId} with kind {specKind}",
         params,
       });
@@ -58,6 +61,7 @@ export function registerParentChildExtraction<World>(
     "the graph contains the child Spec {childId} with kind {specKind}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph contains the child Spec {childId} with kind {specKind}",
         text: "the graph contains the child Spec {childId} with kind {specKind}",
         params,
       });
@@ -65,6 +69,7 @@ export function registerParentChildExtraction<World>(
     "the child Spec {childId} declares {relationType} to {relationTarget}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the child Spec {childId} declares {relationType} to {relationTarget}",
         text: "the child Spec {childId} declares {relationType} to {relationTarget}",
         params,
       });
@@ -73,6 +78,7 @@ export function registerParentChildExtraction<World>(
       (execution, params) => {
         compareContractOutcome(execution, {
           kind: "then",
+          key: "the child Spec {childId} declares the additional relation {relationType} to {relationTarget}",
           text: "the child Spec {childId} declares the additional relation {relationType} to {relationTarget}",
           params,
         });

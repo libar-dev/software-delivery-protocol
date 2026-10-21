@@ -37,6 +37,7 @@ export function registerRoundTrip<World>(
     "the emitted Markdown re-parses to an equal graph": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the emitted Markdown re-parses to an equal graph",
         text: "the emitted Markdown re-parses to an equal graph",
         params,
       });

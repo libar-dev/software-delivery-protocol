@@ -55,3 +55,31 @@ const missingObserve: GeneratedAdapters = {
   expected: () => ({ kind: "total", total: 1 }),
 };
 void missingObserve;
+
+type KeyedStep = "cartSize" | "complete";
+interface KeyedParams {
+  readonly cartSize: { readonly items: number };
+  readonly complete: { readonly total: number };
+}
+const keyedBindings = {
+  cartSize: (_world, { items }) => void items,
+  complete: (_world, { total }) => void total,
+} satisfies StepBindings<unknown, KeyedStep, KeyedParams>;
+void keyedBindings;
+const staleKeyedBindings = {
+  cartSize: () => undefined,
+  complete: () => undefined,
+  // @ts-expect-error wording is not the keyed handler identity
+  "the cart contains {items}": () => undefined,
+} satisfies StepBindings<unknown, KeyedStep, KeyedParams>;
+void staleKeyedBindings;
+const wrongKeyedParams = {
+  cartSize: (world: unknown, params: { items: string }) => {
+    void world;
+    void params;
+  },
+  complete: () => undefined,
+};
+// @ts-expect-error a key preserves the binding name, not a changed slot type
+const incompatible: StepBindings<unknown, KeyedStep, KeyedParams> = wrongKeyedParams;
+void incompatible;

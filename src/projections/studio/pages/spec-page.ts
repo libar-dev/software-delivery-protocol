@@ -129,7 +129,7 @@ function sections(ctx: PageContext, spec: SpecContext): string {
         if (name === "verification" && typeof record.mode === "string")
           title += ` · ${record.mode}`;
         body += `<dl>${Object.entries(record)
-          .filter(([key]) => key !== "description")
+          .filter(([key]) => key !== "description" && !(name === "model" && key === "termKeys"))
           .map(([key, value]) => {
             const address =
               (name === "design" || name === "ui") && /^[a-z][A-Za-z0-9]*$/u.test(key)

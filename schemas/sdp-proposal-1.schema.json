@@ -30,11 +30,11 @@
     },
     "entryAddress": {
       "type": "string",
-      "pattern": "^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule)\\.[a-z][A-Za-z0-9]*(?![\\s\\S])"
+      "pattern": "^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule|term)\\.[a-z][A-Za-z0-9]*(?![\\s\\S])"
     },
     "scopeRef": {
       "type": "string",
-      "pattern": "^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(?:design|ui|question|rule)\\.[a-z][A-Za-z0-9]*)?(?![\\s\\S])"
+      "pattern": "^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(?:design|ui|question|rule|term)\\.[a-z][A-Za-z0-9]*)?(?![\\s\\S])"
     },
     "reason": {
       "type": "string",

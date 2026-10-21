@@ -57,12 +57,6 @@ export const expectedWarnings = [
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:carrier.step-keys",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
     subjectId: "spec:consumers.agent-surface.example-space-coverage",
   },
   {
@@ -292,12 +286,6 @@ export const expectedWarnings = [
     family: "honesty",
     severity: "warning",
     subjectId: "spec:model.spec-sections",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:model.term-addresses",
   },
   {
     validatorId: "honesty/gaps",

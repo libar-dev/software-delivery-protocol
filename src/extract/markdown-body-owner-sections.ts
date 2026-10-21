@@ -78,6 +78,7 @@ export function mapModel(
   lines: readonly MarkdownLine[],
   file: string,
   findings: Finding[],
+  entryLines: ReifiedEntryLine[],
 ): void {
   const parsed = parseSectionContent(lines, file, findings);
   addDescription(section, parsed.description, file, lines[0]?.line ?? 1, findings);
@@ -105,7 +106,10 @@ export function mapModel(
       );
     else if (Object.hasOwn(terms, match[1]))
       addMarkdownFinding(findings, structureFinding(file, item.line, "model terms must be unique"));
-    else setOwn(terms, match[1], match[2]);
+    else {
+      entryLines.push({ entry: `term[${String(Object.keys(terms).length)}]`, line: item.line });
+      setOwn(terms, match[1], match[2]);
+    }
   }
   if (Object.keys(terms).length > 0) section.terms = terms;
 }

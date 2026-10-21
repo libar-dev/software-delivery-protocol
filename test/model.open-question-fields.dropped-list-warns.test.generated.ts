@@ -41,6 +41,7 @@ export function registerDroppedListWarns<World>(
     "the extractor reports {findingId} at severity {severity}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the extractor reports {findingId} at severity {severity}",
         text: "the extractor reports {findingId} at severity {severity}",
         params,
       });
@@ -48,6 +49,7 @@ export function registerDroppedListWarns<World>(
     "the Spec stays in the graph with {questionCount} open questions": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the Spec stays in the graph with {questionCount} open questions",
         text: "the Spec stays in the graph with {questionCount} open questions",
         params,
       });

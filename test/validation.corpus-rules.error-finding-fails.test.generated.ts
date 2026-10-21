@@ -42,6 +42,7 @@ export function registerErrorFindingFails<World>(
     "the command exits {exitCode}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the command exits {exitCode}",
         text: "the command exits {exitCode}",
         params,
       });
@@ -49,6 +50,7 @@ export function registerErrorFindingFails<World>(
     "the Protocol summary line reads {protocolSummary}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the Protocol summary line reads {protocolSummary}",
         text: "the Protocol summary line reads {protocolSummary}",
         params,
       });
@@ -56,6 +58,7 @@ export function registerErrorFindingFails<World>(
     "the corpus summary line reads {corpusSummary}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the corpus summary line reads {corpusSummary}",
         text: "the corpus summary line reads {corpusSummary}",
         params,
       });

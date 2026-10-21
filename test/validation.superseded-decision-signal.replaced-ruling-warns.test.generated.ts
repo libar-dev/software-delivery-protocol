@@ -51,6 +51,7 @@ export function registerReplacedRulingWarns<World>(
     "the report holds {warnings} superseded-decision warnings": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report holds {warnings} superseded-decision warnings",
         text: "the report holds {warnings} superseded-decision warnings",
         params,
       });
@@ -58,6 +59,7 @@ export function registerReplacedRulingWarns<World>(
     "the warnings name {named}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the warnings name {named}",
         text: "the warnings name {named}",
         params,
       });
@@ -68,6 +70,7 @@ export function registerReplacedRulingWarns<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the warning is {validatorId} in the {family} family at severity {severity}",
         text: "the warning is {validatorId} in the {family} family at severity {severity}",
         params,
       });
@@ -78,6 +81,7 @@ export function registerReplacedRulingWarns<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the warning has the subject {subjectId} and the related Spec {relatedId}",
         text: "the warning has the subject {subjectId} and the related Spec {relatedId}",
         params,
       });
@@ -85,6 +89,7 @@ export function registerReplacedRulingWarns<World>(
     "the warning sits at {path} in {file} on line {line}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the warning sits at {path} in {file} on line {line}",
         text: "the warning sits at {path} in {file} on line {line}",
         params,
       });
@@ -92,6 +97,7 @@ export function registerReplacedRulingWarns<World>(
     "the warning message follows {template}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the warning message follows {template}",
         text: "the warning message follows {template}",
         params,
       });
@@ -99,6 +105,7 @@ export function registerReplacedRulingWarns<World>(
     "the report holds {errorCount} errors": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report holds {errorCount} errors",
         text: "the report holds {errorCount} errors",
         params,
       });

@@ -2,7 +2,7 @@
 id: spec:carrier.step-keys.conflicting-example-key-withheld
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.step-keys
   verifies:

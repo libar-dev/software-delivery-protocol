@@ -37,6 +37,7 @@ export function registerNamespacedRoundTrip<World>(
     "parsing {outcome}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "parsing {outcome}",
         text: "parsing {outcome}",
         params,
       });
@@ -44,6 +45,7 @@ export function registerNamespacedRoundTrip<World>(
     "reformatting the parsed parts restores {restored}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "reformatting the parsed parts restores {restored}",
         text: "reformatting the parsed parts restores {restored}",
         params,
       });

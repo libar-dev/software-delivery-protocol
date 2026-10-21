@@ -24,7 +24,7 @@ import { buildGraphIndex } from "../validate/graph-index.js";
  * - a prose-only example, or one with an unbound slot in a used step (the concreteness law),
  *   is not the `defined`-rung bindable form — it gets no step contract; refusing is the honest
  *   behavior, not a degraded run.
- * - an outcome variant's `kind` is the Then step's own **skeleton text** — the no-guessing rule:
+ * - an outcome variant's `kind` is the Then step's own **contract key** — the no-guessing rule:
  *   naming an outcome IS naming an authored Then step, so "the oracle may never claim more than
  *   the specs state" stays a `tsc` error with zero derived slugs (prettier names are the grammar
  *   session's, sugar over this identity).
@@ -56,6 +56,8 @@ export const contractsFindingIds = {
   caseCollidingPath: "contracts/case-colliding-path",
   /** More than one authored suite claims the registrar path for one example. */
   multipleRegistrarPaths: "contracts/multiple-registrar-paths",
+  conflictingStepKey: "contracts/conflicting-step-key",
+  duplicateStepKey: "contracts/duplicate-step-key",
 } as const;
 
 export interface GeneratedContracts {
@@ -125,6 +127,8 @@ function structuredEntriesOf(node: PrimitiveNode): readonly StructuredEntry[] {
 }
 
 interface VocabularyEntry {
+  readonly key: string;
+  readonly stepKey?: string;
   readonly phase: StepPhase;
   readonly skeleton: string;
   /** Slot name → declared type, authored order. Only the ratified type-form declares (`number` /
@@ -132,6 +136,37 @@ interface VocabularyEntry {
    *  identifier-led form, bare, malformed, or a value-form binding, declares nothing and warns
    *  (`contracts/untyped-vocabulary-slot`), never silently drops (L2). */
   readonly slots: ReadonlyMap<string, SlotDeclaredType>;
+}
+
+function authoredStepKey(node: PrimitiveNode, skeleton: string): string | undefined {
+  return Object.entries(node.sections?.behavior?.stepKeys ?? {}).find(
+    ([, target]) => target === skeleton,
+  )?.[0];
+}
+
+function duplicateContractKeys(
+  steps: readonly { readonly key: string; readonly skeleton: string }[],
+  node: PrimitiveNode,
+  kind: "space" | "step",
+  findings: Finding[],
+): boolean {
+  const first = new Map<string, string>();
+  let duplicate = false;
+  for (const step of steps) {
+    const previous = first.get(step.key);
+    if (previous !== undefined && previous !== step.skeleton) {
+      duplicate = true;
+      findings.push(
+        contractsFinding(
+          contractsFindingIds.duplicateStepKey,
+          `contract key "${step.key}" names both "${previous}" and "${step.skeleton}"; ${kind} contract withheld`,
+          node,
+          kind === "space" ? "behavior.exampleSpace" : "behavior.examples",
+        ),
+      );
+    } else first.set(step.key, step.skeleton);
+  }
+  return duplicate;
 }
 
 function vocabularyOf(
@@ -183,7 +218,13 @@ function vocabularyOf(
         );
       }
 
-      entries.push({ phase, skeleton, slots });
+      entries.push({
+        phase,
+        skeleton,
+        slots,
+        key: authoredStepKey(node, skeleton) ?? skeleton,
+        stepKey: authoredStepKey(node, skeleton),
+      });
     }
   }
 
@@ -452,7 +493,7 @@ function renderSpaceContract(space: SpaceModel, points: readonly ExamplePointMod
     `/** The Outcome union — one variant per Then-vocabulary step, its \`kind\` the step's own`,
   );
   lines.push(
-    ` *  skeleton text (naming an outcome IS naming an authored Then step); \`unspecified\` is`,
+    ` *  contract key (naming an outcome IS naming an authored Then step); \`unspecified\` is`,
   );
   lines.push(` *  contributed by the runner core — the one outcome no spec ever states. */`);
   lines.push(`export type ${pascal}Outcome =`);
@@ -461,7 +502,7 @@ function renderSpaceContract(space: SpaceModel, points: readonly ExamplePointMod
     const payload = [...entry.slots]
       .map(([name, type]) => `; readonly ${name}: ${typeExpression(type)}`)
       .join("");
-    lines.push(`  | { readonly kind: ${JSON.stringify(entry.skeleton)}${payload} }`);
+    lines.push(`  | { readonly kind: ${JSON.stringify(entry.key)}${payload} }`);
   }
 
   lines.push(`  | UnspecifiedOutcome;`);
@@ -534,6 +575,7 @@ function renderSpaceContract(space: SpaceModel, points: readonly ExamplePointMod
 /* ----- the step contract ----- */
 
 interface ContractStepModel {
+  readonly key: string;
   readonly kind: StepPhase;
   readonly skeleton: string;
   readonly params: ReadonlyMap<string, SlotScalar>;
@@ -587,13 +629,28 @@ function buildContractSteps(
   spacesByParent: ReadonlyMap<string, SpaceModel>,
   parentIds: readonly string[],
   findings: Finding[],
-): readonly ContractStepModel[] {
+): readonly ContractStepModel[] | undefined {
   const steps: ContractStepModel[] = [];
   const firstParamsBySkeleton = new Map<string, ReadonlyMap<string, SlotScalar>>();
 
   for (const phase of STEP_PHASES) {
     for (const text of scenario[phase]) {
       const skeleton = stepSkeleton(text);
+      const ownKey = authoredStepKey(node, skeleton);
+      const vocabularyEntry = resolveVocabularyEntry(skeleton, spacesByParent, parentIds);
+      const vocabularyKey = vocabularyEntry?.stepKey;
+      if (vocabularyEntry !== undefined && ownKey !== undefined && ownKey !== vocabularyKey) {
+        findings.push(
+          contractsFinding(
+            contractsFindingIds.conflictingStepKey,
+            `example "${node.id}" step "${skeleton}" carries key "${ownKey}" but its vocabulary step carries ${vocabularyKey === undefined ? "none" : `"${vocabularyKey}"`}; step contract withheld`,
+            node,
+            "behavior.examples",
+          ),
+        );
+        return undefined;
+      }
+      const key = vocabularyEntry?.key ?? ownKey ?? skeleton;
       const params = new Map<string, SlotScalar>();
 
       for (const slot of parseSlots(text)) {
@@ -626,7 +683,7 @@ function buildContractSteps(
 
       if (first === undefined) {
         firstParamsBySkeleton.set(skeleton, params);
-        steps.push({ kind: phase, skeleton, params });
+        steps.push({ kind: phase, key, skeleton, params });
         continue;
       }
 
@@ -642,7 +699,7 @@ function buildContractSteps(
       }
 
       // Duplicate text dedupes to one handler and one params shape; every occurrence still runs.
-      steps.push({ kind: phase, skeleton, params: first });
+      steps.push({ kind: phase, key, skeleton, params: first });
     }
   }
 
@@ -672,7 +729,7 @@ function buildContractSteps(
     }
   }
 
-  return steps;
+  return duplicateContractKeys(steps, node, "step", findings) ? undefined : steps;
 }
 
 function sameParams(
@@ -738,21 +795,21 @@ function renderStepContract(
   parentIds: readonly string[],
 ): string {
   const camel = camelCase(node.id);
-  const uniqueSkeletons: string[] = [];
+  const uniqueKeys: string[] = [];
   const seen = new Set<string>();
 
   for (const step of steps) {
-    if (!seen.has(step.skeleton)) {
-      seen.add(step.skeleton);
-      uniqueSkeletons.push(step.skeleton);
+    if (!seen.has(step.key)) {
+      seen.add(step.key);
+      uniqueKeys.push(step.key);
     }
   }
 
-  const paramsBySkeleton = new Map<string, ContractStepModel>();
+  const paramsByKey = new Map<string, ContractStepModel>();
 
   for (const step of steps) {
-    if (!paramsBySkeleton.has(step.skeleton)) {
-      paramsBySkeleton.set(step.skeleton, step);
+    if (!paramsByKey.has(step.key)) {
+      paramsByKey.set(step.key, step);
     }
   }
 
@@ -761,22 +818,20 @@ function renderStepContract(
   lines.push(`import type { ExampleContract } from "${RUNNER_SPECIFIER}";`);
   lines.push("");
   lines.push(
-    `export type Step =\n${uniqueSkeletons.map((skeleton) => `  | ${JSON.stringify(skeleton)}`).join("\n")};`,
+    `export type Step =\n${uniqueKeys.map((key) => `  | ${JSON.stringify(key)}`).join("\n")};`,
   );
   lines.push("");
   lines.push(`export type StepParams = {`);
 
-  for (const skeleton of uniqueSkeletons) {
-    const step = paramsBySkeleton.get(skeleton);
+  for (const key of uniqueKeys) {
+    const step = paramsByKey.get(key);
 
     if (step === undefined) {
       continue;
     }
 
-    const vocabularyEntry = resolveVocabularyEntry(skeleton, spacesByParent, parentIds);
-    lines.push(
-      `  readonly ${JSON.stringify(skeleton)}: ${paramTypeExpression(step, vocabularyEntry)};`,
-    );
+    const vocabularyEntry = resolveVocabularyEntry(step.skeleton, spacesByParent, parentIds);
+    lines.push(`  readonly ${JSON.stringify(key)}: ${paramTypeExpression(step, vocabularyEntry)};`);
   }
 
   lines.push(`};`);
@@ -791,7 +846,7 @@ function renderStepContract(
       .map(([name, value]) => `${name}: ${valueExpression(value)}`)
       .join(", ");
     lines.push(
-      `    { kind: ${JSON.stringify(step.kind)}, text: ${JSON.stringify(step.skeleton)}, params: {${
+      `    { kind: ${JSON.stringify(step.kind)}, key: ${JSON.stringify(step.key)}, text: ${JSON.stringify(step.skeleton)}, params: {${
         params.length > 0 ? ` ${params} ` : ""
       }} },`,
     );
@@ -871,11 +926,11 @@ function renderRunnableRegistrar(
   const renderedBindings = new Set<string>();
 
   for (const step of steps) {
-    if (renderedBindings.has(step.skeleton)) {
+    if (renderedBindings.has(step.key)) {
       continue;
     }
-    renderedBindings.add(step.skeleton);
-    const bindingKey = `    ${JSON.stringify(step.skeleton)}:`;
+    renderedBindings.add(step.key);
+    const bindingKey = `    ${JSON.stringify(step.key)}:`;
     const opening =
       step.kind === "given"
         ? `() => {`
@@ -915,6 +970,7 @@ function renderRunnableRegistrar(
     } else {
       lines.push(`${bodyIndent}compareContractOutcome(execution, {`);
       lines.push(`${bodyIndent}  kind: "then",`);
+      lines.push(`${bodyIndent}  key: ${JSON.stringify(step.key)},`);
       lines.push(`${bodyIndent}  text: ${JSON.stringify(step.skeleton)},`);
       lines.push(`${bodyIndent}  params,`);
       lines.push(`${bodyIndent}});`);
@@ -971,7 +1027,7 @@ const codegenComponentAnchor = codeAnchor({
 const executableContractsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.executable-contracts"),
   label: "derives step and example-space contracts from the graph",
-  satisfies: ref("spec:extraction.executable-contracts"),
+  satisfies: [ref("spec:extraction.executable-contracts"), ref("spec:carrier.step-keys")],
   component: componentAnchorId("component:protocol.codegen"),
   role: "projection",
 });
@@ -1017,6 +1073,7 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
     left < right ? -1 : left > right ? 1 : 0,
   );
   const spacesByParent = new Map<string, SpaceModel>();
+  const withheldSpaces = new Set<string>();
   const boundPoints = new Map<string, ExamplePointModel>();
 
   for (const id of sortedIds) {
@@ -1030,6 +1087,7 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
 
     if (vocabulary !== undefined) {
       spacesByParent.set(id, buildSpaceModel(node, vocabulary, findings));
+      if (duplicateContractKeys(vocabulary, node, "space", findings)) withheldSpaces.add(id);
     }
   }
 
@@ -1052,7 +1110,8 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
       }
     }
 
-    files.set(`${idPath(parentId)}.space.ts`, renderSpaceContract(space, points));
+    if (!withheldSpaces.has(parentId))
+      files.set(`${idPath(parentId)}.space.ts`, renderSpaceContract(space, points));
   }
 
   for (const id of sortedIds) {
@@ -1102,6 +1161,7 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
       left < right ? -1 : left > right ? 1 : 0,
     );
     const steps = buildContractSteps(node, scenario, spacesByParent, parentIds, findings);
+    if (steps === undefined) continue;
     files.set(
       `${idPath(id)}.contract.ts`,
       renderStepContract(node, steps, spacesByParent, parentIds),
@@ -1111,7 +1171,11 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
     const space = parentId === undefined ? undefined : spacesByParent.get(parentId);
     const point = parentId === undefined ? undefined : boundPoints.get(`${parentId}\u0000${id}`);
 
-    if (space !== undefined && point !== undefined) {
+    if (
+      space !== undefined &&
+      point !== undefined &&
+      !parentIds.some((id) => withheldSpaces.has(id))
+    ) {
       const anchoredTestFiles = [
         ...new Set(
           graph.edges

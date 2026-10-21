@@ -40,6 +40,7 @@ export function registerIncoherentAggregate<World>(
     "the report names {findingId} at severity {severity}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report names {findingId} at severity {severity}",
         text: "the report names {findingId} at severity {severity}",
         params,
       });
@@ -47,6 +48,7 @@ export function registerIncoherentAggregate<World>(
     "the report holds {findingCount} pack-coherence findings": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report holds {findingCount} pack-coherence findings",
         text: "the report holds {findingCount} pack-coherence findings",
         params,
       });

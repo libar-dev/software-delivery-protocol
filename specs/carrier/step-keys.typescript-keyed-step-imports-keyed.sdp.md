@@ -2,7 +2,7 @@
 id: spec:carrier.step-keys.typescript-keyed-step-imports-keyed
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:carrier.step-keys
   verifies:

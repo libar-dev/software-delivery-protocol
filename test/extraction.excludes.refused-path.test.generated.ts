@@ -41,6 +41,7 @@ export function registerRefusedPath<World>(
     "the discovery attempt {outcome}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the discovery attempt {outcome}",
         text: "the discovery attempt {outcome}",
         params,
       });
@@ -48,6 +49,7 @@ export function registerRefusedPath<World>(
     "the refusal states {diagnostic} and names the offending path": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the refusal states {diagnostic} and names the offending path",
         text: "the refusal states {diagnostic} and names the offending path",
         params,
       });

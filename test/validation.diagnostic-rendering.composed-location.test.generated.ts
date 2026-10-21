@@ -49,6 +49,7 @@ export function registerComposedLocation<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the finding carrying the file {file} and the line {line} renders {withLocation}",
         text: "the finding carrying the file {file} and the line {line} renders {withLocation}",
         params,
       });
@@ -56,6 +57,7 @@ export function registerComposedLocation<World>(
     "the same finding carrying the file alone renders {fileOnly}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the same finding carrying the file alone renders {fileOnly}",
         text: "the same finding carrying the file alone renders {fileOnly}",
         params,
       });
@@ -63,6 +65,7 @@ export function registerComposedLocation<World>(
     "the same finding carrying neither renders {bare}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the same finding carrying neither renders {bare}",
         text: "the same finding carrying neither renders {bare}",
         params,
       });

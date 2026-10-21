@@ -261,15 +261,15 @@ describe("the self-hosting corpus", () => {
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 399 Markdown Specs and four Gherkin Specs,
-    // 403 in the self-hosting Pack; seven Pack manifests and 369 source anchors.
-    // The excluded-root validate run corroborates 779 nodes and 2245 edges.
-    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 369 });
+    // 403 in the self-hosting Pack; seven Pack manifests and 386 source anchors.
+    // The excluded-root validate run corroborates 796 nodes and 2278 edges.
+    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 386 });
     expect(expectedSpecs).toHaveLength(403);
     expect(expectedPackMembers).toHaveLength(403);
-    expect(expectedAnchors).toHaveLength(369);
-    expect(expectedBindingEdges).toHaveLength(431);
-    expect(result.graph.nodes).toHaveLength(779);
-    expect(result.graph.edges).toHaveLength(2245);
+    expect(expectedAnchors).toHaveLength(386);
+    expect(expectedBindingEdges).toHaveLength(463);
+    expect(result.graph.nodes).toHaveLength(796);
+    expect(result.graph.edges).toHaveLength(2278);
   });
 
   it("rosters exactly the authored Spec, Pack, and anchor node ids", () => {
@@ -331,7 +331,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ defined: 84, idea: 5, ready: 313, scoped: 1 });
+    ).toEqual({ defined: 69, idea: 5, ready: 328, scoped: 1 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -384,7 +384,7 @@ describe("the self-hosting corpus", () => {
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedMemberOfEdges).toHaveLength(126);
+    expect(expectedMemberOfEdges).toHaveLength(127);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>

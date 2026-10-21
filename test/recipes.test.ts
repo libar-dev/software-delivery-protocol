@@ -2044,6 +2044,7 @@ const registerRecipesImplementationAnchor = codeAnchor({
     ref("spec:consumers.agent-surface.register-recipes"),
     ref("spec:model.open-question-keys"),
     ref("spec:extraction.contract-declarations"),
+    ref("spec:model.term-addresses"),
   ],
 });
 void registerRecipesImplementationAnchor;
@@ -3550,7 +3551,10 @@ function expectCyclesToMatchOracle(result: Record<string, unknown>, extraction: 
 const addressAndCycleRecipesImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.address-and-cycle-recipes"),
   label: "asserts realization of the shipped address resolution and dependency cycle recipes",
-  satisfies: ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
+  satisfies: [
+    ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
+    ref("spec:model.term-addresses"),
+  ],
 });
 void addressAndCycleRecipesImplementationAnchor;
 const addressAndCycleRecipesTestAnchor = specTest({
@@ -3619,7 +3623,7 @@ describe("address resolution and dependency cycles", () => {
           ...(reason === "malformed"
             ? {
                 expected:
-                  "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+                  "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII",
               }
             : {}),
         })),
@@ -3819,7 +3823,7 @@ relations: {}
           ...(reason === "malformed"
             ? {
                 expected:
-                  "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+                  "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII",
               }
             : {}),
         })),
@@ -3869,7 +3873,7 @@ relations: {}
       ...(reason === "malformed"
         ? {
             expected:
-              "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+              "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII",
           }
         : {}),
     });
@@ -6788,7 +6792,7 @@ describe("authoring grammar recipes", () => {
       key: null,
       reason: "malformed",
       expected:
-        "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+        "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII",
     });
     const design = asRecord(
       await runRecipe(

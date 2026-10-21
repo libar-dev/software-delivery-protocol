@@ -1,3 +1,4 @@
+import { normalizeKeyedContent, parseKeyMarker } from "./key-markers.js";
 import type { FileReification, ReifiedSpec } from "./reify.js";
 import { setOwn } from "./set-own.js";
 import type { Finding } from "../validate/contracts.js";
@@ -101,8 +102,8 @@ function normalizeRules(spec: ReifiedSpec, findings: Finding[]): void {
   for (const { field, index, text } of entries) {
     if (!text.startsWith("[#")) continue;
     const path = `behavior.${field}[${String(index)}]`;
-    const match = /^\[#([a-z][A-Za-z0-9]*)\] ([^\s][\s\S]*)$/u.exec(text);
-    if (match?.[1] === undefined || match[2] === undefined) {
+    const parsed = parseKeyMarker(text);
+    if (parsed.key === undefined) {
       error(
         spec,
         path,
@@ -112,8 +113,8 @@ function normalizeRules(spec: ReifiedSpec, findings: Finding[]): void {
       continue;
     }
     const values = behavior[field] as string[];
-    values[index] = match[2];
-    const key = match[1];
+    values[index] = parsed.text;
+    const key = parsed.key;
     const paths = sites.get(key) ?? [];
     paths.push(path);
     sites.set(key, paths);
@@ -172,6 +173,7 @@ export function normalizeAuthoring(
   const findings = [...result.findings];
   for (const spec of result.specs) {
     normalizeRules(spec, findings);
+    normalizeKeyedContent(spec, findings);
     normalizeQuestions(spec, findings);
   }
   return {

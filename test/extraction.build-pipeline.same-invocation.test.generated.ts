@@ -39,6 +39,7 @@ export function registerSameInvocation<World>(
     "the query exits {exitCode}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the query exits {exitCode}",
         text: "the query exits {exitCode}",
         params,
       });
@@ -46,6 +47,7 @@ export function registerSameInvocation<World>(
     "the reader and the raw graph both return the spec {returnedSpecId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the reader and the raw graph both return the spec {returnedSpecId}",
         text: "the reader and the raw graph both return the spec {returnedSpecId}",
         params,
       });
@@ -53,6 +55,7 @@ export function registerSameInvocation<World>(
     "the validation report names the same subject {findingSubjectId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the validation report names the same subject {findingSubjectId}",
         text: "the validation report names the same subject {findingSubjectId}",
         params,
       });

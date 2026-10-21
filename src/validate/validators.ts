@@ -1258,7 +1258,10 @@ function proseMentionTexts(node: PrimitiveNode): readonly MentionText[] {
     for (const key of sectionKeys(sectionName, section)) {
       const entry = section[key];
 
-      if (sectionName === "behavior" && key === "exampleSpace") {
+      if (
+        (sectionName === "behavior" && (key === "exampleSpace" || key === "stepKeys")) ||
+        (sectionName === "model" && key === "termKeys")
+      ) {
         continue;
       }
 
@@ -1328,6 +1331,10 @@ function hasAddressedEntry(target: PrimitiveNode, address: string): boolean {
       isRecord(behavior) && isRecord(behavior.ruleKeys) && Object.hasOwn(behavior.ruleKeys, key)
     );
   }
+  if (sectionName === "term") {
+    const model = sections?.model;
+    return isRecord(model) && isRecord(model.termKeys) && Object.hasOwn(model.termKeys, key);
+  }
   const section = sections?.[sectionName];
 
   return key !== "description" && isRecord(section) && Object.hasOwn(section, key);
@@ -1347,6 +1354,15 @@ function backingPairs(graph: GraphSchema): ReadonlySet<string> {
 }
 
 function mentionLine(graph: GraphSchema, spec: string, path: string): number | undefined {
+  const source = graph.nodes.find((node) => node.nodeType === "Primitive" && node.id === spec);
+  if (path.startsWith("model.terms.") && source?.nodeType === "Primitive") {
+    const index = Object.keys(source.sections?.model?.terms ?? {}).indexOf(
+      path.slice("model.terms.".length),
+    );
+    return graph.locations?.find(
+      (row) => row.spec === spec && row.entry === `term[${String(index)}]`,
+    )?.line;
+  }
   const entry = path
     .replace(/^behavior\.rules(?=\[\d+\]$)/u, "rule")
     .replace(/^behavior\.flows(?=\[\d+\]$)/u, "flow")
@@ -1383,7 +1399,11 @@ function proseMentionWarning(
 const proseMentionsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.prose-mentions"),
   label: "checks that prose mentions resolve and warns once per unbacked Spec pair",
-  satisfies: [ref("spec:validation.prose-mentions"), ref("spec:model.open-question-keys")],
+  satisfies: [
+    ref("spec:validation.prose-mentions"),
+    ref("spec:model.open-question-keys"),
+    ref("spec:model.term-addresses"),
+  ],
   component: componentAnchorId("component:protocol.validate"),
   role: "validator",
 });

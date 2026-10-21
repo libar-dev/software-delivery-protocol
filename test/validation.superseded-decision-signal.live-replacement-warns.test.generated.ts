@@ -51,6 +51,7 @@ export function registerLiveReplacementWarns<World>(
     "the report holds {warnings} superseded-decision warnings": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report holds {warnings} superseded-decision warnings",
         text: "the report holds {warnings} superseded-decision warnings",
         params,
       });
@@ -58,6 +59,7 @@ export function registerLiveReplacementWarns<World>(
     "the warnings name {named}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the warnings name {named}",
         text: "the warnings name {named}",
         params,
       });
@@ -68,6 +70,7 @@ export function registerLiveReplacementWarns<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the warning has the subject {subjectId} and the related Spec {relatedId}",
         text: "the warning has the subject {subjectId} and the related Spec {relatedId}",
         params,
       });
@@ -75,6 +78,7 @@ export function registerLiveReplacementWarns<World>(
     "the report holds {errorCount} errors": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report holds {errorCount} errors",
         text: "the report holds {errorCount} errors",
         params,
       });

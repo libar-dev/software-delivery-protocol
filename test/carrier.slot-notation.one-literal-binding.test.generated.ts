@@ -37,6 +37,7 @@ export function registerOneLiteralBinding<World>(
     "the notation finds {slotCount} slot groups": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the notation finds {slotCount} slot groups",
         text: "the notation finds {slotCount} slot groups",
         params,
       });
@@ -44,6 +45,7 @@ export function registerOneLiteralBinding<World>(
     "the first group has the form {form} and the name {slotName}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the first group has the form {form} and the name {slotName}",
         text: "the first group has the form {form} and the name {slotName}",
         params,
       });
@@ -51,6 +53,7 @@ export function registerOneLiteralBinding<World>(
     "the step skeleton is {skeleton}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the step skeleton is {skeleton}",
         text: "the step skeleton is {skeleton}",
         params,
       });
@@ -61,6 +64,7 @@ export function registerOneLiteralBinding<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "contract generation declares {dimensionCount} dimensions and reports {generationFinding}",
         text: "contract generation declares {dimensionCount} dimensions and reports {generationFinding}",
         params,
       });

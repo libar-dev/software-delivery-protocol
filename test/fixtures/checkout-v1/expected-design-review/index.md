@@ -1,6 +1,6 @@
 # Design Review
 
-The Design Review — a pure projection of the one graph (`graph.json`, schema `0.10.0`): 17 nodes · 32 edges.
+The Design Review — a pure projection of the one graph (`graph.json`, schema `0.11.0`): 17 nodes · 32 edges.
 
 ## Specs
 

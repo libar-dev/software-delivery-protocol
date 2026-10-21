@@ -1103,6 +1103,43 @@ function typeScriptEntryLines(
       );
     }
   }
+  const modelNode = firstPropertyNamed(objectLiteral, "model")?.getInitializer();
+  const termsNode =
+    modelNode === undefined ? undefined : firstPropertyNamed(modelNode, "terms")?.getInitializer();
+  const model = data.model;
+  if (termsNode !== undefined && isUnknownRecord(model) && isUnknownRecord(model.terms)) {
+    Object.keys(model.terms).forEach((term, index) => {
+      const property = firstPropertyNamed(termsNode, term);
+      if (property !== undefined)
+        lines.push({ entry: `term[${String(index)}]`, line: property.getStartLineNumber() });
+    });
+  }
+  const stepLines = (node: Node | undefined, path: string): void => {
+    if (node === undefined) return;
+    for (const phase of ["given", "when", "then"]) {
+      const initializer = firstPropertyNamed(node, phase)?.getInitializer();
+      const array = initializer === undefined ? undefined : unwrapTransparent(initializer);
+      if (array !== undefined && Node.isArrayLiteralExpression(array))
+        array.getElements().forEach((element, index) =>
+          lines.push({
+            entry: `${path}.${phase}[${String(index)}]`,
+            line: element.getStartLineNumber(),
+          }),
+        );
+    }
+  };
+  if (behaviorNode !== undefined) {
+    stepLines(
+      firstPropertyNamed(behaviorNode, "exampleSpace")?.getInitializer(),
+      "behavior.exampleSpace",
+    );
+    const initializer = firstPropertyNamed(behaviorNode, "examples")?.getInitializer();
+    const examples = initializer === undefined ? undefined : unwrapTransparent(initializer);
+    if (examples !== undefined && Node.isArrayLiteralExpression(examples))
+      examples.getElements().forEach((element, index) => {
+        stepLines(element, `behavior.examples[${String(index)}]`);
+      });
+  }
   const relationsNode = firstPropertyNamed(objectLiteral, "relations")?.getInitializer();
   const relationsArray = relationsNode === undefined ? undefined : unwrapTransparent(relationsNode);
   if (relationsArray !== undefined && Node.isArrayLiteralExpression(relationsArray)) {

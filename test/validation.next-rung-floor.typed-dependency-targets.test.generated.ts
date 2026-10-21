@@ -40,6 +40,7 @@ export function registerTypedDependencyTargets<World>(
     "the floor reached is {floorReached} and the next rung is {nextRung}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the floor reached is {floorReached} and the next rung is {nextRung}",
         text: "the floor reached is {floorReached} and the next rung is {nextRung}",
         params,
       });
@@ -47,6 +48,7 @@ export function registerTypedDependencyTargets<World>(
     "the next rung's first unmet clause is {clauseId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the next rung's first unmet clause is {clauseId}",
         text: "the next rung's first unmet clause is {clauseId}",
         params,
       });
@@ -54,6 +56,7 @@ export function registerTypedDependencyTargets<World>(
     "that failure names the targets {targets}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "that failure names the targets {targets}",
         text: "that failure names the targets {targets}",
         params,
       });
@@ -61,6 +64,7 @@ export function registerTypedDependencyTargets<World>(
     "the stated rung's floor failures number {currentFailures}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the stated rung's floor failures number {currentFailures}",
         text: "the stated rung's floor failures number {currentFailures}",
         params,
       });
