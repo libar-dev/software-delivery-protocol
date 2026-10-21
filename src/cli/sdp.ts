@@ -4,6 +4,8 @@ import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { SDP_HELP_TEXT, NEW_SPEC_HELP_TEXT, verbHelpText } from "./help.js";
+import { runVault, runVaultWatch } from "./vault-command.js";
+import type { VaultHooks } from "./vault-command.js";
 import { runGenerate } from "./generate-command.js";
 import type { GenerateHooks } from "./generate-command.js";
 import { parseBuildArgs } from "./build-args.js";
@@ -40,7 +42,8 @@ interface CliHooks
     GherkinViewHooks,
     ValidateWatchHooks,
     StudioHooks,
-    GenerateHooks {
+    GenerateHooks,
+    VaultHooks {
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
   readonly readEngineFile?: EngineFileReader;
@@ -145,6 +148,7 @@ export function runSdpCli(
     command !== "gherkin" &&
     command !== "studio" &&
     command !== "generate" &&
+    command !== "vault" &&
     command !== "import" &&
     command !== "new" &&
     command !== "q"
@@ -199,6 +203,9 @@ export function runSdpCli(
   if (parsed === undefined) {
     return 1;
   }
+
+  if (command === "vault")
+    return parsed.watch ? runVaultWatch(parsed, output, hooks) : runVault(parsed, output, hooks);
 
   if (command === "generate") return runGenerate(parsed, output, hooks);
 

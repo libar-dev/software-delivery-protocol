@@ -2,7 +2,7 @@
 id: spec:consumers.obsidian-vault.person-notes-survive
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.obsidian-vault
   verifies:

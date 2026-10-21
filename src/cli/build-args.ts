@@ -85,7 +85,33 @@ export function parseBuildArgs(
       continue;
     }
 
+    if (command === "vault" && (argument === "--root" || argument === "--out")) {
+      const value = args[index + 1];
+      if (value === undefined || value.trim() === "" || value.startsWith("--")) {
+        writeStderr(output, `sdp vault: ${argument} requires a path.\n`);
+        return undefined;
+      }
+      if (argument === "--root") {
+        if (root !== undefined) {
+          writeStderr(output, "sdp vault: give the root once, as an argument or --root.\n");
+          return undefined;
+        }
+        root = value;
+      } else {
+        if (vault !== undefined) {
+          writeStderr(output, "sdp vault: --out may be supplied only once.\n");
+          return undefined;
+        }
+        vault = value;
+      }
+      index++;
+      continue;
+    }
     if (argument === "--check-clean") {
+      if (command === "vault") {
+        writeStderr(output, "sdp vault: unknown option --check-clean\n");
+        return undefined;
+      }
       checkClean = true;
       continue;
     }
@@ -129,7 +155,7 @@ export function parseBuildArgs(
     }
 
     if (argument === "--watch") {
-      if (command !== "validate") {
+      if (command !== "validate" && command !== "vault") {
         writeStderr(output, `sdp ${command}: --watch is only valid on validate.\n`);
         return undefined;
       }

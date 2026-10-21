@@ -60,6 +60,10 @@ export interface ValidateWatchCycle {
 }
 
 export interface ValidateWatchHooks {
+  readonly watchSources?: boolean;
+  readonly watchCommand?: string;
+  readonly runWatchCycle?: () => { readonly exitCode: number };
+  readonly onWatchStop?: () => void;
   readonly abortSignal?: AbortSignal;
   readonly createWatchSource?: (input: {
     readonly root: string;
@@ -166,6 +170,7 @@ export function isWatchedCarrierPath(
   root: string,
   eventPath: string,
   exclude: readonly string[],
+  sources = false,
 ): boolean {
   const relativePath = toPosixRelative(root, eventPath);
 
@@ -185,7 +190,10 @@ export function isWatchedCarrierPath(
     return false;
   }
 
-  return CARRIER_SUFFIXES.some((suffix) => relativePath.endsWith(suffix));
+  return (
+    CARRIER_SUFFIXES.some((suffix) => relativePath.endsWith(suffix)) ||
+    (sources && /\.tsx?$/u.test(relativePath) && !relativePath.endsWith(".d.ts"))
+  );
 }
 
 function defaultNativeWatch(
@@ -212,6 +220,7 @@ function createFilesystemWatchSource(input: {
   readonly root: string;
   readonly exclude: readonly string[];
   readonly createNativeWatch?: NativeWatchFactory;
+  readonly watchSources?: boolean;
   readonly lstatWatchPath?: (path: string) => Stats;
 }): ValidateWatchEventSource {
   const createNativeWatch = input.createNativeWatch ?? defaultNativeWatch;
@@ -434,7 +443,7 @@ function createFilesystemWatchSource(input: {
       if (
         emitExistingCarriers &&
         entry.isFile() &&
-        isWatchedCarrierPath(input.root, relativePath, input.exclude)
+        isWatchedCarrierPath(input.root, relativePath, input.exclude, input.watchSources)
       ) {
         eventListener?.({ type: "create", path: relativePath });
       }
@@ -603,6 +612,7 @@ export async function runValidateWatch(
       exclude: parsed.exclude,
       createNativeWatch: watchHooks.createNativeWatch,
       lstatWatchPath: watchHooks.lstatWatchPath,
+      watchSources: watchHooks.watchSources,
     });
   const namedSource =
     watchHooks.createWatchSource === undefined
@@ -624,6 +634,7 @@ export async function runValidateWatch(
     }
 
     state.closed = true;
+    watchHooks.onWatchStop?.();
     source.close();
     namedSource?.close();
     waiter.wake();
@@ -671,7 +682,7 @@ export async function runValidateWatch(
       event.subtreeRemoved !== true &&
       event.unattributed !== true &&
       !files.includes(resolve(parsed.root, event.path)) &&
-      !isWatchedCarrierPath(parsed.root, event.path, parsed.exclude)
+      !isWatchedCarrierPath(parsed.root, event.path, parsed.exclude, watchHooks.watchSources)
     ) {
       return;
     }
@@ -702,19 +713,21 @@ export async function runValidateWatch(
 
       if (!isWatchClosed(state)) {
         const outcome =
-          parsed.rules === undefined
-            ? runValidate(parsed, output, "validate", hooks)
-            : await runValidateRules(
-                {
-                  ...parsed,
-                  rules: parsed.rules.map((file) => ({
-                    ...file,
-                    rereadParams: state.cycleIndex > 1,
-                  })),
-                },
-                output,
-                hooks,
-              );
+          watchHooks.runWatchCycle !== undefined
+            ? watchHooks.runWatchCycle()
+            : parsed.rules === undefined
+              ? runValidate(parsed, output, "validate", hooks)
+              : await runValidateRules(
+                  {
+                    ...parsed,
+                    rules: parsed.rules.map((file) => ({
+                      ...file,
+                      rereadParams: state.cycleIndex > 1,
+                    })),
+                  },
+                  output,
+                  hooks,
+                );
         watchHooks.onWatchCycleComplete?.({
           index: state.cycleIndex,
           exitCode: outcome.exitCode,
@@ -742,7 +755,10 @@ export async function runValidateWatch(
   }
 
   if (state.failure !== undefined) {
-    writeStderr(output, `sdp validate: watch failed — ${state.failure.message}\n`);
+    writeStderr(
+      output,
+      `sdp ${watchHooks.watchCommand ?? "validate"}: watch failed — ${state.failure.message}\n`,
+    );
     return 1;
   }
 

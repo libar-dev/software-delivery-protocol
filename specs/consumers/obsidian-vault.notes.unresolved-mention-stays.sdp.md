@@ -2,7 +2,7 @@
 id: spec:consumers.obsidian-vault.notes.unresolved-mention-stays
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.obsidian-vault.notes
   verifies:

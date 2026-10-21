@@ -380,6 +380,7 @@ describe("Protocol skill assets", () => {
         "q",
         "studio",
         "validate",
+        "vault",
         "view",
       ].sort(),
     );

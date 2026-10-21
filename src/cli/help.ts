@@ -67,13 +67,23 @@ const commands = {
              Findings remain visible; exit code follows validate. --check-clean independently
              re-renders and refuses missing or drifted output. Pages open through file://.`,
   },
+  vault: {
+    name: "vault",
+    usage: "  sdp vault [root | --root PATH] [--exclude PATH]... [--out DIR] [--watch]",
+    paragraph: `Validate, then synchronize linked Markdown notes and Bases under DIR/sdp, by default
+             <root>/generated/obsidian-vault/sdp. Open DIR itself as an Obsidian vault. Keep your
+             notes outside sdp/, by convention in intent/. Refuses edited or unknown generated
+             files before any build or cleanup. --out resolves against cwd; an in-root vault must
+             be under a skipped directory or excluded prefix, apart from build outputs. --watch
+             reruns on carriers and TypeScript sources; SIGINT exits 0. There is no check mode.`,
+  },
   generate: {
     name: "generate",
     usage: "  sdp generate [root] [--exclude PATH]... [--vault DIR] [--check-clean]",
     paragraph: `Validate once, then publish the Design Review, census, Mermaid diagrams, Gherkin-shaped
              view and Studio from that graph. --check-clean applies each publisher's checks,
-             removing only roots that fail. --vault DIR is parsed for the vault publisher;
-             synchronization is pending that publisher. --check-clean leaves the vault alone.`,
+             removing only roots that fail. Synchronizes the vault through its directory checks and guard before publishing any root,
+             at the default vault directory or --vault DIR. --check-clean leaves the vault alone.`,
   },
   import: {
     name: "import",

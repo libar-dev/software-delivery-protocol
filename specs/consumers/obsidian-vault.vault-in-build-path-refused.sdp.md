@@ -2,7 +2,7 @@
 id: spec:consumers.obsidian-vault.vault-in-build-path-refused
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.obsidian-vault
   verifies:

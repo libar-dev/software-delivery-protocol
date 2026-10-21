@@ -49,6 +49,10 @@ export const contractDependentSuites = [
       "test/extraction.entry-citations.unanchored-file-unread.test.generated.ts",
       "test/extraction.entry-citations.unresolved-citation.test.generated.ts",
 
+      "test/vault-examples.test.ts",
+      "test/consumers.obsidian-vault.bases.views-match-sources.test.generated.ts",
+      "test/consumers.obsidian-vault.iteration.watch-rewrites-changed-notes.test.generated.ts",
+      "test/consumers.obsidian-vault.iteration.watch-source-anchor.test.generated.ts",
       "test/self-hosting-command-line.test.ts",
       "test/self-hosting-external-registers.test.ts",
       "test/consumers.command-line.generate-writes-every-root.test.generated.ts",
