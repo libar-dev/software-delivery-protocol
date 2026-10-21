@@ -166,7 +166,7 @@ describe("Studio page interactions", () => {
     expect(fragmentTarget("#")).toBeNull();
   });
 
-  it("filters all facets together and accepts space-separated row values", () => {
+  it("filters all filters together and accepts space-separated row values", () => {
     expect(
       rowMatches(
         { kind: "behavior", packs: "pack:a pack:b" },

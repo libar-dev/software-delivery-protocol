@@ -4610,7 +4610,7 @@ export const consumersSpecs = [
         searchResults:
           "`sdp-search-results`: on the search page, reads the index from the `sdp-data` element, matches the fragment's term and each term the person types, writes the results `spec:consumers.spec-studio.search` designs, and keeps the term in the fragment.",
         filter:
-          '`sdp-filter`: wraps a hidden form of labelled `select` elements, each with `data-facet="<name>"` and an `any` option, and the rows marked `data-row`. On upgrade it shows the form, hides each row whose `data-<name>` differs from a chosen value, and writes `<shown> of <total> shown` in its `output` element; a row whose attribute holds several space-separated values, such as its Packs, matches when one of them equals the choice.',
+          '`sdp-filter`: wraps a hidden form of labelled `select` elements, each with `data-filter="<name>"` and an `any` option, and the rows marked `data-row`. On upgrade it shows the form, hides each row whose `data-<name>` differs from a chosen value, and writes `<shown> of <total> shown` in its `output` element; a row whose attribute holds several space-separated values, such as its Packs, matches when one of them equals the choice.',
         expander:
           "`sdp-expander`: adds `Open all` and `Close all` buttons for the `details` elements inside it, and on load and on each fragment change opens every `details` that holds the fragment's target and scrolls the target into view.",
         copy: "`sdp-copy` with `text`: a `Copy` button whose accessible name includes the text; it copies the text to the clipboard and says `Copied`, and where the clipboard is unavailable it selects the text so the person can copy it.",

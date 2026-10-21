@@ -266,7 +266,7 @@ describe("Studio static pages", () => {
     expect(question).toContain("Which choice?");
     expect(question).toContain("line 20");
   });
-  it("opens the index with counts, four task routes, every facet and stable section ids", () => {
+  it("opens the index with counts, four task routes, every filter and stable section ids", () => {
     const index = html("index.html");
     for (const id of ["packs", "specs", "findings"]) expect(index).toContain(`id="${id}"`);
     for (const label of [
@@ -285,7 +285,7 @@ describe("Studio static pages", () => {
       "verifier",
       "pack",
     ])
-      expect(index).toContain(`data-facet="${name}"`);
+      expect(index).toContain(`data-filter="${name}"`);
     expect(index).toContain("3 Specs");
     expect(index).toContain("1 Pack");
     expect(index).toContain("2 Specs stated above their floor");
@@ -492,7 +492,7 @@ describe("Studio static pages", () => {
     const options = (name: string) =>
       [
         ...(
-          new RegExp(`<select data-facet="${name}">(.*?)</select>`, "su").exec(page)?.[1] ?? ""
+          new RegExp(`<select data-filter="${name}">(.*?)</select>`, "su").exec(page)?.[1] ?? ""
         ).matchAll(/<option value="([^"]+)"/gu),
       ].map((m) => m[1]);
     expect(options("stated")).toEqual(["any", "idea", "scoped", "defined", "ready"]);
