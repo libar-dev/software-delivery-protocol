@@ -28,7 +28,7 @@ A citation is where text names an entry, read by the machine from comments and s
 
 ## Behavior
 - rule: [#anchoredFilesOnly] The extractor reads citations from each source file it reads for anchors that carries at least one anchor, of either form and any namespace, after the same exclusions; a file that carries no anchor, a carrier and any other file is not read for citations.
-- rule: [#citationToken] A citation is a token the prose-mention scan would read as a mention, found anywhere in such a file's text, in a comment, a string or a template literal, that holds `#`; a token directly followed by `${` is the prefix of a computed address and records no citation, whether or not the prefix parses as an entry address; a bare Spec id is not a citation.
+- rule: [#citationToken] A citation is a token the prose-mention scan would read as a mention, found anywhere in such a file's text, in a comment, a string or a template literal, that holds `#`; a token followed by `${`, directly or after the trailing punctuation the mention scan strips, is the prefix of a computed address and records no citation, whether or not the prefix parses as an entry address; a bare Spec id is not a citation.
 - rule: [#citationRow] Each citation records the address as written, the file's root-relative path and the 1-based line the token starts on; one address written twice on one line is one row.
 - rule: [#citationTable] The citations ride in a table of their own beside the location table, sorted and deterministic as the graph is, and Primitive and Pack nodes stay free of them.
 - rule: [#inferredClaim] The table's definition gives every citation the `inferred` claim, and every reader row of a citation carries it, so no consumer reads a citation as an authored binding.
