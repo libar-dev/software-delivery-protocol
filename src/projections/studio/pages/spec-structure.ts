@@ -52,8 +52,8 @@ function structure(ctx: PageContext, spec: SpecContext) {
 }
 /**
  * @sdpAnchor impl:protocol.studio-spec-structure
+ * @sdpSatisfies spec:consumers.spec-studio.spec-page, spec:consumers.spec-studio.components
  * @sdpLabel renders realization and trace diagrams and the recorded structural neighborhood
- * @sdpReferences spec:consumers.spec-studio.spec-page, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

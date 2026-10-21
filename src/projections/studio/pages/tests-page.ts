@@ -25,8 +25,9 @@ export interface RuleCoverage {
 }
 /**
  * @sdpAnchor impl:protocol.studio-tests-lens
+ * @sdpSatisfies spec:consumers.spec-studio.lenses.tests, spec:consumers.spec-studio.lenses
  * @sdpLabel renders shared rule and example-space coverage with filters and verifier bindings
- * @sdpReferences spec:consumers.spec-studio.lenses.tests, spec:consumers.spec-studio.lenses, spec:decisions.studio-build-renders
+ * @sdpReferences spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

@@ -7222,7 +7222,7 @@ function required<T>(value: T | null | undefined): T {
 const runRecipeAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.run-evidence-recipe"),
   label: "asserts realization of Run evidence in docs/agent-surface/recipes.md",
-  references: [ref("spec:observation.run-evidence")],
+  satisfies: ref("spec:observation.run-evidence"),
 });
 void runRecipeAnchor;
 it("runs recipe 45 as shipped and reports missing and malformed CTRF metadata", async () => {

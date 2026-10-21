@@ -113,8 +113,7 @@ export function prepareStudioPublication(
 /**
  * @sdpAnchor impl:protocol.studio-command
  * @sdpLabel validates and renders the Studio with independent byte checks and diagnostic exit codes
- * @sdpSatisfies spec:consumers.spec-studio.publisher
- * @sdpReferences spec:consumers.spec-studio.data.inputs
+ * @sdpSatisfies spec:consumers.spec-studio.publisher, spec:consumers.spec-studio.data.inputs, spec:consumers.spec-studio
  * @sdpComponent component:protocol.cli
  * @sdpRole publisher
  */

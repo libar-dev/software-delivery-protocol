@@ -68,8 +68,8 @@ export function runHeader(input: RunInput, level = 2): string {
 
 /**
  * @sdpAnchor impl:protocol.studio-run-rows
+ * @sdpSatisfies spec:consumers.spec-studio.runs-page, spec:consumers.spec-studio.verification-panels
  * @sdpLabel renders recipe 45 file rows shared by the runs page and verification panel
- * @sdpReferences spec:consumers.spec-studio.runs-page, spec:consumers.spec-studio.verification-panels
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

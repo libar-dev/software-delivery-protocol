@@ -478,6 +478,7 @@ export const consumersSpecs = [
           "The agent edits source as a human would, git records the ordinary edit, and the same conformance and honesty checks evaluate it.",
           "Lifecycle changes such as splitting, combining, refining, or deleting are ordinary source and git edits rather than structured patches from a derived view.",
         ],
+        ruleKeys: { agentEdits: "rules[1]", lifecycleEdits: "rules[2]" },
       },
     },
     deliveryFacts: ["has-verifier"],
@@ -1614,7 +1615,7 @@ export const consumersSpecs = [
           "`sdp-validation-findings` with `filter`: the validation report's findings for the Spec or Pack id the filter names; no behavior.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.components.sdp.md",
   },
   {
@@ -1689,7 +1690,7 @@ export const consumersSpecs = [
           "the index and the glossary render reader values only; the architecture lens renders recipes 17 and 43; the tests lens renders every recipe 34 answer, recipe 44, and recipe 45 given run records; a Spec page renders its recipe 21, 30 and 34 answers, its own space from recipe 44, the recipe 51 rows that cite its entries, the recipe 45 files whose `specs` hold its id, and its own row of recipe 35's whole-corpus answer; a Pack page renders the totals of its recipe 29 answer and, given a base graph, its own recipe 35 answer; the registers render recipes 20, 31, 24 beside recipe 51's rows, and 33; the owner queue renders recipe 46; the diff page renders recipe 35's whole-corpus answer; the runs page renders recipe 45; an export renders the values of the pages it holds.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.data.recipe-answers.sdp.md",
   },
   {
@@ -1747,7 +1748,7 @@ export const consumersSpecs = [
           "`{ label: string | null; schemaVersion: string; specs: number }`, how a page names the base graph: the label the command gave or null, the base graph's `schemaVersion`, and its count of Spec nodes.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.data.inputs.sdp.md",
   },
   {
@@ -1920,7 +1921,7 @@ export const consumersSpecs = [
           "`index.html` for the Packs lens, `architecture.html`, `tests.html` and `evidence.html`, each opening with its name and one sentence saying what it reads.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.lenses.sdp.md",
   },
   {
@@ -2006,7 +2007,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.sdp.md",
   },
   {
@@ -2077,7 +2078,7 @@ export const consumersSpecs = [
           "a recorded file and line written as `<file>:<line>` in a `code` element carrying `data-source-file` and `data-source-line`, beside its copy action.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.sharing.sdp.md",
   },
   {
@@ -2160,7 +2161,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.navigation.sdp.md",
   },
   {
@@ -2236,7 +2237,7 @@ export const consumersSpecs = [
           "the trace graph, then `Rests on` and `Rested on by` lists, the second grouped by distance, each row with its units, enabled verifiers and Packs; the panel's element id is `panel.impact`.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.spec-page.sdp.md",
   },
   {
@@ -2333,7 +2334,7 @@ export const consumersSpecs = [
           "runtime observation reads not tracked under the binding-language rule; build attestations, deployments and bills of materials show no payload and each reads not tracked until a Spec designs its source.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.verification-panels.sdp.md",
   },
   {
@@ -3131,7 +3132,7 @@ export const consumersSpecs = [
     file: "specs/consumers/obsidian-vault.sdp.md",
     title: "An Obsidian vault lets a person iterate on designs from the one graph",
     narrative:
-      "The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio serves a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view lets a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive. It is a projection of its own, not the Studio's local half: the Studio's page set serves a reader who holds a link, the vault serves a person who iterates in a notes app, and each has its own verb; the verb that writes every projection root writes the vault too.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. The first prototype, in `explorations/obsidian-vault/`, wrote notes from dumped graph and reader values, with relations and checked mentions as wikilinks, entry addresses as block links, and Bases for Pack members and standing queries. The second, in `explorations/obsidian-vault-prototype/`, writes the vault this Pack designs from the built engine and checks it on the Protocol's corpus and the first adopter's: links that resolve, Bases whose views select what their recipes select, two identical renders, and a person's notes that survive.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two runs over one graph write the same bytes, so no note names a commit or a time. Intent is still written only in the carriers. One thing sets the vault apart from the other projections: a person keeps it open and writes notes of their own in it. So the command owns one folder of the vault and a list of what it wrote there, and synchronizes that folder instead of rewriting a root wholesale; the vault's owned-folder decision, `spec:decisions.vault-owned-folder`, says why. For the same reason the vault never lies where the shared build removes files, and a run refuses rather than guess whose a file is.\n\nThe default vault sits under `generated/`, which discovery skips and an adopter usually keeps out of git. A person who wants to keep the intent notes they write in the vault points `--out` at a directory of their own.",
+      "The Design Review links a Spec's relations both ways and gives keyed Pack questions a separate carrier-line link, but it offers no built-in filtering of a Pack or navigation from arbitrary prose mentions to their entries. The Spec Studio serves a person who iterates on a design in the repository and a pull request reviewer who holds only a link. A linked-notes view lets a person follow relations, filter members by rung and design columns, open entries by address and see each pass's edits arrive. It is a projection of its own, not the Studio's local half: the Studio's page set serves a reader who holds a link, the vault serves a person who iterates in a notes app, and each has its own verb; the verb that writes every projection root writes the vault too.\n\nObsidian already does that for linked Markdown notes with properties: backlinks, a graph view, search, and filterable tables it calls Bases. The first prototype, in `explorations/obsidian-vault/`, wrote notes from dumped graph and reader values, with relations and checked mentions as wikilinks, entry addresses as block links, and Bases for Pack members and standing queries. The second prototype checked the vault this Pack designs on the Protocol's corpus and the first adopter's: links that resolve, Bases whose views select what their recipes select, two identical renders, and a person's notes that survive. Its measurements remain in `reviews/assets/plan46-prototypes/vault-measurements.md`; git holds the replaced prototype.\n\nThe principle is a linked-notes view regenerated from the one graph; Obsidian and its Bases are the representation chosen first. Like every projection, the vault states no truth, and two runs over one graph write the same bytes, so no note names a commit or a time. Intent is still written only in the carriers. One thing sets the vault apart from the other projections: a person keeps it open and writes notes of their own in it. So the command owns one folder of the vault and a list of what it wrote there, and synchronizes that folder instead of rewriting a root wholesale; the vault's owned-folder decision, `spec:decisions.vault-owned-folder`, says why. For the same reason the vault never lies where the shared build removes files, and a run refuses rather than guess whose a file is.\n\nThe default vault sits under `generated/`, which discovery skips and an adopter usually keeps out of git. A person who wants to keep the intent notes they write in the vault points `--out` at a directory of their own.",
     sections: {
       intent: {
         actor:
@@ -5642,7 +5643,7 @@ export const consumersSpecs = [
           "one labelled select per filter, each listing any and the values the rows hold, and a line saying how many of all rows show.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.lenses.tests.sdp.md",
   },
   {
@@ -6107,7 +6108,7 @@ export const consumersSpecs = [
           "the test's name, its file path or `no file path`, its result in words, and the reason.",
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.runs-page.sdp.md",
   },
   {

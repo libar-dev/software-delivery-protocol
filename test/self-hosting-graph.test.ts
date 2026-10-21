@@ -261,15 +261,15 @@ describe("the self-hosting corpus", () => {
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 399 Markdown Specs and four Gherkin Specs,
-    // 403 in the self-hosting Pack; seven Pack manifests and 537 source anchors.
-    // The excluded-root validate run corroborates 947 nodes and 2527 edges.
-    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 537 });
+    // 403 in the self-hosting Pack; seven Pack manifests and 538 source anchors.
+    // The excluded-root validate run corroborates 948 nodes and 2536 edges.
+    expect(result.counts).toEqual({ specs: 403, packs: 7, anchors: 538 });
     expect(expectedSpecs).toHaveLength(403);
     expect(expectedPackMembers).toHaveLength(403);
-    expect(expectedAnchors).toHaveLength(537);
-    expect(expectedBindingEdges).toHaveLength(667);
-    expect(result.graph.nodes).toHaveLength(947);
-    expect(result.graph.edges).toHaveLength(2527);
+    expect(expectedAnchors).toHaveLength(538);
+    expect(expectedBindingEdges).toHaveLength(676);
+    expect(result.graph.nodes).toHaveLength(948);
+    expect(result.graph.edges).toHaveLength(2536);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {

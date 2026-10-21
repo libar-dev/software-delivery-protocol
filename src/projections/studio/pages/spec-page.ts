@@ -201,8 +201,7 @@ function bindings(ctx: PageContext, spec: SpecContext): string {
 /**
  * Writes the Spec context in section order, with address ids and both relation directions.
  * @sdpAnchor impl:protocol.studio-spec-page
- * @sdpSatisfies spec:consumers.spec-studio.spec-page.core
- * @sdpReferences spec:consumers.spec-studio.spec-page
+ * @sdpSatisfies spec:consumers.spec-studio.spec-page.core, spec:consumers.spec-studio.spec-page
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

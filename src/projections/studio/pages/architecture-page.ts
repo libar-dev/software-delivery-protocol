@@ -52,8 +52,8 @@ const location = (m: Member) =>
 /**
  * @sdpAnchor impl:protocol.studio-architecture-lens
  * @sdpLabel renders recipe component rows and planned designs as architecture and member diagrams
- * @sdpSatisfies spec:consumers.spec-studio.lenses.architecture
- * @sdpReferences spec:consumers.spec-studio.lenses, spec:decisions.studio-build-renders
+ * @sdpSatisfies spec:consumers.spec-studio.lenses.architecture, spec:consumers.spec-studio.lenses
+ * @sdpReferences spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

@@ -25,7 +25,7 @@ import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 const anchor = specTest({
   id: testAnchorId("test:protocol.studio-publisher"),
-  verifies: ref("spec:consumers.spec-studio.publisher"),
+  verifies: [ref("spec:consumers.spec-studio.publisher"), ref("spec:consumers.spec-studio")],
 });
 void anchor;
 

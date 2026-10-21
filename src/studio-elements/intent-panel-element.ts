@@ -14,7 +14,7 @@ export function gatherInPage(host: HTMLElement, intent: GatheredIntent): void {
 /**
  * @sdpAnchor impl:protocol.studio-intent-panel-element
  * @sdpLabel displays gathered requests and writes copy selections or local download links
- * @sdpSatisfies spec:consumers.spec-studio.intent-panel
+ * @sdpSatisfies spec:consumers.spec-studio.intent-panel, spec:consumers.spec-studio.components
  * @sdpReferences spec:consumers.edit-model, spec:consumers.intent-composition
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility

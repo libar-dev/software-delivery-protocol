@@ -5,8 +5,7 @@ import { codeSpans } from "./text.js";
 /**
  * @sdpAnchor impl:protocol.studio-maturity-map
  * @sdpLabel places resolved Pack members by their stated rung and floor in authored order
- * @sdpSatisfies spec:consumers.spec-studio.pack-page.maturity-map
- * @sdpReferences spec:consumers.spec-studio.components
+ * @sdpSatisfies spec:consumers.spec-studio.pack-page.maturity-map, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

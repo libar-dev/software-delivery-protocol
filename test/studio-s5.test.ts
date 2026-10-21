@@ -412,6 +412,7 @@ const safetyAnchor = specTest({
     ref("spec:consumers.intent-composition"),
     ref("spec:consumers.spec-studio.responsive"),
     ref("spec:consumers.spec-studio.export"),
+    ref("spec:consumers.spec-studio.components"),
   ],
 });
 void safetyAnchor;

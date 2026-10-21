@@ -7,8 +7,8 @@ import type { CliOutput } from "./output.js";
 
 /**
  * @sdpAnchor impl:protocol.stamp-command
+ * @sdpSatisfies spec:consumers.spec-studio.sharing
  * @sdpLabel writes the publishing stamp without extraction or rendering
- * @sdpReferences spec:consumers.spec-studio.sharing
  * @sdpComponent component:protocol.cli
  * @sdpUses impl:protocol.schema-version
  * @sdpRole publisher

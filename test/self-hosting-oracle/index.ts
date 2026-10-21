@@ -50,27 +50,8 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
 );
 
 // No intended prose-mention pair is left without a declared relation. The owner retains the
-// honesty gap on spec:model.spec-sections. The other gaps are this arc's ready designs, each
-// stated before the build that binds its verifier; each leaves this list as its build lands. The list follows carrier-path order, as validation reports it.
+// honesty gap on spec:model.spec-sections. The Studio gaps now have genuine bound verifiers.
 export const expectedWarnings = [
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:consumers.spec-studio.components",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:consumers.spec-studio.navigation",
-  },
-  {
-    validatorId: "honesty/gaps",
-    family: "honesty",
-    severity: "warning",
-    subjectId: "spec:consumers.spec-studio",
-  },
   {
     validatorId: "honesty/gaps",
     family: "honesty",

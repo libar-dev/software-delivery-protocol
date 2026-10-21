@@ -6,7 +6,7 @@ import { writeStderr } from "./output.js";
 
 /**
  * @sdpAnchor impl:protocol.studio-base-input
- * @sdpReferences spec:consumers.spec-studio.data.inputs
+ * @sdpSatisfies spec:consumers.spec-studio.data.inputs
  * @sdpComponent component:protocol.cli
  * @sdpRole codec
  */
