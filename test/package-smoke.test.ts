@@ -250,6 +250,14 @@ describe("published package surface", () => {
       ).toEqual([]);
 
       const tarball = packed[0].filename;
+      const packedManifest = JSON.parse(
+        run("tar", ["-xOf", join(packageRoot, tarball), "package/package.json"], repositoryRoot),
+      ) as {
+        peerDependencies?: Record<string, string>;
+        peerDependenciesMeta?: Record<string, unknown>;
+      };
+      expect(packedManifest.peerDependencies ?? {}).not.toHaveProperty("vitest");
+      expect(packedManifest.peerDependenciesMeta ?? {}).not.toHaveProperty("vitest");
 
       await mkdir(consumer);
       await writeFile(
@@ -257,21 +265,12 @@ describe("published package surface", () => {
         JSON.stringify({ name: "sdp-package-smoke", private: true, type: "module" }),
       );
 
-      // npm 10 crashes resolving Vitest's optional peer tree, even for a package with no code.
-      // This consumer exercises the runtime without that peer; keep required peers visible.
-      const manifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8")) as {
-        peerDependencies: Record<string, string>;
-        peerDependenciesMeta: Record<string, { optional?: boolean }>;
-      };
-      for (const peer of Object.keys(manifest.peerDependencies))
-        expect(manifest.peerDependenciesMeta[peer]?.optional).toBe(true);
       run(
         "npm",
         [
           "install",
           "--ignore-scripts",
           "--omit=dev",
-          "--legacy-peer-deps",
           join(packageRoot, tarball),
           "--prefix",
           consumer,

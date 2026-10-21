@@ -105,6 +105,9 @@ build permissions, then run `pnpm install`. See npm's
 [`approve-scripts`](https://docs.npmjs.com/cli/v11/commands/npm-approve-scripts) and pnpm's
 [source-qualified permissions](https://pnpm.io/settings/build#allowbuilds).
 
+The `./vitest` subpath needs Vitest 2 or later installed beside the package. Install it in the
+adopter with `npm install --save-dev vitest` or `pnpm add --save-dev vitest` when using that adapter.
+
 Verify either install through the linked binary:
 
 ```sh
