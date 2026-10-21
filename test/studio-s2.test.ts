@@ -396,10 +396,11 @@ describe("Spec panels", () => {
         expect([...cell.matchAll(/<sdp-spec-card spec-id="([^"]+)"/gu)].map((m) => m[1])).toEqual(
           members,
         );
-        expect(cell).toContain(
-          `<p>${String(members.length)} · ${relations[rowIndex]?.[column] ?? ""}</p>`,
-        );
-        if (!members.length) expect(cell).toContain("None");
+        if (members.length) {
+          expect(cell).toContain(
+            `<p>${String(members.length)} · ${relations[rowIndex]?.[column] ?? ""}</p>`,
+          );
+        } else expect(cell).toBe("—");
       });
     });
     for (const id of ["another", "orders", "equal", "above"])
@@ -412,8 +413,10 @@ describe("Spec panels", () => {
     const map = page.split("<sdp-maturity-map")[1]?.split("</sdp-maturity-map>")[0] ?? "";
     expect(map).toContain("<h2>Maturity map</h2>");
     const labels = [...map.matchAll(/<th[^>]*>(.*?)<\/th>/gsu)].map((m) => m[1]).join(" ");
-    expect(labels).toContain("floor above statement");
-    expect(labels).toContain("statement above floor");
+    expect(labels).not.toMatch(/<p>|above statement|above floor/u);
+    const caption = /<caption>(.*?)<\/caption>/su.exec(map)?.[1] ?? "";
+    expect(caption).toContain("floor above statement");
+    expect(caption).toContain("statement above floor");
   });
   it("distinguishes test lines from citations by files with unrelated anchors", async () => {
     const files = coverageFiles({});

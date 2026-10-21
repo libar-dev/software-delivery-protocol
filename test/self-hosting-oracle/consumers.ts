@@ -1598,7 +1598,7 @@ export const consumersSpecs = [
         traceGraph:
           "`sdp-trace-graph` with `spec-id`: the Spec's relations one hop each way, drawn in relation bands inside an `sdp-diagram`, then its text equivalent; no behavior of its own.",
         maturityMap:
-          "`sdp-maturity-map` with `pack-id`: the Pack's members placed by stated rung and floor reached, as a table of short cards; no behavior.",
+          "`sdp-maturity-map` with `pack-id`: the Pack's members placed by stated rung and floor reached, as a table of short cards with its axis explanation in the caption; an empty cell shows `—` alone and a filled cell names its count and Specs; no behavior.",
         exampleSpace:
           "`sdp-example-space` with `spec-id`, naming the Spec that owns the example space: the space's slots with their types and the step that declares each, its children's bound points as a table with one row per example and one column per slot, an unbound slot written `unbound`, its expected-outcome oracle binding as present or none, and recipe 44's coverage; its coverage is a report, never a verifier run or a delivery fact; no behavior beyond the composing actions inside it.",
         diagramView:
@@ -4328,7 +4328,7 @@ export const consumersSpecs = [
       },
       ui: {
         maturityMap:
-          "an `sdp-maturity-map` holding a table under a `Maturity map` heading, rows headed `stated idea` to `stated ready`, columns headed `floor none` to `floor ready`, each cell its count and its members as short cards, an empty cell reading None, and a caption saying that a cell right of its row's own rung holds statements the floor already allows.",
+          "an `sdp-maturity-map` holding a table under a `Maturity map` heading, rows headed `stated idea` to `stated ready`, columns headed `floor none` to `floor ready`, each filled cell its count and its members as short cards, an empty cell reading `—` alone, and the axis explanation in the table's caption, never inside a header cell: right of the matching rung the floor is above the statement and already allows it; left of it the statement is above the floor.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],

@@ -11,7 +11,7 @@ import { codeSpans } from "./text.js";
  */
 export function maturityMap(pack: PackContext): string {
   const floors = ["none", ...SPEC_READINESS];
-  return `<sdp-maturity-map pack-id="${escape(pack.id)}"><h2>Maturity map</h2><div class="table-scroll" role="region" aria-label="Maturity map" tabindex="0"><table><caption>A cell right of its row's own rung holds statements the floor already allows. A cell left of it holds a statement above its floor.</caption><thead><tr><th scope="col">Stated rung / floor reached<p>To the right of the matching rung: floor above statement. To its left: statement above floor.</p></th>${floors.map((f) => `<th scope="col">floor ${f}</th>`).join("")}</tr></thead><tbody>${SPEC_READINESS.map(
+  return `<sdp-maturity-map pack-id="${escape(pack.id)}"><h2>Maturity map</h2><div class="table-scroll" role="region" aria-label="Maturity map" tabindex="0"><table><caption>To the right of the matching rung: floor above statement, already allowing it. To its left: statement above floor.</caption><thead><tr><th scope="col">Stated rung / floor reached</th>${floors.map((f) => `<th scope="col">floor ${f}</th>`).join("")}</tr></thead><tbody>${SPEC_READINESS.map(
     (stated) =>
       `<tr><th scope="row">stated ${stated}</th>${floors
         .map((floor) => {
@@ -27,7 +27,9 @@ export function maturityMap(pack: PackContext): string {
               : floors.indexOf(floor) < floors.indexOf(stated)
                 ? "statement above floor"
                 : "statement matches floor";
-          return `<td><p>${String(rows.length)} · ${relation}</p>${rows.length ? rows.map((m) => `<sdp-spec-card spec-id="${escape(m.id)}" variant="short"><p><a href="#${escape(m.id)}">${codeSpans(m.title ?? m.id)}</a> · ${code(m.id)} · ${rungLine(m.statedReadiness, m.derivedReadiness)}</p></sdp-spec-card>`).join("") : "None"}</td>`;
+          return rows.length
+            ? `<td><p>${String(rows.length)} · ${relation}</p>${rows.map((m) => `<sdp-spec-card spec-id="${escape(m.id)}" variant="short"><p><a href="#${escape(m.id)}">${codeSpans(m.title ?? m.id)}</a> · ${code(m.id)} · ${rungLine(m.statedReadiness, m.derivedReadiness)}</p></sdp-spec-card>`).join("")}</td>`
+            : "<td>—</td>";
         })
         .join("")}</tr>`,
   ).join("")}</tbody></table></div></sdp-maturity-map>`;
