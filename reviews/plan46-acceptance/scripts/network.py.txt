@@ -1,0 +1,12 @@
+from pathlib import Path
+import re,collections,json
+root=Path('generated/spec-studio')
+urls=collections.Counter()
+for p in root.rglob('*.html'):
+    for url in re.findall(r'''https?://[^\s<>"']+''',p.read_text()):urls[url]+=1
+script=(root/'assets/studio.js').read_text()
+tokens=[script[max(0,m.start()-50):m.start()+150] for m in re.finditer(r'fetch\(|XMLHttpRequest|WebSocket|EventSource|https?://',script)]
+css=(root/'assets/studio.css').read_text()
+data={'htmlHttpURLs':dict(urls),'scriptNetworkTokens':tokens,'cssRemoteURLs':re.findall(r'https?://[^\s)]+',css)}
+Path('/tmp/plan46/accept/evidence/network.json').write_text(json.dumps(data,indent=2)+'\n')
+print(json.dumps(data,indent=2))

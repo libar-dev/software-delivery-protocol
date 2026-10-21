@@ -1,0 +1,19 @@
+import json,re
+from pathlib import Path
+proposal=json.load(open('/tmp/plan46/accept/proposal.json'))
+check=json.load(open('/tmp/plan46/accept/evidence/proposal-check.json'))
+assert not check['schemaProblems'],check
+assert check['totals']['moved']==0 and check['totals']['unresolved']==0,check
+files={}
+for change in proposal['changes']:
+    match=re.search(r'at (\S+) line (\d+), after its rule:',change['request'])
+    assert match,change
+    path=Path(match[1]); index=int(match[2])-1
+    lines=files.setdefault(path,path.read_text().splitlines(keepends=True))
+    text=change['text']
+    old=re.sub(r'^\[#[a-z][A-Za-z0-9]*\] ','',text)
+    line=lines[index].rstrip('\n')
+    assert line.endswith(old),(path,index,line,old)
+    lines[index]=line[:-len(old)]+text+'\n'
+for path,lines in files.items():path.write_text(''.join(lines))
+print(json.dumps({'changes':len(proposal['changes']),'files':len(files),'paths':[str(p) for p in files]},indent=2))

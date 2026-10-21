@@ -1,0 +1,17 @@
+const answers = [];
+for (const pack of ['pack:application', 'pack:foundation']) {
+  const whole = await recipes(36, {pack, budget: 10000000});
+  const first = await recipes(36, {pack, part: 1});
+  const parts = [first];
+  for (let part=2; part<=first.part.of; part++) parts.push(await recipes(36,{pack,part}));
+  const members = parts.flatMap(p=>p.members);
+  const json = x=>JSON.stringify(x);
+  answers.push({pack,budget:first.budget,wholeUsed:whole.used,wholeMembers:whole.members.length,
+    parts:parts.map(p=>({part:p.part,used:p.used,members:p.members.map(m=>m.id),leftOut:p.leftOut})),
+    allWithinBudget:parts.every(p=>p.used<=p.budget),
+    orderedUnionEqualsWhole:json(members)===json(whole.members),
+    packRepeatedExactly:parts.every(p=>json(p.pack)===json(whole.pack)),
+    boundaryUnionEqualsWhole:json(parts.filter(p=>p.boundary!==null).map(p=>p.boundary))===json([whole.boundary]),
+    scopeEqual:parts.every(p=>json(p.scope)===json(whole.scope))});
+}
+return answers;
