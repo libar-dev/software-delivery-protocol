@@ -342,9 +342,11 @@ export const extractionSpecs = [
           "The concreteness law is a refusal, never a guess — an example carrying an unbound slot in any used step of any entry is not the bindable form and receives no step contract, and a prose-only example receives none either.",
           "Concreteness reads the example's own form, whether or not a parent declares shared vocabulary. Vocabulary resolution is a separate later check; incompatible resolution withholds the step contract with `contracts/unmatched-vocabulary-step`.",
           "An example is one point, so the step contract and bound point derive from the same first complete structured Given/When/Then entry. A further entry, which the TypeScript carrier can carry, is named `contracts/multi-entry-example` rather than left silently inert.",
+          "Each step of a step contract carries its contract key beside its skeleton: its step key, from its own marker or from the vocabulary step it resolves to, under `spec:carrier.step-keys`, and its skeleton when it has none. The `Step` union and the `StepParams` properties are the contract keys in first-occurrence order, and the runner dispatches each step to the handler bound under its contract key.",
           "Degradation is loud and local: an undeclared slot or a value outside its declared type is named and left out of the bound point; an off-type value stays in the step contract, widened to its scalar kind, so the emitted module still compiles; and a conflicting re-binding is named and its first value wins, in the bound point for a slot bound twice and in the step contract for a step that recurs with other values.",
           "A vocabulary slot group that declares no usable type is named rather than dropped in silence, and no dimension enters the space for it.",
-          "Each Then step of the parent's example space is one variant of the space contract's Outcome union, whose `kind` is that step's skeleton text; the build derives no slug or ordinal, and the runner core adds `unspecified`.",
+          "Each Then step of the parent's example space is one variant of the space contract's Outcome union, whose `kind` is that step's contract key, its step key or else its skeleton text; the build derives no slug or ordinal, and the runner core adds `unspecified`.",
+          "A contract never holds two steps under one contract key. An example marker that disagrees with the key of its vocabulary step withholds the example's step contract with `contracts/conflicting-step-key`. A step or space contract whose steps would share a contract key, two skeletons under one key or a key equal to another step's skeleton, is withheld with `contracts/duplicate-step-key`, naming the key and both skeletons; a withheld space contract withholds every registrar of its children.",
           "Two contract paths differing only by letter case cannot coexist on a case-insensitive filesystem, so the contracts tree is withheld whole and the finding names the colliding pair.",
           "Every generation finding is a warning that describes what did not emit; gating belongs to graph validation alone, so a withheld contract never fails the build by itself.",
         ],
@@ -366,13 +368,25 @@ export const extractionSpecs = [
         ruleKeys: {
           concreteness: "rules[2]",
           onePoint: "rules[4]",
-          outcomeIdentity: "rules[7]",
-          caseCollision: "rules[8]",
+          contractKeys: "rules[5]",
+          outcomeIdentity: "rules[8]",
+          keyConflicts: "rules[9]",
+          caseCollision: "rules[10]",
         },
       },
       design: {
         findingIds:
-          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths`, each at warning severity.",
+          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key`, each at warning severity.",
+        duplicateStepKey:
+          '`contracts/duplicate-step-key` is a warning on the parent at `behavior.exampleSpace` for a space collision, or on the example at `behavior.examples` for a step-contract collision. Its message is `contract key "<key>" names both "<first skeleton>" and "<second skeleton>"; <space|step> contract withheld`, with the skeletons in first-occurrence order.',
+        contractStep:
+          "`export interface ContractStep<K extends string, P extends ParamShape> { readonly kind: StepKind; readonly key: K; readonly text: string; readonly params: P; }` is the step shape the runner exports, where `key` is the contract key and `text` the skeleton the natural reading renders.",
+        stepContractModule:
+          '`export type Step = "<contract key>" | …;` is the union of the example\'s contract keys in first-occurrence order, `StepParams` maps each contract key to its parameters, and `export const <camel>Contract: ExampleContract<Step, StepParams>` lists every step as `{ kind, key, text, params }` in authored order.',
+        outcomeVariant:
+          '`{ readonly kind: "<contract key>"; readonly <slot>: <type>; … }` is the Outcome variant of one Then step of the example space, one per Then step, beside `UnspecifiedOutcome`.',
+        planDispatch:
+          "the runner's `planExample` runs each step through `bindings[step.key]`, carries `key` on each planned step beside `text` and `label`, and renders the label from `text` and `params`, so a red keyed step still names itself in the Spec's own words.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -496,17 +510,17 @@ export const extractionSpecs = [
           "`generated/registrars.json` is a versioned, sorted manifest of every extraction-root-relative registrar sibling owed by the build. Publication reconciles the manifest and removes siblings no longer owed under the build-pipeline law. `--check-clean` compares the manifest and every sibling byte with fresh generation. Preflight independently compares every tracked adopted registrar in the worktree and Git index with regenerated bytes.",
           "Registration-path loudness — multiple anchors in one authored suite still locate one registrar sibling; when one example resolves to more than one distinct authored suite path, generation emits a named finding and withholds that registrar rather than selecting a path silently.",
           "Generated registrars import shared runtime helpers from `@libar-dev/software-delivery-protocol/testing` and types through public package subpaths. Public exports are the root for model, anchors and public types, `./anchors` for zero-dependency anchor builders, `./runner` for the framework-neutral plan/run core, `./vitest` for `bindExample`, and `./testing` for the registrar runtime. Authored suites may import anchor builders through the root or `./anchors`. Authored and generated modules never import private `src` paths. The supported optional Vitest peer range is `>=2`, as declared by the package.",
-          "Step identity is the authored skeleton text; wording changes intentionally fail typechecks. Generation introduces no ordinal or slug identity. A wording-stable operation key requires separate model and carrier design.",
-          "Handler resolution — the generated registrar's internal dispatch object is an exhaustive mapped type over the contract's step skeletons: removing or staling one of those generated callbacks is a `tsc` error naming that step. The adopted authored surface retains no per-step callbacks (and therefore no literal step-skeleton keys); its five adapters are required keys (`assertions` optional), so a missing or stale authored callback is a `tsc` error naming that adapter. These are the two exhaustive mapped-type checks; demanding an authored error name a step while simultaneously retaining no authored per-step surface is refused as contradictory. Codegen cannot statically see authored handlers, so no generation-time handler refusal is promised — the type system carries it. Existing generation-time refusals (unbindable example, incompatible vocabulary, colliding path) are reused unchanged.",
+          "Step identity is the step's contract key: its step key under `spec:carrier.step-keys`, or its skeleton text when it has none, and generation introduces no ordinal or slug identity. A directly authored `bindExample` handler map fails the typecheck when one of its keys goes stale. An adopted registrar holds no authored per-step handler: a stale committed registrar fails the regeneration preflight, and its internal handlers change with the contract when it is regenerated. The contract key of a Then step of the example space also names an Outcome `kind`, so changing it fails the typecheck of an authored oracle that names the old kind.",
+          "Handler resolution — the generated registrar's internal dispatch object is an exhaustive mapped type over the contract's step keys: removing or staling one of those generated callbacks is a `tsc` error naming that step. The adopted authored surface retains no per-step callbacks (and therefore no step keys); its five adapters are required keys (`assertions` optional), so a missing or stale authored callback is a `tsc` error naming that adapter. These are the two exhaustive mapped-type checks; demanding an authored error name a step while simultaneously retaining no authored per-step surface is refused as contradictory. Codegen cannot statically see authored handlers, so no generation-time handler refusal is promised — the type system carries it. Existing generation-time refusals (unbindable example, incompatible vocabulary, colliding path) are reused unchanged.",
           "Scenario-level invocation — the five-adapter interface carries one product `invoke` per example, so the first `When` occurrence invokes it and later `When` occurrences in the same lawful scenario do not repeat side effects.",
-          "At the first Then, the comparator refuses an incomplete point before calling the oracle and otherwise evaluates and caches `expected(point)`. It finds the authored Then whose skeleton equals `expected.kind`, compares that step's authored parameters with the oracle payload, reads `observe(world)`, compares observed and oracle outcomes, and runs additional assertions separately. Actual-equals-oracle alone is insufficient: a Spec parameter mutation must fail. The oracle accepts `Partial<Conditions>`; the registrar never casts a partial point to Conditions.",
+          "At the first Then, the comparator refuses an incomplete point before calling the oracle and otherwise evaluates and caches `expected(point)`. It finds the authored Then whose contract key equals `expected.kind`, compares that step's authored parameters with the oracle payload, reads `observe(world)`, compares observed and oracle outcomes, and runs additional assertions separately. Actual-equals-oracle alone is insufficient: a Spec parameter mutation must fail. The oracle accepts `Partial<Conditions>`; the registrar never casts a partial point to Conditions.",
           "Oracle payload versus Spec Then parameters and observed versus oracle outcomes use deep structural equality on the authored shape. Diagnostics name missing, extra or changed values by path and show expected and actual values. The comparator quotes authored Then parameters and skeleton text without rephrasing them.",
-          "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When the oracle selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and available Then skeletons; preserve the original assertion as `cause`.",
+          "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When the oracle selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and the contract keys of the available Then steps; preserve the original assertion as `cause`.",
           "Bound unspecified outcome — `unspecified` names a coverage gap in the example space, but a bound executable example selecting it reddens because no authored Then may silently witness that gap.",
           "The authored top-level `specTest` carries a non-empty `verifies` target naming the example. It remains the source of `has-verifier`; generated execution confers no delivery fact and records no pass state.",
           "Additive assertions — optional `assertions` may add domain checks the Outcome union cannot express; they never replace steps (3) or (5) of the three-way comparator and never silence a Spec-param or oracle mismatch.",
           "Case mapping and outlines — outline rows map one deterministic case per row in carrier order when a multi-row table sugar expands statically into sibling examples (point-per-example). Scenario Outlines and inline Examples tables stay refused as executable carrier constructs inside a single example; one example remains one point and earns exactly one generated registration.",
-          "Registrars use no environment, global or module side channel, mutable global registry or singleton world shared across examples. Generated siblings export the registrar and never self-register. Generation derives no domain observation; the engine never loads or executes adopter code. Registrars do not become generated test harnesses. Scenario Outlines stay refused. The interface changes neither the claim taxonomy, anchor bindings nor skeleton-text identity.",
+          "Registrars use no environment, global or module side channel, mutable global registry or singleton world shared across examples. Generated siblings export the registrar and never self-register. Generation derives no domain observation; the engine never loads or executes adopter code. Registrars do not become generated test harnesses. Scenario Outlines stay refused. The interface changes neither the claim taxonomy, anchor bindings nor the contract-key identity of steps.",
         ],
       },
       design: {
@@ -520,6 +534,10 @@ export const extractionSpecs = [
           "The authored suite directory plus the example id without the `spec:` prefix and the suffix `.test.generated.ts`, retaining the id's dots.",
         registrarManifest:
           "`generated/registrars.json` carries the versioned, sorted extraction-root-relative registrar paths owed by the build.",
+        thenBinding:
+          '`compareContractOutcome(execution, { kind: "then", key, text, params })` is the generated binding of a Then step; it compares only the step whose `key` equals the oracle\'s `kind`.',
+        noMatchingThen:
+          '`scenario <spec>: oracle selected "<kind>"; available Then steps: "<key>", …` is the diagnostic when no authored Then matches, listing each Then step\'s contract key in contract order, with the original assertion as `cause`.',
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -861,19 +879,19 @@ export const extractionSpecs = [
     file: "specs/extraction/entry-locations.sdp.md",
     title: "The graph records where each addressable entry is written",
     narrative:
-      "An entry address names one keyed Design or UI entry, one keyed rule or flow, or one keyed open question. A reader following an address needs its recorded source line.",
+      "An entry address names one keyed Design or UI entry, one keyed rule or flow, one keyed open question, or one keyed Model term. A reader following an address needs its recorded source line.",
     sections: {
       intent: {
         problem:
           "The graph records the file of a Spec and the line of every anchor, but not the line of an entry inside a Spec, so a page that links an address to its text, or a review that cites one, re-reads carrier syntax the extractor already parsed.",
         outcome:
-          "Record source lines for Design and UI entries, rules and flows, open questions and their optional fields, and authored relation targets beside the graph's nodes, so consumers locate text without parsing carriers.",
+          "Record source lines for Design and UI entries, rules and flows, Model terms, open questions and their optional fields, and authored relation targets beside the graph's nodes, so consumers locate text without parsing carriers.",
       },
       behavior: {
         rules: [
-          "The graph carries a location table beside its nodes and edges. Each row names a Spec id, carrier file, entry and 1-based source line. Entries are `design.<key>` or `ui.<key>` for keys other than `description`, `rule[<i>]` or `flow[<i>]` for entries of the primary behavior owner, `question[<i>]` for an open question, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger` for each of those optional fields present, and `relation.<type>.<target>` for an authored relation target. Indexes count from 0 within their authored lists. A rule, flow or question row carries `key` when that entry has one.",
+          "The graph carries a location table beside its nodes and edges. Each row names a Spec id, carrier file, entry and 1-based source line. Entries are `design.<key>` or `ui.<key>` for keys other than `description`, `rule[<i>]` or `flow[<i>]` for entries of the primary behavior owner, `term[<i>]` for a Model term, `question[<i>]` for an open question, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger` for each of those optional fields present, and `relation.<type>.<target>` for an authored relation target. Indexes count from 0 within their authored lists, a term's among the Spec's terms in authored order. A rule, flow, term or question row carries `key` when that entry has one.",
           "Primitive and Pack nodes stay free of lines, so a comparison of nodes and edges is unchanged by an edit that only moves an entry, and carrier parity compares nodes and edges and never the location table, whose lines differ by carrier by nature.",
-          "Markdown and TypeScript record the entry forms their syntax carries. TypeScript questions are located at the question property or string literal. Gherkin records its Rule lines and authored or defaulted relation sites; it carries no Design or UI section, open question or question field. A missing row means not located, never absent.",
+          "Markdown and TypeScript record the entry forms their syntax carries. TypeScript questions are located at the question property or string literal. Gherkin records its Rule lines and authored or defaulted relation sites; it carries no Design, UI or Model section, open question or question field. A missing row means not located, never absent.",
           "An authored relation target has a location row whose entry is `relation.<type>.<target>`, at its carrier's recorded relation site. A defaulted Gherkin relation uses the Scenario identity line when no explicit relation tag locates it.",
           "Rows sort by Spec id, then by entry, in code-unit order. The table is a deterministic function of the carriers at the extracted commit, as every other part of the graph is.",
           "A location names where an entry is written and nothing else: it is not an identity, never an anchor target or a binding, and an edit above an entry moves its line.",

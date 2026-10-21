@@ -54,6 +54,7 @@ export const carrierSpecs = [
           "At most one `@example-space` pseudo-scenario supplies the parent vocabulary without producing a Spec node, while each ordinary Scenario supplies exactly one bound example point.",
           "An ordinary Scenario and an `@example-space` pseudo-scenario must each carry at least one step; a step-less Scenario is refused at its Scenario line without inventing a complete-GWT rule.",
           "Gherkin steps reuse the Protocol-owned slot notation; conjunctions inherit the preceding phase, and outlines, backgrounds, star steps, doc strings, data tables, and leading conjunctions are refused.",
+          "A step of an ordinary Scenario or of the `@example-space` pseudo-scenario may open its text with a step key marker, `[#key]` and a space, after its keyword, `And` included, under `spec:carrier.step-keys`.",
           "Independent semantic Gherkin findings accumulate in physical source order up to a hard cap of 100; any semantic finding excludes the entire invalid carrier from the graph while healthy sibling files survive.",
           "Gherkin is a canonical authoring carrier rather than a Cucumber execution path; generated contracts and resolving code-side anchors remain the execution and delivery-fact boundary.",
           "Markdown remains the default Spec carrier; a default flip to Gherkin is refused before full honest round-trip exists.",
@@ -791,7 +792,7 @@ export const carrierSpecs = [
         rules: [
           "A slot group opens with a name matching ASCII `[A-Za-z_][A-Za-z0-9_]*`, and `__proto__` is always a malformed slot; a brace group that does not open with such a name is prose, and prose is never policed.",
           "A vocabulary slot declares a type only in the ratified type form — `number`, `string`, `boolean`, or a closed union of two or more quoted literals — while an example binds one scalar literal in the same position.",
-          "The skeleton — every slot group normalized to `{name}` with prose braces left untouched — is the step's identity: it keys the generated step contract, matches an example step to its vocabulary entry, and makes a declaration and its binding the same step.",
+          "The skeleton — every slot group normalized to `{name}` with prose braces left untouched — is the step's identity: it matches an example step to its vocabulary entry, makes a declaration and its binding the same step, and keys the generated step contract unless the step carries a step key under `spec:carrier.step-keys`.",
           "An identifier-led group whose remainder parses as neither a type nor a value stays a named but unusable slot: it declares nothing, binds nothing, and reads as unbound rather than being guessed into meaning.",
           'A group holding one double-quoted literal, `{x: "only"}`, is a binding; in a vocabulary it declares no type, no one-value dimension, and contract generation reports `contracts/untyped-vocabulary-slot`.',
           "A bare group, `{n}`, names a slot and binds nothing; in an example it is unbound, and in a vocabulary it declares no type.",
@@ -932,13 +933,13 @@ export const carrierSpecs = [
           "A list entry is one line that starts with a hyphen and a space. A wrapped or indented continuation, a nested list, a star or plus bullet, and an ordered list are refused, except the field lines an open question may carry, each indented by exactly two spaces directly under its question.",
           "The refused block shapes are read line by line in narrative, section prose, and list text: a line that opens with a pipe, a block-quote marker, whitespace, a star or plus bullet, an ordered-list marker, or a `<`, and a line that is only a thematic break or a setext underline. A table without outer pipes is prose to the parser.",
           "Raw HTML is refused in narrative, section prose, and list text, and is not scanned in the H1 title or inside fence steps. The test matches an HTML tag with its closing `>`, a comment delimiter, a declaration, or a processing instruction, so `a < b` and an unclosed `Promise<T` pass. The test ignores matched code spans, as ruled by `spec:carrier.inline-code-spans`.",
-          "The only fences are `gwt` and `gwt-vocabulary`. A fence holds Given steps, exactly one When step, and Then steps in that order, with no blank or indented line, and its slot syntax is `spec:carrier.slot-notation`. An example's Intent owns one `gwt` fence that closes the section. Example space owns optional leading prose, which counts as the shared description above, and then exactly one `gwt-vocabulary` fence, with no list entry or H3.",
+          "The only fences are `gwt` and `gwt-vocabulary`. A fence holds Given steps, exactly one When step, and Then steps in that order, with no blank or indented line, and its slot syntax is `spec:carrier.slot-notation`. A step may open with a step key marker after its keyword, under `spec:carrier.step-keys`. An example's Intent owns one `gwt` fence that closes the section. Example space owns optional leading prose, which counts as the shared description above, and then exactly one `gwt-vocabulary` fence, with no list entry or H3.",
           "Intent accepts `actor`, `problem`, `outcome`, and `value` once each and `risk` and `assumption` repeatedly. One `### Open questions` heading may follow those fields, each of its entries opens with `[blocking]` or `[non-blocking]`, optionally with a lower-camel key after one space and `#` inside the brackets, unique within the Spec, and it is the only H3 any section accepts. Under a question's line may follow its `decider`, `links`, `provisional` and `trigger` fields, one line each and each at most once; their values follow `spec:model.open-question-fields`.",
           "Behavior entries are keyed `rule` or `flow`. Rule and Contract entries are plain bullets, each one rule. Workflow entries are plain bullets, each one flow, plus keyed `rule` entries. Any entry of the primary behavior owner may open its text, after its label where it has one, with a rule key marker, `[#key]` and a space, and the key follows `spec:model.rule-keys`. Verification entries are plain criteria.",
           "A keyed entry is one ASCII word, a colon, and a space before its value. Where a section takes plain bullets, a bullet of that shape is read as a key and refused unless the section names that key, so a plain bullet never opens with a single word and a colon.",
           "Constraints accept one flat entry of `statement`, `flavor`, `target`, and `measurableBy`, each at most once, with `statement` required and no prose. A second entry is refused by this carrier.",
           "The TypeScript carrier may give one Spec several constraint entries, and the evidence clauses read every entry a Spec carries, whichever carrier wrote it. A `constrainedBy` edge names the constraint Spec whole, whatever its entry count, so a Markdown author with two measurable targets writes two constraint Specs.",
-          "A Model entry is a bold term, the em dash character with a space on each side, and the definition; a hyphen is refused, terms are unique, and an integer-like term is refused. Decision accepts `context` and `decision` once each and `rationale`, `alternative`, and `consequence` repeatedly.",
+          "A Model entry is a bold term, the em dash character with a space on each side, and the definition, which may open with a term key marker under `spec:model.term-addresses`; a hyphen is refused, terms are unique, and an integer-like term is refused. Decision accepts `context` and `decision` once each and `rationale`, `alternative`, and `consequence` repeatedly.",
           "Design and UI are open sections. Each entry is a lower-camel ASCII key, unique within its section, and a one-line value; the same key may appear once under Design and once under UI.",
           "The keys `implemented`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo`, and `models` are refused in every keyed section, under `spec:validation.authored-honesty`. In Design and UI, an otherwise lawful lower-camel key outside this set is ordinary content, including `dependsOn`, `references`, `uses` and `memberOf`; it creates no edge. Every closed section still admits only its own fields.",
           "A refused construct excludes its whole carrier from the graph, and healthy sibling carriers survive.",
@@ -1581,16 +1582,415 @@ export const carrierSpecs = [
     id: "spec:carrier.step-keys",
     specKind: "rule",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     file: "specs/carrier/step-keys.sdp.md",
     title: "An example step may carry a key that survives rewording",
+    narrative:
+      "A test that binds an example through `bindExample` names each step it handles, and an oracle names each Then step of its example space as an outcome `kind`. Both names are the step's skeleton, the step text with each slot reduced to its name, so rewording a step renames it and the typecheck fails at every handler and oracle that names it; a generated registrar holds its own handlers and changes with the contract when it is regenerated, so behind a registrar only the oracle's kinds hold a step's name. That break is the right default for a step whose words are its meaning, and the wrong one when an author improves the wording of a step that many examples and tests share. A step key separates the two. An author keys a step once, in the vocabulary its sibling examples share, and the key, not the wording, names the step in the contract and in the test. The key serves the build and the test, not prose: nothing outside an example and its test cites a single step, so the address grammar gains no step segment.",
+    sections: {
+      intent: {
+        problem:
+          "A test that binds an example's steps directly names each by its text, and an oracle names each Then step the same way, so improving a step's wording breaks every test and oracle that names it, though nothing the step means has changed.",
+        outcome:
+          "Let an example step carry a key in a marker, so its contract key and the binding a test holds survive a change of wording, in the Markdown, Gherkin and TypeScript carriers alike.",
+      },
+      behavior: {
+        description:
+          "The world writes one extraction root holding a parent probe Spec and one child example in the carrier the slot names. The parent is a story-altitude behavior Spec stating `scoped`, with an Intent outcome, one rule and an example space whose Given steps are the steps the vocabulary slot joins with a semicolon and a space, followed by `When the probe runs` and `Then the probe ends with {result:string}`. The child is an example stating `scoped` that refines and verifies the parent, whose Given steps are the steps the example slot joins the same way, followed by `When the probe runs` and `Then the probe ends with {result: \"done\"}`. In Markdown the two are separate carriers; in Gherkin they are the Feature and one Scenario of one `.sdp.gherkin` file, with the vocabulary in its `@example-space` pseudo-scenario; in TypeScript they are two `.sdp.ts` carriers whose step strings are the same steps. The world extracts the root and generates the contracts, replaces every occurrence of the before text with the after text in every step as written, markers included, and extracts and generates again. A finding read is the first extraction finding of the first run, or the first contract-generation finding of the first run that names the child, and an empty slot value means the run reports none. A binding key is the key the child's step contract gives its first Given step, in the first run and then in the second, and an empty string when no step contract is emitted for the child. The world writes one `bindExample` handler map against the first contract, one handler per contract key, each declaring its parameters with the names and types that contract gives them and recording which handler each step reaches; it typechecks that unchanged map against the second contract and, when the typecheck passes, runs it with the second contract through `planExample` and `runExamplePlan`. `stillBound` is true only when the unchanged map typechecks and the reworded step reaches the handler it reached in the first run; a changed contract key, slot name or declared slot type makes it false. The import reads the carriers as reworded: the world imports each TypeScript carrier to Markdown, reads the emitted fence line of the parent's first Given step, extracts the imported carriers in a fresh root, and compares each Spec's step keys and step text with the TypeScript graph's.",
+        rules: [
+          "A step may open its text with a step key marker, `[#key]` and one space, after its keyword: in a line of a `gwt` or `gwt-vocabulary` fence, in a step of a `.sdp.gherkin` Scenario or `@example-space` pseudo-scenario, and at the start of a step string in the TypeScript carrier. The key is lower-camel ASCII, the grammar every marker key follows, and an unkeyed step stays lawful. Importing a TypeScript carrier to Markdown writes the marker on every step that carries the key.",
+          "The marker is carrier syntax: the graph holds the step text without it and records the key apart, so the slot notation, the skeleton, the vocabulary match, the bound point, the readiness floor and the frozen projections read the step text unchanged.",
+          "Step text that opens with `[#` and does not continue as a marker is refused at its step; a marker later in the text is plain text.",
+          "Within one Spec a key names one step and a step carries one key, a step being one skeleton: a key on two skeletons, or two keys on one skeleton, is refused at each step that carries one. A step written more than once needs its marker once and may repeat it. An example space belongs to one Spec, so its keys are unique across the space and the sibling set that binds it. A refused Markdown or Gherkin carrier is refused whole, as for every structure refusal; in the TypeScript carrier the key drops at each site and the Spec stays.",
+          "A sibling set shares its parent's vocabulary, and so its keys: an example step that resolves to a step of its parent's example space takes that step's key. A marker on such a step must repeat that key; any other marker, or a marker where the vocabulary step has none, withholds the example's step contract. An example step that no parent's example space declares takes its key from its own marker.",
+          "A step's contract key is its key when it has one and its skeleton otherwise, as `spec:extraction.executable-contracts` derives it. The contract key names the step in the generated contract, the handler a test binds to it, and, for a Then step of an example space, the `kind` of its outcome.",
+          "A key names the step and its slots name the step's parameters: the handler bound under a key receives the step's bound values, typed by the vocabulary as an unkeyed handler's are, and a key never names a slot.",
+          "Rewording a keyed step, in the vocabulary and in every example that uses it, leaves its contract key unchanged, so a directly authored handler bound under the key, and an oracle that names it as an outcome `kind`, compile and run unchanged; an adopted registrar is regenerated, as after every carrier edit, and its authored adapters compile unchanged. Renaming or retyping one of its slots changes its parameters and breaks the binding, as it always has.",
+          "An unkeyed step is keyed by its skeleton, as it always was: rewording it changes its contract key. A directly authored handler under the old skeleton fails the typecheck as a missing and an excess property and fails the run at that step; a committed adopted registrar fails the regeneration preflight until it is regenerated; and an oracle that names a reworded Then step by its old `kind` fails the typecheck.",
+          "Renaming or removing a key changes the step's contract key: a directly authored handler under the old key fails the typecheck, and when the key names a Then step of the example space, an oracle that names its old outcome `kind` fails the typecheck too. A key changes only when an author changes it.",
+          "A step key is not an entry address: the address grammar gains no step segment, prose cites no step, and the location table records none. The generated contract and the code bound to it are a key's only readers, and the typechecker holds them to it; a review that cites one step cites its example Spec and the rules that example exercises.",
+          "A step key mints no edge, confers no delivery fact and moves no readiness floor.",
+        ],
+        ruleKeys: {
+          stepMarker: "rules[0]",
+          markerRefusals: "rules[2]",
+          oneKeyOneStep: "rules[3]",
+          vocabularyHome: "rules[4]",
+          contractKey: "rules[5]",
+          rewordedStaysBound: "rules[7]",
+          unkeyedBreaks: "rules[8]",
+          renamedKey: "rules[9]",
+        },
+        exampleSpace: {
+          given: [
+            'the {carrier:"Markdown"|"Gherkin"|"TypeScript"} carriers of a parent whose example space declares the Given steps {vocabulary:string}',
+            "a child example of that parent whose Given steps read {example:string}",
+          ],
+          when: [
+            "the contracts are generated, the step lines are reworded by replacing {before:string} with {after:string}, and the contracts are generated again",
+          ],
+          then: [
+            "the first extraction finding's message contains {extractMessage:string}",
+            "the first contract finding about the child is {contractFinding:string}",
+            "the child contract binds its first Given step as {bindingKey:string} and then as {rewordedBindingKey:string}",
+            "the handlers bound to the first contract cover the second: {stillBound:boolean}",
+            "the carriers imported to Markdown write the parent's first Given step as {importedStep:string} and keep every step key and step text: {keptOnImport:boolean}",
+          ],
+        },
+      },
+      design: {
+        stepMarker:
+          '`<keyword> [#<key>] <text>` is a keyed step in a `gwt` or `gwt-vocabulary` fence line and in a `.sdp.gherkin` step, with `<keyword>` one of `Given`, `When`, `Then` and `And`, and `"[#<key>] <text>"` is a keyed TypeScript step string; `<key>` matches `^[a-z][A-Za-z0-9]*$`.',
+        stepKeysField:
+          "`behavior.stepKeys` maps each key to the skeleton of the step it names, in authored order, the example space's steps before the examples' steps; the step strings hold the text with the marker removed; a Spec with no keyed step carries no `stepKeys`, and the serialized graph writes it after `exampleSpace`.",
+        markerRefusal:
+          "`step key markers must be [#<lower-camel ASCII key>] followed by one space and text` is the message, as the finding `extract/unrecognized-property` at severity error.",
+        keyOnTwoSteps:
+          '`step key "<key>" names two steps; a step key names one step within a Spec` is the message, as the same finding, at each step that carries the key.',
+        twoKeysOnStep:
+          '`step "<skeleton>" carries two step keys; a step carries one key within a Spec` is the message, as the same finding, at each step of that skeleton that carries a key.',
+        stepPath:
+          "a step refusal's path is `behavior.exampleSpace.<phase>[<i>]` or `behavior.examples[<n>].<phase>[<i>]`, with `<phase>` one of `given`, `when` and `then` and each index counting from 0; the finding carries the step's source line where its carrier reports one and the Spec's line otherwise.",
+        conflictingKey:
+          "`contracts/conflicting-step-key` is the contract-generation warning for an example marker that disagrees with its vocabulary step; it names the example, the step's skeleton, the marker's key and the vocabulary step's key or none, and the example's step contract and registrar are withheld.",
+        importEmitter:
+          "the TypeScript-to-Markdown import writes `[#<key>] ` at the start of every step of the Spec whose skeleton `stepKeys` maps the key to, so a keyed TypeScript Spec imports keyed.",
+        keyedBinding:
+          '`bindExample(contract, () => world, { cartSize: (world, { items }) => { … }, "the probe runs": (world) => { … } })` binds a keyed step by its key beside an unkeyed step bound by its skeleton.',
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.reworded-keyed-step-stays-bound",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.reworded-keyed-step-stays-bound.sdp.md",
+    title: "A keyed step reworded in its vocabulary and its example keeps its binding",
     narrative: null,
     sections: {
       intent: {
         outcome:
-          "Let an example step carry a key in a marker, so its contract key and the binding a test holds survive a change of wording, in the Markdown and Gherkin carriers alike.",
+          "Execute the step key's acceptance: a step keyed in the parent's vocabulary keeps its contract key across a rewording, so the handlers bound before it still bind.",
       },
-      behavior: {},
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "Markdown"} carriers of a parent whose example space declares the Given steps {vocabulary: "[#cartSize] a customer has a cart with {items:number} line items"}',
+              'a child example of that parent whose Given steps read {example: "a customer has a cart with {items: 2} line items"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "a customer has a cart with"} with {after: "the cart holds"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the child contract binds its first Given step as {bindingKey: "cartSize"} and then as {rewordedBindingKey: "cartSize"}',
+              "the handlers bound to the first contract cover the second: {stillBound: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.reworded-unkeyed-step-breaks",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.reworded-unkeyed-step-breaks.sdp.md",
+    title: "The same rewording without a key breaks the binding",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the contrast to the keyed rewording: an unkeyed step is keyed by its skeleton, so the same rewording renames it and the handlers bound before it no longer cover the contract.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "Markdown"} carriers of a parent whose example space declares the Given steps {vocabulary: "a customer has a cart with {items:number} line items"}',
+              'a child example of that parent whose Given steps read {example: "a customer has a cart with {items: 2} line items"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "a customer has a cart with"} with {after: "the cart holds"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the child contract binds its first Given step as {bindingKey: "a customer has a cart with {items} line items"} and then as {rewordedBindingKey: "the cart holds {items} line items"}',
+              "the handlers bound to the first contract cover the second: {stillBound: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.gherkin-keyed-step-stays-bound",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.gherkin-keyed-step-stays-bound.sdp.md",
+    title: "A keyed Gherkin step keeps its binding across a rewording",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the step marker in the Gherkin carrier, where the vocabulary lives in the `@example-space` pseudo-scenario and the child is an ordinary Scenario.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "Gherkin"} carriers of a parent whose example space declares the Given steps {vocabulary: "[#cartSize] a customer has a cart with {items:number} line items"}',
+              'a child example of that parent whose Given steps read {example: "a customer has a cart with {items: 2} line items"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "a customer has a cart with"} with {after: "the cart holds"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the child contract binds its first Given step as {bindingKey: "cartSize"} and then as {rewordedBindingKey: "cartSize"}',
+              "the handlers bound to the first contract cover the second: {stillBound: true}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.renamed-key-breaks",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.renamed-key-breaks.sdp.md",
+    title: "Renaming a step key breaks the binding",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the renamed-key rule: a change of the key itself, with the wording left as it was, renames the step in the contract.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "Markdown"} carriers of a parent whose example space declares the Given steps {vocabulary: "[#cartSize] a customer has a cart with {items:number} line items"}',
+              'a child example of that parent whose Given steps read {example: "a customer has a cart with {items: 2} line items"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "cartSize"} with {after: "cartLines"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the child contract binds its first Given step as {bindingKey: "cartSize"} and then as {rewordedBindingKey: "cartLines"}',
+              "the handlers bound to the first contract cover the second: {stillBound: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.repeated-key-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.repeated-key-refused.sdp.md",
+    title: "One key on two vocabulary steps refuses the carrier",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the refusal of a key that names two steps of one Spec.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "Markdown"} carriers of a parent whose example space declares the Given steps {vocabulary: "[#cartSize] a customer has a cart with {items:number} line items; [#cartSize] the cart is open"}',
+              'a child example of that parent whose Given steps read {example: "a customer has a cart with {items: 2} line items; the cart is open"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "a customer has a cart with"} with {after: "the cart holds"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: "names two steps; a step key names one step within a Spec"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.two-keys-on-one-step-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.two-keys-on-one-step-refused.sdp.md",
+    title: "Two keys on one step refuse the carrier",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the refusal of one step, written twice in a vocabulary, that carries a different key each time.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "Markdown"} carriers of a parent whose example space declares the Given steps {vocabulary: "[#cartSize] a customer has a cart with {items:number} line items; [#cartLines] a customer has a cart with {items:number} line items"}',
+              'a child example of that parent whose Given steps read {example: "a customer has a cart with {items: 2} line items"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "a customer has a cart with"} with {after: "the cart holds"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: "carries two step keys; a step carries one key within a Spec"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.malformed-marker-refused",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.malformed-marker-refused.sdp.md",
+    title: "A step marker whose key is off the grammar refuses the carrier",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the marker refusal on step text that opens with a marker whose key is not lower-camel ASCII.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "Markdown"} carriers of a parent whose example space declares the Given steps {vocabulary: "[#cart-size] a customer has a cart with {items:number} line items"}',
+              'a child example of that parent whose Given steps read {example: "a customer has a cart with {items: 2} line items"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "a customer has a cart with"} with {after: "the cart holds"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: "step key markers must be [#<lower-camel ASCII key>] followed by one space and text"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.conflicting-example-key-withheld",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.conflicting-example-key-withheld.sdp.md",
+    title: "An example marker that disagrees with its vocabulary withholds the contract",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the shared-key rule: an example step keyed apart from the vocabulary step it resolves to gets no step contract, and the finding names the conflict.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "Markdown"} carriers of a parent whose example space declares the Given steps {vocabulary: "[#cartSize] a customer has a cart with {items:number} line items"}',
+              'a child example of that parent whose Given steps read {example: "[#basketSize] a customer has a cart with {items: 2} line items"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "a customer has a cart with"} with {after: "the cart holds"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the first contract finding about the child is {contractFinding: "contracts/conflicting-step-key"}',
+              'the child contract binds its first Given step as {bindingKey: ""} and then as {rewordedBindingKey: ""}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.key-equal-to-a-skeleton-withheld",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.key-equal-to-a-skeleton-withheld.sdp.md",
+    title: "A step key equal to another step's skeleton withholds the contract",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the contract-key collision: a keyed step and an unkeyed step whose skeleton is that key would share one contract key, so extraction accepts both and contract generation withholds the child's step contract with a named finding.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "Markdown"} carriers of a parent whose example space declares the Given steps {vocabulary: "[#cartSize] the cart has {items:number} items; cartSize"}',
+              'a child example of that parent whose Given steps read {example: "the cart has {items: 2} items; cartSize"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "the cart has"} with {after: "the cart holds"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the first contract finding about the child is {contractFinding: "contracts/duplicate-step-key"}',
+              'the child contract binds its first Given step as {bindingKey: ""} and then as {rewordedBindingKey: ""}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:carrier.step-keys.typescript-keyed-step-imports-keyed",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/carrier/step-keys.typescript-keyed-step-imports-keyed.sdp.md",
+    title: "A keyed TypeScript step keeps its key through import to Markdown",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the step marker in the TypeScript carrier: a keyed step string keeps its contract key across a rewording, and importing the carriers to Markdown writes the marker and extracts to the same step keys and step text.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the {carrier: "TypeScript"} carriers of a parent whose example space declares the Given steps {vocabulary: "[#cartSize] a customer has a cart with {items:number} line items"}',
+              'a child example of that parent whose Given steps read {example: "a customer has a cart with {items: 2} line items"}',
+            ],
+            when: [
+              'the contracts are generated, the step lines are reworded by replacing {before: "a customer has a cart with"} with {after: "the cart holds"}, and the contracts are generated again',
+            ],
+            then: [
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the child contract binds its first Given step as {bindingKey: "cartSize"} and then as {rewordedBindingKey: "cartSize"}',
+              'the carriers imported to Markdown write the parent\'s first Given step as {importedStep: "Given [#cartSize] the cart holds {items:number} line items"} and keep every step key and step text: {keptOnImport: true}',
+            ],
+          },
+        ],
+      },
     },
     deliveryFacts: [],
   },
