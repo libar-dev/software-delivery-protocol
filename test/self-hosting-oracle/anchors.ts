@@ -21,6 +21,72 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.generate-command",
+    nodeType: "CodeNode",
+    file: "src/cli/generate-command.ts",
+    site: "export function runGenerate(",
+    label: "prepares all prior roots before one shared build and publishes with each verb's checks",
+    role: "publisher",
+  },
+  {
+    id: "impl:protocol.external-registers-recipe",
+    nodeType: "CodeNode",
+    file: "test/external-registers.test.ts",
+    site: "const catalog =",
+    constant: "anchor",
+    label: "asserts realization of the shipped external-registers recipe",
+  },
+  {
+    id: "oracle:protocol.command-line",
+    nodeType: "Anchor",
+    file: "test/self-hosting-command-line.test.ts",
+    site: "function answer(",
+    constant: "oracle",
+  },
+  {
+    id: "oracle:protocol.external-registers",
+    nodeType: "Anchor",
+    file: "test/self-hosting-external-registers.test.ts",
+    site: "function answer(",
+    constant: "oracle",
+  },
+  {
+    id: "test:protocol.command-line.generate-writes-every-root",
+    nodeType: "Anchor",
+    file: "test/self-hosting-command-line.test.ts",
+    constant: "generateWritesEveryRootAnchor",
+    site: "registerGenerateWritesEveryRoot(",
+  },
+  {
+    id: "test:protocol.command-line.generate-check-failure",
+    nodeType: "Anchor",
+    file: "test/self-hosting-command-line.test.ts",
+    constant: "generateCheckFailureAnchor",
+    site: "registerGenerateCheckFailure(",
+  },
+  {
+    id: "test:protocol.command-line.verb-help-touches-nothing",
+    nodeType: "Anchor",
+    file: "test/self-hosting-command-line.test.ts",
+    constant: "verbHelpTouchesNothingAnchor",
+    site: "registerVerbHelpTouchesNothing(",
+  },
+  {
+    id: "test:protocol.external-registers.unknown-and-retired",
+    nodeType: "Anchor",
+    file: "test/self-hosting-external-registers.test.ts",
+    constant: "unknownAndRetiredAnchor",
+    site: "registerUnknownAndRetired(",
+  },
+  {
+    id: "test:protocol.external-registers.uncited-on-request",
+    nodeType: "Anchor",
+    file: "test/self-hosting-external-registers.test.ts",
+    constant: "uncitedOnRequestAnchor",
+    site: "registerUncitedOnRequest(",
+  },
+
+  {
     id: "impl:protocol.corpus-rules",
     nodeType: "CodeNode",
     file: "src/cli/validate-view-command.ts",
@@ -1478,7 +1544,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     label: "publishes each Design Review as one wholesale temporary-directory replacement",
     file: "src/cli/validate-view-command.ts",
     constant: "wholesaleViewRewriteAnchor",
-    site: "export function runView",
+    site: "export function publishDesignReview",
     role: "publisher",
   },
   {
@@ -1870,7 +1936,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     label: "publishes the census through the explicit `sdp census` surface",
     file: "src/cli/census-command.ts",
     constant: "censusPageCliAnchor",
-    site: "export function runCensus",
+    site: "export function prepareCensusPublication",
     role: "publisher",
   },
   {
@@ -1879,7 +1945,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     label: "publishes Mermaid through the explicit `sdp mermaid` surface",
     file: "src/cli/mermaid-command.ts",
     constant: "mermaidViewCliAnchor",
-    site: "export function runMermaid",
+    site: "export function prepareMermaidPublication",
     role: "publisher",
   },
   {
@@ -1888,7 +1954,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     label: "publishes the Gherkin view through the explicit `sdp gherkin` surface",
     file: "src/cli/gherkin-command.ts",
     constant: "gherkinViewCliAnchor",
-    site: "export function runGherkinView",
+    site: "export function prepareGherkinPublication",
     role: "publisher",
   },
   {
@@ -2704,7 +2770,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     nodeType: "CodeNode",
     label:
       "SDP_HELP_TEXT indexes the shipped skills, recipe catalog, schema, walkthrough, glossary and specs/ by package-relative path",
-    file: "src/cli/sdp.ts",
+    file: "src/cli/help.ts",
     site: "export const SDP_HELP_TEXT =",
     role: "service",
   },
@@ -2812,6 +2878,36 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.generate-command", "references", "spec:consumers.command-line"],
+  ["impl:protocol.adopter-help", "references", "spec:consumers.command-line"],
+  ["impl:protocol.external-registers-recipe", "satisfies", "spec:validation.external-registers"],
+  ["oracle:protocol.command-line", "models", "spec:consumers.command-line"],
+  ["oracle:protocol.external-registers", "models", "spec:validation.external-registers"],
+  [
+    "test:protocol.command-line.generate-writes-every-root",
+    "verifies",
+    "spec:consumers.command-line.generate-writes-every-root",
+  ],
+  [
+    "test:protocol.command-line.generate-check-failure",
+    "verifies",
+    "spec:consumers.command-line.generate-check-failure",
+  ],
+  [
+    "test:protocol.command-line.verb-help-touches-nothing",
+    "verifies",
+    "spec:consumers.command-line.verb-help-touches-nothing",
+  ],
+  [
+    "test:protocol.external-registers.unknown-and-retired",
+    "verifies",
+    "spec:validation.external-registers.unknown-and-retired",
+  ],
+  [
+    "test:protocol.external-registers.uncited-on-request",
+    "verifies",
+    "spec:validation.external-registers.uncited-on-request",
+  ],
   ["impl:protocol.corpus-rules", "satisfies", "spec:validation.corpus-rules"],
   [
     "impl:protocol.architecture-walk-recipe",
@@ -3707,6 +3803,7 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.generate-command",
   "impl:protocol.corpus-rules",
   "impl:protocol.studio-data",
   "impl:protocol.studio-paths",

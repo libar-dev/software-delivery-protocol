@@ -129,11 +129,15 @@ const wholesaleViewRewriteAnchor = codeAnchor({
 });
 void wholesaleViewRewriteAnchor;
 
-export function runView(parsed: BuildArgs, output: CliOutput, hooks: ValidationViewHooks): number {
+export function publishDesignReview(
+  validate: BuildOutcome,
+  parsed: BuildArgs,
+  output: CliOutput,
+  hooks: ValidationViewHooks,
+): number {
   const render = hooks.renderDesignReview ?? renderDesignReview;
   const recoveryRm = hooks.rmSync ?? rmSync;
   const viewPath = join(parsed.root, "generated", "design-review");
-  const validate = runValidate(parsed, output, "view", hooks);
 
   if (validate.graph === undefined) {
     removeArtifacts([viewPath], output, "view", recoveryRm);
@@ -176,4 +180,8 @@ export function runView(parsed: BuildArgs, output: CliOutput, hooks: ValidationV
     const detail = error instanceof Error ? error.message : errorMessage(error);
     return failView(`sdp view: ${detail}\n`);
   }
+}
+
+export function runView(parsed: BuildArgs, output: CliOutput, hooks: ValidationViewHooks): number {
+  return publishDesignReview(runValidate(parsed, output, "view", hooks), parsed, output, hooks);
 }

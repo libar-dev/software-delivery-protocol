@@ -16,6 +16,7 @@ import { createReader } from "../reader/reader.js";
 import type { Reader } from "../reader/reader.js";
 import { removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
+import type { BuildOutcome } from "./build-command.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
 import { runValidate } from "./validate-view-command.js";
@@ -88,7 +89,11 @@ const mermaidViewCliAnchor = codeAnchor({
 void mermaidViewCliAnchor;
 
 /** Publishes Mermaid independently as one wholesale tmp-to-rename root. */
-export function runMermaid(parsed: BuildArgs, output: CliOutput, hooks: MermaidHooks): number {
+export function prepareMermaidPublication(
+  parsed: BuildArgs,
+  output: CliOutput,
+  hooks: MermaidHooks,
+): ((validated: BuildOutcome) => number) | undefined {
   const render: MermaidRenderer = hooks.renderMermaid ?? renderMermaid;
   const recoveryRm = hooks.rmSync ?? rmSync;
   const mermaidPath = join(parsed.root, "generated", "mermaid");
@@ -101,55 +106,60 @@ export function runMermaid(parsed: BuildArgs, output: CliOutput, hooks: MermaidH
     const detail = error instanceof Error ? error.message : errorMessage(error);
     writeStderr(output, `sdp mermaid --check-clean: cannot read generated Mermaid (${detail}).\n`);
     removeArtifacts([mermaidPath, temporaryPath], output, "mermaid", recoveryRm);
-    return 1;
+    return undefined;
   }
 
-  const validate = runValidate(parsed, output, "mermaid", hooks);
+  return (validate) => {
+    if (validate.graph === undefined) {
+      removeArtifacts([mermaidPath, temporaryPath], output, "mermaid", recoveryRm);
+      return validate.exitCode;
+    }
 
-  if (validate.graph === undefined) {
-    removeArtifacts([mermaidPath, temporaryPath], output, "mermaid", recoveryRm);
-    return validate.exitCode;
-  }
+    const failMermaid = (message: string): number => {
+      writeStderr(output, message);
+      removeArtifacts([mermaidPath, temporaryPath], output, "mermaid", recoveryRm);
+      return 1;
+    };
 
-  const failMermaid = (message: string): number => {
-    writeStderr(output, message);
-    removeArtifacts([mermaidPath, temporaryPath], output, "mermaid", recoveryRm);
-    return 1;
+    try {
+      const pages = normalizePages(render(createReader(validate.graph)));
+
+      if (parsed.checkClean) {
+        const second = normalizePages(render(createReader(validate.graph)));
+
+        if (!pagesEqual(second, pages)) {
+          return failMermaid(
+            "sdp mermaid --check-clean: two independent renders diverged — Mermaid is not deterministic.\n",
+          );
+        }
+
+        if (publishedBeforeBuild === undefined || !pagesEqual(publishedBeforeBuild, pages)) {
+          return failMermaid(
+            "sdp mermaid --check-clean: generated Mermaid differs from the current projection.\n",
+          );
+        }
+      }
+
+      rmSync(temporaryPath, { recursive: true, force: true });
+
+      for (const page of pages) {
+        const target = join(temporaryPath, page.path);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, page.content, "utf8");
+      }
+
+      rmSync(mermaidPath, { recursive: true, force: true });
+      renameSync(temporaryPath, mermaidPath);
+      writeStdout(output, `Wrote ${mermaidPath} (${String(pages.length)} pages)\n`);
+      return validate.exitCode;
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : errorMessage(error);
+      return failMermaid(`sdp mermaid: ${detail}\n`);
+    }
   };
+}
 
-  try {
-    const pages = normalizePages(render(createReader(validate.graph)));
-
-    if (parsed.checkClean) {
-      const second = normalizePages(render(createReader(validate.graph)));
-
-      if (!pagesEqual(second, pages)) {
-        return failMermaid(
-          "sdp mermaid --check-clean: two independent renders diverged — Mermaid is not deterministic.\n",
-        );
-      }
-
-      if (publishedBeforeBuild === undefined || !pagesEqual(publishedBeforeBuild, pages)) {
-        return failMermaid(
-          "sdp mermaid --check-clean: generated Mermaid differs from the current projection.\n",
-        );
-      }
-    }
-
-    rmSync(temporaryPath, { recursive: true, force: true });
-
-    for (const page of pages) {
-      const target = join(temporaryPath, page.path);
-      mkdirSync(dirname(target), { recursive: true });
-      writeFileSync(target, page.content, "utf8");
-    }
-
-    rmSync(mermaidPath, { recursive: true, force: true });
-    renameSync(temporaryPath, mermaidPath);
-    writeStdout(output, `Wrote ${mermaidPath} (${String(pages.length)} pages)\n`);
-    return validate.exitCode;
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : errorMessage(error);
-    return failMermaid(`sdp mermaid: ${detail}\n`);
-  }
+export function runMermaid(parsed: BuildArgs, output: CliOutput, hooks: MermaidHooks): number {
+  const publish = prepareMermaidPublication(parsed, output, hooks);
+  return publish === undefined ? 1 : publish(runValidate(parsed, output, "mermaid", hooks));
 }

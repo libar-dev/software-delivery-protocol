@@ -45,6 +45,7 @@
 | 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
 | 42 | The architecture walk | forbidden, isolated, severity | Check anchored architecture rules |
 | 43 | Planned against realized components | none | Compare component designs with anchors |
+| 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -4156,3 +4157,168 @@ return { totals: { designs: designs.length, realized: realizedCount, matching, u
 An anchor without an anchored `satisfies` edge stays unrealized. `differing` counts rows; `matching`
 counts realized designs with neither differences nor unreadable fields. The law is
 `spec:model.planned-architecture`.
+
+## 50. External registers
+
+Check a corpus's prose tokens against its own JSON register. Pass the file as
+`--params register=@PATH`, bound to `params.register`, and a JavaScript regular-expression source as `params.pattern`.
+The register has a `tokens` array of strings or `{ token, retired }` objects; other columns are
+ignored. There is no sample register or pattern. Invalid input returns `diagnostics` without
+`findings`, so it fails as a rules file. `params.severity` defaults to `error`; `params.uncited` set to true also
+reports held tokens no Spec cites. The answer includes input, totals, cited token rows and
+findings. Titles, narrative, section text, authored keys and relation reasons are read from the
+graph. No Pack, id or source file is scanned.
+
+The shipped file runs unchanged with `sdp validate --rules`. To check several registers, a rules
+file calls recipe 50 once per register through `recipes(50, parameters)` and combines the findings.
+The corpus's owner decides which registers it may cite.
+
+```js
+const accepts = ["register", "pattern", "severity", "uncited"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const diagnostics = [];
+const diagnose = (parameter, problem) => diagnostics.push({ parameter, problem });
+const record = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+const register = params.register;
+const severity = params.severity ?? "error";
+const uncited = params.uncited ?? false;
+if (params.severity === null || (severity !== "error" && severity !== "warning")) diagnose("severity", "expected error or warning");
+if (params.uncited === null || typeof uncited !== "boolean") diagnose("uncited", "expected a boolean");
+const held = new Map();
+if (!record(register) || !Array.isArray(register.tokens)) {
+  diagnose("register", "expected an object with a tokens array");
+} else {
+  for (const [index, item] of register.tokens.entries()) {
+    const token = typeof item === "string" ? item : record(item) ? item.token : undefined;
+    if (typeof token !== "string" || token.trim() === "" ||
+        (typeof item !== "string" && typeof item.retired !== "boolean")) {
+      diagnose("register", `tokens[${index}] must be a non-empty string or a token and retired boolean`);
+      continue;
+    }
+    if (held.has(token)) diagnose("register", `token ${token} is listed twice`);
+    held.set(token, typeof item === "string" ? false : item.retired);
+  }
+}
+let pattern;
+if (typeof params.pattern !== "string") {
+  diagnose("pattern", "expected a regular-expression source string");
+} else {
+  try {
+    pattern = new RegExp(params.pattern, "gu");
+    if ([..."".matchAll(pattern)].some((match) => match[0] === ""))
+      diagnose("pattern", "must not match the empty string");
+    for (const token of held.keys()) {
+      const matches = [...token.matchAll(pattern)];
+      if (matches.length !== 1 || matches[0][0] !== token)
+        diagnose("pattern", `must match register token ${token} whole`);
+    }
+  } catch (error) {
+    diagnose("pattern", `cannot compile: ${error.message}`);
+  }
+}
+if (diagnostics.length > 0) return { diagnostics };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const cited = new Map();
+const findings = [];
+let citations = 0;
+const specs = g.specs();
+for (const spec of specs) {
+  const context = g.specContext(spec.id);
+  if (context === undefined) continue;
+  const lines = new Map(context.entryLocations.map((row) => [row.entry, row.line]));
+  const texts = [];
+  const add = (path, text, located) => {
+    if (typeof text === "string") texts.push({ path, text, line: lines.get(located) });
+  };
+  const questionKey = (entry) => {
+    const index = /^openQuestions\[(\d+)\]\.question$/u.exec(entry ?? "")?.[1];
+    return index === undefined ? undefined : context.sections?.intent?.openQuestions?.[Number(index)]?.key;
+  };
+  const ruleKeys = context.sections?.behavior?.ruleKeys ?? {};
+  const walk = (section, value, entry, topKey) => {
+    const path = entry === null ? section : `${section}.${entry}`;
+    const question = /^openQuestions\[(\d+)\](?:\.(question|decider|links|provisional|trigger)(?:\[\d+\])?)?$/u.exec(entry ?? "");
+    const rule = /^(rules|flows)\[(\d+)\]$/u.exec(entry ?? "");
+    const located = section === "intent" && question !== null
+      ? `question[${question[1]}]${question[2] && question[2] !== "question" ? "." + question[2] : ""}`
+      : section === "behavior" && rule !== null
+        ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]`
+        : (section === "design" || section === "ui") && topKey !== null
+          ? `${section}.${topKey}` : path;
+    if (typeof value === "string") {
+      const key = section === "behavior" ? Object.keys(ruleKeys).find((key) => ruleKeys[key] === entry)
+        : section === "intent" ? questionKey(entry) : undefined;
+      add(path, key, located);
+      add(path, value, located);
+    } else if (Array.isArray(value)) {
+      value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, topKey));
+    } else if (record(value)) {
+      const coined = section === "design" || section === "ui" || (section === "model" && entry === "terms");
+      for (const [key, item] of Object.entries(value)) {
+        const next = entry === null ? key : `${entry}.${key}`;
+        if (section === "behavior" && entry === null && key === "ruleKeys") continue;
+        if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(next)) continue;
+        const nextTop = entry === null ? key : topKey;
+        if (coined && !(entry === null && key === "description"))
+          add(`${section}.${next}`, key, (section === "design" || section === "ui") ? `${section}.${nextTop}` : `${section}.${next}`);
+        walk(section, item, next, nextTop);
+      }
+    }
+  };
+  add("title", context.title, "title");
+  add("narrative", context.narrative, "narrative");
+  for (const [section, value] of Object.entries(context.sections ?? {})) walk(section, value, null, null);
+  for (const relation of context.relationsOut.filter((row) => row.claim === "declared").sort((a, b) =>
+    (lines.get(`relation.${a.type}.${a.otherId}`) ?? Infinity) - (lines.get(`relation.${b.type}.${b.otherId}`) ?? Infinity))) {
+    const path = `relation.${relation.type}.${relation.otherId}`;
+    add(path, relation.reason, path);
+  }
+  const first = new Map();
+  for (const text of texts) {
+    for (const match of text.text.matchAll(pattern)) {
+      const token = match[0];
+      if (token === "") { diagnose("pattern", "must not match the empty string"); continue; }
+      citations += 1;
+      const row = cited.get(token) ?? { token, held: held.has(token), retired: held.get(token) === true, citations: 0, specs: new Set() };
+      row.citations += 1;
+      row.specs.add(spec.id);
+      cited.set(token, row);
+      if (!first.has(token)) first.set(token, text);
+    }
+  }
+  for (const [token, text] of first) {
+    if (held.has(token) && !held.get(token)) continue;
+    const retired = held.get(token) === true;
+    findings.push({
+      validatorId: retired ? "retired-token" : "unknown-token",
+      subjectId: spec.id,
+      relatedId: token,
+      severity,
+      message: `${spec.id} cites ${token}, which the register ${retired ? "retires" : "does not list"}`,
+      file: spec.file,
+      path: text.path,
+      ...(text.line === undefined ? {} : { line: text.line }),
+    });
+  }
+}
+if (diagnostics.length > 0) return { diagnostics };
+findings.sort((a, b) => compare(a.subjectId, b.subjectId) || compare(a.relatedId, b.relatedId));
+if (uncited) for (const [token, retired] of held) {
+  if (!retired && !cited.has(token)) findings.push({
+    validatorId: "uncited-token", subjectId: token, severity,
+    message: `${token} is held by the register and no Spec cites it`,
+  });
+}
+return {
+  input: { pattern: params.pattern, severity, uncited },
+  totals: {
+    specs: specs.length, citations, tokens: cited.size,
+    unknown: findings.filter((row) => row.validatorId === "unknown-token").length,
+    retired: findings.filter((row) => row.validatorId === "retired-token").length,
+    uncited: findings.filter((row) => row.validatorId === "uncited-token").length,
+  },
+  tokens: [...cited.values()].sort((a, b) => compare(a.token, b.token)).map((row) => ({ ...row, specs: [...row.specs].sort(compare) })),
+  findings,
+};
+```

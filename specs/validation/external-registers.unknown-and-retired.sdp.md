@@ -2,7 +2,7 @@
 id: spec:validation.external-registers.unknown-and-retired
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:validation.external-registers
   verifies:

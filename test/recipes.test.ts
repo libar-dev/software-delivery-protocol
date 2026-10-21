@@ -503,7 +503,10 @@ describe("the agent-surface recipe corpus", () => {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (let ordinal = 12; ordinal <= recipes.length; ordinal += 1) {
+    // Wave-2 recipes use pre-assigned numbers with gaps; integration owns their skill teaching.
+    for (const { ordinal } of recipes.filter(
+      (recipe) => recipe.ordinal >= 12 && recipe.ordinal <= 43,
+    )) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -4519,7 +4522,8 @@ describe("recipe parameters and the shipped recipe files", () => {
           !(recipe.ordinal === 39 && name === "pack") &&
           !(recipe.ordinal === 40 && name === "imports") &&
           !(recipe.ordinal === 41 && name !== "prefixes") &&
-          !(recipe.ordinal === 42 && name !== "severity");
+          !(recipe.ordinal === 42 && name !== "severity") &&
+          !(recipe.ordinal === 50 && ["register", "pattern"].includes(name));
         expect({
           recipe: recipe.ordinal,
           fallback: recipe.body.includes(`params.${name} ?? `),

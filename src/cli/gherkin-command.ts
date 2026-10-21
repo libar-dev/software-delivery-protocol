@@ -16,6 +16,7 @@ import type { GherkinViewPage } from "../projections/gherkin-view.js";
 import { createReader } from "../reader/reader.js";
 import { removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
+import type { BuildOutcome } from "./build-command.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
 import { runValidate } from "./validate-view-command.js";
@@ -72,11 +73,11 @@ const gherkinViewCliAnchor = codeAnchor({
 void gherkinViewCliAnchor;
 
 /** Publishes the Gherkin-shaped READ projection independently as one wholesale tmp-to-rename root. */
-export function runGherkinView(
+export function prepareGherkinPublication(
   parsed: BuildArgs,
   output: CliOutput,
   hooks: GherkinViewHooks,
-): number {
+): ((validated: BuildOutcome) => number) | undefined {
   const render = hooks.renderGherkinView ?? renderGherkinView;
   const recoveryRm = hooks.rmSync ?? rmSync;
   const viewPath = join(parsed.root, "generated", "gherkin");
@@ -92,55 +93,64 @@ export function runGherkinView(
       `sdp gherkin --check-clean: cannot read generated Gherkin view (${detail}).\n`,
     );
     removeArtifacts([viewPath, temporaryPath], output, "gherkin", recoveryRm);
-    return 1;
+    return undefined;
   }
 
-  const validate = runValidate(parsed, output, "gherkin", hooks);
+  return (validate) => {
+    if (validate.graph === undefined) {
+      removeArtifacts([viewPath, temporaryPath], output, "gherkin", recoveryRm);
+      return validate.exitCode;
+    }
 
-  if (validate.graph === undefined) {
-    removeArtifacts([viewPath, temporaryPath], output, "gherkin", recoveryRm);
-    return validate.exitCode;
-  }
+    const failView = (message: string): number => {
+      writeStderr(output, message);
+      removeArtifacts([viewPath, temporaryPath], output, "gherkin", recoveryRm);
+      return 1;
+    };
 
-  const failView = (message: string): number => {
-    writeStderr(output, message);
-    removeArtifacts([viewPath, temporaryPath], output, "gherkin", recoveryRm);
-    return 1;
+    try {
+      const pages = render(createReader(validate.graph));
+
+      if (parsed.checkClean) {
+        const second = render(createReader(validate.graph));
+
+        if (!pagesEqual(second, pages)) {
+          return failView(
+            "sdp gherkin --check-clean: two independent renders diverged — the Gherkin view is not deterministic.\n",
+          );
+        }
+
+        if (publishedBeforeBuild === undefined || !pagesEqual(publishedBeforeBuild, pages)) {
+          return failView(
+            "sdp gherkin --check-clean: generated Gherkin view differs from the current projection.\n",
+          );
+        }
+      }
+
+      rmSync(temporaryPath, { recursive: true, force: true });
+
+      for (const page of pages) {
+        const target = join(temporaryPath, page.path);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, page.content, "utf8");
+      }
+
+      rmSync(viewPath, { recursive: true, force: true });
+      renameSync(temporaryPath, viewPath);
+      writeStdout(output, `Wrote ${viewPath} (${String(pages.length)} pages)\n`);
+      return validate.exitCode;
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : errorMessage(error);
+      return failView(`sdp gherkin: ${detail}\n`);
+    }
   };
+}
 
-  try {
-    const pages = render(createReader(validate.graph));
-
-    if (parsed.checkClean) {
-      const second = render(createReader(validate.graph));
-
-      if (!pagesEqual(second, pages)) {
-        return failView(
-          "sdp gherkin --check-clean: two independent renders diverged — the Gherkin view is not deterministic.\n",
-        );
-      }
-
-      if (publishedBeforeBuild === undefined || !pagesEqual(publishedBeforeBuild, pages)) {
-        return failView(
-          "sdp gherkin --check-clean: generated Gherkin view differs from the current projection.\n",
-        );
-      }
-    }
-
-    rmSync(temporaryPath, { recursive: true, force: true });
-
-    for (const page of pages) {
-      const target = join(temporaryPath, page.path);
-      mkdirSync(dirname(target), { recursive: true });
-      writeFileSync(target, page.content, "utf8");
-    }
-
-    rmSync(viewPath, { recursive: true, force: true });
-    renameSync(temporaryPath, viewPath);
-    writeStdout(output, `Wrote ${viewPath} (${String(pages.length)} pages)\n`);
-    return validate.exitCode;
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : errorMessage(error);
-    return failView(`sdp gherkin: ${detail}\n`);
-  }
+export function runGherkinView(
+  parsed: BuildArgs,
+  output: CliOutput,
+  hooks: GherkinViewHooks,
+): number {
+  const publish = prepareGherkinPublication(parsed, output, hooks);
+  return publish === undefined ? 1 : publish(runValidate(parsed, output, "gherkin", hooks));
 }

@@ -12,13 +12,8 @@ import type { SpecAltitude, SpecKind } from "../model/descriptors.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
 
-export const NEW_SPEC_HELP_TEXT = `sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME
-
-Scaffold an honest idea-rung Markdown Spec. PATH is cwd-relative and must end
-in .sdp.md; parent directories are created as needed. The file is never
-overwritten. Readiness is always idea; relations are always empty. The kind's
-typed section is a bare heading with no invented content. constraint emits
-envelope, title, and Intent only, with no twin section.`;
+import { NEW_SPEC_HELP_TEXT } from "./help.js";
+export { NEW_SPEC_HELP_TEXT } from "./help.js";
 
 const requiredFlags = ["--id", "--kind", "--altitude", "--title", "--outcome"] as const;
 

@@ -12,6 +12,7 @@ export interface BuildArgs {
   readonly checkClean: boolean;
   readonly watch?: boolean;
   readonly imports?: string;
+  readonly vault?: string;
   readonly rules?: readonly RulesInput[];
 }
 
@@ -29,6 +30,7 @@ export function parseBuildArgs(
   let checkClean = false;
   let watchMode = false;
   let imports: string | undefined;
+  let vault: string | undefined;
   const rawExcludes: string[] = [];
   const rawRules: { rulesFile: string; forms: string[] }[] = [];
   const rulePaths = new Set<string>();
@@ -83,6 +85,25 @@ export function parseBuildArgs(
 
     if (argument === "--check-clean") {
       checkClean = true;
+      continue;
+    }
+
+    if (argument === "--vault") {
+      if (command !== "generate") {
+        writeStderr(output, `sdp ${command}: --vault is only valid on generate.\n`);
+        return undefined;
+      }
+      const directory = args[index + 1];
+      if (directory === undefined || directory.trim() === "" || directory.startsWith("--")) {
+        writeStderr(output, "sdp generate: --vault requires a directory.\n");
+        return undefined;
+      }
+      if (vault !== undefined) {
+        writeStderr(output, "sdp generate: --vault may be supplied only once.\n");
+        return undefined;
+      }
+      vault = directory;
+      index += 1;
       continue;
     }
 
@@ -182,6 +203,7 @@ export function parseBuildArgs(
         ...(rules.length === 0 ? {} : { rules }),
         watch: watchMode,
         ...(imports === undefined ? {} : { imports }),
+        ...(vault === undefined ? {} : { vault }),
       };
 }
 

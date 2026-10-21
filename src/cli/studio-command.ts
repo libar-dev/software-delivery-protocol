@@ -14,6 +14,7 @@ import type { StudioAssets, StudioFile } from "../projections/studio/publish.js"
 import { createReader } from "../reader/reader.js";
 import { removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
+import type { BuildOutcome } from "./build-command.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
 import { runValidate } from "./validate-view-command.js";
@@ -26,14 +27,11 @@ export interface StudioHooks extends ValidationViewHooks {
   readonly renderStudio?: typeof renderStudio;
 }
 
-/**
- * @sdpAnchor impl:protocol.studio-command
- * @sdpLabel validates and renders the Studio with independent byte checks and diagnostic exit codes
- * @sdpSatisfies spec:consumers.spec-studio.publisher
- * @sdpComponent component:protocol.cli
- * @sdpRole publisher
- */
-export function runStudio(parsed: BuildArgs, output: CliOutput, hooks: StudioHooks = {}): number {
+export function prepareStudioPublication(
+  parsed: BuildArgs,
+  output: CliOutput,
+  hooks: StudioHooks = {},
+): ((validated: BuildOutcome) => number) | undefined {
   const studioPath = join(parsed.root, "generated", "spec-studio");
   const temporaryPath = `${studioPath}.tmp`;
   const recoveryRm = hooks.rmSync ?? rmSync;
@@ -46,35 +44,47 @@ export function runStudio(parsed: BuildArgs, output: CliOutput, hooks: StudioHoo
   try {
     if (parsed.checkClean) prior = readPublishedStudio(studioPath);
   } catch (error) {
-    return fail(
-      `sdp studio --check-clean: cannot read generated Studio (${errorMessage(error)}).\n`,
-    );
+    fail(`sdp studio --check-clean: cannot read generated Studio (${errorMessage(error)}).\n`);
+    return undefined;
   }
-  const validated = runValidate(parsed, output, "studio", hooks);
-  if (validated.graph === undefined) {
-    removeArtifacts([studioPath, temporaryPath], output, "studio", recoveryRm);
-    return validated.exitCode;
-  }
-  try {
-    const render = hooks.renderStudio ?? renderStudio;
-    const assets = hooks.studioAssets ?? {
-      script: fileURLToPath(new URL("../studio/studio.js", import.meta.url)),
-      stylesheet: fileURLToPath(new URL("../studio/studio.css", import.meta.url)),
-    };
-    const files = studioFiles(render(createStudioData(createReader(validated.graph))), assets);
-    if (parsed.checkClean) {
-      const twin = studioFiles(render(createStudioData(createReader(validated.graph))), assets);
-      if (!studioFilesEqual(files, twin))
-        return fail("sdp studio --check-clean: two independent renders diverged.\n");
-      if (prior === undefined || !studioFilesEqual(prior, files))
-        return fail(
-          "sdp studio --check-clean: generated Studio differs from the current projection.\n",
-        );
+  return (validated) => {
+    if (validated.graph === undefined) {
+      removeArtifacts([studioPath, temporaryPath], output, "studio", recoveryRm);
+      return validated.exitCode;
     }
-    publishStudio(studioPath, files);
-    writeStdout(output, `Wrote ${studioPath} (${String(files.length)} files)\n`);
-    return validated.exitCode;
-  } catch (error) {
-    return fail(`sdp studio: ${errorMessage(error)}\n`);
-  }
+    try {
+      const render = hooks.renderStudio ?? renderStudio;
+      const assets = hooks.studioAssets ?? {
+        script: fileURLToPath(new URL("../studio/studio.js", import.meta.url)),
+        stylesheet: fileURLToPath(new URL("../studio/studio.css", import.meta.url)),
+      };
+      const files = studioFiles(render(createStudioData(createReader(validated.graph))), assets);
+      if (parsed.checkClean) {
+        const twin = studioFiles(render(createStudioData(createReader(validated.graph))), assets);
+        if (!studioFilesEqual(files, twin))
+          return fail("sdp studio --check-clean: two independent renders diverged.\n");
+        if (prior === undefined || !studioFilesEqual(prior, files))
+          return fail(
+            "sdp studio --check-clean: generated Studio differs from the current projection.\n",
+          );
+      }
+      publishStudio(studioPath, files);
+      writeStdout(output, `Wrote ${studioPath} (${String(files.length)} files)\n`);
+      return validated.exitCode;
+    } catch (error) {
+      return fail(`sdp studio: ${errorMessage(error)}\n`);
+    }
+  };
+}
+
+/**
+ * @sdpAnchor impl:protocol.studio-command
+ * @sdpLabel validates and renders the Studio with independent byte checks and diagnostic exit codes
+ * @sdpSatisfies spec:consumers.spec-studio.publisher
+ * @sdpComponent component:protocol.cli
+ * @sdpRole publisher
+ */
+export function runStudio(parsed: BuildArgs, output: CliOutput, hooks: StudioHooks = {}): number {
+  const publish = prepareStudioPublication(parsed, output, hooks);
+  return publish === undefined ? 1 : publish(runValidate(parsed, output, "studio", hooks));
 }
