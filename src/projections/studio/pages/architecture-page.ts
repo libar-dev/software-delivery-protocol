@@ -163,7 +163,7 @@ export function architecturePage(ctx: PageContext): string {
   return frame(
     ctx,
     "Architecture",
-    `<header class="page-head"><h1>Architecture</h1><p>Components, their members and uses, and planned component designs.</p><p>${String(components.length)} components realized and ${String(plans.unrealized.length)} planned. They state ${count(contexts.size, "context", "contexts", false)} and ${count(layers.size, "layer", "layers", false)}. ${String(edges.filter((e) => e.kind === "uses").length)} uses edges between components. ${String(new Set(plans.differing.map((d) => d.spec)).size)} designs differ from their components.</p></header>${diagrams.drawings.map(renderDiagram).join("")}${designed}${details}${unresolved.length ? `<section><h2>Unresolved structure</h2>${list(unresolved)}</section>` : ""}`,
+    `<header class="page-head"><h1>Architecture</h1><p>Components, their members and uses, and planned component designs.</p><p>${String(components.length)} components realized and ${String(plans.unrealized.length)} planned. They state ${count(contexts.size, "context", "contexts", false)} and ${count(layers.size, "layer", "layers", false)}. ${String(edges.filter((e) => e.kind === "uses").length)} uses edges between components. ${String(new Set(plans.differing.map((d) => d.spec)).size)} designs differ from their components.</p></header>${diagrams.drawings.map((drawing) => renderDiagram(drawing)).join("")}${designed}${details}${unresolved.length ? `<section><h2>Unresolved structure</h2>${list(unresolved)}</section>` : ""}`,
   );
 }
 function linkTarget(ctx: PageContext, id: string): string {

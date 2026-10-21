@@ -1013,7 +1013,7 @@ it("gives unstated context and layer folds addressable text descriptions", () =>
     ...input,
     boxes: input.boxes.map((box) => ({ ...box, context: null, layer: null })),
   });
-  const html = result.drawings.map(renderDiagram).join("");
+  const html = result.drawings.map((drawing) => renderDiagram(drawing)).join("");
   for (const match of html.matchAll(/aria-describedby="([^"]+)"/g))
     expect(match[1]).not.toMatch(/\s/u);
 });
