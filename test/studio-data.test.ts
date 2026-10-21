@@ -13,7 +13,6 @@ import type { GraphSchema } from "../src/graph/schema.js";
 import {
   createStudioData,
   embedData,
-  packTotals,
   railValues,
   searchIndex,
 } from "../src/projections/studio/data.js";
@@ -77,9 +76,10 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
 
   it("counts every Pack exactly as recipe 29", async () => {
     expect(reader.packs().length).toBeGreaterThan(0);
+    const data = await createStudioData(reader);
     for (const pack of reader.packs()) {
       const answer = await recipe<{ totals: unknown }>(29, corpus, { pack: pack.id });
-      expect(packTotals(required(reader.packContext(pack.id)))).toEqual(answer.totals);
+      expect(data.packs.find((p) => p.context.id === pack.id)?.totals).toEqual(answer.totals);
     }
   });
 
@@ -150,7 +150,7 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
     },
   );
 
-  it("keeps rails in Pack-id and authored-member order, with severity and space ownership", () => {
+  it("keeps rails in Pack-id and authored-member order, with severity and space ownership", async () => {
     const rails = railValues(reader);
     expect(rails.packs.map((pack) => pack.id)).toEqual(
       reader
@@ -171,7 +171,7 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
       errors: reader.findings().filter((finding) => finding.severity === "error").length,
       warnings: reader.findings().filter((finding) => finding.severity === "warning").length,
     });
-    const data = createStudioData(reader);
+    const data = await createStudioData(reader);
     expect(data.specs).toEqual(reader.specs().map((spec) => reader.specContext(spec.id)));
     expect(data.findings).toEqual(reader.findings());
     expect(data.packs.map((pack) => pack.context)).toEqual(

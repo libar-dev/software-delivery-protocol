@@ -1577,7 +1577,7 @@ function assertSuperseded(
   const warnings = supersededFindings(world);
   const warning = warnings[0];
   for (const step of contract.steps) {
-    switch (step.text) {
+    switch (step.key) {
       case "the warnings name {named}": {
         const ids = [
           ...new Set(
@@ -1606,7 +1606,7 @@ function assertSuperseded(
           throw new Error(`Missing message template ${step.params.template}`);
         let ids: readonly string[] | undefined;
         for (const candidate of contract.steps) {
-          if (candidate.text === "the warnings name {named}") {
+          if (candidate.key === "the warnings name {named}") {
             ids = candidate.params.named.split(", ");
             break;
           }

@@ -1689,7 +1689,7 @@ export const consumersSpecs = [
           "the index and the glossary render reader values only; the architecture lens renders recipes 17 and 43; the tests lens renders every recipe 34 answer, recipe 44, and recipe 45 given run records; a Spec page renders its recipe 21, 30 and 34 answers, its own space from recipe 44, the recipe 51 rows that cite its entries, the recipe 45 files whose `specs` hold its id, and its own row of recipe 35's whole-corpus answer; a Pack page renders the totals of its recipe 29 answer and, given a base graph, its own recipe 35 answer; the registers render recipes 20, 31, 24 beside recipe 51's rows, and 33; the owner queue renders recipe 46; the diff page renders recipe 35's whole-corpus answer; the runs page renders recipe 45; an export renders the values of the pages it holds.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.data.recipe-answers.sdp.md",
   },
   {
@@ -1920,7 +1920,7 @@ export const consumersSpecs = [
           "`index.html` for the Packs lens, `architecture.html`, `tests.html` and `evidence.html`, each opening with its name and one sentence saying what it reads.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.lenses.sdp.md",
   },
   {
@@ -2618,7 +2618,7 @@ export const consumersSpecs = [
           "`{ spaces: number; slots: number; enumerable: number; values: number; uncovered: number }`, `values` counting the declared literals of the enumerable slots and `uncovered` those no example binds.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/agent-surface.example-space-coverage.sdp.md",
   },
   {
@@ -5355,14 +5355,14 @@ export const consumersSpecs = [
           "a drawing over the bound keeps its `figure` and caption, holds the sentence `Shown as text: this drawing exceeds the bound of <b> boxes and <e> edges.`, with the bound's two numbers, where the SVG would be, and writes its text equivalent open.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diagrams.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.diagrams.within-bound",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "An architecture within the bound draws in one diagram, the same bytes twice",
     narrative: null,
     sections: {
@@ -5390,14 +5390,14 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.diagrams.within-bound.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.diagrams.folds-by-context",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "An architecture over the bound folds by context",
     narrative: null,
     sections: {
@@ -5425,14 +5425,14 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.diagrams.folds-by-context.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.diagrams.folds-by-layer",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "One context over the bound folds by layer",
     narrative: null,
     sections: {
@@ -5460,7 +5460,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.diagrams.folds-by-layer.sdp.md",
   },
   {
@@ -5493,7 +5493,7 @@ export const consumersSpecs = [
           "the index page's Packs section, one closed disclosure per Pack in id order, its summary line the Pack's title, id and member count, its body the members in authored order with their rung badges.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.lenses.packs.sdp.md",
   },
   {
@@ -5557,14 +5557,14 @@ export const consumersSpecs = [
           "a heading with the component's id as code and its label, a line with its layer, context and role in words, its file and line with a copy action, then lists headed Members, Uses, Used by, Satisfies and References, an empty list reading None, then the member diagram.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.lenses.architecture.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.lenses.architecture.planned-apart",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A component design no anchor realizes draws planned beside the built one",
     narrative: null,
     sections: {
@@ -5592,7 +5592,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.lenses.architecture.planned-apart.sdp.md",
   },
   {
@@ -5642,14 +5642,14 @@ export const consumersSpecs = [
           "one labelled select per filter, each listing any and the values the rows hold, and a line saying how many of all rows show.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.lenses.tests.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.lenses.tests.coverage-row",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A Spec's row on the tests lens counts its exercised keyed rules",
     narrative: null,
     sections: {
@@ -5676,7 +5676,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.lenses.tests.coverage-row.sdp.md",
   },
   {
@@ -5709,7 +5709,7 @@ export const consumersSpecs = [
           "one line per source, its name, then `not tracked`, then what would bring it in: an observation the graph records against a measurable target, or a Spec that designs the source.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.lenses.evidence.sdp.md",
   },
   {
@@ -6311,7 +6311,7 @@ export const consumersSpecs = [
     id: "spec:consumers.agent-surface.example-space-coverage.uncovered-literal",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A literal no example binds is reported uncovered, and an unbound child is named",
     narrative: null,
     sections: {
@@ -6339,14 +6339,14 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/agent-surface.example-space-coverage.uncovered-literal.sdp.md",
   },
   {
     id: "spec:consumers.agent-surface.example-space-coverage.number-not-enumerable",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A number slot is not enumerable and reports no uncovered value",
     narrative: null,
     sections: {
@@ -6374,7 +6374,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/agent-surface.example-space-coverage.number-not-enumerable.sdp.md",
   },
 ] as const;

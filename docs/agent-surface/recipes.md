@@ -45,6 +45,7 @@
 | 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
 | 42 | The architecture walk | forbidden, isolated, severity | Check anchored architecture rules |
 | 43 | Planned against realized components | none | Compare component designs with anchors |
+| 44 | Example-space coverage | spec or pack | Report covered and uncovered slot values from decoded example spaces |
 | 46 | The statement queue | decider | Order waiting readiness statements and questions |
 | 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
@@ -938,6 +939,7 @@ satisfied Specs, and shaping decisions in one map.*
 const accepts = [];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const nodes = graph.nodes;
 const edges = graph.edges;
 const codeNodesById = new Map(
@@ -965,6 +967,7 @@ const ownerOf = (id) => componentIds.has(id) ? id : ownerByMember.get(id);
 const usesOutByComponent = new Map();
 const usedByByComponent = new Map();
 const unresolvedUses = [];
+const pairCounts = new Map();
 
 for (const edge of edges.filter((edge) => edge.type === "uses")) {
   const from = ownerOf(edge.from);
@@ -975,6 +978,8 @@ for (const edge of edges.filter((edge) => edge.type === "uses")) {
   }
   // Local collaborations remain in usesEdges; component fan counts measure boundary crossings.
   if (from === to) continue;
+  const pair = `${from}\u0000${to}`;
+  pairCounts.set(pair, (pairCounts.get(pair) ?? 0) + 1);
   const outgoing = usesOutByComponent.get(from) ?? new Set();
   outgoing.add(to);
   usesOutByComponent.set(from, outgoing);
@@ -1014,11 +1019,21 @@ const components = [...componentIds].sort().map((id) => {
   return {
     id,
     declared: codeNodesById.has(id),
+    label: codeNodesById.get(id)?.label ?? null,
+    file: codeNodesById.get(id)?.file ?? null,
+    line: codeNodesById.get(id)?.line ?? null,
+    role: codeNodesById.get(id)?.role ?? null,
+    layer: codeNodesById.get(id)?.layer ?? null,
+    context: codeNodesById.get(id)?.context ?? null,
+    referencedSpecs: [...new Set(edges.filter(edge => edge.type === "references" && anchors.has(edge.from)).map(edge => edge.to))].sort(),
+    usesCounts: usesOut.map(component => ({ component, edges: pairCounts.get(`${id}\u0000${component}`) ?? 0 })),
+    usedByCounts: usedBy.map(component => ({ component, edges: pairCounts.get(`${component}\u0000${id}`) ?? 0 })),
     members: memberIds.map((memberId) => {
       const member = codeNodesById.get(memberId);
       return {
         id: memberId,
         label: member?.label ?? null,
+        role: member?.role ?? null,
         file: member?.file ?? null,
         line: member?.line ?? null,
       };
@@ -1032,7 +1047,7 @@ const components = [...componentIds].sort().map((id) => {
       .filter((edge) => edge.type === "satisfies" && anchors.has(edge.from))
       .map((edge) => ({ from: edge.from, to: edge.to, claim: edge.claim })),
     shapingDecisions: [...decisionSubjects]
-      .sort(([left], [right]) => left.localeCompare(right))
+      .sort(([left], [right]) => compare(left, right))
       .map(([decisionId, subjects]) => ({
         id: decisionId,
         subjects: [...new Set(subjects)].sort(),
@@ -1046,9 +1061,9 @@ const usesEdges = edges
   .filter((edge) => edge.type === "uses")
   .map((edge) => ({ from: edge.from, to: edge.to, claim: edge.claim }))
   .sort((left, right) =>
-    left.from.localeCompare(right.from) ||
-    left.to.localeCompare(right.to) ||
-    left.claim.localeCompare(right.claim),
+    compare(left.from, right.from) ||
+    compare(left.to, right.to) ||
+    compare(left.claim, right.claim),
   );
 const subjectIds = [...new Set(components.flatMap((component) => component.satisfiedSpecs))].sort();
 const subjects = subjectIds.map((id) => {
@@ -1066,6 +1081,11 @@ const subjects = subjectIds.map((id) => {
 
 return { components, subjects, usesEdges, unresolvedUses };
 ```
+
+Each component row includes its recorded `label`, `file`, `line`, `role`, `layer` and `context`,
+each null when unstated. `referencedSpecs` lists the Specs it and its members reference.
+`usesCounts` and `usedByCounts` give the unit-edge count for each other component in id order,
+while every member row also carries its recorded `role`, or null.
 
 Membership, uses, and satisfies remain the derived structural edges; shaping decisions are the
 `decidedBy` targets of Specs those members realize. Fan counts are graph-side composition, not a
@@ -1488,6 +1508,7 @@ The parameter is `params.spec`, the Spec you are weighing; an unknown id returns
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const id = params.spec ?? "spec:extraction.derive-graph";
 const context = g.specContext(id);
 
@@ -1515,7 +1536,7 @@ const footing = context.relationsOut
   })
   .sort(
     (left, right) =>
-      types.indexOf(left.type) - types.indexOf(right.type) || left.id.localeCompare(right.id),
+      types.indexOf(left.type) - types.indexOf(right.type) || compare(left.id, right.id),
   );
 const count = (key, value) => footing.filter((row) => row[key] === value).length;
 
@@ -4285,6 +4306,39 @@ return { totals: { designs: designs.length, realized: realizedCount, matching, u
 An anchor without an anchored `satisfies` edge stays unrealized. `differing` counts rows; `matching`
 counts realized designs with neither differences nor unreadable fields. The law is
 `spec:model.planned-architecture`.
+
+## 44. Example-space coverage
+
+Report each slot value and the examples that bind it, with uncovered literals and unbound
+children kept visible. Pass `params.spec` or `params.pack`, or neither for every space.
+Coverage is per value and confers nothing. Only closed quoted-literal unions are enumerable.
+
+```js
+const accepts = ["spec", "pack"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const diagnostics = [];
+if (params.spec !== undefined && params.pack !== undefined) diagnostics.push({ parameter: "scope", problem: "pass at most one of spec and pack" });
+const spec = params.spec === undefined ? undefined : g.specContext(params.spec);
+const pack = params.pack === undefined ? undefined : g.packContext(params.pack);
+if (params.spec !== undefined && (spec === undefined || spec.exampleSpace === undefined)) diagnostics.push({ parameter: "spec", problem: spec === undefined ? "Spec not found" : "Spec owns no example space" });
+if (params.pack !== undefined && pack === undefined) diagnostics.push({ parameter: "pack", problem: "Pack not found" });
+if (diagnostics.length) return { diagnostics };
+const ids = params.spec !== undefined ? [params.spec] : params.pack !== undefined ? pack.members.map(m => m.id) : g.specs().map(s => s.id);
+const spaces = [...new Set(ids)].sort().flatMap(id => {
+  const space = g.specContext(id)?.exampleSpace;
+  if (space === undefined) return [];
+  const examples = space.points.map(p => p.example);
+  return [{ spec: id, examples, slots: space.slots.map(slot => {
+    const enumerable = slot.type === "enum";
+    const values = enumerable ? slot.values : [...new Set(space.points.flatMap(p => p.values[slot.name] === undefined ? [] : [p.values[slot.name]]))];
+    return { name: slot.name, type: slot.type, step: slot.step, enumerable, values: values.map(value => ({ value, examples: space.points.filter(p => p.values[slot.name] === value).map(p => p.example) })), unbound: space.points.filter(p => p.values[slot.name] === undefined).map(p => p.example) };
+  }) }];
+});
+const slots = spaces.flatMap(space => space.slots);
+const enumerable = slots.filter(slot => slot.enumerable);
+return { scope: params.spec ?? params.pack ?? "all", totals: { spaces: spaces.length, slots: slots.length, enumerable: enumerable.length, values: enumerable.reduce((n, slot) => n + slot.values.length, 0), uncovered: enumerable.reduce((n, slot) => n + slot.values.filter(v => v.examples.length === 0).length, 0) }, spaces };
+```
 
 ## 46. The statement queue
 

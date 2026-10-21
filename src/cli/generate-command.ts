@@ -36,11 +36,11 @@ export function synchronizeVaultBeforeGenerate(
  * @sdpComponent component:protocol.cli
  * @sdpRole publisher
  */
-export function runGenerate(
+export async function runGenerate(
   parsed: BuildArgs,
   output: CliOutput,
   hooks: GenerateHooks = {},
-): number {
+): Promise<number> {
   // Preparation captures every prior tree before runBuild invalidates the five roots.
   const publishers = [
     (validated: Parameters<typeof publishDesignReview>[0]) =>
@@ -65,7 +65,7 @@ export function runGenerate(
 
   let exitCode = validated.exitCode;
   for (const publish of publishers) {
-    if (publish === undefined || publish(validated) !== 0) exitCode = 1;
+    if (publish === undefined || (await publish(validated)) !== 0) exitCode = 1;
   }
   return exitCode;
 }

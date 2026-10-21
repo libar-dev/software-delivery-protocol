@@ -171,7 +171,7 @@ const probe: GraphSchema = {
     { spec: "spec:probe.all", file: "design/probe.sdp.md", entry: "question[0]", line: 20 },
   ],
 };
-const data = createStudioData(createReader(probe));
+const data = await createStudioData(createReader(probe));
 const pages = renderStudio(data);
 const html = (id: string): string => {
   const page = pages.find((p) => p.path === (pagePath(id) ?? id));
@@ -195,7 +195,7 @@ const rail = (page: string): string =>
 function checkLinks(set: readonly StudioPage[]): void {
   const byPath = new Map(set.map((page) => [page.path, page.content]));
   for (const page of set) {
-    const ids = [...page.content.matchAll(/\bid="([^"]+)"/gu)].map((m) => decode(m[1] ?? ""));
+    const ids = [...page.content.matchAll(/\sid="([^"]+)"/gu)].map((m) => decode(m[1] ?? ""));
     expect(new Set(ids).size, `${page.path} duplicate ids`).toBe(ids.length);
     for (const match of page.content.matchAll(/\bhref="([^"]+)"/gu)) {
       const href = decode(match[1] ?? "");
@@ -214,7 +214,7 @@ function checkLinks(set: readonly StudioPage[]): void {
 }
 
 describe("Studio static pages", () => {
-  it("renders Model definitions without exposing the derived term key map", () => {
+  it("renders Model definitions without exposing the derived term key map", async () => {
     const graph: GraphSchema = {
       schemaVersion,
       nodes: [
@@ -230,7 +230,7 @@ describe("Studio static pages", () => {
       ],
       edges: [],
     };
-    const page = renderStudio(createStudioData(createReader(graph))).find(
+    const page = renderStudio(await createStudioData(createReader(graph))).find(
       (page) => page.path === pagePath("spec:probe.terms"),
     );
     expect(page?.content).toContain("Stable step identity.");
@@ -318,11 +318,11 @@ describe("Studio static pages", () => {
     expect(summary[1]).toContain(`(${String(held?.statedNextRungFailures?.length)} unmet clause`);
     expect(summary[2]).toContain('href="#spec:probe.all"');
   });
-  it("leaves member names out when every member waits only for its author", () => {
+  it("leaves member names out when every member waits only for its author", async () => {
     const all = primitive("spec:probe.waiting");
     const waiting =
       renderStudio(
-        createStudioData(
+        await createStudioData(
           createReader({
             schemaVersion,
             nodes: [
@@ -344,7 +344,7 @@ describe("Studio static pages", () => {
     );
     expect(summaryItems(waiting)[2]).not.toContain("href");
   });
-  it("agrees each boundary verb with its count", () => {
+  it("agrees each boundary verb with its count", async () => {
     const member = primitive("spec:probe.member");
     const one = (id: string, type: "dependsOn" | "verifies" | "supersedes") => ({
       node: primitive(id),
@@ -357,7 +357,7 @@ describe("Studio static pages", () => {
     ];
     const page =
       renderStudio(
-        createStudioData(
+        await createStudioData(
           createReader({
             schemaVersion,
             nodes: [
@@ -379,9 +379,9 @@ describe("Studio static pages", () => {
       "No outside Specs the Pack rests on; 1 outside Spec rests on the Pack; 1 outside Spec verifies it; 1 outside Spec supersedes it.",
     );
   });
-  it("shows only the Spec's own Packs in its rail and every Pack on the index", () => {
+  it("shows only the Spec's own Packs in its rail and every Pack on the index", async () => {
     const rendered = renderStudio(
-      createStudioData(
+      await createStudioData(
         createReader({
           ...probe,
           nodes: [
@@ -439,10 +439,10 @@ describe("Studio static pages", () => {
       "1 error and 2 warnings.",
     ]);
   });
-  it("renders code spans in titles on every page and strips them in document titles", () => {
+  it("renders code spans in titles on every page and strips them in document titles", async () => {
     const title = "Use `safe <&>` with spec:probe.target";
     const rendered = renderStudio(
-      createStudioData(
+      await createStudioData(
         createReader({
           ...probe,
           nodes: probe.nodes.map((n) =>
@@ -461,7 +461,7 @@ describe("Studio static pages", () => {
     );
     expect(html("index.html")).toContain("<title>Spec Studio</title>");
   });
-  it("orders rung filters by the ladder and uses none everywhere for an unmet idea floor", () => {
+  it("orders rung filters by the ladder and uses none everywhere for an unmet idea floor", async () => {
     const graph: GraphSchema = {
       schemaVersion,
       nodes: [
@@ -487,7 +487,7 @@ describe("Studio static pages", () => {
       })),
     };
     const page =
-      renderStudio(createStudioData(createReader(graph))).find((p) => p.path === "index.html")
+      renderStudio(await createStudioData(createReader(graph))).find((p) => p.path === "index.html")
         ?.content ?? "";
     const options = (name: string) =>
       [
@@ -585,13 +585,13 @@ describe("Studio static pages", () => {
     expect(spec.indexOf("Second flow")).toBeLessThan(spec.indexOf("Third rule"));
     expect(html("spec:probe.target")).not.toContain('id="section.ui"');
   });
-  it("names the first unmet clause and renders a missing idea floor as none", () => {
+  it("names the first unmet clause and renders a missing idea floor as none", async () => {
     const dishonest = data.specs.find((s) => s.id === "spec:probe.dishonest");
     expect(dishonest?.floorFailures[0]).toBeDefined();
     expect(html("spec:probe.dishonest")).toContain("First unmet clause:");
     expect(html("spec:probe.dishonest")).toContain(dishonest?.floorFailures[0]?.description);
     const empty = renderStudio(
-      createStudioData(
+      await createStudioData(
         createReader({
           schemaVersion,
           nodes: [primitive("spec:probe.empty", { title: "", sections: {} })],
@@ -720,8 +720,8 @@ describe("Studio static pages", () => {
   });
 });
 
-describe("Protocol Studio page set", () => {
-  const protocol = createStudioData(
+describe("Protocol Studio page set", async () => {
+  const protocol = await createStudioData(
     createReader(
       extract({ root, exclude: ["explorations", "examples", "test/fixtures/import/parity"] }).graph,
     ),

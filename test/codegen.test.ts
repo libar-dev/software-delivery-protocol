@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { contractsFindingIds, generateContracts, refines, spec, specId } from "../src/index.js";
+import {
+  createReader,
+  contractsFindingIds,
+  generateContracts,
+  refines,
+  spec,
+  specId,
+} from "../src/index.js";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import type { GraphSchema, Spec } from "../src/index.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
@@ -362,6 +369,19 @@ describe("the contracts codegen stage", () => {
     const space = generateContracts(graph).files.get("orders.create-order.space.ts") ?? "";
 
     expect(space).toContain('{ spec: "spec:orders.create-order.empty-cart", point: { n: 0 } }');
+  });
+
+  it("preserves incomplete contract points while keeping them outside reader coverage", () => {
+    const incomplete = child(
+      { given: ["a customer has a cart with {n: 0} line items"], when: [], then: [] },
+      "spec:orders.create-order.incomplete",
+    );
+    const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), incomplete] });
+    const space = generateContracts(graph).files.get("orders.create-order.space.ts") ?? "";
+    expect(space).toContain('{ spec: "spec:orders.create-order.incomplete", point: { n: 0 } }');
+    expect(
+      createReader(graph).specContext("spec:orders.create-order")?.exampleSpace?.points,
+    ).toEqual([]);
   });
 
   it("warns and drops an undeclared slot from the point — loud, never silent (L2)", () => {

@@ -32,6 +32,7 @@ export const structuralMembershipExceptions = [
   "impl:protocol.validator-probe-table",
   "impl:protocol.entry-citation-recipe",
   "impl:protocol.external-registers-recipe",
+  "impl:protocol.example-space-coverage-recipe",
   "impl:protocol.architecture-walk-recipe",
   "impl:protocol.planned-components-recipe",
   "impl:protocol.authoring-on-ramp",
@@ -95,12 +96,57 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.cli",
   },
   {
+    unit: "src/projections/studio/diagrams/architecture.ts#architectureDiagrams",
+    anchorId: "impl:protocol.studio-architecture-diagrams",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/bands.ts#traceDiagram",
+    anchorId: "impl:protocol.studio-relation-diagrams",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/notation/example-space.ts#decodeExampleSpaces",
+    anchorId: "impl:protocol.example-space-decoding",
+    componentId: "component:protocol.notation",
+  },
+  {
+    unit: "src/projections/studio/recipes.ts#studioRecipeAnswers",
+    anchorId: "impl:protocol.studio-recipes",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/svg.ts#renderDiagram",
+    anchorId: "impl:protocol.studio-diagrams",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/studio-elements/diagram.ts#registerDiagram",
+    anchorId: "impl:protocol.studio-diagram-element",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/projections/studio/pages/architecture-page.ts#architecturePage",
+    anchorId: "impl:protocol.studio-architecture-lens",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/tests-page.ts#testsPage",
+    anchorId: "impl:protocol.studio-tests-lens",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/evidence-page.ts#evidencePage",
+    anchorId: "impl:protocol.studio-evidence-lens",
+    componentId: "component:protocol.projections",
+  },
+  {
     unit: "src/cli/validate-view-command.ts#runValidateRules",
     anchorId: "impl:protocol.corpus-rules",
     componentId: "component:protocol.cli",
   },
   {
-    unit: "src/projections/studio/data.ts#packTotals",
+    unit: "src/projections/studio/data.ts#createStudioData",
     anchorId: "impl:protocol.studio-data",
     componentId: "component:protocol.projections",
   },
@@ -733,7 +779,7 @@ export const acceptedArchitecturalUnits = [
 
 // re-measured under plan 41
 export const expectedMemberOfEdges = acceptedArchitecturalUnits
-  .map((row) => [row.anchorId, row.componentId])
+  .map((row) => [row.anchorId, row.componentId] as const)
   .filter(
     ([anchorId, componentId], position, rows) =>
       rows.findIndex(([anchor, component]) => anchor === anchorId && component === componentId) ===
@@ -802,6 +848,8 @@ export const coarseGrainCoverage = [
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
 // re-measured under plan 41
 export const expectedUsesEdges = [
+  ["impl:protocol.studio-recipes", "impl:protocol.reader"],
+  ["impl:protocol.studio-recipes", "impl:protocol.build-pipeline-query"],
   ["component:protocol.studio-elements", "component:protocol.reader"],
   ["component:protocol.studio-elements", "component:protocol.projections"],
   ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],

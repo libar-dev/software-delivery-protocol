@@ -26,7 +26,11 @@ import {
   validateGraph,
 } from "../src/index.js";
 import type { ExtractionResult, GraphEdge, GraphNode, GraphSchema } from "../src/index.js";
-import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
+import {
+  expectedComponentIds,
+  expectedMemberOfEdges,
+  expectedUsesEdges,
+} from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { countMapSets } from "./helpers/map-sets.js";
 
@@ -1145,7 +1149,10 @@ describe("the agent-surface recipe corpus", () => {
   it("returns exact component uses fan-in and fan-out from the structural oracle", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(13)));
     const rows = asArray(result.components).map(asRecord);
-    const expectedUses = expectedUsesEdges.map(([from, to]) => ({ from, to }));
+    const owners = new Map<string, string>(expectedMemberOfEdges);
+    const expectedUses = expectedUsesEdges
+      .map(([from, to]) => ({ from: owners.get(from) ?? from, to: owners.get(to) ?? to }))
+      .filter((edge) => edge.from !== edge.to);
 
     expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual([...expectedComponentIds].sort());
 
@@ -1153,14 +1160,12 @@ describe("the agent-surface recipe corpus", () => {
       const id = stringAt(row, "id");
       const usesOut = asArray(row.usesOut).map((target) => stringAt({ target }, "target"));
       const usedBy = asArray(row.usedBy).map((source) => stringAt({ source }, "source"));
-      const expectedOut = expectedUses
-        .filter((edge) => edge.from === id)
-        .map((edge) => edge.to)
-        .sort();
-      const expectedIn = expectedUses
-        .filter((edge) => edge.to === id)
-        .map((edge) => edge.from)
-        .sort();
+      const expectedOut = [
+        ...new Set(expectedUses.filter((edge) => edge.from === id).map((edge) => edge.to)),
+      ].sort();
+      const expectedIn = [
+        ...new Set(expectedUses.filter((edge) => edge.to === id).map((edge) => edge.from)),
+      ].sort();
 
       expect(usesOut).toEqual(expectedOut);
       expect(usedBy).toEqual(expectedIn);
@@ -1543,6 +1548,7 @@ describe("the agent-surface recipe corpus", () => {
 
     expect(unresolved).toEqual({
       id: missingMemberId,
+      role: null,
       label: null,
       file: null,
       line: null,
@@ -7123,3 +7129,87 @@ describe("entry citations recipe", () => {
     });
   });
 });
+describe("Studio architecture and example-space recipe additions", () => {
+  it("adds recorded component fields, references, member roles and exact crossing-use counts", async () => {
+    const answer = asRecord(await runRecipe(recipeByOrdinal(17)));
+    for (const raw of asArray(answer.components)) {
+      const row = asRecord(raw),
+        id = stringAt(row, "id");
+      const node = derived.graph.nodes.find((n) => n.id === id);
+      for (const key of ["label", "file", "line", "role", "layer", "context"] as const)
+        expect(row[key]).toEqual(node && key in node ? node[key as keyof typeof node] : null);
+      const members = asArray(row.members).map(asRecord);
+      const owners = new Map(
+        derived.graph.edges.filter((e) => e.type === "memberOf").map((e) => [e.from, e.to]),
+      );
+      const own = (value: string) => (value.startsWith("component:") ? value : owners.get(value));
+      const anchors = new Set([id, ...members.map((m) => stringAt(m, "id"))]);
+      expect(row.referencedSpecs).toEqual(
+        [
+          ...new Set(
+            derived.graph.edges
+              .filter((e) => e.type === "references" && anchors.has(e.from))
+              .map((e) => e.to),
+          ),
+        ].sort(),
+      );
+      for (const member of members)
+        expect(member.role).toEqual(
+          (derived.graph.nodes.find((n) => n.id === member.id) as { role?: string } | undefined)
+            ?.role ?? null,
+        );
+      for (const [direction, key] of [
+        ["out", "usesCounts"],
+        ["in", "usedByCounts"],
+      ] as const) {
+        for (const rawPair of asArray(row[key])) {
+          const pair = asRecord(rawPair);
+          expect(pair.edges).toBe(
+            derived.graph.edges.filter(
+              (e) =>
+                e.type === "uses" &&
+                (direction === "out"
+                  ? own(e.from) === id && own(e.to) === pair.component
+                  : own(e.to) === id && own(e.from) === pair.component),
+            ).length,
+          );
+        }
+      }
+    }
+  });
+  it("runs shipped recipe 44 over every decoded space and refuses bad scopes", async () => {
+    const answer = asRecord(await runRecipe(recipeByOrdinal(44)));
+    const spaces = asArray(answer.spaces).map(asRecord);
+    expect(spaces.map((s) => s.spec)).toEqual(
+      reader
+        .specs()
+        .filter((s) => reader.specContext(s.id)?.exampleSpace !== undefined)
+        .map((s) => s.id)
+        .sort(),
+    );
+    expect(asRecord(answer.totals).spaces).toBe(spaces.length);
+    for (const raw of spaces) {
+      const space = required(required(reader.specContext(stringAt(raw, "spec"))).exampleSpace);
+      expect(raw.examples).toEqual(space.points.map((p) => p.example));
+      for (const slot of asArray(raw.slots).map(asRecord)) {
+        expect(slot.enumerable).toBe(slot.type === "enum");
+        expect(slot.unbound).toEqual(
+          space.points
+            .filter((p) => p.values[stringAt(slot, "name")] === undefined)
+            .map((p) => p.example),
+        );
+      }
+    }
+    for (const params of [
+      { spec: "spec:missing" },
+      { pack: "pack:missing" },
+      { spec: "spec:missing", pack: "pack:missing" },
+    ])
+      expect(asRecord(await runRecipe(recipeByOrdinal(44), params)).diagnostics).toBeDefined();
+  });
+});
+
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) throw new Error("Expected a value");
+  return value;
+}

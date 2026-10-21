@@ -628,3 +628,78 @@ sdp-copy output {
     padding: 1rem 0.75rem;
   }
 }
+
+/* Diagrams keep their native size without script, with text available beside every drawing. */
+sdp-diagram {
+  display: block;
+  min-width: 0;
+}
+sdp-diagram figure {
+  margin: 1.5rem 0;
+}
+sdp-diagram figcaption {
+  font-weight: 650;
+  margin-bottom: 0.75rem;
+}
+.diagram-scroll,
+.table-scroll {
+  overflow: auto;
+  max-width: 100%;
+}
+.diagram-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+sdp-diagram svg {
+  display: block;
+  background: var(--surface);
+}
+sdp-diagram svg text {
+  fill: var(--text);
+  font:
+    12px ui-monospace,
+    monospace;
+}
+sdp-diagram .band > text,
+sdp-diagram .lane > text {
+  fill: var(--muted);
+  font-weight: 650;
+}
+sdp-diagram .node rect {
+  fill: var(--surface-2);
+  stroke: var(--muted);
+}
+sdp-diagram .node a:hover rect,
+sdp-diagram .node a:focus rect {
+  stroke: var(--link);
+  stroke-width: 2;
+}
+sdp-diagram .edge path {
+  stroke: var(--muted);
+}
+sdp-diagram marker path {
+  fill: var(--muted);
+}
+sdp-diagram .edge text {
+  fill: var(--muted);
+  font-size: 11px;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3;
+}
+sdp-diagram details {
+  margin-top: 0.75rem;
+}
+@media print {
+  .diagram-scroll {
+    overflow: visible;
+  }
+  sdp-diagram svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .diagram-controls {
+    display: none;
+  }
+}

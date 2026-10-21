@@ -32,7 +32,7 @@ export function prepareStudioPublication(
   output: CliOutput,
   hooks: StudioHooks = {},
   command = "studio",
-): ((validated: BuildOutcome) => number) | undefined {
+): ((validated: BuildOutcome) => Promise<number>) | undefined {
   const studioPath = join(parsed.root, "generated", "spec-studio");
   const temporaryPath = `${studioPath}.tmp`;
   const recoveryRm = hooks.rmSync ?? rmSync;
@@ -48,7 +48,7 @@ export function prepareStudioPublication(
     fail(`sdp ${command} --check-clean: cannot read generated Studio (${errorMessage(error)}).\n`);
     return undefined;
   }
-  return (validated) => {
+  return async (validated) => {
     if (validated.graph === undefined) {
       removeArtifacts([studioPath, temporaryPath], output, command, recoveryRm);
       return validated.exitCode;
@@ -59,9 +59,15 @@ export function prepareStudioPublication(
         script: fileURLToPath(new URL("../studio/studio.js", import.meta.url)),
         stylesheet: fileURLToPath(new URL("../studio/studio.css", import.meta.url)),
       };
-      const files = studioFiles(render(createStudioData(createReader(validated.graph))), assets);
+      const files = studioFiles(
+        render(await createStudioData(createReader(validated.graph))),
+        assets,
+      );
       if (parsed.checkClean) {
-        const twin = studioFiles(render(createStudioData(createReader(validated.graph))), assets);
+        const twin = studioFiles(
+          render(await createStudioData(createReader(validated.graph))),
+          assets,
+        );
         if (!studioFilesEqual(files, twin))
           return fail(`sdp ${command} --check-clean: two independent renders diverged.\n`);
         if (prior === undefined || !studioFilesEqual(prior, files))
@@ -85,7 +91,11 @@ export function prepareStudioPublication(
  * @sdpComponent component:protocol.cli
  * @sdpRole publisher
  */
-export function runStudio(parsed: BuildArgs, output: CliOutput, hooks: StudioHooks = {}): number {
+export async function runStudio(
+  parsed: BuildArgs,
+  output: CliOutput,
+  hooks: StudioHooks = {},
+): Promise<number> {
   const publish = prepareStudioPublication(parsed, output, hooks);
   return publish === undefined ? 1 : publish(runValidate(parsed, output, "studio", hooks));
 }

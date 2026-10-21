@@ -2,7 +2,7 @@
 id: spec:consumers.agent-surface.example-space-coverage.number-not-enumerable
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.agent-surface.example-space-coverage
   verifies:

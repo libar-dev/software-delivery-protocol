@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.lenses.architecture.planned-apart
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.lenses.architecture
   verifies:

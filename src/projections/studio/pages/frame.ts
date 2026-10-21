@@ -45,5 +45,19 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
     ).values(),
   ];
   const rail = `${packRail}${(!isPack && !selectedSpec) || exampleSpaces.length === 0 ? "" : `<h2>Example spaces</h2><ul>${exampleSpaces.map((m) => `<li>${link(ctx, m.id, m.title ?? m.id, codeSpans(m.title ?? m.id))}</li>`).join("")}</ul>`}<h2>Findings</h2><p><a href="${prefix}index.html#findings">${count(ctx.data.rail.findings.errors, "error")} · ${count(ctx.data.rail.findings.warnings, "warning", "warnings", false)}</a></p>`;
-  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title === "Spec Studio" ? "Spec Studio" : `${escape(plainTitle(title))} · Spec Studio`}</title><link rel="stylesheet" href="${prefix}assets/studio.css"><script defer src="${prefix}assets/studio.js"></script></head><body><a class="skip-link" href="#main">Skip to the page</a><header class="top"><a class="brand" href="${prefix}index.html">Spec Studio</a><nav aria-label="Studio"><a href="${prefix}index.html#packs">Packs</a></nav><sdp-search page-root="${prefix}"><form action="${prefix}search.html" role="search"><label class="visually-hidden" for="q">Search the corpus</label><input id="q" name="q" type="search" placeholder="Search Specs, keys and files"><button type="submit">Search</button></form></sdp-search><sdp-stamp page-root="${prefix}"></sdp-stamp></header><div class="layout"><nav class="rail" aria-label="${isPack ? "Pack members" : selectedSpec ? "Spec Packs" : "Packs"}">${rail}</nav><main id="main">${body}</main></div></body></html>\n`;
+  return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title === "Spec Studio" ? "Spec Studio" : `${escape(plainTitle(title))} · Spec Studio`}</title><link rel="stylesheet" href="${prefix}assets/studio.css"><script defer src="${prefix}assets/studio.js"></script></head><body><a class="skip-link" href="#main">Skip to the page</a><header class="top"><a class="brand" href="${prefix}index.html">Spec Studio</a><nav aria-label="Studio">${(
+    [
+      ["index.html", "Packs"],
+      ["architecture.html", "Architecture"],
+      ["tests.html", "Tests"],
+      ["evidence.html", "Evidence"],
+    ] as const
+  )
+    .map(
+      ([path, label]) =>
+        `<a href="${prefix}${path}"${ctx.path === path ? ' aria-current="page"' : ""}>${label}</a>`,
+    )
+    .join(
+      "",
+    )}</nav><sdp-search page-root="${prefix}"><form action="${prefix}search.html" role="search"><label class="visually-hidden" for="q">Search the corpus</label><input id="q" name="q" type="search" placeholder="Search Specs, keys and files"><button type="submit">Search</button></form></sdp-search><sdp-stamp page-root="${prefix}"></sdp-stamp></header><div class="layout"><nav class="rail" aria-label="${isPack ? "Pack members" : selectedSpec ? "Spec Packs" : "Packs"}">${rail}</nav><main id="main">${body}</main></div></body></html>\n`;
 }

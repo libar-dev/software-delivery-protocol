@@ -3,6 +3,8 @@ import type { AddressResolution } from "../graph/entry-address.js";
 import { entryCitationsBySpec } from "./entry-citations.js";
 import type { EntryCitation } from "./entry-citations.js";
 export type { EntryCitation } from "./entry-citations.js";
+import { decodeExampleSpaces } from "../notation/example-space.js";
+import type { DecodedExampleSpace } from "../notation/example-space.js";
 import { matchConcept } from "./concept-match.js";
 import type { ConceptMatch } from "./concept-match.js";
 export { matchConcept } from "./concept-match.js";
@@ -150,6 +152,7 @@ export interface OracleBinding {
 
 /** The irreducible per-spec join — what a Design Review renders and an agent starts from. */
 export interface SpecContext extends SpecSummary {
+  readonly exampleSpace?: DecodedExampleSpace;
   readonly sections?: SpecSections;
   /** Derived design counts and lists, shared with the Pack member's design. */
   readonly designColumns: PackMemberDesign;
@@ -691,6 +694,7 @@ function packBoundary(
  */
 
 export function createReader(graph: GraphSchema): Reader {
+  const exampleSpaces = decodeExampleSpaces(graph).contexts;
   const index = buildGraphIndex(graph);
   const recomputedFacts = computeDeliveryFacts(graph.nodes, graph.edges);
   const allFindings = validateGraph(graph).findings;
@@ -922,6 +926,7 @@ export function createReader(graph: GraphSchema): Reader {
           })();
 
     const summary = summarize(node);
+    const exampleSpace = exampleSpaces.get(id);
     const nextRung =
       summary.derivedReadiness === undefined
         ? SPEC_READINESS[0]
@@ -931,6 +936,7 @@ export function createReader(graph: GraphSchema): Reader {
 
     return {
       ...summary,
+      ...(exampleSpace === undefined ? {} : { exampleSpace }),
       ...(statedNextRung === undefined ? {} : { statedNextRung }),
       statedNextRungFailures:
         statedNextRung === undefined ? [] : evaluateReadinessFloor(node, index, statedNextRung),
