@@ -2,7 +2,7 @@
 id: spec:consumers.context-bundle.oversized-member-named
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.context-bundle
   verifies:

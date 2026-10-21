@@ -308,7 +308,7 @@ describe("sdp cli", () => {
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
       // Re-measured from the refreshed carriers: no prose-mention pair is retained.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 49 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 48 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

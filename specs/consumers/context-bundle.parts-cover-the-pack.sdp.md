@@ -2,7 +2,7 @@
 id: spec:consumers.context-bundle.parts-cover-the-pack
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.context-bundle
   verifies:

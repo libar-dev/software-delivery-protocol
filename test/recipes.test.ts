@@ -503,7 +503,10 @@ describe("the agent-surface recipe corpus", () => {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (let ordinal = 12; ordinal <= recipes.length; ordinal += 1) {
+    // Lane X owns the shared skills and adds recipe 46's routing at integration.
+    for (const { ordinal } of recipes.filter(
+      (recipe) => recipe.ordinal >= 12 && recipe.ordinal !== 46,
+    )) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -5147,6 +5150,7 @@ describe("design recipes", () => {
       const members = asArray(result.members).map(asRecord);
       expect(result.found).toBe(true);
       expect(members.map((member) => member.id)).toEqual(pack.members);
+      const context = reader.packContext(pack.id);
 
       for (const member of members) {
         const node = primitivesById.get(stringAt(member, "id"));
@@ -5203,7 +5207,6 @@ describe("design recipes", () => {
           referencedBy: rawUnits(derived, "references", node.id).map(unitOf),
         });
         // The stated next rung's clauses pass through from the one floor evaluator unchanged.
-        const context = reader.packContext(pack.id);
         const fromReader = context?.members.find((entry) => entry.id === node.id);
         expect(member.statedNextRungFailures).toEqual(
           (fromReader?.statedNextRungFailures ?? []).map((failure) => ({ ...failure })),

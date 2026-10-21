@@ -46,6 +46,7 @@ export const structuralMembershipExceptions = [
   "impl:protocol.design-diff-recipe",
   "impl:protocol.perspective-filter-recipe",
   "impl:protocol.context-bundle-recipe",
+  "impl:protocol.statement-queue-recipe",
   "impl:protocol.proposal-schema-and-recipe",
 ] as const;
 
