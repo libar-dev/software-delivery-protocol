@@ -10,6 +10,8 @@ import { writeStderr } from "./output.js";
 
 export interface BuildArgs {
   readonly studioInputs?: StudioInputs;
+  readonly studioBaseFile?: string;
+  readonly studioBaseLabel?: string;
   readonly root: string;
   readonly exclude: readonly string[];
   readonly checkClean: boolean;
@@ -207,8 +209,11 @@ export function parseBuildArgs(
     }
 
     if (argument === "--watch") {
-      if (command !== "validate" && command !== "vault") {
-        writeStderr(output, `sdp ${command}: --watch is only valid on validate.\n`);
+      if (command !== "validate" && command !== "vault" && command !== "studio") {
+        writeStderr(
+          output,
+          `sdp ${command}: --watch is only valid on validate, vault or studio.\n`,
+        );
         return undefined;
       }
 
@@ -284,6 +289,8 @@ export function parseBuildArgs(
 
   return {
     ...(studioInputs === undefined ? {} : { studioInputs }),
+    ...(base === undefined ? {} : { studioBaseFile: base }),
+    ...(baseLabel === undefined ? {} : { studioBaseLabel: baseLabel }),
     ...(runs.length === 0 ? {} : { runs }),
     root: resolvedRoot,
     exclude,

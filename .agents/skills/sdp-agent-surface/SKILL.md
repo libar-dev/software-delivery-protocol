@@ -156,6 +156,7 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | See what changed since a design pass                           | the design diff (recipe 35)                                                                                |
 | Compose a design pass's reading                                | the context bundle (recipe 36), the perspective filter (recipe 37)                                         |
 | Apply a change proposal                                        | the proposal check (recipe 38)                                                                             |
+| Render a change proposal as the memo a person reviews          | the proposal memo (recipe 49)                                                                              |
 | Slim a Spec its bound code now carries                         | slimming candidates (recipe 39)                                                                            |
 | Find files and components the anchors miss                     | the curation report (recipe 40)                                                                            |
 | List a family of keyed values (limits, error messages, tables) | the key-family register (recipe 41)                                                                        |

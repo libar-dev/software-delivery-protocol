@@ -63,8 +63,12 @@ const commands = {
   studio: {
     name: "studio",
     usage:
-      "  sdp studio [root] [--exclude PATH]... [--base PATH [--base-label TEXT]] [--check-clean] [--runs PATH]...",
-    paragraph: `validate, then publish static Studio pages into <root>/generated/spec-studio/.
+      "  sdp studio [root] [--exclude PATH]... [--base PATH [--base-label TEXT]] [--check-clean | --watch] [--runs PATH]...",
+    paragraph: `Validate, then publish static Studio pages into <root>/generated/spec-studio/.
+             --watch publishes at start and after each carrier create/change/delete/rename, using
+             the same path as a plain run. Findings print each cycle; SIGINT exits 0.
+             Source and input edits start no cycle. No server or reload script is added.
+             --watch cannot combine with --check-clean.
              Findings remain visible; exit code follows validate. --check-clean independently
              re-renders and refuses missing or drifted output. --base PATH reads the graph JSON from
              an earlier sdp build and adds the design diff; --base-label TEXT names that base.

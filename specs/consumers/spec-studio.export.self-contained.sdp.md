@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.export.self-contained
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.export
   verifies:

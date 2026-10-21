@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.intent-panel.refresh-keeps-intents
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.intent-panel
   verifies:

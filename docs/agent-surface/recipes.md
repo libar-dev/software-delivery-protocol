@@ -50,6 +50,7 @@
 | 46 | The statement queue | decider | Order waiting readiness statements and questions |
 | 47 | Capability adoption | detail, perspectives | Measure capability use and possible places |
 | 48 | The rule-key proposal | commit, pack or specs | Propose keys for unkeyed rules and flows |
+| 49 | The proposal memo | proposal | Render a proposal as the memo the composing panel hands off |
 | 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
 
@@ -4706,6 +4707,135 @@ for (const id of ids) {
   }
 }
 return { scope, totals: { specs: ids.length, entries, keyed, proposed: changes.length, unkeyable: unkeyable.length }, proposal: changes.length ? { schema: "sdp-proposal/1", base: commit, reason: `Key every rule and flow entry in ${label} so a review, a register row or an example can cite it.`, changes } : null, unkeyable };
+```
+
+## 49. The proposal memo
+
+*When you need this:* Render a change proposal as the memo a person reviews and hands to an agent.
+
+The law is `spec:consumers.intent-composition.proposal.memo`. Pass `params.proposal`, the change-proposal document. This recipe reads no graph value and writes nothing. A malformed document returns the same schema problems as recipe 38; a valid one returns the Markdown memo the Studio panel hands off.
+
+```js
+const accepts = ["proposal"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const specId = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?![\s\S])/u;
+const entryAddress = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*)(?![\s\S])/u;
+const scopeRef = (value) => typeof value === "string" && (specId.test(value) || entryAddress.test(value));
+function proposalProblems(proposal) {
+    const problems = [];
+    const problem = (path, message) => {
+        problems.push({ path, problem: message });
+    };
+    const closed = (value, path, allowed, required) => {
+        if (value === null || typeof value !== "object" || Array.isArray(value)) {
+            problem(path, "Expected an object.");
+            return false;
+        }
+        for (const key of Object.keys(value))
+            if (!allowed.includes(key))
+                problem(`${path}.${key}`, "Unknown field.");
+        for (const key of required)
+            if (!Object.hasOwn(value, key))
+                problem(`${path}.${key}`, "Required field.");
+        return true;
+    };
+    const text = (value, path, nonempty = false) => {
+        if (typeof value !== "string" || (nonempty && value.length === 0))
+            problem(path, nonempty ? "Expected a non-empty string." : "Expected a string.");
+    };
+    const reason = (value, path) => {
+        text(value, path, true);
+        if (typeof value === "string" && /[\r\n\u0085\u2028\u2029]/u.test(value))
+            problem(path, "Expected one line.");
+    };
+    const authoredTypes = [
+        "refines",
+        "dependsOn",
+        "constrainedBy",
+        "decidedBy",
+        "verifies",
+        "supersedes",
+    ];
+    if (closed(proposal, "$", ["schema", "base", "reason", "changes"], ["schema", "base", "reason", "changes"])) {
+        if (proposal.schema !== "sdp-proposal/1")
+            problem("$.schema", "Expected sdp-proposal/1.");
+        text(proposal.base, "$.base", true);
+        reason(proposal.reason, "$.reason");
+        if (!Array.isArray(proposal.changes) || !proposal.changes.length)
+            problem("$.changes", "Expected a non-empty list.");
+        else
+            proposal.changes.forEach((change, index) => {
+                const path = `$.changes[${String(index)}]`;
+                if (!closed(change, path, ["scope", "request", "text", "replaces", "follows", "relation", "reason"], ["scope", "request"]))
+                    return;
+                if (!Array.isArray(change.scope) || !change.scope.length)
+                    problem(`${path}.scope`, "Expected a non-empty list.");
+                else
+                    change.scope.forEach((ref, index) => {
+                        if (!scopeRef(ref))
+                            problem(`${path}.scope[${String(index)}]`, "Expected a Spec id or entry address.");
+                    });
+                text(change.request, `${path}.request`, true);
+                if (Object.hasOwn(change, "text"))
+                    text(change.text, `${path}.text`);
+                if (Object.hasOwn(change, "reason"))
+                    reason(change.reason, `${path}.reason`);
+                for (const key of ["replaces", "follows"])
+                    if (Object.hasOwn(change, key) &&
+                        (typeof change[key] !== "string" || !entryAddress.test(change[key])))
+                        problem(`${path}.${key}`, "Expected an entry address.");
+                if (Object.hasOwn(change, "replaces") && Object.hasOwn(change, "follows"))
+                    problem(path, "replaces and follows are exclusive.");
+                if (Object.hasOwn(change, "relation") &&
+                    closed(change.relation, `${path}.relation`, ["action", "from", "type", "target"], ["action", "from", "type", "target"])) {
+                    const relation = change.relation;
+                    if (relation.action !== "declare" && relation.action !== "remove")
+                        problem(`${path}.relation.action`, "Expected declare or remove.");
+                    if (typeof relation.type !== "string" || !authoredTypes.includes(relation.type))
+                        problem(`${path}.relation.type`, "Expected an authored relation type.");
+                    for (const key of ["from", "target"])
+                        if (typeof relation[key] !== "string" || !specId.test(relation[key]))
+                            problem(`${path}.relation.${key}`, "Expected a Spec id.");
+                }
+            });
+    }
+    return problems;
+}
+
+const longestRun = (value) => Math.max(0, ...Array.from(value.matchAll(/`+/gu), (m) => m[0].length));
+function span(value) {
+    const ticks = "`".repeat(longestRun(value) + 1);
+    const pad = value.startsWith("`") || value.endsWith("`") ? " " : "";
+    return `${ticks}${pad}${value}${pad}${ticks}`;
+}
+function fenced(value, language = "") {
+    const ticks = "`".repeat(Math.max(3, longestRun(value) + 1));
+    return `${ticks}${language}\n${value}\n${ticks}\n`;
+}
+function renderMemo(proposal) {
+    let memo = `# Change proposal\n\nBase: ${span(proposal.base)}\nReason: ${proposal.reason}\n\n`;
+    proposal.changes.forEach((change, index) => {
+        memo += `## Change ${String(index + 1)}\n\nScope: ${change.scope.map(span).join(", ")}\nRequest: ${change.request}\n`;
+        if (change.replaces !== undefined)
+            memo += `Replaces: ${span(change.replaces)}\n`;
+        if (change.follows !== undefined)
+            memo += `Follows: ${span(change.follows)}\n`;
+        if (change.relation) {
+            const r = change.relation;
+            memo += `Relation: ${r.action} ${span(r.from)} ${r.type} ${span(r.target)}\n`;
+        }
+        if (change.reason !== undefined)
+            memo += `Reason: ${change.reason}\n`;
+        if (change.text !== undefined)
+            memo += `\n${fenced(change.text)}`;
+        memo += "\n";
+    });
+    return `${memo}## The proposal\n\n${fenced(JSON.stringify(proposal, null, 2), "json")}`;
+}
+
+const schemaProblems = proposalProblems(params.proposal);
+return { schemaProblems, memo: schemaProblems.length ? null : renderMemo(params.proposal) };
 ```
 
 ## 50. External registers

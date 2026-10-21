@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { extract } from "../src/extract/index.js";
 import { createReader } from "../src/reader/reader.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderStudio } from "../src/projections/studio/pages/index.js";
+import { renderStudio } from "./helpers/studio-render.js";
 import type { StudioPage } from "../src/projections/studio/pages/index.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";

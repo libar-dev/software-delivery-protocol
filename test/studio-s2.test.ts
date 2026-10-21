@@ -13,7 +13,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { extract } from "../src/extract/index.js";
 import { createReader } from "../src/reader/reader.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderStudio } from "../src/projections/studio/pages/index.js";
+import { renderStudio } from "./helpers/studio-render.js";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import type {
   SpecPageConditions,

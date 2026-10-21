@@ -6,8 +6,8 @@ import { codeSpans, plainTitle } from "./code-spans.js";
 /**
  * Writes the shared navigation and the rail appropriate to the selected graph node.
  * @sdpAnchor impl:protocol.studio-frame
- * @sdpSatisfies spec:consumers.spec-studio.shell
- * @sdpReferences spec:consumers.spec-studio, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.navigation
+ * @sdpSatisfies spec:consumers.spec-studio.shell, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.intent-panel
+ * @sdpReferences spec:consumers.spec-studio, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.navigation
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
@@ -67,5 +67,5 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
     )
     .join(
       "",
-    )}</nav><sdp-search page-root="${prefix}"><form action="${prefix}search.html" role="search"><label class="visually-hidden" for="q">Search the corpus</label><input id="q" name="q" type="search" placeholder="Search Specs, keys and files"><button type="submit">Search</button></form></sdp-search><sdp-stamp page-root="${prefix}"></sdp-stamp></header><div class="layout"><nav class="rail" aria-label="${isPack ? "Pack members" : selectedSpec ? "Spec Packs" : "Packs"}">${rail}</nav><main id="main">${body}</main></div></body></html>\n`;
+    )}</nav><sdp-search page-root="${prefix}"><form action="${prefix}search.html" role="search"><label class="visually-hidden" for="q">Search the corpus</label><input id="q" name="q" type="search" placeholder="Search Specs, keys and files"><button type="submit">Search</button></form></sdp-search><sdp-stamp page-root="${prefix}"></sdp-stamp></header><div class="layout"><nav class="rail" aria-label="${isPack ? "Pack members" : selectedSpec ? "Spec Packs" : "Packs"}">${rail}</nav><main id="main">${body.includes("<details") && !body.includes("<sdp-expander>") ? `<sdp-expander>${body}</sdp-expander>` : body}<sdp-intent-panel page-root="${prefix}"><details class="section"><summary>Composing (0)</summary><p>Composing needs the script.</p></details></sdp-intent-panel></main></div></body></html>\n`;
 }

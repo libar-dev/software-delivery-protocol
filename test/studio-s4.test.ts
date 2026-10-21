@@ -17,7 +17,7 @@ import { extract } from "../src/extract/index.js";
 import { createReader } from "../src/reader/reader.js";
 import { evaluateStudioRecipe } from "../src/projections/studio/recipes.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderStudio } from "../src/projections/studio/pages/index.js";
+import { renderStudio } from "./helpers/studio-render.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import * as extraction from "../src/extract/index.js";
 
@@ -156,9 +156,11 @@ it("renders external run evidence with result rows, metadata, diagnostics and co
     "no page shows a run result",
   );
   expect(
-    pages.every((p) =>
-      p.content.includes('href="' + (p.path.includes("/") ? "../" : "") + 'runs.html"'),
-    ),
+    pages
+      .filter((p) => !p.path.startsWith("exports/"))
+      .every((p) =>
+        p.content.includes('href="' + (p.path.includes("/") ? "../" : "") + 'runs.html"'),
+      ),
   ).toBe(true);
   const plain = renderStudio(await createStudioData(reader));
   expect(plain.some((p) => p.path === "runs.html")).toBe(false);

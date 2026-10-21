@@ -1,3 +1,4 @@
+import { scenarioTemplate } from "./spec-verification.js";
 import {
   verificationPanel,
   evidencePanel,
@@ -47,7 +48,7 @@ function entry(
   address?: string,
   located?: string,
 ): string {
-  return `<div class="entry"${address === undefined ? "" : ` id="${escape(address)}"`}><dt>${code(key)}${lineLabel(spec.file, entryLine(spec, located ?? address ?? ""))}${address === undefined ? "" : copy(`${spec.id}#${address}`)}</dt><dd>${valueHtml(ctx, value)}${address === undefined ? "" : `${composeSlot(`${spec.id}#${address}`, "change-entry")}${address.startsWith("rule.") ? ruleCoverage(ctx, spec, address.slice(5)) : ""}${entryCitations(ctx, spec, address)}`}</dd></div>`;
+  return `<div class="entry"${address === undefined ? "" : ` id="${escape(address)}"`}><dt>${code(key)}${lineLabel(spec.file, entryLine(spec, located ?? address ?? ""))}${address === undefined ? "" : copy(`${spec.id}#${address}`)}</dt><dd>${valueHtml(ctx, value)}${address === undefined ? "" : `${composeSlot(`${spec.id}#${address}`, "change-entry", typeof value === "string" ? value : undefined)}${address.startsWith("rule.") ? ruleCoverage(ctx, spec, address.slice(5)) : ""}${entryCitations(ctx, spec, address)}`}</dd></div>`;
 }
 
 function steps(value: unknown): string {
@@ -228,7 +229,7 @@ export function specPage(ctx: PageContext, spec: SpecContext): string {
   return frame(
     ctx,
     spec.title ?? spec.id,
-    `${header}${summary}${spec.narrative === undefined ? "" : `<section id="narrative">${prose(ctx, spec.narrative)}</section>`}<sdp-expander>${sections(ctx, spec)}${panels}${relations(ctx, spec)}${bindings(ctx, spec)}<h2 id="findings">Findings</h2><sdp-validation-findings filter="${escape(spec.id)}">${findingList(ctx, findings)}</sdp-validation-findings></sdp-expander>`,
+    `${header}${summary}${spec.specKind === "example" ? `${scenarioTemplate(spec, "edit")}${composeSlot(spec.id, "edit-example")}` : ""}${spec.narrative === undefined ? "" : `<section id="narrative">${prose(ctx, spec.narrative)}</section>`}<sdp-expander>${sections(ctx, spec)}${panels}${relations(ctx, spec)}${bindings(ctx, spec)}<h2 id="findings">Findings</h2><sdp-validation-findings filter="${escape(spec.id)}">${findingList(ctx, findings)}</sdp-validation-findings></sdp-expander>`,
     spec.id,
   );
 }

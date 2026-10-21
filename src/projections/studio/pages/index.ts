@@ -1,3 +1,4 @@
+import { exportPages } from "./export-page.js";
 import { questionsPage, decisionsPage, declarationsPage, backlogPage } from "./registers-page.js";
 import { queuePage } from "./queue-page.js";
 import { glossaryPage } from "./glossary-page.js";
@@ -18,8 +19,8 @@ export interface StudioPage {
   readonly content: string;
 }
 
-export function renderStudio(data: StudioData): readonly StudioPage[] {
-  return [
+export function renderStudio(data: StudioData, stylesheet: string): readonly StudioPage[] {
+  const pages = [
     { path: "index.html", content: indexPage({ data, path: "index.html" }) },
     { path: "architecture.html", content: architecturePage({ data, path: "architecture.html" }) },
     { path: "tests.html", content: testsPage({ data, path: "tests.html" }) },
@@ -50,4 +51,5 @@ export function renderStudio(data: StudioData): readonly StudioPage[] {
       return { path, content: specPage({ data, path }, spec) };
     }),
   ];
+  return [...pages, ...exportPages(data, pages, stylesheet)];
 }

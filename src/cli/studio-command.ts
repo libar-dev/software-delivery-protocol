@@ -1,3 +1,6 @@
+import { runValidateWatch } from "./validate-watch.js";
+import type { ValidateWatchHooks } from "./validate-watch.js";
+import { readStudioBase } from "./studio-inputs.js";
 import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -67,6 +70,7 @@ export function prepareStudioPublication(
         script: fileURLToPath(new URL("../studio/studio.js", import.meta.url)),
         stylesheet: fileURLToPath(new URL("../studio/studio.css", import.meta.url)),
       };
+      const stylesheet = readFileSync(assets.stylesheet, "utf8");
       const files = studioFiles(
         render(
           await createStudioData(
@@ -74,6 +78,7 @@ export function prepareStudioPublication(
             validated.report,
             { ...parsed.studioInputs, runs },
           ),
+          stylesheet,
         ),
         assets,
       );
@@ -85,6 +90,7 @@ export function prepareStudioPublication(
               validated.report,
               { ...parsed.studioInputs, runs },
             ),
+            stylesheet,
           ),
           assets,
         );
@@ -119,4 +125,37 @@ export async function runStudio(
 ): Promise<number> {
   const publish = prepareStudioPublication(parsed, output, hooks);
   return publish === undefined ? 1 : publish(runValidate(parsed, output, "studio", hooks));
+}
+
+/**
+ * @sdpAnchor impl:protocol.studio-watch
+ * @sdpLabel awaits the plain Studio publication in each coalesced carrier-watch cycle
+ * @sdpSatisfies spec:consumers.spec-studio.publisher.watch
+ * @sdpComponent component:protocol.cli
+ * @sdpRole service
+ */
+export async function runStudioWatch(
+  parsed: BuildArgs,
+  output: CliOutput,
+  hooks: StudioHooks & ValidateWatchHooks = {},
+): Promise<number> {
+  return runValidateWatch(parsed, output, hooks, {
+    ...hooks,
+    watchCommand: "studio",
+    watchSources: false,
+    runWatchCycle: async () => {
+      let current = parsed;
+      if (parsed.studioBaseFile !== undefined) {
+        const studioInputs = readStudioBase(
+          parsed.studioBaseFile,
+          parsed.studioBaseLabel ?? null,
+          output,
+          parsed.root,
+        );
+        if (studioInputs === undefined) return { exitCode: 1 };
+        current = { ...parsed, studioInputs };
+      }
+      return { exitCode: await runStudio(current, output, hooks) };
+    },
+  });
 }

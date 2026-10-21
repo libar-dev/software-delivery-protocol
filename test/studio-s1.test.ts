@@ -48,7 +48,7 @@ import {
   realizationDiagram,
 } from "../src/projections/studio/diagrams/index.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderStudio } from "../src/projections/studio/pages/index.js";
+import { renderStudio } from "./helpers/studio-render.js";
 import { createReader } from "../src/reader/reader.js";
 import { schemaVersion } from "../src/graph/schema.js";
 import type { GraphSchema } from "../src/graph/schema.js";

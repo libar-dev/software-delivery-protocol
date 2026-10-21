@@ -1,3 +1,6 @@
+import { registerCompose } from "./compose.js";
+import { registerIntentPanel } from "./intent-panel-element.js";
+import { registerScenarioEditor } from "./scenario-editor.js";
 import { registerViews } from "./views.js";
 import { registerDiagram } from "./diagram.js";
 import { registerCopy } from "./copy.js";
@@ -26,3 +29,7 @@ registerStamp();
 registerDiagram();
 
 registerViews();
+
+registerIntentPanel();
+registerScenarioEditor();
+registerCompose();

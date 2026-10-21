@@ -308,7 +308,7 @@ describe("sdp cli", () => {
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
       // Re-measured from the refreshed carriers: no prose-mention pair is retained.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 11 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 4 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
@@ -1760,7 +1760,9 @@ relations: {}
       expect(exitCode).toBe(1);
       expect(created).toBe(0);
       expect(capture.readStdout()).toBe("");
-      expect(capture.readStderr()).toBe(`sdp ${command}: --watch is only valid on validate.\n`);
+      expect(capture.readStderr()).toBe(
+        `sdp ${command}: --watch is only valid on validate, vault or studio.\n`,
+      );
     },
   );
 
