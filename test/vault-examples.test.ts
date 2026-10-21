@@ -143,7 +143,7 @@ const vaultOracle = specOracle({
 });
 void vaultOracle;
 function vaultExpected(p: Partial<ObsidianVaultConditions>): Record<string, unknown> {
-  const extra = p.extra ?? "";
+  const extra: string = p.extra ?? "";
   const refused =
     extra.includes("inside the generated folder") || extra === "a generated note a person changed";
   const hidden = extra.includes("temporary");

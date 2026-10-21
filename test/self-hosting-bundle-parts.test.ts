@@ -122,7 +122,7 @@ registerPartsCoverThePack({
   invoke,
   observe,
   expected,
-  assertions(world) {
+  assertions(world: World) {
     expect(world.parts).toHaveLength(paramsForStep(partsCoverThePackContract, PARTS).parts);
     expect(world.parts.flatMap((part) => part.members.map((member) => member.id))).toEqual(ids);
     expect(paramsForStep(partsCoverThePackContract, COMPLETE).complete).toBe(true);

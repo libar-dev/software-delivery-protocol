@@ -482,9 +482,10 @@ function diagramAnswer(p: Partial<DiagramsConditions>) {
   if (p.components === undefined || p.contexts === undefined || p.edges === undefined)
     return undefined;
   const fold = p.components <= 40 ? "nothing" : p.contexts > 1 ? "context" : "layer";
-  const drawn =
+  const drawn: number =
     fold === "nothing" ? p.components : fold === "context" ? p.contexts : (p.layers ?? 0);
-  return { identical: true, fold, drawn, named: drawn + (fold === "nothing" ? p.edges : 0) };
+  const edges: number = fold === "nothing" ? p.edges : 0;
+  return { identical: true, fold, drawn, named: drawn + edges };
 }
 import { withinBoundContract } from "../generated/contracts/consumers.spec-studio.diagrams.within-bound.contract.js";
 import { foldsByContextContract } from "../generated/contracts/consumers.spec-studio.diagrams.folds-by-context.contract.js";
@@ -748,8 +749,8 @@ const coverageOracle = specOracle({
 void coverageOracle;
 function coverageAnswer(p: Partial<ExampleSpaceCoverageConditions>) {
   if (!p.declared || !p.bound) return undefined;
-  const values = p.bound.split("; "),
-    enumerable = p.declared.includes("|");
+  const values: string[] = p.bound.split("; ");
+  const enumerable = p.declared.includes("|");
   return {
     enumerable,
     uncovered: enumerable
@@ -794,7 +795,7 @@ function coverageAdapters(
           `\n## Behavior\n- rule: Bind each example value.\n\n## Example space\n\`\`\`gwt-vocabulary\nGiven the value {${String(slot)}:${String(type)}}\nGiven no value\nWhen it is read\nThen it is seen\n\`\`\`\n`,
         ),
       };
-      required(bound)
+      required<string>(bound)
         .split("; ")
         .forEach((v, i) => {
           files[`c${String(i + 1)}.sdp.md`] = carrier(

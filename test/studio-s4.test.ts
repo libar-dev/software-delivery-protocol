@@ -386,7 +386,7 @@ registerExternalEvidence<PageWorld>({
     const reader = createReader(extract({ root: fixture() }).graph);
     const input = report(
       Array.from(
-        { length: required(w.point.passed) + required(w.point.failed) },
+        { length: required<number>(w.point.passed) + required<number>(w.point.failed) },
         () => "test/page.test.ts",
       ),
     );

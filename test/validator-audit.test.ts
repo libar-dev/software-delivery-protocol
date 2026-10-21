@@ -126,7 +126,7 @@ function assertions(world: AuditWorld, contract: AuditContract): void {
   if (!world.answer) throw new Error("The audit must run before assertions.");
   for (const step of contract.steps) {
     if (step.key === "the audit names {named} as {list}") {
-      const actual =
+      const actual: readonly string[] =
         step.params.list === "none"
           ? Object.values(world.answer).flat()
           : world.answer[step.params.list];
