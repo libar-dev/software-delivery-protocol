@@ -126,7 +126,7 @@ registerBlockingFirst<World<RegistersConditions>>({
     expect(html).toContain('href="specs/probe.zeta.html#question.choice"');
     expect(html).toContain('text="spec:probe.zeta#question.choice"');
     for (const facet of ["blocking", "decider", "deferral", "pack"])
-      expect(html).toContain(`data-facet="${facet}"`);
+      expect(html).toContain(`data-filter="${facet}"`);
   },
 });
 const queueOracle = specOracle({
@@ -186,9 +186,9 @@ registerDependencyFirst<World<OwnerQueueConditions>>({
     expect(html).toContain("Round 1");
     const filters = [...html.matchAll(/<sdp-filter>(.*?)<\/sdp-filter>/gsu)].map((m) => m[1]);
     expect(filters).toHaveLength(2);
-    expect(filters[0]).toContain('data-facet="pack"');
-    expect(filters[0]).toContain('data-facet="floor"');
-    expect(filters[1]).toContain('data-facet="pack"');
+    expect(filters[0]).toContain('data-filter="pack"');
+    expect(filters[0]).toContain('data-filter="floor"');
+    expect(filters[1]).toContain('data-filter="pack"');
     expect(alpha).toContain('data-pack=""');
     expect(alpha).toContain('data-floor="defined"');
   },
@@ -712,7 +712,7 @@ describe("Studio base comparison", () => {
         "---\nid: pack:probe\nspecs: [spec:probe.scoped, spec:probe.defined, spec:probe.ready]\n---\n# Probe\n",
     });
     const queue = main(content(await pages(root), "queue.html"));
-    const floor = required(/<select data-facet="floor">(.*?)<\/select>/su.exec(queue)?.[1]);
+    const floor = required(/<select data-filter="floor">(.*?)<\/select>/su.exec(queue)?.[1]);
     expect([...floor.matchAll(/<option value="([^"]+)"/gu)].map((m) => m[1])).toEqual([
       "any",
       "scoped",

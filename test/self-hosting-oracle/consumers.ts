@@ -1747,14 +1747,14 @@ export const consumersSpecs = [
           "`{ label: string | null; schemaVersion: string; specs: number }`, how a page names the base graph: the label the command gave or null, the base graph's `schemaVersion`, and its count of Spec nodes.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.data.inputs.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.data.inputs.graph-only",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Without inputs the page set is the graph's alone",
     narrative: null,
     sections: {
@@ -1782,7 +1782,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.data.inputs.graph-only.sdp.md",
   },
   {
@@ -2077,7 +2077,7 @@ export const consumersSpecs = [
           "a recorded file and line written as `<file>:<line>` in a `code` element carrying `data-source-file` and `data-source-line`, beside its copy action.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.sharing.sdp.md",
   },
   {
@@ -6107,14 +6107,14 @@ export const consumersSpecs = [
           "the test's name, its file path or `no file path`, its result in words, and the reason.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.runs-page.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.runs-page.external-evidence",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The runs page shows a run as external evidence from a test file",
     narrative: null,
     sections: {
@@ -6141,7 +6141,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.runs-page.external-evidence.sdp.md",
   },
   {
@@ -6277,7 +6277,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.sharing.stamp-written-apart",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The stamp is written beside the page set, and a later build removes it",
     narrative: null,
     sections: {
@@ -6304,7 +6304,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.sharing.stamp-written-apart.sdp.md",
   },
   {

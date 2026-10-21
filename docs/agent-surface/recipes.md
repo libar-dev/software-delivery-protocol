@@ -46,6 +46,7 @@
 | 42 | The architecture walk | forbidden, isolated, severity | Check anchored architecture rules |
 | 43 | Planned against realized components | none | Compare component designs with anchors |
 | 44 | Example-space coverage | spec or pack | Report covered and uncovered slot values from decoded example spaces |
+| 45 | Run evidence | runs, commit, spec | Join external CTRF results at test-file grain |
 | 46 | The statement queue | decider | Order waiting readiness statements and questions |
 | 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
@@ -4342,6 +4343,77 @@ const slots = spaces.flatMap(space => space.slots);
 const enumerable = slots.filter(slot => slot.enumerable);
 return { scope: params.spec ?? params.pack ?? "all", totals: { spaces: spaces.length, slots: slots.length, enumerable: enumerable.length, values: enumerable.reduce((n, slot) => n + slot.values.length, 0), uncovered: enumerable.reduce((n, slot) => n + slot.values.filter(v => v.examples.length === 0).length, 0) }, spaces };
 ```
+
+## 45. Run evidence
+
+Read external CTRF reports beside the graph, joined at test-file grain. Pass one report or a list
+as `params.runs`; optional `params.spec` selects files verifying that Spec directly or through an
+enabled example. `params.commit` compares recorded commits without judging freshness. Missing or
+unreadable reports return diagnostics; records without a matching anchor remain in `unjoined`.
+No result changes a binding or a delivery fact.
+
+```js
+const accepts = ["runs", "commit", "spec"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value) ? value : {};
+const string = (value) => typeof value === "string" ? value : null;
+const number = (value) => typeof value === "number" && Number.isFinite(value) ? value : null;
+const normalize = (value) => value.replaceAll("\\", "/").replace(/^(\.\/)+/u, "");
+const diagnostics = [];
+if (params.runs === undefined) return { diagnostics: [{ input: null, problem: "params.runs is required." }] };
+const reports = Array.isArray(params.runs) ? params.runs : [params.runs];
+const inputs = [], unjoined = [], files = new Map();
+const testAnchors = graph.nodes.filter(n => n.nodeType === "Anchor" && n.id.startsWith("test:"));
+const anchored = new Map();
+for (const anchor of testAnchors) {
+  const direct = graph.edges.filter(e => e.from === anchor.id && e.type === "verifies" && g.specContext(e.to)).map(e => e.to);
+  const verifies = [...new Set(direct.flatMap(id => [id, ...graph.edges.filter(e => e.from === id && e.type === "verifies" && g.specContext(id)?.specKind === "example" && g.specContext(e.to)).map(e => e.to)]))].sort();
+  const file = normalize(anchor.file);
+  const row = anchored.get(file) ?? { file, anchors: [], specs: [] };
+  row.anchors.push({ id: anchor.id, verifies });
+  row.specs = [...new Set([...row.specs, ...verifies])].sort();
+  anchored.set(file, row);
+}
+const candidates = [...anchored.keys()].sort((a,b) => b.length-a.length || (a < b ? -1 : a > b ? 1 : 0));
+let tests = 0, joined = 0;
+for (const [index, raw] of reports.entries()) {
+  const report = object(raw), results = object(report.results);
+  let problem = null;
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) problem = "Run input is not an object.";
+  else if (report.reportFormat !== "CTRF") problem = "Run input requires reportFormat: CTRF.";
+  else if (typeof report.specVersion !== "string") problem = "Run input requires specVersion.";
+  else if (!Array.isArray(results.tests)) problem = "Run input requires a results.tests list.";
+  if (problem !== null) { diagnostics.push({ input: index, problem }); continue; }
+  const tool = object(results.tool), summary = object(results.summary), environment = object(results.environment);
+  const commit = string(environment.commit);
+  const build = [environment.buildName, environment.buildNumber].filter(v => typeof v === "string" || typeof v === "number").join(" ") || null;
+  inputs.push({ index, tool: string(tool.name), toolVersion: string(tool.version), specVersion: report.specVersion, commit, branch: string(environment.branchName), build, start: number(summary.start), stop: number(summary.stop), summary: Object.fromEntries(["tests","passed","failed","skipped","pending","other"].map(key => [key, number(summary[key]) ?? 0])), sameCommit: typeof params.commit === "string" && commit !== null ? params.commit === commit : null });
+  for (const rawTest of results.tests) {
+    const test = object(rawTest), name = string(test.name) ?? "not recorded", status = string(test.status) ?? "other";
+    const filePath = string(test.filePath);
+    const normalized = normalize(filePath ?? "");
+    const match = candidates.find(file => normalized === file || normalized.endsWith("/" + file));
+    tests++;
+    if (match === undefined) { unjoined.push({ input: index, name, filePath: filePath || null, status, reason: filePath ? "noTestAnchor" : "noFilePath" }); continue; }
+    joined++;
+    const source = anchored.get(match);
+    if (typeof params.spec === "string" && !source.specs.includes(params.spec)) continue;
+    const row = files.get(match) ?? { ...source, anchors: [...source.anchors].sort((a,b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0), results: [] };
+    row.results.push({ input: index, name, suite: Array.isArray(test.suite) ? test.suite.filter(v => typeof v === "string").join(" > ") || null : string(test.suite), status, duration: number(test.duration) });
+    files.set(match, row);
+  }
+}
+if (inputs.length === 0) return { diagnostics: diagnostics.length ? diagnostics : [{ input: null, problem: "params.runs holds no readable report." }] };
+const rows = [...files.values()].sort((a,b) => a.file < b.file ? -1 : a.file > b.file ? 1 : 0);
+return { inputs, diagnostics, totals: { inputs: inputs.length, tests, joined, unjoined: unjoined.length, files: rows.length, specs: new Set(rows.flatMap(row => row.specs)).size }, files: rows, unjoined };
+```
+
+`inputs` preserves report order and records tool, version, build, branch, commit, times, summary
+and optional commit comparison. `files` lists matching files in path order with their anchors,
+verified Specs and result rows in report order. `totals` counts readable reports and their tests;
+`diagnostics` and `unjoined` keep their input positions. With a Spec filter, test totals still
+count every readable report's tests; file and Spec totals describe the selected files.
 
 ## 46. The statement queue
 

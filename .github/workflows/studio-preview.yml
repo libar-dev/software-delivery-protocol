@@ -1,0 +1,173 @@
+name: Studio preview
+
+on:
+  workflow_call:
+    inputs:
+      root:
+        type: string
+        default: .
+      exclude:
+        type: string
+        default: ""
+      node-version:
+        type: string
+        default: "20"
+      install:
+        type: string
+        default: npm ci
+      sdp:
+        type: string
+        default: npx sdp
+      runs-artifact:
+        type: string
+        default: ""
+      diff:
+        type: boolean
+        default: false
+      deploy:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Install the caller's dependencies
+        env:
+          INSTALL: ${{ inputs.install }}
+        run: bash -e -o pipefail -c "$INSTALL"
+      - name: Download run evidence
+        continue-on-error: true
+        if: inputs.runs-artifact != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.runs-artifact }}
+          path: ${{ runner.temp }}/studio-runs
+      - name: Build, stamp and measure the page set
+        shell: bash
+        env:
+          ROOT: ${{ inputs.root }}
+          EXCLUDE: ${{ inputs.exclude }}
+          INSTALL: ${{ inputs.install }}
+          SDP: ${{ inputs.sdp }}
+          DIFF: ${{ inputs.diff }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          SOURCE_SERVER: ${{ github.server_url }}
+          SOURCE_REPO: ${{ github.repository }}
+          RUNS_ARTIFACT: ${{ inputs.runs-artifact }}
+        run: |
+          sdp() { bash -e -o pipefail -c "$SDP \"\$@\"" -- "$@"; }
+          exclusions=()
+          while IFS= read -r prefix; do
+            if [[ -n "$prefix" ]]; then exclusions+=(--exclude "$prefix"); fi
+          done <<< "$EXCLUDE"
+          inputs=()
+          if [[ "$DIFF" == true ]]; then
+            base="$RUNNER_TEMP/studio-base"
+            git worktree add --detach "$base" "$BASE_SHA"
+            (
+              cd "$base"
+              bash -e -o pipefail -c "$INSTALL"
+              sdp build "$ROOT" "${exclusions[@]}"
+            )
+            cp "$base/$ROOT/generated/graph.json" "$RUNNER_TEMP/studio-base.json"
+            inputs+=(--base "$RUNNER_TEMP/studio-base.json" --base-label "base ${BASE_SHA:0:7}")
+          fi
+          if [[ -n "$RUNS_ARTIFACT" && -d "$RUNNER_TEMP/studio-runs" ]]; then
+            while IFS= read -r -d '' report; do inputs+=(--runs "$report"); done < <(find "$RUNNER_TEMP/studio-runs" -type f -name '*.json' -print0 | sort -z)
+          fi
+          studio_status=0
+          sdp studio "$ROOT" "${exclusions[@]}" "${inputs[@]}" || studio_status=$?
+          if (( studio_status != 0 )); then
+            if [[ ! -f "$ROOT/generated/spec-studio/index.html" ]]; then exit "$studio_status"; fi
+            echo "Studio validation reported findings; the rendered preview includes them." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          root_prefix="${ROOT#./}"
+          if [[ "$root_prefix" == . ]]; then root_prefix=""; fi
+          if [[ -n "$root_prefix" ]]; then root_prefix="${root_prefix%/}/"; fi
+          sdp stamp "$ROOT" --commit "$HEAD_SHA" --source "$SOURCE_SERVER/$SOURCE_REPO/blob/$HEAD_SHA/$root_prefix{file}#L{line}"
+          PAGE_SET="$ROOT/generated/spec-studio" node --input-type=module <<'JS'
+          import { readdirSync, statSync, appendFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          let files=0, bytes=0;
+          function walk(path) { for (const entry of readdirSync(path,{withFileTypes:true})) { const file=join(path,entry.name); if (entry.isDirectory()) walk(file); else { files++; bytes+=statSync(file).size; } } }
+          walk(process.env.PAGE_SET);
+          const line=`Studio artifact: ${files} files, ${bytes} uncompressed bytes.\n`;
+          console.log(line);
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,line);
+          JS
+      - name: Upload the stamped page set
+        uses: actions/upload-artifact@v4
+        with:
+          name: spec-studio-pr-${{ github.event.pull_request.number }}
+          path: ${{ inputs.root }}/generated/spec-studio/
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    if: inputs.deploy && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: read
+    concurrency:
+      group: studio-gh-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Check the Pages source
+        id: pages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if source=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.source.branch' 2>/dev/null) && [[ "$source" == gh-pages ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Studio deployment skipped: Pages does not serve the gh-pages branch." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/download-artifact@v4
+        if: steps.pages.outputs.enabled == 'true'
+        with:
+          name: spec-studio-pr-${{ github.event.pull_request.number }}
+          path: ${{ runner.temp }}/studio-preview
+      - name: Write the preview to the enabled Pages branch
+        if: steps.pages.outputs.enabled == 'true'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages; then
+            git fetch origin gh-pages
+            git checkout -B gh-pages origin/gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf .
+          fi
+          destination="preview/$PR_NUMBER"
+          rm -rf -- "$destination"
+          mkdir -p "$destination"
+          cp -a "$RUNNER_TEMP/studio-preview/." "$destination/"
+          touch .nojekyll
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- "$destination" .nojekyll
+          if ! git diff --cached --quiet; then
+            git commit -m "Studio preview for PR $PR_NUMBER"
+            git push origin HEAD:gh-pages
+          fi

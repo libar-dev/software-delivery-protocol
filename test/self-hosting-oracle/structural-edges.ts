@@ -25,6 +25,8 @@ export const expectedComponentIds = [
 // outside the engine source seams and therefore have no truthful owner among the accepted
 // component set.
 export const structuralMembershipExceptions = [
+  "impl:protocol.run-evidence-recipe",
+  "impl:protocol.studio-preview-workflow",
   "impl:protocol.graph-first-planning",
   "impl:protocol.self-hosting",
   "impl:protocol.structural-self-binding",
@@ -110,6 +112,22 @@ export const acceptedArchitecturalUnits = [
     anchorId: "impl:protocol.studio-base-input",
     componentId: "component:protocol.cli",
   },
+  {
+    unit: "src/cli/stamp-command.ts#runStamp",
+    anchorId: "impl:protocol.stamp-command",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/projections/studio/pages/run-rows.ts#runRows",
+    anchorId: "impl:protocol.studio-run-rows",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/runs-page.ts#runsPage",
+    anchorId: "impl:protocol.studio-runs-page",
+    componentId: "component:protocol.projections",
+  },
+
   {
     unit: "src/validate/validators.ts#checkSupersededDecisions",
     anchorId: "impl:protocol.superseded-decision-signal",
@@ -894,6 +912,7 @@ export const coarseGrainCoverage = [
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
 // re-measured under plan 41
 export const expectedUsesEdges = [
+  ["impl:protocol.stamp-command", "impl:protocol.schema-version"],
   ["impl:protocol.studio-recipes", "impl:protocol.reader"],
   ["impl:protocol.studio-recipes", "api:protocol.evaluate-body"],
   ["component:protocol.studio-elements", "component:protocol.reader"],

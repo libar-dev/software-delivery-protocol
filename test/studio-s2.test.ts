@@ -103,7 +103,7 @@ registerCitedDeclaration<CitationWorld>({
   observe: (w): SpecPageOutcome => ({
     kind: "beside the first declaration the page lists {cited}",
     cited:
-      /<code>(test\/orders\.test\.ts:\d+)<\/code>/u.exec(
+      /<code data-source-file="test\/orders\.test\.ts" data-source-line="\d+">(test\/orders\.test\.ts:\d+)<\/code>/u.exec(
         entry(w.page ?? "", "design.first"),
       )?.[1] ?? "",
   }),
@@ -390,7 +390,9 @@ describe("Spec panels", () => {
     const files = coverageFiles({});
     files["pack.pack.sdp.md"] = "---\nid: pack:orders\nspecs: [spec:orders]\n---\n# Orders\n";
     const page = (await pages(files)).find((p) => p.path === "packs/orders.html")?.content ?? "";
-    expect(page).toContain("The graph records bindings and never runs.");
+    expect(page).toContain(
+      "The graph records bindings and never runs, so no page shows a run result.",
+    );
     expect(page).not.toContain("run evidence is supplied separately");
   });
 });

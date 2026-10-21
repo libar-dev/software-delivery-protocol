@@ -3,7 +3,17 @@ import type { Architecture } from "./architecture-page.js";
 import { realizationDiagram, renderDiagram, traceDiagram } from "../diagrams/index.js";
 import type { DiagramBox, DiagramEdge } from "../diagrams/index.js";
 import type { PageContext } from "./html.js";
-import { code, copy, escape, link, list, location, relative, componentLink } from "./html.js";
+import {
+  code,
+  sourceCode,
+  copy,
+  escape,
+  link,
+  list,
+  location,
+  relative,
+  componentLink,
+} from "./html.js";
 import { plainTitle } from "./code-spans.js";
 import { codeSpans, prose } from "./text.js";
 
@@ -18,7 +28,7 @@ interface StructuralUnit {
 }
 function source(ctx: PageContext, unit: StructuralUnit): string {
   const at = location(unit.file ?? undefined, unit.line ?? undefined);
-  return `${unit.id.startsWith("component:") ? componentLink(ctx, unit.id) : code(unit.id)}${unit.label == null ? "" : ` · ${codeSpans(unit.label)}`} · ${code(at)}${unit.file == null ? "" : copy(at)}${unit.layer == null ? "" : ` · layer ${escape(unit.layer)}`}${unit.context == null ? "" : ` · context ${escape(unit.context)}`}`;
+  return `${unit.id.startsWith("component:") ? componentLink(ctx, unit.id) : code(unit.id)}${unit.label == null ? "" : ` · ${codeSpans(unit.label)}`} · ${sourceCode(unit.file ?? undefined, unit.line ?? undefined)}${unit.file == null ? "" : copy(at)}${unit.layer == null ? "" : ` · layer ${escape(unit.layer)}`}${unit.context == null ? "" : ` · context ${escape(unit.context)}`}`;
 }
 function structure(ctx: PageContext, spec: SpecContext) {
   const architecture = ctx.data.recipes.all.get(17) as Architecture;
@@ -159,7 +169,7 @@ export function impactView(ctx: PageContext, spec: SpecContext): string {
     list(
       rows.map(
         (u) =>
-          `${u.id.startsWith("component:") ? componentLink(ctx, u.id) : code(u.id)} · ${code(location(u.file ?? undefined, u.line ?? undefined))}${u.file === null ? "" : copy(location(u.file, u.line ?? undefined))}`,
+          `${u.id.startsWith("component:") ? componentLink(ctx, u.id) : code(u.id)} · ${sourceCode(u.file ?? undefined, u.line ?? undefined)}${u.file === null ? "" : copy(location(u.file, u.line ?? undefined))}`,
       ),
     );
   return `<sdp-impact-view spec-id="${escape(spec.id)}">${trace}<h3>Rests on</h3>${list(footing.map((row) => `${escape(row.type)} · ${link(ctx, row.id)} · stated ${escape(row.statedReadiness ?? "not recorded")}, floor ${escape(row.floorReached ?? "none")}`))}<h3>Rested on by</h3>${distances.length ? distances.map((distance) => `<h4>Distance ${String(distance)}</h4>${list(impact.filter((row) => row.distance === distance).map((row) => `${link(ctx, row.id)}<p>Implementing units</p>${units(row.implementedBy)}<p>Referencing units</p>${units(row.referencedBy)}<p>Enabled verifiers: ${row.enabledVerifiers.length ? row.enabledVerifiers.map((id) => link(ctx, id)).join(", ") : "None"}</p><p>Packs: ${row.packs.length ? row.packs.map((id) => link(ctx, id)).join(", ") : "None"}</p>`))}`).join("") : "<p>No Spec rests on this Spec.</p>"}</sdp-impact-view>`;

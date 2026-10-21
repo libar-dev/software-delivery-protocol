@@ -2,7 +2,7 @@ import { codeSpans, plainTitle } from "./code-spans.js";
 import { architectureDiagrams, memberDiagram, renderDiagram } from "../diagrams/index.js";
 import type { DiagramBox, DiagramEdge } from "../diagrams/index.js";
 import { frame } from "./frame.js";
-import { code, copy, count, escape, link, list } from "./html.js";
+import { code, sourceCode, copy, count, escape, link, list } from "./html.js";
 import type { PageContext } from "./html.js";
 interface Member {
   id: string;
@@ -148,7 +148,7 @@ export function architecturePage(ctx: PageContext): string {
           ),
         );
       const diff = plans.differing.filter((d) => d.componentId === c.id);
-      return `<section id="${escape(c.id)}"><h2>${code(c.id)}${c.label === null ? "" : ` ${codeSpans(c.label)}`}</h2><p>Layer ${escape(c.layer ?? "not stated")}, context ${escape(c.context ?? "not stated")}, role ${escape(c.role ?? "not stated")}.</p><p>${code(location(c))}${c.file === null ? "" : copy(location(c))}</p><h3>Members</h3>${list(c.members.map((m) => `${code(m.id)} ${codeSpans(m.label ?? "")} · role ${escape(m.role ?? "not stated")} · ${code(location(m))}${m.file === null ? "" : copy(location(m))}`))}<h3>Uses</h3>${directions(c.usesCounts)}<h3>Used by</h3>${directions(c.usedByCounts)}<h3>Satisfies</h3>${list(c.satisfiedSpecs.map((s) => link(ctx, s)))}<h3>References</h3>${list(c.referencedSpecs.map((s) => link(ctx, s)))}${diff.length ? `<h3>Design differences</h3>${list(diff.map((d) => `${link(ctx, d.spec)} ${code(d.field)}: planned ${code(JSON.stringify(d.planned))}; realized ${code(JSON.stringify(d.realized))}`))}` : ""}${c.members.length === 0 ? "<p>None.</p>" : renderDiagram(diagram)}</section>`;
+      return `<section id="${escape(c.id)}"><h2>${code(c.id)}${c.label === null ? "" : ` ${codeSpans(c.label)}`}</h2><p>Layer ${escape(c.layer ?? "not stated")}, context ${escape(c.context ?? "not stated")}, role ${escape(c.role ?? "not stated")}.</p><p>${sourceCode(c.file ?? undefined, c.line ?? undefined)}${c.file === null ? "" : copy(location(c))}</p><h3>Members</h3>${list(c.members.map((m) => `${code(m.id)} ${codeSpans(m.label ?? "")} · role ${escape(m.role ?? "not stated")} · ${sourceCode(m.file ?? undefined, m.line ?? undefined)}${m.file === null ? "" : copy(location(m))}`))}<h3>Uses</h3>${directions(c.usesCounts)}<h3>Used by</h3>${directions(c.usedByCounts)}<h3>Satisfies</h3>${list(c.satisfiedSpecs.map((s) => link(ctx, s)))}<h3>References</h3>${list(c.referencedSpecs.map((s) => link(ctx, s)))}${diff.length ? `<h3>Design differences</h3>${list(diff.map((d) => `${link(ctx, d.spec)} ${code(d.field)}: planned ${code(JSON.stringify(d.planned))}; realized ${code(JSON.stringify(d.realized))}`))}` : ""}${c.members.length === 0 ? "<p>None.</p>" : renderDiagram(diagram)}</section>`;
     })
     .join("");
   const unresolved = [

@@ -22,7 +22,7 @@ export function filterBar(
   return `<form hidden class="filter-bar">${Object.entries(facets)
     .map(
       ([key, facet]) =>
-        `<label>${escape(facet.label)}<select data-facet="${escape(key)}"><option value="any">Any</option>${(facet.ordered
+        `<label>${escape(facet.label)}<select data-filter="${escape(key)}"><option value="any">Any</option>${(facet.ordered
           ? [...new Set(facet.values)]
           : [...new Set(facet.values)].sort()
         )

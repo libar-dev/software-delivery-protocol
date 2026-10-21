@@ -58,6 +58,7 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
       ["backlog.html", "Backlog"],
       ["glossary.html", "Glossary"],
       ...(ctx.data.inputs.base === undefined ? [] : [["diff.html", "Diff"] as const]),
+      ...(ctx.data.recipes.all.has(45) ? [["runs.html", "Runs"]] : []),
     ] as const
   )
     .map(

@@ -1,4 +1,4 @@
-import { rmSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,6 +40,15 @@ export function prepareStudioPublication(
     removeArtifacts([studioPath, temporaryPath], output, command, recoveryRm);
     return 1;
   };
+  const runs: unknown[] = [];
+  for (const path of parsed.runs ?? []) {
+    try {
+      runs.push(JSON.parse(readFileSync(path, "utf8")) as unknown);
+    } catch {
+      writeStderr(output, `sdp ${command}: cannot read --runs ${JSON.stringify(path)} as JSON.\n`);
+      return undefined;
+    }
+  }
   let prior: readonly StudioFile[] | undefined;
   try {
     if (parsed.checkClean) prior = readPublishedStudio(studioPath);
@@ -63,7 +72,7 @@ export function prepareStudioPublication(
           await createStudioData(
             createReader(validated.graph, validated.report),
             validated.report,
-            parsed.studioInputs,
+            { ...parsed.studioInputs, runs },
           ),
         ),
         assets,
@@ -74,7 +83,7 @@ export function prepareStudioPublication(
             await createStudioData(
               createReader(validated.graph, validated.report),
               validated.report,
-              parsed.studioInputs,
+              { ...parsed.studioInputs, runs },
             ),
           ),
           assets,
@@ -99,6 +108,7 @@ export function prepareStudioPublication(
  * @sdpAnchor impl:protocol.studio-command
  * @sdpLabel validates and renders the Studio with independent byte checks and diagnostic exit codes
  * @sdpSatisfies spec:consumers.spec-studio.publisher
+ * @sdpReferences spec:consumers.spec-studio.data.inputs
  * @sdpComponent component:protocol.cli
  * @sdpRole publisher
  */

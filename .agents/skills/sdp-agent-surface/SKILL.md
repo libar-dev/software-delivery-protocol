@@ -152,6 +152,7 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Reuse an architecture value                                    | roles, layers and contexts (recipe 28)                                                                     |
 | Find keyed rules no example exercises                          | rule coverage (recipe 34)                                                                                  |
 | Find example-space values no example binds                     | example-space coverage (recipe 44)                                                                         |
+| Read external CI results beside verifier bindings              | run evidence (recipe 45)                                                                                   |
 | See what changed since a design pass                           | the design diff (recipe 35)                                                                                |
 | Compose a design pass's reading                                | the context bundle (recipe 36), the perspective filter (recipe 37)                                         |
 | Apply a change proposal                                        | the proposal check (recipe 38)                                                                             |

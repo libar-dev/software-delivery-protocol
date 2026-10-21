@@ -1,6 +1,7 @@
+import { runRows } from "./run-rows.js";
 import type { SpecContext } from "../../../reader/reader.js";
 import type { PageContext } from "./html.js";
-import { code, copy, escape, link, list, location, present, rungLine } from "./html.js";
+import { code, sourceCode, copy, escape, link, list, location, present, rungLine } from "./html.js";
 import { codeSpans, text } from "./text.js";
 import type { RuleCoverage, SpaceCoverage } from "./tests-page.js";
 
@@ -20,7 +21,7 @@ export function entryCitations(ctx: PageContext, spec: SpecContext, address: str
   if (!row) return "";
   if (row.citedBy.length === 0)
     return row.pinned ? '<p class="citations">no citation recorded</p>' : "";
-  return `<div class="citations"><p>Cited at</p>${list(row.citedBy.map((c) => `${c.testAnchors.length ? "Test line · " : ""}${code(location(c.file, c.line))}${copy(location(c.file, c.line))}${c.testAnchors.map((id) => ` · ${code(id)}`).join("")}`))}</div>`;
+  return `<div class="citations"><p>Cited at</p>${list(row.citedBy.map((c) => `${c.testAnchors.length ? "Test line · " : ""}${sourceCode(c.file, c.line)}${copy(location(c.file, c.line))}${c.testAnchors.map((id) => ` · ${code(id)}`).join("")}`))}</div>`;
 }
 
 export function ruleCoverage(ctx: PageContext, spec: SpecContext, key: string): string {
@@ -70,10 +71,10 @@ export function verificationPanel(ctx: PageContext, spec: SpecContext): string {
   const verifiers = list(
     spec.verifiers.map(
       (v) =>
-        `${link(ctx, v.verifierId)}${v.label === undefined ? "" : ` · ${escape(v.label)}`} · ${escape(v.claim)} · ${v.via === "example" ? `example ${v.enabled ? "enabled" : "not enabled"}` : "test anchor binding present"} · ${code(location(v.file, v.line))}${v.file === undefined ? "" : copy(location(v.file, v.line))}`,
+        `${link(ctx, v.verifierId)}${v.label === undefined ? "" : ` · ${escape(v.label)}`} · ${escape(v.claim)} · ${v.via === "example" ? `example ${v.enabled ? "enabled" : "not enabled"}` : "test anchor binding present"} · ${sourceCode(v.file, v.line)}${v.file === undefined ? "" : copy(location(v.file, v.line))}`,
     ),
   );
-  return `<h3>Verifier bindings</h3>${spec.verifiers.length ? verifiers : "<p>No verifier binding recorded.</p>"}${spec.sections?.behavior === undefined ? exampleCards(ctx, spec) : ""}${exampleSpace(ctx, spec)}`;
+  return `<h3>Verifier bindings</h3>${spec.verifiers.length ? verifiers : "<p>No verifier binding recorded.</p>"}${spec.sections?.behavior === undefined ? exampleCards(ctx, spec) : ""}${exampleSpace(ctx, spec)}${runRows(ctx, spec.id)}`;
 }
 function exampleSpace(ctx: PageContext, spec: SpecContext): string {
   const space = spec.exampleSpace;
@@ -105,7 +106,7 @@ function exampleSpace(ctx: PageContext, spec: SpecContext): string {
     ),
   );
   const oracle = spec.oracle;
-  return `<sdp-example-space spec-id="${escape(spec.id)}"><h3>Example space</h3>${slots}<h4>Bound points</h4>${points}<p>Oracle binding: ${present(oracle !== undefined)}${oracle ? ` · ${code(oracle.anchorId)} · ${code(location(oracle.file, oracle.line))}${oracle.file === undefined ? "" : copy(location(oracle.file, oracle.line))}` : ""}</p><h4>Coverage</h4>${grid}<h4>Unbound</h4>${unbound}${composeSlot(spec.id, "propose-values")}</sdp-example-space>`;
+  return `<sdp-example-space spec-id="${escape(spec.id)}"><h3>Example space</h3>${slots}<h4>Bound points</h4>${points}<p>Oracle binding: ${present(oracle !== undefined)}${oracle ? ` · ${code(oracle.anchorId)} · ${sourceCode(oracle.file, oracle.line)}${oracle.file === undefined ? "" : copy(location(oracle.file, oracle.line))}` : ""}</p><h4>Coverage</h4>${grid}<h4>Unbound</h4>${unbound}${composeSlot(spec.id, "propose-values")}</sdp-example-space>`;
 }
 export function evidencePanel(spec: SpecContext): string {
   return `<p>Runtime observation: ${spec.deliveryFacts.includes("observed") ? "observed" : "not tracked"}.</p><p>Build attestations: not tracked.</p><p>Deployments: not tracked.</p><p>Bills of materials: not tracked.</p>`;

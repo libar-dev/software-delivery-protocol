@@ -25,6 +25,10 @@ export function escape(value: unknown): string {
     .replaceAll("'", "&#39;");
 }
 export const code = (value: unknown): string => `<code>${escape(value)}</code>`;
+export const sourceCode = (file?: string, line?: number): string =>
+  file === undefined || line === undefined
+    ? code(location(file, line))
+    : `<code data-source-file="${escape(file)}" data-source-line="${String(line)}">${escape(location(file, line))}</code>`;
 export const copy = (value: string): string => `<sdp-copy text="${escape(value)}"></sdp-copy>`;
 export const location = (file?: string, line?: number): string =>
   file === undefined
@@ -71,7 +75,7 @@ export function findingList(ctx: PageContext, rows: readonly Finding[]): string 
   return list(
     rows.map(
       (f) =>
-        `${escape(f.severity)} · ${code(f.validatorId)}${f.subjectId === undefined ? "" : ` · ${link(ctx, f.subjectId)}`} · ${escape(f.message)}${f.file === undefined ? "" : ` · ${code(location(f.file, f.line))}`}`,
+        `${escape(f.severity)} · ${code(f.validatorId)}${f.subjectId === undefined ? "" : ` · ${link(ctx, f.subjectId)}`} · ${escape(f.message)}${f.file === undefined ? "" : ` · ${sourceCode(f.file, f.line)}`}`,
     ),
   );
 }
@@ -86,7 +90,7 @@ export function unitList(rows: readonly CodeUnitBinding[], ctx?: PageContext): s
   return list(
     rows.map(
       (unit) =>
-        `${ctx !== undefined && unit.codeId.startsWith("component:") ? componentLink(ctx, unit.codeId) : code(unit.codeId)}${unit.label === undefined ? "" : ` · ${escape(unit.label)}`} · ${code(location(unit.file, unit.line))}${unit.file === undefined ? "" : copy(location(unit.file, unit.line))}${unit.role === undefined ? "" : ` · role ${escape(unit.role)}`}${unit.component === undefined ? "" : ` · component ${ctx === undefined ? code(unit.component.id) : componentLink(ctx, unit.component.id)}${unit.component.layer === undefined ? "" : ` · layer ${escape(unit.component.layer)}`}${unit.component.context === undefined ? "" : ` · context ${escape(unit.component.context)}`}`}${unit.layer === undefined ? "" : ` · layer ${escape(unit.layer)}`}${unit.context === undefined ? "" : ` · context ${escape(unit.context)}`}`,
+        `${ctx !== undefined && unit.codeId.startsWith("component:") ? componentLink(ctx, unit.codeId) : code(unit.codeId)}${unit.label === undefined ? "" : ` · ${escape(unit.label)}`} · ${sourceCode(unit.file, unit.line)}${unit.file === undefined ? "" : copy(location(unit.file, unit.line))}${unit.role === undefined ? "" : ` · role ${escape(unit.role)}`}${unit.component === undefined ? "" : ` · component ${ctx === undefined ? code(unit.component.id) : componentLink(ctx, unit.component.id)}${unit.component.layer === undefined ? "" : ` · layer ${escape(unit.component.layer)}`}${unit.component.context === undefined ? "" : ` · context ${escape(unit.component.context)}`}`}${unit.layer === undefined ? "" : ` · layer ${escape(unit.layer)}`}${unit.context === undefined ? "" : ` · context ${escape(unit.context)}`}`,
     ),
     "units",
   );

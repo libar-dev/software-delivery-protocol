@@ -1,5 +1,6 @@
+import { runEvidence, runInputSentence } from "./run-rows.js";
 import { frame } from "./frame.js";
-import { code, escape, link } from "./html.js";
+import { code, escape, link, sourceCode } from "./html.js";
 import type { PageContext } from "./html.js";
 import { codeSpans } from "./text.js";
 export interface CoverageSpace {
@@ -30,6 +31,8 @@ export interface RuleCoverage {
  * @sdpRole projection
  */
 export function testsPage(ctx: PageContext): string {
+  const evidence = runEvidence(ctx);
+  const statuses = ["passed", "failed", "skipped", "pending", "other"] as const;
   const coverage = ctx.data.recipes.all.get(44) as SpaceCoverage;
   const specs = ctx.data.specs.filter((s) => s.specKind !== "example");
   let exercised = 0,
@@ -64,11 +67,23 @@ export function testsPage(ctx: PageContext): string {
             }${slot.unbound.length ? `; unbound ${slot.unbound.map((id) => link(ctx, id)).join(", ")}` : ""}`,
         )
         .join("; ");
+      const counts = { passed: 0, failed: 0, skipped: 0, pending: 0, other: 0 };
+      for (const file of evidence?.files ?? []) {
+        if (!file.specs.includes(s.id)) continue;
+        for (const result of file.results) {
+          const status = statuses.find((value) => value === result.status) ?? "other";
+          counts[status]++;
+        }
+      }
+      const runSummary =
+        evidence === undefined
+          ? ""
+          : `<p>external run evidence: ${statuses.map((status) => `${String(counts[status])} ${status}`).join(", ")} from test files.</p>`;
       const target = link(ctx, s.id, s.title ?? s.id, codeSpans(s.title ?? s.id)).replace(
         /href="([^"]+)"/u,
         'href="$1#verification"',
       );
-      return `<li class="spec-row" data-row data-binding="${binding}" data-rules="${totals.keyedRules === 0 ? "none" : totals.unexercised > 0 ? "unexercised" : "exercised"}" data-values="${space === undefined ? "none" : missing > 0 ? "uncovered" : "covered"}" data-pack="${escape(s.packs.join(" "))}">${target} · ${code(s.id)} · verifier binding ${binding}: ${String(s.verifiers.length)} verifiers, ${String(enabled)} enabled · ${String(totals.exercised)} of ${String(totals.keyedRules)} keyed rules exercised · ${String(totals.unkeyedRules)} unkeyed rules${space ? ` · ${String(missing)} uncovered values` : ""}${s.verifiers.length ? `<ul>${s.verifiers.map((v) => `<li>${link(ctx, v.verifierId)} · ${v.enabled ? "enabled" : "not enabled"}${v.file ? ` · ${code(v.file + (v.line === undefined ? "" : `:${String(v.line)}`))}` : ""}</li>`).join("")}</ul>` : ""}${spaceDetails ? `<p>${spaceDetails}</p>` : ""}</li>`;
+      return `<li class="spec-row" data-row data-binding="${binding}" data-rules="${totals.keyedRules === 0 ? "none" : totals.unexercised > 0 ? "unexercised" : "exercised"}" data-values="${space === undefined ? "none" : missing > 0 ? "uncovered" : "covered"}" data-pack="${escape(s.packs.join(" "))}">${target} · ${code(s.id)} · verifier binding ${binding}: ${String(s.verifiers.length)} verifiers, ${String(enabled)} enabled · ${String(totals.exercised)} of ${String(totals.keyedRules)} keyed rules exercised · ${String(totals.unkeyedRules)} unkeyed rules${space ? ` · ${String(missing)} uncovered values` : ""}${s.verifiers.length ? `<ul>${s.verifiers.map((v) => `<li>${link(ctx, v.verifierId)} · ${v.enabled ? "enabled" : "not enabled"}${v.file ? ` · ${sourceCode(v.file, v.line)}` : ""}</li>`).join("")}</ul>` : ""}${spaceDetails ? `<p>${spaceDetails}</p>` : ""}${runSummary}</li>`;
     })
     .join("");
   const filters = [
@@ -124,6 +139,6 @@ export function testsPage(ctx: PageContext): string {
   return frame(
     ctx,
     "Tests",
-    `<header class="page-head"><h1>Tests</h1><p>Verifier bindings, keyed rules from recipe 34 and example-space values from recipe 44.</p><p>${String(present)} Specs with a verifier binding and ${String(specs.length - present)} without. ${String(exercised)} keyed rules exercised and ${String(unexercised)} unexercised. ${String(unkeyed)} unkeyed rules. ${String(withMissing)} example spaces with an uncovered value.</p></header><sdp-filter><form hidden class="filter-bar">${filters.map((f) => `<label>${f.label}<select data-filter="${f.name}"><option value="any">Any</option>${f.values.map((v) => `<option value="${escape(v)}">${escape(v)}</option>`).join("")}</select></label>`).join("")}</form><output aria-live="polite">${String(specs.length)} of ${String(specs.length)} shown</output><ul class="spec-list">${rows}</ul></sdp-filter>`,
+    `<header class="page-head"><h1>Tests</h1><p>Verifier bindings, keyed rules from recipe 34 and example-space values from recipe 44.</p><p>${String(present)} Specs with a verifier binding and ${String(specs.length - present)} without. ${String(exercised)} keyed rules exercised and ${String(unexercised)} unexercised. ${String(unkeyed)} unkeyed rules. ${String(withMissing)} example spaces with an uncovered value.</p>${(evidence?.inputs ?? []).map((input) => runInputSentence(input)).join("")}</header><sdp-filter><form hidden class="filter-bar">${filters.map((f) => `<label>${f.label}<select data-filter="${f.name}"><option value="any">Any</option>${f.values.map((v) => `<option value="${escape(v)}">${escape(v)}</option>`).join("")}</select></label>`).join("")}</form><output aria-live="polite">${String(specs.length)} of ${String(specs.length)} shown</output><ul class="spec-list">${rows}</ul></sdp-filter>`,
   );
 }

@@ -2,6 +2,7 @@ import { questionsPage, decisionsPage, declarationsPage, backlogPage } from "./r
 import { queuePage } from "./queue-page.js";
 import { glossaryPage } from "./glossary-page.js";
 import { diffPage } from "./diff-page.js";
+import { runsPage } from "./runs-page.js";
 import { architecturePage } from "./architecture-page.js";
 import { testsPage } from "./tests-page.js";
 import { evidencePage } from "./evidence-page.js";
@@ -35,6 +36,9 @@ export function renderStudio(data: StudioData): readonly StudioPage[] {
         ...(data.inputs.base === undefined ? [] : [["diff.html", diffPage] as const]),
       ] as const
     ).map(([path, render]) => ({ path, content: render({ data, path }) })),
+    ...(data.recipes.all.has(45)
+      ? [{ path: "runs.html", content: runsPage({ data, path: "runs.html" }) }]
+      : []),
     ...data.packs.map(({ context, totals }) => {
       const path = pagePath(context.id);
       if (path === null) throw new Error(`Pack has no Studio path: ${context.id}`);

@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -23,7 +25,35 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Check
+        env:
+          SDP_CTRF_DIR: ${{ runner.temp }}/ctrf
+          SDP_CORPUS_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
         run: npm run check
+
+      - name: Upload run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctrf-runs
+          path: ${{ runner.temp }}/ctrf/*.json
+          if-no-files-found: warn
 
       - name: Install the committed package
         run: npm run check:git-install
+
+  studio-preview:
+    needs: check
+    if: always() && github.event_name == 'pull_request' && (needs.check.result == 'success' || needs.check.result == 'failure')
+    uses: ./.github/workflows/studio-preview.yml
+    permissions:
+      contents: write
+      pages: read
+    with:
+      exclude: |
+        explorations
+        examples
+        test/fixtures/import/parity
+      sdp: node dist/cli/sdp.js
+      runs-artifact: ctrf-runs
+      diff: true
+      deploy: false

@@ -63,20 +63,29 @@ const commands = {
   studio: {
     name: "studio",
     usage:
-      "  sdp studio [root] [--exclude PATH]... [--base PATH [--base-label TEXT]] [--check-clean]",
+      "  sdp studio [root] [--exclude PATH]... [--base PATH [--base-label TEXT]] [--check-clean] [--runs PATH]...",
     paragraph: `validate, then publish static Studio pages into <root>/generated/spec-studio/.
              Findings remain visible; exit code follows validate. --check-clean independently
              re-renders and refuses missing or drifted output. --base PATH reads the graph JSON from
              an earlier sdp build and adds the design diff; --base-label TEXT names that base.
              Keep the base outside <root>/generated/; paths resolving inside it are refused.
-             Pages open through file://.`,
+             Pages open through file://.
+             Repeat --runs PATH to read CTRF JSON reports as external run evidence from test files.
+             Unreadable or invalid JSON refuses before extraction; report diagnostics show on Runs.`,
+  },
+  stamp: {
+    name: "stamp",
+    usage: "  sdp stamp [root] [--commit SHA] [--source TEMPLATE]",
+    paragraph: `Write stamp.json beside an existing generated/spec-studio page set, naming the
+             engine, commit (unknown without --commit) and UTC publishing time. --source is an
+             http(s) source URL template holding {file} and optionally {line}. Pages stay untouched.`,
   },
   generate: {
     name: "generate",
     usage: "  sdp generate [root] [--exclude PATH]... [--vault DIR] [--check-clean]",
     paragraph: `Validate once, then publish the Design Review, census, Mermaid diagrams, Gherkin-shaped
              view and Studio from that graph. --check-clean applies each publisher's checks,
-             removing only roots that fail. --vault DIR is parsed for the vault publisher;
+             removing only roots that fail. Studio is written without optional inputs. --vault DIR is parsed for the vault publisher;
              synchronization is pending that publisher. --check-clean leaves the vault alone.`,
   },
   import: {

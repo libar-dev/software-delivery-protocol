@@ -2,7 +2,7 @@
 id: spec:observation.run-evidence.unanchored-file-unjoined
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:observation.run-evidence
   verifies:

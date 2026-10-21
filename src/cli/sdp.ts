@@ -22,6 +22,7 @@ import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./outp
 import type { CliOutput } from "./output.js";
 import { parseQueryArgs, runQuery } from "./q-command.js";
 import type { QueryHooks } from "./q-command.js";
+import { runStamp } from "./stamp-command.js";
 import { runStudio } from "./studio-command.js";
 import type { StudioHooks } from "./studio-command.js";
 import { runValidateWatch } from "./validate-watch.js";
@@ -127,6 +128,11 @@ export function runSdpCli(
       writeStdout(output, `${help}\n`);
       return 0;
     }
+  }
+
+  if (command === "stamp") {
+    const { version, commit } = readEngineProvenance(hooks.readEngineFile);
+    return runStamp(rest, output, `sdp ${version} (${commit})`);
   }
 
   if (command === "--version") {
