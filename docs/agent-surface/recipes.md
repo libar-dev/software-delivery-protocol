@@ -3138,8 +3138,8 @@ const ruleChanges = (id, a, b) => {
   match((from, to) => from.text === to.text && from.list === to.list);
   match((from, to) => from.text === to.text);
   match((from, to) => from.key !== null && from.key === to.key);
-  // Remaining anonymous entries pair in list order, including an edit made while keying.
-  match((from, to) => from.list === to.list && (from.key === null || to.key === null));
+  // Remaining entries pair in list order, including wording edited while keying.
+  match((from, to) => from.list === to.list);
   a.forEach((from, i) => { if (!usedA.has(i)) pairs.push([from, null]); });
   b.forEach((to, i) => { if (!usedB.has(i)) pairs.push([null, to]); });
   const address = (entry) => entry?.key ? `${id}#rule.${entry.key}` : null;
@@ -3214,8 +3214,8 @@ return { base: { schemaVersion: base.schemaVersion, specs: ids.filter((id) => be
 
 `specs` reports declared intent. A part is an envelope field, narrative, section, relation target,
 or keyed Design, UI, question, rule or model term. Rule and flow entries match first by exact
-text, preferring the same key for repeated wording, then by retained key. Remaining anonymous
-entries pair in list order, so adding a key while rewording reports one `changed` entry.
+text, preferring the same key for repeated wording, then by retained key. Remaining
+entries pair in list order, so adding or renaming a key while rewording reports one `changed` entry.
 Unchanged text with an added, removed or renamed key reports one `keyed` entry. Its `from` and
 `to` are the old and new addresses, with `null` meaning none. A text edit is `changed`; an
 unchanged entry that changes position or moves between rules and flows is `moved`. Other

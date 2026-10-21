@@ -2860,7 +2860,7 @@ export const consumersSpecs = [
           "Two graphs written by different engine versions are compared on what both carry; the result reports each side's schema version, and a difference is a diagnostic in the result, never a refusal.",
           "It reports the Specs added and removed, and for a Spec present in both graphs the changes to its title, kind, altitude, stated readiness, relations, narrative and each section.",
           "Inside the Design and UI sections, the open questions and any other section whose entries carry keys, it compares keyed entries by key and reports each as added, removed, changed in value or moved in order.",
-          "Rule and flow entries match first by unchanged text, preferring the same key for repeated wording, then by retained key; remaining entries with an unkeyed side pair in list order. Other unkeyed entries have no identity across the two graphs and compare as part of their whole section.",
+          "Rule and flow entries match first by unchanged text, preferring the same key for repeated wording, then by retained key; remaining entries pair in list order, including an entry whose key and wording both changed. Other unkeyed entries have no identity across the two graphs and compare as part of their whole section.",
           "A rule or flow with unchanged text whose key was added, removed or changed is one `keyed` change naming its old and new address, or none; only a text change is `changed`. An unchanged entry moving between rules and flows is `moved`; when one graph keeps no order across rules and flows, keyed entries compare by order within each list and a `ruleOrder` diagnostic names the Spec.",
           "It reports changes to Pack membership and order, and to the code units, verifiers and delivery facts bound to each Spec, kept apart from the authored changes because they derive from anchors.",
           "A comparison states facts about the two graphs and confers nothing. It grants no approval, raises no staleness flag, moves no readiness and never records that a pass happened.",
@@ -2876,7 +2876,7 @@ export const consumersSpecs = [
         diffParts:
           "a part is `title`, `specKind`, `altitude`, `statedReadiness`, `narrative`, `relation.<type>:<target>`, a keyed entry as `design.<key>`, `ui.<key>`, `question.<key>`, `rule.<key>` or `term.<term>`, an unkeyed rule or flow as `behavior.rules[<index>]` or `behavior.flows[<index>]`, using its current index or its base index when removed, an unkeyed question list as `intent.openQuestions`, and any other section as its name.",
         movedEntry:
-          "a keyed entry whose value is unchanged and whose position among retained keyed entries of its section changed is `moved`; an entry whose value changed is `changed` whatever its position. For rules and flows, unchanged text with a different key takes `keyed` precedence, then a list change or relative order change among retained entries is `moved`; anonymous entries compare order within their list. Adding or removing a key alone moves no other entry.",
+          "a keyed entry whose value is unchanged and whose position among the keyed entries of its section changed is `moved`; an entry whose value changed is `changed` whatever its position. For rules and flows, unchanged text with a different key takes `keyed` precedence, then a list change or relative order change among retained entries is `moved`; anonymous entries compare order within their list. Adding or removing a key alone moves no other entry.",
         packRows:
           "`packs` rows are `{ id, change, membersAdded, membersRemoved, reordered }` for each Pack added, removed or changed in membership or order.",
         bindingRows:
@@ -4320,7 +4320,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "After the summary, the maturity map places each resolved member by its stated rung and the floor it reaches: one row per stated rung, idea to ready, and one column per floor, none to ready, each cell listing its members in authored order as short cards linked to their member cards, with its count; the row and column labels say in words where the floor sits above the statement and where the statement sits above the floor.",
+          "After the summary, the maturity map places each resolved member by its stated rung and the floor it reaches: one row per stated rung, idea to ready, and one column per floor, none to ready, each filled cell listing its members in authored order as short cards linked to their member cards, with its count, and an empty cell showing `—` alone; the table caption explains in words where the floor sits above the statement and where the statement sits above the floor.",
         ],
         ruleKeys: {
           maturityMap: "rules[0]",

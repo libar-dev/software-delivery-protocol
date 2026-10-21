@@ -42,7 +42,15 @@ function valueBlock(value: unknown): string {
   if (Array.isArray(value)) return list(value.map(valueBlock));
   if (value !== null && typeof value === "object") {
     const fields = Object.entries(value);
-    if ("text" in value && typeof value.text === "string") return `<p>${escape(value.text)}</p>`;
+    if (
+      fields.length === 2 &&
+      "text" in value &&
+      typeof value.text === "string" &&
+      "list" in value &&
+      (value.list === "rules" || value.list === "flows")
+    ) {
+      return `<p>${escape(value.text)}</p><p class="entry-line">${value.list === "rules" ? "Rule" : "Flow"}</p>`;
+    }
     return `<dl>${fields.map(([key, entry]) => `<dt>${escape(key)}</dt><dd>${valueBlock(entry)}</dd>`).join("")}</dl>`;
   }
   return `<pre>${escape(String(value))}</pre>`;

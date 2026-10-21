@@ -850,14 +850,17 @@ it("renders a keying proposal as one line per keyed entry and readable changed r
 
 it("renders changed list values as lists instead of raw JSON arrays", async () => {
   const root = corpus({
-    "probe.sdp.md": carrier("spec:probe.lists").replace(
+    "probe.sdp.md": carrier("spec:probe.lists", "\n## Behavior\n- rule: Read it.\n").replace(
       "- outcome: Read the design.",
       "- outcome: Read the design.\n- risk: First risk.\n- risk: Second risk.",
     ),
   });
   const base = extract({ root }).graph;
   const path = join(root, "probe.sdp.md");
-  writeFileSync(path, readFileSync(path, "utf8").replace("Second risk.", "Changed risk `<script>`."));
+  writeFileSync(
+    path,
+    readFileSync(path, "utf8").replace("Second risk.", "Changed risk `<script>`."),
+  );
   const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
     base: { graph: base, label: null },
     runs: [],
@@ -869,4 +872,20 @@ it("renders changed list values as lists instead of raw JSON arrays", async () =
   expect(html).toContain("Changed risk `&lt;script&gt;`.");
   expect(html).not.toContain("&quot;risks&quot;");
   expect(html).not.toContain("<script>");
+});
+
+it("retains the owning list when readable rule text moves to a flow", async () => {
+  const root = corpus({
+    "probe.sdp.md": carrier("spec:probe.move", "\n## Behavior\n- rule: [#read] Read it.\n"),
+  });
+  const base = extract({ root }).graph;
+  const path = join(root, "probe.sdp.md");
+  writeFileSync(path, readFileSync(path, "utf8").replace("- rule:", "- flow:"));
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: null },
+    runs: [],
+  });
+  const html = main(content(renderStudio(data), "diff.html"));
+  expect(html).toContain("rule.read</code> · moved");
+  expect(html).toContain('<b>Now</b><p>Read it.</p><p class="entry-line">Flow</p>');
 });

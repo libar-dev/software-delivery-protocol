@@ -7320,6 +7320,15 @@ it("reports text-preserving rule and flow key changes apart from rewording", asy
         },
       ],
     });
+    const sampleText = /```json\n([\s\S]*?)\n```/u.exec(recipeProse(recipeByOrdinal(35)))?.[1];
+    const changed = asArray(asRecord(asRecord(diff).specs).changed).map((row) => {
+      const entry = asRecord(row);
+      return {
+        ...entry,
+        parts: asArray(entry.parts).filter((part) => asRecord(part).part !== "rule.newFlow"),
+      };
+    });
+    expect(changed).toEqual(JSON.parse(sampleText ?? "null"));
     expect(await runRecipe(recipeByOrdinal(35), { base, detail: true }, head)).toEqual(diff);
     write("- rule: First rule.\n- rule: [#second] Revised second rule.\n- flow: One flow.");
     const unkeyed = await runRecipe(
@@ -7340,6 +7349,30 @@ it("reports text-preserving rule and flow key changes apart from rewording", asy
               change: "keyed",
               from: "spec:probe.keying#rule.newFlow",
               to: null,
+            },
+          ],
+        },
+      ],
+    });
+    const renamedBase = extract({ root }).graph;
+    write("- rule: First rule.\n- rule: [#third] Third rule wording.\n- flow: One flow.");
+    const renamed = await runRecipe(
+      recipeByOrdinal(35),
+      { base: renamedBase, detail: true },
+      extract({ root }),
+    );
+    expect(asRecord(renamed).specs).toEqual({
+      added: [],
+      removed: [],
+      changed: [
+        {
+          id: "spec:probe.keying",
+          parts: [
+            {
+              part: "rule.third",
+              change: "changed",
+              from: { list: "rules", text: "Revised second rule." },
+              to: { list: "rules", text: "Third rule wording." },
             },
           ],
         },

@@ -17,7 +17,7 @@ A Pack of many members takes a reviewer a long scroll through its cards before t
 - outcome: Let a reviewer see at a glance where every member of a Pack stands, by the rung it states and the floor it reaches.
 
 ## Behavior
-- rule: [#maturityMap] After the summary, the maturity map places each resolved member by its stated rung and the floor it reaches: one row per stated rung, idea to ready, and one column per floor, none to ready, each cell listing its members in authored order as short cards linked to their member cards, with its count; the row and column labels say in words where the floor sits above the statement and where the statement sits above the floor.
+- rule: [#maturityMap] After the summary, the maturity map places each resolved member by its stated rung and the floor it reaches: one row per stated rung, idea to ready, and one column per floor, none to ready, each filled cell listing its members in authored order as short cards linked to their member cards, with its count, and an empty cell showing `—` alone; the table caption explains in words where the floor sits above the statement and where the statement sits above the floor.
 
 ## UI
 - maturityMap: an `sdp-maturity-map` holding a table under a `Maturity map` heading, rows headed `stated idea` to `stated ready`, columns headed `floor none` to `floor ready`, each filled cell its count and its members as short cards, an empty cell reading `—` alone, and the axis explanation in the table's caption, never inside a header cell: right of the matching rung the floor is above the statement and already allows it; left of it the statement is above the floor.
