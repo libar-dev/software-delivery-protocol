@@ -62,7 +62,9 @@ export interface ValidateWatchCycle {
 export interface ValidateWatchHooks {
   readonly watchSources?: boolean;
   readonly watchCommand?: string;
-  readonly runWatchCycle?: () => { readonly exitCode: number };
+  readonly runWatchCycle?: () =>
+    | { readonly exitCode: number }
+    | Promise<{ readonly exitCode: number }>;
   readonly onWatchStop?: () => void;
   readonly abortSignal?: AbortSignal;
   readonly createWatchSource?: (input: {
@@ -714,7 +716,7 @@ export async function runValidateWatch(
       if (!isWatchClosed(state)) {
         const outcome =
           watchHooks.runWatchCycle !== undefined
-            ? watchHooks.runWatchCycle()
+            ? await watchHooks.runWatchCycle()
             : parsed.rules === undefined
               ? runValidate(parsed, output, "validate", hooks)
               : await runValidateRules(

@@ -23,7 +23,7 @@ export function zoomViewBox(
 /**
  * @sdpAnchor impl:protocol.studio-diagram-element
  * @sdpLabel adds view-box pan, zoom and pinch to build-rendered SVG without changing its layout
- * @sdpSatisfies spec:consumers.spec-studio.diagrams
+ * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.export
  * @sdpReferences spec:decisions.studio-diagram-renderer, spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole utility
@@ -35,6 +35,19 @@ export function registerDiagram(): void {
     private view = this.original;
     private controls: HTMLElement | null = null;
     private dragged = false;
+    private printed?: ViewBox;
+    private readonly beforePrint = (): void => {
+      this.printed ??= this.view;
+      this.view = this.original;
+      this.draw();
+    };
+    private readonly afterPrint = (): void => {
+      if (this.printed) {
+        this.view = this.printed;
+        this.printed = undefined;
+        this.draw();
+      }
+    };
     private readonly pointers = new Map<number, { x: number; y: number }>();
     private draw(): void {
       this.svg?.setAttribute(
@@ -84,6 +97,8 @@ export function registerDiagram(): void {
       }
       this.querySelector("figcaption")?.after(this.controls);
       this.svg.style.touchAction = "none";
+      this.ownerDocument.defaultView?.addEventListener("beforeprint", this.beforePrint);
+      this.ownerDocument.defaultView?.addEventListener("afterprint", this.afterPrint);
       this.svg.addEventListener("click", this.handleClick);
       this.svg.addEventListener("pointerdown", this.down);
       this.svg.addEventListener("pointermove", this.move);
@@ -135,6 +150,9 @@ export function registerDiagram(): void {
       this.zoom(e.deltaY > 0 ? 1.1 : 1 / 1.1);
     };
     disconnectedCallback(): void {
+      this.ownerDocument.defaultView?.removeEventListener("beforeprint", this.beforePrint);
+      this.ownerDocument.defaultView?.removeEventListener("afterprint", this.afterPrint);
+      this.afterPrint();
       this.svg?.removeEventListener("click", this.handleClick);
       this.svg?.removeEventListener("pointerdown", this.down);
       this.svg?.removeEventListener("pointermove", this.move);

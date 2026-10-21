@@ -1,3 +1,4 @@
+import { renderMemo } from "../src/studio-elements/memo.js";
 import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
 import { deriveGraph } from "../src/extract/derive.js";
 import {
@@ -4541,6 +4542,7 @@ describe("recipe parameters and the shipped recipe files", () => {
           ) &&
           !(recipe.ordinal === 47 && name === "perspectives") &&
           recipe.ordinal !== 48 &&
+          recipe.ordinal !== 49 &&
           !(recipe.ordinal === 39 && name === "pack") &&
           !(recipe.ordinal === 40 && name === "imports") &&
           !(recipe.ordinal === 41 && name !== "prefixes") &&
@@ -7236,4 +7238,43 @@ it("runs recipe 45 as shipped and reports missing and malformed CTRF metadata", 
     expect(asArray(answer.diagnostics)).toHaveLength(1);
     expect(answer.inputs).toBeUndefined();
   }
+});
+
+const memoRecipeImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.proposal-memo-recipe"),
+  label: "realizes the catalog proposal memo through its verbatim body check",
+  satisfies: ref("spec:consumers.intent-composition.proposal.memo"),
+});
+void memoRecipeImplementationAnchor;
+it("recipe 49 renders the panel memo from its catalog body and refuses a malformed document", async () => {
+  const proposal = {
+    schema: "sdp-proposal/1" as const,
+    base: "abc",
+    reason: "Review this design.",
+    changes: [
+      {
+        scope: ["spec:probe#rule.read"],
+        request: "Use the exact text.",
+        text: "Use ``` here",
+        replaces: "spec:probe#rule.read",
+      },
+      {
+        scope: ["spec:probe"],
+        request: "Declare a relation.",
+        relation: {
+          action: "declare" as const,
+          from: "spec:probe",
+          type: "dependsOn",
+          target: "spec:basis",
+        },
+      },
+    ],
+  };
+  expect(await runRecipe(recipeByOrdinal(49), { proposal })).toEqual({
+    schemaProblems: [],
+    memo: renderMemo(proposal),
+  });
+  expect(
+    await runRecipe(recipeByOrdinal(49), { proposal: { ...proposal, reason: "two\nlines" } }),
+  ).toEqual({ schemaProblems: [{ path: "$.reason", problem: "Expected one line." }], memo: null });
 });

@@ -25,7 +25,7 @@ import type { CliOutput } from "./output.js";
 import { parseQueryArgs, runQuery } from "./q-command.js";
 import type { QueryHooks } from "./q-command.js";
 import { runStamp } from "./stamp-command.js";
-import { runStudio } from "./studio-command.js";
+import { runStudio, runStudioWatch } from "./studio-command.js";
 import type { StudioHooks } from "./studio-command.js";
 import { runValidateWatch } from "./validate-watch.js";
 import type { ValidateWatchHooks } from "./validate-watch.js";
@@ -236,7 +236,7 @@ export function runSdpCli(
   }
 
   if (command === "studio") {
-    return runStudio(parsed, output, hooks);
+    return parsed.watch ? runStudioWatch(parsed, output, hooks) : runStudio(parsed, output, hooks);
   }
 
   return command === "mermaid"

@@ -25,6 +25,7 @@ export const expectedComponentIds = [
 // outside the engine source seams and therefore have no truthful owner among the accepted
 // component set.
 export const structuralMembershipExceptions = [
+  "impl:protocol.proposal-memo-recipe",
   "impl:protocol.run-evidence-recipe",
   "impl:protocol.studio-preview-workflow",
   "impl:protocol.upgrade-guide",
@@ -69,6 +70,41 @@ export const structuralMembershipExceptions = [
  * @sdpSatisfies spec:protocol.structural-self-binding, spec:model.structural-patterns
  */
 export const acceptedArchitecturalUnits = [
+  {
+    unit: "src/studio-elements/memo.ts#renderMemo",
+    anchorId: "impl:protocol.studio-proposal-memo",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/intent-panel.ts#IntentPanel",
+    anchorId: "impl:protocol.studio-intent-panel",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/intent-panel-element.ts#registerIntentPanel",
+    anchorId: "impl:protocol.studio-intent-panel-element",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/compose.ts#registerCompose",
+    anchorId: "impl:protocol.studio-compose",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/scenario-editor.ts#registerScenarioEditor",
+    anchorId: "impl:protocol.studio-scenario-editor",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/projections/studio/pages/export-page.ts#packExport",
+    anchorId: "impl:protocol.studio-pack-export",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/cli/studio-command.ts#runStudioWatch",
+    anchorId: "impl:protocol.studio-watch",
+    componentId: "component:protocol.cli",
+  },
   {
     unit: "src/projections/studio/pages/spec-verification.ts#verificationPanel",
     anchorId: "impl:protocol.studio-verification-panels",

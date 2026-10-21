@@ -445,7 +445,7 @@ sdp-copy button {
 }
 
 /* Below the phone breakpoint every layout is one column and the rail follows the canvas. */
-@media (max-width: 720px) {
+@media (max-width: 719.98px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -612,7 +612,7 @@ sdp-copy output {
   display: inline;
   margin-left: 0.25rem;
 }
-@media (max-width: 720px) {
+@media (max-width: 719.98px) {
   sdp-search {
     width: 100%;
     margin-left: 0;
@@ -750,4 +750,157 @@ sdp-maturity-map sdp-spec-card + sdp-spec-card {
 }
 .statement-list {
   padding-left: 1.8rem;
+}
+
+/* Composing stays beside the reading flow; its requests leave as text. */
+sdp-intent-panel {
+  display: block;
+  margin-top: 2.5rem;
+}
+sdp-intent-panel label,
+dialog label,
+sdp-scenario-editor label {
+  display: grid;
+  gap: 0.35rem;
+  margin-block: 1rem;
+}
+sdp-intent-panel input,
+sdp-intent-panel textarea,
+dialog textarea {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+textarea:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.intent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.intent-actions h3,
+.intent-actions ul {
+  flex-basis: 100%;
+}
+dialog {
+  width: min(40rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 35%);
+}
+dialog h2 {
+  margin-top: 0;
+}
+dialog button {
+  margin-right: 0.75rem;
+}
+sdp-compose button {
+  margin: 0.25rem;
+}
+@media (max-width: 719.98px) {
+  sdp-diagram svg {
+    width: 100%;
+    height: auto;
+  }
+  sdp-maturity-map table {
+    min-width: 0;
+  }
+  sdp-maturity-map td {
+    min-width: 0;
+  }
+  dialog {
+    padding: 1rem;
+  }
+}
+@media print {
+  :root {
+    color-scheme: light;
+    --bg: white;
+    --surface: white;
+    --surface-2: white;
+    --text: black;
+    --muted: #444;
+    --link: black;
+    --code-bg: #f4f4f4;
+  }
+  .top,
+  .rail,
+  .skip-link,
+  sdp-search,
+  sdp-stamp,
+  sdp-intent-panel,
+  sdp-compose,
+  sdp-copy,
+  button,
+  input,
+  select,
+  textarea,
+  output,
+  dialog,
+  .diagram-controls,
+  .export-download {
+    display: none !important;
+  }
+  .layout {
+    display: block;
+    padding: 0;
+    max-width: none;
+  }
+  main {
+    width: 100%;
+  }
+  .table-scroll,
+  .diagram-scroll {
+    overflow: visible;
+  }
+  sdp-maturity-map table,
+  sdp-maturity-map td {
+    min-width: 0;
+  }
+  details > :not(summary) {
+    display: block !important;
+  }
+  details,
+  .card {
+    break-inside: auto;
+  }
+  summary {
+    list-style: none;
+  }
+  sdp-diagram svg {
+    width: 100%;
+    height: auto;
+  }
+  sdp-expander > div:first-child {
+    display: none;
+  }
+}
+@media print {
+  details::details-content {
+    content-visibility: visible !important;
+  }
+  .badge {
+    background: white;
+    color: black;
+    border-color: #777;
+  }
 }

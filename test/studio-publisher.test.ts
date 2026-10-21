@@ -111,6 +111,7 @@ describe("Studio publication", () => {
       "decisions.html",
       "declarations.html",
       "evidence.html",
+      "exports/probe.html",
       "glossary.html",
       "index.html",
       "packs/probe.html",
@@ -322,10 +323,12 @@ describe("Studio publication", () => {
       }),
     ).toBe(0);
     expect(SDP_HELP_TEXT).toContain(
-      "sdp studio [root] [--exclude PATH]... [--base PATH [--base-label TEXT]] [--check-clean]",
+      "sdp studio [root] [--exclude PATH]... [--base PATH [--base-label TEXT]] [--check-clean | --watch]",
     );
     expect(SDP_HELP_TEXT).toContain("generated/spec-studio/");
     expect(await runSdpCli(["studio", c.root, "--out", "elsewhere"], c.capture.output)).toBe(1);
-    expect(await runSdpCli(["studio", c.root, "--watch"], c.capture.output)).toBe(1);
+    expect(await runSdpCli(["studio", c.root, "--watch", "--check-clean"], c.capture.output)).toBe(
+      1,
+    );
   });
 });

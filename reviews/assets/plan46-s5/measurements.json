@@ -1,0 +1,42 @@
+{
+  "corpus": "platform",
+  "commit": "b038bd4",
+  "command": "node dist/cli/sdp.js studio /tmp/plan46-s5-platform",
+  "exitCode": 0,
+  "milliseconds": 2281,
+  "files": 268,
+  "bytes": 36469219,
+  "pageSetSha256": "814f2410ba72d33efbdcf5845c79b85aab50d9e01d162656e04eb8bb2418b946",
+  "exports": [
+    {
+      "name": "application.html",
+      "bytes": 2864357,
+      "gzipBytes": 362863
+    },
+    {
+      "name": "command-pipeline.html",
+      "bytes": 1249626,
+      "gzipBytes": 160037
+    },
+    {
+      "name": "durable-and-later.html",
+      "bytes": 1265450,
+      "gzipBytes": 161314
+    },
+    {
+      "name": "foundation.html",
+      "bytes": 5926665,
+      "gzipBytes": 599958
+    },
+    {
+      "name": "history-view.html",
+      "bytes": 1981080,
+      "gzipBytes": 283542
+    },
+    {
+      "name": "kernel-and-context.html",
+      "bytes": 1351021,
+      "gzipBytes": 181326
+    }
+  ]
+}

@@ -24,6 +24,11 @@ export const contractDependentSuites = [
     contracts: "generated/contracts",
     generation: "npm run generate:self-hosting",
     testPaths: [
+      "test/studio-s5.test.ts",
+      "test/consumers.spec-studio.intent-panel.refresh-keeps-intents.test.generated.ts",
+      "test/consumers.intent-composition.proposal.memo.shared.test.generated.ts",
+      "test/consumers.spec-studio.export.self-contained.test.generated.ts",
+      "test/consumers.spec-studio.publisher.watch.matches-plain-run.test.generated.ts",
       "test/upgrade-kit.test.ts",
       "test/consumers.upgrade-kit.capability-adoption.counts-a-corpus.test.generated.ts",
       "test/consumers.upgrade-kit.rule-key-proposal.proposal-applies-clean.test.generated.ts",

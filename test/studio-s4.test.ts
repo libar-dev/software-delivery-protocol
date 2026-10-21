@@ -156,9 +156,11 @@ it("renders external run evidence with result rows, metadata, diagnostics and co
     "no page shows a run result",
   );
   expect(
-    pages.every((p) =>
-      p.content.includes('href="' + (p.path.includes("/") ? "../" : "") + 'runs.html"'),
-    ),
+    pages
+      .filter((p) => !p.path.startsWith("exports/"))
+      .every((p) =>
+        p.content.includes('href="' + (p.path.includes("/") ? "../" : "") + 'runs.html"'),
+      ),
   ).toBe(true);
   const plain = renderStudio(await createStudioData(reader));
   expect(plain.some((p) => p.path === "runs.html")).toBe(false);

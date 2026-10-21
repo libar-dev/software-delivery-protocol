@@ -238,8 +238,8 @@ describe("Studio static pages", () => {
     expect(page?.content).not.toContain("durableIdentity</dt>");
   });
 
-  it("frames every page with a skip link, labelled search, rail, canvas, classic script and stamp", () => {
-    for (const page of pages) {
+  it("frames every browsing page with a skip link, labelled search, rail, canvas, classic script and stamp", () => {
+    for (const page of pages.filter((page) => !page.path.startsWith("exports/"))) {
       expect(page.content).toContain('class="skip-link" href="#main"');
       expect(page.content).toContain('<main id="main"');
       expect(page.content).toContain('<sdp-search page-root="');
@@ -725,7 +725,7 @@ describe("Studio static pages", () => {
   it("ships the native layout and focus stylesheet in the browser assets", () => {
     const css = readFileSync(new URL("../dist/studio/studio.css", import.meta.url), "utf8");
     expect(css).toContain("focus-visible");
-    expect(css).toContain("@media (max-width: 720px)");
+    expect(css).toContain("@media (max-width: 719.98px)");
     expect(css).toContain("overflow-x: auto");
   });
 });

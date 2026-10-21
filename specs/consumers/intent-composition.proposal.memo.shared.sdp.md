@@ -2,7 +2,7 @@
 id: spec:consumers.intent-composition.proposal.memo.shared
 kind: example
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.intent-composition.proposal.memo
   verifies:

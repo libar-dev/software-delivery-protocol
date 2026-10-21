@@ -1,3 +1,4 @@
+import { scenarioTemplate } from "./spec-verification.js";
 import {
   verificationPanel,
   evidencePanel,
@@ -228,7 +229,7 @@ export function specPage(ctx: PageContext, spec: SpecContext): string {
   return frame(
     ctx,
     spec.title ?? spec.id,
-    `${header}${summary}${spec.narrative === undefined ? "" : `<section id="narrative">${prose(ctx, spec.narrative)}</section>`}<sdp-expander>${sections(ctx, spec)}${panels}${relations(ctx, spec)}${bindings(ctx, spec)}<h2 id="findings">Findings</h2><sdp-validation-findings filter="${escape(spec.id)}">${findingList(ctx, findings)}</sdp-validation-findings></sdp-expander>`,
+    `${header}${summary}${spec.specKind === "example" ? `${scenarioTemplate(spec, "edit")}${composeSlot(spec.id, "edit-example")}` : ""}${spec.narrative === undefined ? "" : `<section id="narrative">${prose(ctx, spec.narrative)}</section>`}<sdp-expander>${sections(ctx, spec)}${panels}${relations(ctx, spec)}${bindings(ctx, spec)}<h2 id="findings">Findings</h2><sdp-validation-findings filter="${escape(spec.id)}">${findingList(ctx, findings)}</sdp-validation-findings></sdp-expander>`,
     spec.id,
   );
 }

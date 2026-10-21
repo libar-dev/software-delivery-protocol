@@ -16,7 +16,7 @@ import {
 import { codeSpans, text } from "./text.js";
 import type { RuleCoverage, SpaceCoverage } from "./tests-page.js";
 
-// S5 upgrades these empty action slots with controls and the composing panel.
+// Controls are added by the classic script; the surrounding content reads without it.
 export const composeSlot = (scope: string, action: string): string =>
   `<sdp-compose scope="${escape(scope)}" action="${action}"></sdp-compose>`;
 
@@ -59,7 +59,7 @@ export function exampleCards(ctx: PageContext, spec: SpecContext): string {
     .map((example) => {
       const steps = exampleSteps(example);
       const executable = example.verifiers.some((v) => v.via === "test-anchor");
-      return `<article class="example-card"><sdp-spec-card spec-id="${escape(example.id)}" variant="short"><p>${link(ctx, example.id, example.title ?? example.id, codeSpans(example.title ?? example.id))} · ${code(example.id)} · ${rungLine(example.statedReadiness, example.derivedReadiness)}</p></sdp-spec-card><p>${executable ? "Executable Spec" : "No verifier binding"}</p>${steps || "<p>No given, when and then steps recorded.</p>"}<p>${link(ctx, example.id, "Open example")}${composeSlot(example.id, steps ? "edit-example" : "propose-example")}</p></article>`;
+      return `<article class="example-card"><sdp-spec-card spec-id="${escape(example.id)}" variant="short"><p>${link(ctx, example.id, example.title ?? example.id, codeSpans(example.title ?? example.id))} · ${code(example.id)} · ${rungLine(example.statedReadiness, example.derivedReadiness)}</p></sdp-spec-card><p>${executable ? "Executable Spec" : "No verifier binding"}</p>${steps || "<p>No given, when and then steps recorded.</p>"}${scenarioTemplate(example, steps ? "edit" : "propose")}<p>${link(ctx, example.id, "Open example")}${composeSlot(example.id, steps ? "edit-example" : "propose-example")}</p></article>`;
     })
     .join("")}`;
 }
@@ -126,8 +126,15 @@ function exampleSpace(ctx: PageContext, spec: SpecContext): string {
     ),
   );
   const oracle = spec.oracle;
-  return `<sdp-example-space spec-id="${escape(spec.id)}"><h3>Example space</h3>${slots}<h4>Bound points</h4>${points}<p>Oracle binding: ${present(oracle !== undefined)}${oracle ? ` · ${code(oracle.anchorId)} · ${sourceCode(oracle.file, oracle.line)}${oracle.file === undefined ? "" : copy(location(oracle.file, oracle.line))}` : ""}</p><h4>Coverage</h4>${grid}<h4>Unbound</h4>${unbound}${composeSlot(spec.id, "propose-values")}</sdp-example-space>`;
+  return `<sdp-example-space spec-id="${escape(spec.id)}"><h3>Example space</h3>${slots}<h4>Bound points</h4>${points}<p>Oracle binding: ${present(oracle !== undefined)}${oracle ? ` · ${code(oracle.anchorId)} · ${sourceCode(oracle.file, oracle.line)}${oracle.file === undefined ? "" : copy(location(oracle.file, oracle.line))}` : ""}</p><h4>Coverage</h4>${grid}<h4>Unbound</h4>${unbound}${composeSlot(spec.id, "propose-values")}${composeSlot(spec.id, "propose-example")}${scenarioTemplate(spec, "propose")}</sdp-example-space>`;
 }
 export function evidencePanel(spec: SpecContext): string {
   return `<p>Runtime observation: ${spec.deliveryFacts.includes("observed") ? "observed" : "not tracked"}.</p><p>Build attestations: not tracked.</p><p>Deployments: not tracked.</p><p>Bills of materials: not tracked.</p>`;
+}
+
+export function scenarioTemplate(spec: SpecContext, mode: "edit" | "propose"): string {
+  const example = spec.sections?.behavior?.examples?.find((e) => typeof e !== "string");
+  const vocabulary = spec.sections?.behavior?.exampleSpace;
+  const steps = mode === "edit" && example ? example : vocabulary;
+  return `<template data-scenario-for="${escape(spec.id)}"><sdp-scenario-editor spec-id="${escape(spec.id)}" mode="${mode}">${(["given", "when", "then"] as const).map((phase) => `<pre data-step="${phase}">${escape(steps?.[phase]?.join("\n") ?? "")}</pre>`).join("")}<p>Composing needs the script.</p></sdp-scenario-editor></template>`;
 }

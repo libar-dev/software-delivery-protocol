@@ -480,7 +480,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:consumers.derived-readiness-banner",
@@ -1274,7 +1274,7 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:consumers.adopter-on-ramp",
@@ -1887,7 +1887,7 @@ export const consumersSpecs = [
           "a native dialog with a labelled text area for the request, a second for the exact entry text when the action proposes one, and `Gather` and `Cancel` buttons.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.intent-panel.sdp.md",
   },
   {
@@ -1956,7 +1956,7 @@ export const consumersSpecs = [
           "below the same width a diagram opens scaled to the screen's width, with its zoom controls above it and its text equivalent below it, and draws the same boxes and edges a desktop draws.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.responsive.sdp.md",
   },
   {
@@ -2978,14 +2978,14 @@ export const consumersSpecs = [
           "a code span uses a backtick run one longer than the longest run its content holds, padded with a space on each side when the content starts or ends with a backtick; a fence is a backtick run one longer than the longest run its content holds and at least three long; every value is written verbatim; every line ends with a line feed and the memo with one.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/intent-composition.proposal.memo.sdp.md",
   },
   {
     id: "spec:consumers.intent-composition.proposal.memo.shared",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Recipe 49 and the composing panel write one memo for one proposal",
     narrative: null,
     sections: {
@@ -3012,7 +3012,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/intent-composition.proposal.memo.shared.sdp.md",
   },
   {
@@ -4533,14 +4533,14 @@ export const consumersSpecs = [
         },
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.publisher.watch.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.publisher.watch.matches-plain-run",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Each watch cycle writes the page set a plain run writes",
     narrative: null,
     sections: {
@@ -4571,7 +4571,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.publisher.watch.matches-plain-run.sdp.md",
   },
   {
@@ -6207,14 +6207,14 @@ export const consumersSpecs = [
           "each member's section has its Spec id as its element id and opens with the member's position, title and id.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.export.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.export.self-contained",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A Pack's export opens alone and keeps its links inside it",
     narrative: null,
     sections: {
@@ -6243,14 +6243,14 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.export.self-contained.sdp.md",
   },
   {
     id: "spec:consumers.spec-studio.intent-panel.refresh-keeps-intents",
     specKind: "example",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Refreshing a tab keeps every gathered intent",
     narrative: null,
     sections: {
@@ -6270,7 +6270,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/consumers/spec-studio.intent-panel.refresh-keeps-intents.sdp.md",
   },
   {

@@ -357,21 +357,26 @@ describe("Studio page interactions", () => {
         },
       });
     }).not.toThrow();
-    expect(defined.sort()).toEqual([
-      "sdp-copy",
-      "sdp-diagram",
-      "sdp-example-space",
-      "sdp-expander",
-      "sdp-filter",
-      "sdp-impact-view",
-      "sdp-maturity-map",
-      "sdp-search",
-      "sdp-search-results",
-      "sdp-spec-card",
-      "sdp-stamp",
-      "sdp-trace-graph",
-      "sdp-validation-findings",
-    ]);
+    expect(defined.sort()).toEqual(
+      [
+        "sdp-compose",
+        "sdp-intent-panel",
+        "sdp-scenario-editor",
+        "sdp-copy",
+        "sdp-diagram",
+        "sdp-example-space",
+        "sdp-expander",
+        "sdp-filter",
+        "sdp-impact-view",
+        "sdp-maturity-map",
+        "sdp-search",
+        "sdp-search-results",
+        "sdp-spec-card",
+        "sdp-stamp",
+        "sdp-trace-graph",
+        "sdp-validation-findings",
+      ].sort(),
+    );
   });
   it("names a question copy control with the full entry address and updates it", () => {
     const defined = new Map<
