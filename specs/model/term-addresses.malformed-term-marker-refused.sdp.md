@@ -15,7 +15,7 @@ relations:
 - outcome: Execute the marker refusal on a definition that opens with a marker whose key is not lower-camel ASCII.
 
 ```gwt
-Given a Markdown Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#step-key] the key a step carries in its marker"}
+Given a {carrier: "Markdown"} Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#step-key] the key a step carries in its marker"}
 Given a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first
 When the extractor reifies both carriers and the graph is validated
 Then the first carrier is reified: {reified: false}

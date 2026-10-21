@@ -882,9 +882,9 @@ export const modelSpecs = [
       },
       behavior: {
         description:
-          "The world writes two Markdown carriers in one extraction root. The first is a story-altitude model Spec stating `scoped`, with an Intent outcome and a Model section holding the entries the terms slot joins with a semicolon and a space, one line each. The second is a story-altitude rule Spec stating `idea`, with an Intent outcome and one rule; its narrative names the address, and it declares `dependsOn` on the first. A finding read is the first extraction finding, and an empty slot value means the extraction reports none; the term keys of every Spec in the graph are joined by a comma and a space.",
+          "The world writes two carriers in one extraction root. The first is a story-altitude model Spec stating `scoped`, with an Intent outcome and a Model section holding the entries the terms slot joins with a semicolon and a space, in the carrier the slot names: in Markdown one line each, as written, and in TypeScript a `.sdp.ts` carrier whose `model.terms` object maps each entry's term to its definition, marker included. The second is a Markdown story-altitude rule Spec stating `idea`, with an Intent outcome and one rule; its narrative names the address, and it declares `dependsOn` on the first. A finding read is the first extraction finding, and an empty slot value means the extraction reports none; the term keys of every Spec in the graph are joined by a comma and a space. `resolved` is true when address resolution gives the address a resolving row whose `value` is the definition without its marker and whose `file` and `line` are those of the term's row in the location table. `found` is true when entry search for the words of the term that carries the address's key returns a row with that address and that line. The audit reason is the `reason` of the mention audit's unresolved row for the address, and empty when it lists none. The import reads the first carrier as written in TypeScript: the world imports it to Markdown, reads the emitted Model entry of its first term, extracts the imported carrier in a fresh root, and compares its term keys and definitions with the TypeScript graph's.",
         rules: [
-          "A Model term may carry an optional key in a marker that opens its definition, after the bold term and the em dash, as in `- **step key** — [#stepKey] the key a step carries`; the TypeScript carrier writes the same marker at the start of the definition string. The key follows the entry-address key grammar, and an unkeyed term stays lawful and has no address.",
+          "A Model term may carry an optional key in a marker that opens its definition, after the bold term and the em dash, as in `- **step key** — [#stepKey] the key a step carries`; the TypeScript carrier writes the same marker at the start of the definition string. The key follows the entry-address key grammar, and an unkeyed term stays lawful and has no address. Importing a TypeScript carrier to Markdown writes the marker on the term that carries the key.",
           "The key is authored and never derived from the term, so rewording a term or its definition keeps its address, while renaming or removing the key fails validation in every Spec that addresses it.",
           "A term key is unique among the Model terms of one Spec. Term keys and the Spec's Design, UI, question and rule keys sit under different address segments and stay apart.",
           "A definition that opens with `[#` and does not continue as a marker is refused at its term, and a repeated term key is refused at each term that carries it; a refused Markdown carrier is refused whole, as for every structure refusal, and in the TypeScript carrier the key drops at each site and the Spec stays.",
@@ -905,7 +905,7 @@ export const modelSpecs = [
         },
         exampleSpace: {
           given: [
-            "a Markdown Spec carrier {specId:string} whose Model terms read {terms:string}",
+            'a {carrier:"Markdown"|"TypeScript"} Spec carrier {specId:string} whose Model terms read {terms:string}',
             "a second Spec that names {address:string} in its narrative and declares dependsOn on the first",
           ],
           when: ["the extractor reifies both carriers and the graph is validated"],
@@ -914,6 +914,10 @@ export const modelSpecs = [
             "the first extraction finding's message contains {extractMessage:string}",
             "the graph holds the term keys {keys:string}",
             "the report holds {mentionErrors:number} prose-mention errors",
+            "address resolution resolves the address to the marker-free definition at its recorded term location: {resolved:boolean}",
+            "entry search for the addressed term's words finds it at that same address and line: {found:boolean}",
+            "the mention audit lists the address as unresolved with reason {auditReason:string}",
+            "the first carrier imported to Markdown writes the entry {importedEntry:string} and keeps its term keys and definitions: {keptOnImport:boolean}",
           ],
         },
       },
@@ -933,7 +937,7 @@ export const modelSpecs = [
         termLocation:
           "`{ spec, file, entry: \"term[<i>]\", key?, line }` is a term's row in the location table; a mention in a definition, at `model.terms.<term>`, takes that row's line.",
         resolutionRow:
-          "address resolution (recipe 25) reads `term` as a fifth section through `model.termKeys`, gives a resolving row the definition as its `value` and the Spec's term keys as `available`, sorted in code-unit order, and writes its grammar as `spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII`.",
+          "address resolution (recipe 25) reads `term` through `model.termKeys`; a resolving row gives the marker-free definition as `value` and its recorded file and line. A `section` or `entry` miss gives the available term keys sorted in code-unit order. The grammar text is `spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII`.",
         searchRow:
           "entry search (recipe 23) gives a matching keyed term, in section `model` and entry `terms.<term>`, the address `spec:<id>#term.<key>` and the line of its `term[<i>]` row, matches the term key as it matches a rule key, and never walks `termKeys` as content.",
         importEmitter:
@@ -953,13 +957,13 @@ export const modelSpecs = [
     sections: {
       intent: {
         outcome:
-          "Execute the term marker and the term address on one keyed term beside an unkeyed one.",
+          "Execute the term marker and the term address on one keyed term beside an unkeyed one, and show that address resolution and entry search find the term at the line the location table records.",
       },
       behavior: {
         examples: [
           {
             given: [
-              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepKey] the key a step carries in its marker; - **slot** — one typed placeholder in a step"}',
+              'a {carrier: "Markdown"} Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepKey] the key a step carries in its marker; - **slot** — one typed placeholder in a step"}',
               'a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first',
             ],
             when: ["the extractor reifies both carriers and the graph is validated"],
@@ -968,6 +972,8 @@ export const modelSpecs = [
               'the first extraction finding\'s message contains {extractMessage: ""}',
               'the graph holds the term keys {keys: "stepKey"}',
               "the report holds {mentionErrors: 0} prose-mention errors",
+              "address resolution resolves the address to the marker-free definition at its recorded term location: {resolved: true}",
+              "entry search for the addressed term's words finds it at that same address and line: {found: true}",
             ],
           },
         ],
@@ -992,7 +998,7 @@ export const modelSpecs = [
         examples: [
           {
             given: [
-              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepLabel] the key a step carries in its marker"}',
+              'a {carrier: "Markdown"} Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepLabel] the key a step carries in its marker"}',
               'a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first',
             ],
             when: ["the extractor reifies both carriers and the graph is validated"],
@@ -1001,6 +1007,7 @@ export const modelSpecs = [
               'the first extraction finding\'s message contains {extractMessage: ""}',
               'the graph holds the term keys {keys: "stepLabel"}',
               "the report holds {mentionErrors: 1} prose-mention errors",
+              'the mention audit lists the address as unresolved with reason {auditReason: "entry"}',
             ],
           },
         ],
@@ -1025,7 +1032,7 @@ export const modelSpecs = [
         examples: [
           {
             given: [
-              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepKey] the key a step carries in its marker; - **term key** — [#stepKey] the key a Model term carries in its marker"}',
+              'a {carrier: "Markdown"} Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepKey] the key a step carries in its marker; - **term key** — [#stepKey] the key a Model term carries in its marker"}',
               'a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first',
             ],
             when: ["the extractor reifies both carriers and the graph is validated"],
@@ -1058,7 +1065,7 @@ export const modelSpecs = [
         examples: [
           {
             given: [
-              'a Markdown Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#step-key] the key a step carries in its marker"}',
+              'a {carrier: "Markdown"} Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#step-key] the key a step carries in its marker"}',
               'a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first',
             ],
             when: ["the extractor reifies both carriers and the graph is validated"],
@@ -1067,6 +1074,40 @@ export const modelSpecs = [
               'the first extraction finding\'s message contains {extractMessage: "term key markers must be [#<lower-camel ASCII key>] followed by one space and text"}',
               'the graph holds the term keys {keys: ""}',
               "the report holds {mentionErrors: 1} prose-mention errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:model.term-addresses.typescript-term-imports-keyed",
+    specKind: "example",
+    altitude: "story",
+    readiness: "defined",
+    file: "specs/model/term-addresses.typescript-term-imports-keyed.sdp.md",
+    title: "A keyed TypeScript term keeps its address through import to Markdown",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the term marker in the TypeScript carrier: a keyed definition string is reified with its key, its address resolves, and importing the carrier to Markdown writes the marker and extracts to the same term keys and definitions.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {carrier: "TypeScript"} Spec carrier {specId: "spec:probe.subject"} whose Model terms read {terms: "- **step key** — [#stepKey] the key a step carries in its marker"}',
+              'a second Spec that names {address: "spec:probe.subject#term.stepKey"} in its narrative and declares dependsOn on the first',
+            ],
+            when: ["the extractor reifies both carriers and the graph is validated"],
+            then: [
+              "the first carrier is reified: {reified: true}",
+              'the first extraction finding\'s message contains {extractMessage: ""}',
+              'the graph holds the term keys {keys: "stepKey"}',
+              "the report holds {mentionErrors: 0} prose-mention errors",
+              'the first carrier imported to Markdown writes the entry {importedEntry: "- **step key** — [#stepKey] the key a step carries in its marker"} and keeps its term keys and definitions: {keptOnImport: true}',
             ],
           },
         ],

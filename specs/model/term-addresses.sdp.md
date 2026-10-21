@@ -29,7 +29,7 @@ A Model section defines a Spec's terms, and prose names those terms by word. A w
 - outcome: Let a Model term carry a key, addressed as `spec:<id>#term.<key>`, so prose cites a concept as a checked mention and every view links it exactly.
 
 ## Rule
-- [#termMarker] A Model term may carry an optional key in a marker that opens its definition, after the bold term and the em dash, as in `- **step key** — [#stepKey] the key a step carries`; the TypeScript carrier writes the same marker at the start of the definition string. The key follows the entry-address key grammar, and an unkeyed term stays lawful and has no address.
+- [#termMarker] A Model term may carry an optional key in a marker that opens its definition, after the bold term and the em dash, as in `- **step key** — [#stepKey] the key a step carries`; the TypeScript carrier writes the same marker at the start of the definition string. The key follows the entry-address key grammar, and an unkeyed term stays lawful and has no address. Importing a TypeScript carrier to Markdown writes the marker on the term that carries the key.
 - [#authoredKey] The key is authored and never derived from the term, so rewording a term or its definition keeps its address, while renaming or removing the key fails validation in every Spec that addresses it.
 - [#uniqueTermKeys] A term key is unique among the Model terms of one Spec. Term keys and the Spec's Design, UI, question and rule keys sit under different address segments and stay apart.
 - [#markerRefusals] A definition that opens with `[#` and does not continue as a marker is refused at its term, and a repeated term key is refused at each term that carries it; a refused Markdown carrier is refused whole, as for every structure refusal, and in the TypeScript carrier the key drops at each site and the Spec stays.
@@ -40,16 +40,20 @@ A Model section defines a Spec's terms, and prose names those terms by word. A w
 - A term key mints no edge, confers no delivery fact and moves no readiness floor, and `exercises` names rule keys only. A term promoted to a `model` Spec of its own leaves its address behind, because promotion moves the content out, and every mention of the address fails until it names the new Spec.
 
 ## Example space
-The world writes two Markdown carriers in one extraction root. The first is a story-altitude model Spec stating `scoped`, with an Intent outcome and a Model section holding the entries the terms slot joins with a semicolon and a space, one line each. The second is a story-altitude rule Spec stating `idea`, with an Intent outcome and one rule; its narrative names the address, and it declares `dependsOn` on the first. A finding read is the first extraction finding, and an empty slot value means the extraction reports none; the term keys of every Spec in the graph are joined by a comma and a space.
+The world writes two carriers in one extraction root. The first is a story-altitude model Spec stating `scoped`, with an Intent outcome and a Model section holding the entries the terms slot joins with a semicolon and a space, in the carrier the slot names: in Markdown one line each, as written, and in TypeScript a `.sdp.ts` carrier whose `model.terms` object maps each entry's term to its definition, marker included. The second is a Markdown story-altitude rule Spec stating `idea`, with an Intent outcome and one rule; its narrative names the address, and it declares `dependsOn` on the first. A finding read is the first extraction finding, and an empty slot value means the extraction reports none; the term keys of every Spec in the graph are joined by a comma and a space. `resolved` is true when address resolution gives the address a resolving row whose `value` is the definition without its marker and whose `file` and `line` are those of the term's row in the location table. `found` is true when entry search for the words of the term that carries the address's key returns a row with that address and that line. The audit reason is the `reason` of the mention audit's unresolved row for the address, and empty when it lists none. The import reads the first carrier as written in TypeScript: the world imports it to Markdown, reads the emitted Model entry of its first term, extracts the imported carrier in a fresh root, and compares its term keys and definitions with the TypeScript graph's.
 
 ```gwt-vocabulary
-Given a Markdown Spec carrier {specId:string} whose Model terms read {terms:string}
+Given a {carrier:"Markdown"|"TypeScript"} Spec carrier {specId:string} whose Model terms read {terms:string}
 Given a second Spec that names {address:string} in its narrative and declares dependsOn on the first
 When the extractor reifies both carriers and the graph is validated
 Then the first carrier is reified: {reified:boolean}
 Then the first extraction finding's message contains {extractMessage:string}
 Then the graph holds the term keys {keys:string}
 Then the report holds {mentionErrors:number} prose-mention errors
+Then address resolution resolves the address to the marker-free definition at its recorded term location: {resolved:boolean}
+Then entry search for the addressed term's words finds it at that same address and line: {found:boolean}
+Then the mention audit lists the address as unresolved with reason {auditReason:string}
+Then the first carrier imported to Markdown writes the entry {importedEntry:string} and keeps its term keys and definitions: {keptOnImport:boolean}
 ```
 
 ## Design
@@ -60,6 +64,6 @@ Then the report holds {mentionErrors:number} prose-mention errors
 - addressSections: `ENTRY_ADDRESS_SECTIONS` is `["design", "ui", "question", "rule", "term"]`, and `parseId` refuses any other segment with `entry address must be <section>.<key> with section design, ui, question, rule, or term`.
 - missingTerm: `Mention in "<spec>" at <path> points to missing entry "term.<key>" of "<target>".` is the prose-mentions error for a term key the target does not carry.
 - termLocation: `{ spec, file, entry: "term[<i>]", key?, line }` is a term's row in the location table; a mention in a definition, at `model.terms.<term>`, takes that row's line.
-- resolutionRow: address resolution (recipe 25) reads `term` as a fifth section through `model.termKeys`, gives a resolving row the definition as its `value` and the Spec's term keys as `available`, sorted in code-unit order, and writes its grammar as `spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII`.
+- resolutionRow: address resolution (recipe 25) reads `term` through `model.termKeys`; a resolving row gives the marker-free definition as `value` and its recorded file and line. A `section` or `entry` miss gives the available term keys sorted in code-unit order. The grammar text is `spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII`.
 - searchRow: entry search (recipe 23) gives a matching keyed term, in section `model` and entry `terms.<term>`, the address `spec:<id>#term.<key>` and the line of its `term[<i>]` row, matches the term key as it matches a rule key, and never walks `termKeys` as content.
 - importEmitter: the TypeScript-to-Markdown import writes a keyed term as `- **<term>** — [#<key>] <definition>`, so a keyed TypeScript term imports keyed.

@@ -58,6 +58,8 @@ specs:
   - spec:carrier.step-keys.two-keys-on-one-step-refused
   - spec:carrier.step-keys.malformed-marker-refused
   - spec:carrier.step-keys.conflicting-example-key-withheld
+  - spec:carrier.step-keys.key-equal-to-a-skeleton-withheld
+  - spec:carrier.step-keys.typescript-keyed-step-imports-keyed
   - spec:model.core-model
   - spec:model.enrichment-lifecycle
   - spec:model.spec-sections
@@ -88,6 +90,7 @@ specs:
   - spec:model.term-addresses.unknown-term-key-refused
   - spec:model.term-addresses.repeated-term-key-refused
   - spec:model.term-addresses.malformed-term-marker-refused
+  - spec:model.term-addresses.typescript-term-imports-keyed
   - spec:extraction.derive-graph
   - spec:extraction.delivery-facts
   - spec:extraction.determinism

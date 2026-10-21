@@ -2291,6 +2291,33 @@ export const expectedDeclaredRelations: readonly (readonly [
     null,
     ["keyConflicts"],
   ],
+  ["spec:carrier.step-keys.key-equal-to-a-skeleton-withheld", "refines", "spec:carrier.step-keys"],
+  [
+    "spec:carrier.step-keys.key-equal-to-a-skeleton-withheld",
+    "verifies",
+    "spec:carrier.step-keys",
+    null,
+    ["contractKey"],
+  ],
+  [
+    "spec:carrier.step-keys.key-equal-to-a-skeleton-withheld",
+    "verifies",
+    "spec:extraction.executable-contracts",
+    null,
+    ["keyConflicts"],
+  ],
+  [
+    "spec:carrier.step-keys.typescript-keyed-step-imports-keyed",
+    "refines",
+    "spec:carrier.step-keys",
+  ],
+  [
+    "spec:carrier.step-keys.typescript-keyed-step-imports-keyed",
+    "verifies",
+    "spec:carrier.step-keys",
+    null,
+    ["stepMarker", "contractKey"],
+  ],
   [
     "spec:model.term-addresses",
     "dependsOn",
@@ -2309,7 +2336,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "verifies",
     "spec:model.term-addresses",
     null,
-    ["termMarker", "termAddress"],
+    ["termMarker", "termAddress", "termLocations", "termReaders"],
   ],
   ["spec:model.term-addresses.unknown-term-key-refused", "refines", "spec:model.term-addresses"],
   [
@@ -2317,7 +2344,19 @@ export const expectedDeclaredRelations: readonly (readonly [
     "verifies",
     "spec:model.term-addresses",
     null,
-    ["authoredKey", "termAddress"],
+    ["authoredKey", "termAddress", "termReaders"],
+  ],
+  [
+    "spec:model.term-addresses.typescript-term-imports-keyed",
+    "refines",
+    "spec:model.term-addresses",
+  ],
+  [
+    "spec:model.term-addresses.typescript-term-imports-keyed",
+    "verifies",
+    "spec:model.term-addresses",
+    null,
+    ["termMarker", "termAddress"],
   ],
   ["spec:model.term-addresses.repeated-term-key-refused", "refines", "spec:model.term-addresses"],
   [
