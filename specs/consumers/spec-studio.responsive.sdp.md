@@ -19,7 +19,7 @@ The curated graph's edges carry no confidence, and the impact graph's inferred i
 - rule: Every page of the Studio is responsive, so the same pages serve a desktop and a phone.
 
 ## UI
-- singleColumn: every layout collapses to one column below 720 CSS pixels of viewport width.
+- singleColumn: every layout collapses to one column below 720 CSS pixels of viewport width; at 390 CSS pixels no page exceeds the viewport. The top navigation and stamp line wrap, and a table wider than its column scrolls inside its own container, including maturity maps, run results and coverage tables; queue rows wrap within their column.
 - pinchZoom: on a touch device, every diagram zooms with a pinch, which the diagram element adds.
 - narrowDiagram: below the same width a diagram opens scaled to the screen's width, with its zoom controls above it and its text equivalent below it, and draws the same boxes and edges a desktop draws.
 

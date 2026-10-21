@@ -128,8 +128,19 @@ code {
   color: var(--text);
 }
 
-.top nav a {
-  margin-right: 0.9rem;
+.top nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+sdp-stamp {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .top form {
@@ -820,12 +831,6 @@ sdp-compose button {
   sdp-diagram svg {
     width: 100%;
     height: auto;
-  }
-  sdp-maturity-map table {
-    min-width: 0;
-  }
-  sdp-maturity-map td {
-    min-width: 0;
   }
   dialog {
     padding: 1rem;

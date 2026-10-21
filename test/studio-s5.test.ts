@@ -1293,3 +1293,32 @@ it.each([
   ]);
   expect(visible.join("\n")).not.toContain("<!--");
 });
+
+it("contains phone navigation, stamp and wide tables within the viewport", () => {
+  const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
+  const declarations: Record<string, Record<string, string>> = {};
+  css.walkRules((rule) => {
+    if (rule.parent?.type === "atrule" && rule.parent.params !== "(max-width: 719.98px)") return;
+    for (const selector of rule.selector.split(",").map((s) => s.trim())) {
+      const values = (declarations[selector] ??= {});
+      rule.walkDecls((decl) => {
+        values[decl.prop] = decl.value;
+      });
+    }
+  });
+  expect(declarations[".top nav"]).toMatchObject({
+    display: "flex",
+    "flex-wrap": "wrap",
+    "min-width": "0",
+    "max-width": "100%",
+  });
+  expect(declarations["sdp-stamp"]).toMatchObject({
+    display: "block",
+    "min-width": "0",
+    "max-width": "100%",
+    "overflow-wrap": "anywhere",
+  });
+  expect(declarations[".table-scroll"]).toMatchObject({ overflow: "auto", "max-width": "100%" });
+  expect(declarations["sdp-maturity-map table"]).toMatchObject({ "min-width": "48rem" });
+  expect(declarations["sdp-maturity-map td"]).toMatchObject({ "min-width": "9rem" });
+});

@@ -1952,7 +1952,7 @@ export const consumersSpecs = [
       },
       ui: {
         singleColumn:
-          "every layout collapses to one column below 720 CSS pixels of viewport width.",
+          "every layout collapses to one column below 720 CSS pixels of viewport width; at 390 CSS pixels no page exceeds the viewport. The top navigation and stamp line wrap, and a table wider than its column scrolls inside its own container, including maturity maps, run results and coverage tables; queue rows wrap within their column.",
         pinchZoom:
           "on a touch device, every diagram zooms with a pinch, which the diagram element adds.",
         narrowDiagram:
