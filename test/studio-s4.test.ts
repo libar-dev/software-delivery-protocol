@@ -1026,28 +1026,60 @@ it.each(["gh-pages", "main", "disabled"])(
   },
 );
 
+const build = (commit: string, status: string) => ({ commit, status });
 it.each([
-  ["building,built", 0, "Pages published"],
-  ["building,errored", 1, "Pages failed to build"],
-  ["building", 1, "did not publish"],
+  [
+    "an unrelated errored build is newest",
+    [
+      [build("other", "errored"), build("abc123", "building")],
+      [build("abc123", "built"), build("other", "errored")],
+    ],
+    0,
+    "Pages published",
+    "0",
+  ],
+  [
+    "a retried build follows an errored one",
+    [[build("abc123", "built"), build("abc123", "errored")]],
+    0,
+    "Pages published",
+    "0",
+  ],
+  ["the build errors", [[build("abc123", "errored")]], 1, "Pages failed to build", "0"],
+  ["the commit is never built", [[build("other", "built")]], 1, "did not publish", "0"],
+  ["the answer arrives after the wait", [[build("abc123", "built")]], 1, "did not publish", "1.5"],
 ] as const)(
   "deploy succeeds only once Pages publishes the pushed commit: %s",
-  (statuses, status, message) => {
+  (_case, polls, status, message, delay) => {
     const deploy = required(workflow("studio-preview").jobs.deploy);
     const write = stepNamed(deploy, "Write the preview to the enabled Pages branch");
-    const wait = stepNamed(deploy, "Wait for Pages to publish the preview");
+    const wait = stepNamed(deploy, "Wait for Pages to publish the preview") as WorkflowStep & {
+      "timeout-minutes"?: number;
+    };
     expect(write.id).toBe("write");
     expect(write.run).toContain('echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"');
     expect(required(deploy.steps).indexOf(wait)).toBe(required(deploy.steps).indexOf(write) + 1);
     expect(wait.if).toBe("steps.write.outputs.commit != ''");
     expect(wait.env?.COMMIT).toBe("${{ steps.write.outputs.commit }}");
+    expect(wait["timeout-minutes"]).toBe(15);
     const root = fixture(),
       bin = join(root, "bin"),
-      count = join(root, "count");
+      count = join(root, "count"),
+      answers = join(root, "polls");
     mkdirSync(bin);
+    writeFileSync(answers, polls.map((poll) => JSON.stringify(poll)).join("\n") + "\n");
+    // The stub answers with each poll's build list, newest first, and applies the step's own --jq.
     writeFileSync(
       join(bin, "gh"),
-      '#!/bin/bash\nprintf "%s\\n" "$*" >> "$API_ARGS"\nn=$(($(cat "$COUNT" 2>/dev/null || echo 0) + 1)); echo "$n" > "$COUNT"\nIFS=, read -ra all <<< "$STATUSES"\ni=$(( n <= ${#all[@]} ? n - 1 : ${#all[@]} - 1 ))\nprintf "%s\\n" "${all[$i]}"\n',
+      [
+        "#!/bin/bash",
+        'printf "%s\\n" "$*" >> "$API_ARGS"',
+        'n=$(($(cat "$COUNT" 2>/dev/null || echo 0) + 1)); echo "$n" > "$COUNT"',
+        'total=$(wc -l < "$POLLS"); line=$(( n <= total ? n : total ))',
+        'while [[ $# -gt 0 && "$1" != --jq ]]; do shift; done',
+        'sleep "$DELAY"',
+        'sed -n "${line}p" "$POLLS" | jq -r "$2"',
+      ].join("\n") + "\n",
     );
     chmodSync(join(bin, "gh"), 0o755);
     const result = spawnSync("bash", ["-e", "-o", "pipefail", "-c", required(wait.run)], {
@@ -1058,7 +1090,8 @@ it.each([
         COMMIT: "abc123",
         WAIT_SECONDS: "1",
         POLL_SECONDS: "0.05",
-        STATUSES: statuses,
+        DELAY: delay,
+        POLLS: answers,
         COUNT: count,
         API_ARGS: join(root, "args"),
       },
@@ -1066,9 +1099,7 @@ it.each([
     });
     expect(result.status, result.stderr).toBe(status);
     expect(result.stdout).toContain(message);
-    const args = readFileSync(join(root, "args"), "utf8");
-    expect(args).toContain("repos/owner/repo/pages/builds");
-    expect(args).toContain("abc123");
+    expect(readFileSync(join(root, "args"), "utf8")).toContain("repos/owner/repo/pages/builds");
   },
 );
 

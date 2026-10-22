@@ -173,6 +173,7 @@ jobs:
           fi
       - name: Wait for Pages to publish the preview
         if: steps.write.outputs.commit != ''
+        timeout-minutes: 15
         env:
           GH_TOKEN: ${{ github.token }}
           COMMIT: ${{ steps.write.outputs.commit }}
@@ -183,6 +184,7 @@ jobs:
           deadline=$((SECONDS + WAIT_SECONDS))
           while (( SECONDS < deadline )); do
             status=$(gh api "repos/$GITHUB_REPOSITORY/pages/builds" --jq "map(select(.commit == \"$COMMIT\")) | .[0].status // \"\"" || true)
+            (( SECONDS < deadline )) || break
             case "$status" in
               built) echo "Pages published $COMMIT."; exit 0 ;;
               errored) echo "::error::Pages failed to build $COMMIT; re-run the repository's pages-build-deployment run."; exit 1 ;;
