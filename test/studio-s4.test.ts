@@ -1037,6 +1037,7 @@ it.each([
     0,
     "Pages published",
     "0",
+    "5",
   ],
   [
     "a retried build follows an errored one",
@@ -1044,13 +1045,21 @@ it.each([
     0,
     "Pages published",
     "0",
+    "5",
   ],
-  ["the build errors", [[build("abc123", "errored")]], 1, "Pages failed to build", "0"],
-  ["the commit is never built", [[build("other", "built")]], 1, "did not publish", "0"],
-  ["the answer arrives after the wait", [[build("abc123", "built")]], 1, "did not publish", "1.5"],
+  ["the build errors", [[build("abc123", "errored")]], 1, "Pages failed to build", "0", "5"],
+  ["the commit is never built", [[build("other", "built")]], 1, "did not publish", "0", "1"],
+  [
+    "the answer arrives after the wait",
+    [[build("abc123", "built")]],
+    1,
+    "did not publish",
+    "1.5",
+    "1",
+  ],
 ] as const)(
   "deploy succeeds only once Pages publishes the pushed commit: %s",
-  (_case, polls, status, message, delay) => {
+  (_case, polls, status, message, delay, waitSeconds) => {
     const deploy = required(workflow("studio-preview").jobs.deploy);
     const write = stepNamed(deploy, "Write the preview to the enabled Pages branch");
     const wait = stepNamed(deploy, "Wait for Pages to publish the preview") as WorkflowStep & {
@@ -1088,7 +1097,7 @@ it.each([
         PATH: `${bin}:${process.env.PATH ?? ""}`,
         GITHUB_REPOSITORY: "owner/repo",
         COMMIT: "abc123",
-        WAIT_SECONDS: "1",
+        WAIT_SECONDS: waitSeconds,
         POLL_SECONDS: "0.05",
         DELAY: delay,
         POLLS: answers,
