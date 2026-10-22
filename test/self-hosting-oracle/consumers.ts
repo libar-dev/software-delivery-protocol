@@ -2189,7 +2189,7 @@ export const consumersSpecs = [
           "Inside the core's sections the page adds a composing action beside each keyed entry that proposes new text for it, the composing actions beside each open question, the rule coverage beside each keyed rule or flow and the example cards after the rules, each constraint's target, the citations beside each cited entry, and an element id on each keyed term, as the rules below state.",
           "Each keyed Model term in the core's Model section carries the element id `term.<key>`, its address after the `#`, and shows its key and its recorded line, as the core's entry ids do.",
           "Beside each keyed entry an anchored source file cites, its section lists every citing file and line recipe 51 records, as text with a copy action; a pinned declaration no file cites reads `no citation recorded`.",
-          "The Design view panel draws the realization diagram of the units that satisfy the Spec, their components and what they use, and then lists the decision records the Spec names through `decidedBy`, each with its title linked and its decision text inline.",
+          "The Design view panel draws the requirement drawing defined by spec:consumers.spec-studio.diagram-kinds.requirement-trace in place of realization, then lists the decision records the Spec names through decidedBy with linked titles and decision text inline. The Runtime panel retains the implementation anchors' components and uses.",
           "The Runtime panel shows the structural neighborhood of the Spec's implementation anchors: each anchor's component with its layer and context, and the units it uses, each with its file and line; runtime observation reads not tracked.",
           "The Impact panel draws the Spec's trace graph, one hop each way, and then lists what it rests on with each target's stated and derived rung, from recipe 21, and every Spec that rests on it to any depth, by distance, with the units, enabled verifiers and Packs each brings, from recipe 30.",
           "Given a base graph, a line under the header names the base and lists the Spec's changed parts, as `spec:consumers.spec-studio.diff-page` states.",
@@ -2231,7 +2231,7 @@ export const consumersSpecs = [
         verificationPanel:
           "the verifier list, with run evidence given run records, then the coverage grid when the Spec owns an example space, laid out as `spec:consumers.spec-studio.verification-panels` states; the panel's element id is `panel.verification`.",
         designViewPanel:
-          "the realization diagram, drawn as SVG whose nodes show their id, source file and line as the source-text rule states, then the decision records with their decision text; the panel's element id is `panel.design-view`.",
+          "The requirement drawing, with the text equivalent naming each binding's id, source file and line under the source-text rule, then the decision records and their decision text; its element id remains `panel.design-view`.",
         runtimePanel:
           "the structural neighborhood of the Spec's implementation anchors, each anchor's component and the code units it uses, with file and line, then `Runtime observation: not tracked`; the panel's element id is `panel.runtime`.",
         evidencePanel:
@@ -4391,7 +4391,7 @@ export const consumersSpecs = [
     readiness: "ready",
     title: "A Pack page's maturity map places every member by its stated rung and its floor",
     narrative:
-      "A Pack of many members takes a reviewer a long scroll through its cards before they know where the design stands. The maturity map answers that first: one table, a row per stated rung and a column per floor reached, each member a short card in its cell. A member right of its row's own rung waits only for a statement the floor already allows; a member left of it states more than its floor holds.",
+      "A Pack's maturity map shows its distribution before its member lists. Equal-sized cells place each resolved member by stated readiness and floor reached. Populated cells show exact counts and member marks; faint empty cells show no number. The count table and ordered lists retain the reading in text.",
     sections: {
       intent: {
         outcome:
@@ -4399,7 +4399,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "After the summary, the maturity map places each resolved member by its stated rung and the floor it reaches: one row per stated rung, idea to ready, and one column per floor, none to ready, each filled cell listing its members in authored order as short cards linked to their member cards, with its count, and an empty cell showing `—` alone; the table caption explains in words where the floor sits above the statement and where the statement sits above the floor.",
+          "After the summary, show the categorical grid and full member lists defined by spec:consumers.spec-studio.diagram-kinds.maturity-picture. Every resolved member belongs to one stated-rung and floor cell; unresolved members are named apart. Populated cells link to their built lists, whose members stay in authored order.",
         ],
         ruleKeys: {
           maturityMap: "rules[0]",
@@ -4407,7 +4407,7 @@ export const consumersSpecs = [
       },
       ui: {
         maturityMap:
-          "an `sdp-maturity-map` holding a table under a `Maturity map` heading, rows headed `stated idea` to `stated ready`, columns headed `floor none` to `floor ready`, each filled cell its count and its members as short cards, an empty cell reading `—` alone, and the axis explanation in the table's caption, never inside a header cell: right of the matching rung the floor is above the statement and already allows it; left of it the statement is above the floor.",
+          "An `sdp-maturity-map` holds the static SVG grid, caption and accessible count table, followed by populated cells' full member lists in disclosures that print open. Equal-sized cells have explicit axes; the legend names matches, floor above statement and statement above floor once. The diagonal has an outline, empty cells are faint, and populated cells carry exact counts and member marks, up to `100` marks and solid fill above that. Every member links to its card.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -5370,7 +5370,6 @@ export const consumersSpecs = [
           "An architecture edge joins two components and carries the count of unit `uses` edges between them, as the component rows of `spec:consumers.spec-studio.lenses.architecture#design.componentRows` count them: each end of a unit `uses` edge resolves to its component, directly or through `memberOf`, and a use within one component draws nothing.",
           "A trace graph draws the Spec in a band of its own, the Specs its declared relations name above it in one band per relation type, in the order refines, dependsOn, constrainedBy, decidedBy, verifies, supersedes, and the Specs whose declared relations name it below in bands of the same order; a Spec related more than one way sits in the band of its first relation, and each relation is its own edge.",
           "A member diagram draws a component's members in bands by how deep `uses` among members reaches, a member that uses another sitting above it, and the units and components outside the component that members use in a last band of their own.",
-          "A realization diagram draws the units that satisfy the Spec, then their components, then what those units use, in three bands.",
           "A diagram draws at most the boxes and edges the bound names.",
           "An architecture diagram over the bound with more than one context draws one box per context, with the uses between contexts aggregated and counted, and then each context's own diagram in a section of its own, where every other context it uses or is used by is one folded box in a band of its own.",
           "A diagram of one context still over the bound draws one box per layer of that context, and then each layer's components in a section of their own.",
@@ -5389,16 +5388,15 @@ export const consumersSpecs = [
           aggregatedUses: "rules[4]",
           relationBands: "rules[5]",
           memberBands: "rules[6]",
-          realizationBands: "rules[7]",
-          bound: "rules[8]",
-          foldByContext: "rules[9]",
-          foldByLayer: "rules[10]",
-          boundFallback: "rules[11]",
-          foldGroups: "rules[12]",
-          noFoldBelowComponent: "rules[13]",
-          wordsBesideStyle: "rules[14]",
-          textEquivalent: "rules[15]",
-          panZoomOnly: "rules[16]",
+          bound: "rules[7]",
+          foldByContext: "rules[8]",
+          foldByLayer: "rules[9]",
+          boundFallback: "rules[10]",
+          foldGroups: "rules[11]",
+          noFoldBelowComponent: "rules[12]",
+          wordsBesideStyle: "rules[13]",
+          textEquivalent: "rules[14]",
+          panZoomOnly: "rules[15]",
         },
         exampleSpace: {
           given: [
@@ -5601,7 +5599,7 @@ export const consumersSpecs = [
         rules: [
           "The lens draws every component the anchors realize, from recipe 17's component rows and the attributes the `componentRows` entry adds to them, grouped by its recorded context and layer as the architecture grid of `spec:consumers.spec-studio.diagrams` places it, and folds above the bound as that Spec states.",
           "The lens draws component membership, as the member count in each box, and `uses`, as edges between components, and nothing else: no port, external system, runtime layer or import the impact graph infers.",
-          "Beside the architecture drawing comes the component uses table, read from recipe 17's component rows and their counts of unit `uses` edges: one row per realized component as the user and one column per realized component as the used. A nonzero cell holds the count of anchored unit `uses` edges behind the pair and links to that use in the row component's detail; a zero cell between two components reads `no anchored use recorded`, and the cell where a component meets itself stays empty. Planned uses, unresolved endpoints and uses within one component stay in their own readings and never enter the table. The table is not a drawing, and it reads in full without script and in print.",
+          "Beside the architecture drawing comes the component uses table, read from recipe 17's component rows and their counts of unit `uses` edges: one row per realized component as the user and one column per realized component as the used. A nonzero cell holds the count of anchored unit `uses` edges behind the pair and links to that use in the row component's detail; a zero cell between two components shows `·`, with `no anchored use recorded` as hidden text and the legend `· means no anchored use recorded`, and the cell where a component meets itself stays empty. Planned uses, unresolved endpoints and uses within one component stay in their own readings and never enter the table. The table is not a drawing, and it reads in full without script and in print.",
           "Each component design no anchor realizes, a row of recipe 43's `unrealized` list, draws in the same grid by its planned context and layer as a planned box, with the uses it plans drawn dashed to the components it names, and is listed again in a `Designed, not built` section apart from the realized components; a planned use naming a component the lens draws no box for draws no edge and stays listed in its design's row.",
           "A realized component whose design differs from it lists each differing field, as recipe 43's `differing` rows give it, with its planned and realized values in its detail, and a design value recipe 43 cannot read lists in the `Designed, not built` section as unreadable.",
           "Each realized component has a detail section on the lens page whose element id is its id, which its box and every link to it from another page open: its id, label, layer, context and role; its recorded file and line as text with a copy action; its members, each with its id, label, role and recorded file and line; the components it uses and is used by, each with the count of unit edges; the Specs it and its members satisfy and reference, linked, a component design its anchor satisfies among them; and its member diagram, every value read from its recipe 17 row.",
@@ -5687,7 +5685,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.lenses.architecture.unit-register.sdp.md",
   },
   {
@@ -7053,7 +7051,7 @@ export const consumersSpecs = [
           "`block` with a fixed categorical grid, cell labels and counts. This is not a quadrant chart; source includes each cell's full membership as comments and names its accessible table.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diagram-kinds.maturity-picture.sdp.md",
   },
   {
@@ -7095,7 +7093,7 @@ export const consumersSpecs = [
           "`requirementDiagram` for the exact refines, satisfies and verifies subset, generic requirement nodes and element nodes for code and bindings; omit risk and verifyMethod. Put claim words in node text and per-edge comments. Use `flowchart TB` with exact labels when references, models or folds require relations requirement syntax cannot express; never rename them traces.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diagram-kinds.requirement-trace.sdp.md",
   },
   {

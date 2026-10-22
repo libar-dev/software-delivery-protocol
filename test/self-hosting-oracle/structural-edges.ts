@@ -79,6 +79,22 @@ export const structuralMembershipExceptions = [
  */
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/projections/studio/pages/architecture-register.ts#unitRegister",
+    anchorId: "impl:protocol.studio-unit-register",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/requirement.ts#requirementDiagram",
+    anchorId: "impl:protocol.studio-requirement-diagram",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/requirement-view.ts#requirementView",
+    anchorId: "impl:protocol.studio-requirement-view",
+    componentId: "component:protocol.projections",
+  },
+
+  {
     unit: "src/cli/params.ts#mergeParams",
     anchorId: "impl:protocol.parameter-codec",
     componentId: "component:protocol.cli",

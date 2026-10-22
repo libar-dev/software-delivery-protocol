@@ -1,4 +1,4 @@
-import { escape } from "../pages/html.js";
+import { escape, sourceCode, copy, location } from "../pages/html.js";
 import { contextOf, layerOf, withinBound, needsEdgeLabels } from "./model.js";
 import type { Diagram, DiagramBox } from "./model.js";
 import { layoutDiagram, foldedBand, widthBudget } from "./layout.js";
@@ -91,8 +91,9 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
   };
   const l = fits ? layoutDiagram(normalized) : null,
     routed = l ? routeDiagram(l, normalized.edges) : null;
-  const edgeLabels = new Map(d.boxes.map((b) => [b.id, b.edgeLabel ?? b.id]));
-  const text = `<details${routed ? "" : " open"} id="${escape(textId)}"><summary>The diagram as text</summary><ul>${normalized.boxes.map((b) => `<li>${escape(b.id)}: ${escape(b.words)}${b.foldedIds?.length ? ` · folded members: ${b.foldedIds.map(escape).join(", ")}` : ""}</li>`).join("")}${normalized.edges.map((e) => `<li>${escape(edgeLabels.get(e.from) ?? e.from)} ${escape(e.kind)} ${escape(edgeLabels.get(e.to) ?? e.to)}${e.claim ? ` · ${escape(e.claim)}` : ""}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}${e.reason ? ` — ${escape(e.reason)}` : ""}</li>`).join("")}</ul></details>`;
+  const equivalent = d.textEquivalent ?? normalized;
+  const edgeLabels = new Map(equivalent.boxes.map((b) => [b.id, b.edgeLabel ?? b.id]));
+  const text = `<details${routed ? "" : " open"} id="${escape(textId)}"><summary>The diagram as text</summary><ul>${equivalent.boxes.map((b) => `<li>${escape(b.id)}: ${escape(b.words)}${b.source ? ` · ${sourceCode(b.source.file, b.source.line)}${b.source.file ? copy(location(b.source.file, b.source.line)) : ""}` : ""}${b.foldedIds?.length ? ` · folded members: ${b.foldedIds.map(escape).join(", ")}` : ""}</li>`).join("")}${equivalent.edges.map((e) => `<li>${escape(edgeLabels.get(e.from) ?? e.from)} ${escape(e.kind)} ${escape(edgeLabels.get(e.to) ?? e.to)}${e.claim ? ` · ${escape(e.claim)}` : ""}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}${e.reason ? ` — ${escape(e.reason)}` : ""}</li>`).join("")}</ul></details>`;
   const relationWords = (kind: string) => {
     const claims = [
       ...new Set(d.edges.filter((e) => e.kind === kind).flatMap((e) => (e.claim ? [e.claim] : []))),
@@ -117,7 +118,7 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
   const sourceId = `diagram.${diagramId}.source`,
     areaId = `${sourceId}-text`;
   const source = routed
-    ? `<details id="${escape(sourceId)}"><summary>Mermaid source</summary><p>Copyable source; the Studio draws static SVG.</p><p>${d.grid ? "Preferred syntax: block; flowchart fallback because block cannot carry edge claims and counts." : "Preferred syntax: flowchart. Chosen syntax: labelled flowchart, preserving exact relations, claims and folds."}</p><label for="${escape(areaId)}">Mermaid source for ${escape(d.caption)}</label><textarea readonly id="${escape(areaId)}" rows="8">${escape(mermaidSource(normalized))}</textarea><sdp-copy for="${escape(areaId)}"></sdp-copy></details>`
+    ? `<details id="${escape(sourceId)}"><summary>Mermaid source</summary><p>Copyable source; the Studio draws static SVG.</p><p>${d.source ? escape(d.source.explanation) : d.grid ? "Preferred syntax: block; flowchart fallback because block cannot carry edge claims and counts." : "Preferred syntax: flowchart. Chosen syntax: labelled flowchart, preserving exact relations, claims and folds."}</p><label for="${escape(areaId)}">Mermaid source for ${escape(d.caption)}</label><textarea readonly id="${escape(areaId)}" rows="8">${escape(d.source?.text ?? mermaidSource(normalized))}</textarea><sdp-copy for="${escape(areaId)}"></sdp-copy></details>`
     : "";
   const sectionId = d.sectionId === undefined ? d.subject : d.sectionId;
   return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${legend}${help}${routed && l ? `<div class="diagram-scroll" id="${escape(viewportId)}" tabindex="0" role="region" aria-label="${escape(d.caption)}"${help ? ` aria-describedby="${escape(helpId)}"` : ""}>${svg(normalized, textId, diagramId, l, routed)}</div>` : `<p>${fits ? "Shown as text: a distinct route or label could not be placed within the routing budget." : "Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges."}</p>`}${text}${source}</figure></sdp-diagram></section>`;

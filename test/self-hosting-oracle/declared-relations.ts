@@ -3556,7 +3556,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.spec-studio.spec-page",
     "dependsOn",
     "spec:consumers.spec-studio.diagrams",
-    "the design view and the impact panel draw the realization diagram and the trace graph",
+    "the design view and impact panel draw requirement traceability and the one-hop trace graph",
   ],
   [
     "spec:consumers.spec-studio.spec-page",
@@ -4840,5 +4840,17 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.roadmap",
     null,
     ["waiting", "earlier"],
+  ],
+  [
+    "spec:consumers.spec-studio.pack-page.maturity-map",
+    "dependsOn",
+    "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+    "the map is drawn as the picture defines",
+  ],
+  [
+    "spec:consumers.spec-studio.spec-page",
+    "dependsOn",
+    "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+    "the Design view reads the selected set and claims the requirement drawing defines",
   ],
 ] as const;

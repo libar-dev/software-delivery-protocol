@@ -53,6 +53,7 @@ export interface SearchRecord {
   readonly page: string | null;
   readonly title?: string;
   readonly label?: string;
+  readonly role?: string;
   readonly framing?: string;
   readonly narrative?: string;
   readonly sections?: Record<string, unknown>;
@@ -257,6 +258,7 @@ export function searchIndex(reader: Reader): SearchIndex {
           ...common,
           ...(node.label === undefined ? {} : { label: node.label }),
           ...(node.line === undefined ? {} : { line: node.line }),
+          ...(node.nodeType === "CodeNode" && node.role !== undefined ? { role: node.role } : {}),
           bindings: bindings.get(node.id) ?? [],
           entries: [],
         };

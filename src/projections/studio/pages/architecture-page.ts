@@ -1,3 +1,4 @@
+import { unitRegister } from "./architecture-register.js";
 import { codeSpans, plainTitle } from "./code-spans.js";
 import { architectureDiagrams, memberDiagram, renderDiagram } from "../diagrams/index.js";
 import type { DiagramBox, DiagramEdge } from "../diagrams/index.js";
@@ -60,7 +61,10 @@ const location = (m: Member) =>
 export function architecturePage(ctx: PageContext): string {
   const architecture = ctx.data.recipes.all.get(17) as Architecture;
   const plans = ctx.data.recipes.all.get(43) as Plans;
-  const components = architecture.components.filter((c) => c.declared);
+  const components = architecture.components
+    .filter((c) => c.declared)
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const register = unitRegister(ctx, architecture);
   const boxes: DiagramBox[] = components.map((c) => ({
     id: c.id,
     title: plainTitle(c.label ?? c.id),
@@ -129,6 +133,7 @@ export function architecturePage(ctx: PageContext): string {
     )
     .join("");
   const designed = `<section><h2>Designed, not built</h2>${plannedRows || unreadable ? `<div class="table-scroll"><table><thead><tr><th>Design</th><th>Component</th><th>Context</th><th>Layer</th><th>Role</th><th>Plans to use</th><th>Anchor exists without satisfying</th></tr></thead><tbody>${plannedRows}${unreadable}</tbody></table></div>` : "<p>None.</p>"}</section>`;
+  const matrix = usesTable(components);
   const details = components
     .map((c) => {
       const own = new Set(c.members.map((m) => m.id));
@@ -163,7 +168,7 @@ export function architecturePage(ctx: PageContext): string {
           ),
         );
       const diff = plans.differing.filter((d) => d.componentId === c.id);
-      return `<section id="${escape(c.id)}"><h2>${code(c.id)}${c.label === null ? "" : ` ${codeSpans(c.label)}`}</h2><p>Layer ${escape(c.layer ?? "not stated")}, context ${escape(c.context ?? "not stated")}, role ${escape(c.role ?? "not stated")}.</p><p>${sourceCode(c.file ?? undefined, c.line ?? undefined)}${c.file === null ? "" : copy(location(c))}</p><h3>Members</h3>${list(c.members.map((m) => `${code(m.id)} ${codeSpans(m.label ?? "")} · role ${escape(m.role ?? "not stated")} · ${sourceCode(m.file ?? undefined, m.line ?? undefined)}${m.file === null ? "" : copy(location(m))}`))}<h3>Uses</h3>${directions(c.usesCounts)}<h3>Used by</h3>${directions(c.usedByCounts)}<h3>Satisfies</h3>${list(c.satisfiedSpecs.map((s) => link(ctx, s)))}<h3>References</h3>${list(c.referencedSpecs.map((s) => link(ctx, s)))}${diff.length ? `<h3>Design differences</h3>${list(diff.map((d) => `${link(ctx, d.spec)} ${code(d.field)}: planned ${code(JSON.stringify(d.planned))}; realized ${code(JSON.stringify(d.realized))}`))}` : ""}${c.members.length === 0 ? "<p>None.</p>" : renderDiagram(diagram)}</section>`;
+      return `<section id="${escape(c.id)}"><h2>${code(c.id)}${c.label === null ? "" : ` ${codeSpans(c.label)}`}</h2><p>Layer ${escape(c.layer ?? "not stated")}, context ${escape(c.context ?? "not stated")}, role ${escape(c.role ?? "not stated")}.</p><p>${sourceCode(c.file ?? undefined, c.line ?? undefined)}${c.file === null ? "" : copy(location(c))}</p><h3>Members</h3>${list(c.members.map((m) => `${code(m.id)} ${codeSpans(m.label ?? "")} · role ${escape(m.role ?? "not stated")} · ${sourceCode(m.file ?? undefined, m.line ?? undefined)}${m.file === null ? "" : copy(location(m))}`))}<h3>Uses</h3>${directions(c.usesCounts)}<h3>Used by</h3>${directions(c.usedByCounts)}<h3>Satisfies</h3>${list(c.satisfiedSpecs.map((s) => link(ctx, s)))}<h3>References</h3>${list(c.referencedSpecs.map((s) => link(ctx, s)))}${diff.length ? `<h3>Design differences</h3>${list(diff.map((d) => `${link(ctx, d.spec)} ${code(d.field)}: planned ${code(JSON.stringify(d.planned))}; realized ${code(JSON.stringify(d.realized))}`))}` : ""}${register.component(c.id)}${supportingUses(architecture, c, components)}${c.members.length === 0 ? "<p>None.</p>" : renderDiagram(diagram)}</section>`;
     })
     .join("");
   const unresolved = [
@@ -178,9 +183,51 @@ export function architecturePage(ctx: PageContext): string {
   return frame(
     ctx,
     "Architecture",
-    `<header class="page-head"><h1>Architecture</h1><p>Components, their members and uses, and planned component designs.</p><p>${String(components.length)} components realized and ${String(plans.unrealized.length)} planned. They state ${count(contexts.size, "context", "contexts", false)} and ${count(layers.size, "layer", "layers", false)}. ${String(edges.filter((e) => e.kind === "uses").length)} uses edges between components. ${String(new Set(plans.differing.map((d) => d.spec)).size)} designs differ from their components.</p></header>${diagrams.drawings.map((drawing) => renderDiagram(drawing)).join("")}${designed}${details}${unresolved.length ? `<section><h2>Unresolved structure</h2>${list(unresolved)}</section>` : ""}`,
+    `<header class="page-head"><h1>Architecture</h1><p>Components, their members and uses, and planned component designs.</p><p>${String(components.length)} components realized and ${String(plans.unrealized.length)} planned. They state ${count(contexts.size, "context", "contexts", false)} and ${count(layers.size, "layer", "layers", false)}. ${String(edges.filter((e) => e.kind === "uses").length)} uses edges between components. ${String(new Set(plans.differing.map((d) => d.spec)).size)} designs differ from their components.</p></header>${diagrams.drawings.map((drawing) => renderDiagram(drawing)).join("")}${matrix}${designed}${register.index}${details}${register.unowned}${unresolved.length ? `<section><h2>Unresolved structure</h2>${list(unresolved)}</section>` : ""}`,
   );
 }
 function linkTarget(ctx: PageContext, id: string): string {
   return /href="([^"]+)"/u.exec(link(ctx, id))?.[1] ?? "#main";
+}
+
+const useId = (from: string, to: string) => `uses.${from}.${to}`;
+function usesTable(components: Component[]): string {
+  const layers = ["edge", "application", "domain", "adapter", "infrastructure"];
+  const rank = (c: Component) => (c.layer === null ? layers.length : layers.indexOf(c.layer));
+  const rows = [...components].sort(
+    (a, b) => rank(a) - rank(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+  );
+  const header = (c: Component) => `${codeSpans(c.label ?? c.id)} ${code(c.id)}`;
+  return `<section><h2>Component uses</h2><p>Rows use columns. · means no anchored use recorded; a component's own cell is empty.</p><div class="table-scroll" role="region" aria-label="Which components use which" tabindex="0"><table class="component-uses"><caption>Which components use which</caption><thead><tr><th scope="col">Using / used</th>${rows.map((c) => `<th scope="col">${header(c)}</th>`).join("")}</tr></thead><tbody>${rows
+    .map(
+      (from) =>
+        `<tr><th scope="row">${header(from)}</th>${rows
+          .map((to) => {
+            if (from.id === to.id) return '<td class="uses-self"></td>';
+            const n = from.usesCounts.find((u) => u.component === to.id)?.edges ?? 0;
+            return n
+              ? `<td><a href="#${escape(useId(from.id, to.id))}">${String(n)}</a></td>`
+              : '<td><span aria-hidden="true">·</span><span class="visually-hidden">no anchored use recorded</span></td>';
+          })
+          .join("")}</tr>`,
+    )
+    .join("")}</tbody></table></div></section>`;
+}
+function supportingUses(
+  architecture: Architecture,
+  component: Component,
+  components: Component[],
+): string {
+  const owner = new Map(
+    components.flatMap(
+      (c) => [[c.id, c.id], ...c.members.map((m) => [m.id, c.id])] as [string, string][],
+    ),
+  );
+  return component.usesCounts
+    .filter((u) => u.component !== component.id && components.some((c) => c.id === u.component))
+    .map(
+      (u) =>
+        `<details id="${escape(useId(component.id, u.component))}"><summary>Uses ${code(u.component)} · ${String(u.edges)} unit edges</summary>${list(architecture.usesEdges.filter((e) => owner.get(e.from) === component.id && owner.get(e.to) === u.component).map((e) => `${code(e.from)} uses ${code(e.to)} · anchored`))}</details>`,
+    )
+    .join("");
 }

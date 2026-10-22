@@ -956,3 +956,57 @@ sdp-compose button {
     display: block !important;
   }
 }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.component-uses td {
+  position: relative;
+  text-align: center;
+  min-width: 3rem;
+  font-variant-numeric: tabular-nums;
+}
+.component-uses .uses-self {
+  background: var(--surface-2);
+}
+[data-unit] {
+  overflow-wrap: anywhere;
+  margin-block: 1rem;
+}
+sdp-maturity-map svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  fill: var(--text);
+  font-size: 14px;
+}
+sdp-maturity-map .maturity-cell rect {
+  fill: var(--surface);
+  stroke: var(--muted);
+  stroke-opacity: 0.3;
+}
+sdp-maturity-map .maturity-cell.matches rect {
+  stroke: var(--text);
+  stroke-opacity: 1;
+  stroke-width: 2;
+}
+sdp-maturity-map .maturity-cell.populated rect {
+  fill: var(--surface-2);
+  stroke-opacity: 1;
+}
+sdp-maturity-map .maturity-cell.solid rect {
+  fill: var(--text);
+}
+sdp-maturity-map .solid .cell-count {
+  fill: var(--bg);
+}
+sdp-maturity-map .cell-count {
+  font-weight: 650;
+}
