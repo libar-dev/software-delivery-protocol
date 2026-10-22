@@ -22,18 +22,27 @@ try{
    assert.equal(await read('new Set([...document.querySelectorAll("[id]")].map(e=>e.id)).size===document.querySelectorAll("[id]").length'),true);
   }
  }
+ await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1050,deviceScaleFactor:1,mobile:false});
+ await open(base+'protocol-head.html');
+ assert.equal(await read('document.querySelectorAll(".epic-context").length>=4'),true);
+ assert.equal(await read('document.body.textContent.includes("binding absent")'),false);
+ assert.equal(await read(`document.querySelectorAll('a[href$="#intent"]').length`),0);
+ assert.equal(await read('document.body.textContent.includes("1 decisions")'),false);
+ assert.equal(await read('document.body.textContent.includes("Read 1 questions")'),false);
+ await open(base+'platform.html');
+ assert.equal(await read('document.querySelector("figcaption").textContent.includes("First six children by id; the rest are folded")'),true);
  await open(base+'protocol-head-index.html?epic=spec%3Aconsumers.agent-surface#specs');
  assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),48);
  await read('document.getElementById("kind").value="example";document.getElementById("kind").dispatchEvent(new Event("change",{bubbles:true}))');
  assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),27);
  await read('document.getElementById("filters").reset()');await pause(50);
- assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),421);
+ assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),423);
  await open(base+'protocol-head-index.html?epic=missing');assert.equal(await read('document.getElementById("filter-note").textContent'),'Unknown epic filter. All Specs are shown.');
- assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),421);
- await open(base+'protocol-head-index.html?epic=none&epic=none');assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),421);
+ assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),423);
+ await open(base+'protocol-head-index.html?epic=none&epic=none');assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),423);
  await send('Emulation.setScriptExecutionDisabled',{value:true});await open(base+'protocol-head-index.html?epic=spec%3Aconsumers.agent-surface');
- assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),421);
+ assert.equal(await read('document.querySelectorAll(".filter-row:not([hidden])").length'),423);
  await open(base+'protocol-head.html');
  assert.equal(await read('document.querySelectorAll(".complete").length'),9);
- console.log('Browser checks passed: all corpora at 1440 and 390 without overflow; unique ids; epic filter 48 rows, intersected examples 27, reset 421; bad/repeated epic query safe; no-script index and native disclosures intact.');
+ console.log('Browser checks passed: all corpora at 1440 and 390 without overflow; unique ids; epic filter 48 rows, intersected examples 27, reset 423; bad/repeated epic query safe; no-script index and native disclosures intact.');
 }finally{ws.close();chrome.kill();}

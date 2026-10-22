@@ -1,8 +1,9 @@
 // Throwaway draft of recipe 52. The caller supplies the Protocol's reader bindings.
 export function capabilityMap({ g, graph, params }) {
-  const accepts = ['epic'];
+  const accepts = ['epic', 'detail'];
   const unknownParams = Object.keys(params).filter(k => !accepts.includes(k));
   if (unknownParams.length) return { unknownParams, accepts };
+  if (params.detail !== undefined && typeof params.detail !== 'boolean') return { diagnostics: [{ parameter:'detail', problem:'Expected a boolean' }] };
   const specs = g.specs().sort((a,b)=>a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const byId = new Map(specs.map(s=>[s.id,s]));
   if (params.epic !== undefined && (typeof params.epic !== 'string' || byId.get(params.epic)?.altitude !== 'epic')) return { diagnostics: [{ parameter:'epic', problem:'Expected a resolving epic Spec id' }] };
@@ -41,8 +42,10 @@ export function capabilityMap({ g, graph, params }) {
   const ids=nodes.map(n=>n.id), unreached=nodes.filter(n=>!n.epicIds.length).map(n=>n.id), unreachedSet=new Set(unreached);
   const roots=components(unreached).filter(group=>!group.some(id=>parents.get(id).some(p=>unreachedSet.has(p)&&!group.includes(p)))).map(group=>group[0]).sort();
   const cycles=components(ids).filter(group=>group.length>1||children.get(group[0]).includes(group[0])).map(members=>({members}));
-  const epics=epicIds.filter(id=>selected.has(id)).map(id=>{const descendantIds=reaches.get(id).filter(child=>child!==id&&selected.has(child));return {id,descendantIds,rollup:count(descendantIds)};});
-  const diagnostics=allEdges.filter(e=>(!byId.has(e.from)||!byId.has(e.to))&&(!params.epic||selected.has(e.from)||selected.has(e.to))).map(e=>({code:'unresolved-refinement',from:e.from,to:e.to})).sort((a,b)=>a.from<b.from?-1:a.from>b.from?1:a.to<b.to?-1:a.to>b.to?1:0);
-  return {input:{epic:params.epic??null},totals:{...count(ids),epics:epics.length,reached:ids.length-unreached.length,unreached:unreached.length},nodes,edges:edges.filter(e=>selected.has(e.from)&&selected.has(e.to)).map(e=>({from:e.from,to:e.to,claim:'declared',reason:e.reason??null})),epics,unreached:{ids:unreached,roots},cycles,diagnostics};
+  const epics=epicIds.filter(id=>selected.has(id)).map(id=>{const descendantIds=reaches.get(id).filter(child=>child!==id&&selected.has(child));return {id,title:byId.get(id).title,parentEpicIds:parents.get(id).filter(p=>byId.get(p).altitude==='epic'),descendantIds,rollup:count(descendantIds)};});
+  const damage=allEdges.filter(e=>(!byId.has(e.from)||!byId.has(e.to))&&(!params.epic||selected.has(e.from)||selected.has(e.to))).map(e=>({code:'unresolved-refinement',from:e.from,to:e.to})).sort((a,b)=>a.from<b.from?-1:a.from>b.from?1:a.to<b.to?-1:a.to>b.to?1:0);
+  const answer = {input:{epic:params.epic??null},totals:{...count(ids),epics:epics.length,reached:ids.length-unreached.length,unreached:unreached.length},nodes,edges:edges.filter(e=>selected.has(e.from)&&selected.has(e.to)).map(e=>({from:e.from,to:e.to,claim:'declared',reason:e.reason??null})),epics,unreached:{ids:unreached,roots},cycles,damage};
+  if (params.detail === true) return answer;
+  return {input:answer.input,totals:answer.totals,epics:epics.map(({id,title,parentEpicIds,rollup})=>({id,title,parentEpicIds,rollup})),unreached:{ids:unreached},cycles,damage,leftOut:['nodes: full Spec rows and memberships','edges: selected refinement edges and reasons','epics.descendantIds: distinct descendant ids','unreached.roots: roots for complete refinement text']};
 }
 export const recipeBody = `return (${capabilityMap.toString()})({g,graph,params});`;
