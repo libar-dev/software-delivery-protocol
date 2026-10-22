@@ -5,8 +5,8 @@ altitude: feature
 readiness: idea
 relations:
   refines:
-    target: spec:consumers.projections-model
-    reason: runtime evidence is a consumer view over bindings and observations
+    target: spec:extraction.derive-graph
+    reason: an observed fact would be derived beside implemented and has-verifier
   dependsOn: spec:model.core-model
 ---
 # Runtime observations can close the liveness loop
