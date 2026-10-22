@@ -1032,6 +1032,14 @@ ${i.text}`}
       ([name, chosen]) => chosen === "any" || (row[name] ?? "").split(/\s+/u).includes(chosen)
     );
   }
+  function epicFilter(href, epics) {
+    const values = new URL(href).searchParams.getAll("epic");
+    if (values.length === 0) return { value: "any", unknown: false };
+    const value = values[0] ?? "";
+    if (values.length !== 1 || value !== "none" && !epics.includes(value))
+      return { value: "any", unknown: true };
+    return { value, unknown: false };
+  }
   function registerFilter() {
     class Filter extends globalThis.HTMLElement {
       update = () => {
@@ -1056,14 +1064,41 @@ ${i.text}`}
           form.hidden = false;
           form.addEventListener("submit", this.preventSubmit);
         }
-        this.addEventListener("change", this.update);
+        const epic = this.querySelector('select[data-filter="epic"]');
+        if (epic) {
+          const requested = epicFilter(
+            this.ownerDocument.location.href,
+            Array.from(epic.options).map((o) => o.value).filter((v) => v !== "any" && v !== "none")
+          );
+          epic.value = requested.value;
+          const note = this.querySelector("[data-filter-note]");
+          if (note)
+            note.textContent = requested.unknown ? "Unknown epic filter. All Specs are shown." : "";
+        }
+        form?.addEventListener("reset", this.reset);
+        this.addEventListener("change", this.change);
         this.update();
       }
+      change = () => {
+        const note = this.querySelector("[data-filter-note]");
+        if (note) note.textContent = "";
+        this.update();
+      };
+      reset = () => {
+        for (const select of Array.from(
+          this.querySelectorAll("select[data-filter]")
+        ))
+          select.value = "any";
+        const note = this.querySelector("[data-filter-note]");
+        if (note) note.textContent = "";
+        this.update();
+      };
       preventSubmit = (event) => {
         event.preventDefault();
       };
       disconnectedCallback() {
-        this.removeEventListener("change", this.update);
+        this.removeEventListener("change", this.change);
+        this.querySelector("form")?.removeEventListener("reset", this.reset);
         this.querySelector("form")?.removeEventListener("submit", this.preventSubmit);
       }
     }
