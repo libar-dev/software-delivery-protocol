@@ -1,7 +1,7 @@
 ---
 id: spec:consumers.authoring-on-ramp
 kind: behavior
-altitude: feature
+altitude: epic
 readiness: ready
 relations:
   dependsOn:

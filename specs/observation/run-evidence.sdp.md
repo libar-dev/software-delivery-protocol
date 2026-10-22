@@ -4,6 +4,9 @@ kind: behavior
 altitude: feature
 readiness: ready
 relations:
+  refines:
+    target: spec:consumers.projections-model
+    reason: run records inform a view without becoming graph facts
   dependsOn:
     - target: spec:extraction.delivery-facts
       reason: the view reads verifier bindings while leaving their delivery facts unchanged

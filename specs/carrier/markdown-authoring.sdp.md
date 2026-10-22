@@ -1,7 +1,7 @@
 ---
 id: spec:carrier.markdown-authoring
 kind: behavior
-altitude: feature
+altitude: epic
 readiness: ready
 relations:
   dependsOn: spec:carrier.markdown-parser

@@ -4,7 +4,9 @@ kind: behavior
 altitude: feature
 readiness: idea
 relations:
-  refines: spec:protocol.self-hosting
+  refines:
+    target: spec:consumers.projections-model
+    reason: runtime evidence is a consumer view over bindings and observations
   dependsOn: spec:model.core-model
 ---
 # Runtime observations can close the liveness loop

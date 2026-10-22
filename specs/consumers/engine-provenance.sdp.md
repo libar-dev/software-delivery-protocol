@@ -4,6 +4,9 @@ kind: behavior
 altitude: story
 readiness: ready
 relations:
+  refines:
+    target: spec:consumers.authoring-on-ramp
+    reason: an adopter names the engine used to author and check its corpus
   dependsOn:
     target: spec:consumers.adopter-on-ramp
     reason: an adopter pinned to a build asks the CLI the adopter on-ramp points it to which build it runs

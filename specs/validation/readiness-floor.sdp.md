@@ -4,7 +4,9 @@ kind: rule
 altitude: feature
 readiness: ready
 relations:
-  refines: spec:protocol.self-hosting
+  refines:
+    target: spec:validation.two-check-families
+    reason: the readiness floor checks honesty of the stated rung
   dependsOn:
     target: spec:model.core-model
     reason: the floor reads the Protocol descriptor model

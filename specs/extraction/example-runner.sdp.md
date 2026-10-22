@@ -1,7 +1,7 @@
 ---
 id: spec:extraction.example-runner
 kind: behavior
-altitude: feature
+altitude: epic
 readiness: ready
 relations:
   dependsOn:
