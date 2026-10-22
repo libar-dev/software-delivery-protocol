@@ -99,7 +99,7 @@ export const capabilityBranchId = (subject: string, id: string): string =>
 /**
  * @sdpAnchor impl:protocol.studio-capability-diagrams
  * @sdpLabel places refinement occurrences and bounded branches from the capability map
- * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.capability-tree
+ * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.capability-tree, spec:consumers.spec-studio.diagram-kinds
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

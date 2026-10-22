@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,9 +17,9 @@ import { fileURLToPath } from "node:url";
 //      phase-2 disposition.
 //   3. PACKET AGREEMENT — the ledger's fields agree with the owner-packet
 //      dispositions, embedded here as constants read from those packets.
-//   4. CURRENT RECORD — the highest primary-numbered plan has a readable status header, the
-//      handbook names that plan and status, semantic surfaces carry no plan status, and the
-//      documented green-gate legs agree with package.json.
+//   4. CURRENT RECORD — the handbook names the roadmap Pack and recipe, its manifest states
+//      priority order, semantic surfaces carry no plan status, and the documented green-gate
+//      legs agree with package.json.
 //   5. ADR DISPOSITIONS — both flagged §3 rulings carry explicit three-part-test outcomes:
 //      lean diary entries (the strict consumer-exclusion contract (MD-20); the
 //      envelope-grammar ownership posture (MD-21)) with registry rows, and the plan records
@@ -42,6 +42,7 @@ const planPath = ["plans", "17-self-hosting-v1.md"].join("/");
 const plan18Path = ["plans", "18-self-hosting-phase-2.md"].join("/");
 const plan16Path = ["plans", "16-carrier-ruling.md"].join("/");
 const agentsPath = "AGENTS.md";
+const roadmapPath = "specs/roadmap.pack.sdp.md";
 const decisionsPath = "docs/concept/DECISIONS.md";
 const glossaryPath = "CONTEXT.md";
 const packagePath = "package.json";
@@ -86,24 +87,6 @@ const glossary = read(glossaryPath);
 const packageJson = JSON.parse(read(packagePath));
 const plan16 = read(plan16Path);
 const plan18 = existsSync(join(rootDir, plan18Path)) ? read(plan18Path) : null;
-
-const primaryPlans = readdirSync(join(rootDir, "plans"), { withFileTypes: true })
-  .filter((entry) => entry.isFile())
-  .map((entry) => {
-    const match = /^(?<number>\d+)-[a-z0-9][a-z0-9-]*\.md$/u.exec(entry.name);
-    const number = match?.groups?.number;
-    return number === undefined ? null : { name: entry.name, number: Number(number) };
-  })
-  .filter((entry) => entry !== null)
-  .sort((left, right) => right.number - left.number);
-const currentPlan = primaryPlans[0];
-
-if (currentPlan === undefined) {
-  failures.push("plans/ — no primary-numbered plan exists");
-}
-
-const currentPlanPath = currentPlan === undefined ? null : ["plans", currentPlan.name].join("/");
-const currentPlanSource = currentPlanPath === null ? "" : read(currentPlanPath);
 
 // ---------------------------------------------------------------------------
 // 1. The docket: all 25 obligations are dispositioned.
@@ -223,36 +206,18 @@ if (ledgerStart === -1) {
 }
 
 // ---------------------------------------------------------------------------
-// 4. Current record: select the current plan by convention and keep status/gate surfaces aligned.
+// 4. Current record: roadmap pointers and the documented gate.
 // ---------------------------------------------------------------------------
 
-const currentStatusHeader =
-  currentPlanSource.split("\n").find((line) => line.startsWith("> **Status:**")) ?? "";
-const currentStatus = /\b(DRAFTED|EXECUTING|RUN|EXECUTED)\b/u.exec(currentStatusHeader)?.[1];
-
-if (currentStatusHeader === "") {
-  failures.push(`${currentPlanPath ?? "plans/"} — missing a readable blockquoted status header`);
-}
-if (currentStatus === undefined) {
-  failures.push(
-    `${currentPlanPath ?? "plans/"} — status header has no DRAFTED/EXECUTING/RUN/EXECUTED state`,
-  );
-}
-if (currentPlan !== undefined) {
-  expectContains(
-    agentsPath,
-    agents,
-    `plan ${String(currentPlan.number)}`,
-    "the handbook does not name the current primary plan",
-  );
-}
-if (currentStatus !== undefined) {
-  expectContains(
-    agentsPath,
-    agents,
-    `plan ${String(currentPlan?.number)} is ${currentStatus}`,
-    "the handbook status disagrees with the current primary plan",
-  );
+expectContains(agentsPath, agents, "pack:roadmap", "the handbook does not name the roadmap Pack");
+expectContains(agentsPath, agents, "recipe 53", "the handbook does not name the roadmap recipe");
+if (!existsSync(join(rootDir, roadmapPath))) {
+  failures.push(`${roadmapPath} — the roadmap Pack's manifest is missing`);
+} else {
+  const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(read(roadmapPath))?.[1] ?? "";
+  if (!/^order: priority[ \t]*$/mu.test(frontmatter)) {
+    failures.push(`${roadmapPath} — the roadmap Pack's manifest does not state order: priority`);
+  }
 }
 
 const checkScript = packageJson?.scripts?.check;
@@ -404,11 +369,12 @@ const report = {
     decisions: decisionsPath,
     glossary: glossaryPath,
     phase2Plan: plan18 === null ? null : plan18Path,
-    currentPlan: currentPlanPath,
+    roadmap: roadmapPath,
     package: packagePath,
   },
   currentRecord: {
-    status: currentStatus ?? null,
+    roadmap: "pack:roadmap",
+    recipe: 53,
     gateLegs: actualGateLegs,
   },
   temporal,

@@ -1092,6 +1092,7 @@ export const consumersSpecs = [
           "Cheap capture starts with `sdp new spec` (or the equivalent hand-authored idea carrier) in the family found through concept search; the scaffolder emits envelope, Intent outcome, and the kind's bare typed heading, never invented content, and for `constraint` emits envelope, title, and Intent only with no twin section. Every later readiness edit is preceded by the promotion-preflight recipe and remains a human statement.",
           "The skill teaches question keys and their optional fields through `spec:model.open-question-keys` and `spec:model.open-question-fields`, rule keys and an example's `exercises` through `spec:model.rule-keys`, and optional relation reasons through `spec:model.relation-reasons`.",
           "The skill teaches the least design two parties need to agree: keyed Design entries for shared names and shapes, code spans for pinned declarations, rule keys for outside citations, one prose owner for why, and no derived counts, delivery state or implementation sequence authored as design.",
+          "The skill teaches design in rounds over a design slice: what each rung's design typically settles, that a detail only the builder reads and a question only the builder answers belong to the build, and how a reviewer reads the design columns beside each rung; no check reads this guidance.",
           "The skill points behavior and example authors to `spec:carrier.gherkin-authoring` for the lawful Gherkin alternative and Pack authors to `spec:carrier.markdown-pack-authoring` for namespace routing, framing and ordered membership.",
           "Binding is taught for code, test and oracle anchors in the constant form and the comment form, following `spec:decisions.anchor-comment-form` and `spec:decisions.anchor-binding-grain`. The constant builders are `codeAnchor`, `specTest` and `specOracle`; a code anchor's `satisfies` is optional and plural, a test anchor's `verifies` is non-empty and plural, and an oracle anchor has one `models` target. The skill teaches `references` as the code-to-design binding that claims no realization, and names the two silent non-binding hazards, a constant builder without a Protocol builder binding and a comment that does not open with `/**`.",
           "The skill teaches the collective promise test for `satisfies` and the one-way meaning of `references`, following `spec:decisions.anchor-binding-grain`; every promise is realized by the satisfying units together, and each satisfying unit realizes at least one promise.",
@@ -1102,6 +1103,7 @@ export const consumersSpecs = [
           "An anchor carries identity, an optional label, its flavor's targets and optional structure, never intent; a code anchor with neither `satisfies` nor `references` is identity-only and lawful. A Markdown deliverable binds through the document-realization convention: the suite asserting the shipped document carries the code anchor, and blast radius stays coverage-unknown for the Markdown file.",
           "Design Review supplies context for the human readiness statement without becoming a workflow gate.",
         ],
+        ruleKeys: { designRounds: "rules[4]" },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -4937,7 +4939,7 @@ export const consumersSpecs = [
         guideFile:
           "`docs/agent-surface/upgrade-guide.md`, shipped in the package beside the recipe catalog, listed in the package's files and named by `sdp --help` among the shipped on-ramps.",
         guideSections:
-          "in this order: re-pin the package and check `sdp --version`; measure the corpus with capability adoption (recipe 47); key the rules with the rule-key proposal (recipe 48), check the proposal with the proposal check (recipe 38) and apply it through an agent's edit; for every capability in recipe 47's answer, one subsection citing its `carriedBy` Spec and recipe 47 as the measurement, naming a further recipe only when the subsection teaches a distinct next action with it and otherwise sending the reader to the carrying Spec; move rules files onto shipped recipes, recipes 25, 26, 42, 50 and 51 and the `recipes` binding; read large Packs in parts and order the waiting statements, recipes 36 and 46; publish every root with `sdp generate`; and pass a recipe's subject as `--params` data, the recipe-caller guidance the README carries.",
+          "in this order: re-pin the package and check `sdp --version`; measure the corpus with capability adoption (recipe 47); organize features in epics, reading the capability map (recipe 52) and citing `spec:consumers.capability-map`; move planning and review records into the graph, a roadmap Pack read with recipes 53 and 55 and open review findings homed as open questions or a change proposal checked by recipe 38, citing `spec:consumers.roadmap`; key the rules with the rule-key proposal (recipe 48), check the proposal with the proposal check (recipe 38) and apply it through an agent's edit; for every capability in recipe 47's answer, one subsection citing its `carriedBy` Spec and recipe 47 as the measurement, naming a further recipe only when the subsection teaches a distinct next action with it and otherwise sending the reader to the carrying Spec; move rules files onto shipped recipes, recipes 25, 26, 42, 50 and 51 and the `recipes` binding; read large Packs in parts and order the waiting statements, recipes 36 and 46; publish every root with `sdp generate`; and pass a recipe's subject as `--params` data, the recipe-caller guidance the README carries.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -6747,7 +6749,7 @@ export const consumersSpecs = [
           "Mermaid's info and error renderers are diagnostics, not corpus diagram kinds. Keep them outside the Studio catalog of graph drawings; renderer variants such as flowchart ELK, class and state versions share their semantic family's row.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diagram-kinds.sdp.md",
   },
   {

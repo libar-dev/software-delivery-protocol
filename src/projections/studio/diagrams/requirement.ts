@@ -10,7 +10,7 @@ const bandOrder = [
 /**
  * @sdpAnchor impl:protocol.studio-requirement-diagram
  * @sdpLabel folds requirement bindings by relation direction and claim and serializes exact relations
- * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.requirement-trace
+ * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.requirement-trace, spec:consumers.spec-studio.diagram-kinds
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

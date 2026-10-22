@@ -58,8 +58,7 @@ export const foldedBand = (b: DiagramBox): boolean =>
 /**
  * @sdpAnchor impl:protocol.studio-diagram-layout
  * @sdpLabel title-first box placement, wrapping and band sizing for desktop and phone
- * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.legibility
- * @sdpReferences spec:consumers.spec-studio.diagram-kinds
+ * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.legibility, spec:consumers.spec-studio.diagram-kinds
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

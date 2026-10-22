@@ -16,91 +16,14 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 47 is EXECUTING** on `feature/roadmap-and-slices-v0`, as draft PR 36: roadmaps,
-> capability maps and design slices, a thin pointer to `pack:roadmaps-and-slices-v1`. Epics and
-> the capability map, a roadmap whose Pack order is advisory priority (MD-46), more diagram kinds
-> and a curated annotation review, a Pack read as one design slice, and the roadmap replacing the
-> numbered plans (MD-47). The owner ruled the design and gave the build go.
-> **plan 46 is EXECUTED**, as PR 35 on `feature/studio-and-adoption-v0`. Designs people can read,
-> and an adopter at full speed: the Studio's phase 1 (diagrams, every Spec-page panel, the registers and
-> the owner's queue as pages, the design diff, run evidence, the composing panel, previews per
-> pull request), the vault, and the adopter's loop at scale (recipes called from rules files, step
-> keys, term addresses, checked declarations, bundles in parts, the readiness planner, the upgrade
-> kit). The rulings were made on the owner's delegation and the owner confirmed them; the owner
-> ratified the Studio's two decisions and the vault's (MD-43 to MD-45) and turned on the per-pull-
-> request preview. The plan lists what stays the owner's: the platform's statements and the merges.
-> **plan 45 is EXECUTED**, merged as PR 33. Design at the adopter's
-> scale: the adopter installs from a commit, the design-pass loop fits a large corpus
-> (`declarations: "addresses"`, recipe 41), corpus rules run under `sdp validate --rules` with
-> recipes 42 and 43, and the Spec Studio's phase 0 publishes static pages (`sdp studio`; plan 42
-> was its brief). The first adopter moved onto it in its own branch. The rulings were delegated
-> and await the owner's review; the plan lists them, the acceptance as measured, and what waits.
-> **plan 44 is EXECUTED**, merged as PR 32. A whole-corpus refresh: every Spec read against the
-> engine, the other Specs and the vocabulary, cross-family verified, and the findings fixed,
-> ruled on the owner's delegation, or homed as keyed questions with provisional answers for the
-> next arcs; the record is `reviews/26-whole-corpus-refresh.md`.
-> **plan 43 is EXECUTED**, merged as PR 31. Design iteration on a readable graph: answers
-> that fit (summaries, both next rungs, explained misses, the design backlog, repeatable
-> `--params`), the authoring grammar (rule keys, question fields, relation reasons), the iteration
-> loop (design diff, context bundle, perspective filter, change proposal), and gen 1's curation
-> and slimming lessons; intent in `pack:design-iteration-v1`, recipes 33 to 40. The design pass's
-> rulings and `ready` statements were delegated by the owner and still await the owner's review;
-> the plan's last sections list them. Plan 42 follows it.
-> **plan 42 is EXECUTED** as the Studio lane above. The Spec Studio's phase 0, a read-only
-> static view (`sdp studio`); intent in `pack:spec-studio-v1`. Its design pass split the Studio's
-> Specs for honest binding and prototyped the Pack page before the build.
-> **plan 41 is EXECUTED**. The design-management arc, intent in `pack:design-management-v1`: the
-> Design Review's Pack page shows a Pack's design (the Pack design page, MD-39), the graph
-> records entry lines, recipes take `--params` and ship under `dist/recipes/`, recipes 29 to 32
-> serve design work, `sdp --version` names the build, and the original design's unbuilt promises
-> are captured as Specs. The owner ruled every open item and the fold landed in the
-> same branch: the arc's Specs and the drift queue state `ready`; a decision that narrows another
-> `refines` it, `supersedes` replaces whole, and a replaced record that explains nothing is
-> deleted (MD-30, MD-34 and MD-35 were); the captures' questions are answered; and the Studio's
-> phase 0 is ruled a read-only static root. The plan's last section lists the rulings.
-> **plan 40 is EXECUTED**. The annotations arc: the comment form (MD-36), optional plural
-> bindings and design references (MD-37), and architecture attributes (MD-38), all three
-> `ready`, with their open questions closed by the plan's rulings; the engine, self-binding,
-> projections, and agent recipes changed together. Counts are derived at close; re-run the
-> recipes rather than quoting them.
-> **plan 39 is DRAFTED**. The first-adopter arc, a thin lineage pointer in the plan-38 shape. Six
-> of its Specs (inline code spans, the unbound-example posture, the typed-dependency floor, the
-> register recipes, the adopter on-ramp, the shipped corpus) are implemented with bound evidence
-> and, like the verified Markdown body grammar, state `ready` since plan 41's fold. The
-> entry-address engine is built: the prose-mentions validator and the open-section order state
-> `ready` as well, the checked-mentions decision is ratified (MD-40), contract
-> declarations need no engine binding, and the list rendering an owner question held
-> (`spec:decisions.authored-entry-order`) was ratified and built in round 2. The backlog
-> and readiness are read from the graph (recipes 1, 2, 9, 11).
-> **plan 38 is DRAFTED** — the graph-first planning arc, a thin lineage pointer, not a briefs
-> index: the arc's forward intent is authored as capture-rung Specs
-> (`spec:consumers.graph-first-planning`, `spec:model.structural-patterns`,
-> `spec:protocol.structural-self-binding`) and the backlog and readiness are read
-> from the graph (recipes 1, 9, 11). Settled ground:
-> **plan 37 is EXECUTED** — the plan-36 arc is closed; briefs I–K are delivered per
-> plan 36, with operational tracking in `.omo/plans/plan-37-settling-arc.md`.
-> **Status:** Specs and Packs default to the Markdown carrier (the carrier ruling, MD-18, completed
-> by the Pack syntax ruling, MD-25); the TS DSL survives as import source and a lawful per-ID
-> option, and the Gherkin carrier option (MD-27) admits a graph-aware lawful per-ID option for
-> behavior and example Specs. Settled ground: **plan 35 is EXECUTED** (the plan-34 arc: structural
-> recipes, `sdp new spec`, `sdp validate --watch`, first-tranche registrar adoption under MD-31,
-> the engine's own component/uses self-binding); **plan 33 is EXECUTED** (the adjudicated plan-31
-> review closed, graph and gate re-measured); **plan 31 is EXECUTED** (carrier universality,
-> derived runnable modules, census/Mermaid projections, structural anchor semantics); **plan 30 is
-> EXECUTED** (the canonical `.sdp.gherkin` suffix, MD-28); **plan 28 is EXECUTED** (bounded carrier
-> pipeline, parity proof, reader-family tracer bullet); **plan 27 is EXECUTED** (v0 lineage
-> restored, the Gherkin option selected). Plans 36 and 34 are DRAFTED briefs indexes; plans 32 and
-> 29 are briefs-only planning inputs — lineage, never execution plans. Earlier arcs (plans 24–26)
-> stand as recorded in `plans/`. Plan 24's inward turn remains the standing practice: forward
-> intent lives in the graph, so the live backlog is a graph query, not a document.
-> Corpus counts, readiness, and findings are **derived, never quoted** — re-run
+> **Next work** is read from the graph: run the roadmap, recipe 53, over `pack:roadmap`
+> (`pnpm --silent sdp:q "$(cat dist/recipes/53-the-roadmap.js)" --params '{"pack":"pack:roadmap"}'`),
+> follow each entry to its Packs and carrying Specs, and read the open arc's draft pull request for
+> its record. `plans/` and `reviews/` are frozen history of earlier arcs until a cleanup arc
+> removes or archives them; nothing is added to either. Corpus counts, readiness, and findings are
+> **derived, never quoted** — re-run
 > `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
-> (or `npm run --silent sdp --` with the same argv) and read recipes 8 and 11. Recipe 1 is the
-> operational backlog, not the census. Never invoke a bare `sdp`. Build state lives in
-> **`plans/`** — read the highest **primary-numbered** plan's status header, plus any **active
-> subplans it (or its parent family) explicitly designates as current**; ignore unnumbered files
-> and letter-suffixed plans only when no primary/active plan designates them. If that plan is
-> DRAFTED, also read the latest ✅ EXECUTED/RUN plan for settled ground.
+> and read recipes 8 and 11. Recipe 1 is the operational backlog, not the census. Never invoke a bare `sdp`.
 
 ## The frame
 
@@ -141,9 +64,9 @@ Progressive disclosure — start at the top, follow the pointers down.
 | `examples/checkout-v1` | **the worked MVP example** (Markdown carriers; originally the TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `docs/lineage/` | restored historical design documents — the v0 concept set, verbatim with lineage headers; evidence for design reviews, never intended truth | when a review needs superseded design on the table rather than in git history |
-| `plans/` | **the build plan** — what each implementation session does, and why | before writing code — highest primary-numbered plan's status header, plus active subplans it designates; if DRAFTED, also the latest ✅ EXECUTED/RUN plan |
+| `pack:roadmap` + recipe 53 | **the next work** — the owner's advisory priority over upcoming capabilities, each entry placed by the graph as to design, to state, to build or built; the open arc's record is its draft pull request | before writing code |
 | `npm run check` | **the green gate** — `check:temporal` → `lint` → `format:check` → `build` → `generate:self-hosting` → `generate:example` → `typecheck` → `typecheck:examples` → `test` → `check:self-hosting-gates` → `check:self-hosting` → `check:example` → `preflight` | before claiming green / after engine edits |
-| `reviews/` | **archived session reviews** (implementation, founding-ideation, adversarial + prompts) — durable findings already folded into plans/DECISIONS; read for provenance | rarely |
+| `plans/`, `reviews/` | **frozen history** of earlier arcs: plans, session reviews, prompts and assets; read for provenance; nothing is added | rarely |
 
 Key decisions (names first): the executable meta-model (MD-1); one primitive named coordinates (MD-4); the carrier ruling (MD-18); the agent front door (MD-22); the shipped projections stay frozen (MD-32); planning truths live in ruled graph homes (MD-33); the comment form (MD-36); bindings are optional, plural, and may reference a design (MD-37); architectural significance is annotated where it is realized (MD-38).
 
@@ -203,8 +126,8 @@ for the Studio, `sdp-vault` for the vault) are the on-ramps. In this checkout, a
 The MVP proved the founding principle on **one** bounded context — Order Management,
 `pack:checkout-v1` — built as thin **end-to-end slices on the Phase 0 foundation**; the worked
 example lives at `examples/checkout-v1` (documented walkthrough in its README). **Slices 0–5 are
-complete** — the per-slice record is plan 10. Live work is the
-highest primary-numbered plan under `plans/` — read it before writing code.
+complete** — the per-slice record is plan 10. Live work is read from the
+roadmap, recipe 53 over `pack:roadmap` — run it before writing code.
 
 > **Tracer-bullet discipline.** Author the example specs and anchored code *first*, so the carrier and extractor are
 > forced to be usable before they are finished. If the example stops extracting or validating, fix the carrier or extractor — not the example.
@@ -247,7 +170,7 @@ Every doc honours both — never mistake one half for the other:
   ladder) is a **bug to fix against the base**, not current usage.
 - **DECISIONS.md admits sparingly, and reads by name.** An entry must pass the ADR three-part test — *hard to
   reverse · surprising without context · a real trade-off*. If the "Why" says the base already forced the
-  answer, it's drift repair, not a decision — its paper trail is git + the plan done-record. Authoring
+  answer, it's drift repair, not a decision — its paper trail is git and the pull request description. Authoring
   guidance only, never a validator (checks police conformance and honesty, never content-quality). In prose,
   lead with meaning: "the typing law (MD-11)," never bare MD-n (the registry at the top of `DECISIONS.md`
   holds the ratified names).
@@ -257,8 +180,8 @@ Every doc honours both — never mistake one half for the other:
 - **Naming is resolved — use these names.** Product **Libar Software Delivery Protocol** (short form "the
   Protocol"); CLI **`sdp`**; npm **`@libar-dev/software-delivery-protocol`** (single package); repo
   `libar-dev/software-delivery-protocol`. Namespaces: `@libar-dev/` (OSS) vs `@libar-ai/` (commercial).
-- **Plan vs execution.** Distinguish **PLAN-ONLY** work (designing, deciding) from **execution** (editing code or
-  docs). For a plan under `plans/`, don't touch its target files unless the session is execution.
+- **Design vs execution.** Distinguish design work (Specs, decisions, open questions) from execution
+  (code, tests, docs). A design session edits carriers and leaves the code its Specs will change alone.
 - **Lineage is evidence, not template.** Prior art **`@libar-dev/architect`** (local clone when
   present, e.g. a sibling `architect` checkout) taught us the problem in production — source-first
   annotations, one graph as the read model, a scriptable graph handle (the direct ancestor of
@@ -272,15 +195,31 @@ Every doc honours both — never mistake one half for the other:
   write it, under OmO's own protocol. Every other agent leaves it alone: it adds no plan, draft or evidence
   there and never deletes, prunes or overwrites what is there. A Claude session keeps its working material
   in its own scratchpad.
-- **Tests are the evidence.** A change proves itself with a test that fails without it, and the corpus's
-  state with a recipe anyone can re-run. Keep a separate evidence artifact only for what no test or recipe
-  can carry, such as a rendered page or an adopter measurement, and commit it beside the record that cites it.
-- **Commits are recovery boundaries, not workflow gates.** An execution plan's explicit commit strategy counts
-  as authorization on its work branch; otherwise ask before committing. Prefer a commit after a coherent
-  logical unit and its relevant quality gate, but never force one per todo, create empty commits, absorb
-  unrelated or pre-existing changes, or commit from an unsafe dirty baseline. When no clean boundary exists,
-  preserve and account for the state in the tracked plan/draft rather than discarding it; commit at the next
-  safe boundary. Push only on the user's explicit request; never use `git stash`.
+- **Tests are the evidence.** A change proves itself with a test that fails without it; recipes
+  re-derive corpus state. Acceptance links bound examples and run evidence at the measured commit
+  with the commands, never an inherited verdict. A run's commit must match a preview's stamp to
+  evidence it; a preview remains a current view. Evidence no test or recipe carries is committed
+  on the arc's branch with its commands, linked from the description at that commit, and removed before merge.
+- **Commits are recovery boundaries, not workflow gates.** The owner's instruction that opens an
+  arc authorizes commits and its push; the convention creates no authority. The first commit message
+  states the owner's working rules, base and arc's Pack. Open the draft pull request at the first coherent commit,
+  normally the scaffold, and repeat those rules there with the branch, base, lanes and rulings.
+  Without such an instruction, ask before committing. Commit each coherent unit after its gate;
+  never force one per todo, create empty commits, absorb unrelated or pre-existing changes, or
+  commit from an unsafe dirty baseline. If a session must stop without a clean boundary, commit
+  its work in progress saying what is incomplete. Resume from
+  the branch, commits, draft description and graph; git cannot recover uncommitted work.
+  Outstanding work is read from the arc's Pack, backlogs and open-question register.
+  Push only on the user's explicit request; never use `git stash`.
+- **Reviews travel as proposals.** Findings against Specs form one change proposal
+  (`schemas/sdp-proposal-1.schema.json`), based on the branch-head commit the reviewer read,
+  never a preview's merge commit. Check it with recipe 38 against that base, read moved,
+  unresolved or incomparable scopes again, and post recipe 49's memo to the pull request.
+  Findings against code or other files are pull request comments on their lines; a review proposing no Spec edit
+  has no proposal. An open design finding becomes an open question with `decider`, `provisional`
+  and `links`; a deferral adds its blocking question's `trigger`. A code defect against settled
+  intent stays a code finding. An applying commit carries the proposal's reason line and base;
+  acceptance stays in git and the discussion. Briefs and prompts stay in the session.
 - **Unreleased OmO installs are user-controlled.** The user switches the official
   `~/dev-admin/oh-my-openagent` clone to `dev` when needed and owns `~/.omo/omo.jsonc`. Agents may inspect and
   report that state, but must not checkout, pull, build, globally install, or edit the OmO configuration unless
@@ -295,17 +234,17 @@ that reader brings. The standard, set by PR #19 (the universal-Spec arc) buildin
 #16, and extended by PR #31 (human views, ruling tables, the next PR's lanes):
 
 - **Story before inventory.** Lead with what the PR introduces and why: the questions it answers,
-  the arc it closes, the plans it executes. What-changed lists and review-closure details are
+  the arc it closes, the capability it delivers. What-changed lists and review-closure details are
   evidence, never the headline; a description written during a review session must still be
   re-anchored on the full scope before publication.
 - **Present new things, don't just name them.** Each new surface gets a short explanation of the
   idea and a linked representative artifact on the branch: a carrying Spec, a worked example, a
-  plan. One stop per surface, tour-style.
+  Pack. One stop per surface, tour-style.
 - **Show it to a person.** Prose, rendered tables and screenshots are welcome. When the PR moves a
   human view, such as a Design Review page, show it at the arc's base and at the head. Render a
   recipe's answer as a short table rather than pasting JSON, and say plainly what no human view
-  shows yet. `gh` cannot attach images, so commit them under `reviews/assets/pr<n>/` with a
-  short README naming the commit and the commands.
+  shows yet. `gh` cannot attach images, so commit them on the arc's branch with a
+  short README naming the commands, pin links to that commit, and remove them before merge.
 - **Self-hosted and graph-measured.** The arc's intent is a Pack in the corpus: link it, and
   describe its state and its changes with the Protocol's own recipes, Pack design (29) and the
   design diff (35) from the arc's base among them. Check every claim about the Protocol's own
@@ -315,14 +254,13 @@ that reader brings. The standard, set by PR #19 (the universal-Spec arc) buildin
   second. Every registry row the PR adds appears.
 - **Invite use.** A try-it block with real commands, re-run at the head before publishing, plus a
   feedback call naming the open questions the PR most wants pressure on.
-- **Plan the next PR.** Every description keeps a forward section, and it is a proposal: the next
-  PR's lanes as a table (what, and why now) with its re-entry condition, then the arc after it,
-  the statements that wait only for the owner, and the deferred items with their triggers from
-  recipe 20. Keep the durable refused list. Rewrite the section each time rather than appending
-  stale rows.
+- **Plan the next PR.** The forward section is recipe 55's memo over `pack:roadmap`, rendered at
+  the head, with the owner's reason for each entry's priority, the re-entry condition and the
+  durable refused list in the author's words around it. The pull request completing an entry's
+  selected work removes it in the same change; entries join or move only on the owner's word.
 - **Numbers are re-measured and marked.** Close measurements are re-derived at close and labeled
   as such ("re-run the recipes rather than inheriting these"), never quoted from an older record.
-- **Audit, then publish.** Check the description against the plan, every ruling record the PR
+- **Audit, then publish.** Check the description against the arc's Pack, every ruling record the PR
   carries out, and the diff stat from the base, so each finished piece of work appears or is left
   out on purpose. Pin links and images to a commit so they outlive the branch (`blob/<sha>/…`,
   `raw.githubusercontent.com/<owner>/<repo>/<sha>/…`; a line anchor on a Markdown file needs

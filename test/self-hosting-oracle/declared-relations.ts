@@ -3367,6 +3367,18 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.edit-model",
     "a carrier changes only through an agent's or a person's edit, recorded by git",
   ],
+  [
+    "spec:consumers.upgrade-kit",
+    "dependsOn",
+    "spec:consumers.capability-map",
+    "the guide teaches epic organization through the capability map",
+  ],
+  [
+    "spec:consumers.upgrade-kit",
+    "dependsOn",
+    "spec:consumers.roadmap",
+    "the guide teaches advisory priority and the roadmap memo as planning records",
+  ],
   ["spec:consumers.upgrade-kit.capability-adoption", "refines", "spec:consumers.upgrade-kit"],
   [
     "spec:consumers.upgrade-kit.capability-adoption",

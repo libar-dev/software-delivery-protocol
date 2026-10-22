@@ -304,6 +304,6 @@ export const protocolSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
 ] as const;

@@ -73,8 +73,8 @@ function svg(d: Diagram, textId: string, diagramId: string, l: Layout, routed: R
 /**
  * @sdpAnchor impl:protocol.studio-diagrams
  * @sdpLabel deterministic grid and band layouts with bounded folds and full text equivalents
- * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.diagram-kinds.edge-routing, spec:consumers.spec-studio.diagram-kinds.legibility, spec:consumers.spec-studio.diagram-kinds.mermaid-source
- * @sdpReferences spec:decisions.studio-diagram-renderer, spec:decisions.studio-build-renders, spec:consumers.spec-studio.diagram-kinds
+ * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.diagram-kinds.edge-routing, spec:consumers.spec-studio.diagram-kinds.legibility, spec:consumers.spec-studio.diagram-kinds.mermaid-source, spec:consumers.spec-studio.diagram-kinds
+ * @sdpReferences spec:decisions.studio-diagram-renderer, spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  * @sdpUses impl:protocol.studio-diagram-model

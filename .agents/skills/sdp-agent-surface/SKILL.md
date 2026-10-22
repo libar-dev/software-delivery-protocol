@@ -99,7 +99,8 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Check prose tokens against an outside register                 | external registers (recipe 50)                                                                             |
 | Find source and test lines citing an entry                     | entry citations (recipe 51)                                                                                |
 | Read epic scopes and direct binding evidence                   | the capability map (recipe 52)                                                                             |
-| Read upcoming work in the owner's order                        | the roadmap (recipe 53); the roadmap memo (recipe 55) for a description's forward section                  |
+| Read upcoming work in the owner's order                        | the roadmap (recipe 53)                                                                                    |
+| Render a description's forward section                         | the roadmap memo (recipe 55)                                                                               |
 
 Choose a recipe from the task sheet, then read its numbered catalog entry for parameters,
 defaults, diagnostics and answer fields. Run the shipped body unchanged, or call
