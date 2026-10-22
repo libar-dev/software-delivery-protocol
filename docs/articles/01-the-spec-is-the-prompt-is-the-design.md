@@ -342,7 +342,7 @@ The three `--exclude` flags keep the exploration exhibits, the separate worked e
 
 ## Up Next in the Series
 
-In **Part 2: From Rough Idea to Verified Code** ([read it here](./02-walkthrough-intent-to-verified-code.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/ARTICLES_COMMIT/docs/articles/02-walkthrough-intent-to-verified-code.md)), we open `examples/checkout-v1` and the Protocol's own source code to walk the complete engineering loop: authoring `.sdp.md` carriers (and where `.sdp.gherkin` fits), binding code with constant-form and `@sdp*` comment-form anchors, generating typed step and space contracts, writing an expected-outcome `specOracle`, and deliberately breaking the graph to watch the extraction, conformance, honesty, and contract checks fire.
+In **Part 2: From Rough Idea to Verified Code** ([read it here](./02-walkthrough-intent-to-verified-code.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/58a82023ec9c66784f09ccbb5be941a0beda39a0/docs/articles/02-walkthrough-intent-to-verified-code.md)), we open `examples/checkout-v1` and the Protocol's own source code to walk the complete engineering loop: authoring `.sdp.md` carriers (and where `.sdp.gherkin` fits), binding code with constant-form and `@sdp*` comment-form anchors, generating typed step and space contracts, writing an expected-outcome `specOracle`, and deliberately breaking the graph to watch the extraction, conformance, honesty, and contract checks fire.
 
 ---
 
