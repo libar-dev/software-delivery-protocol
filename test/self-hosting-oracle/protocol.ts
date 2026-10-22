@@ -306,4 +306,35 @@ export const protocolSpecs = [
     },
     deliveryFacts: ["implemented", "has-verifier"],
   },
+  {
+    id: "spec:protocol.delivery-record-cleanup",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    file: "specs/protocol/delivery-record-cleanup.sdp.md",
+    title: "The Protocol removes its frozen plans, review reports and superseded concept material",
+    narrative:
+      "Since the roadmap and each pull request carry the Protocol's delivery record, `plans/` and `reviews/` stand as frozen history, and the concept documents keep material the Specs already carry. Before they go, the durable content they still hold that no Spec, test, decision or recipe carries moves into the graph; git keeps the rest.",
+    sections: {
+      intent: {
+        outcome:
+          "Remove `plans/`, `reviews/` and the superseded concept material from the tree, after moving into the graph the durable content they still hold, so the repository keeps one delivery record: the graph, git and the pull requests.",
+        risks: [
+          "The self-hosting gate's frozen historical checks read three plan files, and the temporal guard exempts both folders, so the removal changes those checks in the same change.",
+        ],
+        openQuestions: [
+          {
+            question:
+              "Which content in `plans/`, `reviews/` and the concept documents does no Spec, test, decision or recipe carry yet, and where does each piece belong?",
+            blocking: true,
+            key: "durableContent",
+            decider: "owner",
+            provisional:
+              "a measured inventory by the arc that removes them, reviewed before anything is deleted",
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;

@@ -409,6 +409,7 @@ specs:
   - spec:protocol.role-vocabulary
   - spec:protocol.capability-epics
   - spec:protocol.roadmap-replaces-plans
+  - spec:protocol.delivery-record-cleanup
   - spec:decisions.plain-language-references
   - spec:decisions.concept-docs-dissolve
   - spec:decisions.one-validation-path

@@ -4639,6 +4639,13 @@ export const expectedDeclaredRelations: readonly (readonly [
     "an arc's acceptance reads run records as evidence from test files at their recorded commit",
   ],
   ["spec:protocol.roadmap-replaces-plans", "decidedBy", "spec:decisions.roadmap-over-plans"],
+  [
+    "spec:protocol.delivery-record-cleanup",
+    "refines",
+    "spec:protocol.roadmap-replaces-plans",
+    "carries out the removal the roadmap and the pull request record made possible for frozen history",
+  ],
+  ["spec:protocol.delivery-record-cleanup", "decidedBy", "spec:decisions.roadmap-over-plans"],
   ["spec:consumers.spec-studio.cited-line-text", "refines", "spec:consumers.spec-studio"],
   [
     "spec:consumers.spec-studio.cited-line-text",
