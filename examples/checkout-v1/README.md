@@ -149,7 +149,7 @@ npm run --silent sdp -- q 'return recipes(53, params)' --root examples/checkout-
 npm run --silent sdp -- q 'return recipes(55, params)' --root examples/checkout-v1 --params '{"pack":"pack:checkout-roadmap"}' --json
 ```
 
-Order placement needs design; the vocabulary waits for a person's readiness statement.
+Recipe 53 places each entry by what it needs, read from the graph each time.
 The memo copies purpose and dependency reach; the owner's reason for priority belongs in the
 pull request author's own words. Membership and priority change no readiness or delivery fact.
 

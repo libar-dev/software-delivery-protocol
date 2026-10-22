@@ -364,7 +364,7 @@ describe("the self-hosting corpus", () => {
     expect(expectedAnchors).toHaveLength(606);
     expect(expectedBindingEdges).toHaveLength(806);
     expect(result.graph.nodes).toHaveLength(1070);
-    expect(result.graph.edges).toHaveLength(2974);
+    expect(result.graph.edges).toHaveLength(2976);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {

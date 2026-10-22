@@ -501,8 +501,9 @@ follows. The law is `spec:decisions.anchor-binding-grain`.
   non-empty and unique, and structural self-reference is refused. Multi-node `uses` cycles remain
   data, never findings. There is no `implements` field; contract realization stays `satisfies`.
 - `role` names the architectural pattern the unit plays, on any code anchor. The corpus owns the
-  vocabulary; run recipe 28 to reuse a value and read `spec:protocol.role-vocabulary` for this
-  corpus's meanings, not a closed list. A value is one lowercase kebab token matching
+  vocabulary; run recipe 28 to reuse a value. Common roles include `service`, `decider` and
+  `projection`; the Protocol's own engine roles (`spec:protocol.role-vocabulary`) are a worked
+  example, not a list. A value is one lowercase kebab token matching
   `^[a-z][a-z0-9-]*$` and is never normalized, so `readModel` is refused rather than folded into
   `read-model`.
 - `layer` goes on a `component:` anchor only and takes one of five values:
@@ -529,15 +530,23 @@ A significant unit owns a contract or responsibility a designer or builder must 
 has exported public surface or cross-component reach; export status or import rank alone is
 insufficient. Bind ports, shared shapes, pipeline stages, decision tables, catalogs, layout
 policies and adapters when they meet that criterion. Mechanical wrappers, forwarding barrels,
-empty registrations and formatting helpers stay bare. Keep the unit's responsibility in its label
-and the component's reading guidance in its anchor. A `uses` declaration needs a real value or type import;
+empty registrations and formatting helpers stay bare unless they own an independent contract or
+architectural responsibility. Keep the unit's responsibility in its label and the component's
+reading guidance in its anchor. A `uses` declaration needs a real value or type import;
 anchor-authoring imports and unused re-exports confer none. Run the curation report (recipe 40)
-for advice, never a coverage quota. The corpus's reviewed boundary is
-`spec:protocol.significant-units-review`.
+for advice, never a coverage quota; the Protocol's own reviewed boundary,
+`spec:protocol.significant-units-review`, is a worked example.
 
-An identity has one owner, so an identity standing for several files becomes several identities.
-Each identity chooses `satisfies` or `references` for what its own code does. A realizing unit's
-comment documents its local how; the Spec owns its what and why.
+An identity has one file owner. Several Specs realized by one responsibility normally share an
+anchor with plural targets; independent contracts, entry points and semantic policies in one file
+may keep distinct identities when their separate design use is clear. Before merging or dropping
+an identity, list every promise its targets carry and name the surviving units that still realize
+it. Transfer targets only when that set remains true, or explicitly record a false claim being
+removed. Review imported value and type contracts when declaring component uses, exclude imports
+made only to author anchors and unused re-export reach, and inspect external-input omissions and
+unassigned files before deleting an edge. Each identity chooses `satisfies` or `references` for
+what its own code does. A realizing unit documents its local how, never a paraphrase of the Spec's
+what or why.
 
 A Markdown deliverable cannot carry an in-code anchor. Bind it through the document-realization
 convention: the test suite that asserts the shipped document carries the code anchor, its label

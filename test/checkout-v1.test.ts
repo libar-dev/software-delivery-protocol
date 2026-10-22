@@ -23,6 +23,18 @@ const goldenPath = fileURLToPath(
 const extraction = extract({ root: exampleRoot });
 
 describe("checkout-v1 tracer bullet (extractor-fed)", () => {
+  it("teaches readers to derive roadmap needs each time", () => {
+    const readme = readFileSync(
+      new URL("../examples/checkout-v1/README.md", import.meta.url),
+      "utf8",
+    );
+    const roadmap = readme.split("## Read the next work\n")[1]?.split(/^## /mu)[0] ?? "";
+    expect(roadmap).toContain(
+      "Recipe 53 places each entry by what it needs, read from the graph each time",
+    );
+    expect(roadmap).not.toContain("Order placement needs design");
+  });
+
   it("extracts the example with zero findings", () => {
     expect(extraction.report.findings).toEqual([]);
     expect(extraction.counts).toEqual({ specs: 11, packs: 2, anchors: 5 });

@@ -149,16 +149,31 @@ describe("the self-hosting records gate", () => {
   });
 
   it("ships the roadmap, recovery and review convention in the handbook", () => {
-    const handbook = readFileSync(join(repoRoot, "AGENTS.md"), "utf8").replace(/\s+/gu, " ");
+    const source = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
+    const flat = (text: string) => text.replace(/\s+/gu, " ");
+    const bullet = (label: string) => {
+      const match = source.split(`- **${label}**`)[1]?.split(/^-(?= \*\*)|^## /mu)[0];
+      expect(match, label).toBeDefined();
+      return flat(match ?? "");
+    };
+    const next = flat(source.split("> **Next work**")[1]?.split(/^## /mu)[0] ?? "");
+    for (const clause of ["pack:roadmap", "recipe 53", "frozen history"])
+      expect(next).toContain(clause);
+    const commits = bullet("Commits are recovery boundaries, not workflow gates.");
     for (const clause of [
-      "**Next work**",
-      "pack:roadmap",
-      "recipe 53",
-      "frozen history",
       "first commit message",
       "working rules",
       "draft pull request",
       "first coherent commit",
+      "Without such an instruction, ask before committing",
+      "never force one per todo",
+      "create empty commits",
+      "absorb unrelated or pre-existing changes",
+      "commit from an unsafe dirty baseline",
+    ])
+      expect(commits).toContain(clause);
+    const reviews = bullet("Reviews travel as proposals.");
+    for (const clause of [
       "branch-head commit",
       "preview's merge commit",
       "recipe 38",
@@ -167,13 +182,17 @@ describe("the self-hosting records gate", () => {
       "provisional",
       "links",
       "code defect",
-      "removed before merge",
-      "recipe 55",
-      "owner's reason",
-      "run evidence",
     ])
-      expect(handbook).toContain(clause);
-    expect(handbook).not.toMatch(/plan \d+ is (?:EXECUTING|EXECUTED|DRAFTED)/u);
-    expect(handbook).not.toContain("highest primary-numbered plan");
+      expect(reviews).toContain(clause);
+    const evidence = bullet("Tests are the evidence.");
+    for (const clause of ["removed before merge", "run evidence"])
+      expect(evidence).toContain(clause);
+    const forward = bullet("Plan the next PR.");
+    for (const clause of ["recipe 55", "owner's reason"]) expect(forward).toContain(clause);
+    expect(bullet("DECISIONS.md admits sparingly, and reads by name.")).toContain(
+      "its paper trail is git and the pull request description",
+    );
+    expect(flat(source)).not.toMatch(/plan \d+ is (?:EXECUTING|EXECUTED|DRAFTED)/u);
+    expect(source).not.toContain("highest primary-numbered plan");
   });
 });

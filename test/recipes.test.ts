@@ -8339,15 +8339,81 @@ it("pins the adopter roadmap and its forward memo over the worked example", asyn
   expect(roadmaps).toHaveLength(1);
   const roadmap = asRecord(roadmaps[0]);
   expect(roadmap.order).toBe("priority");
+  expect(roadmap.totals).toEqual({
+    entries: 2,
+    toDesign: 1,
+    toState: 1,
+    toBuild: 0,
+    built: 0,
+    apart: 0,
+    questions: 0,
+    blockingQuestions: 0,
+    withoutDecider: 0,
+    blockingWithoutDecider: 0,
+    statements: 1,
+  });
   expect(
     asArray(roadmap.entries).map((entry) => {
       const row = asRecord(entry);
-      return [row.id, row.need];
+      return {
+        id: row.id,
+        need: row.need,
+        statedReadiness: row.statedReadiness,
+        floorReached: row.floorReached,
+        holdsNextRung: row.holdsNextRung,
+      };
     }),
   ).toEqual([
-    ["spec:orders.order-placement-flow", "to design"],
-    ["spec:orders.order-model", "to state"],
+    {
+      id: "spec:orders.order-placement-flow",
+      need: "to design",
+      statedReadiness: "scoped",
+      floorReached: "scoped",
+      holdsNextRung: [{ clause: "kind-evidence-complete", targets: [] }],
+    },
+    {
+      id: "spec:orders.order-model",
+      need: "to state",
+      statedReadiness: "defined",
+      floorReached: "ready",
+      holdsNextRung: [],
+    },
   ]);
-  expect(answer).toMatchSnapshot("roadmap answer");
-  expect(await runRecipe(recipeByOrdinal(55), params, example)).toMatchSnapshot("forward memo");
+  // Transcribed from the memo's head, design, state, build and waiting contracts.
+  // spec:consumers.roadmap.memo#design.memoHead
+  // spec:consumers.roadmap.memo#design.memoDesign
+  // spec:consumers.roadmap.memo#design.memoState
+  // spec:consumers.roadmap.memo#design.memoBuild
+  // spec:consumers.roadmap.memo#design.memoWaiting
+  expect(await runRecipe(recipeByOrdinal(55), params, example)).toEqual({
+    diagnostics: [],
+    memo: `## The next work, from the roadmap
+
+Roadmap: Checkout roadmap \`pack:checkout-roadmap\`
+
+To state means the floor allows ready and a person still judges the statement. Built means every Spec of the entry's work states ready and has an implementation binding; it reports no passing test and no deployment.
+
+Clarify how a customer reaches order creation, then review the shared order vocabulary. The order is advisory priority; needs come from the graph and confer no permission.
+
+### To design
+
+| Place | Entry | Next | Purpose and reach |
+| --- | --- | --- | --- |
+| 1 | Order placement flow \`spec:orders.order-placement-flow\` | itself \`scoped\` → \`defined\`, held by kind-evidence-complete | Sequence cart submission through validation to a created order. |
+
+### To state
+
+| Place | Entry | Earlier waiting statements | Purpose and reach |
+| --- | --- | --- | --- |
+| 2 | Order-management domain vocabulary \`spec:orders.order-model\` | 1 outside the roadmap | Define the core terms used by the checkout-v1 order-management slice. |
+
+### To build
+
+No entry is ready to build.
+
+### Waiting on the owner
+
+- State \`spec:orders.order-model\`: it states \`defined\` and its floor allows \`ready\`; place 2
+`,
+  });
 });

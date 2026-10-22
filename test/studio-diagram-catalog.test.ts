@@ -16,13 +16,12 @@ const catalog = specTest({
 void catalog;
 
 describe("the shipped diagram catalog", () => {
-  it("binds the complete drawn set and keeps every other family deferred or refused", () => {
+  it("keeps the complete drawn catalog and every other family deferred or refused", () => {
     const graph = extract({
       root: fileURLToPath(new URL("..", import.meta.url)),
       exclude: ["explorations", "examples", "test/fixtures/import/parity"],
     }).graph;
     const context = createReader(graph).specContext("spec:consumers.spec-studio.diagram-kinds");
-    expect(context?.deliveryFacts).toEqual(["implemented", "has-verifier"]);
     const design = context?.sections?.design ?? {};
     const choices = Object.entries(design)
       .filter(([, value]) => /^(Draw|Equivalent|Defer|Refuse)\b/u.test(String(value)))
@@ -100,10 +99,29 @@ describe("the shipped diagram catalog", () => {
         expect(slice).toContain(`id="diagram.pack:probe.${kind}.text"`);
       expect(page("capabilities.html")).toContain(".capability.text");
       expect(page("packs/probe.html")).toContain('id="diagram.pack:probe.maturity.text"');
-      expect(page("architecture.html")).toContain('class="component-uses"');
+      // spec:consumers.spec-studio.diagram-kinds#design.usesTable
+      const uses = /<section><h2>Component uses<\/h2>[\s\S]*?<\/section>/u.exec(
+        page("architecture.html"),
+      )?.[0];
+      expect(uses).toBeDefined();
+      expect(uses).toContain('class="component-uses"');
+      expect(uses).not.toContain("<textarea");
       expect(page("specs/probe.root.html")).toContain(
         'id="diagram.spec:probe.root.requirement.text"',
       );
+      // spec:consumers.spec-studio.diagram-kinds#rule.drawnKinds
+      const specPage = page("specs/probe.root.html");
+      const designView =
+        specPage.split('id="panel.design-view"')[1]?.split('id="panel.runtime"')[0] ?? "";
+      const specDrawingIds = [...designView.matchAll(/\bid="(diagram\.[^"]+)"/gu)].map(
+        (match) => match[1],
+      );
+      expect(specDrawingIds.length).toBeGreaterThan(0);
+      for (const id of specDrawingIds)
+        expect(id).toMatch(/^diagram\.spec:probe\.root\.requirement\./u);
+      expect(specPage).not.toContain(".realization.");
+      const impact = specPage.split('id="panel.impact"')[1] ?? "";
+      expect(impact).toContain('id="diagram.spec:probe.root.text"');
       const html = pages.map((row) => row.content).join("\n");
       const sources = [...html.matchAll(/<textarea[^>]*>([\s\S]*?)<\/textarea>/gu)].map(
         (match) => match[1]?.trim().split("\n")[0],

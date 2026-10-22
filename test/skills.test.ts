@@ -143,11 +143,30 @@ it("teaches design rounds and curates bindings by responsibility", () => {
     "contract or responsibility",
     "export status or import rank alone",
     "Mechanical wrappers",
+    "unless they own an independent contract or architectural responsibility",
+    "Several Specs realized by one responsibility normally share an anchor with plural targets",
+    "independent contracts, entry points and semantic policies",
+    "Before merging or dropping an identity, list every promise",
+    "name the surviving units",
+    "explicitly record a false claim being removed",
     "value or type import",
     "responsibility in its label",
     "component's reading guidance",
   ])
     expect(binding).toContain(clause);
+});
+
+it("presents the Protocol engine roles and reviewed boundary as worked examples for adopters", () => {
+  const architecture = flat(
+    skillSection(skillPaths[1], "### Declare architecture where it is realized"),
+  );
+  expect(architecture).toContain(
+    "the Protocol's own engine roles (`spec:protocol.role-vocabulary`) are a worked example, not a list",
+  );
+  const curation = flat(skillSection(skillPaths[1], "### Curate the anchors"));
+  expect(curation).toContain(
+    "the Protocol's own reviewed boundary, `spec:protocol.significant-units-review`, is a worked example",
+  );
 });
 
 it("routes the next work and reviews through roadmap and proposal recipes", () => {

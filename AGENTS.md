@@ -170,7 +170,7 @@ Every doc honours both — never mistake one half for the other:
   ladder) is a **bug to fix against the base**, not current usage.
 - **DECISIONS.md admits sparingly, and reads by name.** An entry must pass the ADR three-part test — *hard to
   reverse · surprising without context · a real trade-off*. If the "Why" says the base already forced the
-  answer, it's drift repair, not a decision — its paper trail is git + the plan done-record. Authoring
+  answer, it's drift repair, not a decision — its paper trail is git and the pull request description. Authoring
   guidance only, never a validator (checks police conformance and honesty, never content-quality). In prose,
   lead with meaning: "the typing law (MD-11)," never bare MD-n (the registry at the top of `DECISIONS.md`
   holds the ratified names).
@@ -204,8 +204,10 @@ Every doc honours both — never mistake one half for the other:
   arc authorizes commits and its push; the convention creates no authority. The first commit message
   states the owner's working rules, base and arc's Pack. Open the draft pull request at the first coherent commit,
   normally the scaffold, and repeat those rules there with the branch, base, lanes and rulings.
-  Commit each coherent unit after its gate; preserve unrelated changes. If a session must stop
-  without a clean boundary, commit its work in progress saying what is incomplete. Resume from
+  Without such an instruction, ask before committing. Commit each coherent unit after its gate;
+  never force one per todo, create empty commits, absorb unrelated or pre-existing changes, or
+  commit from an unsafe dirty baseline. If a session must stop without a clean boundary, commit
+  its work in progress saying what is incomplete. Resume from
   the branch, commits, draft description and graph; git cannot recover uncommitted work.
   Outstanding work is read from the arc's Pack, backlogs and open-question register.
   Push only on the user's explicit request; never use `git stash`.
