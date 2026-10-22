@@ -212,6 +212,9 @@ Made by the executing thread on the owner's delegation; each awaits the owner's 
 | The diff page lists keyed rules in rule order with their text; a Spec's change note counts rules keyed with wording unchanged, and the Pack page marks a member keyed only | `spec:consumers.spec-studio.diff-page` |
 | The Protocol ships two more skills, `sdp-studio` and `sdp-vault`, each realizing its own on-ramp Spec; upgrade, corpus-rules and review guidance stay sections of the existing skills | `spec:consumers.studio-on-ramp`, `spec:consumers.vault-on-ramp` |
 | The package smoke test packs a scratch copy of the package: npm 10 runs `prepare` on `npm pack` even with `--ignore-scripts`, which rebuilt `dist/` mid-suite on CI's Node 20 | — |
+| A copied Pack request keeps its action and scope: a member change names the member Specs with the Pack as context, a Pack change names the Pack (Greptile's first thread on PR 35) | `spec:consumers.spec-studio.intent-panel#rule.textApart` |
+| An example space with no enumerable slot reads "not measurable", with its own filter, and never counts as covered (Greptile's second thread) | `spec:consumers.spec-studio.lenses.tests#rule.coverageRows`, `#rule.filters` |
+| The smoke test's installs, the npm 11 reference among them, skip npm's audit request: the registry's audit endpoint stalled two of PR 35's CI runs for seven minutes | — |
 
 ## Rulings by the coordinating session during the close
 
@@ -285,7 +288,12 @@ results are in `reviews/plan46-acceptance.md`. Re-run them rather than inheritin
   the test line and its anchor, with the assertion behind the source link the stamp adds.
 - The vault built from the copy regenerates without touching a person's note, and the Studio's
   watch rebuilds byte-identically to a plain build.
-- The pull request's CI uploads the stamped Studio and its CTRF runs: measured on PR 35 itself.
+- The pull request's CI uploads the stamped Studio and its CTRF runs, measured on PR 35's run
+  39717039517 at `91ec942`. The `spec-studio-pr-35` artifact, served over HTTP, shows the stamp in
+  the shell: corpus and engine `e47f20e`, the merge commit GitHub tests. Its runs page labels both
+  of CI's runs as external run evidence for that commit: 2847 passed and 8 skipped, then 100
+  passed. Its diff page compares with `main` at `5a0b22c`: 129 Specs added, 66 changed, none
+  removed. `reviews/assets/pr35/ci-preview-runs.png` captures the runs page.
 
 ## Deferred, with their triggers
 

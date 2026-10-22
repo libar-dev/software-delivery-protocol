@@ -32,6 +32,14 @@ page set is generated and never committed, so these captures stand in for it on 
   500 pixels wide and is not a phone check. `reviews/plan46-acceptance.md` records the copy's edits
   and the CTRF run.
 
+## The pull request's own preview
+
+- `ci-preview-runs.png`: `runs.html` from the `spec-studio-pr-35` artifact of CI run
+  [39717039517](https://github.com/libar-dev/software-delivery-protocol/actions/runs/39717039517),
+  on `91ec942`. GitHub builds the pull request's merge commit, `e47f20e` (`main` at `5a0b22c` with
+  `91ec942`), so the stamp and both runs name it. Downloaded with `gh run download 39717039517 -n
+  spec-studio-pr-35`, served over HTTP and captured as above at 1280 × 520.
+
 | File | Page |
 | --- | --- |
 | `*-index.png` | `index.html` |
