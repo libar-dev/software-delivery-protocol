@@ -1848,7 +1848,7 @@ export const consumersSpecs = [
           "The memo the panel writes for a proposal is byte for byte the memo recipe 49 returns for the same proposal.",
           "A proposal's base is the commit a present build stamp names, otherwise one the person supplies, and the person gives one reason for the whole proposal; without a base and a reason the panel exports its intents as scoped-intent text, and the agent that receives them writes the proposal against a commit it knows.",
           "A request scoped to a Pack records the members this page set renders for that Pack, and expands to them at hand-off only when the proposal's base is the commit the page set's stamp names; otherwise it stays scoped-intent text for an agent to resolve against the base. A request that changes a Pack's membership or framing, names an empty Pack or names a Pack with an unresolved member, stays scoped-intent text too, so the change-proposal contract keeps its Spec and entry scopes.",
-          "The proposal holds only the intents its contract can carry; every intent that stays scoped-intent text is listed apart under `Not in the proposal`, and `Copy scoped intent` copies those intents, so the panel drops none.",
+          "The proposal holds only the intents its contract can carry; every intent that stays scoped-intent text is listed apart under `Not in the proposal`, and `Copy scoped intent` copies those intents, so the panel drops none. The copied text names each intent's action and recorded scope: the member Spec ids for a member change, with the Pack id as context, or the Pack id for a membership or framing change.",
           "The panel requests nothing over the network and sends its intents nowhere.",
         ],
         ruleKeys: {

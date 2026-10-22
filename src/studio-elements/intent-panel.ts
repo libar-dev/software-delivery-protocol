@@ -41,10 +41,11 @@ export function pageRootPath(root: string, page: string): string {
 }
 export function scopedIntentText(intents: readonly GatheredIntent[]): string {
   return intents
-    .map(
-      (i) =>
-        `${i.pack ?? i.scope.join(", ")}\n${i.request}${i.text === undefined ? "" : `\nExact text:\n${i.text}`}\n`,
-    )
+    .map((i) => {
+      const scope = i.action === "change-pack" && i.pack ? i.pack : i.scope.join(", ");
+      const pack = i.pack && i.action !== "change-pack" ? `\nPack: ${i.pack}` : "";
+      return `Action: ${i.action}\nScope: ${scope}${pack}\n${i.request}${i.text === undefined ? "" : `\nExact text:\n${i.text}`}\n`;
+    })
     .join("\n");
 }
 /**
