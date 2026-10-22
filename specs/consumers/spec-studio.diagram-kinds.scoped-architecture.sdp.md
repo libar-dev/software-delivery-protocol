@@ -23,7 +23,7 @@ relations:
 
 ## Design
 - layout: Use the architecture grid's context columns and layer bands, with the legibility child's title-first boxes, cell wrapping and local scroll. Prefix planned boxes with `planned`; outside-scope boxes say `outside scope`.
-- edgeWords: The legend reads `Arrows: uses (anchored).` and, when planned uses are drawn, `Dashed arrows: plans to use (declared).`; edges carry no per-edge label. A realization correspondence is its own labelled link, never a uses edge or a delivery fact.
+- edgeWords: The legend distinguishes `uses (anchored)`, `plans to use (declared)` and `realizes (anchored)` when present. A drawing containing uses and planned uses alone carries no per-edge label. When a realization correspondence is present, label the distinct relation families beside each link or through a keyed legend; realization stays apart from uses and confers no delivery fact.
 - textEquivalent: List each component's full id, label, layer, context and the scoped Spec and binding kind that brought it in; list unassigned units, unreadable declarations, planned-to-realized comparisons and every original uses edge.
 - elementIds: Use `diagram.<subject>.architecture.text` and `.architecture.arrow`; context and layer folds append their encoded full key before the suffix.
 - mermaidKind: `block` with generic component boxes and uses arrows for a purely anchored grid; use `flowchart TB` with explicit declared and anchored labels when planned, comparison or folded edges cannot be preserved by block syntax. Architecture icons never infer deployment meaning.

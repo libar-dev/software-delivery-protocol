@@ -56,6 +56,7 @@ export function requirementView(ctx: PageContext, spec: SpecContext): string {
     const isExample = examples.has(id) || s?.specKind === "example";
     const test = edges.some((e) => e.to === id && e.kind === "verifies" && e.claim === "anchored");
     const satisfying = (s?.implementations.length ?? 0) > 0;
+    const satisfiable = !isExample && s?.specKind !== "decision";
     const claim =
       s || id.startsWith("spec:")
         ? "declared Spec"
@@ -65,7 +66,7 @@ export function requirementView(ctx: PageContext, spec: SpecContext): string {
             ? "anchored test binding · binding present"
             : "anchored code";
     const absence = s
-      ? `${isExample && !test ? " · no test binding" : ""}${selected.has(id) && !satisfying ? " · no satisfying binding" : ""}`
+      ? `${isExample && !test ? " · no test binding" : ""}${selected.has(id) && satisfiable && !satisfying ? " · no satisfying binding" : ""}`
       : "";
     const title = plainTitle(s?.title ?? unit?.label ?? id);
     return {

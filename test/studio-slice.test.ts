@@ -13,8 +13,9 @@ import {
   scopedArchitectureDiagrams,
 } from "../src/projections/studio/diagrams/slice.js";
 import { renderDiagram } from "../src/projections/studio/diagrams/index.js";
+import { mermaidSource } from "../src/projections/studio/diagrams/mermaid.js";
 import { layoutDiagram } from "../src/projections/studio/diagrams/layout.js";
-import type { SliceAnswer } from "../src/projections/studio/slice-answer.js";
+import type { SliceAnswer, SliceArchitecture } from "../src/projections/studio/slice-answer.js";
 
 function required<T>(v: T | undefined): T {
   if (v === undefined) throw new Error("Expected a value");
@@ -402,7 +403,11 @@ describe("slice dependency drawing", () => {
     expect(html).toContain('data-orders="false"');
     expect(html).toContain("spec:probe.folded refines spec:probe.a");
     expect(html).toContain('id="diagram.pack:probe.Slice.dependencies.text"');
-    expect(html).toContain("flowchart BT");
+    // The deepest band is drawn first and each member points down at what it rests on.
+    const source = mermaidSource(d);
+    expect(source).toMatch(/^flowchart TB\n {2}subgraph depth0\["Depth \d+"\]/u);
+    expect(source).not.toContain("flowchart BT");
+    expect(html).toContain("flowchart TB");
     expect(html).toContain("outside footing");
     expect(html).toContain("unresolved footing");
     expect(html).toContain("spec:probe.missing, unresolved");
@@ -559,5 +564,46 @@ describe("scoped architecture drawing", () => {
     expect(html).toContain("declared domain; anchored application");
     expect(html).toContain("component:probe.design uses component:probe.remote");
     expect(renderDiagram(d, "pack:probe.Slice.architecture")).toBe(html);
+  });
+  it("names uses, planned uses and realization in the legend and labels links only when a realization is drawn", async () => {
+    const { answer } = await fixture();
+    const legendOf = (html: string) =>
+      text(/<p class="diagram-legend">(.*?)<\/p>/u.exec(html)?.[1] ?? "");
+    const edgeGroups = (html: string) => [...html.matchAll(/<g class="edge"[^>]*>.*?<\/g>/gu)];
+    const render = (architecture: SliceArchitecture) =>
+      renderDiagram(
+        required(scopedArchitectureDiagrams("probe", architecture, (id) => `#${id}`)[0]),
+        "probe.architecture",
+      );
+
+    const realized = render(answer.architecture);
+    const legend = legendOf(realized);
+    expect(legend).toContain("uses (anchored)");
+    expect(legend).toContain("plans to use (declared)");
+    expect(legend).toContain("realizes (anchored)");
+    expect(legend).toContain("confers no delivery fact");
+    const realizes = edgeGroups(realized).filter((m) => m[0].includes('data-kind="realizes"'));
+    expect(realizes.length).toBeGreaterThan(0);
+    for (const [edge] of edgeGroups(realized)) {
+      const key = /data-edge-key="([^"]+)"/u.exec(edge)?.[1];
+      const words = key
+        ? new RegExp(`<li>${key}: ([^<]+)</li>`, "u").exec(realized)?.[1]
+        : /<text[^>]*>([^<]+)<\/text>/u.exec(edge)?.[1];
+      const kind = /data-kind="([^"]+)"/u.exec(edge)?.[1] ?? "";
+      expect(words, edge).toMatch(new RegExp(`^${kind} · `, "u"));
+    }
+
+    const unrealized = render({
+      ...answer.architecture,
+      designs: answer.architecture.designs.map((d) => ({ ...d, realized: false })),
+    });
+    expect(unrealized).not.toContain('data-kind="realizes"');
+    expect(legendOf(unrealized)).toBe(
+      "Arrows: uses (anchored). Dashed arrows: plans to use (declared).",
+    );
+    for (const [edge] of edgeGroups(unrealized)) {
+      expect(edge).not.toContain("<text");
+      expect(edge).not.toContain("data-edge-key");
+    }
   });
 });

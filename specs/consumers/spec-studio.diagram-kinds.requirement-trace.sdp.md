@@ -14,7 +14,7 @@ relations:
 
 ## Behavior
 - rule: [#exactEdges] For the Spec page's selected set, draw declared refines, declared and anchored verifies, and anchored satisfies edges incident on the set, plus anchored verifies on its declared verifying examples. Draw code references and oracle models only as their own named kinds, never as realization or successful verification.
-- rule: [#claimsApart] Every box and edge names its claim. A declared verifying example with no resolving test says `no test binding`; an anchored verifier says `binding present`, never passed. Missing satisfies says `no satisfying binding`, never unimplemented by inference through a child.
+- rule: [#claimsApart] Every box and edge names its claim. A declared verifying example with no resolving test says `no test binding`; an anchored verifier says `binding present`, never passed. Missing satisfies says `no satisfying binding`, never unimplemented by inference through a child. Examples and decision records, which code never satisfies, carry no satisfying-binding label.
 - rule: [#fold] Above the shared bound, fold the largest group by edge kind, direction and claim, ties in that lexical order, until it fits. Keep every original edge and box in the text equivalent. If the fold still cannot fit, omit the drawing and open its text.
 
 ## Design

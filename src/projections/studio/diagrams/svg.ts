@@ -103,16 +103,18 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
     ].sort();
     return `${kind}${claims.length ? ` (${claims.join(", ")})` : ""}`;
   };
+  const keyed = routed?.routes.some((r) => r.label?.text === r.key)
+    ? `<ul class="diagram-legend">${routed.routes
+        .filter((r) => r.label?.text === r.key)
+        .map((r) => `<li>${r.key}: ${escape(edgeWords(r.edge))}</li>`)
+        .join("")}</ul>`
+    : "";
+  // A supplied legend names the relation families; edge keys still need their words.
   const legend = d.legend
-    ? `<p class="diagram-legend">${escape(d.legend)}</p>`
+    ? `<p class="diagram-legend">${escape(d.legend)}</p>${keyed}`
     : d.edges.length && !needsEdgeLabels(d.edges) && routed
       ? `<p class="diagram-legend">Arrows: ${escape(relationWords(d.edges.some((e) => e.kind === "uses") ? "uses" : (d.edges[0]?.kind ?? "")))}.${d.edges.some((e) => e.kind === "plans to use") ? ` Dashed arrows: ${escape(relationWords("plans to use"))}.` : ""}</p>`
-      : routed?.routes.some((r) => r.label?.text === r.key)
-        ? `<ul class="diagram-legend">${routed.routes
-            .filter((r) => r.label?.text === r.key)
-            .map((r) => `<li>${r.key}: ${escape(edgeWords(r.edge))}</li>`)
-            .join("")}</ul>`
-        : "";
+      : keyed;
   const viewportId = `diagram.${diagramId}.viewport`,
     helpId = `diagram.${diagramId}.scroll-help`;
   const help =

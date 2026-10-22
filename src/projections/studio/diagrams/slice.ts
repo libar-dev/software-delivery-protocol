@@ -194,6 +194,16 @@ const value = (v: unknown): string =>
       : typeof v === "string"
         ? v
         : JSON.stringify(v);
+// A realization link makes the relations mixed, so each link carries its own label and the
+// legend names every family drawn.
+const realizationLegend = (edges: readonly DiagramEdge[]): string =>
+  [
+    ...(edges.some((e) => e.kind === "uses") ? ["Arrows: uses (anchored)."] : []),
+    ...(edges.some((e) => e.kind === "plans to use")
+      ? ["Dashed arrows: plans to use (declared)."]
+      : []),
+    "Labelled links: realizes (anchored), a component paired with the design it satisfies, never a use; it confers no delivery fact.",
+  ].join(" ");
 /**
  * @sdpAnchor impl:protocol.studio-slice-architecture
  * @sdpLabel selected component grid with distinct planned identities and complete unit edges
@@ -322,6 +332,7 @@ export function scopedArchitectureDiagrams(
         : b.target,
     })),
     caption: i === 0 ? "Anchored components and member designs" : d.caption,
+    ...(d.edges.some((e) => e.kind === "realizes") ? { legend: realizationLegend(d.edges) } : {}),
     textRows: original,
     ...(selected.fold === "nothing" && !a.outside.length && !a.designs.length
       ? { mermaidKind: "block" as const }

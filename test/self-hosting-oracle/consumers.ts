@@ -2633,7 +2633,7 @@ export const consumersSpecs = [
     file: "specs/consumers/review-perspectives.sdp.md",
     title: "A Pack is read from a named perspective",
     narrative:
-      "The original design gave every reader one reading surface, each reading from their own concern: the analyst, the domain engineer, the architect, the tester, the designer and the agent (`docs/lineage/v0-design/04-authoring-surfaces.md` §6). The first adopter iterates each capability's design through advisor lenses, its runtime platform, the domain, operations and the product, each a written list of the questions its field asks, run over the same Pack by the same pass brief (`libar-platform/design/advisors/lenses/`, `libar-platform/design/advisors/task-pass.md`). It asks for a lens to be a filter over the same capability that reorders and emphasizes questions, entries, examples and constraints and opens the same Specs, with no new Spec kind and no compulsory sequence of stages (`libar-platform/docs/feedback/sdp-feedback-02.md`, item 28). The Protocol takes the member filter and the order and leaves each member's content whole; emphasis inside a member stays the reader's.\n\nThe owner ruled the word: perspective. The Spec Studio keeps lens for its graph views, its Packs, architecture, tests and evidence views, and discipline stays the filter by kind or section. The adopter's advisor lens is a reader's concern, not a view of the graph, so in the Protocol's terms it is a perspective.",
+      "The original design gave every reader one reading surface, each reading from their own concern: the analyst, the domain engineer, the architect, the tester, the designer and the agent (`docs/lineage/v0-design/04-authoring-surfaces.md` §6). The first adopter iterates each capability's design through advisor lenses, its runtime platform, the domain, operations and the product, each a written list of the questions its field asks, run over the same Pack by the same pass brief (`libar-platform/design/advisors/lenses/`, `libar-platform/design/advisors/task-pass.md`). It asks for a lens to be a filter over the same capability that reorders and emphasizes questions, entries, examples and constraints and opens the same Specs, with no new Spec kind and no compulsory sequence of stages (`libar-platform/docs/feedback/sdp-feedback-02.md`, item 28). The Protocol takes the member filter and the order and leaves each member's content whole; emphasis inside a member stays the reader's.\n\nThe owner ruled the word: perspective. The Spec Studio keeps lens for its graph views, its Packs, capabilities, architecture, tests and evidence views, and discipline stays the filter by kind or section. The adopter's advisor lens is a reader's concern, not a view of the graph, so in the Protocol's terms it is a perspective.",
     sections: {
       intent: {
         actor:
@@ -6922,7 +6922,7 @@ export const consumersSpecs = [
         elementIds:
           "Use `diagram.<subject>.dependencies.text`, `.dependencies.arrow` and `.dependencies.fold.<depth>`; a second scope on one page uses a distinct subject occurrence key supplied by the page.",
         mermaidKind:
-          "`flowchart BT` with depth subgraphs and exact relation labels; export the displayed folds and name the full text equivalent beside the source.",
+          "`flowchart TB` with depth subgraphs and exact relation labels; export the displayed folds and name the full text equivalent beside the source.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -6998,7 +6998,7 @@ export const consumersSpecs = [
         layout:
           "Use the architecture grid's context columns and layer bands, with the legibility child's title-first boxes, cell wrapping and local scroll. Prefix planned boxes with `planned`; outside-scope boxes say `outside scope`.",
         edgeWords:
-          "The legend reads `Arrows: uses (anchored).` and, when planned uses are drawn, `Dashed arrows: plans to use (declared).`; edges carry no per-edge label. A realization correspondence is its own labelled link, never a uses edge or a delivery fact.",
+          "The legend distinguishes `uses (anchored)`, `plans to use (declared)` and `realizes (anchored)` when present. A drawing containing uses and planned uses alone carries no per-edge label. When a realization correspondence is present, label the distinct relation families beside each link or through a keyed legend; realization stays apart from uses and confers no delivery fact.",
         textEquivalent:
           "List each component's full id, label, layer, context and the scoped Spec and binding kind that brought it in; list unassigned units, unreadable declarations, planned-to-realized comparisons and every original uses edge.",
         elementIds:
@@ -7069,7 +7069,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "For the Spec page's selected set, draw declared refines, declared and anchored verifies, and anchored satisfies edges incident on the set, plus anchored verifies on its declared verifying examples. Draw code references and oracle models only as their own named kinds, never as realization or successful verification.",
-          "Every box and edge names its claim. A declared verifying example with no resolving test says `no test binding`; an anchored verifier says `binding present`, never passed. Missing satisfies says `no satisfying binding`, never unimplemented by inference through a child.",
+          "Every box and edge names its claim. A declared verifying example with no resolving test says `no test binding`; an anchored verifier says `binding present`, never passed. Missing satisfies says `no satisfying binding`, never unimplemented by inference through a child. Examples and decision records, which code never satisfies, carry no satisfying-binding label.",
           "Above the shared bound, fold the largest group by edge kind, direction and claim, ties in that lexical order, until it fits. Keep every original edge and box in the text equivalent. If the fold still cannot fit, omit the drawing and open its text.",
         ],
         ruleKeys: {

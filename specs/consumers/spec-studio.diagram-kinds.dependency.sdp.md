@@ -25,4 +25,4 @@ relations:
 - edgeWords: Show refines, dependsOn, constrainedBy and decidedBy beside their arrow or as a keyed legend where several kinds occur, and in the text equivalent with claim and optional reason. Mixed relations cannot become an unlabeled dependency arrow.
 - textEquivalent: List every scoped and boundary Spec with its full id and title, then every original edge and every cycle's members; folding removes no text row.
 - elementIds: Use `diagram.<subject>.dependencies.text`, `.dependencies.arrow` and `.dependencies.fold.<depth>`; a second scope on one page uses a distinct subject occurrence key supplied by the page.
-- mermaidKind: `flowchart BT` with depth subgraphs and exact relation labels; export the displayed folds and name the full text equivalent beside the source.
+- mermaidKind: `flowchart TB` with depth subgraphs and exact relation labels; export the displayed folds and name the full text equivalent beside the source.

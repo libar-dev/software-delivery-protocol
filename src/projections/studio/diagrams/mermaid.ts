@@ -35,7 +35,7 @@ export function mermaidSource(d: Diagram): string {
   }
   return [
     d.mermaidKind === "dependencies"
-      ? "flowchart BT"
+      ? "flowchart TB"
       : d.mermaidKind === "block"
         ? "block-beta\n  columns 1"
         : (d.mermaidKind ?? "flowchart TB"),

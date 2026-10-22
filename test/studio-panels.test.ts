@@ -195,6 +195,7 @@ describe("requirement drawing", () => {
           "example",
         ),
         "other.sdp.md": carrier("other-example", "{verifies: spec:child}", "idea", "example"),
+        "ruling.sdp.md": carrier("ruling", "{refines: spec:sample}", "idea", "decision"),
         "impl.ts": anchor(
           "impl:sample",
           " * @sdpSatisfies spec:child\n * @sdpReferences spec:sample\n",
@@ -226,6 +227,10 @@ describe("requirement drawing", () => {
     };
     expect(exampleBox("spec:example")).not.toContain("no test binding");
     expect(exampleBox("spec:other-example")).toContain("no test binding");
+    // Code never satisfies an example or a decision record, so neither reads as missing one.
+    for (const id of ["spec:example", "spec:other-example", "spec:ruling"])
+      expect(exampleBox(id)).not.toContain("no satisfying binding");
+    expect(exampleBox("spec:sample")).toContain("no satisfying binding");
     expect(drawing).not.toContain("None.");
     expect(drawing).toMatch(/data-id="impl:sample"><a href="#bindings"/u);
     expect(drawing).toMatch(/data-id="test:example"><a href="#bindings"/u);
