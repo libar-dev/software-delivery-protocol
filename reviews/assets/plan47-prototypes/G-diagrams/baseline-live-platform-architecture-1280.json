@@ -1,0 +1,123 @@
+[
+  {
+    "subject": "architecture",
+    "viewBoxWidth": 1770,
+    "figureWidth": 913,
+    "svgWidth": 913,
+    "scale": 0.515819209039548,
+    "font": 12,
+    "effectiveFont": 6.19,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:example.inventory-context",
+    "viewBoxWidth": 1140,
+    "figureWidth": 913,
+    "svgWidth": 913,
+    "scale": 0.8008771929824562,
+    "font": 12,
+    "effectiveFont": 9.61,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:example.inventory-domain",
+    "viewBoxWidth": 314,
+    "figureWidth": 913,
+    "svgWidth": 314,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:example.orders-context",
+    "viewBoxWidth": 1112,
+    "figureWidth": 913,
+    "svgWidth": 913,
+    "scale": 0.8210431654676259,
+    "font": 12,
+    "effectiveFont": 9.85,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:example.orders-domain",
+    "viewBoxWidth": 276,
+    "figureWidth": 913,
+    "svgWidth": 276,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:example.parent",
+    "viewBoxWidth": 1140,
+    "figureWidth": 913,
+    "svgWidth": 913,
+    "scale": 0.8008771929824562,
+    "font": 12,
+    "effectiveFont": 9.61,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:platform.command",
+    "viewBoxWidth": 1686,
+    "figureWidth": 913,
+    "svgWidth": 913,
+    "scale": 0.5415183867141162,
+    "font": 12,
+    "effectiveFont": 6.5,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:platform.context",
+    "viewBoxWidth": 1686,
+    "figureWidth": 913,
+    "svgWidth": 913,
+    "scale": 0.5415183867141162,
+    "font": 12,
+    "effectiveFont": 6.5,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:platform.gate",
+    "viewBoxWidth": 846,
+    "figureWidth": 913,
+    "svgWidth": 846,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:platform.kernel",
+    "viewBoxWidth": 594,
+    "figureWidth": 913,
+    "svgWidth": 594,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  },
+  {
+    "subject": "component:platform.read-model",
+    "viewBoxWidth": 1686,
+    "figureWidth": 913,
+    "svgWidth": 913,
+    "scale": 0.5415183867141162,
+    "font": 12,
+    "effectiveFont": 6.5,
+    "scrollWidth": 913,
+    "viewportWidth": 913
+  }
+]

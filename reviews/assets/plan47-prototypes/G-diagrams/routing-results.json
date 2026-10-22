@@ -1,0 +1,152 @@
+[
+  {
+    "key": "dependency",
+    "boxes": 24,
+    "edges": 97,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": [
+      "boundary-constrainedBy",
+      "boundary-decidedBy",
+      "boundary-dependsOn",
+      "boundary-refines",
+      "fold:Depth 6",
+      "fold:Depth 8",
+      "fold:Depth 9",
+      "fold:Depth 1"
+    ]
+  },
+  {
+    "key": "capability",
+    "boxes": 11,
+    "edges": 9,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": [
+      "branch-5",
+      "branch-6",
+      "branch-7",
+      "branch-8",
+      "unreached-group"
+    ]
+  },
+  {
+    "key": "scoped-architecture",
+    "boxes": 11,
+    "edges": 33,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  },
+  {
+    "key": "requirement",
+    "boxes": 14,
+    "edges": 19,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  },
+  {
+    "key": "architecture",
+    "boxes": 14,
+    "edges": 38,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  },
+  {
+    "key": "trace",
+    "boxes": 24,
+    "edges": 36,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  },
+  {
+    "key": "dependency",
+    "boxes": 18,
+    "edges": 82,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": [
+      "boundary-constrainedBy",
+      "boundary-decidedBy",
+      "boundary-dependsOn",
+      "boundary-refines"
+    ]
+  },
+  {
+    "key": "capability",
+    "boxes": 17,
+    "edges": 16,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": [
+      "branch-0"
+    ]
+  },
+  {
+    "key": "scoped-architecture",
+    "boxes": 9,
+    "edges": 22,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  },
+  {
+    "key": "requirement",
+    "boxes": 33,
+    "edges": 52,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  },
+  {
+    "key": "architecture",
+    "boxes": 12,
+    "edges": 36,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  },
+  {
+    "key": "trace",
+    "boxes": 25,
+    "edges": 38,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": [
+      "fold:Outgoing dependsOn"
+    ]
+  },
+  {
+    "key": "planned-probe",
+    "boxes": 3,
+    "edges": 3,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  },
+  {
+    "key": "source-probe",
+    "boxes": 2,
+    "edges": 1,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  }
+]

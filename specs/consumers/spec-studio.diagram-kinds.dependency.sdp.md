@@ -1,0 +1,29 @@
+---
+id: spec:consumers.spec-studio.diagram-kinds.dependency
+kind: behavior
+altitude: story
+readiness: defined
+relations:
+  refines: spec:consumers.spec-studio.diagram-kinds
+  dependsOn: spec:consumers.design-slice
+---
+# A dependency drawing shows the declared footing of a Spec set
+
+## Intent
+- outcome: See multi-hop dependency chains and cycles within a Pack, slice or roadmap without reading them as an execution schedule.
+
+## Behavior
+- rule: [#declaredOnly] Draw the design slice answer's structure edges and rests-on boundary, preserving each declared refines, dependsOn, constrainedBy and decidedBy relation's exact direction, reason and claim. The design slice owns its rests-on exception for a refines back to a member that names it by another typed relation. Membership is scope, never a dependency.
+- rule: [#depth] Band each member by the depth its supplied answer gives, the design slice's `depth` for a Pack, slice or roadmap scope; the layout never recomputes it. A cycle's members share one band and are named as a cycle in words.
+- rule: [#boundary] Show immediate dependencies outside the supplied scope in a separate boundary band, without traversing their dependencies. An unresolved target is named unresolved and has no invented title or link.
+- rule: [#fold] Above the shared bound, first fold the boundary band into one box per relation type that names its count, keeping as its own box each outside Spec that holds a member's stated next rung or states below defined; then fold whole depth bands in descending box count, ties by ascending depth; if the drawing still exceeds the bound, omit the SVG and open the text equivalent.
+
+- rule: [#examplesInParent] An example member that refines another member is counted on its parent's box and is never drawn as its own box; it keeps its row in the text equivalent.
+
+## Design
+- inputs: `subject` and the design slice answer supply ordered members, exampleOf, exampleMembers, depth, cycles, structure edges and the rests-on boundary with its holds and relation reasons; a roadmap passes its explicitly selected ordered Spec set to that same reader. Duplicate or unknown scope ids are that reader's diagnostics, never repaired by layout.
+- bands: Label bands `Depth <n>` from the deepest at the top down to depth 1, then `Outside this scope` at the bottom, so a member sits above what it rests on and boundary edges stay short. Within a band keep supplied order. Depths are structural, never phases, dates or priority.
+- edgeWords: Show refines, dependsOn, constrainedBy and decidedBy beside their arrow or as a keyed legend where several kinds occur, and in the text equivalent with claim and optional reason. Mixed relations cannot become an unlabeled dependency arrow.
+- textEquivalent: List every scoped and boundary Spec with its full id and title, then every original edge and every cycle's members; folding removes no text row.
+- elementIds: Use `diagram.<subject>.dependencies.text`, `.dependencies.arrow` and `.dependencies.fold.<depth>`; a second scope on one page uses a distinct subject occurrence key supplied by the page.
+- mermaidKind: `flowchart BT` with depth subgraphs and exact relation labels; export the displayed folds and name the full text equivalent beside the source.
