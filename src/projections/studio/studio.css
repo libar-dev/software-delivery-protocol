@@ -860,6 +860,9 @@ sdp-compose button {
   margin: 0.25rem;
 }
 @media (max-width: 719.98px) {
+  .scroll-help {
+    display: none;
+  }
   sdp-diagram svg {
     max-width: 100%;
     height: auto;
@@ -942,5 +945,14 @@ sdp-compose button {
     background: white;
     color: black;
     border-color: #777;
+  }
+}
+
+@media print {
+  sdp-diagram details[id$=".source"]:not([open]) {
+    display: none !important;
+  }
+  sdp-diagram details[id$=".source"][open] textarea {
+    display: block !important;
   }
 }

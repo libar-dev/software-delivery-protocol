@@ -5418,7 +5418,7 @@ export const consumersSpecs = [
         shortId:
           "Drop the namespace and leading dotted segments every id in the figure shares, marking elision with `…`; keep more segments on collisions. A displayed id carries a namespace only when shown in full. Full ids remain in link titles, the text equivalent and source.",
         widthBudget:
-          "`880` logical pixels for a band or grid, band labels included above their band; `264` for one context cell and `24` between boxes. Routing gutters may widen the SVG to preserve distinct lanes. A drawing wider than `880` scrolls inside its figure and receives the build-written instruction `Scroll horizontally to read the whole drawing.`",
+          "`880` logical pixels for a band or grid, band labels included above their band; `264` per context cell when several contexts share a grid, the full band budget when only one context is shown, and `24` between boxes. Routing gutters may widen the SVG to preserve distinct lanes. A drawing wider than `880` scrolls inside its figure and receives the build-written instruction `Scroll horizontally to read the whole drawing.`",
         bound:
           "`40` boxes and `100` edges per diagram, counting every box a drawing holds, folded and planned boxes included, and every edge it draws.",
         labelMetrics:
@@ -5432,7 +5432,7 @@ export const consumersSpecs = [
         boxTargets:
           "a component's box links to its detail on the architecture lens, a planned component's to its component design's Spec page, a context's or layer's folded box to its section on the same page, a Spec's to its page, and a folded relation group's to the Spec page's relations.",
         textEquivalent:
-          "a `details` element closed by default, summary `The diagram as text`, holding one `li` per box, `<id>: <words>`, and then one `li` per edge, `<from> <kind> <to>`, followed by `(<n> unit edges)` when the edge aggregates more than one.",
+          "a `details` element closed by default, summary `The diagram as text`, holding one `li` per box, `<id>: <words>`, followed by `· folded members: <ids>` when folded identities are present, and then one `li` per edge, `<from> <kind> <to>`, followed by `· <claim>` when present, `(<n> unit edges)` when the edge aggregates more than one, and `— <reason>` when present.",
         diagramElement:
           "`sdp-diagram` with `subject`, the rooted Spec, Pack, component or context id, or `architecture`, wraps one figure containing its caption and legend, any build-written scroll instruction, a keyboard-focusable named `.diagram-scroll` region containing the SVG, its text equivalent and, when offered, its closed Mermaid-source disclosure with labelled read-only textarea and `sdp-copy`. Caption, legend and source stay outside the scroll region. On upgrade it adds Zoom in, Zoom out and Reset buttons and handles drag, a wheel with Control or Command held, and pinch; it adds no layout or copy behavior.",
         elementIds:
@@ -6769,7 +6769,7 @@ export const consumersSpecs = [
       },
       design: {
         widthBudget:
-          "`880` logical pixels for a band or grid, band labels included, which stay above their band; `264` for one context cell and `24` between boxes. A drawing wider than `880` scrolls inside its figure. Layout reads no browser or font measurement.",
+          "`880` logical pixels for a band or grid, band labels included, which stay above their band; `264` per context cell when several contexts share a grid, the full band budget when only one context is shown, and `24` between boxes. A drawing wider than `880` scrolls inside its figure. Layout reads no browser or font measurement.",
         labelMetrics:
           "Title lines hold at most `28` characters at fourteen pixels with an eight-pixel character advance; ids hold at most `30` characters at twelve pixels with an eight-pixel advance. Wrap at spaces or id punctuation, then by code point, with whole-pixel coordinates and height calculated from all lines.",
         minimumScale:
@@ -6865,7 +6865,7 @@ export const consumersSpecs = [
         sourceElement:
           "The disclosure's copy button is the page elements' `sdp-copy`, given a `for` attribute that names the source text area so a long source is not repeated in an attribute; no new element is added, and `sdp-diagram` still adds only pan, zoom and pinch.",
         sourceEscaping:
-          'Inside a quoted label, `"`, `#`, `<` and `>` become Mermaid entity codes (`#quot;`, `#35;`, `#lt;`, `#gt;`), a line break becomes a space, and every other character is kept.',
+          'Inside a quoted label, `"`, `#`, `%`, `<` and `>` become Mermaid entity codes (`#quot;`, `#35;`, `#37;`, `#lt;`, `#gt;`), a line break becomes a space, and every other character is kept.',
         sourceIds:
           "Stable safe aliases assigned in displayed box order, with full graph ids in quoted labels or escaped comments. Aliases are local serialization names, never graph identities. No click directive or initialization directive is emitted.",
         elementIds:

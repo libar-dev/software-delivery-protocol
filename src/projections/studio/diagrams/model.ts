@@ -45,13 +45,15 @@ export function aggregate(
     const from = ids.get(e.from),
       to = ids.get(e.to);
     if (from === undefined || to === undefined || from === to) continue;
-    const key = JSON.stringify([from, to, e.kind, e.claim, e.reason]);
+    const key = JSON.stringify([from, to, e.kind, e.claim]);
+    const previous = pairs.get(key);
+    const reason = previous && previous.reason !== e.reason ? undefined : e.reason;
     pairs.set(key, {
       from,
       to,
       kind: e.kind,
       ...(e.claim === undefined ? {} : { claim: e.claim }),
-      ...(e.reason === undefined ? {} : { reason: e.reason }),
+      ...(reason === undefined ? {} : { reason }),
       count: (pairs.get(key)?.count ?? 0) + (e.count ?? 1),
     });
   }
@@ -59,3 +61,9 @@ export function aggregate(
     (a, b) => compare(a.from, b.from) || compare(a.to, b.to) || compare(a.kind, b.kind),
   );
 }
+
+// The dashed form states the planned half of the same architectural use relation.
+export const relationFamily = (e: DiagramEdge): string =>
+  `${e.kind === "plans to use" ? "uses" : e.kind}/${e.kind === "plans to use" && e.claim === "declared" ? "anchored" : (e.claim ?? "")}`;
+export const needsEdgeLabels = (edges: readonly DiagramEdge[]): boolean =>
+  new Set(edges.map(relationFamily)).size > 1;

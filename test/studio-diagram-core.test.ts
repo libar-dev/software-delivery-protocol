@@ -81,6 +81,7 @@ describe("shared diagram core", () => {
     expect(routed).not.toBeNull();
     if (!routed) throw new Error("No routes");
     expect(routed.routes).toHaveLength(4);
+    assertGeometry(layout, routed);
     const ports = routed.routes
       .flatMap((r) => [r.points[0], r.points.at(-1)])
       .map((p) => JSON.stringify(p));
@@ -133,12 +134,10 @@ describe("shared diagram core", () => {
         claim: "anchored",
       })),
     };
-    const failed = renderDiagram(star);
-    expect(failed).not.toContain("<svg");
-    expect(failed).toContain(
-      "Shown as text: a distinct route or label could not be placed within the routing budget.",
-    );
-    expect(failed).not.toContain("Mermaid source");
+    const starLayout = layoutDiagram(star),
+      starRoutes = routeDiagram(starLayout, star.edges);
+    expect(starRoutes?.routes).toHaveLength(39);
+    expect(renderDiagram(star)).toContain("<svg");
     const impossible = {
       ...drawing,
       edges: [{ from: "missing", to: required(drawing.boxes[0]).id, kind: "uses" }],
@@ -173,7 +172,8 @@ describe("shared diagram core", () => {
     expect(source).toContain("dependsOn · declared");
     expect(source).toContain("count: 2");
     expect(source).toContain("Needs its contract");
-    expect(source).not.toMatch(/^\s*(?:click|%%\{)/mu);
+    expect(source).not.toMatch(/^\s*click/mu);
+    expect(source).not.toContain("%%{");
     const html = renderDiagram(drawing, "spec:probe.realization");
     expect(html).toContain('id="diagram.spec:probe.realization.source"');
     expect(html).toContain("<textarea readonly");
@@ -242,6 +242,7 @@ it("keeps the full box and edge bound routable with obstacles, separate lanes an
       routed = routeDiagram(layout, edges);
     expect(routed).not.toBeNull();
     if (!routed) throw new Error("Missing bounded routes");
+    assertGeometry(layout, routed);
     for (const route of routed.routes)
       for (let i = 1; i < route.points.length; i++) {
         for (const obstacle of [...layout.boxes, ...layout.labels]) {
@@ -302,7 +303,7 @@ it("offers deterministic Mermaid source for each existing drawing and pins the s
   for (const d of drawings) {
     const html = renderDiagram(d);
     expect(html).toContain("<summary>Mermaid source</summary>");
-    expect(html).toContain("Syntax:");
+    expect(html).toContain("syntax:");
     expect(html).toContain("spec:probe.item0");
     expect(mermaidSource(d)).toBe(mermaidSource(d));
   }
@@ -321,3 +322,210 @@ import {
   traceDiagram,
   realizationDiagram,
 } from "../src/projections/studio/diagrams/index.js";
+
+it("folds reason-bearing trace groups without attributing a member reason to the group", () => {
+  const root = { id: "spec:root", words: "Root", target: "#root" };
+  const members = Array.from({ length: 105 }, (_, i) => ({
+    id: `spec:member.${String(i)}`,
+    words: "Member",
+    target: "#member",
+  }));
+  for (const count of [45, 105]) {
+    const edges = members.slice(0, count).map((b, i) => ({
+      from: b.id,
+      to: root.id,
+      kind: "dependsOn",
+      claim: "declared",
+      reason: `Reason ${String(i)}`,
+    }));
+    const input = { subject: root.id, boxes: [root, ...members.slice(0, count)], edges };
+    const d = traceDiagram(input);
+    expect(d.boxes).toHaveLength(2);
+    expect(d.edges).toEqual([
+      {
+        from: "spec:root.fold.Incoming.dependsOn",
+        to: root.id,
+        kind: "dependsOn",
+        claim: "declared",
+        count,
+      },
+    ]);
+    expect(
+      traceDiagram({ ...input, edges: edges.map((e) => ({ ...e, reason: "Shared reason" })) })
+        .edges[0]?.reason,
+    ).toBe("Shared reason");
+  }
+});
+it("uses the full band budget for a single context and routes adjacent bands inside it", () => {
+  const d = {
+    ...drawing,
+    grid: true,
+    boxes: drawing.boxes.map((b) => ({
+      ...b,
+      context: "one",
+      layer: b.band === "First" ? "edge" : "domain",
+    })),
+  };
+  const l = layoutDiagram(d);
+  expect(l.boxes[0]?.y).toBe(l.boxes[1]?.y);
+  const adjacent = {
+    ...drawing,
+    edges: [{ from: "spec:probe.item0", to: "spec:probe.item4", kind: "uses" }],
+  };
+  const layout = layoutDiagram(adjacent),
+    routed = routeDiagram(layout, adjacent.edges);
+  expect(routed).not.toBeNull();
+  expect(routed?.routes.flatMap((r) => r.points).every((p) => p.x <= layout.width)).toBe(true);
+});
+it("prints exact short relation words and reserves keys for wording that cannot fit", () => {
+  const short = routeDiagram(layoutDiagram(drawing), drawing.edges);
+  expect(short?.routes.some((r) => r.label?.text === "refines · declared")).toBe(true);
+  const d = {
+    ...drawing,
+    edges: drawing.edges.map((e, i) => ({
+      ...e,
+      kind: i === 0 ? "very-long-relation-".repeat(60) : e.kind,
+    })),
+  };
+  const routed = routeDiagram(layoutDiagram(d), d.edges);
+  expect(routed).not.toBeNull();
+  expect(routed?.routes.some((r) => r.label?.text === r.key)).toBe(true);
+  expect(renderDiagram(d)).toContain("E1: very-long-relation-");
+});
+it("names viewport and instruction ids for trace and secondary views", () => {
+  const d = {
+    ...drawing,
+    grid: true,
+    boxes: drawing.boxes.map((b, i) => ({ ...b, context: String(i), layer: "domain" })),
+  };
+  for (const id of [drawing.subject, `${drawing.subject}.realization`]) {
+    const html = renderDiagram(d, id);
+    expect(html).toContain(`id="diagram.${id}.viewport"`);
+    expect(html).toContain(`id="diagram.${id}.scroll-help"`);
+    expect(html).toContain(`aria-describedby="diagram.${id}.scroll-help"`);
+  }
+});
+it("names the architecture syntax and serializes aliases in displayed box order", () => {
+  const d = {
+    ...drawing,
+    grid: true,
+    boxes: [
+      {
+        id: "component:adapters",
+        words: "Adapter",
+        target: "#adapter",
+        context: "one",
+        layer: "adapter",
+      },
+      { id: "component:cli", words: "CLI", target: "#cli", context: "one", layer: "edge" },
+    ],
+    edges: [],
+  };
+  const html = renderDiagram(d);
+  expect(html).toContain("Preferred syntax: block");
+  expect(html).toContain("flowchart fallback because block cannot carry edge claims and counts");
+  expect(html).toContain("n0[&quot;CLI · component:cli&quot;]");
+});
+
+import { readFileSync } from "node:fs";
+import { extract } from "../src/extract/index.js";
+import { createReader } from "../src/reader/reader.js";
+import { evaluateStudioRecipe } from "../src/projections/studio/recipes.js";
+import type { Architecture } from "../src/projections/studio/pages/architecture-page.js";
+import type { Layout } from "../src/projections/studio/diagrams/layout.js";
+import type { Routed } from "../src/projections/studio/diagrams/routing.js";
+import type { DiagramInput } from "../src/projections/studio/diagrams/model.js";
+function assertGeometry(layout: Layout, routed: Routed): void {
+  const failures: string[] = [];
+  const ports = routed.routes.flatMap((r) => [
+    JSON.stringify(r.points[0]),
+    JSON.stringify(r.points.at(-1)),
+  ]);
+  if (new Set(ports).size !== ports.length) failures.push("shared port");
+  const segments = routed.routes.flatMap((r, index) =>
+    r.points.slice(1).map((b, i) => ({ a: required(r.points[i]), b, index })),
+  );
+  for (const [i, { a, b, index }] of segments.entries()) {
+    if (a.x !== b.x && a.y !== b.y) failures.push("non-orthogonal segment");
+    for (const { a: c, b: d, index: other } of segments.slice(i + 1)) {
+      if (index === other) continue;
+      if (
+        a.x === b.x &&
+        c.x === d.x &&
+        a.x === c.x &&
+        Math.min(Math.max(a.y, b.y), Math.max(c.y, d.y)) >
+          Math.max(Math.min(a.y, b.y), Math.min(c.y, d.y))
+      )
+        failures.push("shared vertical segment");
+      if (
+        a.y === b.y &&
+        c.y === d.y &&
+        a.y === c.y &&
+        Math.min(Math.max(a.x, b.x), Math.max(c.x, d.x)) >
+          Math.max(Math.min(a.x, b.x), Math.min(c.x, d.x))
+      )
+        failures.push("shared horizontal segment");
+    }
+  }
+  for (const route of routed.routes) {
+    const labels = routed.routes.flatMap((r) => (r.label ? [r.label] : []));
+    for (let i = 1; i < route.points.length; i++) {
+      const a = required(route.points[i - 1]),
+        b = required(route.points[i]);
+      for (const box of layout.boxes) {
+        if (
+          (i === 1 && box.box.id === route.edge.from) ||
+          (i === route.points.length - 1 && box.box.id === route.edge.to)
+        )
+          continue;
+        if (routingChecks.intersects(a, b, box)) failures.push("box crossing");
+      }
+      for (const label of [...layout.labels, ...labels])
+        if (routingChecks.intersects(a, b, label)) failures.push("label crossing");
+    }
+  }
+  expect(failures).toEqual([]);
+}
+it("routes the current Protocol architecture and recorded adopter architecture with distinct ports and segments", async () => {
+  const reader = createReader(
+    extract({
+      root: process.cwd(),
+      exclude: ["explorations", "examples", "test/fixtures/import/parity"],
+    }).graph,
+  );
+  const answer = (await evaluateStudioRecipe(reader, 17)) as Architecture;
+  const components = answer.components.filter((c) => c.declared);
+  const protocol: DiagramInput = {
+    boxes: components.map((c) => ({
+      id: c.id,
+      words: c.label ?? c.id,
+      detail: `${String(c.members.length)} members`,
+      context: c.context,
+      layer: c.layer,
+      target: `#${c.id}`,
+    })),
+    edges: components.flatMap((c) =>
+      c.usesCounts.map((u) => ({
+        from: c.id,
+        to: u.component,
+        kind: "uses",
+        claim: "anchored",
+        count: u.edges,
+      })),
+    ),
+  };
+  // Selected diagram inputs from the adopter at b038bd4, read with the architecture recipe.
+  const platform = JSON.parse(
+    readFileSync(new URL("./fixtures/studio/platform-architecture.json", import.meta.url), "utf8"),
+  ) as DiagramInput;
+  for (const input of [protocol, platform]) {
+    for (const d of architectureDiagrams(input).drawings) {
+      const l = layoutDiagram(d),
+        routed = routeDiagram(l, d.edges);
+      expect(routed).not.toBeNull();
+      if (!routed) throw new Error(`No architecture routes: ${d.subject}`);
+      assertGeometry(l, routed);
+      expect(routeDiagram(l, d.edges)).toEqual(routed);
+    }
+  }
+}, 30000);

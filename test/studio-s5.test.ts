@@ -1412,19 +1412,33 @@ it("keeps table headers and one-word cells intact while allowing word-boundary w
   }
 });
 
-it("fits diagrams without enlarging them at desktop and phone widths", () => {
+it("keeps natural desktop diagram size and fits only on phones", () => {
   const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
-  const values: Record<string, string> = {};
+  const byMedia: Record<string, Record<string, string>> = {};
   css.walkRules("sdp-diagram svg", (rule) => {
-    if (rule.parent?.type === "atrule" && rule.parent.params === "print") return;
-    expect(
-      rule.nodes
-        .filter((node) => node.type === "decl" && node.prop === "width")
-        .map((node) => node.type),
-    ).toEqual([]);
+    const key = rule.parent?.type === "atrule" ? rule.parent.params : "desktop";
     rule.walkDecls((decl) => {
-      values[decl.prop] = decl.value;
+      (byMedia[key] ??= {})[decl.prop] = decl.value;
     });
   });
-  expect(values).toMatchObject({ "max-width": "100%", height: "auto" });
+  expect(byMedia.desktop).toMatchObject({ "max-width": "none", height: "auto" });
+  expect(byMedia["(max-width: 719.98px)"]).toMatchObject({ "max-width": "100%", height: "auto" });
+});
+it("hides phone scroll advice and closed source in print while keeping opened source printable", () => {
+  const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
+  const values: Record<string, Record<string, string>> = {};
+  css.walkRules((rule) => {
+    if (rule.parent?.type !== "atrule") return;
+    rule.walkDecls((decl) => {
+      (values[`${rule.parent?.type === "atrule" ? rule.parent.params : ""}/${rule.selector}`] ??=
+        {})[decl.prop] = decl.value;
+    });
+  });
+  expect(values["(max-width: 719.98px)/.scroll-help"]).toMatchObject({ display: "none" });
+  expect(values['print/sdp-diagram details[id$=".source"]:not([open])']).toMatchObject({
+    display: "none",
+  });
+  expect(values['print/sdp-diagram details[id$=".source"][open] textarea']).toMatchObject({
+    display: "block",
+  });
 });

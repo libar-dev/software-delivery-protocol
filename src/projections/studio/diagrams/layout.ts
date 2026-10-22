@@ -1,4 +1,4 @@
-import { compare, contextOf, layerOf, layers } from "./model.js";
+import { compare, contextOf, layerOf, layers, needsEdgeLabels } from "./model.js";
 import type { Diagram, DiagramBox } from "./model.js";
 
 export const widthBudget = 880;
@@ -81,7 +81,7 @@ export function layoutDiagram(d: Diagram): Layout {
         Math.max(
           96,
           ...[...title, ...identity, ...detail].map((s) => Array.from(s).length * 8 + 24),
-          Math.min(d.grid ? 264 : 832, degree(box.id) * 8 + 32),
+          Math.min(832, degree(box.id) * 8 + 32),
         ),
       ),
       height: snap(24 + (title.length + identity.length + detail.length) * 18),
@@ -103,7 +103,7 @@ export function layoutDiagram(d: Diagram): Layout {
           : (box.band ?? "Units") === b,
       )
       .sort((a, b) => compare(a.id, b.id));
-  const cellWidth = d.grid ? 264 : widthBudget - 48;
+  const cellWidth = d.grid && columns.length > 1 ? 264 : widthBudget - 48;
   const place = (items: readonly DiagramBox[], x: number, y: number, width: number) => {
     let nextX = x,
       nextY = y,
@@ -162,9 +162,7 @@ export function layoutDiagram(d: Diagram): Layout {
       y = place(items, margin, snap(y + h + 80), widthBudget - 48) + 64;
       maxX = Math.max(maxX, ...boxes.map((b) => b.x + b.width));
     }
-  const labelled =
-    new Set(d.edges.map((e) => `${e.kind === "plans to use" ? "uses" : e.kind}/${e.claim ?? ""}`))
-      .size > 1;
+  const labelled = needsEdgeLabels(d.edges);
   const events = [...new Set([...boxes.map((b) => b.y), ...labels.map((l) => l.y)])].sort(
     (a, b) => a - b,
   );
@@ -180,13 +178,27 @@ export function layoutDiagram(d: Diagram): Layout {
     }
     if (bs.length) {
       const ids = new Set(bs.map((b) => b.box.id));
-      const ports = d.edges.reduce(
-        (n, e) => n + Number(ids.has(e.from)) + Number(ids.has(e.to)),
-        0,
-      );
-      cursor += ports * (labelled ? 48 : 8) + 32;
+      const above = d.edges.reduce((n, e) => {
+        const from = boxes.find((b) => b.box.id === e.from),
+          to = boxes.find((b) => b.box.id === e.to);
+        return (
+          n +
+          (ids.has(e.from) && (!to || (from && to.y <= from.y)) ? (labelled ? 48 : 8) : 0) +
+          (ids.has(e.to) && (!from || (to && from.y < to.y)) ? 8 : 0)
+        );
+      }, 0);
+      const below = d.edges.reduce((n, e) => {
+        const from = boxes.find((b) => b.box.id === e.from),
+          to = boxes.find((b) => b.box.id === e.to);
+        return (
+          n +
+          (ids.has(e.from) && to && from && to.y > from.y ? (labelled ? 48 : 8) : 0) +
+          (ids.has(e.to) && from && to && from.y >= to.y ? 8 : 0)
+        );
+      }, 0);
+      cursor += above + 48;
       movedBoxes.push(...bs.map((b) => ({ ...b, y: cursor })));
-      cursor += Math.max(...bs.map((b) => b.height)) + 32;
+      cursor += Math.max(...bs.map((b) => b.height)) + below + 48;
     }
   }
   return {

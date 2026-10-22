@@ -1152,10 +1152,9 @@ it("names a single edge relation once in the legend and preserves its text equiv
     ...drawing,
     edges: [required(drawing.edges[0]), { from: "a", to: "c", kind: "dependsOn" }],
   });
-  expect(mixed).toContain('class="diagram-legend"');
+  expect(mixed).not.toContain("data-edge-key=");
   expect(groups(mixed, "edge").every((edge) => edge.includes("<text"))).toBe(true);
-  expect(mixed).toContain("E2: dependsOn");
-  expect(mixed).toContain('data-edge-key="E2"');
+  expect(mixed).toContain("dependsOn</text>");
 });
 
 it("names solid and planned uses once without repeating edge labels", () => {
@@ -1167,16 +1166,17 @@ it("names solid and planned uses once without repeating edge labels", () => {
       { id: "b", words: "Second", target: "#b", planned: true },
     ],
     edges: [
-      { from: "a", to: "b", kind: "uses" },
-      { from: "b", to: "a", kind: "plans to use" },
+      { from: "a", to: "b", kind: "uses", claim: "anchored" },
+      { from: "b", to: "a", kind: "plans to use", claim: "declared" },
     ],
   };
   const html = renderDiagram(drawing);
   expect(html).toContain(
-    '<p class="diagram-legend">Arrows: uses. Dashed arrows: plans to use.</p>',
+    '<p class="diagram-legend">Arrows: uses (anchored). Dashed arrows: plans to use (declared).</p>',
   );
   expect(groups(html, "edge").every((edge) => !edge.includes("<text"))).toBe(true);
+  expect(html).not.toContain("data-edge-key");
   expect(html).toContain('stroke-dasharray="6 4"');
-  expect(html).toContain("<li>b plans to use a</li>");
-  expect(html).toContain("<li>a uses b</li>");
+  expect(html).toContain("<li>b plans to use a · declared</li>");
+  expect(html).toContain("<li>a uses b · anchored</li>");
 });

@@ -5082,6 +5082,11 @@ export const expectedBindingEdges = [
     "spec:consumers.spec-studio.diagrams",
   ],
   ["impl:protocol.studio-relation-diagrams", "satisfies", "spec:consumers.spec-studio.diagrams"],
+  [
+    "impl:protocol.studio-diagrams",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.edge-routing",
+  ],
   ["impl:protocol.studio-diagrams", "satisfies", "spec:consumers.spec-studio.diagrams"],
   ["impl:protocol.studio-diagrams", "references", "spec:decisions.studio-diagram-renderer"],
   ["impl:protocol.studio-diagrams", "references", "spec:decisions.studio-build-renders"],

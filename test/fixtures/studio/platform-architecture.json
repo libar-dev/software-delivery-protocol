@@ -1,0 +1,366 @@
+{
+  "boxes": [
+    {
+      "id": "component:example.inventory-context",
+      "title": "the Inventory context component",
+      "words": "the Inventory context component, 4 members",
+      "detail": "4 members",
+      "context": "inventory",
+      "layer": "adapter",
+      "target": "#component:example.inventory-context"
+    },
+    {
+      "id": "component:example.inventory-domain",
+      "title": "the Inventory context's pure domain code",
+      "words": "the Inventory context's pure domain code, 1 members",
+      "detail": "1 members",
+      "context": "inventory",
+      "layer": "domain",
+      "target": "#component:example.inventory-domain"
+    },
+    {
+      "id": "component:example.orders-context",
+      "title": "the Orders context component",
+      "words": "the Orders context component, 4 members",
+      "detail": "4 members",
+      "context": "orders",
+      "layer": "adapter",
+      "target": "#component:example.orders-context"
+    },
+    {
+      "id": "component:example.orders-domain",
+      "title": "the Orders context's pure domain code",
+      "words": "the Orders context's pure domain code, 1 members",
+      "detail": "1 members",
+      "context": "orders",
+      "layer": "domain",
+      "target": "#component:example.orders-domain"
+    },
+    {
+      "id": "component:example.parent",
+      "title": "the production composition's parent deployment over Orders and Inventory",
+      "words": "the production composition's parent deployment over Orders and Inventory, 4 members",
+      "detail": "4 members",
+      "context": "orders-inventory",
+      "layer": "application",
+      "target": "#component:example.parent"
+    },
+    {
+      "id": "component:platform.audit",
+      "title": "the audit library: the audit record of a command and of a gate change",
+      "words": "the audit library: the audit record of a command and of a gate change, 0 members",
+      "detail": "0 members",
+      "context": "platform",
+      "layer": "infrastructure",
+      "target": "#component:platform.audit"
+    },
+    {
+      "id": "component:platform.command",
+      "title": "the command library that runs in the parent deployment",
+      "words": "the command library that runs in the parent deployment, 7 members",
+      "detail": "7 members",
+      "context": "platform",
+      "layer": "application",
+      "target": "#component:platform.command"
+    },
+    {
+      "id": "component:platform.context",
+      "title": "the context library that runs inside every context component",
+      "words": "the context library that runs inside every context component, 8 members",
+      "detail": "8 members",
+      "context": "platform",
+      "layer": "adapter",
+      "target": "#component:platform.context"
+    },
+    {
+      "id": "component:platform.gate",
+      "title": "the maintenance gate: its table, the writer check, the two writers and the operator entries",
+      "words": "the maintenance gate: its table, the writer check, the two writers and the operator entries, 3 members",
+      "detail": "3 members",
+      "context": "platform",
+      "layer": "infrastructure",
+      "target": "#component:platform.gate"
+    },
+    {
+      "id": "component:platform.kernel",
+      "title": "the pure domain kernel: the decider contract and the outcome types",
+      "words": "the pure domain kernel: the decider contract and the outcome types, 2 members",
+      "detail": "2 members",
+      "context": "platform",
+      "layer": "domain",
+      "target": "#component:platform.kernel"
+    },
+    {
+      "id": "component:platform.operations",
+      "title": "the operations library: the diagnostic record a command writes",
+      "words": "the operations library: the diagnostic record a command writes, 0 members",
+      "detail": "0 members",
+      "context": "platform",
+      "layer": "infrastructure",
+      "target": "#component:platform.operations"
+    },
+    {
+      "id": "component:platform.read-model",
+      "title": "the read-model library: declare, rebuild, write and read a read model",
+      "words": "the read-model library: declare, rebuild, write and read a read model, 6 members",
+      "detail": "6 members",
+      "context": "platform",
+      "layer": "application",
+      "target": "#component:platform.read-model"
+    }
+  ],
+  "edges": [
+    {
+      "from": "component:example.inventory-context",
+      "to": "component:example.inventory-domain",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.inventory-context",
+      "to": "component:platform.context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.inventory-domain",
+      "to": "component:platform.kernel",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.orders-context",
+      "to": "component:example.orders-domain",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.orders-context",
+      "to": "component:platform.context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.orders-domain",
+      "to": "component:platform.kernel",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.parent",
+      "to": "component:example.inventory-context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.parent",
+      "to": "component:example.inventory-domain",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.parent",
+      "to": "component:example.orders-context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.parent",
+      "to": "component:example.orders-domain",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.parent",
+      "to": "component:platform.audit",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.parent",
+      "to": "component:platform.command",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.parent",
+      "to": "component:platform.context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.parent",
+      "to": "component:platform.gate",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:example.parent",
+      "to": "component:platform.read-model",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.audit",
+      "to": "component:platform.command",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.audit",
+      "to": "component:platform.context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.command",
+      "to": "component:platform.audit",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.command",
+      "to": "component:platform.context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.command",
+      "to": "component:platform.gate",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.command",
+      "to": "component:platform.kernel",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.command",
+      "to": "component:platform.operations",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.command",
+      "to": "component:platform.read-model",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.context",
+      "to": "component:platform.command",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.context",
+      "to": "component:platform.kernel",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.gate",
+      "to": "component:platform.audit",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.gate",
+      "to": "component:platform.command",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.gate",
+      "to": "component:platform.context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.gate",
+      "to": "component:platform.read-model",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.operations",
+      "to": "component:platform.command",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.operations",
+      "to": "component:platform.context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.operations",
+      "to": "component:platform.kernel",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.read-model",
+      "to": "component:platform.command",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.read-model",
+      "to": "component:platform.context",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.read-model",
+      "to": "component:platform.gate",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    },
+    {
+      "from": "component:platform.read-model",
+      "to": "component:platform.kernel",
+      "kind": "uses",
+      "claim": "anchored",
+      "count": 1
+    }
+  ]
+}

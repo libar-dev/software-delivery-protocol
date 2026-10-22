@@ -1,5 +1,5 @@
 import { escape } from "../pages/html.js";
-import { contextOf, layerOf, withinBound } from "./model.js";
+import { contextOf, layerOf, withinBound, needsEdgeLabels } from "./model.js";
 import type { Diagram, DiagramBox } from "./model.js";
 import { layoutDiagram, foldedBand, widthBudget } from "./layout.js";
 import type { Layout, Positioned } from "./layout.js";
@@ -7,7 +7,6 @@ import { routeDiagram, edgeOrder, edgeWords } from "./routing.js";
 import type { Routed } from "./routing.js";
 import { mermaidSource } from "./mermaid.js";
 export { labelLines } from "./layout.js";
-const relationOf = (kind: string): string => (kind === "plans to use" ? "uses" : kind);
 function svg(d: Diagram, textId: string, diagramId: string, l: Layout, routed: Routed): string {
   const marker = `diagram.${diagramId}.arrow`;
   const edges = routed.routes
@@ -74,7 +73,7 @@ function svg(d: Diagram, textId: string, diagramId: string, l: Layout, routed: R
 /**
  * @sdpAnchor impl:protocol.studio-diagrams
  * @sdpLabel deterministic grid and band layouts with bounded folds and full text equivalents
- * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.diagram-kinds.legibility, spec:consumers.spec-studio.diagram-kinds.mermaid-source
+ * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.diagram-kinds.edge-routing, spec:consumers.spec-studio.diagram-kinds.legibility, spec:consumers.spec-studio.diagram-kinds.mermaid-source
  * @sdpReferences spec:decisions.studio-diagram-renderer, spec:decisions.studio-build-renders, spec:consumers.spec-studio.diagram-kinds
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
@@ -93,12 +92,15 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
     routed = l ? routeDiagram(l, normalized.edges) : null;
   const edgeLabels = new Map(d.boxes.map((b) => [b.id, b.edgeLabel ?? b.id]));
   const text = `<details${routed ? "" : " open"} id="${escape(textId)}"><summary>The diagram as text</summary><ul>${normalized.boxes.map((b) => `<li>${escape(b.id)}: ${escape(b.words)}${b.foldedIds?.length ? ` · folded members: ${b.foldedIds.map(escape).join(", ")}` : ""}</li>`).join("")}${normalized.edges.map((e) => `<li>${escape(edgeLabels.get(e.from) ?? e.from)} ${escape(e.kind)} ${escape(edgeLabels.get(e.to) ?? e.to)}${e.claim ? ` · ${escape(e.claim)}` : ""}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}${e.reason ? ` — ${escape(e.reason)}` : ""}</li>`).join("")}</ul></details>`;
-  const relations = new Set(
-    d.edges.map((e) => `${relationOf(e.kind)}${e.claim ? ` · ${e.claim}` : ""}`),
-  );
+  const relationWords = (kind: string) => {
+    const claims = [
+      ...new Set(d.edges.filter((e) => e.kind === kind).flatMap((e) => (e.claim ? [e.claim] : []))),
+    ].sort();
+    return `${kind}${claims.length ? ` (${claims.join(", ")})` : ""}`;
+  };
   const legend =
-    relations.size === 1 && routed
-      ? `<p class="diagram-legend">Arrows: ${escape([...relations][0] ?? "")}.${d.edges.some((e) => e.kind === "plans to use") ? " Dashed arrows: plans to use." : ""}</p>`
+    d.edges.length && !needsEdgeLabels(d.edges) && routed
+      ? `<p class="diagram-legend">Arrows: ${escape(relationWords(d.edges.some((e) => e.kind === "uses") ? "uses" : (d.edges[0]?.kind ?? "")))}.${d.edges.some((e) => e.kind === "plans to use") ? ` Dashed arrows: ${escape(relationWords("plans to use"))}.` : ""}</p>`
       : routed?.routes.some((r) => r.label?.text === r.key)
         ? `<ul class="diagram-legend">${routed.routes
             .filter((r) => r.label?.text === r.key)
@@ -114,7 +116,7 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
   const sourceId = `diagram.${diagramId}.source`,
     areaId = `${sourceId}-text`;
   const source = routed
-    ? `<details id="${escape(sourceId)}"><summary>Mermaid source</summary><p>Copyable source; the Studio draws static SVG.</p><p>Syntax: labelled flowchart. This preserves exact relations, claims and folds for this drawing.</p><label for="${escape(areaId)}">Mermaid source for ${escape(d.caption)}</label><textarea readonly id="${escape(areaId)}" rows="8">${escape(mermaidSource(normalized))}</textarea><sdp-copy for="${escape(areaId)}"></sdp-copy></details>`
+    ? `<details id="${escape(sourceId)}"><summary>Mermaid source</summary><p>Copyable source; the Studio draws static SVG.</p><p>${d.grid ? "Preferred syntax: block; flowchart fallback because block cannot carry edge claims and counts." : "Preferred syntax: flowchart. Chosen syntax: labelled flowchart, preserving exact relations, claims and folds."}</p><label for="${escape(areaId)}">Mermaid source for ${escape(d.caption)}</label><textarea readonly id="${escape(areaId)}" rows="8">${escape(mermaidSource(normalized))}</textarea><sdp-copy for="${escape(areaId)}"></sdp-copy></details>`
     : "";
   const sectionId = d.sectionId === undefined ? d.subject : d.sectionId;
   return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${legend}${help}${routed && l ? `<div class="diagram-scroll" id="${escape(viewportId)}" tabindex="0" role="region" aria-label="${escape(d.caption)}"${help ? ` aria-describedby="${escape(helpId)}"` : ""}>${svg(normalized, textId, diagramId, l, routed)}</div>` : `<p>${fits ? "Shown as text: a distinct route or label could not be placed within the routing budget." : "Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges."}</p>`}${text}${source}</figure></sdp-diagram></section>`;

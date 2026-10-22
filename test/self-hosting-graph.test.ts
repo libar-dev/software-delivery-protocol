@@ -264,15 +264,15 @@ describe("the self-hosting corpus", () => {
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 428 Markdown Specs and four Gherkin Specs,
     // 432 in the self-hosting Pack; nine Pack manifests and 548 source anchors.
-    // The excluded-root validate run corroborates 989 nodes and 2735 edges; the capability-epics
-    // decision's dependency on the one-primitive decision added the latest edge.
+    // The excluded-root validate run corroborates 989 nodes and 2736 edges; the renderer's
+    // binding to edge routing accounts for the additional satisfies edge.
     expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 548 });
     expect(expectedSpecs).toHaveLength(432);
     expect(expectedPackMembers).toHaveLength(432);
     expect(expectedAnchors).toHaveLength(548);
-    expect(expectedBindingEdges).toHaveLength(694);
+    expect(expectedBindingEdges).toHaveLength(695);
     expect(result.graph.nodes).toHaveLength(989);
-    expect(result.graph.edges).toHaveLength(2735);
+    expect(result.graph.edges).toHaveLength(2736);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {

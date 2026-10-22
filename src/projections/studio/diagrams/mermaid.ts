@@ -1,8 +1,10 @@
 import type { Diagram } from "./model.js";
+import { layoutDiagram } from "./layout.js";
 import { edgeWords } from "./routing.js";
 export const mermaidText = (value: string): string =>
   value
     .replace(/#/gu, "#35;")
+    .replace(/%/gu, "#37;")
     .replace(/"/gu, "#quot;")
     .replace(/</gu, "#lt;")
     .replace(/>/gu, "#gt;")
@@ -15,10 +17,11 @@ export const mermaidText = (value: string): string =>
  * @sdpRole projection
  */
 export function mermaidSource(d: Diagram): string {
-  const aliases = new Map(d.boxes.map((b, i) => [b.id, `n${String(i)}`]));
+  const displayed = layoutDiagram(d).boxes.map((p) => p.box);
+  const aliases = new Map(displayed.map((b, i) => [b.id, `n${String(i)}`]));
   return [
     "flowchart TB",
-    ...d.boxes.flatMap((b) => [
+    ...displayed.flatMap((b) => [
       `  ${aliases.get(b.id) ?? ""}["${mermaidText(`${b.words} · ${b.id}`)}"]`,
       ...(b.folded
         ? [`  %% folded ${mermaidText(b.id)}: ${(b.foldedIds ?? []).map(mermaidText).join(", ")}`]
