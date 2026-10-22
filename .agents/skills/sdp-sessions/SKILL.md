@@ -62,10 +62,10 @@ addresses.
 
 ### Design
 
-Read the capability map (recipe 52) to choose an epic's refinement scope and inspect its direct
-binding evidence; check `damage`, `cycles` and summary omissions before interpreting the answer.
+Read the roadmap (recipe 53) for the next design work and the capability map (recipe 52) to
+choose an epic's refinement scope and inspect its direct binding evidence; check `damage`, `cycles` and summary omissions before interpreting the answer.
 
-Open the next design work from the roadmap (recipe 53). Use promotion preflight (recipe 9) on the target; the planning slice (recipe 19), dependency
+Use promotion preflight (recipe 9) on the target; the planning slice (recipe 19), dependency
 footing (recipe 21) and dependency cycles (recipe 26) for what it rests on; and readiness
 divergence (recipe 7) across the corpus. Resolve the target's blocking open questions and review
 the carrying Specs. The open-question register (recipe 20) lists the neighbors' questions, and the
@@ -76,7 +76,7 @@ and a test author share. For a Pack, read Pack design (recipe 29) member by memb
 slice (recipe 54) as one whole: how the members rest on each other, the architecture they touch,
 and the decisions and questions in scope. Before changing a Spec others rest on, run
 design-change impact (recipe 30). Follow `sdp-authoring` for capability-based Pack
-names, and read the next work from the roadmap (recipe 53).
+names and advisory priority.
 
 A design pass over a Pack runs in a loop:
 
@@ -98,9 +98,7 @@ show what the next pass could take up.
 ### Implement
 
 Read the roadmap (recipe 53) for the owner's order and each entry's need; render the roadmap memo
-(recipe 55) for a pull request description's forward section.
-
-Use the build backlog (recipe 1) to orient the available ready work and the target Spec context
+(recipe 55) for a pull request description's forward section. Use the build backlog (recipe 1) to orient the available ready work and the target Spec context
 (recipe 3) to read guarantees, relations, implementation bindings, and verifiers. Inspect the
 planning slice (recipe 19) before writing code. In a declared seam, read component membership
 (recipe 12) and uses fan-in and fan-out (recipe 13). When the code answers to a Pack's design, read
@@ -138,7 +136,7 @@ Findings against Specs travel as one change proposal: use the branch-head commit
 read as its base, never a preview's merge commit, check it with recipe 38, and post the
 proposal memo (recipe 49) to the pull request. Read moved, unresolved or incomparable scopes
 again before applying them. Findings against code or other files are review comments on their
-lines; no Spec edit needs no proposal. An open design finding becomes an open question with
+lines; a review proposing no Spec edit has no proposal. An open design finding becomes an open question with
 `decider`, `provisional` and `links`; a code defect against settled intent stays a code finding.
 The applying commit names the proposal's reason and base. The Protocol keeps its record in git
 and the draft pull request; an adopter chooses its own record convention.

@@ -163,6 +163,7 @@ it("routes the next work and reviews through roadmap and proposal recipes", () =
   ])
     expect(sessions).toContain(clause);
   expect(sessions).not.toContain("plan pointers");
+  expect(skillSection(skillPaths[2], "### Design").match(/recipe 53/gu)).toHaveLength(1);
   const tasks = skillSection(skillPaths[0], "### Which recipe answers a task");
   for (const number of [52, 53, 54, 55]) expect(tasks).toContain(`recipe ${String(number)}`);
 });

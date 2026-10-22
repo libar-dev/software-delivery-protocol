@@ -213,8 +213,8 @@ Every doc honours both — never mistake one half for the other:
   (`schemas/sdp-proposal-1.schema.json`), based on the branch-head commit the reviewer read,
   never a preview's merge commit. Check it with recipe 38 against that base, read moved,
   unresolved or incomparable scopes again, and post recipe 49's memo to the pull request.
-  Findings against code or other files are pull request comments on their lines; no Spec edit
-  needs no proposal. An open design finding becomes an open question with `decider`, `provisional`
+  Findings against code or other files are pull request comments on their lines; a review proposing no Spec edit
+  has no proposal. An open design finding becomes an open question with `decider`, `provisional`
   and `links`; a deferral adds its blocking question's `trigger`. A code defect against settled
   intent stays a code finding. An applying commit carries the proposal's reason line and base;
   acceptance stays in git and the discussion. Briefs and prompts stay in the session.
