@@ -160,6 +160,21 @@ describe("maturity picture", () => {
     expect(map).toContain('role="group"');
     expect(map).not.toContain('role="img"');
   });
+  it("places the map inside the page's expander so a cell link opens its member list", async () => {
+    const page = find(
+      await pages({
+        "a.sdp.md": carrier("a", "{dependsOn: spec:basis}", "idea"),
+        "basis.sdp.md": carrier("basis"),
+        "p.pack.sdp.md": "---\nid: pack:sample\nspecs: [spec:a, spec:basis]\n---\n# Sample\n",
+      }),
+      "packs/sample.html",
+    );
+    const expander = page.indexOf("<sdp-expander>");
+    const map = page.indexOf("<sdp-maturity-map");
+    expect(expander).toBeGreaterThan(-1);
+    expect(map).toBeGreaterThan(expander);
+    expect(page.indexOf("</sdp-expander>")).toBeGreaterThan(map);
+  });
   it("puts a uniform map behind a closed disclosure and uses solid fill above the mark bound", async () => {
     const files: Record<string, string> = { "basis.sdp.md": carrier("basis") };
     const ids = Array.from({ length: 101 }, (_, i) => `spec:item${String(i)}`);
