@@ -51,6 +51,7 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
       ["architecture.html", "Architecture"],
       ["tests.html", "Tests"],
       ["evidence.html", "Evidence"],
+      ["roadmap.html", "Roadmap"],
       ["queue.html", "Queue"],
       ["questions.html", "Questions"],
       ["decisions.html", "Decisions"],

@@ -7484,7 +7484,7 @@ export const consumersSpecs = [
           "a disclosure whose summary reads `The forward section, as Markdown`, holding a copy action and the memo in a `pre` element.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.roadmap-page.sdp.md",
   },
   {

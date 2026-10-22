@@ -21,6 +21,20 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.studio-roadmap-page",
+    nodeType: "CodeNode",
+    label: "renders roadmap needs, holding parts and the shared Markdown memo",
+    file: "src/projections/studio/pages/roadmap-page.ts",
+    site: "export function roadmapPage(",
+    role: "projection",
+  },
+  {
+    id: "test:protocol.studio-roadmap-page",
+    nodeType: "Anchor",
+    file: "test/studio-roadmap.test.ts",
+    site: "async function page(",
+  },
+  {
     id: "test:protocol.roadmap-priority",
     nodeType: "Anchor",
     label: "checks Pack priority extraction, comparison and Studio change notes",
@@ -4660,6 +4674,11 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.studio-roadmap-page", "satisfies", "spec:consumers.spec-studio.roadmap-page"],
+  ["impl:protocol.studio-roadmap-page", "satisfies", "spec:consumers.roadmap.memo"],
+  ["test:protocol.studio-roadmap-page", "verifies", "spec:consumers.spec-studio.roadmap-page"],
+  ["test:protocol.studio-roadmap-page", "verifies", "spec:consumers.roadmap.memo"],
+  ["test:protocol.studio-roadmap-page", "verifies", "spec:consumers.spec-studio.navigation"],
   [
     "impl:protocol.studio-diagram-layout",
     "satisfies",
@@ -6492,6 +6511,8 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.studio-roadmap-page",
+  "test:protocol.studio-roadmap-page",
   "impl:protocol.studio-diagram-layout",
   "impl:protocol.studio-diagram-routing",
   "impl:protocol.studio-diagram-source",

@@ -336,10 +336,6 @@ describe("sdp cli", () => {
           "specs/consumers/spec-studio.lenses.architecture.unit-register.sdp.md",
           "spec:consumers.spec-studio.lenses.architecture.unit-register",
         ],
-        [
-          "specs/consumers/spec-studio.roadmap-page.sdp.md",
-          "spec:consumers.spec-studio.roadmap-page",
-        ],
         ["specs/consumers/spec-studio.slice-page.sdp.md", "spec:consumers.spec-studio.slice-page"],
         ["specs/extraction/executable-examples.sdp.md", "spec:extraction.executable-examples"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
@@ -356,12 +352,13 @@ describe("sdp cli", () => {
         "spec:consumers.design-slice",
         "spec:consumers.roadmap",
         "spec:consumers.roadmap.memo",
+        "spec:consumers.spec-studio.roadmap-page",
       ]) {
         expect(stderr).not.toContain(`honesty/gaps — Spec "${specId}"`);
       }
       // Re-measured from the refreshed carriers: no prose-mention pair is retained, and the
       // verifier gaps listed above are the whole warning set.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 13 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

@@ -1,0 +1,170 @@
+{
+  "viewports": [
+    {
+      "width": 1440,
+      "combined": false,
+      "navRows": 1,
+      "navLabels": [
+        "Packs",
+        "Architecture",
+        "Tests",
+        "Evidence",
+        "Roadmap",
+        "Queue",
+        "Questions",
+        "Decisions",
+        "Declarations",
+        "Backlog",
+        "Glossary"
+      ],
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "columns": [
+        {
+          "x": 400,
+          "y": 517.625
+        },
+        {
+          "x": 643,
+          "y": 517.625
+        },
+        {
+          "x": 886,
+          "y": 517.625
+        },
+        {
+          "x": 1129,
+          "y": 517.625
+        }
+      ],
+      "rows": 9
+    },
+    {
+      "width": 1440,
+      "combined": true,
+      "navRows": 1,
+      "navLabels": [
+        "Packs",
+        "Capabilities",
+        "Architecture",
+        "Tests",
+        "Evidence",
+        "Roadmap",
+        "Queue",
+        "Questions",
+        "Decisions",
+        "Declarations",
+        "Backlog",
+        "Glossary"
+      ],
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "columns": [
+        {
+          "x": 400,
+          "y": 517.625
+        },
+        {
+          "x": 643,
+          "y": 517.625
+        },
+        {
+          "x": 886,
+          "y": 517.625
+        },
+        {
+          "x": 1129,
+          "y": 517.625
+        }
+      ],
+      "rows": 9
+    },
+    {
+      "width": 390,
+      "combined": false,
+      "navRows": 3,
+      "navLabels": [
+        "Packs",
+        "Architecture",
+        "Tests",
+        "Evidence",
+        "Roadmap",
+        "Queue",
+        "Questions",
+        "Decisions",
+        "Declarations",
+        "Backlog",
+        "Glossary"
+      ],
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "columns": [
+        {
+          "x": 12,
+          "y": 969.71875
+        },
+        {
+          "x": 12,
+          "y": 1140.515625
+        },
+        {
+          "x": 12,
+          "y": 1256.5625
+        },
+        {
+          "x": 12,
+          "y": 1619.359375
+        }
+      ],
+      "rows": 9
+    },
+    {
+      "width": 390,
+      "combined": true,
+      "navRows": 3,
+      "navLabels": [
+        "Packs",
+        "Capabilities",
+        "Architecture",
+        "Tests",
+        "Evidence",
+        "Roadmap",
+        "Queue",
+        "Questions",
+        "Decisions",
+        "Declarations",
+        "Backlog",
+        "Glossary"
+      ],
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "columns": [
+        {
+          "x": 12,
+          "y": 969.71875
+        },
+        {
+          "x": 12,
+          "y": 1140.515625
+        },
+        {
+          "x": 12,
+          "y": 1256.5625
+        },
+        {
+          "x": 12,
+          "y": 1619.359375
+        }
+      ],
+      "rows": 9
+    }
+  ],
+  "noScript": {
+    "hidden": 0,
+    "rows": 9,
+    "filterHidden": true
+  },
+  "filter": "passed",
+  "memoBytes": "passed",
+  "expandedWidth": "passed"
+}

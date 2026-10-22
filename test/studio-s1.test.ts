@@ -381,6 +381,7 @@ describe("Studio lenses", () => {
       "Architecture",
       "Tests",
       "Evidence",
+      "Roadmap",
       "Queue",
       "Questions",
       "Decisions",
@@ -1033,7 +1034,7 @@ it.each([false, true])(
       expect(spy.mock.calls[0]?.[1].graph).toBe(reader.graph);
       expect(spy.mock.calls[0]?.[1].report).toBe(report);
       const expected = [
-        ...[17, 20, 24, 31, 33, 43, 44, 46, 51].map((number) => ({ number, params: {} })),
+        ...[17, 20, 24, 31, 33, 43, 44, 46, 51, 53].map((number) => ({ number, params: {} })),
         ...(withBase ? [{ number: 35, params: { base: reader.graph, detail: true } }] : []),
         { number: 29, params: { pack: "pack:probe" } },
         ...(withBase

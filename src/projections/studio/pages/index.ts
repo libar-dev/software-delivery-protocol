@@ -13,6 +13,7 @@ import { indexPage } from "./index-page.js";
 import { packPage } from "./pack-page.js";
 import { specPage } from "./spec-page.js";
 import { searchPage } from "./search-page.js";
+import { roadmapPage } from "./roadmap-page.js";
 
 /**
  * @sdpAnchor impl:protocol.studio-page-catalog
@@ -33,6 +34,7 @@ export function renderStudio(data: StudioData, stylesheet: string): readonly Stu
     { path: "tests.html", content: testsPage({ data, path: "tests.html" }) },
     { path: "evidence.html", content: evidencePage({ data, path: "evidence.html" }) },
     { path: "search.html", content: searchPage({ data, path: "search.html" }) },
+    { path: "roadmap.html", content: roadmapPage({ data, path: "roadmap.html" }) },
     ...(
       [
         ["questions.html", questionsPage],

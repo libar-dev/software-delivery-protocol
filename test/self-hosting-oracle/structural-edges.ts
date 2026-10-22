@@ -79,6 +79,11 @@ export const structuralMembershipExceptions = [
  */
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/projections/studio/pages/roadmap-page.ts#roadmapPage",
+    anchorId: "impl:protocol.studio-roadmap-page",
+    componentId: "component:protocol.projections",
+  },
+  {
     unit: "src/cli/params.ts#mergeParams",
     anchorId: "impl:protocol.parameter-codec",
     componentId: "component:protocol.cli",

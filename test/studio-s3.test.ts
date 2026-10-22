@@ -387,6 +387,7 @@ describe("Studio register pages", () => {
       "Architecture",
       "Tests",
       "Evidence",
+      "Roadmap",
       "Queue",
       "Questions",
       "Decisions",
