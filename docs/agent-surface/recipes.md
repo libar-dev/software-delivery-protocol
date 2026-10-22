@@ -5588,10 +5588,14 @@ A refused input returns `{ diagnostics }` without a slice:
 The answer is `{ scope, totals, members, structure, boundary, architecture, decisions, questions }`.
 Members stay in scope order, with their depth, next-rung holds and design columns. Structure
 lists typed relations with their ordering mark and reasons, and cycles with a closed path.
+`structure.unresolved` lists unresolved outgoing typed targets apart from the resolved boundary,
+with their relation type and optional reason, and no invented title or rung.
 Boundary rows extend Pack design with floors and held members, marking excluded Pack members
-with `inPack`. Architecture keeps touched anchored components, member component designs,
+with `inPack`; a full row's `via` includes `reasons: [{ member, reason }]` only for relations that
+state a reason. Architecture keeps touched anchored components, member component designs,
 anchored component pairs with unit edges, planned uses, one-step outside components, and
-unplaced units apart. Decisions include member decisions and those members name; questions
+unplaced units apart. A member's bound unit whose component membership does not resolve stays
+unplaced and touches no invented component. Decisions include member decisions and those members name; questions
 include members', decisions', and blocking questions of outside Specs holding a member.
 Totals count these readings without a score, finding, schedule or gate. The law and complete
 row shapes are `spec:consumers.design-slice`.

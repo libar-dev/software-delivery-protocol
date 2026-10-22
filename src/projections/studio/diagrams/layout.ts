@@ -74,7 +74,7 @@ export function layoutDiagram(d: Diagram): Layout {
     d.grid && new Set(d.boxes.filter((b) => !foldedBand(b)).map(contextOf)).size > 1;
   const measure = (box: DiagramBox) => {
     const title = labelLines(box.title ?? box.words, 28),
-      identity = labelLines(short.get(box.id) ?? box.id),
+      identity = box.hideIdentity ? [] : labelLines(short.get(box.id) ?? box.id),
       detail = labelLines(box.detail ?? "");
     return {
       title,

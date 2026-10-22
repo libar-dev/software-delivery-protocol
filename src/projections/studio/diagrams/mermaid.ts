@@ -31,14 +31,19 @@ export function mermaidSource(d: Diagram): string {
           `  subgraph depth${String(i)}["${mermaidText(band ?? "Units")}"]`,
           ...displayed
             .filter((b) => b.band === band)
-            .map((b) => `    ${aliases.get(b.id) ?? ""}["${mermaidText(`${b.words} · ${b.id}`)}"]`),
+            .map(
+              (b) =>
+                `    ${aliases.get(b.id) ?? ""}["${mermaidText(b.hideIdentity ? b.words : `${b.words} · ${b.id}`)}"]`,
+            ),
           "  end",
         ])
       : []),
     ...displayed.flatMap((b) => [
       ...(d.mermaidKind === "dependencies"
         ? []
-        : [`  ${aliases.get(b.id) ?? ""}["${mermaidText(`${b.words} · ${b.id}`)}"]`]),
+        : [
+            `  ${aliases.get(b.id) ?? ""}["${mermaidText(b.hideIdentity ? b.words : `${b.words} · ${b.id}`)}"]`,
+          ]),
       ...(b.folded
         ? [`  %% folded ${mermaidText(b.id)}: ${(b.foldedIds ?? []).map(mermaidText).join(", ")}`]
         : []),

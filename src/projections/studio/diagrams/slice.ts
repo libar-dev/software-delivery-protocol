@@ -12,7 +12,12 @@ const rung = (row: { statedReadiness: string | null; floorReached: string | null
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
-export function dependencyDiagram(subject: string, answer: SliceAnswer, target: Target): Diagram {
+export function dependencyDiagram(
+  subject: string,
+  answer: SliceAnswer,
+  target: Target,
+  diagramId = `${subject}.dependencies`,
+): Diagram {
   const shown = answer.members.filter((m) => m.exampleOf === null);
   const depths = [...new Set(shown.map((m) => m.depth))].sort((a, b) => b - a);
   const boxes: DiagramBox[] = depths.flatMap((depth) =>
@@ -56,7 +61,7 @@ export function dependencyDiagram(subject: string, answer: SliceAnswer, target: 
       mapping.set(row.id, row.id);
     }
     for (const via of row.via) {
-      const id = keep ? row.id : `diagram.${subject}.dependencies.outside.${via.type}`;
+      const id = keep ? row.id : `diagram.${diagramId}.outside.${via.type}`;
       if (!keep) {
         const ids = groups.get(via.type) ?? [];
         if (!ids.includes(row.id)) ids.push(row.id);
@@ -77,7 +82,7 @@ export function dependencyDiagram(subject: string, answer: SliceAnswer, target: 
     }
   }
   for (const [type, ids] of groups) {
-    const id = `diagram.${subject}.dependencies.outside.${type}`;
+    const id = `diagram.${diagramId}.outside.${type}`;
     mapping.set(id, id);
     boxes.push({
       id,
@@ -85,6 +90,7 @@ export function dependencyDiagram(subject: string, answer: SliceAnswer, target: 
       title: `${String(ids.length)} outside Specs`,
       detail: `${type}, folded`,
       folded: true,
+      hideIdentity: true,
       foldedIds: ids,
       target: "#boundary.restsOn",
       band: "Outside this scope",
@@ -114,12 +120,12 @@ export function dependencyDiagram(subject: string, answer: SliceAnswer, target: 
   }
   let drawing: Diagram = {
     subject,
-    caption: "How the members rest on each other",
+    caption: "Declared relations by depth",
     sectionId: null,
     preserveOrder: true,
     mermaidKind: "dependencies",
     boxes,
-    edges,
+    edges: aggregate(edges, mapping),
   };
   for (const depth of [...depths].sort(
     (a, b) =>
@@ -128,7 +134,7 @@ export function dependencyDiagram(subject: string, answer: SliceAnswer, target: 
   )) {
     if (withinBound(drawing)) break;
     const members = shown.filter((m) => m.depth === depth),
-      id = `diagram.${subject}.dependencies.fold.${String(depth)}`;
+      id = `diagram.${diagramId}.fold.${String(depth)}`;
     for (const m of members) mapping.set(m.id, id);
     const at = drawing.boxes.findIndex((b) => b.band === `Depth ${String(depth)}`);
     const remaining = drawing.boxes.filter((b) => b.band !== `Depth ${String(depth)}`);
@@ -140,6 +146,7 @@ export function dependencyDiagram(subject: string, answer: SliceAnswer, target: 
       target: "#slice.members",
       band: `Depth ${String(depth)}`,
       folded: true,
+      hideIdentity: true,
       foldedIds: members.map((m) => m.id),
     });
     drawing = { ...drawing, boxes: remaining, edges: aggregate(edges, mapping) };
@@ -235,6 +242,7 @@ export function scopedArchitectureDiagrams(
       context: c.context,
       layer: c.layer,
       folded: true,
+      hideIdentity: true,
       foldedIds: rows.map((c) => c.id),
     });
   }
@@ -313,7 +321,7 @@ export function scopedArchitectureDiagrams(
         ? `#${sectionIds.get(b.target.slice(1)) ?? "slice.outside"}`
         : b.target,
     })),
-    caption: i === 0 ? "The architecture it touches" : d.caption,
+    caption: i === 0 ? "Anchored components and member designs" : d.caption,
     textRows: original,
     ...(selected.fold === "nothing" && !a.outside.length && !a.designs.length
       ? { mermaidKind: "block" as const }

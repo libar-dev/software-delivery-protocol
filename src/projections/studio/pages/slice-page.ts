@@ -10,7 +10,7 @@ const value = (v: unknown): string =>
   v === null || v === undefined
     ? "not stated"
     : Array.isArray(v)
-      ? v.join(", ") || "nothing"
+      ? v.join(", ") || "none"
       : typeof v === "string"
         ? v
         : JSON.stringify(v);
@@ -79,7 +79,7 @@ export function slicePage(ctx: PageContext, a: SliceAnswer): string {
   const comparison = (d: SliceDesign) =>
     lines([
       ...(!d.realized
-        ? ["not compared: no anchor satisfies the design"]
+        ? ["not compared"]
         : !d.differing.length && !d.unreadable.length
           ? ["matches"]
           : []),
@@ -95,7 +95,12 @@ export function slicePage(ctx: PageContext, a: SliceAnswer): string {
     ["Design", "Component", "Declared", "Anchor", "Comparison"],
     arch.designs.map(
       (d) =>
-        `<tr><td>${link(ctx, d.spec, members.get(d.spec)?.title ?? d.spec)}<br>${code(d.spec)}</td><td>${code(d.componentId)}</td><td>${lines((["layer", "context", "role", "uses"] as const).map((key) => `${key}: ${escape(value(d[key]))}`))}</td><td>${d.realized ? "satisfies the design" : d.anchorExists ? "present, does not satisfy the design" : "absent"}</td><td>${comparison(d)}</td></tr>`,
+        `<tr><td>${link(ctx, d.spec, members.get(d.spec)?.title ?? d.spec)}<br>${code(d.spec)}</td><td>${code(d.componentId)}</td><td>${lines(
+          (["layer", "context", "role", "uses"] as const).map((key) => {
+            const unreadable = d.unreadable.find((u) => u.key === key);
+            return `${key}: ${escape(unreadable ? `unreadable ${unreadable.value}` : value(d[key]))}`;
+          }),
+        )}</td><td>${d.realized ? "satisfies the design" : d.anchorExists ? "present, does not satisfy the design" : "absent"}</td><td>${comparison(d)}</td></tr>`,
     ),
   );
   const reachWords: Record<string, string> = {
@@ -152,20 +157,21 @@ export function slicePage(ctx: PageContext, a: SliceAnswer): string {
     )
     .join("");
   const t = a.totals;
+  const count = (n: number, noun: string) => `${String(n)} ${noun}${n === 1 ? "" : "s"}`;
   const summary = [
-    `${String(t.members)} members; ${String(t.exampleMembers)} example members counted in their parents.`,
-    `${String(t.relations)} relations among members; deepest depth ${String(t.depth)}; ${String(t.cycles)} cycles.`,
+    `${count(t.members, "member")}; ${count(t.exampleMembers, "example member")} counted in their parents.`,
+    `${count(t.relations, "relation")} among members; deepest depth ${String(t.depth)}; ${count(t.cycles, "cycle")}.`,
     `${String(t.heldBelowNextRung)} member${t.heldBelowNextRung === 1 ? "" : "s"} held below their stated next rung; ${String(t.waitingForAuthor)} waiting only for their author.`,
-    `${String(t.restsOn)} outside Specs the slice rests on; ${String(t.holdingOutside)} hold a member; ${String(t.restedOnBy)} outside Specs rest on it.`,
-    `${String(t.components.touched)} components touched: ${String(t.components.throughMembers)} through members' code, ${String(t.components.throughRestsOn)} through what the slice rests on, ${String(t.components.throughDesigns)} named by member designs; ${String(t.components.outside)} outside components shown for context.`,
-    `${String(t.designs.total)} member component designs; ${String(t.designs.realized)} realized; ${String(t.designs.matching)} of those match.`,
-    `${String(t.decisions)} decisions in scope; ${String(t.decisionsBelowReady)} state below ready.`,
-    `${String(t.openQuestions)} open questions; ${String(t.blockingQuestions)} blocking.`,
+    `${count(t.restsOn, "outside Spec")} the slice rests on; ${String(t.holdingOutside)} ${t.holdingOutside === 1 ? "holds" : "hold"} a member; ${count(t.restedOnBy, "outside Spec")} ${t.restedOnBy === 1 ? "rests" : "rest"} on it.`,
+    `${count(t.components.touched, "component")} touched: ${String(t.components.throughMembers)} through members' code, ${String(t.components.throughRestsOn)} through what the slice rests on, ${String(t.components.throughDesigns)} named by member designs; ${count(t.components.outside, "outside component")} shown for context.`,
+    `${count(t.designs.total, "member component design")}; ${String(t.designs.realized)} realized; ${String(t.designs.matching)} of those match.`,
+    `${count(t.decisions, "decision")} in scope; ${String(t.decisionsBelowReady)} ${t.decisionsBelowReady === 1 ? "states" : "state"} below ready.`,
+    `${count(t.openQuestions, "open question")}; ${String(t.blockingQuestions)} blocking.`,
   ];
   return frame(
     ctx,
     `Design slice: ${a.scope.title ?? subject}`,
-    `<header class="page-head"><h1>Design slice: ${codeSpans(a.scope.title ?? subject)}</h1><div class="ids">${code(subject)}${copy(subject)}</div><p><a href="${escape(relative(ctx, packPath))}">Read the Pack member by member</a></p><h2>The design as a whole</h2>${list(summary.map(escape), "summary")}<p class="reading-note">Members read with the ones others rest on first. The columns count the design each member carries beside its rung; they never judge whether it is enough. This page records no review and approves nothing.</p></header><sdp-expander><h2 id="slice.dependencies">How the members rest on each other</h2>${renderDiagram(dependencyDiagram(subject, a, target), `${subject}.dependencies`)}<h2 id="slice.members">What each member needs next</h2>${table("What each member needs next", ["Member", "Depth", "Rung", "Next rung", "Design carried", "Code"], rows, "slice-members")}<h2 id="slice.architecture">The architecture it touches</h2>${architecture}<h3>Components the slice touches</h3>${touched}<h3>Member component designs</h3>${designs}<h3 id="slice.outside">Outside the slice, shown for context and not counted as touched</h3>${list(arch.outside.map((c) => `${c.anchored ? componentLink(ctx, c.id) : code(c.id)}${c.label ? ` · ${escape(c.label)}` : ""} · ${c.anchored ? "anchored" : "not anchored"} · ${c.reachedBy.map((h) => escape(reachWords[h] ?? h)).join("; ")}`))}<h3>Units bound to a member and to no component</h3>${list(arch.unplaced.map((u) => `${code(u.unit)} ${u.via === "satisfies" ? "implements" : "references"} ${memberLink(u.member)}`))}<h2 id="slice.decisions">Decisions in scope</h2>${decisions}<h2 id="slice.questions">Open questions in scope</h2>${questions}<h2 id="slice.boundary">Where the slice meets the rest</h2>${boundary}</sdp-expander>`,
+    `<header class="page-head"><h1>Design slice: ${codeSpans(a.scope.title ?? subject)}</h1><div class="ids"><span>${code(subject)}</span>${copy(subject)}</div><p><a href="${escape(relative(ctx, packPath))}">Read the Pack member by member</a></p><h2>The design as a whole</h2>${list(summary.map(escape), "summary")}<p class="reading-note">Members read with the ones others rest on first. The columns count the design each member carries beside its rung; they never judge whether it is enough. This page records no review and approves nothing.</p></header><sdp-expander><h2 id="slice.dependencies">How the members rest on each other</h2>${renderDiagram(dependencyDiagram(subject, a, target), `${subject}.dependencies`)}<h2 id="slice.members">What each member needs next</h2>${table("What each member needs next", ["Member", "Depth", "Rung", "Next rung", "Design carried", "Code"], rows, "slice-members")}<h2 id="slice.architecture">The architecture it touches</h2>${architecture}<h3>Components the slice touches</h3>${touched}<h3>Member component designs</h3>${designs}<h3 id="slice.outside">Outside the slice, shown for context and not counted as touched</h3>${list(arch.outside.map((c) => `${c.anchored ? componentLink(ctx, c.id) : code(c.id)}${c.label ? ` · ${escape(c.label)}` : ""} · ${c.anchored ? "anchored" : "not anchored"} · ${c.reachedBy.map((h) => escape(reachWords[h] ?? h)).join("; ")}`))}<h3>Units bound to a member and to no component</h3>${list(arch.unplaced.map((u) => `${code(u.unit)} ${u.via === "satisfies" ? "implements" : "references"} ${memberLink(u.member)}`))}<h2 id="slice.decisions">Decisions in scope</h2>${decisions}<h2 id="slice.questions">Open questions in scope</h2>${questions}<h2 id="slice.boundary">Where the slice meets the rest</h2>${boundary}</sdp-expander>`,
   );
 }
 export { slicePath };

@@ -8279,6 +8279,26 @@ describe("the shipped design slice", () => {
     );
     for (const [direction, rows] of Object.entries(asRecord(pack.boundary))) {
       const boundary = asRecord(full.boundary);
+      for (const row of asArray(boundary[direction])) {
+        const boundaryRow = asRecord(row);
+        for (const entry of asArray(boundaryRow.via)) {
+          const via = asRecord(entry);
+          const reasons = asArray(via.members).flatMap((member) =>
+            derived.graph.edges
+              .filter(
+                (edge) =>
+                  edge.claim === "declared" &&
+                  edge.type === via.type &&
+                  edge.reason !== undefined &&
+                  (direction === "restsOn"
+                    ? edge.from === member && edge.to === boundaryRow.id
+                    : edge.to === member && edge.from === boundaryRow.id),
+              )
+              .map((edge) => ({ member, reason: edge.reason })),
+          );
+          expect(via.reasons ?? []).toEqual(reasons);
+        }
+      }
       expect(
         asArray(boundary[direction]).map((row) => {
           const { id, title, statedReadiness, implemented, via } = asRecord(row);

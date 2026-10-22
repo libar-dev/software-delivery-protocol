@@ -82,8 +82,17 @@ interface Slice {
   structure: {
     edges: { from: string; to: string; type: string; orders: boolean; reason?: string }[];
     cycles: { members: string[]; cycle: string[] }[];
+    unresolved: { from: string; to: string; type: string; reason?: string }[];
   };
-  boundary: Record<string, { id: string; holds: string[]; inPack?: boolean }[]>;
+  boundary: Record<
+    string,
+    {
+      id: string;
+      holds: string[];
+      inPack?: boolean;
+      via: { type: string; members: string[]; reasons?: { member: string; reason: string }[] }[];
+    }[]
+  >;
   architecture: {
     components: {
       id: string;
@@ -836,6 +845,49 @@ void outsideHoldingAnchor;
 registerOutsideHolding(adapters);
 
 describe("design slice composition", () => {
+  it("keeps unresolved targets and boundary relation reasons in the recipe answer", async () => {
+    const graph = sliceProbe();
+    graph.nodes.push(primitive("outside"));
+    graph.edges.push(
+      link(sid("top"), "dependsOn", sid("outside"), "declared", "outside footing"),
+      link(sid("base"), "dependsOn", sid("outside")),
+      link(sid("top"), "constrainedBy", sid("missing"), "declared", "unresolved footing"),
+    );
+    const full = await slice(graph);
+    expect(full.structure.unresolved).toEqual([
+      { from: sid("top"), to: sid("missing"), type: "constrainedBy", reason: "unresolved footing" },
+    ]);
+    expect(required(full.boundary.restsOn).find((row) => row.id === sid("outside"))?.via).toEqual([
+      {
+        type: "dependsOn",
+        members: [sid("top"), sid("base")],
+        reasons: [{ member: sid("top"), reason: "outside footing" }],
+      },
+    ]);
+    expect(required(full.boundary.restsOn).map((row) => row.id)).not.toContain(sid("missing"));
+  });
+  it("keeps bindings to unresolved components unplaced rather than touching an invented component", async () => {
+    const graph = sliceProbe();
+    graph.nodes.push({
+      id: "impl:probe.unplaced",
+      nodeType: "CodeNode",
+      claim: "anchored",
+      file: "unplaced.ts",
+      line: 1,
+    });
+    graph.edges.push(
+      link("impl:probe.unplaced", "satisfies", sid("top"), "anchored"),
+      link("impl:probe.unplaced", "references", sid("base"), "anchored"),
+      link("impl:probe.unplaced", "memberOf", cid("missing"), "anchored"),
+    );
+    const answer = await slice(graph);
+    expect(answer.architecture.components).toEqual([]);
+    expect(answer.totals.components).toMatchObject({ touched: 0, throughMembers: 0 });
+    expect(answer.architecture.unplaced).toEqual([
+      { unit: "impl:probe.unplaced", member: sid("top"), via: "satisfies" },
+      { unit: "impl:probe.unplaced", member: sid("base"), via: "references" },
+    ]);
+  });
   it("pins every full and summary row shape to the carrying Design entries", async () => {
     const graph = columnProbe();
     const full = await slice(graph);

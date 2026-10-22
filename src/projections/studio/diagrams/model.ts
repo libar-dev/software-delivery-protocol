@@ -10,6 +10,7 @@ export interface DiagramBox {
   readonly words: string;
   readonly title?: string;
   readonly elementId?: string;
+  readonly hideIdentity?: boolean;
   readonly detail?: string;
   readonly foldedIds?: readonly string[];
   readonly edgeLabel?: string;
