@@ -1,4 +1,4 @@
-# PR 34's screenshots
+# PR 35's screenshots
 
 The Spec Studio's pages as `sdp studio` publishes them, at the arc's base and at its head. The
 page set is generated and never committed, so these captures stand in for it on the pull request.

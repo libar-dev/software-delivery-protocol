@@ -1,7 +1,7 @@
 # Plan 46. Designs people can read, and an adopter at full speed
 
 > **Status:** ✅ EXECUTED on `feature/studio-and-adoption-v0`, from `main` at `5a0b22c`, the merge
-> of PR 33, as PR 34. One branch and one PR. Every lane landed, each reviewed across model families;
+> of PR 33, as PR 35. One branch and one PR. Every lane landed, each reviewed across model families;
 > the rulings were made on the owner's delegation of 2026-10-21 and await the owner's review; the
 > decisions only the owner makes are listed apart. A thin
 > lineage pointer: once the design passes land, readiness, backlog and open questions are read
@@ -285,7 +285,7 @@ results are in `reviews/plan46-acceptance.md`. Re-run them rather than inheritin
   the test line and its anchor, with the assertion behind the source link the stamp adds.
 - The vault built from the copy regenerates without touching a person's note, and the Studio's
   watch rebuilds byte-identically to a plain build.
-- The pull request's CI uploads the stamped Studio and its CTRF runs: measured on PR 34 itself.
+- The pull request's CI uploads the stamped Studio and its CTRF runs: measured on PR 35 itself.
 
 ## Deferred, with their triggers
 
