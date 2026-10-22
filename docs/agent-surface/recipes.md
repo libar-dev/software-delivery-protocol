@@ -3146,7 +3146,7 @@ const ruleChanges = (id, a, b) => {
   const value = (entry) => entry === null ? null : { list: entry.list, text: entry.text };
   return pairs.flatMap(([from, to]) => {
     const entry = to ?? from, key = to?.key ?? from?.key ?? null;
-    const part = key === null ? `behavior.${entry.list}[${entry.index}]` : `rule.${key}`;
+    const part = key === null ? `behavior.${entry.list}[${entry.index}]${to === null ? " (base)" : ""}` : `rule.${key}`;
     const peers = pairs.filter(([a, b]) => a !== null && b !== null && a.list === b.list &&
       (from?.key === null ? a.list === from.list : a.key !== null && a.key === b.key && (!unordered.has(id) || a.list === from?.list)));
     const position = (entry, side) => peers.filter((pair) => {
@@ -3220,7 +3220,10 @@ entry. An unmatched keyed base entry is `removed`; an unmatched head entry is `a
 Unchanged text with an added, removed or renamed key reports one `keyed` entry. Its `from` and
 `to` are the old and new addresses, with `null` meaning none. A text edit is `changed`; an
 unchanged entry that changes position or moves between rules and flows is `moved`. Other
-unkeyed collections compare as a whole. Line changes and object property serialization order
+unkeyed collections compare as a whole. An unkeyed rule or flow uses its head index in its part
+name; a removed entry uses its base index with a ` (base)` mark, such as
+`behavior.rules[1] (base)`, so its name differs from a head entry at that position.
+Line changes and object property serialization order
 alone do not change intent.
 
 For a probe whose two rules were keyed and whose second rule was also reworded, the detailed
@@ -3932,8 +3935,9 @@ return { schemaProblems, base: proposal.base, diagnostics, totals: { changes: ch
 `schemaProblems` names each malformed field by its JSON path. A malformed document produces no
 change rows. The check resolves the deduplicated union of each change's scope, replaced or followed
 entry, and relation source. Each scope row reports resolution at both commits and whether its value
-was added, removed or changed under recipe 35's comparison. An order-only entry move keeps its
-value unchanged; a whole-Spec scope includes order changes. `relationTarget` reports resolution at
+was added, removed or changed. The check compares keyed entries by key. A keyed rule or flow has
+`{ list, text }` as its value; a rule or flow list containing an unkeyed entry also compares as a
+whole. An order-only entry move keeps its value unchanged; a whole-Spec scope includes order changes. `relationTarget` reports resolution at
 the head for a declared relation, and is null otherwise. `totals.moved` and `totals.unresolved`
 count changes, so one moved entry leaves other changes independently visible. Unknown references
 remain explicit rows. A scope outside the common schema carries `comparable: false` and a

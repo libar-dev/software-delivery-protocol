@@ -7436,3 +7436,58 @@ it.each(["rule", "flow"])(
     }
   },
 );
+
+it.each(["rule", "flow"])(
+  "distinguishes removed unkeyed %s base positions from head positions",
+  async (kind) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-unkeyed-removal-"));
+    const path = join(root, "probe.sdp.md");
+    const write = (entries: string[]) => {
+      writeFileSync(
+        path,
+        `---\nid: spec:probe.removal\nkind: behavior\naltitude: story\nreadiness: scoped\nrelations: {}\n---\n# Removal probe\n\n## Intent\n- outcome: Name removed entries unambiguously.\n\n## Behavior\n${entries.map((entry) => `- ${kind}: ${entry}`).join("\n")}\n`,
+      );
+    };
+    try {
+      write(["A.", "B.", "C."]);
+      const base = extract({ root }).graph;
+      write(["C.", "D."]);
+      const head = extract({ root });
+      const list = kind === "rule" ? "rules" : "flows";
+      const diff = asRecord(await runRecipe(recipeByOrdinal(35), { base, detail: true }, head));
+      const parts = [
+        {
+          part: `behavior.${list}[0]`,
+          change: "moved",
+          from: { list, text: "C." },
+          to: { list, text: "C." },
+        },
+        {
+          part: `behavior.${list}[1]`,
+          change: "changed",
+          from: { list, text: "A." },
+          to: { list, text: "D." },
+        },
+        {
+          part: `behavior.${list}[1] (base)`,
+          change: "removed",
+          from: { list, text: "B." },
+          to: null,
+        },
+      ];
+      expect(diff.specs).toEqual({
+        added: [],
+        removed: [],
+        changed: [{ id: "spec:probe.removal", parts }],
+      });
+      const summary = asRecord(await runRecipe(recipeByOrdinal(35), { base }, head));
+      expect(summary.specs).toEqual({
+        added: [],
+        removed: [],
+        changed: [{ id: "spec:probe.removal", parts: parts.map((p) => p.part) }],
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  },
+);
