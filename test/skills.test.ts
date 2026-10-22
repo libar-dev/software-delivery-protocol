@@ -1531,7 +1531,10 @@ function taughtProposalCheckBody(path: string): string {
   return body;
 }
 
-/** Runs the taught proposal check over a probe whose first change's scope moved since its base. */
+/**
+ * Runs the taught proposal check over a probe whose first change's scope moved since its base,
+ * whose third names a Spec the head lacks, and whose fourth declares a relation to one.
+ */
 async function assertTaughtRouting(path: string): Promise<void> {
   const carrierWith = (limit: string) => ({
     "a.sdp.md": probeCarrier("spec:probe.a", "behavior", `## Design\n- limit: ${limit}`),
@@ -1547,29 +1550,59 @@ async function assertTaughtRouting(path: string): Promise<void> {
       { scope: ["spec:probe.a#design.limit"], request: "Lower the limit." },
       { scope: ["spec:probe.b"], request: "Add an example." },
       { scope: ["spec:probe.c"], request: "Name a Spec the head lacks." },
+      {
+        scope: ["spec:probe.b"],
+        request: "Depend on a Spec the head lacks.",
+        relation: {
+          action: "declare",
+          from: "spec:probe.b",
+          type: "dependsOn",
+          target: "spec:probe.missing-target",
+        },
+      },
     ],
   };
+  interface Row {
+    moved: boolean | null;
+    scope: { resolvesAtHead: boolean }[];
+    relationTarget: { ref: string; resolvesAtHead: boolean } | null;
+  }
   const answer = (await evaluateBody(taughtProposalCheckBody(path), {
     graph: head,
     params: { proposal, base },
-  })) as {
-    schemaProblems: unknown[];
-    totals: { unresolved: number };
-    changes: { moved: boolean | null; scope: { resolvesAtHead: boolean }[] }[];
-  };
+  })) as { schemaProblems: unknown[]; totals: { unresolved: number }; changes: Row[] };
   expect(answer.schemaProblems).toEqual([]);
-  expect(answer.changes.map((change) => change.moved)).toEqual([true, false, false]);
+  expect(answer.changes.map((change) => change.moved)).toEqual([true, false, false, false]);
   expect(answer.changes[2]?.scope.map((item) => item.resolvesAtHead)).toEqual([false]);
-  expect(answer.totals.unresolved).toBe(1);
+  // The relation's target is reported apart from the scope, which resolves and has not moved.
+  expect(answer.changes[3]?.scope.map((item) => item.resolvesAtHead)).toEqual([true]);
+  expect(answer.changes[3]?.relationTarget).toEqual({
+    ref: "spec:probe.missing-target",
+    resolvesAtHead: false,
+  });
+  expect(answer.totals.unresolved).toBe(2);
 
   const routing = flat(readSkill(path).source);
   for (const clause of [
-    "Route each change by its `moved`: `true` goes to the person, and so does `null`, which the check could not compare, and any change whose scope does not resolve at the head.",
-    "Apply each `false` change as an ordinary carrier edit through `sdp-authoring`",
+    "If `schemaProblems` is non-empty, the answer has no change rows: return the proposal for correction.",
+    "Send a change to the person when its `moved` is `true` or `null`, which the check could not compare, when any `scope` item has `resolvesAtHead: false`, or when its `relationTarget` has `resolvesAtHead: false`.",
+    "Apply only the remaining `moved: false` changes, as ordinary carrier edits through `sdp-authoring`",
     "`spec:consumers.intent-composition#rule.changedScope`",
   ]) {
     expect(routing).toContain(clause);
   }
+
+  // The routing as taught: only the change whose scope stayed put and whose target resolves applies.
+  const toPerson = (row: Row) =>
+    row.moved !== false ||
+    row.scope.some((item) => !item.resolvesAtHead) ||
+    row.relationTarget?.resolvesAtHead === false;
+  expect(answer.changes.map((row) => (toPerson(row) ? "person" : "apply"))).toEqual([
+    "person",
+    "apply",
+    "person",
+    "person",
+  ]);
 }
 
 const studioOnRampImplementationAnchor = codeAnchor({
@@ -1711,6 +1744,53 @@ describe("the Studio on-ramp", () => {
     );
     expect(text).toContain("`spec-studio-pr-<number>`");
     expect(text).toContain("`preview/<number>/`");
+  });
+
+  it("has the preview's run evidence checked against the stamp, never assumed to match it", async () => {
+    const text = flat(skillSection(studioSkillPath, "## Stamp and share"));
+    for (const clause of [
+      "The workflow builds and stamps GitHub's pull-request merge commit, not the branch head.",
+      "Run evidence keeps the commit each CTRF report records in `results.environment.commit`, which may name another commit or none",
+      "a report uploaded in the same workflow run does not establish that they match.",
+      "Compare each run's commit on `runs.html` with the stamp's before you treat its results as evidence for the preview commit",
+      "`spec:consumers.spec-studio.runs-page#rule.commitShown`",
+      "recipe 45 with `params.commit` set to the stamp's `corpusCommit` answers `sameCommit` per report, `null` when the report records no commit.",
+    ]) {
+      expect(text).toContain(clause);
+    }
+    expect(text).not.toContain("its stamp and its run evidence name that commit");
+    expect(readFileSync(join(repoRoot, "src/cli/stamp-command.ts"), "utf8")).toContain(
+      "corpusCommit",
+    );
+
+    // The workflow hands each downloaded report to the Studio as it is, its recorded commit included.
+    const workflow = readFileSync(join(repoRoot, ".github/workflows/studio-preview.yml"), "utf8");
+    expect(workflow).toContain('inputs+=(--runs "$report")');
+    expect(workflow).not.toContain("environment.commit");
+
+    const report = (environment?: Record<string, unknown>) => ({
+      reportFormat: "CTRF",
+      specVersion: "0.0.0",
+      results: {
+        tool: { name: "vitest" },
+        summary: { tests: 0, passed: 0, failed: 0, pending: 0, skipped: 0, other: 0 },
+        ...(environment === undefined ? {} : { environment }),
+        tests: [],
+      },
+    });
+    const preview = "aaaaaaa";
+    const evidence = (await evaluateBody("return recipes(45, params)", {
+      graph: probeGraph({}).graph,
+      params: {
+        runs: [report({ commit: "bbbbbbb" }), report(), report({ commit: preview })],
+        commit: preview,
+      },
+    })) as { inputs: { commit: string | null; sameCommit: boolean | null }[] };
+    expect(evidence.inputs.map(({ commit, sameCommit }) => ({ commit, sameCommit }))).toEqual([
+      { commit: "bbbbbbb", sameCommit: false },
+      { commit: null, sameCommit: null },
+      { commit: preview, sameCommit: true },
+    ]);
   });
 
   it("maps each task to a page the Studio writes, and states what a page does not", async () => {
@@ -2012,6 +2092,55 @@ describe("the vault on-ramp", () => {
     ]);
 
     await assertTaughtRouting(vaultSkillPath);
+  });
+
+  it("takes the proposal's base from the graph the person read, never from the latest synchronization", async () => {
+    const intent = section("## Turn intent notes into carrier edits");
+    for (const clause of [
+      "Establish the commit whose graph the person read; it is the proposal's base.",
+      "record that commit in a note under `intent/`",
+      "Otherwise write the graph with that commit's own engine, as the design diff's catalog entry (recipe 35) shows",
+      "A later synchronization does not change this base",
+      "Use the current graph only when the person confirms it is the version their intent addresses and its carriers match the named commit.",
+      "When the reading base cannot be established, ask the person to review the current design and restate the intent against a known commit before you write a proposal.",
+    ]) {
+      expect(intent).toContain(clause);
+    }
+    expect(intent).not.toContain("If no carrier changed since the last synchronization");
+
+    // The person read the vault at graph A; under --watch it then synchronized to graph B.
+    const limitGraph = (limit: string) =>
+      probeGraph({
+        "limit.sdp.md": probeCarrier(
+          "spec:probe.limit",
+          "behavior",
+          `## Design\n- limit: ${limit}`,
+        ),
+      }).graph;
+    const read = limitGraph("ten");
+    const latestSync = limitGraph("twelve");
+    const syncedNote = renderVault(latestSync).find(
+      (file) => file.path === "specs/probe/spec.probe.limit.md",
+    );
+    expect(syncedNote?.content).toMatch(/- limit: twelve \^design-limit$/mu);
+
+    const proposal = {
+      schema: "sdp-proposal/1",
+      base: "0123456",
+      reason: "Answer the limit the person read.",
+      changes: [{ scope: ["spec:probe.limit#design.limit"], request: "Lower the limit to eight." }],
+    };
+    const moved = async (base: typeof read) =>
+      (
+        (await evaluateBody(taughtProposalCheckBody(vaultSkillPath), {
+          graph: latestSync,
+          params: { proposal, base },
+        })) as { changes: { moved: boolean | null }[] }
+      ).changes.map((change) => change.moved);
+    // Against the graph the person read, the change goes to the person; against the latest
+    // synchronization the same change would be applied over a limit the person never saw.
+    expect(await moved(read)).toEqual([true]);
+    expect(await moved(latestSync)).toEqual([false]);
   });
 
   it("cites resolving vault Specs for law and leaves flags to the verb's help", async () => {

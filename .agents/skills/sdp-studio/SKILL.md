@@ -94,8 +94,14 @@ The inputs and their defaults are `spec:consumers.spec-studio.sharing#design.wor
 `install` and `sdp` default to npm; a pnpm repository passes an install command that makes pnpm
 available on the runner, and `pnpm exec sdp`.
 
-- The workflow builds GitHub's pull-request merge commit, so the page set, its stamp and its run
-  evidence name that commit, not the branch head.
+- The workflow builds and stamps GitHub's pull-request merge commit, not the branch head. Run
+  evidence keeps the commit each CTRF report records in `results.environment.commit`, which may
+  name another commit or none, and a report uploaded in the same workflow run does not establish
+  that they match. Compare each run's commit on `runs.html` with the stamp's before you treat its
+  results as evidence for the preview commit
+  (`spec:consumers.spec-studio.runs-page#rule.commitShown`): recipe 45 with `params.commit` set
+  to the stamp's `corpusCommit` answers `sameCommit` per report, `null` when the report records
+  no commit.
 - `diff: true` builds the base branch's commit in its own worktree, with that commit's install and
   engine, and passes its graph as the base. `runs-artifact` names an artifact an earlier job of the
   same run uploaded; each JSON report in it becomes one `--runs`.
@@ -163,11 +169,12 @@ Ask the person for both, then:
    pnpm exec sdp q 'return await recipes(38, params)' --params proposal=@proposal.json --params base=@../base-graph.json --json
    ```
 
-4. A proposal with `schemaProblems` has no change rows; return it. Route each change by its
-   `moved`: `true` goes to the person, and so does `null`, which the check could not compare, and
-   any change whose scope does not resolve at the head. Apply each `false` change as an ordinary
-   carrier edit through `sdp-authoring`, from a worktree `sdp validate` reports no error on
-   (`spec:consumers.intent-composition#rule.changedScope`).
+4. If `schemaProblems` is non-empty, the answer has no change rows: return the proposal for
+   correction. Send a change to the person when its `moved` is `true` or `null`, which the check
+   could not compare, when any `scope` item has `resolvesAtHead: false`, or when its
+   `relationTarget` has `resolvesAtHead: false`. Apply only the remaining `moved: false` changes,
+   as ordinary carrier edits through `sdp-authoring`, from a worktree `sdp validate` reports no
+   error on (`spec:consumers.intent-composition#rule.changedScope`).
 5. Scoped-intent text names its scope by id or entry address and carries no base. Resolve each
    intent against a commit you hold, write the proposal yourself against the shipped schema
    `schemas/sdp-proposal-1.schema.json`, render its memo with recipe 49 for the person, and check

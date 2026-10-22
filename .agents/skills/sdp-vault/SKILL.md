@@ -99,15 +99,22 @@ proposal (`spec:consumers.obsidian-vault.iteration`):
    colon after the namespace written as a dot, and a block id `^<section>-<key>` in a Spec's note
    is the entry `#<section>.<key>`: `spec.<path>.md#^design-limit` names
    `spec:<path>#design.limit`. A term note `term.<path>.<key>` names `spec:<path>#term.<key>`.
-2. Hold the graph the person read. If no carrier changed since the last synchronization, run
-   `sdp build`, copy `generated/graph.json` outside `generated/`, and name as the base the commit
-   its carriers come from, committing pending carrier edits first.
+2. Establish the commit whose graph the person read; it is the proposal's base. At the start of a
+   design pass, commit pending carrier edits, record that commit in a note under `intent/`, run
+   `sdp build` and copy `generated/graph.json` outside `generated/`. Otherwise write the graph
+   with that commit's own engine, as the design diff's catalog entry (recipe 35) shows: the
+   catalog is `docs/agent-surface/recipes.md` in the Protocol repository and
+   `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an
+   adopter. A later
+   synchronization does not change this base: under `--watch` the vault can refresh after the
+   person began writing, and checking against the newer graph hides what changed in between. Use
+   the current graph only when the person confirms it is the version their intent addresses and
+   its carriers match the named commit. When the reading base cannot be established, ask the
+   person to review the current design and restate the intent against a known commit before you
+   write a proposal.
 3. Write the change proposal against that base, following the shipped schema
    `schemas/sdp-proposal-1.schema.json`, and render its memo with the proposal memo (recipe 49)
-   for the person to confirm. The recipe catalog is `docs/agent-surface/recipes.md` in the Protocol
-   repository and
-   `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an
-   adopter.
+   for the person to confirm.
 4. Run the proposal check (recipe 38). In this source checkout the same body runs through
    `pnpm --silent sdp:q`:
 
@@ -115,11 +122,13 @@ proposal (`spec:consumers.obsidian-vault.iteration`):
    pnpm exec sdp q 'return await recipes(38, params)' --params proposal=@proposal.json --params base=@../base-graph.json --json
    ```
 
-5. Route each change by its `moved`: `true` goes to the person, and so does `null`, which the
-   check could not compare, and any change whose scope does not resolve at the head. Apply each
-   `false` change as an ordinary carrier edit through `sdp-authoring`, from a worktree
-   `sdp validate` reports no error on (`spec:consumers.intent-composition#rule.changedScope`).
-   Under `--watch` the person sees each edit arrive in its note.
+5. If `schemaProblems` is non-empty, the answer has no change rows: return the proposal for
+   correction. Send a change to the person when its `moved` is `true` or `null`, which the check
+   could not compare, when any `scope` item has `resolvesAtHead: false`, or when its
+   `relationTarget` has `resolvesAtHead: false`. Apply only the remaining `moved: false` changes,
+   as ordinary carrier edits through `sdp-authoring`, from a worktree `sdp validate` reports no
+   error on (`spec:consumers.intent-composition#rule.changedScope`). Under `--watch` the person
+   sees each edit arrive in its note.
 
 The graph outranks this skill. If a note, a recipe or this skill disagrees with the carrying Spec,
 report the skill as drift and follow the Spec.
