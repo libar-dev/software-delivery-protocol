@@ -55,6 +55,7 @@ export async function studioRecipeAnswers(
   const specs = new Map<string, ReadonlyMap<number, unknown>>();
   for (const number of [17, 20, 24, 31, 33, 43, 44, 46, 51])
     all.set(number, await evaluate(number, {}));
+  all.set(52, await evaluate(52, { detail: true }));
   if (inputs.runs.length > 0) all.set(45, await evaluate(45, { runs: inputs.runs }));
   if (inputs.base !== undefined)
     all.set(35, await evaluate(35, { base: inputs.base.graph, detail: true }));

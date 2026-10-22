@@ -108,6 +108,7 @@ describe("Studio publication", () => {
       "assets/studio.css",
       "assets/studio.js",
       "backlog.html",
+      "capabilities.html",
       "decisions.html",
       "declarations.html",
       "evidence.html",

@@ -350,7 +350,7 @@ describe("Studio lenses", () => {
       spy.mockRestore();
     }
   });
-  it("publishes all four ordered lenses and honest evidence without script", async () => {
+  it("publishes all five ordered lenses and honest evidence without script", async () => {
     const data = await createStudioData(
       fixture({
         "a.sdp.md": carrier("spec:probe.a", "behavior", "{}", "\n## Behavior\n- rule: A.\n"),
@@ -378,6 +378,7 @@ describe("Studio lenses", () => {
     const nav = required(/<nav aria-label="Studio">(.*?)<\/nav>/u.exec(evidence)?.[1]);
     expect([...nav.matchAll(/<a[^>]*>(.*?)<\/a>/gu)].map((m) => m[1])).toEqual([
       "Packs",
+      "Capabilities",
       "Architecture",
       "Tests",
       "Evidence",
@@ -1034,6 +1035,7 @@ it.each([false, true])(
       expect(spy.mock.calls[0]?.[1].report).toBe(report);
       const expected = [
         ...[17, 20, 24, 31, 33, 43, 44, 46, 51].map((number) => ({ number, params: {} })),
+        { number: 52, params: { detail: true } },
         ...(withBase ? [{ number: 35, params: { base: reader.graph, detail: true } }] : []),
         { number: 29, params: { pack: "pack:probe" } },
         ...(withBase

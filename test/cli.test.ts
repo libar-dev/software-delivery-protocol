@@ -305,14 +305,6 @@ describe("sdp cli", () => {
       const stderr = capture.readStderr();
       for (const [file, specId] of [
         [
-          "specs/consumers/spec-studio.capability-map-page.sdp.md",
-          "spec:consumers.spec-studio.capability-map-page",
-        ],
-        [
-          "specs/consumers/spec-studio.diagram-kinds.capability-tree.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.capability-tree",
-        ],
-        [
           "specs/consumers/spec-studio.diagram-kinds.dependency.sdp.md",
           "spec:consumers.spec-studio.diagram-kinds.dependency",
         ],
@@ -350,6 +342,8 @@ describe("sdp cli", () => {
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
       for (const specId of [
+        "spec:consumers.spec-studio.capability-map-page",
+        "spec:consumers.spec-studio.diagram-kinds.capability-tree",
         "spec:protocol.significant-units-review",
         "spec:consumers.capability-map",
         "spec:protocol.capability-epics",
@@ -361,7 +355,7 @@ describe("sdp cli", () => {
       }
       // Re-measured from the refreshed carriers: no prose-mention pair is retained, and the
       // verifier gaps listed above are the whole warning set.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 12 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

@@ -203,7 +203,9 @@ function checkLinks(set: readonly StudioPage[]): void {
       expect(href, `${page.path}: ${href}`).not.toMatch(/^(?:[a-z]+:|\/)/iu);
       const [path = "", fragment] = href.split("#");
       const target =
-        path === "" ? page.path : posix.normalize(posix.join(posix.dirname(page.path), path));
+        path === ""
+          ? page.path
+          : posix.normalize(posix.join(posix.dirname(page.path), path.split("?")[0] ?? ""));
       if (target === "assets/studio.css") continue;
       const content = byPath.get(target);
       expect(content, `${page.path}: ${href}`).toBeDefined();

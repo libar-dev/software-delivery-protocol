@@ -63,8 +63,6 @@ const gap = (subjectId: string) =>
   }) as const;
 
 export const expectedWarnings = [
-  gap("spec:consumers.spec-studio.capability-map-page"),
-  gap("spec:consumers.spec-studio.diagram-kinds.capability-tree"),
   gap("spec:consumers.spec-studio.diagram-kinds.dependency"),
   gap("spec:consumers.spec-studio.diagram-kinds.maturity-picture"),
   gap("spec:consumers.spec-studio.diagram-kinds.requirement-trace"),

@@ -1,3 +1,4 @@
+import type { CapabilityMap } from "../diagrams/capability.js";
 import { SPEC_READINESS } from "../../../model/descriptors.js";
 import { badge, code, count, escape, findingList, link, present, rungLine } from "./html.js";
 import type { PageContext } from "./html.js";
@@ -7,7 +8,7 @@ import { codeSpans } from "./text.js";
 /**
  * Counts reader values and writes native Pack disclosures and filterable Spec rows.
  * @sdpAnchor impl:protocol.studio-index-page
- * @sdpSatisfies spec:consumers.spec-studio.index-page, spec:consumers.spec-studio.lenses.packs, spec:consumers.spec-studio.navigation
+ * @sdpSatisfies spec:consumers.spec-studio.index-page, spec:consumers.spec-studio.lenses.packs, spec:consumers.spec-studio.navigation, spec:consumers.spec-studio.capability-map-page
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  * @sdpLabel renders Pack disclosures and filterable Spec rows
@@ -38,6 +39,8 @@ export function indexPage(ctx: PageContext): string {
     `${count(specs.filter((s) => s.implementations.length > 0).length, "Spec")} with an implementation binding and ${count(specs.filter((s) => s.deliveryFacts.includes("has-verifier")).length, "Spec", "Specs", false)} with a verifier binding.`,
     `${count(findings.filter((f) => f.severity === "error").length, "error")} and ${count(findings.filter((f) => f.severity === "warning").length, "warning", "warnings", false)}.`,
   ];
+  const capabilities = ctx.data.recipes.all.get(52) as CapabilityMap;
+  const epicIds = new Map(capabilities.nodes.map((n) => [n.id, n.epicIds]));
   const rowValues = specs.map((spec) => ({
     kind: spec.specKind,
     altitude: spec.altitude,
@@ -46,6 +49,10 @@ export function indexPage(ctx: PageContext): string {
     implementation: present(spec.implementations.length > 0),
     verifier: present(spec.deliveryFacts.includes("has-verifier")),
     pack: spec.packs.join(" "),
+    epic:
+      (epicIds.get(spec.id)?.length ?? 0) > 0
+        ? (epicIds.get(spec.id)?.join(" ") ?? "none")
+        : "none",
   }));
   const labels = {
     kind: "Kind",
@@ -55,9 +62,12 @@ export function indexPage(ctx: PageContext): string {
     implementation: "Implementation binding",
     verifier: "Verifier binding",
     pack: "Pack",
+    epic: "Epic",
   };
   const filters = Object.entries(labels)
     .map(([name, label]) => {
+      if (name === "epic")
+        return `<label>Epic<select data-filter="epic"><option value="any">Any</option><option value="none">No epic</option>${capabilities.epics.map((e) => `<option value="${escape(e.id)}">${escape(e.title ?? e.id)} · ${escape(e.id)}</option>`).join("")}</select></label>`;
       const values = [
         ...new Set(
           rowValues.flatMap((row) =>
@@ -95,6 +105,6 @@ export function indexPage(ctx: PageContext): string {
   return frame(
     ctx,
     "Spec Studio",
-    `<header class="page-head"><h1>Packs</h1><p>Specs grouped by the Packs that hold them, from the reader.</p><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header><h2>Start here</h2><ul class="plain-list task-routes"><li><a href="#packs">Read a Pack's design</a></li><li><a href="search.html">Find a Spec, entry or file by a word</a></li><li><a href="#specs">Narrow the Specs</a></li><li><a href="#findings">Read the findings</a></li><li><a href="queue.html">See what the owner can state first</a></li><li><a href="architecture.html">See the components by context and layer</a></li>${ctx.data.inputs.base === undefined ? "" : '<li><a href="diff.html">See what changed since the base</a></li>'}</ul><section id="packs"><h2>Packs</h2>${packList || "<p>No Packs.</p>"}</section><section id="specs"><h2>Specs</h2><sdp-filter><form hidden class="filter-bar">${filters}</form><output aria-live="polite">${String(specs.length)} of ${String(specs.length)} shown</output><ul class="spec-list">${specRows}</ul></sdp-filter></section><section id="findings"><h2>Findings</h2>${findingList(ctx, findings)}</section>`,
+    `<header class="page-head"><h1>Packs</h1><p>Specs grouped by the Packs that hold them, from the reader.</p><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header><h2>Start here</h2><ul class="plain-list task-routes"><li><a href="#packs">Read a Pack's design</a></li><li><a href="search.html">Find a Spec, entry or file by a word</a></li><li><a href="#specs">Narrow the Specs</a></li><li><a href="#findings">Read the findings</a></li><li><a href="queue.html">See what the owner can state first</a></li><li><a href="architecture.html">See the components by context and layer</a></li>${ctx.data.inputs.base === undefined ? "" : '<li><a href="diff.html">See what changed since the base</a></li>'}</ul><section id="packs"><h2>Packs</h2>${packList || "<p>No Packs.</p>"}</section><section id="specs"><h2>Specs</h2><sdp-filter><form hidden class="filter-bar">${filters}<button type="reset">Reset filters</button></form><p data-filter-note>Filtering needs script. All Specs are shown.</p><output aria-live="polite">${String(specs.length)} of ${String(specs.length)} shown</output><ul class="spec-list">${specRows}</ul></sdp-filter></section><section id="findings"><h2>Findings</h2>${findingList(ctx, findings)}</section>`,
   );
 }

@@ -384,6 +384,7 @@ describe("Studio register pages", () => {
     const result = await pages(corpus({}));
     const labels = [
       "Packs",
+      "Capabilities",
       "Architecture",
       "Tests",
       "Evidence",

@@ -6603,7 +6603,7 @@ export const consumersSpecs = [
           "The Studio publishes `capabilities.html` on every build and links it as `Capabilities` immediately after `Packs` in the top navigation. The Packs lens keeps its membership order and the index remains the landing page.",
           "The page reads recipe 52 with `{ detail: true }` and no epic parameter. It renders every epic's own evidence beside its descendant rollup and names the rollup's scope. Examples and decisions have separate counts and expandable rows. There is no combined total obtained by adding epic rows.",
           "Each epic has a refinement drawing supplied by the shared diagram implementation. It keeps parent-to-child reading order while arrows, if drawn, point child to parent and the legend says `refines`. Repeated nodes link to their first occurrence within that epic section. A nested epic remains a labelled epic, not a new altitude.",
-          "A large branch folds at the shared diagram bound and links to its complete refinement text. It never scales labels below the shared legibility size to fit an entire tree. The text includes every node and edge, repeats and cyclic links labelled in words, and stays readable without script.",
+          "A large branch folds at the shared diagram bound and links to its complete refinement text. At desktop width it never scales labels below the shared legibility size to fit an entire tree; below the responsive breakpoint it follows the shared legibility rule's narrow fit. The text includes every node and edge, repeats and cyclic links labelled in words, and stays readable without script.",
           "Every node title links to that Spec's Studio page. A separate `Show these Specs` link goes to the index's Specs section with the epic selected. Keyed questions link to their entry on the Spec page; unkeyed questions link to the Spec page's `section.intent`. Unresolved endpoints are text with their diagnostics, never plausible Spec links.",
           "The index's Specs filter gains `Epic`, with `Any`, `No epic` and every epic by title and id. An epic selects its own Spec and every Spec whose full-corpus epicIds contains it. It intersects with the existing filters, resets with them, and never changes Pack membership or hides Pack cards.",
           "Native links, disclosures, complete refinement text and all Spec rows work without script. Index filtering is an enhancement: before script applies a requested epic, the index says filtering needs script and shows all rows. A supplied id that is absent or not epic reports `Unknown epic filter` and leaves all rows visible.",
@@ -6632,7 +6632,7 @@ export const consumersSpecs = [
         nestedEpics:
           "a card for an epic that refines another epic says `Inside <title>`, using `parentEpicIds`, and a card whose descendants include an epic names it, so overlapping counts read as overlap.",
         responsive:
-          "overview cards reflow to one column on a narrow viewport; refinement text wraps ids and titles, caps visual indentation, and names the parent in words so deep trees remain readable. Diagram labels use the shared readable size and bounded branches instead of shrinking the whole graph. Print opens the disclosures and retains the complete text.",
+          "overview cards reflow to one column on a narrow viewport; refinement text wraps ids and titles, caps visual indentation, and names the parent in words so deep trees remain readable. At desktop width diagram labels use the shared readable size and bounded branches. Below the responsive breakpoint the drawing follows the legibility rule's narrow fit; the complete refinement text is the readable form. Print opens the disclosures and retains the complete text.",
       },
       verification: {
         mode: "reviewed",
@@ -6643,7 +6643,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.capability-map-page.sdp.md",
   },
   {
@@ -6946,7 +6946,7 @@ export const consumersSpecs = [
         rules: [
           "Draw the roots, refinement edges, unreached Specs and repeated reach supplied by the capability map. Root selection and reach belong to that reader, never to label prefixes, files or the drawing.",
           "Place a Spec at its first visit in the capability map page's traversal of the epic and draw each later visit as a repeat box that links to the first occurrence and keeps its own refines arrow. A cycle is a labelled group whose internal relations stay in the text equivalent; the drawing never cuts an edge silently.",
-          "Above the shared bound, retain each root and fold the largest descendant branch below a non-root parent first, ties by root order then id, linking to its full branch list. If leaf siblings still exceed the bound, keep their first entries in supplied order and replace the remaining siblings of one parent with a labelled folded remainder, keeping that parent's relation explicit. Count unique Specs and rendered boxes separately where a cycle or repeated reach needs an occurrence. If no lawful fold fits, omit the SVG and open the text equivalent.",
+          "Above the shared bound, retain each root and fold the largest descendant branch below a non-root parent first, ties by root order then id, linking to its full branch list. If siblings still exceed the bound, keep their first entries in supplied order and replace the remaining siblings of one parent together with their descendant boxes with a labelled folded remainder, keeping that parent's relation explicit and counting every hidden unique Spec. Count unique Specs and rendered boxes separately where a cycle or repeated reach needs an occurrence. If no lawful fold fits, omit the SVG and open the text equivalent.",
         ],
         ruleKeys: {
           mapInput: "rules[0]",
@@ -6967,7 +6967,7 @@ export const consumersSpecs = [
           "`mindmap` for a strict tree, with title and full id per node. Use `flowchart BT` with exact refines edges whenever there is repeated parentage, a cycle, an unreached band or a fold that mindmap cannot state losslessly. TreeView is an optional equivalent export of a strict tree with icons disabled.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diagram-kinds.capability-tree.sdp.md",
   },
   {
