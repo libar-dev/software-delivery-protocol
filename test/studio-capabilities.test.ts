@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import postcss from "postcss";
@@ -72,9 +72,14 @@ const probe = graph(
     refines("missing", "root"),
   ],
 );
-const data = await createStudioData(createReader(probe));
-const map = data.recipes.all.get(52) as CapabilityMap;
-const pages = renderStudio(data);
+let data: Awaited<ReturnType<typeof createStudioData>>;
+let map: CapabilityMap;
+let pages: ReturnType<typeof renderStudio>;
+beforeAll(async () => {
+  data = await createStudioData(createReader(probe));
+  map = data.recipes.all.get(52) as CapabilityMap;
+  pages = renderStudio(data);
+}, 30_000);
 const html = (path: string) => {
   const page = pages.find((p) => p.path === path);
   if (!page) throw new Error(`Missing ${path}`);
@@ -186,7 +191,29 @@ describe("Studio capabilities", () => {
     expect(rendered).toContain("a cycle");
   });
 
-  it("initializes epic filtering from the URL, intersects every control and resets native rows", () => {
+  it("renders code-span titles as plain drawing words and questions as linked prose", async () => {
+    const node = spec("root", {
+      altitude: "epic",
+      title: "`Root` title",
+      sections: {
+        intent: {
+          outcome: "Read",
+          openQuestions: [{ question: "Read `code` and spec:probe.root", blocking: false }],
+        },
+      },
+    });
+    const d = await createStudioData(createReader(graph([node])));
+    const page = required(renderStudio(d).find((p) => p.path === "capabilities.html")).content;
+    expect(page).toContain(
+      'non-blocking</a>: Read <code>code</code> and <a href="specs/probe.root.html">',
+    );
+    const drawing = required(
+      capabilityDiagrams(d.recipes.all.get(52) as CapabilityMap, [node.id], node.id)[0],
+    );
+    expect(drawing.boxes[0]?.title).toBe("Root title");
+    expect(mermaidSource(drawing)).not.toContain("`Root`");
+  });
+  it("initializes epic filtering from the URL, intersects every control and resets native rows", async () => {
     const row = {
       epic: "spec:probe.root",
       kind: "example",
@@ -208,7 +235,7 @@ describe("Studio capabilities", () => {
         textContent = "";
         parentNode?: FakeNode;
         attributes = new Map<string, string>();
-        listeners = new Map<string, () => void>();
+        listeners = new Map<string, (event?: Event) => void>();
         options = [{ value: "any" }, { value: "none" }, { value: "spec:probe.root" }];
         ownerDocument = {
           location: { href: `file:///index.html${query}` },
@@ -220,7 +247,7 @@ describe("Studio capabilities", () => {
         getAttribute(name: string) {
           return this.attributes.get(name) ?? null;
         }
-        addEventListener(name: string, callback: () => void) {
+        addEventListener(name: string, callback: (event?: Event) => void) {
           this.listeners.set(name, callback);
         }
         removeEventListener(name: string) {
@@ -251,6 +278,8 @@ describe("Studio capabilities", () => {
       });
       runInNewContext(readFileSync(new URL("../dist/studio/studio.js", import.meta.url), "utf8"), {
         HTMLElement: FakeNode,
+        Event,
+        queueMicrotask,
         URL,
         customElements: {
           get: () => undefined,
@@ -278,7 +307,14 @@ describe("Studio capabilities", () => {
           expect(rows.map((r) => r.hidden)).toEqual([false, true]);
           select.value = "any";
         }
-      form.listeners.get("reset")?.();
+      const event = new Event("reset", { cancelable: true });
+      form.listeners.get("reset")?.(event);
+      expect(event.defaultPrevented).toBe(false);
+      // The browser applies option defaults only after an uncancelled reset event.
+      if (!event.defaultPrevented) for (const select of selects) select.value = "native-default";
+      await new Promise<void>((resolve) => {
+        queueMicrotask(resolve);
+      });
       expect(rows.map((r) => r.hidden)).toEqual([false, false]);
       expect(note.textContent).toBe("");
       expect(selects.every((s) => s.value === "any")).toBe(true);
@@ -343,9 +379,9 @@ describe("Studio capabilities", () => {
       )
     ).recipes.all.get(52) as CapabilityMap;
     const d = capabilityDiagrams(answer, [root.id], root.id)[0];
-    expect(d.boxes).toHaveLength(40);
+    expect(d.boxes).toHaveLength(31);
     expect(d.boxes[1]?.identity).toBe("spec:probe.leaf00");
-    expect(d.boxes.at(-1)?.foldedIds).toHaveLength(12);
+    expect(d.boxes.at(-1)?.foldedIds).toHaveLength(21);
     expect(d.edges.at(-1)?.to).toBe(d.boxes[0]?.id);
     const isolated = leaves.map((n) => ({ ...n, altitude: "epic" as const }));
     const many = (await createStudioData(createReader(graph(isolated)))).recipes.all.get(

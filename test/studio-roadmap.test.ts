@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { createReader } from "../src/reader/reader.js";
 import { createStudioData } from "../src/projections/studio/data.js";
 import { rowMatches } from "../src/studio-elements/filter.js";
@@ -71,6 +71,13 @@ function mixedGraph() {
   });
 }
 
+let mixedInput: GraphSchema;
+let mixed: Awaited<ReturnType<typeof page>>;
+beforeAll(async () => {
+  mixedInput = mixedGraph();
+  mixed = await page(mixedInput);
+}, 30_000);
+
 describe("Studio roadmap page", () => {
   it("shows unresolved members with their original manifest places", async () => {
     const graph = probeGraph({
@@ -105,8 +112,8 @@ describe("Studio roadmap page", () => {
     );
   });
 
-  it("renders the board, four need lists, numbered gaps, legend and entries listed apart", async () => {
-    const { html } = await page(mixedGraph());
+  it("renders the board, four need lists, numbered gaps, legend and entries listed apart", () => {
+    const { html } = mixed;
     const body = main(html);
     const summary = required(/<ul class="summary">(.*?)<\/ul>/su.exec(body)?.[1]);
     expect(summary).toContain(
@@ -193,8 +200,8 @@ describe("Studio roadmap page", () => {
   );
 
   it("keeps waiting questions, provisional readings, unnamed deciders and statements in recipe order", async () => {
-    const graph = mixedGraph();
-    const { html } = await page(graph);
+    const graph = mixedInput;
+    const { html } = mixed;
     const waiting =
       required(main(html).split("<h3>Waiting on the owner</h3>")[1]).split(
         '<details class="section"><summary>The forward section',
@@ -369,8 +376,8 @@ describe("Studio roadmap page", () => {
     expect(html).toBe((await page(graph)).html);
   });
 
-  it("shows every row without script and supplies the existing filter with need tokens", async () => {
-    const { html } = await page(mixedGraph());
+  it("shows every row without script and supplies the existing filter with need tokens", () => {
+    const { html } = mixed;
     expect(html).toContain('<form hidden class="filter-bar">');
     expect(html).toContain('data-filter="need"');
     const rows = [...html.matchAll(/data-row data-need="([^"]+)"/gu)].map((m) => ({

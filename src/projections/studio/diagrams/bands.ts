@@ -1,4 +1,5 @@
 import { aggregate, compare, withinBound } from "./model.js";
+import { needsFold, reducesHeight, foldHeightBudget } from "./layout.js";
 import type { Diagram, DiagramBox, DiagramInput } from "./model.js";
 const relations = ["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"];
 const relationIndex = (kind: string): number => {
@@ -30,7 +31,13 @@ export function traceDiagram(input: Rooted): Diagram {
       groups.set(band, members);
       return { ...box, band };
     });
-  let drawing: Diagram = { ...input, boxes, caption: `Relations of ${input.subject}` };
+  let drawing: Diagram = {
+    ...input,
+    boxes,
+    caption: `Relations of ${input.subject}`,
+    heightBudget: foldHeightBudget,
+    textEquivalent: input,
+  };
   const ids = new Map(boxes.map((b) => [b.id, b.id]));
   const groupOrder = (band: string) =>
     (band.startsWith("Outgoing ") ? 0 : relations.length + 1) +
@@ -39,10 +46,12 @@ export function traceDiagram(input: Rooted): Diagram {
     ([a, aa], [b, bb]) => bb.length - aa.length || groupOrder(a) - groupOrder(b) || compare(a, b),
   );
   for (const [band, members] of sorted) {
-    if (withinBound(drawing)) break;
+    if (!needsFold(drawing)) break;
+    if (members.length < 2) continue;
     const id = `${input.subject}.fold.${band.replaceAll(" ", ".")}`;
-    for (const member of members) ids.set(member.id, id);
-    drawing = {
+    const candidateIds = new Map(ids);
+    for (const member of members) candidateIds.set(member.id, id);
+    const candidate = {
       ...drawing,
       boxes: [
         ...drawing.boxes.filter((b) => !members.some((m) => m.id === b.id)),
@@ -55,8 +64,11 @@ export function traceDiagram(input: Rooted): Diagram {
           band,
         },
       ],
-      edges: aggregate(input.edges, ids),
+      edges: aggregate(input.edges, candidateIds),
     };
+    if (!reducesHeight(drawing, candidate)) continue;
+    for (const member of members) ids.set(member.id, id);
+    drawing = candidate;
   }
   const order = [
     ...relations.map((r) => `Outgoing ${r}`),

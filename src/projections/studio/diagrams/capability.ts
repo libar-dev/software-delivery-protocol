@@ -1,5 +1,7 @@
+import { plainTitle } from "../pages/code-spans.js";
 import type { Diagram, DiagramBox, DiagramEdge } from "./model.js";
-import { withinBound, compare } from "./model.js";
+import { compare } from "./model.js";
+import { needsFold, reducesHeight, foldHeightBudget } from "./layout.js";
 import { escape, code } from "../pages/html.js";
 
 export interface CapabilityNode {
@@ -149,8 +151,8 @@ export function capabilityDiagrams(
     boxes.push({
       id,
       identity: v.node.id,
-      words: `${v.node.title ?? v.node.id} · ${v.node.altitude}${cycle ? ` · cycle · ${String(cycle.length)} unique Specs` : ""}${v.repeat ? " · repeat" : ""}`,
-      title: v.node.title ?? v.node.id,
+      words: `${plainTitle(v.node.title ?? v.node.id)} · ${v.node.altitude}${cycle ? ` · cycle · ${String(cycle.length)} unique Specs` : ""}${v.repeat ? " · repeat" : ""}`,
+      title: plainTitle(v.node.title ?? v.node.id),
       detail: `${v.node.altitude}${cycle ? ` · cycle · ${String(cycle.length)} unique Specs` : ""}${v.repeat ? " · repeat" : ""}`,
       target: v.repeat
         ? `#${encodeURIComponent(firstId ?? capabilityBranchId(subject, v.node.id))}`
@@ -181,6 +183,7 @@ export function capabilityDiagrams(
     }
   }
   // Replace the largest proper branch first. Roots and their relationship to a remainder survive.
+  let current = { boxes, edges };
   const fold = (parent: DiagramBox, removed: readonly DiagramBox[]) => {
     const ids = new Set(removed.map((b) => b.id));
     const memberIds = [...new Set(removed.flatMap((b) => b.foldedIds ?? [b.identity ?? b.id]))];
@@ -198,11 +201,21 @@ export function capabilityDiagrams(
       band: `Depth ${String((depths.get(parent.id) ?? 0) + 1)} · Children of ${parent.identity ?? parent.id}`,
     };
     const at = boxes.findIndex((b) => ids.has(b.id));
-    boxes = boxes.flatMap((b, i) => (i === at ? [remainder] : ids.has(b.id) ? [] : [b]));
-    edges = edges.filter((e) => !ids.has(e.from) && !ids.has(e.to));
-    edges.push({ from: id, to: parent.id, kind: "refines", claim: "declared" });
+    const candidateBoxes = boxes.flatMap((b, i) =>
+      i === at ? [remainder] : ids.has(b.id) ? [] : [b],
+    );
+    const candidateEdges = [
+      ...edges.filter((e) => !ids.has(e.from) && !ids.has(e.to)),
+      { from: id, to: parent.id, kind: "refines", claim: "declared" },
+    ];
+    const candidate = { boxes: candidateBoxes, edges: candidateEdges };
+    if (!reducesHeight(current, candidate)) return false;
+    boxes = candidateBoxes;
+    edges = candidateEdges;
+    current = candidate;
     depths.set(id, (depths.get(parent.id) ?? 0) + 1);
     rootOrder.set(id, rootOrder.get(parent.id) ?? 0);
+    return true;
   };
   const descendants = (parent: DiagramBox): DiagramBox[] => {
     const ids = new Set([parent.id]);
@@ -212,7 +225,7 @@ export function capabilityDiagrams(
       return true;
     });
   };
-  while (!withinBound({ boxes, edges })) {
+  while (needsFold(current)) {
     const branches = boxes
       .filter((b) => b.parent && !b.folded)
       .map((parent) => ({ parent, removed: descendants(parent) }))
@@ -223,10 +236,7 @@ export function capabilityDiagrams(
           (rootOrder.get(a.parent.id) ?? 0) - (rootOrder.get(b.parent.id) ?? 0) ||
           compare(a.parent.identity ?? a.parent.id, b.parent.identity ?? b.parent.id),
       );
-    if (branches[0]) {
-      fold(branches[0].parent, branches[0].removed);
-      continue;
-    }
+    if (branches.some((branch) => fold(branch.parent, branch.removed))) continue;
     const siblings = boxes
       .map((parent) => ({ parent, children: boxes.filter((b) => b.parent === parent.id) }))
       .filter((g) => g.children.length > 1)
@@ -235,18 +245,23 @@ export function capabilityDiagrams(
           b.children.length - a.children.length ||
           boxes.indexOf(a.parent) - boxes.indexOf(b.parent),
       );
-    const group = siblings[0];
-    if (!group) break;
-    const removed = new Set<DiagramBox>();
-    for (const sibling of group.children.slice().reverse()) {
-      removed.add(sibling);
-      for (const child of descendants(sibling)) removed.add(child);
-      if (removed.size >= Math.max(2, boxes.length - 39)) break;
-    }
-    fold(
-      group.parent,
-      boxes.filter((b) => removed.has(b)),
-    );
+    const improved = siblings.some((group) => {
+      const removed = new Set<DiagramBox>();
+      for (const sibling of group.children.slice().reverse()) {
+        removed.add(sibling);
+        for (const child of descendants(sibling)) removed.add(child);
+        if (
+          removed.size >= Math.max(2, boxes.length - 39) &&
+          fold(
+            group.parent,
+            boxes.filter((b) => removed.has(b)),
+          )
+        )
+          return true;
+      }
+      return false;
+    });
+    if (!improved) break;
   }
   const placementOrder = new Map(boxes.map((b, i) => [b.id, i]));
   boxes.sort(
@@ -284,6 +299,7 @@ export function capabilityDiagrams(
   return [
     {
       subject,
+      heightBudget: foldHeightBudget,
       sectionId: null,
       caption: "Refinement · parent to child reading order",
       boxes,

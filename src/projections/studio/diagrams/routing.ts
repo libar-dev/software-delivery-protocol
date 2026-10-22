@@ -1,7 +1,7 @@
 import { compare, needsEdgeLabels } from "./model.js";
 import type { DiagramEdge } from "./model.js";
 import type { Layout, Rectangle } from "./layout.js";
-import { snap } from "./layout.js";
+import { edgeLanes, snap, widthBudget } from "./layout.js";
 export interface Point {
   readonly x: number;
   readonly y: number;
@@ -50,34 +50,34 @@ export function routeDiagram(
   if (!edges.length) return { routes: [], width: layout.width, height: layout.height };
   const boxes = new Map(layout.boxes.map((b) => [b.box.id, b]));
   const multiple = needsEdgeLabels(edges);
-  const ports = new Map<string, number>(),
-    lanes = new Map<string, number>(),
-    routes: Route[] = [];
-  const rowBottom = (y: number) =>
-    Math.max(...layout.boxes.filter((b) => b.y === y).map((b) => b.y + b.height));
-  const end = (id: string, side: "top" | "bottom", labelled: boolean) => {
-    const box = boxes.get(id);
-    if (!box) return null;
-    const portKey = `${id}/${side}`,
-      laneKey = `${String(box.y)}/${side}`;
-    const port = ports.get(portKey) ?? 0;
-    const previous = lanes.get(laneKey) ?? 0;
-    const used = previous + (labelled ? 48 : 8);
-    ports.set(portKey, port + 1);
-    lanes.set(laneKey, used);
-    if (16 + port * 8 >= box.width - 12) return null;
+  const routes: Route[] = [];
+  const bottoms = new Map(
+    layout.boxes.map((b) => [
+      b.y,
+      Math.max(
+        ...layout.boxes.filter((other) => other.y === b.y).map((other) => other.y + other.height),
+      ),
+    ]),
+  );
+  const end = (reservation: ReturnType<typeof edgeLanes>[number]["a"]) => {
+    if (!reservation) return null;
+    const box = boxes.get(reservation.id);
+    if (!box || 16 + reservation.port * 8 >= box.width - 12) return null;
     return {
-      port: { x: box.x + 16 + port * 8, y: side === "top" ? box.y : box.y + box.height },
-      lane: side === "top" ? box.y - 32 - previous : rowBottom(box.y) + 24 + used,
+      port: {
+        x: box.x + 16 + reservation.port * 8,
+        y: reservation.side === "top" ? box.y : box.y + box.height,
+      },
+      lane:
+        reservation.side === "top"
+          ? box.y - 32 - reservation.offset
+          : (bottoms.get(box.y) ?? 0) + 24 + reservation.offset + reservation.size,
     };
   };
-  const allocated = [...edges].sort(edgeOrder).map((edge) => {
-    const from = boxes.get(edge.from),
-      to = boxes.get(edge.to);
-    if (!from || !to) return null;
-    const a = end(edge.from, to.y > from.y ? "bottom" : "top", multiple),
-      b = end(edge.to, from.y >= to.y ? "bottom" : "top", false);
-    return a && b ? { edge, a, b } : null;
+  const allocated = edgeLanes(layout.boxes, edges, layout.packedLanes).map(({ edge, a, b }) => {
+    const from = end(a),
+      to = end(b);
+    return from && to ? { edge, a: from, b: to } : null;
   });
   if (allocated.some((e) => e === null)) return null;
   const stubs = allocated.flatMap((e) =>
@@ -102,13 +102,38 @@ export function routeDiagram(
         a.y === c.y &&
         Math.min(Math.max(a.x, b.x), Math.max(c.x, d.x)) >
           Math.max(Math.min(a.x, b.x), Math.min(c.x, d.x));
+  type Segment = readonly [Point, Point];
+  const placedSegments: Segment[] = [];
+  const verticals = new Map<number, Segment[]>(),
+    horizontals = new Map<number, Segment[]>();
+  const remember = ([a, b]: Segment) => {
+    const index = a.x === b.x ? verticals : horizontals,
+      key = a.x === b.x ? a.x : a.y;
+    index.set(key, [...(index.get(key) ?? []), [a, b]]);
+    placedSegments.push([a, b]);
+  };
+  const obstacleRows = new Map<number, Rectangle[]>();
+  const indexObstacle = (r: Rectangle) => {
+    for (
+      let row = Math.floor((r.y - 12) / 128);
+      row <= Math.floor((r.y + r.height + 12) / 128);
+      row++
+    )
+      obstacleRows.set(row, [...(obstacleRows.get(row) ?? []), r]);
+  };
+  for (const r of [...layout.boxes, ...layout.labels]) indexObstacle(r);
+  const obstacles = (minY: number, maxY: number): Rectangle[] => {
+    const found = new Set<Rectangle>();
+    for (let row = Math.floor(minY / 128); row <= Math.floor(maxY / 128); row++)
+      for (const r of obstacleRows.get(row) ?? []) found.add(r);
+    return [...found];
+  };
+  const stubVerticals = new Map<number, typeof stubs>();
+  for (const stub of stubs)
+    stubVerticals.set(stub.a.x, [...(stubVerticals.get(stub.a.x) ?? []), stub]);
   const clear = (points: Point[], edge: DiagramEdge) => {
     for (const [j, [a, b]] of segments(points).entries()) {
-      for (const obstacle of [
-        ...layout.boxes,
-        ...layout.labels,
-        ...routes.flatMap((r) => (r.label ? [r.label] : [])),
-      ]) {
+      for (const obstacle of obstacles(Math.min(a.y, b.y), Math.max(a.y, b.y))) {
         if (--budget < 0) return false;
         if (
           (j === 0 && obstacle === boxes.get(edge.from)) ||
@@ -117,11 +142,15 @@ export function routeDiagram(
           continue;
         if (intersects(a, b, obstacle)) return false;
       }
-      if (stubs.some((stub) => stub.edge !== edge && overlaps(a, b, stub.a, stub.b))) return false;
-      for (const r of routes)
-        for (const [c, d] of segments(r.points)) {
-          if (--budget < 0 || overlaps(a, b, c, d)) return false;
-        }
+      if (
+        a.x === b.x &&
+        (stubVerticals.get(a.x) ?? []).some(
+          (stub) => stub.edge !== edge && overlaps(a, b, stub.a, stub.b),
+        )
+      )
+        return false;
+      for (const [c, d] of (a.x === b.x ? verticals.get(a.x) : horizontals.get(a.y)) ?? [])
+        if (--budget < 0 || overlaps(a, b, c, d)) return false;
     }
     return true;
   };
@@ -133,11 +162,7 @@ export function routeDiagram(
         if (--budget < 0) return undefined;
         const label = { x, y: a.y - 28, width, height: 16, text };
         if (
-          [
-            ...layout.boxes,
-            ...layout.labels,
-            ...routes.flatMap((r) => (r.label ? [r.label] : [])),
-          ].some(
+          obstacles(label.y - 12, label.y + label.height + 12).some(
             (r) =>
               label.x < r.x + r.width + 12 &&
               label.x + label.width > r.x - 12 &&
@@ -147,11 +172,7 @@ export function routeDiagram(
         )
           continue;
         if (stubs.some((stub) => intersects(stub.a, stub.b, label))) continue;
-        if (
-          [...routes.map((r) => r.points), points].some((ps) =>
-            segments(ps).some(([c, d]) => intersects(c, d, label)),
-          )
-        )
+        if ([...placedSegments, ...segments(points)].some(([c, d]) => intersects(c, d, label)))
           continue;
         return label;
       }
@@ -182,33 +203,40 @@ export function routeDiagram(
       ]),
     ];
     let chosen: Route | undefined;
-    for (const wording of multiple
-      ? [`${edge.kind}${edge.claim ? ` · ${edge.claim}` : ""}`, key]
-      : [""]) {
-      for (const rail of rails) {
-        if (budget < 0) return null;
-        const points = [
-          a.port,
-          { x: a.port.x, y: a.lane },
-          { x: rail, y: a.lane },
-          { x: rail, y: b.lane },
-          { x: b.port.x, y: b.lane },
-          b.port,
-        ].filter((p, j, ps) => j === 0 || p.x !== ps[j - 1]?.x || p.y !== ps[j - 1]?.y);
-        if (!clear(points, edge)) continue;
-        const label = multiple ? labelFor(wording, points) : undefined;
-        if (multiple && !label) continue;
-        chosen = { edge, points, key, ...(label ? { label } : {}) };
-        break;
-      }
-      if (chosen) break;
+    const wordings = multiple ? [`${edge.kind}${edge.claim ? ` · ${edge.claim}` : ""}`, key] : [""];
+    const candidates = wordings
+      .flatMap((wording, i) =>
+        rails.map((rail) => ({
+          wording,
+          rail,
+          rank: Number(rail > Math.max(layout.width - 24, widthBudget - 24)) * 2 + i,
+        })),
+      )
+      .sort((a, b) => a.rank - b.rank);
+    for (const { wording, rail } of candidates) {
+      if (budget < 0) return null;
+      const points = [
+        a.port,
+        { x: a.port.x, y: a.lane },
+        { x: rail, y: a.lane },
+        { x: rail, y: b.lane },
+        { x: b.port.x, y: b.lane },
+        b.port,
+      ].filter((p, j, ps) => j === 0 || p.x !== ps[j - 1]?.x || p.y !== ps[j - 1]?.y);
+      if (!clear(points, edge)) continue;
+      const label = multiple ? labelFor(wording, points) : undefined;
+      if (multiple && !label) continue;
+      chosen = { edge, points, key, ...(label ? { label } : {}) };
+      break;
     }
     if (!chosen) return null;
     routes.push(chosen);
+    for (const segment of segments(chosen.points)) remember(segment);
+    if (chosen.label) indexObstacle(chosen.label);
   }
   return {
     routes,
-    width: snap(Math.max(layout.width, ...routes.flatMap((r) => r.points.map((p) => p.x))) + 24),
+    width: snap(Math.max(layout.width, ...routes.flatMap((r) => r.points.map((p) => p.x + 24)))),
     height: layout.height,
   };
 }

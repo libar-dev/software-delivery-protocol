@@ -244,14 +244,42 @@ describe("requirement drawing", () => {
     expect(drawing).toContain("requirementDiagram");
     expect(drawing).not.toMatch(/passed|verifyMethod|risk:/u);
     expect(drawing.match(/data-id="spec:example"/gu)).toHaveLength(1);
-    expect(drawing.indexOf('data-id="spec:example"')).toBeLessThan(
+    expect(drawing.indexOf('data-id="spec:example"')).toBeGreaterThan(
       drawing.indexOf('data-label="Declared verifying examples"'),
     );
+  });
+  it("keeps a refining verifier in the examples band and outside Specs apart", async () => {
+    const page = find(
+      await pages({
+        "s.sdp.md": carrier("sample", "{refines: spec:parent}"),
+        "p.sdp.md": carrier("parent"),
+        "e.sdp.md": carrier(
+          "example",
+          "{refines: spec:sample, verifies: spec:sample}",
+          "idea",
+          "example",
+        ),
+      }),
+      "specs/sample.html",
+    );
+    const drawing =
+      page.split("<h3>Requirement drawing</h3>")[1]?.split("<h3>Decisions</h3>")[0] ?? "";
+    expect(drawing).not.toContain("no declared verifying example");
+    expect(drawing).toMatch(
+      /data-label="Declared verifying examples"[\s\S]*?data-id="spec:example"/u,
+    );
+    expect(drawing).toMatch(/data-label="Outside the selected set"[\s\S]*?data-id="spec:parent"/u);
   });
   it("offers requirement syntax for the supported exact relation subset", async () => {
     const page = find(
       await pages({
         "s.sdp.md": carrier("sample"),
+        "e.sdp.md": carrier(
+          "example",
+          "{refines: spec:sample, verifies: spec:sample}",
+          "idea",
+          "example",
+        ),
         "impl.ts": anchor("impl:sample", " * @sdpSatisfies spec:sample\n"),
         "test.ts": anchor("test:sample", " * @sdpVerifies spec:sample\n"),
       }),
@@ -261,9 +289,27 @@ describe("requirement drawing", () => {
       page.split("<h3>Requirement drawing</h3>")[1]?.split("<h3>Decisions</h3>")[0] ?? "";
     expect(drawing).toContain("requirementDiagram\n");
     expect(drawing).toContain("- satisfies -&gt;");
+    expect(drawing).toContain("- refines -&gt;");
     expect(drawing).toContain("- verifies -&gt;");
     expect(drawing).toContain("%% claim: anchored");
     expect(drawing).toContain("type: &quot;impl:sample · anchored code");
+  });
+  it("counts the subject example when reporting selected verifying examples", async () => {
+    const output = await pages({
+      "p.sdp.md": carrier("parent"),
+      "e.sdp.md": carrier(
+        "example",
+        "{refines: spec:parent, verifies: spec:parent}",
+        "idea",
+        "example",
+      ),
+    });
+    const drawing =
+      find(output, "specs/example.html")
+        .split("<h3>Requirement drawing</h3>")[1]
+        ?.split("<h3>Decisions</h3>")[0] ?? "";
+    expect(drawing).toContain('data-label="Declared verifying examples"');
+    expect(drawing).not.toContain("no declared verifying example");
   });
 });
 
@@ -405,7 +451,7 @@ it.each([
 ])("breaks equal requirement fold groups by $field in lexical order", ({ first, second }) => {
   const subject = { id: "spec:sample", words: "Sample", target: "#main", band: "Intended Specs" };
   const groups = [first, second].map(([kind, direction, claim], group) => {
-    const boxes = Array.from({ length: 20 }, (_, i) => ({
+    const boxes = Array.from({ length: 15 }, (_, i) => ({
       id: `test:group${String(group)}.binding${String(i)}`,
       words: "Binding",
       target: "#bindings",
@@ -429,8 +475,9 @@ it.each([
   expect(drawing.boxes.filter((b) => b.folded).map((b) => b.id)).toEqual([
     `diagram.spec:sample.requirement.fold.${first.join(".")}`,
   ]);
-  expect(drawing.textEquivalent?.boxes).toHaveLength(41);
-  expect(drawing.textEquivalent?.edges).toHaveLength(40);
+  expect(drawing.boxes).toHaveLength(17);
+  expect(drawing.textEquivalent?.boxes).toHaveLength(31);
+  expect(drawing.textEquivalent?.edges).toHaveLength(30);
 });
 
 it("offers only the active relation and member renderers after requirement replaces realization", () => {

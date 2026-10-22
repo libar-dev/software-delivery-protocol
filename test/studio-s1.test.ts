@@ -239,9 +239,9 @@ describe("Studio diagrams", () => {
   });
   it("places outgoing relation bands above the subject and folds ties in relation order", () => {
     const subject = { id: "spec:probe.subject", words: "Subject", target: "#s" };
-    const kinds = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
+    const kinds = ["refines", "dependsOn"];
     const boxes = kinds.flatMap((kind) =>
-      Array.from({ length: 11 }, (_, i) => ({
+      Array.from({ length: 10 }, (_, i) => ({
         id: `spec:probe.${kind}${String(i)}`,
         words: kind,
         target: "#relations",
@@ -250,6 +250,7 @@ describe("Studio diagrams", () => {
     const edges = boxes.map((box) => ({ from: subject.id, to: box.id, kind: box.words }));
     const trace = traceDiagram({ subject: subject.id, boxes: [subject, ...boxes], edges });
     expect(trace.boxes.filter((b) => b.folded).map((b) => b.band)).toEqual(["Outgoing refines"]);
+    expect(trace.boxes).toHaveLength(12);
     const bands = groups(renderDiagram(trace), "band").map(
       (g) => /data-label="([^"]+)"/u.exec(g)?.[1],
     );

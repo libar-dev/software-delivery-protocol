@@ -1,7 +1,22 @@
-import { compare, contextOf, layerOf, layers, needsEdgeLabels } from "./model.js";
-import type { Diagram, DiagramBox } from "./model.js";
+import { compare, contextOf, layerOf, layers, needsEdgeLabels, withinBound } from "./model.js";
+import type { Diagram, DiagramBox, DiagramEdge, DiagramInput } from "./model.js";
 
 export const widthBudget = 880;
+export const foldHeightBudget = 2000;
+const measuredHeights = new WeakMap<DiagramInput, number>();
+export const measuredHeight = (d: DiagramInput & Partial<Diagram>): number => {
+  const known = measuredHeights.get(d);
+  if (known !== undefined) return known;
+  const height = layoutDiagram({ subject: "", caption: "", ...d }).height;
+  measuredHeights.set(d, height);
+  return height;
+};
+export const needsFold = (d: DiagramInput & Partial<Diagram>): boolean =>
+  !withinBound(d) || measuredHeight(d) > foldHeightBudget;
+export const reducesHeight = (
+  before: DiagramInput & Partial<Diagram>,
+  after: DiagramInput & Partial<Diagram>,
+): boolean => measuredHeight(after) < measuredHeight(before);
 export interface Rectangle {
   readonly x: number;
   readonly y: number;
@@ -19,6 +34,7 @@ export interface Layout {
   readonly labels: (Rectangle & { kind: "lane" | "band"; label: string; lines: string[] })[];
   readonly width: number;
   readonly height: number;
+  readonly packedLanes?: boolean;
 }
 export const snap = (n: number): number => Math.ceil(n / 8) * 8;
 export function labelLines(text: string, limit = 30): string[] {
@@ -44,17 +60,83 @@ export function shortIds(ids: readonly string[]): Map<string, string> {
   )
     shared++;
   const result = new Map(ids.map((id, i) => [id, `…${parts[i]?.slice(shared).join(".") ?? id}`]));
-  for (const id of ids) {
-    const value = result.get(id);
-    if (ids.some((other) => other !== id && result.get(other) === value)) {
-      for (const other of ids.filter((other) => result.get(other) === value))
-        result.set(other, other);
-    }
+  const collisions = new Map<string, Set<string>>();
+  for (const [id, value] of result) {
+    const group = collisions.get(value) ?? new Set<string>();
+    group.add(id);
+    collisions.set(value, group);
   }
+  for (const group of collisions.values())
+    if (group.size > 1) for (const id of group) result.set(id, id);
   return result;
 }
 export const foldedBand = (b: DiagramBox): boolean =>
   b.folded === true && (b.band === "Other contexts" || b.band === "Other layers");
+interface LaneEnd {
+  readonly id: string;
+  readonly side: "top" | "bottom";
+  readonly port: number;
+  readonly offset: number;
+  readonly size: number;
+}
+// Share a horizontal lane only when the endpoint spans are disjoint, including label room.
+export function edgeLanes(
+  boxes: readonly Positioned[],
+  edges: readonly DiagramEdge[],
+  packed = true,
+) {
+  const byId = new Map(boxes.map((b) => [b.box.id, b]));
+  const ports = new Map<string, number>();
+  const lanes = new Map<string, { start: number; end: number; offset: number; size: number }[]>();
+  const labelled = needsEdgeLabels(edges);
+  const dense =
+    !packed || boxes.some((b) => b.box.context !== undefined || b.box.layer !== undefined);
+  return [...edges]
+    .sort(
+      (a, b) =>
+        compare(a.from, b.from) ||
+        compare(a.to, b.to) ||
+        compare(a.kind, b.kind) ||
+        compare(a.claim ?? "", b.claim ?? "") ||
+        compare(a.reason ?? "", b.reason ?? ""),
+    )
+    .map((edge) => {
+      const from = byId.get(edge.from),
+        to = byId.get(edge.to);
+      if (!from || !to) return { edge, a: null, b: null };
+      const endpoint = (box: Positioned, side: "top" | "bottom", label: boolean): LaneEnd => {
+        const key = `${box.box.id}/${side}`,
+          port = ports.get(key) ?? 0;
+        ports.set(key, port + 1);
+        const laneKey = `${String(box.y)}/${side}`;
+        const spans = lanes.get(laneKey) ?? [];
+        const start = dense ? 0 : Math.min(from.x, to.x),
+          end = dense
+            ? Number.MAX_SAFE_INTEGER
+            : Math.max(from.x + from.width, to.x + to.width) + (label ? 200 : 24);
+        const size = label ? 48 : 8;
+        let offset = 0;
+        while (
+          spans.some(
+            (s) =>
+              start < s.end + 16 &&
+              end + 16 > s.start &&
+              offset < s.offset + s.size &&
+              offset + size > s.offset,
+          )
+        )
+          offset += 8;
+        spans.push({ start, end, offset, size });
+        lanes.set(laneKey, spans);
+        return { id: box.box.id, side, port, offset, size };
+      };
+      return {
+        edge,
+        a: endpoint(from, to.y > from.y ? "bottom" : "top", labelled),
+        b: endpoint(to, from.y >= to.y ? "bottom" : "top", false),
+      };
+    });
+}
 /**
  * @sdpAnchor impl:protocol.studio-diagram-layout
  * @sdpLabel title-first box placement, wrapping and band sizing for desktop and phone
@@ -62,12 +144,15 @@ export const foldedBand = (b: DiagramBox): boolean =>
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
-export function layoutDiagram(d: Diagram): Layout {
+export function layoutDiagram(d: Diagram, packedLanes = true): Layout {
   const short = shortIds(d.boxes.map((b) => b.identity ?? b.id));
   const boxes: Positioned[] = [],
     labels: Layout["labels"] = [];
-  const degree = (id: string) =>
-    d.edges.reduce((n, e) => n + Number(e.from === id) + Number(e.to === id), 0);
+  const degrees = new Map<string, number>();
+  for (const e of d.edges) {
+    degrees.set(e.from, (degrees.get(e.from) ?? 0) + 1);
+    degrees.set(e.to, (degrees.get(e.to) ?? 0) + 1);
+  }
   const margin = 24;
   const multipleContexts =
     d.grid && new Set(d.boxes.filter((b) => !foldedBand(b)).map(contextOf)).size > 1;
@@ -83,7 +168,7 @@ export function layoutDiagram(d: Diagram): Layout {
         Math.max(
           96,
           ...[...title, ...identity, ...detail].map((s) => Array.from(s).length * 8 + 24),
-          Math.min(multipleContexts ? 264 : 832, degree(box.id) * 8 + 32),
+          Math.min(multipleContexts ? 264 : 832, (degrees.get(box.id) ?? 0) * 8 + 32),
         ),
       ),
       height: snap(24 + (title.length + identity.length + detail.length) * 18),
@@ -164,7 +249,15 @@ export function layoutDiagram(d: Diagram): Layout {
       y = place(items, margin, snap(y + h + 80), widthBudget - 48) + 64;
       maxX = Math.max(maxX, ...boxes.map((b) => b.x + b.width));
     }
-  const labelled = needsEdgeLabels(d.edges);
+  const reservations = edgeLanes(boxes, d.edges, packedLanes);
+  const reservationsById = new Map<string, { above: number; below: number }>();
+  for (const end of reservations.flatMap((r) => [r.a, r.b])) {
+    if (!end) continue;
+    const space = reservationsById.get(end.id) ?? { above: 0, below: 0 };
+    const side = end.side === "top" ? "above" : "below";
+    space[side] = Math.max(space[side], end.offset + end.size);
+    reservationsById.set(end.id, space);
+  }
   const events = [...new Set([...boxes.map((b) => b.y), ...labels.map((l) => l.y)])].sort(
     (a, b) => a - b,
   );
@@ -179,31 +272,15 @@ export function layoutDiagram(d: Diagram): Layout {
       cursor += snap(Math.max(...ls.map((l) => l.height)) + 24);
     }
     if (bs.length) {
-      const ids = new Set(bs.map((b) => b.box.id));
-      const above = d.edges.reduce((n, e) => {
-        const from = boxes.find((b) => b.box.id === e.from),
-          to = boxes.find((b) => b.box.id === e.to);
-        return (
-          n +
-          (ids.has(e.from) && (!to || (from && to.y <= from.y)) ? (labelled ? 48 : 8) : 0) +
-          (ids.has(e.to) && (!from || (to && from.y < to.y)) ? 8 : 0)
-        );
-      }, 0);
-      const below = d.edges.reduce((n, e) => {
-        const from = boxes.find((b) => b.box.id === e.from),
-          to = boxes.find((b) => b.box.id === e.to);
-        return (
-          n +
-          (ids.has(e.from) && to && from && to.y > from.y ? (labelled ? 48 : 8) : 0) +
-          (ids.has(e.to) && from && to && from.y >= to.y ? 8 : 0)
-        );
-      }, 0);
+      const above = Math.max(0, ...bs.map((b) => reservationsById.get(b.box.id)?.above ?? 0));
+      const below = Math.max(0, ...bs.map((b) => reservationsById.get(b.box.id)?.below ?? 0));
       cursor += above + 48;
       movedBoxes.push(...bs.map((b) => ({ ...b, y: cursor })));
       cursor += Math.max(...bs.map((b) => b.height)) + below + 48;
     }
   }
   return {
+    packedLanes,
     boxes: movedBoxes,
     labels: movedLabels,
     width: snap(Math.max(240, maxX + margin, ...labels.map((l) => l.x + l.width + 24))),

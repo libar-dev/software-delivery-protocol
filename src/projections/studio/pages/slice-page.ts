@@ -1,3 +1,4 @@
+import { text } from "./text.js";
 import type { SliceAnswer, SliceMember, SliceDesign } from "../slice-answer.js";
 import type { PageContext } from "./html.js";
 import { code, copy, escape, link, list, relative, rungLine, componentLink } from "./html.js";
@@ -132,7 +133,7 @@ export function slicePage(ctx: PageContext, a: SliceAnswer): string {
       .sort((x, y) => Number(y.blocking) - Number(x.blocking))
       .map(
         (q) =>
-          `${q.blocking ? "blocking" : "non-blocking"} · ${q.address ? `${link(ctx, q.address, q.address.split("#")[1])}${copy(q.address)} · ` : ""}${link(ctx, q.spec)} · ${escape(q.question)}${lines([...(q.decider ? [`<b>Decider:</b> ${escape(q.decider)}`] : []), ...(q.links?.length ? [`<b>Links:</b> ${ids(q.links)}`] : []), ...(q.provisional ? [`<b>Provisional:</b> ${escape(q.provisional)}`] : []), ...(q.trigger ? [`<b>Trigger:</b> ${escape(q.trigger)}`] : []), ...(q.holds.length ? [`Holds: ${ids(q.holds, true)}`] : [])])}`,
+          `${q.blocking ? "blocking" : "non-blocking"} · ${q.address ? `${link(ctx, q.address, q.address.split("#")[1])}${copy(q.address)} · ` : ""}${link(ctx, q.spec)} · ${text(ctx, q.question)}${lines([...(q.decider ? [`<b>Decider:</b> ${escape(q.decider)}`] : []), ...(q.links?.length ? [`<b>Links:</b> ${ids(q.links)}`] : []), ...(q.provisional ? [`<b>Provisional:</b> ${text(ctx, q.provisional)}`] : []), ...(q.trigger ? [`<b>Trigger:</b> ${text(ctx, q.trigger)}`] : []), ...(q.holds.length ? [`Holds: ${ids(q.holds, true)}`] : [])])}`,
       ),
     "questions",
   );

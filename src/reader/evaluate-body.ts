@@ -89,6 +89,13 @@ function plainObject(value: unknown): value is Readonly<Record<string, unknown>>
   return prototype === Object.prototype || prototype === null;
 }
 
+function freezeAnswer(value: unknown, seen = new Set<object>()): unknown {
+  if (typeof value !== "object" || value === null || seen.has(value)) return value;
+  seen.add(value);
+  for (const child of Object.values(value)) freezeAnswer(child, seen);
+  return Object.freeze(value);
+}
+
 // Both source tests and bundled entries read this package's built bodies. Walking from the
 // module also works for the CommonJS main entry, whose bundle supplies __dirname.
 function recipeDirectory(): string {
@@ -141,12 +148,14 @@ export async function evaluateBodyWithReader(
     graph: GraphSchema;
     report: ValidationReport;
     params?: Readonly<Record<string, unknown>>;
+    memoizeParameterlessRecipes?: boolean;
   },
 ): Promise<unknown> {
   const { reader: g, graph, report, params = {} } = input;
   if (!plainObject(params)) throw new Error("evaluateBody: params takes one parameters object");
   const compiled = compileBody(body);
   const recipeBodies = new Map<number, CompiledBody>();
+  const answers = new Map<number, Promise<unknown>>();
   const recipes: RecipeCaller = async (number, parameters = {}) => {
     if (!Number.isInteger(number))
       throw new Error(`recipes: ${String(number)} is not a recipe number`);
@@ -162,6 +171,15 @@ export async function evaluateBodyWithReader(
     if (recipeBody === undefined) {
       recipeBody = compileBody(readFileSync(join(directory, file), "utf8"));
       recipeBodies.set(number, recipeBody);
+    }
+    if (input.memoizeParameterlessRecipes && Object.keys(parameters).length === 0) {
+      const previous = answers.get(number);
+      if (previous !== undefined) return previous;
+      const answer = recipeBody(g, graph, report, parameters, recipes).then((value) =>
+        freezeAnswer(value),
+      );
+      answers.set(number, answer);
+      return answer;
     }
     return recipeBody(g, graph, report, parameters, recipes);
   };

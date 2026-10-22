@@ -56,11 +56,43 @@ export interface Diagram extends DiagramInput {
   readonly occurrenceKey?: string;
   readonly source?: { readonly text: string; readonly explanation: string };
   readonly sectionId?: string | null;
+  readonly heightBudget?: number;
 }
 export const layers = ["edge", "application", "domain", "adapter", "infrastructure", "not stated"];
 export const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 export const withinBound = (d: DiagramInput): boolean =>
   d.boxes.length <= 40 && d.edges.length <= 100;
+
+// Keep direction, claim and ordering apart; original relations remain in the text equivalent.
+export function combinePairs(edges: readonly DiagramEdge[]): DiagramEdge[] {
+  const groups = new Map<string, DiagramEdge[]>();
+  for (const edge of edges) {
+    const key = JSON.stringify([edge.from, edge.to, edge.claim, edge.orders]);
+    groups.set(key, [...(groups.get(key) ?? []), edge]);
+  }
+  return [...groups.values()].map((group) => {
+    const first = group[0];
+    if (!first) throw new Error("Empty edge group");
+    if (group.length === 1) return first;
+    const sameCount = group.every((e) => (e.count ?? 1) === (first.count ?? 1));
+    return {
+      from: first.from,
+      to: first.to,
+      ...(first.claim === undefined ? {} : { claim: first.claim }),
+      ...(first.orders === undefined ? {} : { orders: first.orders }),
+      kind: group
+        .map((e) => `${e.kind}${!sameCount && (e.count ?? 1) > 1 ? ` (${String(e.count)})` : ""}`)
+        .sort(compare)
+        .join(", "),
+      ...(sameCount && first.count !== undefined
+        ? { count: first.count, countLabel: "per relation" }
+        : {}),
+      ...(group.every((e) => e.reason === first.reason) && first.reason !== undefined
+        ? { reason: first.reason }
+        : {}),
+    };
+  });
+}
 export const contextOf = (b: DiagramBox): string => b.context ?? "not stated";
 export const layerOf = (b: DiagramBox): string => b.layer ?? "not stated";
 export function aggregate(

@@ -1,7 +1,7 @@
 import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, posix } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { parse as parseCss } from "postcss";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { extract } from "../src/extract/index.js";
@@ -22,13 +22,13 @@ function required<T>(v: T | undefined): T {
   return v;
 }
 const roots: string[] = [];
-afterEach(() => {
+afterAll(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
 function spec(id: string, relations = "{}", body = "", kind = "behavior", readiness = "defined") {
   return `---\nid: spec:probe.${id}\nkind: ${kind}\naltitude: story\nreadiness: ${readiness}\nrelations: ${relations}\n---\n# ${id}\n\n## Intent\n- outcome: Read a slice.\n${body || "\n## Behavior\n- rule: Read the member.\n"}`;
 }
-async function fixture(empty = false) {
+async function fixture(empty = false, proseProbe = false) {
   const root = mkdtempSync(join(tmpdir(), "sdp-slice-page-"));
   roots.push(root);
   const files: Record<string, string> = empty
@@ -79,6 +79,18 @@ async function fixture(empty = false) {
         "code.ts": `/**\n * @sdpAnchor component:probe.design\n * @sdpSatisfies spec:probe.design\n * @sdpLayer application\n * @sdpContext probe\n * @sdpUses component:probe.remote\n */\nexport const design=1;\n/**\n * @sdpAnchor component:probe.unrelated\n */\nexport const unrelated=2;\n/**\n * @sdpAnchor component:probe.matching\n * @sdpSatisfies spec:probe.matching\n * @sdpLayer domain\n * @sdpContext probe\n * @sdpUses component:probe.remote\n */\nexport const matching=3;\n/**\n * @sdpAnchor component:probe.unreadable\n * @sdpSatisfies spec:probe.unreadable\n * @sdpLayer domain\n * @sdpContext probe\n */\nexport const unreadable=4;\n/**\n * @sdpAnchor component:probe.remote\n * @sdpLayer infrastructure\n * @sdpContext remote\n */\nexport const remote=5;\n/**\n * @sdpAnchor impl:probe.loose\n * @sdpSatisfies spec:probe.a\n */\nexport const loose=6;\n/**\n * @sdpAnchor impl:probe.member\n * @sdpReferences spec:probe.b\n * @sdpComponent component:probe.design\n */\nexport const member=7;\n`,
       };
   for (const [path, content] of Object.entries(files)) writeFileSync(join(root, path), content);
+  if (proseProbe) {
+    const path = join(root, "folded.sdp.md");
+    writeFileSync(
+      path,
+      readFileSync(path, "utf8")
+        .replace("What holds the example?", "What holds `code` and spec:probe.a?")
+        .replace("Keep it visible.", "Keep `code` and spec:probe.a visible.")
+        .replace("a reader asks", "a reader asks for `code` and spec:probe.a"),
+    );
+    const a = join(root, "a.sdp.md");
+    writeFileSync(a, readFileSync(a, "utf8").replace("# a\n", "# `First` title\n"));
+  }
   const data = await createStudioData(createReader(extract({ root }).graph));
   return {
     data,
@@ -86,6 +98,14 @@ async function fixture(empty = false) {
     answer: data.recipes.slices.get(empty ? "pack:probe.Empty" : "pack:probe.Slice") as SliceAnswer,
   };
 }
+let shared: Awaited<ReturnType<typeof fixture>>;
+let emptyFixture: Awaited<ReturnType<typeof fixture>>;
+let proseFixture: Awaited<ReturnType<typeof fixture>>;
+beforeAll(async () => {
+  shared = await fixture();
+  emptyFixture = await fixture(true);
+  proseFixture = await fixture(false, true);
+}, 30_000);
 function page(
   pages: readonly { path: string; content: string }[],
   path = "slices/probe._slice.html",
@@ -116,8 +136,8 @@ const sliceAnchor = specTest({
 void sliceAnchor;
 
 describe("slice page", () => {
-  it("renders the complete answer in order, keeps held examples folded and independent examples separate", async () => {
-    const { pages, answer } = await fixture();
+  it("renders the complete answer in order, keeps held examples folded and independent examples separate", () => {
+    const { pages, answer } = shared;
     const html = page(pages);
     const plain = text(html);
     const headings = [
@@ -202,10 +222,10 @@ describe("slice page", () => {
     );
     for (const cell of html.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gu))
       expect(text(cell[1] ?? "")).not.toMatch(/\b(?:built|done|verified|approved)\b/iu);
-    expect(html).toBe(page(renderStudio((await fixture()).data)));
+    expect(html).toBe(page(renderStudio(shared.data)));
   });
-  it("keeps declared, unreadable and comparison words in their own design cells", async () => {
-    const html = page((await fixture()).pages);
+  it("keeps declared, unreadable and comparison words in their own design cells", () => {
+    const html = page(shared.pages);
     const unreadable = designCells(html, "spec:probe.unreadable");
     expect(unreadable[2]).toContain("layer: unreadable middleware");
     expect(unreadable[2]).not.toContain("layer: not stated");
@@ -225,15 +245,15 @@ describe("slice page", () => {
       "layer: declared domain; anchored application",
     );
   });
-  it("writes the slice's Pack id as text in exports instead of a relative file path", async () => {
-    const { pages } = await fixture();
+  it("writes the slice's Pack id as text in exports instead of a relative file path", () => {
+    const { pages } = shared;
     const exported = page(pages, "exports/probe._slice.html");
     expect(exported).toContain("<p><code>pack:probe.Slice</code></p>");
     for (const p of pages.filter((p) => p.path.startsWith("exports/")))
       expect(p.content).not.toMatch(/<code>\.\.\//u);
   });
-  it("uses singular summary nouns and captions that add to the section headings", async () => {
-    const { data, answer } = await fixture();
+  it("uses singular summary nouns and captions that add to the section headings", () => {
+    const { data, answer } = shared;
     const single = {
       ...answer,
       totals: {
@@ -263,8 +283,8 @@ describe("slice page", () => {
     expect(captions).not.toContain("How the members rest on each other");
     expect(captions).not.toContain("The architecture it touches");
   });
-  it("keeps every link inside the complete page set and gives every id one owner", async () => {
-    const { pages } = await fixture();
+  it("keeps every link inside the complete page set and gives every id one owner", () => {
+    const { pages } = shared;
     for (const p of pages) {
       const ids = [...p.content.matchAll(/\sid="([^"]+)"/gu)].map((m) => m[1]);
       expect(new Set(ids).size, p.path).toBe(ids.length);
@@ -292,8 +312,8 @@ describe("slice page", () => {
       }
     }
   });
-  it("names empty architecture and empty sections without inventing bindings", async () => {
-    const { pages } = await fixture(true);
+  it("names empty architecture and empty sections without inventing bindings", () => {
+    const { pages } = emptyFixture;
     const html = page(pages, "slices/probe._empty.html");
     expect(text(html)).toContain("No component is touched");
     expect(text(html)).toContain("0 Specs");
@@ -334,8 +354,44 @@ const dependencyAnchor = specTest({
 void dependencyAnchor;
 
 describe("slice dependency drawing", () => {
-  it("aggregates boundary arrows before testing the bound, retaining every original relation in text", async () => {
-    const { answer } = await fixture();
+  it("preserves single-member depths and opens complete text when no height-reducing fold fits", () => {
+    const member = required(shared.answer.members[0]);
+    const members = Array.from({ length: 10 }, (_, i) => ({
+      ...member,
+      id: `spec:probe.depth${String(i)}`,
+      depth: i + 1,
+      exampleOf: null,
+      exampleMembers: [],
+    }));
+    const d = dependencyDiagram(
+      "probe",
+      {
+        ...shared.answer,
+        members,
+        boundary: { ...shared.answer.boundary, restsOn: [], restedOnBy: [] },
+        structure: {
+          edges: members.slice(1).map((m, i) => ({
+            from: m.id,
+            to: required(members[i]).id,
+            type: "dependsOn",
+            orders: true,
+          })),
+          cycles: [],
+          unresolved: [],
+        },
+      },
+      (id) => id,
+    );
+    expect(d.boxes.some((b) => b.folded)).toBe(false);
+    for (const m of members) expect(d.boxes.some((b) => b.id === m.id)).toBe(true);
+    const html = renderDiagram(d, "probe.dependencies");
+    expect(html).not.toContain("<svg");
+    expect(html).toContain('<details open id="diagram.probe.dependencies.text"');
+    expect(html).toContain("height budget");
+    for (const m of members) expect(html).toContain(m.id);
+  });
+  it("aggregates boundary arrows before testing the bound, retaining every original relation in text", () => {
+    const { answer } = shared;
     const member = required(answer.members.find((m) => m.id === "spec:probe.a"));
     const outside = required(answer.boundary.restsOn.find((r) => r.id === "spec:probe.other"));
     const many = {
@@ -378,8 +434,8 @@ describe("slice dependency drawing", () => {
         );
     }
   });
-  it("points from the Mermaid source disclosure to the full text equivalent", async () => {
-    const { pages } = await fixture();
+  it("points from the Mermaid source disclosure to the full text equivalent", () => {
+    const { pages } = shared;
     const source = required(
       page(pages)
         .split('id="diagram.pack:probe.Slice.dependencies.source"')[1]
@@ -388,15 +444,19 @@ describe("slice dependency drawing", () => {
     expect(source).toContain('href="#diagram.pack:probe.Slice.dependencies.text"');
     expect(text(source)).toContain("full text equivalent");
   });
-  it("uses supplied depths, folds its boundary even below the bound, and retains full text and nonordering arrows", async () => {
-    const { answer } = await fixture();
+  it("uses supplied depths, folds its boundary even below the bound, and retains full text and nonordering arrows", () => {
+    const { answer } = shared;
     const d = dependencyDiagram("pack:probe.Slice", answer, (id) => `#${id}`);
     const html = renderDiagram(d, "pack:probe.Slice.dependencies");
-    expect(d.boxes.find((b) => b.id === "spec:probe.a")?.band).toBe(
-      `Depth ${String(answer.members.find((m) => m.id === "spec:probe.a")?.depth)}`,
-    );
+    expect(
+      d.boxes.find((b) => b.id === "spec:probe.a" || b.foldedIds?.includes("spec:probe.a"))?.band,
+    ).toBe(`Depth ${String(answer.members.find((m) => m.id === "spec:probe.a")?.depth)}`);
     expect(d.boxes.some((b) => b.id === "spec:probe.folded")).toBe(false);
-    expect(d.boxes.some((b) => b.id === "spec:probe.independent")).toBe(true);
+    expect(
+      d.boxes.some(
+        (b) => b.id === "spec:probe.independent" || b.foldedIds?.includes("spec:probe.independent"),
+      ),
+    ).toBe(true);
     expect(d.boxes.some((b) => b.id === "spec:probe.outside")).toBe(true);
     expect(d.boxes.some((b) => b.folded && b.band === "Outside this scope")).toBe(true);
     expect(html).toContain("orders nothing");
@@ -428,8 +488,8 @@ describe("slice dependency drawing", () => {
         .every((b) => b.band === "Depth 37"),
     ).toBe(true);
   });
-  it("folds largest complete bands first and opens text when protected boundary boxes exceed the bound", async () => {
-    const { answer } = await fixture();
+  it("folds largest complete bands first and opens text when protected boundary boxes exceed the bound", () => {
+    const { answer } = shared;
     const member = required(answer.members[0]);
     const expanded = {
       ...answer,
@@ -462,8 +522,8 @@ describe("slice dependency drawing", () => {
     expect(html).not.toContain("<svg");
     expect(html).toContain('<details open id="diagram.probe.dependencies.text"');
   });
-  it("gives repeated scopes distinct fold element ids through their drawing occurrence", async () => {
-    const { answer } = await fixture();
+  it("gives repeated scopes distinct fold element ids through their drawing occurrence", () => {
+    const { answer } = shared;
     const member = required(answer.members[0]);
     const expanded = {
       ...answer,
@@ -489,8 +549,8 @@ describe("slice dependency drawing", () => {
     expect(ids).toContain("diagram.probe.dependencies.fold.1");
     expect(ids).toContain("diagram.probe.second.dependencies.fold.1");
   });
-  it("keeps synthetic boundary identifiers out of the visible box identity line", async () => {
-    const { answer } = await fixture();
+  it("keeps synthetic boundary identifiers out of the visible box identity line", () => {
+    const { answer } = shared;
     const d = dependencyDiagram("probe", answer, (id) => id);
     const folded = layoutDiagram(d).boxes.filter((p) => p.box.folded);
     expect(folded.length).toBeGreaterThan(0);
@@ -504,8 +564,8 @@ const architectureAnchor = specTest({
 void architectureAnchor;
 
 describe("scoped architecture drawing", () => {
-  it("gives context and layer folds distinct ids and preserves all original rows", async () => {
-    const { answer } = await fixture();
+  it("gives context and layer folds distinct ids and preserves all original rows", () => {
+    const { answer } = shared;
     const component = required(answer.architecture.components[0]);
     const arch = {
       ...answer.architecture,
@@ -541,8 +601,8 @@ describe("scoped architecture drawing", () => {
     );
     expect(renderDiagram(pure, "one.architecture")).toContain("block-beta");
   });
-  it("keeps planned and anchored identities apart, folds outside context and retains original unit edges", async () => {
-    const { answer } = await fixture();
+  it("keeps planned and anchored identities apart, folds outside context and retains original unit edges", () => {
+    const { answer } = shared;
     const drawings = scopedArchitectureDiagrams(
       "pack:probe.Slice",
       answer.architecture,
@@ -565,8 +625,8 @@ describe("scoped architecture drawing", () => {
     expect(html).toContain("component:probe.design uses component:probe.remote");
     expect(renderDiagram(d, "pack:probe.Slice.architecture")).toBe(html);
   });
-  it("names uses, planned uses and realization in the legend and labels links only when a realization is drawn", async () => {
-    const { answer } = await fixture();
+  it("names uses, planned uses and realization in the legend and labels links only when a realization is drawn", () => {
+    const { answer } = shared;
     const legendOf = (html: string) =>
       text(/<p class="diagram-legend">(.*?)<\/p>/u.exec(html)?.[1] ?? "");
     const edgeGroups = (html: string) => [...html.matchAll(/<g class="edge"[^>]*>.*?<\/g>/gu)];
@@ -606,4 +666,42 @@ describe("scoped architecture drawing", () => {
       expect(edge).not.toContain("data-edge-key");
     }
   });
+});
+
+it("renders question fields as linked prose and dependency titles as plain text", () => {
+  const result = proseFixture,
+    html = page(result.pages);
+  const questions = html.split('id="slice.questions"')[1]?.split('id="slice.boundary"')[0] ?? "";
+  expect(questions).toContain("What holds <code>code</code> and");
+  expect(questions).toContain('href="../specs/probe.a.html"');
+  expect(questions).toContain("Keep <code>code</code> and");
+  expect(questions).toContain("a reader asks for <code>code</code> and");
+  const drawing = dependencyDiagram(
+    "pack:probe.Slice",
+    {
+      ...result.answer,
+      members: result.answer.members.filter((m) => m.id === "spec:probe.a"),
+      structure: { ...result.answer.structure, edges: [], unresolved: [] },
+      boundary: { ...result.answer.boundary, restsOn: [] },
+    },
+    () => "#main",
+  );
+  expect(drawing.boxes.find((b) => b.id === "spec:probe.a")?.title).toBe("First title");
+  expect(mermaidSource(drawing)).not.toContain("`First`");
+});
+
+it("combines relations on one ordered pair while retaining every original text row", () => {
+  const { answer } = shared;
+  const original = required(
+    answer.structure.edges.find((e) => e.from === "spec:probe.b" && e.to === "spec:probe.a"),
+  );
+  const extra = { ...original, type: "refines", reason: "Another relation" };
+  const d = dependencyDiagram(
+    "probe",
+    { ...answer, structure: { ...answer.structure, edges: [original, extra] } },
+    () => "#main",
+  );
+  expect(d.edges.some((e) => e.kind === "dependsOn, refines" && e.claim === "declared")).toBe(true);
+  expect(d.textRows?.some((r) => r.includes("spec:probe.b dependsOn spec:probe.a"))).toBe(true);
+  expect(d.textRows?.some((r) => r.includes("spec:probe.b refines spec:probe.a"))).toBe(true);
 });

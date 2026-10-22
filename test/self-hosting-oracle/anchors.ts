@@ -4988,6 +4988,12 @@ export const expectedBindingEdges = [
     "spec:consumers.spec-studio.diagram-kinds.legibility",
   ],
   ["test:protocol.studio-copy-source", "verifies", "spec:consumers.spec-studio.page-elements"],
+  ["test:protocol.studio-diagram-core", "verifies", "spec:consumers.spec-studio.diagrams"],
+  [
+    "test:protocol.studio-diagram-core",
+    "verifies",
+    "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+  ],
   [
     "test:protocol.studio-diagram-core",
     "verifies",

@@ -5,6 +5,7 @@ export const mermaidText = (value: string): string =>
   value
     .replace(/#/gu, "#35;")
     .replace(/%/gu, "#37;")
+    .replace(/`/gu, "#96;")
     .replace(/"/gu, "#quot;")
     .replace(/</gu, "#lt;")
     .replace(/>/gu, "#gt;")
