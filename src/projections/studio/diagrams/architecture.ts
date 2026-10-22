@@ -37,6 +37,7 @@ export function architectureDiagrams(input: DiagramInput): {
         words: `${c}: ${String(boxes.filter((b) => contextOf(b) === c).length)} components, folded`,
         target: `#${contextId(c)}`,
         folded: true,
+        foldedIds: boxes.filter((b) => contextOf(b) === c).map((b) => b.id),
         band: "Contexts",
       })),
       edges: aggregate(input.edges, ids),
@@ -63,6 +64,7 @@ export function architectureDiagrams(input: DiagramInput): {
         target: `#${contextId(c)}`,
         folded: true,
         band: "Other contexts",
+        foldedIds: boxes.filter((b) => contextOf(b) === c).map((b) => b.id),
       }));
     const diagram: Diagram = {
       subject: contextId(context),
@@ -92,6 +94,7 @@ export function architectureDiagrams(input: DiagramInput): {
           target: `#${layerId(l)}`,
           folded: true,
           band: "Layers",
+          foldedIds: own.filter((b) => layerOf(b) === l).map((b) => b.id),
         })),
         ...external,
       ],
@@ -120,6 +123,7 @@ export function architectureDiagrams(input: DiagramInput): {
         target: `#${layerId(l)}`,
         folded: true,
         band: "Other layers",
+        foldedIds: own.filter((b) => layerOf(b) === l).map((b) => b.id),
       }));
       const outgoing = aggregate(layerEdges, mapping);
       const ext = external.filter((b) => outgoing.some((e) => e.from === b.id || e.to === b.id));

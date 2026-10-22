@@ -1,6 +1,9 @@
 export interface DiagramBox {
   readonly id: string;
   readonly words: string;
+  readonly title?: string;
+  readonly detail?: string;
+  readonly foldedIds?: readonly string[];
   readonly edgeLabel?: string;
   readonly target: string;
   readonly context?: string | null;
@@ -14,6 +17,8 @@ export interface DiagramEdge {
   readonly to: string;
   readonly kind: string;
   readonly count?: number;
+  readonly claim?: string;
+  readonly reason?: string;
 }
 export interface DiagramInput {
   readonly boxes: readonly DiagramBox[];
@@ -40,11 +45,13 @@ export function aggregate(
     const from = ids.get(e.from),
       to = ids.get(e.to);
     if (from === undefined || to === undefined || from === to) continue;
-    const key = JSON.stringify([from, to, e.kind]);
+    const key = JSON.stringify([from, to, e.kind, e.claim, e.reason]);
     pairs.set(key, {
       from,
       to,
       kind: e.kind,
+      ...(e.claim === undefined ? {} : { claim: e.claim }),
+      ...(e.reason === undefined ? {} : { reason: e.reason }),
       count: (pairs.get(key)?.count ?? 0) + (e.count ?? 1),
     });
   }

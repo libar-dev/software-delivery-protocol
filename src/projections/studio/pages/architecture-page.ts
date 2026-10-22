@@ -63,6 +63,8 @@ export function architecturePage(ctx: PageContext): string {
   const components = architecture.components.filter((c) => c.declared);
   const boxes: DiagramBox[] = components.map((c) => ({
     id: c.id,
+    title: plainTitle(c.label ?? c.id),
+    detail: `${String(c.members.length)} ${c.members.length === 1 ? "member" : "members"}`,
     words: `${c.label === null ? "" : `${plainTitle(c.label)}, `}${String(c.members.length)} ${c.members.length === 1 ? "member" : "members"}`,
     context: c.context,
     layer: c.layer,
@@ -91,7 +93,13 @@ export function architecturePage(ctx: PageContext): string {
   const edges: DiagramEdge[] = components.flatMap((c) =>
     c.usesCounts
       .filter((e) => components.some((t) => t.id === e.component))
-      .map((e) => ({ from: c.id, to: e.component, kind: "uses", count: e.edges })),
+      .map((e) => ({
+        from: c.id,
+        to: e.component,
+        kind: "uses",
+        claim: "anchored",
+        count: e.edges,
+      })),
   );
   const targetsOf = (id: string): string[] => {
     if (components.some((c) => c.id === id)) return [id];
@@ -100,7 +108,7 @@ export function architecturePage(ctx: PageContext): string {
   for (const p of plans.unrealized)
     for (const use of p.uses ?? [])
       for (const target of targetsOf(use))
-        edges.push({ from: plannedKey(p), to: target, kind: "plans to use" });
+        edges.push({ from: plannedKey(p), to: target, kind: "plans to use", claim: "declared" });
   const diagrams = architectureDiagrams({ boxes, edges });
   const contexts = new Set(
     boxes.flatMap((b) => (b.context === null || b.context === undefined ? [] : [b.context])),
@@ -129,6 +137,8 @@ export function architecturePage(ctx: PageContext): string {
       const memberBoxes: DiagramBox[] = [
         ...c.members.map((m) => ({
           id: m.id,
+          title: plainTitle(m.label ?? m.id),
+          detail: m.role === null ? "" : `role ${m.role}`,
           words: `${plainTitle(m.label ?? m.id)}${m.role === null ? "" : `, role ${m.role}`}`,
           target: `#${c.id}`,
         })),

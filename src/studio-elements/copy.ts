@@ -32,11 +32,26 @@ export function registerCopy(): void {
     private control?: HTMLButtonElement;
     private selected?: HTMLTextAreaElement;
     static get observedAttributes(): string[] {
-      return ["text"];
+      return ["text", "for"];
     }
 
+    private target(): HTMLTextAreaElement | undefined {
+      const id = this.getAttribute("for");
+      if (!id) return undefined;
+      return Array.from(this.ownerDocument.querySelectorAll<HTMLTextAreaElement>("textarea")).find(
+        (area) => area.id === id || area.getAttribute("id") === id,
+      );
+    }
     attributeChangedCallback(): void {
-      this.control?.setAttribute("aria-label", `Copy ${this.getAttribute("text") ?? ""}`);
+      const target = this.target();
+      const label = target
+        ? (Array.from(this.ownerDocument.querySelectorAll("label")).find(
+            (label) => label.getAttribute("for") === (target.id || target.getAttribute("id")),
+          )?.textContent ??
+          target.getAttribute("aria-label") ??
+          "text")
+        : (this.getAttribute("text") ?? "");
+      this.control?.setAttribute("aria-label", `Copy ${label}`);
     }
 
     connectedCallback(): void {
@@ -49,7 +64,14 @@ export function registerCopy(): void {
           clipboard === undefined
             ? undefined
             : (text: string): Promise<void> => clipboard.writeText(text);
-        void copyText(this.getAttribute("text") ?? "", write, (text) => {
+        const target = this.target();
+        if (this.getAttribute("for") && !target) return;
+        void copyText(target?.value ?? this.getAttribute("text") ?? "", write, (text) => {
+          if (target) {
+            target.focus();
+            target.select();
+            return;
+          }
           this.selected?.parentElement?.remove();
           const label = this.ownerDocument.createElement("label");
           label.textContent = "Text to copy ";

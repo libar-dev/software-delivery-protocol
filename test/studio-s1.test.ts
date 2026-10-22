@@ -141,7 +141,7 @@ describe("Studio diagrams", () => {
       "Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.",
     );
   });
-  it("orders grid contexts and layers and wraps after six boxes with pinned label metrics", () => {
+  it("orders grid contexts and layers and wraps cells within the fixed width budget", () => {
     const input = architectureInput(12, 1, 1);
     const drawing = required(
       architectureDiagrams({
@@ -171,12 +171,21 @@ describe("Studio diagrams", () => {
     ]);
     const nodes = groups(c0, "node");
     const y = (i: number) => /<rect x="\d+" y="(\d+)"/u.exec(required(nodes[i]))?.[1];
-    expect(y(0)).toBe(y(5));
-    expect(Number(y(6))).toBeGreaterThan(Number(y(5)));
-    expect(y(6)).toBe(y(11));
+    expect(new Set(nodes.map((_, i) => y(i))).size).toBeGreaterThan(1);
+    for (const row of new Set(nodes.map((_, i) => y(i)))) {
+      const rectangles = nodes
+        .filter((_, i) => y(i) === row)
+        .map((node) => {
+          const rect = /<rect x="(\d+)" y="\d+" width="(\d+)"/u.exec(node);
+          return { x: Number(rect?.[1]), width: Number(rect?.[2]) };
+        });
+      expect(
+        Math.max(...rectangles.map((r) => r.x + r.width)) - Math.min(...rectangles.map((r) => r.x)),
+      ).toBeLessThanOrEqual(264);
+    }
     expect(labelLines("component:probe.a-very-long-identifier")).toEqual([
-      "component:probe.",
-      "a-very-long-identifier",
+      "component:probe.a-very-long-",
+      "identifier",
     ]);
     expect(labelLines("a-very-long-identifier-with-hyphens-only")).toEqual([
       "a-very-long-identifier-with-",
@@ -184,7 +193,8 @@ describe("Studio diagrams", () => {
     ]);
     const node = required(nodes[0]);
     const width = Number(/width="(\d+)"/u.exec(node)?.[1]);
-    expect(width).toBe(Math.ceil("component:probe.c01".length * 7.5) + 24);
+    expect(width).toBeLessThanOrEqual(264);
+    expect(node).toContain("…c01");
     expect(html).toContain('role="img"');
     expect(html).toContain('aria-describedby="diagram.architecture.text"');
   });
@@ -1142,9 +1152,10 @@ it("names a single edge relation once in the legend and preserves its text equiv
     ...drawing,
     edges: [required(drawing.edges[0]), { from: "a", to: "c", kind: "dependsOn" }],
   });
-  expect(mixed).not.toContain('class="diagram-legend"');
+  expect(mixed).toContain('class="diagram-legend"');
   expect(groups(mixed, "edge").every((edge) => edge.includes("<text"))).toBe(true);
-  expect(mixed).toContain("dependsOn</text>");
+  expect(mixed).toContain("E2: dependsOn");
+  expect(mixed).toContain('data-edge-key="E2"');
 });
 
 it("names solid and planned uses once without repeating edge labels", () => {

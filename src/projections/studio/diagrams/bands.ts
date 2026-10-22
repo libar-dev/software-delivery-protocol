@@ -51,6 +51,7 @@ export function traceDiagram(input: Rooted): Diagram {
           words: `${String(members.length)} ${band}, folded`,
           target: "#relations",
           folded: true,
+          foldedIds: members.flatMap((m) => m.foldedIds ?? [m.id]),
           band,
         },
       ],

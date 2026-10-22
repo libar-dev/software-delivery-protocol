@@ -321,20 +321,8 @@ describe("sdp cli", () => {
           "spec:consumers.spec-studio.diagram-kinds.dependency",
         ],
         [
-          "specs/consumers/spec-studio.diagram-kinds.edge-routing.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.edge-routing",
-        ],
-        [
-          "specs/consumers/spec-studio.diagram-kinds.legibility.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.legibility",
-        ],
-        [
           "specs/consumers/spec-studio.diagram-kinds.maturity-picture.sdp.md",
           "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
-        ],
-        [
-          "specs/consumers/spec-studio.diagram-kinds.mermaid-source.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
         ],
         [
           "specs/consumers/spec-studio.diagram-kinds.requirement-trace.sdp.md",
@@ -371,9 +359,9 @@ describe("sdp cli", () => {
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
       // Re-measured from the refreshed carriers: no prose-mention pair is retained. The owner's
-      // ready statements on plan 47's roadmaps-and-slices Pack add 22 verifier gaps beside the
+      // ready statements on plan 47's roadmaps-and-slices Pack leave 19 verifier gaps beside the
       // retained one on the Spec-sections Model.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 23 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 20 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

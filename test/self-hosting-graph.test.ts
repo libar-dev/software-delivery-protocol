@@ -263,16 +263,16 @@ describe("the self-hosting corpus", () => {
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 428 Markdown Specs and four Gherkin Specs,
-    // 432 in the self-hosting Pack; nine Pack manifests and 543 source anchors.
-    // The excluded-root validate run corroborates 984 nodes and 2719 edges; the capability-epics
+    // 432 in the self-hosting Pack; nine Pack manifests and 548 source anchors.
+    // The excluded-root validate run corroborates 989 nodes and 2735 edges; the capability-epics
     // decision's dependency on the one-primitive decision added the latest edge.
-    expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 543 });
+    expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 548 });
     expect(expectedSpecs).toHaveLength(432);
     expect(expectedPackMembers).toHaveLength(432);
-    expect(expectedAnchors).toHaveLength(543);
-    expect(expectedBindingEdges).toHaveLength(681);
-    expect(result.graph.nodes).toHaveLength(984);
-    expect(result.graph.edges).toHaveLength(2719);
+    expect(expectedAnchors).toHaveLength(548);
+    expect(expectedBindingEdges).toHaveLength(694);
+    expect(result.graph.nodes).toHaveLength(989);
+    expect(result.graph.edges).toHaveLength(2735);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -415,7 +415,7 @@ describe("the self-hosting corpus", () => {
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedMemberOfEdges).toHaveLength(167);
+    expect(expectedMemberOfEdges).toHaveLength(170);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>
@@ -575,7 +575,7 @@ describe("the self-hosting corpus", () => {
 
   it("finds every converted comment anchor at its block's first line", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedCommentAnchorIds).toHaveLength(93);
+    expect(expectedCommentAnchorIds).toHaveLength(96);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)

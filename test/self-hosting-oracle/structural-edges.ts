@@ -256,6 +256,21 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.projections",
   },
   {
+    unit: "src/projections/studio/diagrams/layout.ts#layoutDiagram",
+    anchorId: "impl:protocol.studio-diagram-layout",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/routing.ts#routeDiagram",
+    anchorId: "impl:protocol.studio-diagram-routing",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/mermaid.ts#mermaidSource",
+    anchorId: "impl:protocol.studio-diagram-source",
+    componentId: "component:protocol.projections",
+  },
+  {
     unit: "src/projections/studio/diagrams/svg.ts#renderDiagram",
     anchorId: "impl:protocol.studio-diagrams",
     componentId: "component:protocol.projections",

@@ -64,6 +64,8 @@ export function designView(ctx: PageContext, spec: SpecContext): string {
     const unit = units.get(id);
     return {
       id,
+      title: unit ? plainTitle(unit.label ?? id) : "unresolved",
+      detail: unit ? location(unit.file ?? undefined, unit.line ?? undefined) : "",
       words: unit
         ? `${plainTitle(unit.label ?? "")} ${location(unit.file ?? undefined, unit.line ?? undefined)}`.trim()
         : "unresolved",
@@ -82,6 +84,7 @@ export function designView(ctx: PageContext, spec: SpecContext): string {
     from: e.from,
     to: e.to,
     kind: e.type,
+    claim: "anchored",
   }));
   const drawing = boxes.length
     ? renderDiagram(
@@ -151,8 +154,20 @@ interface Impact {
 }
 export function impactView(ctx: PageContext, spec: SpecContext): string {
   const relations = [
-    ...spec.relationsOut.map((r) => ({ from: spec.id, to: r.otherId, kind: r.type })),
-    ...spec.relationsIn.map((r) => ({ from: r.otherId, to: spec.id, kind: r.type })),
+    ...spec.relationsOut.map((r) => ({
+      from: spec.id,
+      to: r.otherId,
+      kind: r.type,
+      claim: r.claim,
+      ...(r.reason === undefined ? {} : { reason: r.reason }),
+    })),
+    ...spec.relationsIn.map((r) => ({
+      from: r.otherId,
+      to: spec.id,
+      kind: r.type,
+      claim: r.claim,
+      ...(r.reason === undefined ? {} : { reason: r.reason }),
+    })),
   ];
   const ids = new Set([spec.id, ...relations.flatMap((r) => [r.from, r.to])]);
   const boxes: DiagramBox[] = [...ids].sort(compare).map((id) => ({
