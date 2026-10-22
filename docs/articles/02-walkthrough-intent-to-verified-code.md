@@ -2,7 +2,7 @@
 
 *Part 2 in a series introducing the Libar Software Delivery Protocol. Links and measurements are pinned to one commit; see the footer.*
 
-In Part 1 ([read it here](./01-the-spec-is-the-prompt-is-the-design.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/58a82023ec9c66784f09ccbb5be941a0beda39a0/docs/articles/01-the-spec-is-the-prompt-is-the-design.md)), we introduced the core thesis of the **Libar Software Delivery Protocol**: model the delivery lifecycle as instances of one enrichable primitive (`Spec`), bind code and tests with source `anchor`s, derive **one regenerable graph**, and check **conformance and honesty** in CI.
+In Part 1 ([read it here](./01-the-spec-is-the-prompt-is-the-design.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/48d8f495959c2a8adc6ffab4069d4ab60afbf716/docs/articles/01-the-spec-is-the-prompt-is-the-design.md)), we introduced the core thesis of the **Libar Software Delivery Protocol**: model the delivery lifecycle as instances of one enrichable primitive (`Spec`), bind code and tests with source `anchor`s, derive **one regenerable graph**, and check **conformance and honesty** in CI.
 
 That sounds clean in principle. What does it actually look like in a text editor and a terminal?
 
@@ -353,7 +353,7 @@ The fastest way to appreciate the checks is to trip them in `examples/checkout-v
 
 ## Up Next in the Series
 
-We have seen how Specs and anchors enter the repo and how the extractor and validators keep them honest. In **Part 3: Stop Building 30-Verb CLI Walls for Coding Agents** ([read it here](./03-stop-building-verb-walls-for-coding-agents.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/58a82023ec9c66784f09ccbb5be941a0beda39a0/docs/articles/03-stop-building-verb-walls-for-coding-agents.md)), we look at what happens *downstream* of the graph: how AI coding agents script `sdp q` across 43 runnable recipes, how a design pass fits one capability Pack of the first adopter's 243-Spec corpus into a context bundle, and how humans review the same graph in the static HTML **Spec Studio**.
+We have seen how Specs and anchors enter the repo and how the extractor and validators keep them honest. In **Part 3: Stop Building 30-Verb CLI Walls for Coding Agents** ([read it here](./03-stop-building-verb-walls-for-coding-agents.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/48d8f495959c2a8adc6ffab4069d4ab60afbf716/docs/articles/03-stop-building-verb-walls-for-coding-agents.md)), we look at what happens *downstream* of the graph: how AI coding agents script `sdp q` across 43 runnable recipes, how a design pass fits one capability Pack of the first adopter's 243-Spec corpus into a context bundle, and how humans review the same graph in the static HTML **Spec Studio**.
 
 ---
 

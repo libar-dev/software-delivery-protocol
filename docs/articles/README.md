@@ -79,7 +79,7 @@ Every article in the series reinforces one or more clauses of the founding sloga
 **Worked example, lineage, and review**
 
 22. [`examples/checkout-v1/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/README.md) — the worked MVP example
-23. [`docs/lineage/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/lineage/README.md) — the restored v0 design documents and the Gen 1 annotation scout report
+23. [`docs/lineage/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/lineage/README.md) — the restored v0 design documents and the Gen 1 lineage scout report
 24. [`reviews/26-whole-corpus-refresh.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/reviews/26-whole-corpus-refresh.md) — the whole-corpus refresh record
 
 </details>
