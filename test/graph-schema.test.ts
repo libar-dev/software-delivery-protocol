@@ -209,12 +209,19 @@ The Model prose.
     const root = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
     const { graph, report } = extract({ root });
     expect(report.findings).toEqual([]);
-    const pack = graph.nodes.find((node) => node.nodeType === "Pack");
-    if (pack?.nodeType !== "Pack") throw new Error("Missing example Pack.");
-    expect(pack.claim).toBe("declared");
-    const membership = graph.edges.filter((edge) => edge.type === "belongsTo");
-    expect(membership.map((edge) => edge.from).sort()).toEqual([...pack.members].sort());
-    expect(membership.every((edge) => edge.to === pack.id && edge.claim === pack.claim)).toBe(true);
+    const packs = graph.nodes.filter((node) => node.nodeType === "Pack");
+    expect(packs.map((pack) => pack.id).sort()).toEqual([
+      "pack:checkout-roadmap",
+      "pack:checkout-v1",
+    ]);
+    for (const pack of packs) {
+      expect(pack.claim).toBe("declared");
+      const membership = graph.edges.filter(
+        (edge) => edge.type === "belongsTo" && edge.to === pack.id,
+      );
+      expect(membership.map((edge) => edge.from).sort()).toEqual([...pack.members].sort());
+      expect(membership.every((edge) => edge.claim === pack.claim)).toBe(true);
+    }
     const verifies = graph.edges.filter((edge) => edge.type === "verifies");
     expect(new Set(verifies.map((edge) => edge.claim))).toEqual(new Set(["declared", "anchored"]));
     expect(

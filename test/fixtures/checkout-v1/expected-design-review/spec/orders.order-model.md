@@ -30,7 +30,7 @@
 
 Every line is a one-hop neighbor over the curated graph: changing this spec touches this list plus the bindings above. Deeper reach is a script over the reader; symbol-level reach is the aspirational impact graph.
 
-- Belongs to: [`pack:checkout-v1`](../pack/checkout-v1.md) `[declared]`
+- Belongs to: [`pack:checkout-roadmap`](../pack/checkout-roadmap.md) · [`pack:checkout-v1`](../pack/checkout-v1.md) `[declared]`
 - refines → [`spec:orders.order-management`](orders.order-management.md) — Order management `[declared]`
 
 ## Findings
