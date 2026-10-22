@@ -21,7 +21,7 @@ import { entryAddressSlotReason } from "./reify.js";
 
 const relationTypes = new Set<string>(SPEC_RELATION_TYPES);
 const specEnvelopeKeys = new Set(["id", "kind", "altitude", "readiness", "relations"]);
-const packEnvelopeKeys = new Set(["id", "specs", "modelRefs"]);
+const packEnvelopeKeys = new Set(["id", "specs", "modelRefs", "order"]);
 const specKinds = new Set<string>(SPEC_KINDS);
 const specAltitudes = new Set<string>(SPEC_ALTITUDES);
 const specReadiness = new Set<string>(SPEC_READINESS);
@@ -30,6 +30,13 @@ function refusal(file: string, message: string): MarkdownFrontmatterResult {
   return { ok: false, findings: [markdownFinding(file, 1, message)] };
 }
 
+/**
+ * @sdpAnchor impl:protocol.envelope-contract
+ * @sdpLabel parses the bounded Markdown frontmatter envelope
+ * @sdpSatisfies spec:carrier.envelope-contract
+ * @sdpComponent component:protocol.extract
+ * @sdpRole codec
+ */
 export function parseMarkdownFrontmatter(
   sourceText: string,
   file: string,
@@ -232,6 +239,8 @@ export function parseMarkdownFrontmatter(
           "readiness is not a recognized spec readiness",
           extractFindingIds.nonStaticEnvelope,
         );
+      else if (name === "order" && value !== "priority")
+        report(findings, file, line, 'order must be "priority"');
       else data[name] = value;
     }
     for (const required of requiredFields)

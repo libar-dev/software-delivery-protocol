@@ -204,6 +204,7 @@ function bindings(ctx: PageContext, spec: SpecContext): string {
  * @sdpSatisfies spec:consumers.spec-studio.spec-page.core, spec:consumers.spec-studio.spec-page
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders Spec intent, relations and realization bindings
  */
 export function specPage(ctx: PageContext, spec: SpecContext): string {
   const d = spec.designColumns;

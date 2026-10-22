@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { posix } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { extract } from "../src/extract/index.js";
 import { schemaVersion } from "../src/graph/schema.js";
@@ -172,8 +172,12 @@ const probe: GraphSchema = {
     { spec: "spec:probe.all", file: "design/probe.sdp.md", entry: "question[0]", line: 20 },
   ],
 };
-const data = await createStudioData(createReader(probe));
-const pages = renderStudio(data);
+let data: Awaited<ReturnType<typeof createStudioData>>;
+let pages: ReturnType<typeof renderStudio>;
+beforeAll(async () => {
+  data = await createStudioData(createReader(probe));
+  pages = renderStudio(data);
+}, 30_000);
 const html = (id: string): string => {
   const page = pages.find((p) => p.path === (pagePath(id) ?? id));
   if (!page) throw new Error(`Missing page ${id}`);
@@ -194,25 +198,46 @@ const rail = (page: string): string =>
   /<nav class="rail"[^>]*>(.*?)<\/nav>/su.exec(page)?.[1] ?? "";
 
 function checkLinks(set: readonly StudioPage[]): void {
-  const byPath = new Map(set.map((page) => [page.path, page.content]));
+  const idsByPath = new Map<string, Set<string>>();
+  const problems: string[] = [];
   for (const page of set) {
     const ids = [...page.content.matchAll(/\sid="([^"]+)"/gu)].map((m) => decode(m[1] ?? ""));
-    expect(new Set(ids).size, `${page.path} duplicate ids`).toBe(ids.length);
+    const unique = new Set(ids);
+    if (unique.size !== ids.length) problems.push(`${page.path}: duplicate ids`);
+    idsByPath.set(page.path, unique);
+  }
+  for (const page of set)
     for (const match of page.content.matchAll(/\bhref="([^"]+)"/gu)) {
       const href = decode(match[1] ?? "");
-      expect(href, `${page.path}: ${href}`).not.toMatch(/^(?:[a-z]+:|\/)/iu);
+      if (/^(?:[a-z]+:|\/)/iu.test(href)) problems.push(`${page.path}: nonlocal link ${href}`);
       const [path = "", fragment] = href.split("#");
       const target =
-        path === "" ? page.path : posix.normalize(posix.join(posix.dirname(page.path), path));
+        path === ""
+          ? page.path
+          : posix.normalize(posix.join(posix.dirname(page.path), path.split("?")[0] ?? ""));
       if (target === "assets/studio.css") continue;
-      const content = byPath.get(target);
-      expect(content, `${page.path}: ${href}`).toBeDefined();
-      if (fragment && !(target === "search.html" && fragment.startsWith("q="))) {
-        expect(content, `${page.path}: ${href}`).toContain(`id="${decodeURIComponent(fragment)}"`);
-      }
+      const ids = idsByPath.get(target);
+      if (!ids) problems.push(`${page.path}: missing page ${href}`);
+      else if (
+        fragment &&
+        !(target === "search.html" && fragment.startsWith("q=")) &&
+        !ids.has(decodeURIComponent(fragment))
+      )
+        problems.push(`${page.path}: missing fragment ${href}`);
     }
-  }
+  expect(problems, problems.join("\n")).toEqual([]);
 }
+
+it.each([
+  ['<div id="same"></div><div id="same"></div>', "duplicate ids"],
+  ['<a href="missing.html">Missing</a>', "missing page"],
+  ['<a href="#missing">Missing</a>', "missing fragment"],
+  ['<a href="https://example.com">Outside</a>', "nonlocal link"],
+])("rejects malformed page links: %s", (content, reason) => {
+  expect(() => {
+    checkLinks([{ path: "index.html", content }]);
+  }).toThrow(reason);
+});
 
 describe("Studio static pages", () => {
   it("renders Model definitions without exposing the derived term key map", async () => {
@@ -731,21 +756,24 @@ describe("Studio static pages", () => {
   });
 });
 
-describe("Protocol Studio page set", async () => {
-  const protocol = await createStudioData(
-    createReader(
-      extract({ root, exclude: ["explorations", "examples", "test/fixtures/import/parity"] }).graph,
-    ),
-  );
-  const rendered = renderStudio(protocol);
-  // Checking every link of the whole Protocol page set grows with the corpus; under the full
-  // suite's parallel load it outruns the default five seconds.
+describe("Protocol Studio page set", () => {
+  let protocol: Awaited<ReturnType<typeof createStudioData>>;
+  let rendered: ReturnType<typeof renderStudio>;
+  beforeAll(async () => {
+    protocol = await createStudioData(
+      createReader(
+        extract({ root, exclude: ["explorations", "examples", "test/fixtures/import/parity"] })
+          .graph,
+      ),
+    );
+    rendered = renderStudio(protocol);
+  }, 30_000);
   it("resolves every page link and element fragment", () => {
     expect(
       rendered.find((p) => p.path === "specs/consumers.spec-studio.shell.html")?.content,
     ).toContain('id="rule.withoutScript"');
     checkLinks(rendered);
-  }, 30_000);
+  });
   it("contains the complete Spec prose without executing script", () => {
     for (const spec of protocol.specs) {
       const page = rendered.find((p) => p.path === pagePath(spec.id))?.content ?? "";

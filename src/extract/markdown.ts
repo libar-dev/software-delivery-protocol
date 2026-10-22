@@ -16,28 +16,12 @@ export type {
   MarkdownFrontmatterResult,
 } from "./markdown-types.js";
 
-export const envelopeContractAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.envelope-contract"),
-  label: "parses the bounded Markdown frontmatter envelope",
-  satisfies: ref("spec:carrier.envelope-contract"),
-  component: componentAnchorId("component:protocol.extract"),
-  role: "codec",
-});
-
 export function parseMarkdownFrontmatter(
   sourceText: string,
   file: string,
 ): MarkdownFrontmatterResult {
   return parseFrontmatter(sourceText, file);
 }
-
-export const proseOwnershipAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.prose-ownership"),
-  label: "reads Markdown body content through its prose owners",
-  satisfies: ref("spec:carrier.prose-ownership-rule"),
-  component: componentAnchorId("component:protocol.extract"),
-  role: "codec",
-});
 
 export function readMarkdownBody(
   sourceText: string,
@@ -50,18 +34,10 @@ export function readMarkdownBody(
   return parseMarkdownBody(envelope.body, envelope.bodyBaseLine, file, kind);
 }
 
-export const markdownAuthoringAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.markdown-authoring"),
-  label: "reifies Markdown authoring into the one carrier path",
-  satisfies: ref("spec:carrier.markdown-authoring"),
-  component: componentAnchorId("component:protocol.extract"),
-  role: "extractor",
-});
-
 export const markdownParserAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.markdown-parser"),
-  label: "reifies the ruled Markdown parser input",
-  satisfies: ref("spec:carrier.markdown-parser"),
+  label: "reifies Markdown Specs and Packs through one carrier boundary",
+  satisfies: [ref("spec:carrier.markdown-parser"), ref("spec:carrier.markdown-authoring")],
   component: componentAnchorId("component:protocol.extract"),
   role: "extractor",
 });

@@ -86,6 +86,79 @@ function fixtureProgram(files: Readonly<Record<string, string>>): ts.Program {
 }
 
 describe("coarse structural coverage", () => {
+  it.each([
+    [
+      'import type { Result } from "./unit.js";\nexport function parse(): Result { return { ok: true }; }',
+      "ok",
+    ],
+    [
+      'import { type Result as Parsed } from "./unit.js";\nexport const result: Parsed = { ok: true };',
+      "ok",
+    ],
+    ['import type * as T from "./unit.js";\nexport const result: T.Result = { ok: true };', "ok"],
+    ['import type { Result } from "./unit.js";\nexport interface Parsed extends Result {}', "ok"],
+    ['import type * as T from "./unit.js";\nexport interface Parsed extends T.Result {}', "ok"],
+    [
+      'import type * as T from "./unit.js";\nexport const result = true;',
+      "covering source does not type-consume unit",
+    ],
+    [
+      'import type * as T from "./other.js";\nexport const result: T.Result = { ok: true };',
+      "covering source does not type-consume unit",
+    ],
+    [
+      'import type { Result } from "./unit.js";\nexport const result = true;',
+      "covering source does not type-consume unit",
+    ],
+    [
+      "type Result = { ok: boolean };\nexport const result: Result = { ok: true };",
+      "covering source does not type-consume unit",
+    ],
+    [
+      'import type { Result } from "./other.js";\nexport const result: Result = { ok: true };',
+      "covering source does not type-consume unit",
+    ],
+  ])("checks actual consumption of a shared type: %s", (cover, expected) => {
+    const program = fixtureProgram({
+      "unit.ts": "export type Result = { ok: boolean };\n",
+      "other.ts": "export type Result = { ok: boolean };\n",
+      "cover.ts": cover,
+    });
+    expect(auditStructuralCoverage(program, "unit.ts#Result", "cover.ts", "type")).toBe(expected);
+  });
+
+  it.each([
+    ['import { Result } from "./unit.js";\nexport type Constructor = typeof Result;', "ok"],
+    ['import * as T from "./unit.js";\nexport type Constructor = typeof T.Result;', "ok"],
+    ['import { Result } from "./unit.js";\nexport class Parsed extends Result {}', "ok"],
+    ['import * as T from "./unit.js";\nexport class Parsed extends T.Result {}', "ok"],
+    [
+      'import * as T from "./other.js";\nexport type Constructor = typeof T.Result;',
+      "covering source does not type-consume unit",
+    ],
+    [
+      'import { Result } from "./unit.js";\nexport function local() { class Result {} type Constructor = typeof Result; }',
+      "covering source does not type-consume unit",
+    ],
+  ])("checks shared class consumption in heritage and type queries: %s", (cover, expected) => {
+    const program = fixtureProgram({
+      "unit.ts": "export class Result {}\n",
+      "other.ts": "export class Result {}\n",
+      "cover.ts": cover,
+    });
+    expect(auditStructuralCoverage(program, "unit.ts#Result", "cover.ts", "type")).toBe(expected);
+  });
+
+  it("reports a missing shared type independently of its consumer", () => {
+    const program = fixtureProgram({
+      "unit.ts": "export interface Other { ok: boolean }\n",
+      "cover.ts": "export const result = true;\n",
+    });
+    expect(auditStructuralCoverage(program, "unit.ts#Result", "cover.ts", "type")).toBe(
+      "exported unit missing",
+    );
+  });
+
   it("reports a missing runtime export when the named unit is absent", () => {
     // Given: a source module that does not export the rostered function.
     const program = fixtureProgram({

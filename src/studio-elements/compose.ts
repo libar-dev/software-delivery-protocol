@@ -15,7 +15,7 @@ const labels: Readonly<Record<string, string>> = {
  * @sdpLabel opens a native request dialog beside build-rendered scopes without changing their content
  * @sdpSatisfies spec:consumers.spec-studio.intent-panel, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
  */
 export function registerCompose(): void {
   class Compose extends globalThis.HTMLElement {

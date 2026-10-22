@@ -104,7 +104,7 @@ export function readEngineProvenance(read: EngineFileReader = readShippedFile): 
  * @sdpLabel prints sdp version and the commit parsed from the build-info file beside the compiled CLI
  * @sdpSatisfies spec:consumers.engine-provenance
  * @sdpComponent component:protocol.cli
- * @sdpRole service
+ * @sdpRole projection
  */
 
 /**

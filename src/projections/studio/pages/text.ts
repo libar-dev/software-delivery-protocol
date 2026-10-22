@@ -10,6 +10,7 @@ export { codeSpans } from "./code-spans.js";
  * @sdpSatisfies spec:consumers.spec-studio.shell
  * @sdpComponent component:protocol.projections
  * @sdpRole codec
+ * @sdpLabel escapes prose and links graph-resolving mentions
  */
 export function text(ctx: PageContext, value: string): string {
   const mentions = (part: string): string => {

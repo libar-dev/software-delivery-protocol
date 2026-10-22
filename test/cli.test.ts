@@ -221,7 +221,7 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       expect(capture.readStderr()).toBe("");
       expect(capture.readStdout()).toContain(
-        "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
+        "11 specs · 2 packs · 5 anchors → 18 nodes · 34 edges",
       );
       expect(capture.readStdout()).toContain("(3 modules)");
       expect(readdirSync(join(root, "generated")).sort()).toEqual([
@@ -304,13 +304,37 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
       for (const [file, specId] of [
+        ["specs/extraction/executable-examples.sdp.md", "spec:extraction.executable-examples"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
+        ["specs/protocol/role-vocabulary.sdp.md", "spec:protocol.role-vocabulary"],
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
-      // Re-measured from the refreshed carriers: no prose-mention pair is retained.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 1 warnings");
+      for (const specId of [
+        "spec:consumers.spec-studio.diagram-kinds",
+        "spec:protocol.roadmap-replaces-plans",
+        "spec:consumers.spec-studio.capability-map-page",
+        "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+        "spec:consumers.spec-studio.slice-page",
+        "spec:consumers.spec-studio.diagram-kinds.dependency",
+        "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+        "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+        "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+        "spec:consumers.spec-studio.lenses.architecture.unit-register",
+        "spec:protocol.significant-units-review",
+        "spec:consumers.capability-map",
+        "spec:protocol.capability-epics",
+        "spec:consumers.design-slice",
+        "spec:consumers.roadmap",
+        "spec:consumers.roadmap.memo",
+        "spec:consumers.spec-studio.roadmap-page",
+      ]) {
+        expect(stderr).not.toContain(`honesty/gaps — Spec "${specId}"`);
+      }
+      // Re-measured from the refreshed carriers: no prose-mention pair is retained, and the
+      // verifier gaps listed above are the whole warning set.
+      expect(capture.readStdout()).toContain("validate: 0 errors · 3 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
@@ -1310,7 +1334,7 @@ export const probe = spec({
 
       expect(exitCode).toBe(0);
       expect(capture.readStdout()).toContain(
-        "11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges",
+        "11 specs · 2 packs · 5 anchors → 18 nodes · 34 edges",
       );
       expect(capture.readStdout()).toContain(
         "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)",
@@ -1382,7 +1406,7 @@ export const probe = spec({
       expect(capture.readStdout()).toContain(
         "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)",
       );
-      expect(capture.readStdout()).toContain("(13 pages)");
+      expect(capture.readStdout()).toContain("(14 pages)");
 
       const viewRoot = join(root, "generated", "design-review");
       expect(readdirSync(viewRoot).sort()).toEqual(["index.md", "pack", "spec"]);

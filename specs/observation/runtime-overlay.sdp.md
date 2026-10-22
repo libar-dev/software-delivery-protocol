@@ -4,7 +4,9 @@ kind: behavior
 altitude: feature
 readiness: idea
 relations:
-  refines: spec:protocol.self-hosting
+  refines:
+    target: spec:extraction.derive-graph
+    reason: an observed fact would be derived beside implemented and has-verifier
   dependsOn: spec:model.core-model
 ---
 # Runtime observations can close the liveness loop

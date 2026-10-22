@@ -205,8 +205,8 @@ so it needs no extra tag, status key, or side table.
   and a change's review scope from changed-file blast radius (recipe 4).
   In prose, name the recipe and leave the number out.
 
-- Group a body of work in a Pack named for its capability, never its plan number; keep its Specs in reading order. Membership confers no readiness, delivery fact or gate; the Pack remains a review aggregate after the work ends.
-- A plan file points to the Pack and carrying Specs for intended truth and derived state. It may keep an advisory execution and recovery record; plan numbering, recorded work order and staleness confer no graph structure or workflow authority.
+- Group a body of work in a Pack named for its capability, never a number or a date; keep its Specs in reading order. Membership confers no readiness, delivery fact or gate; the Pack remains a review aggregate after the work ends.
+- Hold advisory priority over the next work in a roadmap, a Pack whose manifest states `order: priority`, and read it with recipe 53; its order confers nothing. Keep an arc's execution record in git and its pull request description. A corpus that keeps plan documents of its own lets them point to Packs and carrying Specs; they confer nothing.
 
 ### Say why a relation holds
 
@@ -251,6 +251,54 @@ and a reviewer.
   the bound code may now carry. Compare each with the code; removing one is your edit, never the
   recipe's.
 
+### Design in rounds
+
+A design grows in rounds over the Specs that must be reviewed together, never one Spec at a time
+to completion. Open each round with the design slice (recipe 54) over the Pack, or over one
+perspective's members, and spend detail where the next round or the next build needs it, first
+on the members others rest on.
+
+What a rung's design typically settles:
+
+- `idea`: the outcome, and the parent it refines when it has one. Capture the questions you
+  already see; rules and Design entries wait.
+- `scoped`: the actor and the problem, the relations to what it rests on, the first rules or
+  examples, and its open questions with keys, deciders and provisional readings. A decision it
+  needs is a decision Spec it names through `decidedBy`.
+- `defined`: every behavior stated as a rule, keyed where something outside cites it; every
+  blocking question answered or moved to the decision Spec that settles it; the names, shapes and
+  messages two parties share as keyed Design entries, pinned when they are declarations; a
+  component design for each component the code does not hold yet; and the example space when
+  examples will exercise the rules. A deferral stays a blocking question with its trigger and
+  keeps the Spec below `defined`.
+- `ready`: no new detail. What it rests on states `defined`, a person reads it in its slice, and
+  that person states it.
+
+What stays out, because it belongs to the build:
+
+- a detail only the builder reads: private names, internal decomposition, file layout, the data
+  structure behind a stated shape, the algorithm behind a rule that already states its outcome;
+- a question only the builder can answer: leave it to the build, or record it `[non-blocking]`
+  with `decider: delegated` and a provisional reading, so it holds no rung.
+
+A detail belongs in the Spec when a second party must agree on it: a test author, a reviewer,
+another Spec's author or an adopter. Otherwise the builder decides it and the code holds it.
+
+Read the slice to see both:
+
+- Read members in depth order, the ones others rest on first: a member others rest on needs its
+  shared names settled before they can settle theirs.
+- Read the design columns beside each rung. Pinned declarations on a member stated `idea` or
+  `scoped` may run ahead of intent no one has settled; a member stated `defined` that others rest
+  on, with no keyed entries where they need its names, may leave them guessing. Both are
+  questions for the author, never findings.
+- A blocking question in scope that only the builder can answer belongs to the build.
+- The architecture it touches names the code the design builds on through what it rests on; that
+  code's owners read the slice too.
+
+No check reads this guidance; how much design is enough stays the author's and the reviewer's
+judgment.
+
 ### Key a step or a term
 
 To keep a step's binding through later rewording, add its key after the keyword in the parent's
@@ -283,9 +331,11 @@ fields, or a relation reason; a Spec that needs one is authored in Markdown.
 
 ## Author a Pack
 
-Use a Markdown `*.pack.sdp.md` manifest with frontmatter closed to `id`, `specs`, and optional
-`modelRefs`. The H1 is the Pack title; the remaining body prose is its framing. Preserve authored
-membership order and point to `spec:carrier.markdown-pack-authoring` for the complete carrier law.
+Use a Markdown `*.pack.sdp.md` manifest with frontmatter closed to `id`, `specs`, optional
+`modelRefs`, and optional `order`, whose one lawful value is `priority`. The H1 is the Pack title;
+the remaining body prose is its framing. Without `order`, membership is reading order; `order: priority` states advisory priority, first
+entry first, without a readiness effect or gate. Preserve authored membership order and point to
+`spec:carrier.markdown-pack-authoring` for the complete carrier law.
 
 ## Bind code, tests, and oracles
 
@@ -451,8 +501,9 @@ follows. The law is `spec:decisions.anchor-binding-grain`.
   non-empty and unique, and structural self-reference is refused. Multi-node `uses` cycles remain
   data, never findings. There is no `implements` field; contract realization stays `satisfies`.
 - `role` names the architectural pattern the unit plays, on any code anchor. The corpus owns the
-  vocabulary: `service`, `decider`, `projection`, `read-model`, `codec`, `contract`, `barrel`, and
-  `utility` are common values, not a closed list. A value is one lowercase kebab token matching
+  vocabulary; run recipe 28 to reuse a value. Common roles include `service`, `decider` and
+  `projection`; the Protocol's own engine roles (`spec:protocol.role-vocabulary`) are a worked
+  example, not a list. A value is one lowercase kebab token matching
   `^[a-z][a-z0-9-]*$` and is never normalized, so `readModel` is refused rather than folded into
   `read-model`.
 - `layer` goes on a `component:` anchor only and takes one of five values:
@@ -475,13 +526,27 @@ so map packages to components by review rather than one component per package. R
 
 ### Curate the anchors
 
-Anchors are curated, never a coverage quota. Anchor the units that carry the architecture, its
-exported public surface and its cross-component reach, and leave the rest bare. An identity has
-one owner, so an identity that would stand for several files becomes several identities; a site
-that realizes several Specs may carry one identity per Spec, each labeled with its own local how.
-Each identity chooses `satisfies` or `references` for what its own code does.
-A realizing unit's comment documents its local how, never a paraphrase of the Spec's what or why;
-the Spec already owns those, and a restatement in code is a second owner that drifts.
+A significant unit owns a contract or responsibility a designer or builder must understand and
+has exported public surface or cross-component reach; export status or import rank alone is
+insufficient. Bind ports, shared shapes, pipeline stages, decision tables, catalogs, layout
+policies and adapters when they meet that criterion. Mechanical wrappers, forwarding barrels,
+empty registrations and formatting helpers stay bare unless they own an independent contract or
+architectural responsibility. Keep the unit's responsibility in its label and the component's
+reading guidance in its anchor. A `uses` declaration needs a real value or type import;
+anchor-authoring imports and unused re-exports confer none. Run the curation report (recipe 40)
+for advice, never a coverage quota; the Protocol's own reviewed boundary,
+`spec:protocol.significant-units-review`, is a worked example.
+
+An identity has one file owner. Several Specs realized by one responsibility normally share an
+anchor with plural targets; independent contracts, entry points and semantic policies in one file
+may keep distinct identities when their separate design use is clear. Before merging or dropping
+an identity, list every promise its targets carry and name the surviving units that still realize
+it. Transfer targets only when that set remains true, or explicitly record a false claim being
+removed. Review imported value and type contracts when declaring component uses, exclude imports
+made only to author anchors and unused re-export reach, and inspect external-input omissions and
+unassigned files before deleting an edge. Each identity chooses `satisfies` or `references` for
+what its own code does. A realizing unit documents its local how, never a paraphrase of the Spec's
+what or why.
 
 A Markdown deliverable cannot carry an in-code anchor. Bind it through the document-realization
 convention: the test suite that asserts the shipped document carries the code anchor, its label

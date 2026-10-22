@@ -118,24 +118,16 @@ function renderMemberRow(member: PackMemberSummary, number: number, page: string
 }
 
 /**
- * @sdpAnchor impl:protocol.binding-language-pack-table
- * @sdpLabel renders Pack member implementation and verifier bindings as present or none
- * @sdpSatisfies spec:consumers.binding-language-views
- * @sdpComponent component:protocol.projections
- * @sdpRole renderer
- */
-
-/**
  * `renderPackPage` writes the header and member table, calls the section renderers in
  * `design-review-pack-sections.ts`, then writes the verifier-gap list and the findings
  * (`renderFindings`); `escapeRenderedField` encodes values and `sourceHref` builds source links.
  *
  * @sdpAnchor impl:protocol.pack-design-page
  * @sdpLabel renders the Pack page from the Pack design
- * @sdpSatisfies spec:consumers.design-review.pack-design-page
+ * @sdpSatisfies spec:consumers.design-review.pack-design-page, spec:extraction.pack-member-order
  * @sdpReferences spec:decisions.pack-design-page
  * @sdpComponent component:protocol.projections
- * @sdpRole renderer
+ * @sdpRole projection
  */
 
 export function renderPackPage(
@@ -208,10 +200,10 @@ export function renderPackPage(
 
 /**
  * @sdpAnchor impl:protocol.binding-language-index-table
- * @sdpLabel renders index implementation and verifier bindings as present or none
+ * @sdpLabel renders binding presence in index and Pack tables
  * @sdpSatisfies spec:consumers.binding-language-views
  * @sdpComponent component:protocol.projections
- * @sdpRole renderer
+ * @sdpRole projection
  */
 
 export function renderIndexPage(reader: Reader, specs: readonly SpecSummary[]): DesignReviewPage {

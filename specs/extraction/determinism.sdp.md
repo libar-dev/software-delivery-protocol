@@ -4,7 +4,9 @@ kind: constraint
 altitude: feature
 readiness: ready
 relations:
-  refines: spec:protocol.self-hosting
+  refines:
+    target: spec:extraction.derive-graph
+    reason: deterministic output constrains the derivation capability
 ---
 # Committed source derives byte-identical output
 

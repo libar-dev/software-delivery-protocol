@@ -12,6 +12,10 @@ relations:
       reason: a proposed upgrade hands off on the one change-proposal shape and is applied after its check
     - target: spec:consumers.edit-model
       reason: a carrier changes only through an agent's or a person's edit, recorded by git
+    - target: spec:consumers.capability-map
+      reason: the guide teaches epic organization through the capability map
+    - target: spec:consumers.roadmap
+      reason: the guide teaches advisory priority and the roadmap memo as planning records
 ---
 # The upgrade kit shows a corpus what it could adopt
 
@@ -30,4 +34,4 @@ An adopter learns what its corpus does not use yet only by writing its own queri
 
 ## Design
 - guideFile: `docs/agent-surface/upgrade-guide.md`, shipped in the package beside the recipe catalog, listed in the package's files and named by `sdp --help` among the shipped on-ramps.
-- guideSections: in this order: re-pin the package and check `sdp --version`; measure the corpus with capability adoption (recipe 47); key the rules with the rule-key proposal (recipe 48), check the proposal with the proposal check (recipe 38) and apply it through an agent's edit; for every capability in recipe 47's answer, one subsection citing its `carriedBy` Spec and recipe 47 as the measurement, naming a further recipe only when the subsection teaches a distinct next action with it and otherwise sending the reader to the carrying Spec; move rules files onto shipped recipes, recipes 25, 26, 42, 50 and 51 and the `recipes` binding; read large Packs in parts and order the waiting statements, recipes 36 and 46; publish every root with `sdp generate`; and pass a recipe's subject as `--params` data, the recipe-caller guidance the README carries.
+- guideSections: in this order: re-pin the package and check `sdp --version`; measure the corpus with capability adoption (recipe 47); organize features in epics, reading the capability map (recipe 52) and citing `spec:consumers.capability-map`; `Model upcoming work in the graph; keep review history in git and pull requests`, a roadmap Pack read with recipes 53 and 55 and intended design proposed as a change proposal checked by recipe 38, citing `spec:consumers.roadmap`, with the guidance `Unresolved intended design lives in open questions. Review disposition and acceptance remain in git and the pull request; neither becomes a graph field.`; key the rules with the rule-key proposal (recipe 48), check the proposal with the proposal check (recipe 38) and apply it through an agent's edit; for every capability in recipe 47's answer, one subsection citing its `carriedBy` Spec and recipe 47 as the measurement, naming a further recipe only when the subsection teaches a distinct next action with it and otherwise sending the reader to the carrying Spec; move rules files onto shipped recipes, recipes 25, 26, 42, 50 and 51 and the `recipes` binding; read large Packs in parts and order the waiting statements, recipes 36 and 46; publish every root with `sdp generate`; and pass a recipe's subject as `--params` data, the recipe-caller guidance the README carries.

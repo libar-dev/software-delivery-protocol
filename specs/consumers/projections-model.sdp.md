@@ -1,10 +1,9 @@
 ---
 id: spec:consumers.projections-model
 kind: model
-altitude: feature
+altitude: epic
 readiness: ready
 relations:
-  refines: spec:protocol.self-hosting
   decidedBy:
     - target: spec:decisions.mcp-deferred
       reason: MCP integration waits for a concrete caller to establish its boundary and contract

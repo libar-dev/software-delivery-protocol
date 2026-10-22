@@ -22,8 +22,8 @@ The Markdown Pack page renders the Pack design as one wide member table, and the
 - outcome: Show where a Pack's design stands, member by member in reading order, on one page a reviewer scans quickly and opens where they need detail.
 
 ## Behavior
-- rule: [#header] The page opens with the Pack's title, its id and its carrier file as text with a copy action, then the summary; the framing follows as prose under the heading Framing, with the vocabulary references, linked.
-- rule: [#summary] The summary states each Pack total in one sentence that opens with its count, never as a table: the members and the unresolved ones, the members held below their stated next rung and those waiting only for their author, the design entries and pinned declarations, the open and blocking questions, the members with an implementation binding and with a design reference, and the boundary in each direction.
+- rule: [#header] The page opens with the Pack's title, its id and its carrier file as text with a copy action, and a link to the Pack's slice page, then the summary; the framing follows as prose under the heading Framing, with the vocabulary references, linked.
+- rule: [#summary] The summary states each Pack total in one sentence that opens with its count, never as a table: the members and the unresolved ones, the members held below their stated next rung and those waiting only for their author, the design entries and pinned declarations, the open and blocking questions, the members with an implementation binding and with a design reference, and the boundary in each direction. The member sentence says `in priority order` when the Pack states `order: priority`, otherwise `in authored reading order`.
 - rule: [#holds] The summary's held sentence links each held member to its card with its count of unmet clauses, and its waiting sentence names the members whose stated next rung waits only for their author's statement unless every member does; the page never presents a rung as approved.
 - rule: [#memberCards] The members follow in authored order, one closed card each. A card's summary line shows the member's position, title and kind, its stated rung beside the floor reached, its stated next rung with `nothing blocks` or how many of its clauses are unmet, its open and blocking questions, and its implementation and verifier bindings as present or none.
 - rule: [#cardBody] An open card shows the member's id, linked to its Spec page, then the parts the next five rules state, in their order.
@@ -38,7 +38,7 @@ The Markdown Pack page renders the Pack design as one wide member table, and the
 - rule: [#openAll] `Open all` and `Close all` open or close every card and section at once, and opening the page at a card's fragment opens that card.
 
 ## UI
-- headerBlock: the title as the page heading; below it the id and the carrier file, each with a copy action; then the summary; then the framing under a `Framing` heading, and the vocabulary references.
+- headerBlock: the title as the page heading; below it the id and the carrier file, each with a copy action, and the link `Read this Pack as one design` to its slice page; then the summary; then the framing under a `Framing` heading, and the vocabulary references.
 - summaryList: the totals as a short list of sentences under a `Where the design stands` heading, each opening with its count, a zero written as No.
 - memberCard: a disclosure whose element id is the member's Spec id; its summary line reads `<position>. <title>`, then the kind, the rung badge, the floor in words, the next rung in words unless the member states ready, the question counts and the two binding values, all but the badge as plain text, wrapping onto further lines on a narrow screen.
 - cardBody: in order, the id link, the unmet clauses, the design counts and decisions, the open questions, the code, and the verifier binding.

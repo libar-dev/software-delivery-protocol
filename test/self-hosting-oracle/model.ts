@@ -6,7 +6,7 @@ export const modelSpecs = [
   {
     id: "spec:model.core-model",
     specKind: "model",
-    altitude: "feature",
+    altitude: "epic",
     readiness: "ready",
     file: "specs/model/core-model.sdp.md",
     title: "The Protocol models delivery with one enrichable Spec",
@@ -279,6 +279,8 @@ export const modelSpecs = [
             "A declared manifest reference that derives a belongsTo edge; a Spec may belong to many Packs.",
           modelRefs:
             "References from a Pack to standalone model Specs that carry shared vocabulary.",
+          "priority order":
+            "The authored member order of a Pack whose manifest states `order: priority`, read as its owner's advisory preference among its members; it confers nothing and sequences nothing.",
           refinement:
             "A truth-bearing parent-child relation, distinct from the cross-cutting Pack aggregate.",
         },
@@ -439,7 +441,7 @@ export const modelSpecs = [
       model: {
         terms: {
           "architecturally significant unit":
-            "A code unit with exported public surface or cross-component reach that warrants graph-visible structural binding: component membership, a role, and `references` to the designs it answers to. An architectural dependency is declared as `uses`, normally between components; a unit's own `uses` is optional.",
+            "A code unit with exported public surface or cross-component reach whose contract or responsibility a designer or builder must understand; export status or import rank alone is insufficient. Ports, shared data shapes, pipeline stages, decision tables, catalogs, layout policies and adapters may qualify. Its anchor records component membership, a role and `references` to the designs it answers to. An architectural dependency is declared as `uses`, normally between components; a unit's own `uses` is optional.",
           "structural attributes":
             "`role` on any code anchor; `layer` and `context` on a `component:` anchor; they describe the unit's architecture and carry no readiness or delivery fact, and the census renders their taxonomy from the graph.",
           "accepted set":

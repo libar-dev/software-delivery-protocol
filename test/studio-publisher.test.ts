@@ -108,6 +108,7 @@ describe("Studio publication", () => {
       "assets/studio.css",
       "assets/studio.js",
       "backlog.html",
+      "capabilities.html",
       "decisions.html",
       "declarations.html",
       "evidence.html",
@@ -117,7 +118,9 @@ describe("Studio publication", () => {
       "packs/probe.html",
       "questions.html",
       "queue.html",
+      "roadmap.html",
       "search.html",
+      "slices/probe.html",
       "specs/probe.member.html",
       "tests.html",
     ]);

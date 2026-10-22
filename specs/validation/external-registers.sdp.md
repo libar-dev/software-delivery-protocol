@@ -4,6 +4,9 @@ kind: behavior
 altitude: story
 readiness: ready
 relations:
+  refines:
+    target: spec:validation.corpus-rules
+    reason: external-register checks run as corpus-selected rules
   dependsOn:
     - target: spec:validation.corpus-rules
       reason: the recipe answers with findings and runs as a rules file

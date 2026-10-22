@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.11.0",
+  "schemaVersion": "0.12.0",
   "nodes": [
     {
       "id": "api:orders.post",
@@ -32,6 +32,19 @@
       "label": "expected create-order outcome over the example space",
       "file": "test/orders/create-order.oracle.ts",
       "line": 12
+    },
+    {
+      "id": "pack:checkout-roadmap",
+      "nodeType": "Pack",
+      "claim": "declared",
+      "title": "Checkout roadmap",
+      "framing": "Clarify how a customer reaches order creation, then review the shared order vocabulary. The order is advisory priority; needs come from the graph and confer no permission.",
+      "file": "specs/roadmap.pack.sdp.md",
+      "members": [
+        "spec:orders.order-placement-flow",
+        "spec:orders.order-model"
+      ],
+      "order": "priority"
     },
     {
       "id": "pack:checkout-v1",
@@ -521,6 +534,12 @@
     {
       "from": "spec:orders.order-model",
       "type": "belongsTo",
+      "to": "pack:checkout-roadmap",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-model",
+      "type": "belongsTo",
       "to": "pack:checkout-v1",
       "claim": "declared"
     },
@@ -528,6 +547,12 @@
       "from": "spec:orders.order-model",
       "type": "refines",
       "to": "spec:orders.order-management",
+      "claim": "declared"
+    },
+    {
+      "from": "spec:orders.order-placement-flow",
+      "type": "belongsTo",
+      "to": "pack:checkout-roadmap",
       "claim": "declared"
     },
     {

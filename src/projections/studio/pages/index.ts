@@ -1,3 +1,4 @@
+import { capabilitiesPage } from "./capabilities-page.js";
 import { exportPages } from "./export-page.js";
 import { questionsPage, decisionsPage, declarationsPage, backlogPage } from "./registers-page.js";
 import { queuePage } from "./queue-page.js";
@@ -10,10 +11,20 @@ import { evidencePage } from "./evidence-page.js";
 import type { StudioData } from "../data.js";
 import { pagePath } from "../paths.js";
 import { indexPage } from "./index-page.js";
+import type { SliceAnswer } from "../slice-answer.js";
+import { slicePage, slicePath } from "./slice-page.js";
 import { packPage } from "./pack-page.js";
 import { specPage } from "./spec-page.js";
 import { searchPage } from "./search-page.js";
+import { roadmapPage } from "./roadmap-page.js";
 
+/**
+ * @sdpAnchor impl:protocol.studio-page-catalog
+ * @sdpLabel selects Studio pages, optional inputs and Pack exports
+ * @sdpSatisfies spec:consumers.spec-studio.publisher
+ * @sdpComponent component:protocol.projections
+ * @sdpRole projection
+ */
 export interface StudioPage {
   readonly path: string;
   readonly content: string;
@@ -22,10 +33,12 @@ export interface StudioPage {
 export function renderStudio(data: StudioData, stylesheet: string): readonly StudioPage[] {
   const pages = [
     { path: "index.html", content: indexPage({ data, path: "index.html" }) },
+    { path: "capabilities.html", content: capabilitiesPage({ data, path: "capabilities.html" }) },
     { path: "architecture.html", content: architecturePage({ data, path: "architecture.html" }) },
     { path: "tests.html", content: testsPage({ data, path: "tests.html" }) },
     { path: "evidence.html", content: evidencePage({ data, path: "evidence.html" }) },
     { path: "search.html", content: searchPage({ data, path: "search.html" }) },
+    { path: "roadmap.html", content: roadmapPage({ data, path: "roadmap.html" }) },
     ...(
       [
         ["questions.html", questionsPage],
@@ -44,6 +57,13 @@ export function renderStudio(data: StudioData, stylesheet: string): readonly Stu
       const path = pagePath(context.id);
       if (path === null) throw new Error(`Pack has no Studio path: ${context.id}`);
       return { path, content: packPage({ data, path }, context, totals) };
+    }),
+    ...data.packs.map(({ context }) => {
+      const path = slicePath(context.id);
+      return {
+        path,
+        content: slicePage({ data, path }, data.recipes.slices.get(context.id) as SliceAnswer),
+      };
     }),
     ...data.specs.map((spec) => {
       const path = pagePath(spec.id);

@@ -400,7 +400,7 @@ const kindEvidenceAnchor = codeAnchor({
   label: "defines the code-level per-kind evidence rows for readiness floors",
   satisfies: ref("spec:validation.kind-evidence"),
   component: componentAnchorId("component:protocol.validate"),
-  role: "contract",
+  role: "decider",
 });
 void kindEvidenceAnchor;
 

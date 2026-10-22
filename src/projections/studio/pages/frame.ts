@@ -6,9 +6,10 @@ import { codeSpans, plainTitle } from "./code-spans.js";
 /**
  * Writes the shared navigation and the rail appropriate to the selected graph node.
  * @sdpAnchor impl:protocol.studio-frame
- * @sdpSatisfies spec:consumers.spec-studio.shell, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.intent-panel, spec:consumers.spec-studio, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.navigation
+ * @sdpSatisfies spec:consumers.spec-studio.shell, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.intent-panel, spec:consumers.spec-studio, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.navigation, spec:consumers.spec-studio.capability-map-page
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders Studio navigation, page rails and composing controls
  */
 export function frame(ctx: PageContext, title: string, body: string, selected?: string): string {
   const prefix = relative(ctx, "index.html").replace(/index\.html$/u, "");
@@ -19,6 +20,7 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
     : selectedSpec
       ? ctx.data.rail.packs.filter((pack) => selectedSpec.packs.includes(pack.id))
       : ctx.data.rail.packs;
+  const specIds = new Set(ctx.data.specs.map((spec) => spec.id));
   const packRail = packs
     .map(
       (pack) =>
@@ -27,7 +29,7 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
             ? `<ol>${pack.members
                 .map((member) => {
                   const path = pagePath(member.id);
-                  const resolved = ctx.data.specs.some((s) => s.id === member.id);
+                  const resolved = specIds.has(member.id);
                   const label = codeSpans(member.title ?? member.id);
                   return `<li>${isPack ? `<a href="#${escape(member.id)}">${label}</a>` : path !== null && resolved ? `<a href="${escape(relative(ctx, path))}"${member.id === selected ? ' aria-current="page"' : ""}>${label}</a>` : label}</li>`;
                 })
@@ -47,9 +49,11 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
   return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title === "Spec Studio" ? "Spec Studio" : `${escape(plainTitle(title))} · Spec Studio`}</title><link rel="stylesheet" href="${prefix}assets/studio.css"><script defer src="${prefix}assets/studio.js"></script></head><body><a class="skip-link" href="#main">Skip to the page</a><header class="top"><a class="brand" href="${prefix}index.html">Spec Studio</a><nav aria-label="Studio">${(
     [
       ["index.html", "Packs"],
+      ["capabilities.html", "Capabilities"],
       ["architecture.html", "Architecture"],
       ["tests.html", "Tests"],
       ["evidence.html", "Evidence"],
+      ["roadmap.html", "Roadmap"],
       ["queue.html", "Queue"],
       ["questions.html", "Questions"],
       ["decisions.html", "Decisions"],

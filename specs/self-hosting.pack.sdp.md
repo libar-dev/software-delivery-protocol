@@ -105,6 +105,7 @@ specs:
   - spec:extraction.regenerability
   - spec:extraction.schema-versioning
   - spec:extraction.schema-versioning.declared-version
+  - spec:extraction.executable-examples
   - spec:extraction.executable-contracts
   - spec:extraction.executable-contracts.concreteness-refusal
   - spec:extraction.executable-contracts.multi-entry-example
@@ -276,6 +277,7 @@ specs:
   - spec:consumers.spec-studio.navigation
   - spec:consumers.spec-studio.lenses.packs
   - spec:consumers.spec-studio.lenses.architecture
+  - spec:consumers.spec-studio.lenses.architecture.unit-register
   - spec:consumers.spec-studio.lenses.architecture.planned-apart
   - spec:consumers.spec-studio.lenses.tests
   - spec:consumers.spec-studio.lenses.tests.coverage-row
@@ -356,12 +358,58 @@ specs:
   - spec:consumers.command-line.generate-check-failure
   - spec:consumers.command-line.generate-writes-every-root
   - spec:consumers.command-line.verb-help-touches-nothing
+  - spec:consumers.capability-map
+  - spec:consumers.spec-studio.capability-map-page
+  - spec:consumers.spec-studio.diagram-kinds
+  - spec:consumers.spec-studio.diagram-kinds.legibility
+  - spec:consumers.spec-studio.diagram-kinds.edge-routing
+  - spec:consumers.spec-studio.diagram-kinds.mermaid-source
+  - spec:consumers.spec-studio.diagram-kinds.dependency
+  - spec:consumers.spec-studio.diagram-kinds.capability-tree
+  - spec:consumers.spec-studio.diagram-kinds.scoped-architecture
+  - spec:consumers.spec-studio.diagram-kinds.maturity-picture
+  - spec:consumers.spec-studio.diagram-kinds.requirement-trace
+  - spec:consumers.design-slice
+  - spec:consumers.design-slice.outside-components
+  - spec:consumers.design-slice.chain
+  - spec:consumers.design-slice.decision-backlink
+  - spec:consumers.design-slice.dependency-cycle
+  - spec:consumers.design-slice.folded-example
+  - spec:consumers.design-slice.independent-example
+  - spec:consumers.design-slice.component-absent
+  - spec:consumers.design-slice.component-unrelated
+  - spec:consumers.design-slice.component-matching
+  - spec:consumers.design-slice.component-differing
+  - spec:consumers.design-slice.component-unreadable
+  - spec:consumers.design-slice.outside-satisfied
+  - spec:consumers.design-slice.outside-unbound
+  - spec:consumers.design-slice.outside-holding
+  - spec:consumers.spec-studio.slice-page
+  - spec:consumers.roadmap
+  - spec:consumers.roadmap.built-work
+  - spec:consumers.roadmap.buildable-part
+  - spec:consumers.roadmap.statement-part
+  - spec:consumers.roadmap.design-part
+  - spec:consumers.roadmap.drifting-part
+  - spec:consumers.roadmap.missing-evidence
+  - spec:consumers.roadmap.blocking-part
+  - spec:consumers.roadmap.outside-parent
+  - spec:consumers.roadmap.statement-order
+  - spec:consumers.spec-studio.roadmap-page
+  - spec:consumers.roadmap.memo
+  - spec:consumers.spec-studio.cited-line-text
+  - spec:consumers.spec-studio.register-input
   - spec:observation.runtime-overlay
   - spec:observation.run-evidence
   - spec:observation.run-evidence.absolute-path-joins
   - spec:observation.run-evidence.unanchored-file-unjoined
   - spec:protocol.self-hosting
   - spec:protocol.structural-self-binding
+  - spec:protocol.significant-units-review
+  - spec:protocol.role-vocabulary
+  - spec:protocol.capability-epics
+  - spec:protocol.roadmap-replaces-plans
+  - spec:protocol.delivery-record-cleanup
   - spec:decisions.plain-language-references
   - spec:decisions.concept-docs-dissolve
   - spec:decisions.one-validation-path
@@ -406,6 +454,9 @@ specs:
   - spec:decisions.architectural-annotation
   - spec:decisions.pack-design-page
   - spec:decisions.vault-owned-folder
+  - spec:decisions.roadmap-priority
+  - spec:decisions.roadmap-over-plans
+  - spec:decisions.epics-of-any-kind
 modelRefs:
   - spec:model.core-model
 ---

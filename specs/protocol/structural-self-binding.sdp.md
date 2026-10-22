@@ -20,7 +20,7 @@ relations:
 
 ## Behavior
 
-- rule: [#criterion] The engine applies the structural-patterns model's significance criterion: exported public surface or cross-component reach.
+- rule: [#criterion] The engine applies the structural-patterns model's significance criterion: exported public surface or cross-component reach whose contract or responsibility a designer or builder must understand; export status or import rank alone is insufficient.
 - rule: [#membership] Every architecturally significant engine unit carries component membership through a realizing anchor; a helper with no realization target of its own is covered through the nearest realization anchor that consumes it.
 - rule: [#architecturalUses] An architectural dependency of the engine is declared as `uses`, normally from one engine component to another; a unit's own `uses` is optional.
 - rule: [#componentUses] A component-level `uses` declaration tracks real value or type imports from another component's source files; imports made only to author anchors through the stable-id or anchor-builder modules confer no edge.

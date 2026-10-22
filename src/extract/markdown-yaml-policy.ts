@@ -30,6 +30,13 @@ const reservedEnvelopeKeys = new Set([
   "models",
 ]);
 
+/**
+ * @sdpAnchor impl:protocol.markdown-yaml-policy
+ * @sdpLabel bounded YAML scalars and relation-target forms
+ * @sdpSatisfies spec:carrier.envelope-contract, spec:carrier.markdown-pack-authoring, spec:extraction.pack-member-order
+ * @sdpComponent component:protocol.extract
+ * @sdpRole codec
+ */
 export function isReservedEnvelopeKey(value: string): boolean {
   return reservedEnvelopeKeys.has(value);
 }

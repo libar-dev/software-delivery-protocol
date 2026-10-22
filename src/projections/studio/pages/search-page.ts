@@ -8,6 +8,7 @@ import type { PageContext } from "./html.js";
  * @sdpSatisfies spec:consumers.spec-studio.search
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel publishes search records beside the browser results view
  */
 export function searchPage(ctx: PageContext): string {
   return frame(
