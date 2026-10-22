@@ -915,6 +915,23 @@ it.each([false, true])(
   },
 );
 
+it("names one keyed rule in the singular", async () => {
+  const root = corpus({
+    "probe.sdp.md": carrier("spec:probe.keying", "\n## Behavior\n- rule: First rule.\n"),
+  });
+  const base = extract({ root }).graph;
+  const path = join(root, "probe.sdp.md");
+  writeFileSync(path, readFileSync(path, "utf8").replace("rule: First", "rule: [#first] First"));
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: "Before keying" },
+    runs: [],
+  });
+  const html = main(content(renderStudio(data), "specs/probe.keying.html"));
+  const note = required(/<p class="change-note">(.*?)<\/p>/su.exec(html)?.[1]);
+  expect(note).toContain("1 rule keyed, wording unchanged");
+  expect(note).not.toContain("1 rules keyed");
+});
+
 it("marks only members with exclusively keyed changes as keyed only", async () => {
   const root = corpus({
     "keyed.sdp.md": carrier("spec:probe.keyed", "\n## Behavior\n- rule: Keep it.\n"),
