@@ -21,6 +21,14 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.studio-diagram-catalog",
+    nodeType: "Anchor",
+    file: "test/studio-diagram-catalog.test.ts",
+    constant: "catalog",
+    site: 'describe("the shipped diagram catalog",',
+  },
+
+  {
     id: "impl:protocol.roadmap-practice",
     nodeType: "CodeNode",
     label: "realizes the roadmap handbook and its current-record gate",
@@ -4801,6 +4809,34 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  [
+    "impl:protocol.studio-capability-diagrams",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds",
+  ],
+  [
+    "impl:protocol.studio-slice-dependencies",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds",
+  ],
+  [
+    "impl:protocol.studio-slice-architecture",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds",
+  ],
+  ["impl:protocol.studio-maturity-map", "satisfies", "spec:consumers.spec-studio.diagram-kinds"],
+  [
+    "impl:protocol.studio-requirement-diagram",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds",
+  ],
+  [
+    "impl:protocol.studio-architecture-lens",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds",
+  ],
+  ["test:protocol.studio-diagram-catalog", "verifies", "spec:consumers.spec-studio.diagram-kinds"],
+
   ["impl:protocol.roadmap-practice", "satisfies", "spec:protocol.roadmap-replaces-plans"],
   ["test:protocol.roadmap-practice", "verifies", "spec:protocol.roadmap-replaces-plans"],
 
@@ -4921,7 +4957,7 @@ export const expectedBindingEdges = [
     "satisfies",
     "spec:consumers.spec-studio.diagram-kinds.legibility",
   ],
-  ["impl:protocol.studio-diagram-layout", "references", "spec:consumers.spec-studio.diagram-kinds"],
+  ["impl:protocol.studio-diagram-layout", "satisfies", "spec:consumers.spec-studio.diagram-kinds"],
   [
     "impl:protocol.studio-diagram-routing",
     "satisfies",
@@ -4937,8 +4973,8 @@ export const expectedBindingEdges = [
     "satisfies",
     "spec:consumers.spec-studio.diagram-kinds.capability-tree",
   ],
-  ["impl:protocol.studio-diagram-source", "references", "spec:consumers.spec-studio.diagram-kinds"],
-  ["impl:protocol.studio-diagrams", "references", "spec:consumers.spec-studio.diagram-kinds"],
+  ["impl:protocol.studio-diagram-source", "satisfies", "spec:consumers.spec-studio.diagram-kinds"],
+  ["impl:protocol.studio-diagrams", "satisfies", "spec:consumers.spec-studio.diagram-kinds"],
   [
     "impl:protocol.studio-diagram-element",
     "satisfies",

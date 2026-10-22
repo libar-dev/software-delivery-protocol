@@ -6749,7 +6749,7 @@ export const consumersSpecs = [
           "Mermaid's info and error renderers are diagnostics, not corpus diagram kinds. Keep them outside the Studio catalog of graph drawings; renderer variants such as flowchart ELK, class and state versions share their semantic family's row.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diagram-kinds.sdp.md",
   },
   {

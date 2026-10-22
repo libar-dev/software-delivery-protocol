@@ -12,8 +12,7 @@ export const mermaidText = (value: string): string =>
 /**
  * @sdpAnchor impl:protocol.studio-diagram-source
  * @sdpLabel escaped Mermaid flowchart and mindmap source in placed box order
- * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.mermaid-source, spec:consumers.spec-studio.diagram-kinds.capability-tree
- * @sdpReferences spec:consumers.spec-studio.diagram-kinds
+ * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.mermaid-source, spec:consumers.spec-studio.diagram-kinds.capability-tree, spec:consumers.spec-studio.diagram-kinds
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

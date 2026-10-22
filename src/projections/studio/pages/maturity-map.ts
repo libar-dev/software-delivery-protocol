@@ -7,7 +7,7 @@ import { mermaidText } from "../diagrams/mermaid.js";
 /**
  * @sdpAnchor impl:protocol.studio-maturity-map
  * @sdpLabel places resolved Pack members by their stated rung and floor in authored order
- * @sdpSatisfies spec:consumers.spec-studio.pack-page.maturity-map, spec:consumers.spec-studio.components, spec:consumers.spec-studio.diagram-kinds.maturity-picture
+ * @sdpSatisfies spec:consumers.spec-studio.pack-page.maturity-map, spec:consumers.spec-studio.components, spec:consumers.spec-studio.diagram-kinds.maturity-picture, spec:consumers.spec-studio.diagram-kinds
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */

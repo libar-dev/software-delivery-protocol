@@ -50,7 +50,7 @@ interface Plans {
 /**
  * @sdpAnchor impl:protocol.studio-architecture-lens
  * @sdpLabel renders recipe component rows and planned designs as architecture and member diagrams
- * @sdpSatisfies spec:consumers.spec-studio.lenses.architecture, spec:consumers.spec-studio.lenses
+ * @sdpSatisfies spec:consumers.spec-studio.lenses.architecture, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.diagram-kinds
  * @sdpReferences spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
  * @sdpRole projection

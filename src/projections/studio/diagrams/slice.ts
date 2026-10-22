@@ -8,7 +8,7 @@ const rung = (row: { statedReadiness: string | null; floorReached: string | null
 /**
  * @sdpAnchor impl:protocol.studio-slice-dependencies
  * @sdpLabel supplied depth bands with protected boundary boxes and lossless text
- * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.dependency
+ * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.dependency, spec:consumers.spec-studio.diagram-kinds
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
@@ -207,7 +207,7 @@ const realizationLegend = (edges: readonly DiagramEdge[]): string =>
 /**
  * @sdpAnchor impl:protocol.studio-slice-architecture
  * @sdpLabel selected component grid with distinct planned identities and complete unit edges
- * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.scoped-architecture
+ * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.scoped-architecture, spec:consumers.spec-studio.diagram-kinds
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
