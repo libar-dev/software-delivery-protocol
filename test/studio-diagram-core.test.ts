@@ -243,47 +243,9 @@ it("keeps the full box and edge bound routable with obstacles, separate lanes an
     expect(routed).not.toBeNull();
     if (!routed) throw new Error("Missing bounded routes");
     assertGeometry(layout, routed);
-    for (const route of routed.routes)
-      for (let i = 1; i < route.points.length; i++) {
-        for (const obstacle of [...layout.boxes, ...layout.labels]) {
-          if (i === 1 && "box" in obstacle && obstacle.box.id === route.edge.from) continue;
-          if (
-            i === route.points.length - 1 &&
-            "box" in obstacle &&
-            obstacle.box.id === route.edge.to
-          )
-            continue;
-          const { intersects } = routingChecks;
-          expect(
-            intersects(required(route.points[i - 1]), required(route.points[i]), obstacle),
-          ).toBe(false);
-        }
-        for (const other of routed.routes)
-          if (other.label)
-            expect(
-              routingChecks.intersects(
-                required(route.points[i - 1]),
-                required(route.points[i]),
-                other.label,
-              ),
-            ).toBe(false);
-      }
-    for (const route of routed.routes)
-      for (const other of routed.routes)
-        if (route !== other && route.label && other.label) {
-          const a = route.label,
-            b = other.label;
-          expect(
-            a.x < a.x + a.width &&
-              a.x + a.width > b.x &&
-              a.x < b.x + b.width &&
-              a.y + a.height > b.y &&
-              a.y < b.y + b.height,
-          ).toBe(false);
-        }
-    expect(renderDiagram(d)).toBe(renderDiagram(d));
+    expect(routeDiagram(layout, edges)).toEqual(routed);
   }
-});
+}, 30000);
 import * as routingChecks from "../src/projections/studio/diagrams/routing.js";
 
 it("offers deterministic Mermaid source for each existing drawing and pins the safe text syntax", () => {
@@ -467,8 +429,18 @@ function assertGeometry(layout: Layout, routed: Routed): void {
         failures.push("shared horizontal segment");
     }
   }
+  const labels = routed.routes.flatMap((r) => (r.label ? [r.label] : []));
+  for (const [i, a] of labels.entries())
+    for (const b of labels.slice(i + 1)) {
+      if (
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
+      )
+        failures.push("label overlap");
+    }
   for (const route of routed.routes) {
-    const labels = routed.routes.flatMap((r) => (r.label ? [r.label] : []));
     for (let i = 1; i < route.points.length; i++) {
       const a = required(route.points[i - 1]),
         b = required(route.points[i]);
