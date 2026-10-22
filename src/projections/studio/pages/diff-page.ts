@@ -4,6 +4,7 @@ import type { PageContext } from "./html.js";
 import { answer } from "./register-answers.js";
 import type { Delta, Diff } from "./register-answers.js";
 import { summary, titleLink, total } from "./register-common.js";
+import { keyedRows } from "./diff-keyed-rows.js";
 
 export function baseLabel(ctx: PageContext): string {
   const label = ctx.data.inputs.base?.label;
@@ -64,7 +65,6 @@ function bindingDelta(delta: Delta): string {
 function diagnostics(diff: Diff): string {
   return list(diff.diagnostics.map((d) => `<pre>${escape(JSON.stringify(d, null, 2))}</pre>`));
 }
-const keyedAddress = (value: unknown): string => (typeof value === "string" ? code(value) : "none");
 function partValues(part: NonNullable<Diff["specs"]>["changed"][number]["parts"][number]): string {
   const base = `<b>Base</b>${valueBlock(part.from)}`;
   const now = `<b>Now</b>${valueBlock(part.to)}`;
@@ -96,7 +96,20 @@ export function diffPage(ctx: PageContext): string {
   return frame(
     ctx,
     "Design diff",
-    `<header class="page-head"><h1>Design diff</h1><p>${names}</p><p>The comparison reads the two graphs only. Recipe 35 with detail enabled.</p>${t === undefined ? "" : summary([`${total(t.added, "Spec")} added.`, `${total(t.removed, "Spec")} removed.`, `${total(t.changed, "Spec")} changed.`, `${total(t.packs, "Pack")} with membership or order changes.`, `${total(t.bindings, "Spec")} with binding changes.`])}</header><h2>Specs added</h2>${list((diff.specs?.added ?? []).map((id) => `<span id="${escape(id)}">${titleLink(ctx, id)} · ${code(id)}</span>`))}<h2>Specs removed</h2>${list((diff.specs?.removed ?? []).map(code))}<h2>Specs changed</h2>${(diff.specs?.changed ?? []).map((s) => `<section class="spec-row" id="${escape(s.id)}"><h3>${titleLink(ctx, s.id)}</h3><p>${code(s.id)}</p>${s.parts.map((p) => `<div class="entry"><p>${code(p.part)} · ${escape(p.change)}${p.change === "keyed" ? ` · Base: ${keyedAddress(p.from)} · Now: ${keyedAddress(p.to)}` : ""}</p>${partValues(p)}</div>`).join("")}</section>`).join("") || "<p>None.</p>"}<h2>Packs with membership or order changes</h2>${(diff.packs ?? []).map((p) => `<section class="spec-row">${packDelta(ctx, p)}</section>`).join("") || "<p>None.</p>"}<h2>Bindings, derived from anchors</h2>${
+    `<header class="page-head"><h1>Design diff</h1><p>${names}</p><p>The comparison reads the two graphs only. Recipe 35 with detail enabled.</p>${t === undefined ? "" : summary([`${total(t.added, "Spec")} added.`, `${total(t.removed, "Spec")} removed.`, `${total(t.changed, "Spec")} changed.`, `${total(t.packs, "Pack")} with membership or order changes.`, `${total(t.bindings, "Spec")} with binding changes.`])}</header><h2>Specs added</h2>${list((diff.specs?.added ?? []).map((id) => `<span id="${escape(id)}">${titleLink(ctx, id)} · ${code(id)}</span>`))}<h2>Specs removed</h2>${list((diff.specs?.removed ?? []).map(code))}<h2>Specs changed</h2>${
+      (diff.specs?.changed ?? [])
+        .map(
+          (s) =>
+            `<section class="spec-row" id="${escape(s.id)}"><h3>${titleLink(ctx, s.id)}</h3><p>${code(s.id)}</p>${keyedRows(ctx, s)}${s.parts
+              .filter((p) => p.change !== "keyed")
+              .map(
+                (p) =>
+                  `<div class="entry"><p>${code(p.part)} · ${escape(p.change)}</p>${partValues(p)}</div>`,
+              )
+              .join("")}</section>`,
+        )
+        .join("") || "<p>None.</p>"
+    }<h2>Packs with membership or order changes</h2>${(diff.packs ?? []).map((p) => `<section class="spec-row">${packDelta(ctx, p)}</section>`).join("") || "<p>None.</p>"}<h2>Bindings, derived from anchors</h2>${
       (diff.bindings ?? [])
         .map(
           (b) =>

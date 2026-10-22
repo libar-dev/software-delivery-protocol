@@ -841,11 +841,47 @@ it("renders a keying proposal as one line per keyed entry and readable changed r
   const entries = [...html.matchAll(/<div class="entry">(.*?)<\/div>/gsu)].map((m) => m[1] ?? "");
   expect(entries).toHaveLength(2);
   expect(entries[0]).toBe(
-    "<p><code>rule.first</code> · keyed · Base: none · Now: <code>spec:probe.keying#rule.first</code></p>",
+    "<p><code>rule.first</code> · keyed · First rule. · Base: none · Now: <code>spec:probe.keying#rule.first</code></p>",
   );
   expect(entries[1]).toContain("<b>Base</b><p>Second rule.</p>");
   expect(entries[1]).toContain("<b>Now</b><p>Revised second rule.</p>");
   expect(entries[1]).not.toMatch(/<pre>|&quot;list&quot;|&quot;text&quot;/u);
+});
+
+it("lists keyed lines in head rule order with rendered text for added, renamed and removed keys", async () => {
+  const root = corpus({
+    "probe.sdp.md": carrier(
+      "spec:probe.keying",
+      "\n## Behavior\n- rule: [#zOld] Same `<script>` text.\n- flow: Middle flow.\n- rule: [#aDrop] Dropped key text.\n",
+    ),
+  });
+  const base = extract({ root }).graph;
+  writeFileSync(
+    join(root, "probe.sdp.md"),
+    carrier(
+      "spec:probe.keying",
+      "\n## Behavior\n- rule: Dropped key text.\n- flow: [#fMiddle] Middle flow.\n- rule: [#bNew] Same `<script>` text.\n",
+    ),
+  );
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: null },
+    runs: [],
+  });
+  const before = JSON.stringify(data.recipes.all.get(35));
+  const rendered = renderStudio(data);
+  const html = main(content(rendered, "diff.html"));
+  const entries = [...html.matchAll(/<div class="entry">(.*?)<\/div>/gsu)].map((m) => m[1] ?? "");
+  expect(entries).toEqual([
+    "<p><code>rule.aDrop</code> · keyed · Dropped key text. · Base: <code>spec:probe.keying#rule.aDrop</code> · Now: none</p>",
+    "<p><code>rule.fMiddle</code> · keyed · Middle flow. · Base: none · Now: <code>spec:probe.keying#rule.fMiddle</code></p>",
+    "<p><code>rule.bNew</code> · keyed · Same <code>&lt;script&gt;</code> text. · Base: <code>spec:probe.keying#rule.zOld</code> · Now: <code>spec:probe.keying#rule.bNew</code></p>",
+  ]);
+  expect(main(content(rendered, "specs/probe.keying.html"))).toContain(
+    "Same <code>&lt;script&gt;</code> text.",
+  );
+  expect(html).not.toContain("<script>");
+  expect(JSON.stringify(data.recipes.all.get(35))).toBe(before);
+  expect(renderStudio(data)).toEqual(rendered);
 });
 
 it.each([false, true])(
