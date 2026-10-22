@@ -29,11 +29,12 @@ as thorough as possible and its result curated.
 
 Five lanes, each designed by one model family, reviewed by another, and answered by the first,
 run as Relay jobs and Claude agents through one Workflow. Every review finding was fixed or
-rebutted with a reason; the records are under `reviews/plan47-design/` (briefs, designs, reviews,
-answers), with `reviews/plan47-annotation-review.md` and
-`reviews/plan47-epics-integration-proposals.md`. Prototypes of every new page and drawing, on the
-Protocol's corpus and on a copy of libar-platform at `b038bd4`, are under
-`reviews/assets/plan47-prototypes/`.
+rebutted with a reason. The records were removed before merge and stay at commit `d02c4062`:
+`reviews/plan47-design/` (briefs, designs, reviews, answers), `reviews/plan47-annotation-review.md`
+and `reviews/plan47-epics-integration-proposals.md`. Prototypes of every new page and drawing, on
+the Protocol's corpus and on a copy of libar-platform at `b038bd4`, are at
+`reviews/assets/plan47-prototypes/` in the same commit, and PR 36's screenshots at
+`evidence/pr36/`.
 
 | Lane | Designed by, reviewed by | Carrying Specs |
 | --- | --- | --- |
