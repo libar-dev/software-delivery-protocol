@@ -955,6 +955,7 @@ ${i.text}`}
   }
 
   // src/studio-elements/expander.ts
+  var sourceDisclosure = 'sdp-diagram details[id$=".source"], sdp-maturity-map details[id$=".source"]';
   function fragmentTarget(fragment) {
     if (fragment.length < 2) return null;
     try {
@@ -969,7 +970,7 @@ ${i.text}`}
       printed = [];
       beforePrint = () => {
         if (this.printed.length) return;
-        this.printed = Array.from(this.querySelectorAll("details")).map((details) => ({
+        this.printed = Array.from(this.querySelectorAll("details")).filter((details) => !details.matches(sourceDisclosure)).map((details) => ({
           details,
           open: details.open
         }));
@@ -1058,6 +1059,29 @@ ${i.text}`}
         }
         liveOutput(this).textContent = `${String(rows.filter((row) => !row.hidden).length)} of ${String(rows.length)} shown`;
       };
+      // A link or fragment that targets a row this filter hides clears every choice, so the
+      // linked row shows; the expander opens its disclosures.
+      showTarget = (id) => {
+        const target = id === null ? null : this.ownerDocument.getElementById(id);
+        if (!target || !this.contains(target) || !target.closest("[data-row]")?.hidden)
+          return;
+        for (const select of Array.from(
+          this.querySelectorAll("select[data-filter]")
+        ))
+          select.value = "any";
+        this.update();
+        const output = liveOutput(this);
+        output.textContent = `${output.textContent}; the filter was cleared to show ${id ?? "the linked entry"}`;
+        target.scrollIntoView();
+      };
+      hashChange = () => {
+        this.showTarget(fragmentTarget(this.ownerDocument.location.hash));
+      };
+      linkClick = (event) => {
+        const link2 = event.target?.closest("a[href]");
+        const href = link2?.getAttribute("href") ?? "";
+        if (href.startsWith("#")) this.showTarget(fragmentTarget(href));
+      };
       connectedCallback() {
         const form = this.querySelector("form");
         if (form) {
@@ -1077,7 +1101,10 @@ ${i.text}`}
         }
         form?.addEventListener("reset", this.reset);
         this.addEventListener("change", this.change);
+        this.ownerDocument.addEventListener("click", this.linkClick, true);
+        this.ownerDocument.defaultView?.addEventListener("hashchange", this.hashChange);
         this.update();
+        this.hashChange();
       }
       change = () => {
         const note = this.querySelector("[data-filter-note]");
@@ -1100,6 +1127,8 @@ ${i.text}`}
       };
       disconnectedCallback() {
         this.removeEventListener("change", this.change);
+        this.ownerDocument.removeEventListener("click", this.linkClick, true);
+        this.ownerDocument.defaultView?.removeEventListener("hashchange", this.hashChange);
         this.querySelector("form")?.removeEventListener("reset", this.reset);
         this.querySelector("form")?.removeEventListener("submit", this.preventSubmit);
       }
