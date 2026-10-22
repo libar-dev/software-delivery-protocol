@@ -263,10 +263,20 @@ describe("published package surface", () => {
     try {
       const before = distFiles();
       // Pin the reference implementation: only npm 11 honors --ignore-scripts for prepare.
+      // npx installs it through a reify that posts to the registry's audit endpoint, which
+      // stalled CI for seven minutes; the reference needs no audit.
       const [expected] = JSON.parse(
         run(
           "npx",
-          ["-y", "-p", "npm@11.6.2", "-c", "npm pack --dry-run --json --ignore-scripts"],
+          [
+            "-y",
+            "--no-audit",
+            "--no-fund",
+            "-p",
+            "npm@11.6.2",
+            "-c",
+            "npm pack --dry-run --json --ignore-scripts",
+          ],
           repositoryRoot,
         ),
       ) as [PackedPackage];
