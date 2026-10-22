@@ -1,0 +1,107 @@
+[
+  {
+    "file": "platform-after-architecture.html",
+    "boxes": 12,
+    "routes": 36,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "platform-after-capability.html",
+    "boxes": 32,
+    "routes": 42,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "platform-after-dependency.html",
+    "boxes": 7,
+    "routes": 34,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "platform-after-maturity.html",
+    "boxes": 20,
+    "routes": 0,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "platform-after-requirement.html",
+    "boxes": 20,
+    "routes": 24,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "platform-after-scoped-architecture.html",
+    "boxes": 12,
+    "routes": 35,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "platform-after-trace.html",
+    "boxes": 25,
+    "routes": 38,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "protocol-after-architecture.html",
+    "boxes": 14,
+    "routes": 38,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "protocol-after-capability.html",
+    "boxes": 32,
+    "routes": 32,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "protocol-after-dependency.html",
+    "boxes": 8,
+    "routes": 34,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "protocol-after-maturity.html",
+    "boxes": 20,
+    "routes": 0,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "protocol-after-requirement.html",
+    "boxes": 14,
+    "routes": 16,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "protocol-after-scoped-architecture.html",
+    "boxes": 13,
+    "routes": 25,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "protocol-after-trace.html",
+    "boxes": 24,
+    "routes": 36,
+    "collisions": [],
+    "duplicateIds": []
+  },
+  {
+    "file": "synthetic-plans.html",
+    "boxes": 3,
+    "routes": 3,
+    "collisions": [],
+    "duplicateIds": []
+  }
+]

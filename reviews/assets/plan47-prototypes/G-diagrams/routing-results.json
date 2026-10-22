@@ -1,0 +1,131 @@
+[
+  {
+    "key": "dependency",
+    "boxes": 8,
+    "edges": 34,
+    "rejected": 0,
+    "folded": [
+      "fold:Dependency depth 0",
+      "fold:Dependency depth 1",
+      "fold:Dependency depth 4",
+      "fold:Dependency depth 2",
+      "fold:Dependency depth 3",
+      "fold:Dependency depth 5",
+      "fold:Outside this scope"
+    ]
+  },
+  {
+    "key": "capability",
+    "boxes": 32,
+    "edges": 32,
+    "rejected": 0,
+    "folded": [
+      "fold:branch:spec:consumers.projections-model",
+      "fold:branch:spec:validation.two-check-families",
+      "fold:branch:spec:model.core-model",
+      "fold:branch:spec:extraction.derive-graph",
+      "fold:branch:spec:validation.readiness-floor"
+    ]
+  },
+  {
+    "key": "scoped-architecture",
+    "boxes": 13,
+    "edges": 25,
+    "rejected": 0,
+    "folded": []
+  },
+  {
+    "key": "requirement",
+    "boxes": 14,
+    "edges": 16,
+    "rejected": 0,
+    "folded": []
+  },
+  {
+    "key": "architecture",
+    "boxes": 14,
+    "edges": 38,
+    "rejected": 0,
+    "folded": []
+  },
+  {
+    "key": "trace",
+    "boxes": 24,
+    "edges": 36,
+    "rejected": 0,
+    "folded": []
+  },
+  {
+    "key": "dependency",
+    "boxes": 7,
+    "edges": 34,
+    "rejected": 0,
+    "folded": [
+      "fold:Dependency depth 0",
+      "fold:Dependency depth 2",
+      "fold:Dependency depth 3",
+      "fold:Dependency depth 4",
+      "fold:Dependency depth 1",
+      "fold:Outside this scope"
+    ]
+  },
+  {
+    "key": "capability",
+    "boxes": 32,
+    "edges": 42,
+    "rejected": 0,
+    "folded": [
+      "fold:branch:spec:facts.fact-ledger",
+      "fold:branch:spec:application.first-experiment",
+      "fold:branch:spec:application.read-models",
+      "fold:branch:spec:obligations.obligation-module",
+      "fold:branch:spec:command.command-pipeline",
+      "fold:branch:spec:context.context-component",
+      "fold:branch:spec:advanced.trigger-table",
+      "fold:branch:spec:platform.acceptance-contract",
+      "fold:branch:spec:agents.agent-runs",
+      "fold:branch:spec:command.tenancy-and-authority",
+      "fold:branch:spec:operations.baseline-operations",
+      "fold:branch:spec:kernel.domain-kernel",
+      "fold:branch:spec:processes.workflow-processes",
+      "fold:branch:spec:application.parent-use-cases",
+      "fold:branch:spec:command.command-declaration",
+      "fold:remaining:spec:platform.transactional-domain-platform"
+    ]
+  },
+  {
+    "key": "scoped-architecture",
+    "boxes": 12,
+    "edges": 35,
+    "rejected": 0,
+    "folded": []
+  },
+  {
+    "key": "requirement",
+    "boxes": 20,
+    "edges": 24,
+    "rejected": 0,
+    "folded": []
+  },
+  {
+    "key": "architecture",
+    "boxes": 12,
+    "edges": 36,
+    "rejected": 0,
+    "folded": []
+  },
+  {
+    "key": "trace",
+    "boxes": 25,
+    "edges": 38,
+    "rejected": 0,
+    "folded": []
+  },
+  {
+    "key": "planned-probe",
+    "boxes": 3,
+    "edges": 3,
+    "rejected": 0,
+    "folded": []
+  }
+]

@@ -1,0 +1,157 @@
+[
+  {
+    "subject": "architecture",
+    "viewBoxWidth": 1413,
+    "figureWidth": 960,
+    "svgWidth": 960,
+    "scale": 0.6794055201698513,
+    "font": 12,
+    "effectiveFont": 8.15,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.adapters",
+    "viewBoxWidth": 580,
+    "figureWidth": 960,
+    "svgWidth": 580,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.cli",
+    "viewBoxWidth": 1686,
+    "figureWidth": 960,
+    "svgWidth": 960,
+    "scale": 0.5693950177935944,
+    "font": 12,
+    "effectiveFont": 6.83,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.codegen",
+    "viewBoxWidth": 594,
+    "figureWidth": 960,
+    "svgWidth": 594,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.extract",
+    "viewBoxWidth": 1686,
+    "figureWidth": 960,
+    "svgWidth": 960,
+    "scale": 0.5693950177935944,
+    "font": 12,
+    "effectiveFont": 6.83,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.graph",
+    "viewBoxWidth": 1686,
+    "figureWidth": 960,
+    "svgWidth": 960,
+    "scale": 0.5693950177935944,
+    "font": 12,
+    "effectiveFont": 6.83,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.import",
+    "viewBoxWidth": 594,
+    "figureWidth": 960,
+    "svgWidth": 594,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.model",
+    "viewBoxWidth": 1686,
+    "figureWidth": 960,
+    "svgWidth": 960,
+    "scale": 0.5693950177935944,
+    "font": 12,
+    "effectiveFont": 6.83,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.notation",
+    "viewBoxWidth": 580,
+    "figureWidth": 960,
+    "svgWidth": 580,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  null,
+  {
+    "subject": "component:protocol.reader",
+    "viewBoxWidth": 1686,
+    "figureWidth": 960,
+    "svgWidth": 960,
+    "scale": 0.5693950177935944,
+    "font": 12,
+    "effectiveFont": 6.83,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.runner",
+    "viewBoxWidth": 314,
+    "figureWidth": 960,
+    "svgWidth": 314,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.studio-elements",
+    "viewBoxWidth": 1686,
+    "figureWidth": 960,
+    "svgWidth": 960,
+    "scale": 0.5693950177935944,
+    "font": 12,
+    "effectiveFont": 6.83,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.testing",
+    "viewBoxWidth": 321,
+    "figureWidth": 960,
+    "svgWidth": 321,
+    "scale": 1,
+    "font": 12,
+    "effectiveFont": 12,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  },
+  {
+    "subject": "component:protocol.validate",
+    "viewBoxWidth": 1686,
+    "figureWidth": 960,
+    "svgWidth": 960,
+    "scale": 0.5693950177935944,
+    "font": 12,
+    "effectiveFont": 6.83,
+    "scrollWidth": 960,
+    "viewportWidth": 960
+  }
+]
