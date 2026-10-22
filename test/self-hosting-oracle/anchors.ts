@@ -21,6 +21,30 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.studio-capabilities-page",
+    nodeType: "CodeNode",
+    label: "renders epic evidence, refinement and unreached Specs from the capability map",
+    file: "src/projections/studio/pages/capabilities-page.ts",
+    site: "export function capabilitiesPage(",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-capability-diagrams",
+    nodeType: "CodeNode",
+    label: "places refinement occurrences and bounded branches from the capability map",
+    file: "src/projections/studio/diagrams/capability.ts",
+    site: "export function capabilityDiagrams(",
+    role: "projection",
+  },
+  {
+    id: "test:protocol.studio-capabilities",
+    nodeType: "Anchor",
+    file: "test/studio-capabilities.test.ts",
+    constant: "capabilitiesAnchor",
+    site: 'describe("Studio capabilities",',
+  },
+
+  {
     id: "test:protocol.roadmap-priority",
     nodeType: "Anchor",
     label: "checks Pack priority extraction, comparison and Studio change notes",
@@ -4660,6 +4684,34 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.studio-frame", "satisfies", "spec:consumers.spec-studio.capability-map-page"],
+  [
+    "impl:protocol.studio-index-page",
+    "satisfies",
+    "spec:consumers.spec-studio.capability-map-page",
+  ],
+  ["impl:protocol.studio-filter", "satisfies", "spec:consumers.spec-studio.capability-map-page"],
+  [
+    "impl:protocol.studio-capabilities-page",
+    "satisfies",
+    "spec:consumers.spec-studio.capability-map-page",
+  ],
+  [
+    "impl:protocol.studio-capability-diagrams",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+  ],
+  [
+    "test:protocol.studio-capabilities",
+    "verifies",
+    "spec:consumers.spec-studio.capability-map-page",
+  ],
+  [
+    "test:protocol.studio-capabilities",
+    "verifies",
+    "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+  ],
+
   [
     "impl:protocol.studio-diagram-layout",
     "satisfies",
@@ -6492,6 +6544,8 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.studio-capabilities-page",
+  "impl:protocol.studio-capability-diagrams",
   "impl:protocol.studio-diagram-layout",
   "impl:protocol.studio-diagram-routing",
   "impl:protocol.studio-diagram-source",

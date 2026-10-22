@@ -8,6 +8,8 @@
 export interface DiagramBox {
   readonly id: string;
   readonly words: string;
+  readonly identity?: string;
+  readonly parent?: string;
   readonly title?: string;
   readonly detail?: string;
   readonly foldedIds?: readonly string[];
@@ -35,6 +37,10 @@ export interface Diagram extends DiagramInput {
   readonly subject: string;
   readonly caption: string;
   readonly grid?: boolean;
+  readonly boxOrder?: "supplied";
+  readonly mermaidKind?: "mindmap" | "flowchart BT";
+  readonly legend?: string;
+  readonly textEquivalent?: string;
   readonly sectionId?: string | null;
 }
 export const layers = ["edge", "application", "domain", "adapter", "infrastructure", "not stated"];

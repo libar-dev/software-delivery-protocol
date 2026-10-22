@@ -6643,7 +6643,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.capability-map-page.sdp.md",
   },
   {
@@ -6967,7 +6967,7 @@ export const consumersSpecs = [
           "`mindmap` for a strict tree, with title and full id per node. Use `flowchart BT` with exact refines edges whenever there is repeated parentage, a cycle, an unreached band or a fold that mindmap cannot state losslessly. TreeView is an optional equivalent export of a strict tree with icons disabled.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diagram-kinds.capability-tree.sdp.md",
   },
   {

@@ -956,3 +956,38 @@ sdp-compose button {
     display: block !important;
   }
 }
+
+.capability-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 1rem;
+}
+.capability-overview > .card {
+  padding: 1rem;
+}
+.capability-section {
+  margin-block: 2rem;
+}
+.capability-counts > div {
+  margin-block: 0.5rem;
+}
+.capability-counts dd {
+  margin-inline-start: 0;
+}
+.capability-walk {
+  list-style: none;
+  padding: 0;
+}
+.capability-walk > li {
+  margin-block: 1rem;
+  margin-inline-start: calc(var(--depth) * 0.6rem);
+  padding-inline-start: 0.6rem;
+  border-inline-start: 1px solid var(--border);
+}
+.capability-overview,
+.capability-evidence,
+.capability-complete,
+.capability-counts {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}

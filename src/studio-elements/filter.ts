@@ -9,11 +9,23 @@ export function rowMatches(
   );
 }
 
+export function epicFilter(
+  href: string,
+  epics: readonly string[],
+): { value: string; unknown: boolean } {
+  const values = new URL(href).searchParams.getAll("epic");
+  if (values.length === 0) return { value: "any", unknown: false };
+  const value = values[0] ?? "";
+  if (values.length !== 1 || (value !== "none" && !epics.includes(value)))
+    return { value: "any", unknown: true };
+  return { value, unknown: false };
+}
+
 /**
  * Reads each row's filter attributes and changes only its hidden state.
  *
  * @sdpAnchor impl:protocol.studio-filter
- * @sdpSatisfies spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.components
+ * @sdpSatisfies spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.components, spec:consumers.spec-studio.capability-map-page
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole interaction
  * @sdpLabel filters build-rendered rows through their recorded attributes
@@ -44,16 +56,47 @@ export function registerFilter(): void {
         form.hidden = false;
         form.addEventListener("submit", this.preventSubmit);
       }
-      this.addEventListener("change", this.update);
+      const epic = this.querySelector<HTMLSelectElement>('select[data-filter="epic"]');
+      if (epic) {
+        const requested = epicFilter(
+          this.ownerDocument.location.href,
+          Array.from(epic.options)
+            .map((o) => o.value)
+            .filter((v) => v !== "any" && v !== "none"),
+        );
+        epic.value = requested.value;
+        const note = this.querySelector<HTMLElement>("[data-filter-note]");
+        if (note)
+          note.textContent = requested.unknown ? "Unknown epic filter. All Specs are shown." : "";
+      }
+      form?.addEventListener("reset", this.reset);
+      this.addEventListener("change", this.change);
       this.update();
     }
+
+    private readonly change = (): void => {
+      const note = this.querySelector<HTMLElement>("[data-filter-note]");
+      if (note) note.textContent = "";
+      this.update();
+    };
+
+    private readonly reset = (): void => {
+      for (const select of Array.from(
+        this.querySelectorAll<HTMLSelectElement>("select[data-filter]"),
+      ))
+        select.value = "any";
+      const note = this.querySelector<HTMLElement>("[data-filter-note]");
+      if (note) note.textContent = "";
+      this.update();
+    };
 
     private readonly preventSubmit = (event: Event): void => {
       event.preventDefault();
     };
 
     disconnectedCallback(): void {
-      this.removeEventListener("change", this.update);
+      this.removeEventListener("change", this.change);
+      this.querySelector("form")?.removeEventListener("reset", this.reset);
       this.querySelector("form")?.removeEventListener("submit", this.preventSubmit);
     }
   }

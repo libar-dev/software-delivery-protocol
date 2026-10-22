@@ -1,3 +1,4 @@
+import { capabilitiesPage } from "./capabilities-page.js";
 import { exportPages } from "./export-page.js";
 import { questionsPage, decisionsPage, declarationsPage, backlogPage } from "./registers-page.js";
 import { queuePage } from "./queue-page.js";
@@ -29,6 +30,7 @@ export interface StudioPage {
 export function renderStudio(data: StudioData, stylesheet: string): readonly StudioPage[] {
   const pages = [
     { path: "index.html", content: indexPage({ data, path: "index.html" }) },
+    { path: "capabilities.html", content: capabilitiesPage({ data, path: "capabilities.html" }) },
     { path: "architecture.html", content: architecturePage({ data, path: "architecture.html" }) },
     { path: "tests.html", content: testsPage({ data, path: "tests.html" }) },
     { path: "evidence.html", content: evidencePage({ data, path: "evidence.html" }) },

@@ -6,7 +6,7 @@ import { codeSpans, plainTitle } from "./code-spans.js";
 /**
  * Writes the shared navigation and the rail appropriate to the selected graph node.
  * @sdpAnchor impl:protocol.studio-frame
- * @sdpSatisfies spec:consumers.spec-studio.shell, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.intent-panel, spec:consumers.spec-studio, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.navigation
+ * @sdpSatisfies spec:consumers.spec-studio.shell, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.intent-panel, spec:consumers.spec-studio, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.navigation, spec:consumers.spec-studio.capability-map-page
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  * @sdpLabel renders Studio navigation, page rails and composing controls
@@ -48,6 +48,7 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
   return `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title === "Spec Studio" ? "Spec Studio" : `${escape(plainTitle(title))} · Spec Studio`}</title><link rel="stylesheet" href="${prefix}assets/studio.css"><script defer src="${prefix}assets/studio.js"></script></head><body><a class="skip-link" href="#main">Skip to the page</a><header class="top"><a class="brand" href="${prefix}index.html">Spec Studio</a><nav aria-label="Studio">${(
     [
       ["index.html", "Packs"],
+      ["capabilities.html", "Capabilities"],
       ["architecture.html", "Architecture"],
       ["tests.html", "Tests"],
       ["evidence.html", "Evidence"],
