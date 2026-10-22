@@ -8,16 +8,16 @@
       "order": "reading",
       "totals": {
         "entries": 9,
-        "toDesign": 6,
-        "toState": 2,
+        "toDesign": 3,
+        "toState": 5,
         "toBuild": 1,
         "built": 0,
         "apart": 0,
-        "questions": 1,
-        "blockingQuestions": 1,
+        "questions": 5,
+        "blockingQuestions": 2,
         "withoutDecider": 0,
         "blockingWithoutDecider": 0,
-        "statements": 5
+        "statements": 14
       },
       "entries": [
         {
@@ -111,17 +111,19 @@
         {
           "place": 2,
           "id": "spec:consumers.capability-map",
-          "title": "The capability map reads every epic with the features and stories that refine it",
+          "title": "The capability map reads every epic and its refinement descendants",
           "specKind": "behavior",
           "altitude": "feature",
           "lane": "to design",
-          "statedReadiness": "idea",
-          "floorReached": "idea",
-          "statedNextRung": "scoped",
+          "statedReadiness": "defined",
+          "floorReached": "defined",
+          "statedNextRung": "ready",
           "holdsNextRung": [
             {
-              "clause": "kind-evidence-present",
-              "targets": []
+              "clause": "typed-dependency-targets-are-defined",
+              "targets": [
+                "spec:decisions.epics-of-any-kind"
+              ]
             }
           ],
           "work": {
@@ -136,13 +138,15 @@
             {
               "id": "spec:consumers.capability-map",
               "lane": "to design",
-              "statedReadiness": "idea",
-              "floorReached": "idea",
-              "statedNextRung": "scoped",
+              "statedReadiness": "defined",
+              "floorReached": "defined",
+              "statedNextRung": "ready",
               "holdsNextRung": [
                 {
-                  "clause": "kind-evidence-present",
-                  "targets": []
+                  "clause": "typed-dependency-targets-are-defined",
+                  "targets": [
+                    "spec:decisions.epics-of-any-kind"
+                  ]
                 }
               ],
               "drift": false
@@ -151,30 +155,50 @@
           "buildNow": [],
           "blockingQuestions": [
             {
-              "address": "spec:consumers.capability-map#question.multipleParents",
-              "spec": "spec:consumers.capability-map",
+              "address": "spec:decisions.epics-of-any-kind#question.epicKinds",
+              "spec": "spec:decisions.epics-of-any-kind",
               "index": 0,
-              "question": "Where does the map place a Spec that refines more than one parent?",
+              "question": "Is a capability epic any Spec at epic altitude, or only a behavior Spec?",
               "blocking": true,
-              "decider": "delegated",
-              "provisional": "under every parent, the second and later placements marked as repeats that link to the first"
-            },
-            {
-              "address": "spec:consumers.capability-map#question.unreached",
-              "spec": "spec:consumers.capability-map",
-              "index": 1,
-              "question": "How does the map show a Spec that no epic reaches through refinement?",
-              "blocking": true,
-              "decider": "delegated",
-              "provisional": "in its own section after the epics, grouped by the highest Spec its refinement reaches"
+              "decider": "owner",
+              "provisional": "Admit every kind, preserving the identity and truth of existing model and rule hubs."
             }
           ],
-          "decisions": [],
+          "decisions": [
+            {
+              "id": "spec:decisions.epics-of-any-kind",
+              "title": "Capability epics keep kind independent of altitude",
+              "statedReadiness": "scoped",
+              "blockingQuestions": [
+                {
+                  "address": "spec:decisions.epics-of-any-kind#question.epicKinds",
+                  "spec": "spec:decisions.epics-of-any-kind",
+                  "index": 0,
+                  "question": "Is a capability epic any Spec at epic altitude, or only a behavior Spec?",
+                  "blocking": true,
+                  "decider": "owner",
+                  "provisional": "Admit every kind, preserving the identity and truth of existing model and rule hubs."
+                }
+              ]
+            }
+          ],
           "restsOn": [],
           "restedOnBy": [
             {
               "id": "spec:consumers.spec-studio.capability-map-page",
               "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": 4
+            },
+            {
+              "id": "spec:protocol.capability-epics",
+              "via": "decidedBy",
               "lane": "to design",
               "onRoadmap": null
             },
@@ -198,20 +222,15 @@
           "title": "A slice reads a Pack as one design, with the architecture it touches and what each member needs next",
           "specKind": "behavior",
           "altitude": "feature",
-          "lane": "to design",
-          "statedReadiness": "idea",
-          "floorReached": "idea",
-          "statedNextRung": "scoped",
-          "holdsNextRung": [
-            {
-              "clause": "kind-evidence-present",
-              "targets": []
-            }
-          ],
+          "lane": "to state",
+          "statedReadiness": "defined",
+          "floorReached": "ready",
+          "statedNextRung": "ready",
+          "holdsNextRung": [],
           "work": {
             "specs": 1,
-            "toDesign": 1,
-            "toState": 0,
+            "toDesign": 0,
+            "toState": 1,
             "toBuild": 0,
             "built": 0,
             "drift": 0
@@ -219,16 +238,11 @@
           "workRows": [
             {
               "id": "spec:consumers.design-slice",
-              "lane": "to design",
-              "statedReadiness": "idea",
-              "floorReached": "idea",
-              "statedNextRung": "scoped",
-              "holdsNextRung": [
-                {
-                  "clause": "kind-evidence-present",
-                  "targets": []
-                }
-              ],
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
               "drift": false
             }
           ],
@@ -238,9 +252,21 @@
           "restsOn": [],
           "restedOnBy": [
             {
+              "id": "spec:consumers.spec-studio.diagram-kinds.dependency",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": 4
+            },
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": 4
+            },
+            {
               "id": "spec:consumers.spec-studio.slice-page",
               "via": "dependsOn",
-              "lane": "to design",
+              "lane": "to state",
               "onRoadmap": null
             }
           ],
@@ -254,23 +280,18 @@
         {
           "place": 4,
           "id": "spec:consumers.spec-studio.diagram-kinds",
-          "title": "The Studio draws every diagram kind the graph holds data for",
+          "title": "The Studio chooses diagram kinds from graph values",
           "specKind": "behavior",
           "altitude": "feature",
-          "lane": "to design",
-          "statedReadiness": "idea",
-          "floorReached": "idea",
-          "statedNextRung": "scoped",
-          "holdsNextRung": [
-            {
-              "clause": "kind-evidence-present",
-              "targets": []
-            }
-          ],
+          "lane": "to state",
+          "statedReadiness": "defined",
+          "floorReached": "ready",
+          "statedNextRung": "ready",
+          "holdsNextRung": [],
           "work": {
-            "specs": 1,
-            "toDesign": 1,
-            "toState": 0,
+            "specs": 7,
+            "toDesign": 0,
+            "toState": 7,
             "toBuild": 0,
             "built": 0,
             "drift": 0
@@ -278,44 +299,122 @@
           "workRows": [
             {
               "id": "spec:consumers.spec-studio.diagram-kinds",
-              "lane": "to design",
-              "statedReadiness": "idea",
-              "floorReached": "idea",
-              "statedNextRung": "scoped",
-              "holdsNextRung": [
-                {
-                  "clause": "kind-evidence-present",
-                  "targets": []
-                }
-              ],
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds.dependency",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
               "drift": false
             }
           ],
           "buildNow": [],
-          "blockingQuestions": [
+          "blockingQuestions": [],
+          "decisions": [],
+          "restsOn": [
             {
-              "address": "spec:consumers.spec-studio.diagram-kinds#question.kindCatalog",
-              "spec": "spec:consumers.spec-studio.diagram-kinds",
-              "index": 0,
-              "question": "Which diagram kinds does the graph hold honest data for, and which would need data it does not hold, such as message order for a sequence diagram?",
-              "blocking": true,
-              "decider": "delegated",
-              "provisional": null
+              "id": "spec:consumers.capability-map",
+              "via": "dependsOn",
+              "from": [
+                "spec:consumers.spec-studio.diagram-kinds.capability-tree"
+              ],
+              "lane": "to design",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": 2
             },
             {
-              "address": "spec:consumers.spec-studio.diagram-kinds#question.legibleLabels",
-              "spec": "spec:consumers.spec-studio.diagram-kinds",
-              "index": 1,
-              "question": "How does a drawing wider than its column keep its labels legible: a wider figure, shorter labels, a smallest scale with scrolling, or a mix?",
-              "blocking": true,
-              "decider": "delegated",
-              "provisional": null
+              "id": "spec:consumers.design-slice",
+              "via": "dependsOn",
+              "from": [
+                "spec:consumers.spec-studio.diagram-kinds.dependency",
+                "spec:consumers.spec-studio.diagram-kinds.scoped-architecture"
+              ],
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": 3
             }
           ],
-          "decisions": [],
-          "restsOn": [],
-          "restedOnBy": [],
-          "earlierStatements": [],
+          "restedOnBy": [
+            {
+              "id": "spec:consumers.spec-studio.capability-map-page",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:consumers.spec-studio.slice-page",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            }
+          ],
+          "earlierStatements": [
+            {
+              "id": "spec:consumers.design-slice",
+              "where": "roadmap",
+              "onRoadmap": 3
+            },
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds",
+              "where": "entry",
+              "onRoadmap": null
+            }
+          ],
           "packs": [
             "pack:roadmaps-and-slices-v1",
             "pack:self-hosting-v1"
@@ -328,20 +427,15 @@
           "title": "The engine's accepted set covers its significant abstractions and only those",
           "specKind": "behavior",
           "altitude": "feature",
-          "lane": "to design",
-          "statedReadiness": "idea",
-          "floorReached": "idea",
-          "statedNextRung": "scoped",
-          "holdsNextRung": [
-            {
-              "clause": "kind-evidence-present",
-              "targets": []
-            }
-          ],
+          "lane": "to state",
+          "statedReadiness": "defined",
+          "floorReached": "ready",
+          "statedNextRung": "ready",
+          "holdsNextRung": [],
           "work": {
             "specs": 1,
-            "toDesign": 1,
-            "toState": 0,
+            "toDesign": 0,
+            "toState": 1,
             "toBuild": 0,
             "built": 0,
             "drift": 0
@@ -349,25 +443,38 @@
           "workRows": [
             {
               "id": "spec:protocol.significant-units-review",
-              "lane": "to design",
-              "statedReadiness": "idea",
-              "floorReached": "idea",
-              "statedNextRung": "scoped",
-              "holdsNextRung": [
-                {
-                  "clause": "kind-evidence-present",
-                  "targets": []
-                }
-              ],
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
               "drift": false
             }
           ],
           "buildNow": [],
           "blockingQuestions": [],
           "decisions": [],
-          "restsOn": [],
+          "restsOn": [
+            {
+              "id": "spec:protocol.role-vocabulary",
+              "via": "dependsOn",
+              "from": [
+                "spec:protocol.significant-units-review"
+              ],
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            }
+          ],
           "restedOnBy": [],
-          "earlierStatements": [],
+          "earlierStatements": [
+            {
+              "id": "spec:protocol.role-vocabulary",
+              "where": "outside",
+              "onRoadmap": null
+            }
+          ],
           "packs": [
             "pack:roadmaps-and-slices-v1",
             "pack:self-hosting-v1"
@@ -690,6 +797,54 @@
       "waiting": {
         "questions": [
           {
+            "address": "spec:decisions.epics-of-any-kind#question.epicKinds",
+            "spec": "spec:decisions.epics-of-any-kind",
+            "index": 0,
+            "question": "Is a capability epic any Spec at epic altitude, or only a behavior Spec?",
+            "blocking": true,
+            "decider": "owner",
+            "provisional": "Admit every kind, preserving the identity and truth of existing model and rule hubs.",
+            "places": [
+              2
+            ]
+          },
+          {
+            "address": "spec:consumers.design-slice#question.sliceTerm",
+            "spec": "spec:consumers.design-slice",
+            "index": 0,
+            "question": "Does `design slice` join the glossary's guidance-only labels beside design pass, design diff and design backlog, so the word names a recipe's answer and is never read as the refused saved AI slice?",
+            "blocking": false,
+            "decider": "owner",
+            "provisional": "yes, a guidance-only label for the recipe's answer; it names no primitive, artifact or stage",
+            "places": [
+              3
+            ]
+          },
+          {
+            "address": "spec:protocol.significant-units-review#question.acceptedRoster",
+            "spec": "spec:protocol.significant-units-review",
+            "index": 0,
+            "question": "Which proposed anchor and dependency changes does the owner accept after reading the annotation review?",
+            "blocking": false,
+            "decider": "owner",
+            "provisional": "The annotation review proposes the changes; the existing oracle roster remains the accepted declaration until the owner reviews its replacement.",
+            "places": [
+              5
+            ]
+          },
+          {
+            "address": "spec:protocol.significant-units-review#question.notationBoundary",
+            "spec": "spec:protocol.significant-units-review",
+            "index": 1,
+            "question": "Declaring the example-space decoder's real imports within notation makes graph, notation and validate a uses cycle. Should the decoder join the reader component, leaving notation a leaf codec?",
+            "blocking": false,
+            "decider": "owner",
+            "provisional": "Assign the existing example-space-decoding identity to reader without moving its source file, declare reader to notation and codegen to reader, and declare neither notation to graph nor notation to validate. The annotation review carries this membership proposal pending acceptance; uses cycles remain lawful data.",
+            "places": [
+              5
+            ]
+          },
+          {
             "address": "spec:consumers.spec-studio.cited-line-text#question.lineText",
             "spec": "spec:consumers.spec-studio.cited-line-text",
             "index": 0,
@@ -704,6 +859,22 @@
         ],
         "withoutDecider": [],
         "statements": [
+          {
+            "id": "spec:consumers.design-slice",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              3
+            ]
+          },
+          {
+            "id": "spec:consumers.spec-studio.diagram-kinds",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
           {
             "id": "spec:decisions.roadmap-priority",
             "statedReadiness": "defined",
@@ -721,11 +892,67 @@
             ]
           },
           {
+            "id": "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
+          {
+            "id": "spec:consumers.spec-studio.diagram-kinds.dependency",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
+          {
+            "id": "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
+          {
+            "id": "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
+          {
+            "id": "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
+          {
+            "id": "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
+          {
             "id": "spec:decisions.roadmap-over-plans",
             "statedReadiness": "defined",
             "floorReached": "ready",
             "places": [
               6
+            ]
+          },
+          {
+            "id": "spec:protocol.significant-units-review",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              5
             ]
           },
           {
