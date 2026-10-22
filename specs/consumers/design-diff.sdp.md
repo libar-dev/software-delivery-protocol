@@ -4,6 +4,7 @@ kind: behavior
 altitude: feature
 readiness: ready
 relations:
+  decidedBy: spec:decisions.roadmap-priority
   refines: spec:consumers.projections-model
   dependsOn:
     target: spec:consumers.agent-surface.recipe-parameters
@@ -33,7 +34,7 @@ Iterating on a design asks what changed since the last reading. The first adopte
 - rule: Inside the Design and UI sections, the open questions and other keyed sections apart from rules and flows, it compares keyed entries by key and reports each as added, removed, changed in value or moved in order.
 - rule: Rule and flow entries match first by unchanged text, preferring the same key for repeated wording, then by retained key; remaining unkeyed base entries pair in list order, including an entry reworded while adding a key. An unmatched keyed base entry is removed, and an unmatched head entry is added. Other unkeyed entries have no identity across the two graphs and compare as part of their whole section.
 - rule: A rule or flow with unchanged text whose key was added, removed or changed is one `keyed` change naming its old and new address, or none; only a text change is `changed`. An unchanged entry moving between rules and flows is `moved`; when one graph keeps no order across rules and flows, keyed entries compare by order within each list and a `ruleOrder` diagnostic names the Spec.
-- rule: It reports changes to Pack membership and order, and to the code units, verifiers and delivery facts bound to each Spec, kept apart from the authored changes because they derive from anchors.
+- rule: It reports changes to Pack membership, member order and what a Pack's order means, and to the code units, verifiers and delivery facts bound to each Spec, kept apart from the authored changes because they derive from anchors.
 - rule: A comparison states facts about the two graphs and confers nothing. It grants no approval, raises no staleness flag, moves no readiness and never records that a pass happened.
 
 ## Design
@@ -43,6 +44,6 @@ Iterating on a design asks what changed since the last reading. The first adopte
 - changedSpecRow: `{ id, parts: [part] }` in the summary and `{ id, parts: [{ part, change, from, to }] }` with `detail: true`; `change` is `added`, `removed`, `changed`, `moved` or `keyed`. For `keyed`, `from` and `to` carry the old and new entry addresses, `null` meaning none; other changes carry the values on each side, a rule or flow value as `{ list, text }`. A text change while adding a key is one `changed` entry.
 - diffParts: a part is `title`, `specKind`, `altitude`, `statedReadiness`, `narrative`, `relation.<type>:<target>`, a keyed entry as `design.<key>`, `ui.<key>`, `question.<key>`, `rule.<key>` or `term.<term>`, an unkeyed rule or flow as `behavior.rules[<index>]` or `behavior.flows[<index>]`, using its head index; a removed unkeyed entry uses its base index with a ` (base)` mark, such as `behavior.rules[1] (base)`, so it cannot share a name with a head entry at that index; an unkeyed question list as `intent.openQuestions`, and any other section as its name.
 - movedEntry: a keyed entry whose value is unchanged and whose position among the keyed entries of its section changed is `moved`; an entry whose value changed is `changed` whatever its position. For rules and flows, unchanged text with a different key takes `keyed` precedence, then a list change or relative order change among retained entries is `moved`; anonymous entries compare order within their list. Adding or removing a key alone moves no other entry.
-- packRows: `packs` rows are `{ id, change, membersAdded, membersRemoved, reordered }` for each Pack added, removed or changed in membership or order.
+- packRows: `packs` rows are `{ id, change, membersAdded, membersRemoved, reordered, orderChanged, orderBefore, orderAfter }` for each Pack added, removed or changed in membership, member order or order meaning; `orderBefore` and `orderAfter` are `"reading"` or `"priority"`, null on a side where the Pack is absent, and `orderChanged` is true when both sides hold the Pack and the two differ. An absent `order` reads as `"reading"` in every schema version; a value the head's engine does not know is outside the common schema, listed in `diagnostics` and not compared.
 - bindingRows: `bindings` rows are `{ id, implementedBy, referencedBy, verifiers, deliveryFacts }`, each an `{ added, removed }` pair of ids or fact names, kept apart from `specs` because they derive from anchors.
 - baseRecipe: The catalog shows how to derive the base graph in a worktree at the base commit with the corpus's exclusions. When constant-form anchors use relative engine imports, as in this repository, run the base worktree's own engine, then pass its `generated/graph.json` as `base` and remove the worktree.

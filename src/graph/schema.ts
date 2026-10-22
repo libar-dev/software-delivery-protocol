@@ -4,7 +4,7 @@ import type { CodeAnchorLayer } from "../model/anchors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
 
-export const schemaVersion = "0.11.0" as const;
+export const schemaVersion = "0.12.0" as const;
 
 const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
@@ -123,6 +123,7 @@ export interface PackNode extends GraphNodeBase {
   /** The manifest's `specs` list as authored, duplicates included; the `belongsTo` edges re-express it. */
   readonly members: readonly string[];
   readonly modelRefs?: readonly string[];
+  readonly order?: "priority";
   readonly file: string;
 }
 

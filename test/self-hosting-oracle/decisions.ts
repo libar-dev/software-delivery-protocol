@@ -1440,7 +1440,7 @@ export const decisionsSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
     file: "specs/decisions/roadmap-priority.sdp.md",
   },
   {

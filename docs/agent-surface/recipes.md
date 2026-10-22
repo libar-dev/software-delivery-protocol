@@ -3185,11 +3185,22 @@ const packs = [];
 for (const id of [...new Set([...basePacks.keys(), ...headPacks.keys()])].sort()) {
   if (packId !== undefined && id !== packId) continue;
   const a = basePacks.get(id), b = headPacks.get(id);
+  const orderOf = (node) => node === undefined ? null : node.order === undefined ? "reading" : node.order;
+  const orderBefore = orderOf(a), orderAfter = orderOf(b);
+  let comparable = true;
+  for (const [side, node, value] of [["base", a, orderBefore], ["head", b, orderAfter]]) {
+    if (node !== undefined && node.order !== undefined && node.order !== "priority") {
+      diagnostics.push({ part: "order", id, side, value, problem: "Part is outside the common schema." });
+      comparable = false;
+    }
+  }
+  if (!comparable) continue;
+  const orderChanged = a !== undefined && b !== undefined && orderBefore !== orderAfter;
   const members = delta(a?.members ?? [], b?.members ?? []);
   const common = new Set((a?.members ?? []).filter((member) => b?.members.includes(member)));
   const reordered = !same((a?.members ?? []).filter((member) => common.has(member)), (b?.members ?? []).filter((member) => common.has(member)));
-  if (!a || !b || members.added.length || members.removed.length || reordered) packs.push({ id,
-    change: !a ? "added" : !b ? "removed" : "changed", membersAdded: members.added, membersRemoved: members.removed, reordered });
+  if (!a || !b || members.added.length || members.removed.length || reordered || orderChanged) packs.push({ id,
+    change: !a ? "added" : !b ? "removed" : "changed", membersAdded: members.added, membersRemoved: members.removed, reordered, orderChanged, orderBefore, orderAfter });
 }
 const bound = (value, id, type) => {
   const nodes = new Map(value.nodes.map((node) => [node.id, node]));

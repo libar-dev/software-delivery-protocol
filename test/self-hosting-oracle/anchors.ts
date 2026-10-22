@@ -21,6 +21,13 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.roadmap-priority",
+    nodeType: "Anchor",
+    file: "test/roadmap-priority.test.ts",
+    constant: "priorityAnchor",
+    site: 'describe("roadmap priority manifest",',
+  },
+  {
     id: "test:protocol.studio-navigation",
     nodeType: "Anchor",
     file: "test/studio-s3.test.ts",
@@ -5970,6 +5977,17 @@ export const expectedBindingEdges = [
   ["impl:protocol.authoring-grammar-recipes", "satisfies", "spec:model.open-question-fields"],
   ["impl:protocol.authoring-grammar-recipes", "satisfies", "spec:model.relation-reasons"],
   ["impl:protocol.curation-recipe", "references", "spec:model.planned-architecture"],
+  ["test:protocol.roadmap-priority", "verifies", "spec:decisions.roadmap-priority"],
+  ["test:protocol.roadmap-priority", "verifies", "spec:carrier.markdown-pack-authoring"],
+  ["test:protocol.roadmap-priority", "verifies", "spec:model.pack-aggregate"],
+  ["test:protocol.roadmap-priority", "verifies", "spec:extraction.pack-member-order"],
+  ["test:protocol.roadmap-priority", "verifies", "spec:consumers.design-diff"],
+  ["test:protocol.roadmap-priority", "verifies", "spec:consumers.spec-studio.diff-page"],
+  ["impl:protocol.pack-aggregate", "references", "spec:decisions.roadmap-priority"],
+  ["impl:protocol.pack-member-order", "references", "spec:decisions.roadmap-priority"],
+  ["impl:protocol.static-reification", "satisfies", "spec:carrier.markdown-pack-authoring"],
+  ["impl:protocol.open-section-order", "satisfies", "spec:extraction.pack-member-order"],
+  ["impl:protocol.reader", "satisfies", "spec:extraction.pack-member-order"],
 ] as const;
 
 // re-measured under plan 41

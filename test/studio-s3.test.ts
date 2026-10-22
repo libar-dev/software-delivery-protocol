@@ -601,9 +601,9 @@ describe("Studio base comparison", () => {
     expect(main(content(first, "specs/probe.added.html"))).toContain(
       "New since the base graph &lt;first&gt;",
     );
-    expect(pack).toContain("Base input: schema 0.11.0, 2 Specs.");
+    expect(pack).toContain("Base input: schema 0.12.0, 2 Specs.");
     expect(main(content(first, "specs/probe.alpha.html"))).toContain(
-      "Base input: schema 0.11.0, 2 Specs.",
+      "Base input: schema 0.12.0, 2 Specs.",
     );
     expect(content(first, "diff.html")).toContain('href="diff.html" aria-current="page"');
   });

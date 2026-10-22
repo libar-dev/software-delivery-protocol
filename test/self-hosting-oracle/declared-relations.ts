@@ -4605,4 +4605,8 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.spec-studio.data.inputs",
     "the register joins the base graph and the run records as a named input",
   ],
+  ["spec:carrier.markdown-pack-authoring", "decidedBy", "spec:decisions.roadmap-priority"],
+  ["spec:model.pack-aggregate", "decidedBy", "spec:decisions.roadmap-priority"],
+  ["spec:extraction.pack-member-order", "decidedBy", "spec:decisions.roadmap-priority"],
+  ["spec:consumers.design-diff", "decidedBy", "spec:decisions.roadmap-priority"],
 ] as const;

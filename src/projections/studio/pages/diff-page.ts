@@ -40,7 +40,10 @@ export function packChangeNote(ctx: PageContext, id: string): string {
   return `<section id="changed-since-base"><h2>Changed since the base</h2><p>Compared with ${baseLabel(ctx)}. <a href="${escape(relative(ctx, "diff.html"))}">Read the diff</a>.</p>${baseMetadata(ctx)}${changed.length || compared ? `<h3>Changed members</h3>${list(changed.map((s) => `${link(ctx, s.id)}${s.parts.length > 0 && s.parts.every((p) => p.change === "keyed") ? " · keyed only" : ""}`))}` : ""}${added.length || compared ? `<h3>Added members</h3>${list(added.map((s) => link(ctx, s)))}` : ""}${pack !== undefined ? `<h3>Pack membership</h3>${packDelta(ctx, pack)}` : compared ? "<h3>Pack membership</h3><p>No membership or order change.</p>" : ""}${diff.diagnostics.length ? `<h3>Diagnostics</h3>${diagnostics(diff)}` : ""}</section>`;
 }
 function packDelta(ctx: PageContext, pack: NonNullable<Diff["packs"]>[number]): string {
-  return `<p>${escape(pack.change)} · ${link(ctx, pack.id)}</p><p>Members added: ${pack.membersAdded.map((id) => link(ctx, id)).join(", ") || "None"}</p><p>Members removed: ${pack.membersRemoved.map(code).join(", ") || "None"}</p><p>Order ${pack.reordered ? "changed" : "unchanged"}.</p>`;
+  const meaning = pack.orderChanged
+    ? `<p>${pack.orderAfter === "priority" ? "now a roadmap" : "no longer a roadmap"}</p>`
+    : "";
+  return `<p>${escape(pack.change)} · ${link(ctx, pack.id)}</p><p>Members added: ${pack.membersAdded.map((id) => link(ctx, id)).join(", ") || "None"}</p><p>Members removed: ${pack.membersRemoved.map(code).join(", ") || "None"}</p><p>Order ${pack.reordered ? "changed" : "unchanged"}.</p>${meaning}`;
 }
 function valueBlock(value: unknown): string {
   if (Array.isArray(value)) return list(value.map(valueBlock));
