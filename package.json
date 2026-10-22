@@ -20,7 +20,9 @@
     "docs/agent-surface/architecture.md",
     ".agents/skills/sdp-agent-surface/SKILL.md",
     ".agents/skills/sdp-authoring/SKILL.md",
-    ".agents/skills/sdp-sessions/SKILL.md"
+    ".agents/skills/sdp-sessions/SKILL.md",
+    ".agents/skills/sdp-studio/SKILL.md",
+    ".agents/skills/sdp-vault/SKILL.md"
   ],
   "bin": {
     "sdp": "./dist/cli/sdp.js"

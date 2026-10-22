@@ -295,6 +295,8 @@ bindExample({
         ".agents/skills/sdp-agent-surface/SKILL.md",
         ".agents/skills/sdp-authoring/SKILL.md",
         ".agents/skills/sdp-sessions/SKILL.md",
+        ".agents/skills/sdp-studio/SKILL.md",
+        ".agents/skills/sdp-vault/SKILL.md",
         "docs/agent-surface/recipes.md",
         "docs/agent-surface/upgrade-guide.md",
         "docs/agent-surface/architecture.md",
@@ -544,6 +546,19 @@ relations: {}
       expect(installedAgentSkill).toContain("name: sdp-agent-surface");
       expect(installedAuthoringSkill).toContain("name: sdp-authoring");
       expect(installedSessionsSkill).toContain("name: sdp-sessions");
+      for (const skill of ["sdp-studio", "sdp-vault"]) {
+        const installed = await readFile(
+          join(
+            consumer,
+            "node_modules",
+            "@libar-dev",
+            "software-delivery-protocol",
+            `.agents/skills/${skill}/SKILL.md`,
+          ),
+          "utf8",
+        );
+        expect(installed).toContain(`name: ${skill}`);
+      }
     } finally {
       await rm(packageRoot, { force: true, recursive: true });
     }

@@ -267,7 +267,8 @@ Extraction always loads the pinned Cucumber parser stack as ordinary runtime dep
 Install the Protocol package once; do not add a parallel Gherkin parser or re-pin those packages
 for carrier support.
 
-The package installs three agent on-ramps as `SKILL.md` files under
+The package installs its agent on-ramps as `SKILL.md` files under
 `node_modules/@libar-dev/software-delivery-protocol/.agents/skills/`. Use `sdp-agent-surface` to read
-the graph, `sdp-authoring` to author intent, and `sdp-sessions` for advisory delivery-session
-routing. The same package includes the runnable recipe bodies at `docs/agent-surface/recipes.md`.
+the graph, `sdp-authoring` to author intent, `sdp-sessions` for advisory delivery-session
+routing, `sdp-studio` to publish, share and read the Studio, and `sdp-vault` to keep an Obsidian
+vault. The same package includes the runnable recipe bodies at `docs/agent-surface/recipes.md`.

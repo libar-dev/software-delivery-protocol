@@ -226,13 +226,12 @@ current (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
   source and input edits start no cycle (`spec:consumers.spec-studio.publisher.watch`).
 - After the final Studio build, run `sdp stamp` with the corpus commit, then upload the stamped
   page set. A later build removes the stamp
-  (`spec:consumers.spec-studio.sharing#rule.stampLifetime`).
-- For linked notes, open the directory `sdp vault --out DIR` names as the vault; the command owns
-  its `sdp/` folder. Keep personal notes outside that folder, conventionally under `intent/`.
-  `sdp vault` enters the shared build and invalidates the five page roots; use
-  `sdp generate --vault DIR` when those roots must also be published. `sdp vault --watch` also
-  follows source anchors. Follow `spec:consumers.obsidian-vault` and
-  `spec:consumers.obsidian-vault.iteration`.
+  (`spec:consumers.spec-studio.sharing#rule.stampLifetime`). Follow `sdp-studio` for previews,
+  page reading, exports and composing-panel hand-offs.
+- For linked notes, use `sdp-vault`. Open the directory `sdp vault --out DIR` names as the vault;
+  the command owns its `sdp/` folder. Keep personal notes outside that folder, conventionally
+  under `intent/`. `sdp vault` enters the shared build and invalidates the five page roots; use
+  `sdp generate --vault DIR` when those roots must also be published.
 
 In this source checkout, `npm run generate:self-hosting` and `npm run check:self-hosting` preserve
 and publish all five roots together. In check mode a prior tree must exist for each root; Design

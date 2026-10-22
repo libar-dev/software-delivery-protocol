@@ -301,6 +301,7 @@ export const expectedPackMembers = [
   "spec:consumers.spec-studio.diagrams.folds-by-layer",
   "spec:consumers.spec-studio.export",
   "spec:consumers.spec-studio.export.self-contained",
+  "spec:consumers.studio-on-ramp",
   "spec:consumers.pack-design",
   "spec:consumers.design-review.pack-design-page",
   "spec:consumers.agent-surface.recipe-parameters",
@@ -340,6 +341,7 @@ export const expectedPackMembers = [
   "spec:consumers.obsidian-vault.iteration",
   "spec:consumers.obsidian-vault.iteration.watch-rewrites-changed-notes",
   "spec:consumers.obsidian-vault.iteration.watch-source-anchor",
+  "spec:consumers.vault-on-ramp",
   "spec:consumers.readiness-planner",
   "spec:consumers.readiness-planner.dependency-order",
   "spec:consumers.readiness-planner.decision-first",
@@ -470,6 +472,7 @@ export const expectedStudioPackMembers = [
   "spec:consumers.spec-studio.export.self-contained",
   "spec:consumers.spec-studio.sharing",
   "spec:consumers.spec-studio.sharing.stamp-written-apart",
+  "spec:consumers.studio-on-ramp",
 ] as const;
 
 // The authored membership of `pack:design-management-v1`, in manifest order.
@@ -538,6 +541,7 @@ export const expectedObsidianVaultPackMembers = [
   "spec:consumers.obsidian-vault.iteration",
   "spec:consumers.obsidian-vault.iteration.watch-rewrites-changed-notes",
   "spec:consumers.obsidian-vault.iteration.watch-source-anchor",
+  "spec:consumers.vault-on-ramp",
   "spec:model.term-addresses",
 ] as const;
 
@@ -640,7 +644,7 @@ export const expectedPacks = [
     claim: "declared",
     title: "Spec Studio",
     framing:
-      "The Spec Studio of the original design, `docs/lineage/v0-design/07-spec-studio-and-projections.md` sections 1 to 3, 11 and 12, in the order a reviewer reads it: what the Studio is and why it renders HTML; the data it reads, with the recipe answers it composes and its two named inputs, and the verb that publishes and watches it; its shell, search and navigation; its four lenses, with the index that is the Packs lens and the coverage recipe the tests lens reads; the Pack page and its maturity map; the Spec page with its core and its panels; the register pages, the owner queue, and the diff, runs and glossary pages, with the run-evidence recipe the runs page reads; the composing panel and the memo it hands off; its custom elements, the decisions that shape them, and the diagrams the engine draws for them; its phone layout; the Pack export and print; and how a build is stamped and shared. Each Spec is followed by the examples that will verify it. Recipe 27, references into a design, shows each member's code bindings and the implemented Specs it builds on.",
+      "The Spec Studio of the original design, `docs/lineage/v0-design/07-spec-studio-and-projections.md` sections 1 to 3, 11 and 12, in the order a reviewer reads it: what the Studio is and why it renders HTML; the data it reads, with the recipe answers it composes and its two named inputs, and the verb that publishes and watches it; its shell, search and navigation; its four lenses, with the index that is the Packs lens and the coverage recipe the tests lens reads; the Pack page and its maturity map; the Spec page with its core and its panels; the register pages, the owner queue, and the diff, runs and glossary pages, with the run-evidence recipe the runs page reads; the composing panel and the memo it hands off; its custom elements, the decisions that shape them, and the diagrams the engine draws for them; its phone layout; the Pack export and print; how a build is stamped and shared; and the skill that teaches an agent to publish, share and read the Studio and to apply what a person composes in it. Each Spec is followed by the examples that will verify it. Recipe 27, references into a design, shows each member's code bindings and the implemented Specs it builds on.",
     file: "specs/consumers/spec-studio.pack.sdp.md",
     members: expectedStudioPackMembers,
     modelRefs: ["spec:consumers.projections-model"],
@@ -682,7 +686,7 @@ export const expectedPacks = [
     claim: "declared",
     title: "Obsidian vault",
     framing:
-      "A human interface for iterating on designs: the one graph regenerated as an Obsidian vault of linked notes, read beside the carriers an agent edits. First the vault, its verb and its place among the projections, with the decision that its generator owns one folder of the vault and never touches a note a person wrote. Then its notes and links, its tables, and the loop a design pass runs through it. Each Spec is followed by the examples that will verify it. Last, the one model change the vault asks for, an address for a Model term, so a concept links as exactly as a Spec does.",
+      "A human interface for iterating on designs: the one graph regenerated as an Obsidian vault of linked notes, read beside the carriers an agent edits. First the vault, its verb and its place among the projections, with the decision that its generator owns one folder of the vault and never touches a note a person wrote. Then its notes and links, its tables, the loop a design pass runs through it, and the skill that teaches an agent to keep the vault and answer a pass from it. Each Spec is followed by the examples that will verify it. Last, the one model change the vault asks for, an address for a Model term, so a concept links as exactly as a Spec does.",
     file: "specs/obsidian-vault.pack.sdp.md",
     members: expectedObsidianVaultPackMembers,
   },

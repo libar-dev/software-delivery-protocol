@@ -40,7 +40,8 @@ grants permission or records a verdict.
 
 For human-readable pages or linked notes, follow `sdp-agent-surface`'s "Publish pages and notes":
 it says which publisher to run, what each run invalidates, when to stamp a preview, and where the
-vault keeps a person's notes.
+vault keeps a person's notes. `sdp-studio` and `sdp-vault` turn intent a person composed there into
+a checked change proposal.
 
 For a corpus upgrade, follow the shipped upgrade guide: `docs/agent-surface/upgrade-guide.md` in
 the Protocol checkout, or

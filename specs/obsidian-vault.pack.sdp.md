@@ -22,8 +22,9 @@ specs:
   - spec:consumers.obsidian-vault.iteration
   - spec:consumers.obsidian-vault.iteration.watch-rewrites-changed-notes
   - spec:consumers.obsidian-vault.iteration.watch-source-anchor
+  - spec:consumers.vault-on-ramp
   - spec:model.term-addresses
 ---
 # Obsidian vault
 
-A human interface for iterating on designs: the one graph regenerated as an Obsidian vault of linked notes, read beside the carriers an agent edits. First the vault, its verb and its place among the projections, with the decision that its generator owns one folder of the vault and never touches a note a person wrote. Then its notes and links, its tables, and the loop a design pass runs through it. Each Spec is followed by the examples that will verify it. Last, the one model change the vault asks for, an address for a Model term, so a concept links as exactly as a Spec does.
+A human interface for iterating on designs: the one graph regenerated as an Obsidian vault of linked notes, read beside the carriers an agent edits. First the vault, its verb and its place among the projections, with the decision that its generator owns one folder of the vault and never touches a note a person wrote. Then its notes and links, its tables, the loop a design pass runs through it, and the skill that teaches an agent to keep the vault and answer a pass from it. Each Spec is followed by the examples that will verify it. Last, the one model change the vault asks for, an address for a Model term, so a concept links as exactly as a Spec does.

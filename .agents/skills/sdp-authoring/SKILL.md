@@ -643,7 +643,8 @@ recipe 46 to order waiting statements and questions. Recipe 44 reports example-s
 recipe 45 reads external runs, and recipe 51 locates entry citations. Follow
 `spec:consumers.context-bundle` and `spec:consumers.readiness-planner`. To publish the Studio,
 stamp a preview or synchronize linked notes, follow `sdp-agent-surface`'s "Publish pages and
-notes".
+notes". To apply intent a person composed in the Studio or wrote in the vault, follow
+`sdp-studio` or `sdp-vault`.
 
 The graph outranks this skill. If a recipe or instruction disagrees with current graph data or a
 carrying Spec, report the skill as drift and follow the graph and Spec.

@@ -2,13 +2,14 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   readlinkSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -27,8 +28,16 @@ import {
 import type { PrimitiveNode } from "../src/index.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
-import { SDP_HELP_TEXT } from "../src/cli/sdp.js";
+import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
+import { checkVaultDirectory, reportVaultError, vaultDirectory } from "../src/cli/vault-command.js";
+import { isExcludedDiscoveryDirectory } from "../src/extract/discover.js";
 import { parseMarkdownBody } from "../src/extract/markdown-body.js";
+import { createStudioData } from "../src/projections/studio/data.js";
+import { renderVault } from "../src/projections/vault/notes.js";
+import { VaultGuardError } from "../src/projections/vault/sync.js";
+import { createReader } from "../src/reader/reader.js";
+import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { renderStudio } from "./helpers/studio-render.js";
 
 import { parse } from "yaml";
 import { describe, expect, it } from "vitest";
@@ -50,6 +59,10 @@ const skillPaths = [
   ".agents/skills/sdp-authoring/SKILL.md",
   ".agents/skills/sdp-sessions/SKILL.md",
 ] as const;
+const studioSkillPath = ".agents/skills/sdp-studio/SKILL.md";
+const vaultSkillPath = ".agents/skills/sdp-vault/SKILL.md";
+/** Every shipped skill; the generic checks run over all of them. */
+const allSkillPaths = [...skillPaths, studioSkillPath, vaultSkillPath] as const;
 
 const authoringOnRampImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authoring-on-ramp"),
@@ -235,8 +248,24 @@ describe("Protocol skill assets", () => {
     expect(readlinkSync(claudeSkills)).toBe("../.agents/skills");
   });
 
+  it("ships every skill folder in the package and indexes it in the help", () => {
+    const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+      files: string[];
+    };
+    const folders = readdirSync(join(repoRoot, ".agents", "skills"), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => `.agents/skills/${entry.name}/SKILL.md`)
+      .sort();
+
+    expect(folders).toEqual([...allSkillPaths].sort());
+    for (const path of folders) {
+      expect(packageJson.files).toContain(path);
+      expect(SDP_HELP_TEXT).toContain(path);
+    }
+  });
+
   it("uses the repository's two-field single-file convention", () => {
-    for (const path of skillPaths) {
+    for (const path of allSkillPaths) {
       const skill = readSkill(path);
       const folder = basename(dirname(path));
 
@@ -248,7 +277,7 @@ describe("Protocol skill assets", () => {
   });
 
   it("keeps every skill graph-first and the authoring law linked to carrying Specs", () => {
-    for (const path of skillPaths) {
+    for (const path of allSkillPaths) {
       const { source } = readSkill(path);
 
       expect(source).toContain("sdp q");
@@ -403,7 +432,7 @@ describe("Protocol skill assets", () => {
       expect(localQuery).toContain(`--exclude ${exclusion}`);
     }
 
-    for (const path of skillPaths) {
+    for (const path of allSkillPaths) {
       const documented = documentedCommands(readSkill(path).body);
       expect(documented.length).toBeGreaterThan(0);
 
@@ -431,7 +460,7 @@ describe("Protocol skill assets", () => {
     // The hazard is a documented invocation the collector above would never collect: a bare
     // `sdp` resolves to whatever binary shadows it on PATH (macOS ships an unrelated `sdp`),
     // so the check scans every shell-fenced line rather than the pnpm-prefixed subset.
-    for (const path of skillPaths) {
+    for (const path of allSkillPaths) {
       const bareInvocations = shellFenceLines(readSkill(path).body).filter((line) =>
         /^\s*(?:sdp|npx +sdp|npm +exec +sdp)\b/u.test(line),
       );
@@ -449,7 +478,7 @@ describe("Protocol skill assets", () => {
       "verification mode proves a verifier exists",
     ];
 
-    for (const path of skillPaths) {
+    for (const path of allSkillPaths) {
       const source = readSkill(path).source.toLowerCase();
 
       for (const claim of forbidden) {
@@ -484,7 +513,7 @@ describe("Protocol skill assets", () => {
       expect(ordinal).not.toMatch(sizeStatement);
     }
 
-    for (const path of ["AGENTS.md", "README.md", ...skillPaths]) {
+    for (const path of ["AGENTS.md", "README.md", ...allSkillPaths]) {
       const text = teachingText(readFileSync(join(repoRoot, path), "utf8"));
       const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
       expect({ path, stated: sizeStatement.exec(text)?.[0] ?? null }).toEqual({
@@ -1445,5 +1474,555 @@ describe("the reviewed skill teaching", () => {
     expect(new Set(lines.Pack)).toEqual(new Set(["undefined"]));
     expect(new Set(lines.Anchor)).toEqual(new Set(["number"]));
     expect(new Set(lines.CodeNode)).toEqual(new Set(["number"]));
+  });
+});
+
+/** Every `spec:` id and entry address a skill cites, placeholders and probe ids left out. */
+function citedProtocolReferences(source: string): { ids: string[]; addresses: string[] } {
+  const cited = [
+    ...new Set(
+      [...source.matchAll(/spec:[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)*(?:#[a-z]+\.[A-Za-z0-9]+)?/gu)]
+        .map((match) => match[0])
+        .filter((reference) => !/[<>]/u.test(reference)),
+    ),
+  ];
+  return {
+    ids: [...new Set(cited.map((reference) => reference.split("#")[0] ?? reference))],
+    addresses: cited.filter((reference) => reference.includes("#")),
+  };
+}
+
+let shippedCorpus: ReturnType<typeof extract> | undefined;
+/** The Protocol's own Specs as the package ships them, extracted once for the citation checks. */
+function shippedCorpusGraph() {
+  shippedCorpus ??= extract({ root: join(repoRoot, "specs") });
+  return shippedCorpus.graph;
+}
+
+async function assertCitationsResolve(path: string, required: readonly string[]): Promise<void> {
+  const { ids, addresses } = citedProtocolReferences(readSkill(path).source);
+  for (const id of required) expect(ids).toContain(id);
+  const graph = shippedCorpusGraph();
+  const reader = createReader(graph);
+  for (const id of ids) {
+    expect({ path, id, resolves: reader.specContext(id) !== undefined }).toEqual({
+      path,
+      id,
+      resolves: true,
+    });
+  }
+  const resolution = (await evaluateBody("return recipes(25, params)", {
+    graph,
+    params: { addresses },
+  })) as { rows: { address: string; resolves: boolean }[] };
+  expect(resolution.rows.filter((row) => !row.resolves)).toEqual([]);
+  expect(resolution.rows).toHaveLength(addresses.length);
+}
+
+/** The body of the one documented `sdp q '…'` line that calls the proposal check. */
+function taughtProposalCheckBody(path: string): string {
+  const line = shellFenceLines(readSkill(path).body)
+    .map((entry) => entry.trim())
+    .find((entry) => entry.includes(" q '") && entry.includes("recipes(38"));
+  const body = /\bq '([^']+)'/u.exec(line ?? "")?.[1];
+  if (body === undefined) throw new Error(`${path} must teach one proposal-check invocation`);
+  expect(line).toContain("--params proposal=@proposal.json");
+  expect(line).toMatch(/--params base=@\S+/u);
+  return body;
+}
+
+/** Runs the taught proposal check over a probe whose first change's scope moved since its base. */
+async function assertTaughtRouting(path: string): Promise<void> {
+  const carrierWith = (limit: string) => ({
+    "a.sdp.md": probeCarrier("spec:probe.a", "behavior", `## Design\n- limit: ${limit}`),
+    "b.sdp.md": probeCarrier("spec:probe.b", "behavior", "## Behavior\n- rule: A second rule."),
+  });
+  const base = probeGraph(carrierWith("ten")).graph;
+  const head = probeGraph(carrierWith("twelve")).graph;
+  const proposal = {
+    schema: "sdp-proposal/1",
+    base: "0123456",
+    reason: "Tighten the limit.",
+    changes: [
+      { scope: ["spec:probe.a#design.limit"], request: "Lower the limit." },
+      { scope: ["spec:probe.b"], request: "Add an example." },
+      { scope: ["spec:probe.c"], request: "Name a Spec the head lacks." },
+    ],
+  };
+  const answer = (await evaluateBody(taughtProposalCheckBody(path), {
+    graph: head,
+    params: { proposal, base },
+  })) as {
+    schemaProblems: unknown[];
+    totals: { unresolved: number };
+    changes: { moved: boolean | null; scope: { resolvesAtHead: boolean }[] }[];
+  };
+  expect(answer.schemaProblems).toEqual([]);
+  expect(answer.changes.map((change) => change.moved)).toEqual([true, false, false]);
+  expect(answer.changes[2]?.scope.map((item) => item.resolvesAtHead)).toEqual([false]);
+  expect(answer.totals.unresolved).toBe(1);
+
+  const routing = flat(readSkill(path).source);
+  for (const clause of [
+    "Route each change by its `moved`: `true` goes to the person, and so does `null`, which the check could not compare, and any change whose scope does not resolve at the head.",
+    "Apply each `false` change as an ordinary carrier edit through `sdp-authoring`",
+    "`spec:consumers.intent-composition#rule.changedScope`",
+  ]) {
+    expect(routing).toContain(clause);
+  }
+}
+
+const studioOnRampImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.studio-on-ramp"),
+  label: "asserts realization of the shipped Studio skill document",
+  satisfies: ref("spec:consumers.studio-on-ramp"),
+});
+void studioOnRampImplementationAnchor;
+
+const studioOnRampTestAnchor = specTest({
+  id: testAnchorId("test:protocol.studio-on-ramp"),
+  label: "skill-asset checks verify the Studio on-ramp against the verbs, workflow and pages",
+  verifies: ref("spec:consumers.studio-on-ramp"),
+});
+void studioOnRampTestAnchor;
+
+describe("the Studio on-ramp", () => {
+  const studio = () => readSkill(studioSkillPath);
+  const section = (heading: string) => flat(skillSection(studioSkillPath, heading));
+
+  it("is its own shipped skill, which the reading skill points to", () => {
+    const { frontmatter } = studio();
+    expect(frontmatter.name).toBe("sdp-studio");
+    const description = String(frontmatter.description);
+    expect(description.startsWith("Publish, share and read the Spec Studio")).toBe(true);
+    for (const trigger of ["pull-request previews", "Studio link", "composing panel"]) {
+      expect(description).toContain(trigger);
+    }
+    expect(flat(skillSection(skillPaths[0], "## Publish pages and notes"))).toContain(
+      "Follow `sdp-studio` for previews, page reading, exports and composing-panel hand-offs.",
+    );
+    for (const path of [skillPaths[1], skillPaths[2]]) {
+      expect(readSkill(path).source).toContain("`sdp-studio`");
+    }
+  });
+
+  it("starts from what the agent holds", () => {
+    const start = section("## Start from what you hold");
+    for (const holding of [
+      "**A repository**",
+      "**A page set or a link**",
+      "**Composed intent**",
+      "**A CI workflow to set up**",
+    ]) {
+      expect(start).toContain(holding);
+    }
+    expect(start).toContain("navigating them needs no local graph");
+  });
+
+  it("teaches the publishing run as the studio and generate verbs take it", async () => {
+    const publish = skillSection(studioSkillPath, "## Publish the page set");
+    const taughtFlags = new Set(
+      shellFenceLines(publish)
+        .filter((line) => line.includes(" studio "))
+        .flatMap((line) =>
+          [...line.slice(line.indexOf(" studio ")).matchAll(/(--[a-z-]+)/gu)].map(
+            (match) => match[1],
+          ),
+        ),
+    );
+    expect([...taughtFlags].sort()).toEqual(
+      ["--base", "--base-label", "--exclude", "--runs", "--watch"].sort(),
+    );
+    for (const flag of taughtFlags) {
+      expect(usageLine("studio")).toMatch(new RegExp(`${flag ?? ""}(?![a-z-])`, "u"));
+    }
+    for (const flag of ["--base", "--runs"]) expect(usageLine("generate")).not.toContain(flag);
+
+    const text = flat(publish);
+    for (const clause of [
+      "`sdp generate` writes the Studio beside the other four page roots, with no optional input.",
+      "Build the Studio last.",
+      "`spec:consumers.spec-studio.publisher#rule.buildInvalidates`",
+      "Keep every input outside `generated/` and every other path the build writes or removes.",
+      "nothing serves or reloads the page",
+    ]) {
+      expect(text).toContain(clause);
+    }
+
+    const root = mkdtempSync(join(tmpdir(), "sdp-studio-skill-"));
+    try {
+      writeFileSync(join(root, "a.sdp.md"), probeCarrier("spec:probe.a", "behavior", ""));
+      mkdirSync(join(root, "generated"));
+      writeFileSync(join(root, "generated", "graph.json"), "{}");
+      const refused = createCaptureOutput();
+      const exitCode = await runSdpCli(
+        ["studio", root, "--base", join(root, "generated", "graph.json")],
+        refused.output,
+      );
+      expect(exitCode).toBe(1);
+      expect(refused.readStderr()).toContain("--base");
+      const generate = createCaptureOutput();
+      expect(
+        await runSdpCli(["generate", root, "--runs", join(root, "x.json")], generate.output),
+      ).toBe(1);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("teaches stamping and the preview workflow as the workflow declares them", () => {
+    const share = skillSection(studioSkillPath, "## Stamp and share");
+    const text = flat(share);
+    for (const clause of [
+      "Stamp after the final build",
+      "a later build removes it with the page set",
+      "`spec:consumers.spec-studio.sharing#rule.stampLifetime`",
+      "Build from a clean checkout of the commit you stamp.",
+      "through `file://` they stay text",
+      "a pull request from a fork never deploys",
+    ]) {
+      expect(text).toContain(clause);
+    }
+    for (const flag of ["--commit", "--source"]) expect(usageLine("stamp")).toContain(flag);
+
+    const fence = /```yaml\n([\s\S]*?)\n```/u.exec(share)?.[1];
+    if (fence === undefined) throw new Error("the Studio skill must show the preview job");
+    const job = (parse(fence) as { jobs: Record<string, Record<string, unknown>> }).jobs[
+      "studio-preview"
+    ];
+    const workflow = parse(
+      readFileSync(join(repoRoot, ".github/workflows/studio-preview.yml"), "utf8"),
+    ) as {
+      on: { workflow_call: { inputs: Record<string, unknown> } };
+      jobs: Record<string, { if?: string; permissions?: unknown; steps?: { with?: unknown }[] }>;
+    };
+    expect(String(job?.uses)).toMatch(
+      /^libar-dev\/software-delivery-protocol\/\.github\/workflows\/studio-preview\.yml@/u,
+    );
+    for (const input of Object.keys(job?.with ?? {})) {
+      expect(Object.keys(workflow.on.workflow_call.inputs)).toContain(input);
+    }
+    expect(job?.permissions).toEqual(workflow.jobs.deploy?.permissions);
+    expect(workflow.jobs.deploy?.if).toContain(
+      "github.event.pull_request.head.repo.full_name == github.repository",
+    );
+    expect(JSON.stringify(workflow.jobs.build?.steps)).toContain(
+      "spec-studio-pr-${{ github.event.pull_request.number }}",
+    );
+    expect(text).toContain("`spec-studio-pr-<number>`");
+    expect(text).toContain("`preview/<number>/`");
+  });
+
+  it("maps each task to a page the Studio writes, and states what a page does not", async () => {
+    const reading = skillSection(studioSkillPath, "## Read the pages by task");
+    const taught = [...reading.matchAll(/`([a-z/<>]+\.html)`/gu)].map((match) => match[1] ?? "");
+    const { graph } = probeGraph({
+      "a.sdp.md": probeCarrier("spec:probe.a", "behavior", "## Behavior\n- rule: One rule."),
+      "probe.pack.sdp.md":
+        "---\nid: pack:probe.review\nspecs:\n  - spec:probe.a\n---\n# Probe review\n\nFraming.\n",
+    });
+    const run = {
+      results: {
+        tool: { name: "vitest" },
+        summary: {
+          tests: 0,
+          passed: 0,
+          failed: 0,
+          pending: 0,
+          skipped: 0,
+          other: 0,
+          start: 0,
+          stop: 0,
+        },
+        tests: [],
+      },
+    };
+    const reader = createReader(graph);
+    const withInputs = renderStudio(
+      await createStudioData(reader, undefined, {
+        base: { graph, label: "last design pass" },
+        runs: [run],
+      }),
+    ).map((page) => page.path);
+    const without = renderStudio(await createStudioData(reader)).map((page) => page.path);
+
+    expect(taught.length).toBeGreaterThan(10);
+    for (const page of taught) {
+      const pattern = new RegExp(
+        `^${page.replace("<name>", "[^/]+").replaceAll(".", "\\.")}$`,
+        "u",
+      );
+      expect({ page, written: withInputs.some((path) => pattern.test(path)) }).toEqual({
+        page,
+        written: true,
+      });
+    }
+    for (const page of ["diff.html", "runs.html"]) {
+      expect(taught).toContain(page);
+      expect(without).not.toContain(page);
+    }
+    expect(withInputs).toContain("exports/probe.review.html");
+
+    const limits = flat(reading);
+    for (const clause of [
+      "The queue's order sets no priority",
+      "never a verdict on a verifier",
+      "`spec:consumers.spec-studio.diagrams#rule.textEquivalent`",
+      "It carries no stamp, date, commit or composing panel",
+    ]) {
+      expect(limits).toContain(clause);
+    }
+  });
+
+  it("receives the composing panel's hand-off through the proposal check", async () => {
+    const receive = section("## Receive composed intent");
+    for (const clause of [
+      "The memo ends with the exact proposal under `## The proposal`",
+      "`Not in the proposal`",
+      "`Copy scoped intent`",
+      "`git fetch origin pull/<number>/merge`",
+      "`schemas/sdp-proposal-1.schema.json`",
+      "render its memo with recipe 49",
+    ]) {
+      expect(receive).toContain(clause);
+    }
+    const panel = readFileSync(
+      join(repoRoot, "src/studio-elements/intent-panel-element.ts"),
+      "utf8",
+    );
+    expect(panel).toContain("Not in the proposal");
+    expect(panel).toContain("Copy scoped intent");
+    expect(readFileSync(join(repoRoot, "schemas/sdp-proposal-1.schema.json"), "utf8")).toContain(
+      "sdp-proposal/1",
+    );
+
+    const proposal = {
+      schema: "sdp-proposal/1",
+      base: "0123456",
+      reason: "Probe the memo.",
+      changes: [{ scope: ["spec:probe.a"], request: "Add an example." }],
+    };
+    const { memo } = (await evaluateBody("return recipes(49, params)", {
+      graph: probeGraph({}).graph,
+      params: { proposal },
+    })) as { memo: string };
+    const saved = /## The proposal\n\n```json\n([\s\S]*?)\n```/u.exec(memo)?.[1];
+    expect(JSON.parse(saved ?? "null")).toEqual(proposal);
+
+    await assertTaughtRouting(studioSkillPath);
+  });
+
+  it("cites resolving Studio Specs for law and leaves flags to each verb's help", async () => {
+    expect(flat(studio().body)).toContain("each verb's `--help` owns its flags");
+    await assertCitationsResolve(studioSkillPath, [
+      "spec:consumers.studio-on-ramp",
+      "spec:consumers.spec-studio",
+      "spec:consumers.spec-studio.publisher",
+      "spec:consumers.spec-studio.data.inputs",
+      "spec:consumers.spec-studio.sharing",
+      "spec:consumers.spec-studio.export",
+      "spec:consumers.spec-studio.intent-panel",
+      "spec:consumers.intent-composition",
+    ]);
+  });
+});
+
+const vaultOnRampImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.vault-on-ramp"),
+  label: "asserts realization of the shipped vault skill document",
+  satisfies: ref("spec:consumers.vault-on-ramp"),
+});
+void vaultOnRampImplementationAnchor;
+
+const vaultOnRampTestAnchor = specTest({
+  id: testAnchorId("test:protocol.vault-on-ramp"),
+  label: "skill-asset checks verify the vault on-ramp against the verb, its guard and its notes",
+  verifies: ref("spec:consumers.vault-on-ramp"),
+});
+void vaultOnRampTestAnchor;
+
+describe("the vault on-ramp", () => {
+  const vault = () => readSkill(vaultSkillPath);
+  const section = (heading: string) => flat(skillSection(vaultSkillPath, heading));
+
+  it("is its own shipped skill, which the reading skill points to", () => {
+    const { frontmatter } = vault();
+    expect(frontmatter.name).toBe("sdp-vault");
+    const description = String(frontmatter.description);
+    expect(description.startsWith("Keep the Protocol's Obsidian vault")).toBe(true);
+    for (const trigger of [
+      "vault directory",
+      "refused or failed synchronization",
+      "intent notes",
+    ]) {
+      expect(description).toContain(trigger);
+    }
+    expect(flat(skillSection(skillPaths[0], "## Publish pages and notes"))).toContain(
+      "For linked notes, use `sdp-vault`.",
+    );
+    for (const path of [skillPaths[1], skillPaths[2]]) {
+      expect(readSkill(path).source).toContain("`sdp-vault`");
+    }
+  });
+
+  it("places the vault where the command accepts it", () => {
+    const place = section("## Choose the vault directory");
+    for (const clause of [
+      "`--out` resolves against the working directory, not the root.",
+      "`spec:consumers.obsidian-vault#design.buildOwnedPaths`",
+      "Open the vault directory itself in Obsidian, never its `sdp/` folder",
+    ]) {
+      expect(place).toContain(clause);
+    }
+    const skipped = /discovery skips \(([^)]+)\)/u.exec(place)?.[1] ?? "";
+    const names = [...skipped.matchAll(/`([a-z_-]+)\/`/gu)].map((match) => match[1] ?? "");
+    expect(names.sort()).toEqual(["coverage", "dist", "generated", "node_modules"]);
+    for (const name of names) expect(isExcludedDiscoveryDirectory(name)).toBe(true);
+    expect(skipped).toContain("a dot-directory");
+    expect(isExcludedDiscoveryDirectory(".notes")).toBe(true);
+    expect(isExcludedDiscoveryDirectory("specs")).toBe(false);
+
+    const root = mkdtempSync(join(tmpdir(), "sdp-vault-skill-"));
+    try {
+      const args = (vaultDir: string, exclude: readonly string[] = []) => ({
+        root,
+        exclude,
+        checkClean: false,
+        vault: vaultDir,
+      });
+      expect(vaultDirectory(args("design-vault"))).toBe(resolve("design-vault"));
+      expect(() => {
+        checkVaultDirectory(args(join(root, "notes")));
+      }).toThrow(/lies inside the root/u);
+      expect(() => {
+        checkVaultDirectory(args(join(root, "notes"), ["notes"]));
+      }).not.toThrow();
+      expect(() => {
+        checkVaultDirectory(args(join(root, "generated", "obsidian-vault")));
+      }).not.toThrow();
+      expect(() => {
+        checkVaultDirectory(args(join(root, "generated", "spec-studio")));
+      }).toThrow(/overlaps generated\/spec-studio/u);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps the person's notes outside the folder the command owns", () => {
+    const apart = section("## Keep the person's notes apart");
+    for (const clause of [
+      "The command writes, moves and removes files only under `sdp/`.",
+      "by convention under `intent/`",
+      "`spec:decisions.vault-owned-folder`",
+      "An edit to a generated note never reaches the carrier",
+    ]) {
+      expect(apart).toContain(clause);
+    }
+    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toContain(
+      "Keep your notes outside sdp/, by convention in intent/.",
+    );
+  });
+
+  it("teaches synchronizing and watching as the verbs and the failed index state them", () => {
+    const sync = section("## Synchronize and watch");
+    for (const clause of [
+      "`sdp vault` enters the shared build, so it removes the five page roots.",
+      "run `sdp generate --vault DIR`",
+      "a `.ts` or `.tsx` source other than a `.d.ts`",
+      "`sdp validate --watch` follows no source files.",
+    ]) {
+      expect(sync).toContain(clause);
+    }
+    expect(usageLine("generate")).toContain("[--vault DIR]");
+    expect(usageLine("vault")).toContain("[--watch]");
+    const warning = /`(The last regeneration failed[^`]+)`/u.exec(sync)?.[1];
+    expect(warning).toBeDefined();
+    expect(readFileSync(join(repoRoot, "src/cli/vault-command.ts"), "utf8")).toContain(
+      `> [!warning] ${warning ?? ""}`,
+    );
+  });
+
+  it("names every refusal the guard prints and how to recover from it", () => {
+    const recover = skillSection(vaultSkillPath, "## Recover a refused run");
+    const capture = createCaptureOutput();
+    reportVaultError(
+      new VaultGuardError([
+        { path: "sdp/a.md", reason: "changed" },
+        { path: "sdp/b.md", reason: "unknown" },
+        { path: "sdp/c", reason: "not a file" },
+        { path: "sdp/.sdp-vault.json", reason: "malformed" },
+      ]),
+      capture.output,
+    );
+    const printed = capture.readStderr().split("\n").filter(Boolean);
+    const reasons = [...recover.matchAll(/^\| `\(([a-z ]+)\)`/gmu)].map((match) => match[1]);
+    expect(reasons).toEqual(["changed", "unknown", "not a file", "malformed"]);
+    for (const reason of reasons) {
+      expect(printed.some((line) => line.endsWith(`(${reason ?? ""})`))).toBe(true);
+    }
+    expect(flat(recover)).toContain(`\`${printed.at(-1) ?? ""}\``);
+    expect(flat(recover)).toContain(
+      "`sdp vault: warning: sdp/<path> has changed; delete it to regenerate`",
+    );
+    expect(readFileSync(join(repoRoot, "src/cli/vault-command.ts"), "utf8")).toContain(
+      "has changed; delete it to regenerate",
+    );
+    expect(flat(recover)).toContain("Save the person's words before you delete anything");
+  });
+
+  it("converts a note's links back to the addresses the vault wrote, then checks the proposal", async () => {
+    const intent = section("## Turn intent notes into carrier edits");
+    for (const clause of [
+      "`spec.<path>.md#^design-limit` names `spec:<path>#design.limit`",
+      "A term note `term.<path>.<key>` names `spec:<path>#term.<key>`",
+      "`spec:consumers.obsidian-vault.notes#rule.addressRoundTrip`",
+      "render its memo with the proposal memo (recipe 49)",
+    ]) {
+      expect(intent).toContain(clause);
+    }
+
+    const { graph } = probeGraph({
+      ...termCorpus,
+      "limit.sdp.md": probeCarrier("spec:probe.limit", "behavior", "## Design\n- limit: ten"),
+    });
+    const files = renderVault(graph);
+    const note = files.find((file) => file.path === "specs/probe/spec.probe.limit.md");
+    expect(note?.content).toMatch(/- limit: ten \^design-limit$/mu);
+    const term = files.find((file) => file.path === "terms/term.probe.terms.stepKey.md");
+    expect(term).toBeDefined();
+
+    // The conversion the skill teaches, applied to what the vault wrote.
+    const toId = (noteName: string) => noteName.replace(".", ":");
+    const toAddress = (noteName: string, block: string) =>
+      `${toId(noteName)}#${block.replace(/^\^/u, "").replace("-", ".")}`;
+    const termAddress = (termNote: string) =>
+      termNote.replace(/^term\.(.*)\.([A-Za-z0-9]+)$/u, "spec:$1#term.$2");
+    const resolution = (await evaluateBody("return recipes(25, params)", {
+      graph,
+      params: {
+        addresses: [
+          toAddress("spec.probe.limit", "^design-limit"),
+          termAddress("term.probe.terms.stepKey"),
+        ],
+      },
+    })) as { rows: { address: string; resolves: boolean }[] };
+    expect(resolution.rows).toEqual([
+      expect.objectContaining({ address: "spec:probe.limit#design.limit", resolves: true }),
+      expect.objectContaining({ address: "spec:probe.terms#term.stepKey", resolves: true }),
+    ]);
+
+    await assertTaughtRouting(vaultSkillPath);
+  });
+
+  it("cites resolving vault Specs for law and leaves flags to the verb's help", async () => {
+    expect(flat(vault().body)).toContain("`sdp vault --help` owns the flags");
+    await assertCitationsResolve(vaultSkillPath, [
+      "spec:consumers.vault-on-ramp",
+      "spec:consumers.obsidian-vault",
+      "spec:consumers.obsidian-vault.notes",
+      "spec:consumers.obsidian-vault.iteration",
+      "spec:decisions.vault-owned-folder",
+      "spec:consumers.intent-composition",
+    ]);
   });
 });
