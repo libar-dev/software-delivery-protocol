@@ -264,14 +264,14 @@ describe("the self-hosting corpus", () => {
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 428 Markdown Specs and four Gherkin Specs,
     // 432 in the self-hosting Pack; nine Pack manifests and 546 source anchors.
-    // The capability map adds three anchors, four bindings and one membership edge.
+    // The capability map adds three anchors and four bindings.
     expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 546 });
     expect(expectedSpecs).toHaveLength(432);
     expect(expectedPackMembers).toHaveLength(432);
     expect(expectedAnchors).toHaveLength(546);
     expect(expectedBindingEdges).toHaveLength(685);
     expect(result.graph.nodes).toHaveLength(987);
-    expect(result.graph.edges).toHaveLength(2724);
+    expect(result.graph.edges).toHaveLength(2723);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -414,7 +414,7 @@ describe("the self-hosting corpus", () => {
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedMemberOfEdges).toHaveLength(168);
+    expect(expectedMemberOfEdges).toHaveLength(167);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>

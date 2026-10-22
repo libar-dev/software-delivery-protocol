@@ -5179,16 +5179,27 @@ const accepts = ["epic", "detail"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 const detail = params.detail ?? false;
+const diagnostics = [];
 if (params.detail !== undefined && typeof params.detail !== "boolean") {
-  return { diagnostics: [{ parameter: "detail", problem: "Expected a boolean" }] };
+  diagnostics.push({ parameter: "detail", problem: "Expected a boolean" });
 }
 const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const byEnds = (a, b) => compare(a.from, b.from) || compare(a.to, b.to);
 const specs = g.specs().sort((a, b) => compare(a.id, b.id));
 const byId = new Map(specs.map((spec) => [spec.id, spec]));
-if (params.epic !== undefined && (typeof params.epic !== "string" || byId.get(params.epic)?.altitude !== "epic")) {
-  return { diagnostics: [{ parameter: "epic", problem: "Expected a resolving epic Spec id" }] };
+if (params.epic !== undefined) {
+  if (typeof params.epic !== "string") {
+    diagnostics.push({ parameter: "epic", problem: "Expected a Spec id string" });
+  } else {
+    const epic = byId.get(params.epic);
+    if (!epic) {
+      diagnostics.push({ parameter: "epic", problem: `No resolving Spec for ${params.epic}` });
+    } else if (epic.altitude !== "epic") {
+      diagnostics.push({ parameter: "epic", problem: `${params.epic} is a ${epic.altitude} Spec, not an epic` });
+    }
+  }
 }
+if (diagnostics.length > 0) return { diagnostics };
 const allEdges = graph.edges.filter((edge) => edge.type === "refines" && edge.claim === "declared");
 const edges = allEdges.filter((edge) => byId.has(edge.from) && byId.has(edge.to)).sort(byEnds);
 const parents = new Map(specs.map((spec) => [spec.id, new Set()]));
@@ -5216,14 +5227,14 @@ const reaches = new Map(epicIds.map((id) => [id, reach(id)]));
 const selected = params.epic === undefined ? new Set(byId.keys()) : reaches.get(params.epic);
 const nodes = specs.filter((spec) => selected.has(spec.id)).map((spec) => ({
   id: spec.id,
-  title: spec.title,
+  title: spec.title ?? null,
   specKind: spec.specKind,
   altitude: spec.altitude,
   statedReadiness: spec.statedReadiness,
   floorReached: spec.derivedReadiness ?? "none",
   deliveryFacts: spec.deliveryFacts,
-  questions: (g.specContext(spec.id).sections?.intent?.openQuestions ?? []).map((question, index) => ({
-    index,
+  questions: g.specContext(spec.id).designColumns.openQuestions.map((question) => ({
+    index: question.index,
     address: question.key ? `${spec.id}#question.${question.key}` : null,
     question: question.question,
     blocking: question.blocking,
@@ -5316,8 +5327,8 @@ const epics = epicIds.filter((id) => selected.has(id)).map((id) => {
   const descendantIds = [...reaches.get(id)].filter((child) => child !== id && selected.has(child)).sort(compare);
   return {
     id,
-    title: byId.get(id).title,
-    parentEpicIds: parents.get(id).filter((parent) => byId.get(parent).altitude === "epic"),
+    title: byId.get(id).title ?? null,
+    parentEpicIds: parents.get(id).filter((parent) => parent !== id && byId.get(parent).altitude === "epic"),
     descendantIds,
     rollup: count(descendantIds),
   };
@@ -5352,7 +5363,7 @@ return {
     "nodes: full Spec rows and memberships",
     "edges: selected refinement edges and reasons",
     "epics.descendantIds: distinct descendant ids",
-    "unreached.roots: roots for complete refinement text",
+    "unreached.roots: roots of the unreached refinement subgraph",
   ],
 };
 ```

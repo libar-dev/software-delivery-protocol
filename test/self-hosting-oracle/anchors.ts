@@ -27,7 +27,6 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     constant: "capabilityMapRecipeImplementationAnchor",
     site: 'describe("the capability map recipe",',
     label: "asserts realization of The capability map in docs/agent-surface/recipes.md",
-    role: "projection",
   },
   {
     id: "test:protocol.capability-map",

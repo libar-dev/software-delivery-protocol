@@ -37,6 +37,7 @@ export const structuralMembershipExceptions = [
   "impl:protocol.validator-self-testing",
   "impl:protocol.validator-probe-table",
   "impl:protocol.entry-citation-recipe",
+  "impl:protocol.capability-map-recipe",
   "impl:protocol.external-registers-recipe",
   "impl:protocol.example-space-coverage-recipe",
   "impl:protocol.architecture-walk-recipe",
@@ -72,11 +73,6 @@ export const structuralMembershipExceptions = [
  * @sdpSatisfies spec:protocol.structural-self-binding, spec:model.structural-patterns
  */
 export const acceptedArchitecturalUnits = [
-  {
-    unit: "test/recipes.test.ts#capabilityMapRecipeImplementationAnchor",
-    anchorId: "impl:protocol.capability-map-recipe",
-    componentId: "component:protocol.reader",
-  },
   {
     unit: "src/studio-elements/memo.ts#renderMemo",
     anchorId: "impl:protocol.studio-proposal-memo",
