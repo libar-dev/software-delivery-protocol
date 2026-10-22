@@ -1,0 +1,930 @@
+/* One hue in four lightness steps orders the rungs; each badge always carries its word. */
+
+:root {
+  --bg: #fbfbfa;
+  --surface: #ffffff;
+  --surface-2: #f3f4f2;
+  --text: #1d2125;
+  --muted: #5b636b;
+  --line: #d9dcd8;
+  --link: #1f5fa8;
+  --focus: #c25e00;
+  --warn-bg: #fff4d6;
+  --warn-text: #6b4500;
+  --warn-line: #e0b54a;
+  --code-bg: #eef0ec;
+  /* The rung palette: one hue in four lightness steps, so it stays ordered under any color
+     vision; the word is always inside the badge. */
+  --rung-idea-bg: #eef3f9;
+  --rung-idea-text: #26425f;
+  --rung-scoped-bg: #c8daf0;
+  --rung-scoped-text: #1c3854;
+  --rung-defined-bg: #356eae;
+  --rung-defined-text: #ffffff;
+  --rung-ready-bg: #1f4878;
+  --rung-ready-text: #ffffff;
+  --measure: 80ch;
+  --radius: 6px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15181b;
+    --surface: #1c2024;
+    --surface-2: #23282d;
+    --text: #e6e8ea;
+    --muted: #a3abb3;
+    --line: #353b41;
+    --link: #8cbcf2;
+    --focus: #ffb062;
+    --warn-bg: #3a2e12;
+    --warn-text: #f3d68f;
+    --warn-line: #8a6a1e;
+    --code-bg: #262c31;
+    --rung-idea-bg: #26313d;
+    --rung-idea-text: #d6e3f2;
+    --rung-scoped-bg: #2f4b6b;
+    --rung-scoped-text: #e4eefa;
+    --rung-defined-bg: #356eae;
+    --rung-defined-text: #ffffff;
+    --rung-ready-bg: #9cc3f0;
+    --rung-ready-text: #0d2238;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    15px/1.55 system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+a {
+  color: var(--link);
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--code-bg);
+  border-radius: 3px;
+  padding: 0.05em 0.3em;
+  overflow-wrap: anywhere;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--surface);
+  padding: 0.5rem 1rem;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  left: 1rem;
+}
+
+/* The shell. */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.top .brand {
+  font-weight: 650;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.top nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+sdp-stamp {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.top form {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.top input[type="search"] {
+  font: inherit;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  width: 16rem;
+  max-width: 50vw;
+}
+
+button {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+  gap: 0 2rem;
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.rail {
+  font-size: 0.9rem;
+  position: sticky;
+  top: 0.5rem;
+  align-self: start;
+  max-height: calc(100vh - 1rem);
+  overflow: auto;
+  padding-right: 0.5rem;
+}
+
+.rail h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 1rem 0 0.4rem;
+}
+
+.rail ol,
+.rail ul {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.rail li {
+  margin: 0.2rem 0;
+}
+
+.rail a[aria-current="page"] {
+  font-weight: 650;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.rail a[aria-current="page"]::before {
+  content: "▸ ";
+}
+
+main {
+  min-width: 0;
+}
+
+h1 {
+  font-size: 1.7rem;
+  line-height: 1.25;
+  margin: 0.15rem 0 0.5rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin: 2rem 0 0.6rem;
+}
+
+h3 {
+  font-size: 1rem;
+  margin: 1rem 0 0.35rem;
+}
+
+.prose,
+.prose p,
+.summary {
+  max-width: var(--measure);
+}
+
+.ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  align-items: center;
+  margin: 0.2rem 0 0.8rem;
+  color: var(--muted);
+}
+
+.ids > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+}
+
+.ids > span > code {
+  min-width: 0;
+}
+
+sdp-copy {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.summary {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.summary li {
+  margin: 0.15rem 0;
+}
+
+/* Rung badges and the other words that carry a status. */
+.badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.rung-idea {
+  background: var(--rung-idea-bg);
+  color: var(--rung-idea-text);
+  border-color: transparent;
+}
+
+.rung-scoped {
+  background: var(--rung-scoped-bg);
+  color: var(--rung-scoped-text);
+  border-color: transparent;
+}
+
+.rung-defined {
+  background: var(--rung-defined-bg);
+  color: var(--rung-defined-text);
+  border-color: transparent;
+}
+
+.rung-ready {
+  background: var(--rung-ready-bg);
+  color: var(--rung-ready-text);
+  border-color: transparent;
+}
+
+.floor {
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* Member cards. */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin: 0.45rem 0;
+}
+
+.card:target,
+.card:has(:target) {
+  border-color: var(--focus);
+}
+
+.card > summary {
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+  list-style-position: outside;
+  margin-left: 1rem;
+}
+
+.card > summary .line1 {
+  font-weight: 600;
+}
+
+.card > summary .line2 {
+  display: block;
+  margin-top: 0.25rem;
+  font-weight: 400;
+}
+
+.card-body {
+  padding: 0.2rem 1rem 0.9rem 1.8rem;
+  border-top: 1px solid var(--line);
+}
+
+.card-body h3 {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-top: 0.9rem;
+}
+
+.card-body p,
+.card-body li {
+  max-width: var(--measure);
+}
+
+.questions {
+  padding-left: 1.2rem;
+  margin: 0.3rem 0;
+}
+
+.questions > li {
+  margin: 0.5rem 0;
+}
+
+.field {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.9rem;
+}
+
+.field b {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.units {
+  list-style: none;
+  padding: 0;
+  margin: 0.2rem 0;
+}
+
+.units li {
+  margin: 0.35rem 0;
+}
+
+/* Sections that close: the boundary and the lists after the cards. */
+.section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin: 0.45rem 0;
+}
+
+.section > summary {
+  cursor: pointer;
+  padding: 0.5rem 0.8rem;
+  font-weight: 600;
+}
+
+.section > .section-body {
+  padding: 0 0.8rem 0.8rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+td code,
+th code {
+  overflow-wrap: break-word;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.plain-list {
+  padding-left: 1.2rem;
+}
+
+sdp-copy button {
+  font-size: 0.75rem;
+  padding: 0.05rem 0.45rem;
+  margin-left: 0.25rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Below the phone breakpoint every layout is one column and the rail follows the canvas. */
+@media (max-width: 719.98px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rail {
+    position: static;
+    max-height: none;
+    order: 2;
+    border-top: 1px solid var(--line);
+    margin-top: 2rem;
+  }
+
+  main {
+    order: 1;
+  }
+
+  .top form {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .top input[type="search"] {
+    flex: 1;
+    max-width: none;
+  }
+
+  .card-body {
+    padding-left: 1rem;
+  }
+}
+
+/* Static sections, rows, entry addresses and the search element. */
+[hidden] {
+  display: none !important;
+}
+sdp-search {
+  margin-left: auto;
+  min-width: 0;
+}
+sdp-expander,
+sdp-filter,
+sdp-search-results {
+  display: block;
+}
+sdp-expander > button {
+  margin: 0.4rem 0.4rem 0.6rem 0;
+}
+sdp-search-results form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+}
+sdp-search-results input,
+select {
+  font: inherit;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.4rem;
+  max-width: 100%;
+}
+sdp-search-results label {
+  display: grid;
+  gap: 0.3rem;
+  flex: 1;
+}
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+}
+.filter-bar label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+}
+.spec-list {
+  padding: 0;
+  list-style: none;
+}
+.spec-row {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.entry {
+  margin: 0.75rem 0;
+}
+dt {
+  font-weight: 600;
+}
+dd {
+  margin: 0.3rem 0 0.5rem 1rem;
+  max-width: var(--measure);
+}
+.entry-line {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: var(--measure);
+  padding: 0.75rem;
+  background: var(--code-bg);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+p,
+li,
+dd,
+.line1 {
+  overflow-wrap: anywhere;
+}
+.divergence {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border: 1px solid var(--warn-line);
+  border-radius: var(--radius);
+  padding: 0.65rem;
+  max-width: var(--measure);
+}
+.rungs {
+  white-space: nowrap;
+}
+.search-result {
+  padding: 0.8rem 0 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.search-result h2 {
+  margin: 0.2rem 0 0.5rem;
+}
+.search-result p {
+  margin: 0.4rem 0;
+  max-width: var(--measure);
+}
+a {
+  text-underline-offset: 0.15em;
+}
+a:hover {
+  text-decoration-thickness: 0.12em;
+}
+button:hover {
+  border-color: var(--muted);
+}
+input,
+select {
+  caret-color: var(--link);
+}
+::selection {
+  background: var(--rung-scoped-bg);
+  color: var(--rung-scoped-text);
+}
+output {
+  display: block;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+sdp-copy output {
+  display: inline;
+  margin-left: 0.25rem;
+}
+@media (max-width: 719.98px) {
+  sdp-search {
+    width: 100%;
+    margin-left: 0;
+  }
+  .top input[type="search"] {
+    min-width: 0;
+    width: 100%;
+  }
+  .rungs {
+    white-space: normal;
+  }
+  .layout {
+    padding: 1rem 0.75rem;
+  }
+}
+
+/* Diagrams fit the column; pan and zoom enlarge the build-rendered view. */
+sdp-diagram {
+  display: block;
+  min-width: 0;
+}
+sdp-diagram figure {
+  margin: 1.5rem 0;
+}
+sdp-diagram figcaption {
+  font-weight: 650;
+  margin-bottom: 0.75rem;
+}
+.diagram-scroll,
+.table-scroll {
+  overflow: auto;
+  max-width: 100%;
+}
+.diagram-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+sdp-diagram svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  background: var(--surface);
+}
+sdp-diagram svg text {
+  fill: var(--text);
+  font:
+    12px ui-monospace,
+    monospace;
+}
+sdp-diagram .band > text,
+sdp-diagram .lane > text {
+  fill: var(--muted);
+  font-weight: 650;
+}
+sdp-diagram .node rect {
+  fill: var(--surface-2);
+  stroke: var(--muted);
+}
+sdp-diagram .node a:hover rect,
+sdp-diagram .node a:focus rect {
+  stroke: var(--link);
+  stroke-width: 2;
+}
+sdp-diagram .edge path {
+  stroke: var(--muted);
+}
+sdp-diagram marker path {
+  fill: var(--muted);
+}
+sdp-diagram .edge text {
+  fill: var(--muted);
+  font-size: 11px;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3;
+}
+sdp-diagram details {
+  margin-top: 0.75rem;
+}
+@media print {
+  .diagram-scroll {
+    overflow: visible;
+  }
+  sdp-diagram svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .diagram-controls {
+    display: none;
+  }
+}
+
+sdp-spec-card,
+sdp-maturity-map,
+sdp-example-space,
+sdp-trace-graph,
+sdp-impact-view,
+sdp-validation-findings {
+  display: block;
+  min-width: 0;
+}
+sdp-compose:empty {
+  display: none;
+}
+.example-card {
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--muted);
+}
+.example-card h4 {
+  margin-block: 0 0.5rem;
+}
+.citations,
+.rule-coverage {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+sdp-maturity-map table {
+  min-width: 48rem;
+}
+sdp-maturity-map caption {
+  text-align: start;
+  max-width: calc(100vw - 2.5rem);
+}
+sdp-maturity-map td {
+  min-width: 9rem;
+  vertical-align: top;
+}
+sdp-maturity-map td:not(:has(sdp-spec-card)) {
+  min-width: 0;
+}
+sdp-maturity-map td > p {
+  margin-block-start: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+sdp-maturity-map sdp-spec-card + sdp-spec-card {
+  margin-top: 1rem;
+}
+.top nav a[aria-current="page"] {
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-thickness: 0.15em;
+}
+.statement-list {
+  padding-left: 1.8rem;
+}
+
+/* Composing stays beside the reading flow; its requests leave as text. */
+sdp-intent-panel {
+  display: block;
+  margin-top: 2.5rem;
+}
+sdp-intent-panel label,
+dialog label,
+sdp-scenario-editor label {
+  display: grid;
+  gap: 0.35rem;
+  margin-block: 1rem;
+}
+sdp-intent-panel input,
+sdp-intent-panel textarea,
+dialog textarea {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+textarea:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.intent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.intent-actions h3,
+.intent-actions ul {
+  flex-basis: 100%;
+}
+dialog {
+  width: min(40rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 35%);
+}
+dialog h2 {
+  margin-top: 0;
+}
+dialog button {
+  margin-right: 0.75rem;
+}
+sdp-compose button {
+  margin: 0.25rem;
+}
+@media (max-width: 719.98px) {
+  sdp-diagram svg {
+    max-width: 100%;
+    height: auto;
+  }
+  sdp-maturity-map table {
+    min-width: 0;
+  }
+  dialog {
+    padding: 1rem;
+  }
+}
+@media print {
+  :root {
+    color-scheme: light;
+    --bg: white;
+    --surface: white;
+    --surface-2: white;
+    --text: black;
+    --muted: #444;
+    --link: black;
+    --code-bg: #f4f4f4;
+  }
+  .top,
+  .rail,
+  .skip-link,
+  sdp-search,
+  sdp-stamp,
+  sdp-intent-panel,
+  sdp-compose,
+  sdp-copy,
+  button,
+  input,
+  select,
+  textarea,
+  output,
+  dialog,
+  .diagram-controls,
+  .export-download {
+    display: none !important;
+  }
+  .layout {
+    display: block;
+    padding: 0;
+    max-width: none;
+  }
+  main {
+    width: 100%;
+  }
+  .table-scroll,
+  .diagram-scroll {
+    overflow: visible;
+  }
+  sdp-maturity-map table,
+  sdp-maturity-map td {
+    min-width: 0;
+  }
+  details > :not(summary) {
+    display: block !important;
+  }
+  details,
+  .card {
+    break-inside: auto;
+  }
+  summary {
+    list-style: none;
+  }
+  sdp-diagram svg {
+    width: 100%;
+    height: auto;
+  }
+  sdp-expander > div:first-child {
+    display: none;
+  }
+}
+@media print {
+  details::details-content {
+    content-visibility: visible !important;
+  }
+  .badge {
+    background: white;
+    color: black;
+    border-color: #777;
+  }
+}

@@ -4,6 +4,9 @@ kind: behavior
 altitude: feature
 readiness: ready
 relations:
+  refines:
+    target: spec:consumers.agent-surface
+    reason: a corpus scripts the graph through the evaluation sink to report its own findings
   dependsOn:
     - spec:consumers.agent-surface
     - target: spec:validation.diagnostic-rendering

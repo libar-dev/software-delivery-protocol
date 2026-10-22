@@ -1,7 +1,7 @@
 ---
 id: spec:consumers.agent-surface
 kind: behavior
-altitude: feature
+altitude: epic
 readiness: ready
 relations:
   refines: spec:consumers.projections-model
