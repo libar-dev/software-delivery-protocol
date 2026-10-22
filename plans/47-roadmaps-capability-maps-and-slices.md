@@ -1,11 +1,10 @@
 # Plan 47. Roadmaps, capability maps and design slices
 
-> **Status:** EXECUTING on `feature/roadmap-and-slices-v0`, from `main` at `da4b141`, the merge of
-> PR 35, as draft PR 36. The design wave is done and reviewed; the owner ruled its decisions and
-> gave the build go on 2026-10-22. A thin pointer: the arc's intent is `pack:roadmaps-and-slices-v1`
-> (`specs/roadmaps-and-slices.pack.sdp.md`), and readiness, backlog and open questions are read
-> from the graph (recipes 1, 9, 11, 20, 29, 33), never from this file. If this file and the graph
-> disagree, the graph wins.
+> **Status:** EXECUTED on `feature/roadmap-and-slices-v0`, from `main` at `da4b141`, the merge of
+> PR 35, as PR 36. The last numbered plan: forward work reads from the roadmap, `pack:roadmap`
+> (recipe 53), and each arc's record is its branch and then its pull request (MD-47). A thin
+> pointer: the arc's intent is `pack:roadmaps-and-slices-v1`, and readiness, backlog and open
+> questions are read from the graph, never from this file.
 
 ## Why
 
@@ -109,20 +108,56 @@ both.
 
 The owner also asked, directly in the executing thread, that this arc set the precedent for
 retiring `reviews/` as well as `plans/`, with canonical SDP-native examples of the alternatives,
-leaving the removal to a dedicated cleanup PR. Where an arc's record lives before its first push
-is put back to the owner, since `reviews/` retires too.
+leaving the removal to a dedicated cleanup PR, now first on the roadmap. The owner then ruled the
+record's home: before the first push the record is the branch itself, the first commit message
+stating the owner's working rules and the arc's Pack, with no record file anywhere; an arc pushes
+and opens its draft pull request at its first coherent commit; the draft pull request holds the
+narrative, review findings as change proposals with their memos, and the acceptance. The advisory
+round of this PR, posted to its conversation as two opinions, two proposals checked by recipe 38
+with their recipe-49 memos, and the executing thread's rulings, is the canonical example.
 
-## Build waves
+## How it was built
 
-1. **Foundation**, in parallel: the `order: priority` field and the design diff's order change;
-   the diagram core (labels, routing, Mermaid source, the copy element's `for`); the accepted
-   roster applied to the anchors with the oracle; recipes 52, 53 and 55, and 54.
-2. **Pages**, in parallel: the capabilities lens and the epic filter; the slice page with the
-   dependency and scoped architecture drawings; the roadmap page and its navigation; the maturity
-   map, the requirement drawing and the significant-units panel.
-3. **The switch and the close**: the handbook's roadmap pointer, the gate's roadmap check, the
-   skills (design rounds, curation, roadmap), the glossary and registry rows, the upgrade guide's
-   epics section, `ready` statements, acceptance on both corpora, screenshots and the PR.
+Each lane was built by GPT-6.1-Sol in its own worktree, reviewed by Opus 5.5 at extra-high effort,
+and fixed test-first by Sol; each wave was integrated in one pass and checked on CI's route (Node 20,
+npm 10, a fresh clone) before its push.
+
+| Wave | Lanes |
+| --- | --- |
+| 1 | The `order: priority` field and the design diff's order change; the diagram core (labels, routing, Mermaid source); the accepted roster on the anchors, the decoder moved to reader with no added layer crossing; recipes 52 to 55 with executable examples; the reach examples' heavy-test timeout, test-first, for a flaky CI run |
+| 2 | The Capabilities lens and epic filter; the roadmap page; a slice page per Pack; the component uses table, the significant-units panel, the maturity picture and the requirement drawing |
+| 3 | The handbook's roadmap pointer and the gate's roadmap check; skills, glossary, upgrade guide and the worked example's roadmap; the diagram catalog bound; this arc's six built entries removed from the roadmap and the delivery-record cleanup captured first |
+
+Rulings the executing thread made during the build, on the owner's delegation: the dependency
+drawing's Mermaid source is `flowchart TB`; the scoped architecture's legend names uses, planned
+uses and realization; the requirement drawing gives examples and decisions no absence label; the
+design-rounds guidance joins the authoring skill and its on-ramp.
+
+## The close review
+
+Four independent reviews of the built branch: an adversarial code review (Opus 5.5), a
+design-honesty review (GPT-6-Astra), CodeRabbit's CLI by directory (25 runs under its file limit),
+and Greptile's CLI on throwaway commits from `main` holding one directory group each (the whole
+branch exceeds its limit; findings that only the split produced were set aside). Every remaining
+finding was fixed test-first in two Sol lanes, each reviewed by Opus: the requirement drawing's false
+absence on 63 of 78 pages; drawings past their budget; Mermaid that failed to parse on a backtick
+title; recipe 53's renumbering after an unresolved member; priority shown as reading order on the
+Pack page, the vault and the design diff; the gate reading the roadmap from the graph; the memo's
+escaping; the upgrade guide's wording; evidence durability; and a Studio build 2.7 times slower than
+`main`'s, back within about five percent, with the Studio tests building their page set once.
+
+## Acceptance, measured at close
+
+Re-run the recipes rather than inheriting these.
+
+- `npm run check` passes, and CI's route on Node 20 with npm 10 passes in a fresh clone.
+- 456 Specs in 9 epics; no Spec outside an epic (110 at `main`); 447 stated `ready`, every one at
+  a `ready` floor; drift alarm empty; three honest verifier gaps.
+- The design diff from `main`: 51 Specs added, 51 changed, none removed; 4 Packs changed; 88 binding
+  changes.
+- The roadmap ran its own cycle: this arc's six entries read built and left; it now holds the
+  delivery-record cleanup, the two Studio captures (to design) and the composed-intent model (to
+  build), which is the whole build backlog with its child.
 
 ## Working rules
 
