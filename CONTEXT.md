@@ -274,7 +274,7 @@ delivery fact, workflow state, or graph state.
   relations or pack-targeting arrive.
 
 The vault ambiguity is resolved by adopting Obsidian's established noun in the glossary above.
-Its owned-folder decision remains `defined` for the owner's ratification.
+Its owned-folder decision, the vault owns one folder (MD-45), is ratified.
 
 ## Term ledger  (locked / rejected / resolved)
 

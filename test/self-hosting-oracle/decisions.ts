@@ -1295,7 +1295,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.vault-owned-folder",
     specKind: "decision",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     title: "The vault's generator owns one folder and synchronizes it",
     narrative: null,
     sections: {
@@ -1333,7 +1333,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.studio-diagram-renderer",
     specKind: "decision",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The engine lays out every Studio diagram as static SVG when the page set is built",
     narrative: null,
     sections: {
@@ -1370,7 +1370,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.studio-build-renders",
     specKind: "decision",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The build renders every Studio view, and an element only enhances it",
     narrative: null,
     sections: {

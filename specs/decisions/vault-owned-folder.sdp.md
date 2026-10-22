@@ -2,7 +2,7 @@
 id: spec:decisions.vault-owned-folder
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:consumers.obsidian-vault

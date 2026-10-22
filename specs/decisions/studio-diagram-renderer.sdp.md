@@ -2,7 +2,7 @@
 id: spec:decisions.studio-diagram-renderer
 kind: decision
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines:
     - target: spec:decisions.studio-web-components

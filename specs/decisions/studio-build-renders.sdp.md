@@ -2,7 +2,7 @@
 id: spec:decisions.studio-build-renders
 kind: decision
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:decisions.studio-web-components
