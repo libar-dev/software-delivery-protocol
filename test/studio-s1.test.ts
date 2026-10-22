@@ -947,7 +947,9 @@ it.each([false, true])(
         ...[17, 20, 24, 31, 33, 43, 44, 46, 51].map((number) => ({ number, params: {} })),
         ...(withBase ? [{ number: 35, params: { base: reader.graph, detail: true } }] : []),
         { number: 29, params: { pack: "pack:probe" } },
-        ...(withBase ? [{ number: 35, params: { base: reader.graph, pack: "pack:probe" } }] : []),
+        ...(withBase
+          ? [{ number: 35, params: { base: reader.graph, pack: "pack:probe", detail: true } }]
+          : []),
         { number: 21, params: { spec: "spec:probe.parent" } },
         { number: 30, params: { specs: ["spec:probe.parent"] } },
         { number: 34, params: { spec: "spec:probe.parent" } },
