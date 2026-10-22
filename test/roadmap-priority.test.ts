@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
-import { createReader, evaluateBody, extract, pack, packId, serializeGraph } from "../src/index.js";
+import { createReader, evaluateBody, extract, serializeGraph } from "../src/index.js";
 import type { GraphSchema } from "../src/index.js";
 import { createStudioData } from "../src/projections/studio/data.js";
 import type { Diff } from "../src/projections/studio/pages/register-answers.js";
@@ -26,7 +26,7 @@ function corpus(source: string, extension = "md"): string {
 function graphOf(priority: boolean): GraphSchema {
   return extract({ root: corpus(markdown(priority ? "order: priority\n" : "")) }).graph;
 }
-async function diff(base: unknown, graph: GraphSchema): Promise<Diff> {
+async function diff(base: unknown, graph: GraphSchema, pack?: string): Promise<Diff> {
   // Execute the catalog body itself; the build also ships these exact bytes.
   const catalog = readFileSync(
     new URL("../docs/agent-surface/recipes.md", import.meta.url),
@@ -35,13 +35,16 @@ async function diff(base: unknown, graph: GraphSchema): Promise<Diff> {
   const section = catalog.split(/^## 35\. .+$/mu)[1]?.split(/^## /mu)[0];
   const body = /```js\n([\s\S]*?)\n```/u.exec(section ?? "")?.[1];
   if (body === undefined) throw new Error("Missing design diff recipe");
-  return (await evaluateBody(body, { graph, params: { base, detail: true } })) as Diff;
+  return (await evaluateBody(body, {
+    graph,
+    params: { base, detail: true, ...(pack === undefined ? {} : { pack }) },
+  })) as Diff;
 }
 
 const priorityAnchor = specTest({
   id: testAnchorId("test:protocol.roadmap-priority"),
+  label: "checks Pack priority extraction, comparison and Studio change notes",
   verifies: [
-    ref("spec:decisions.roadmap-priority"),
     ref("spec:carrier.markdown-pack-authoring"),
     ref("spec:model.pack-aggregate"),
     ref("spec:extraction.pack-member-order"),
@@ -52,16 +55,6 @@ const priorityAnchor = specTest({
 void priorityAnchor;
 
 describe("roadmap priority manifest", () => {
-  it("keeps the builder's optional priority without defaulting an ordinary Pack", () => {
-    expect(
-      pack({ id: packId("pack:probe.review"), specs: [], title: "Review", order: "priority" })
-        .order,
-    ).toBe("priority");
-    expect(
-      pack({ id: packId("pack:probe.review"), specs: [], title: "Review" }),
-    ).not.toHaveProperty("order");
-  });
-
   it("derives equal Markdown and TypeScript Pack nodes and edges, serializes order last, and exposes it through the reader", () => {
     const mdRoot = corpus(
       markdown("order: priority\n").replace("specs: []", "specs: [spec:probe.member]"),
@@ -145,6 +138,23 @@ describe("roadmap priority manifest", () => {
 });
 
 describe("roadmap priority design diff", () => {
+  it("documents the order comparison fields, default and diagnostic in the recipe contract", () => {
+    const catalog = readFileSync(
+      new URL("../docs/agent-surface/recipes.md", import.meta.url),
+      "utf8",
+    );
+    const contract = catalog.split("`packs` reports")[1]?.split("`bindings`")[0];
+    for (const term of [
+      "`orderChanged`",
+      "`orderBefore`",
+      "`orderAfter`",
+      '`"reading"`',
+      '{ part: "order", id, side, value, problem }',
+    ]) {
+      expect(contract).toContain(term);
+    }
+  });
+
   it.each([true, false])(
     "compares a priority transition to %s without a membership edit",
     async (priority) => {
@@ -198,7 +208,7 @@ describe("roadmap priority design diff", () => {
   );
 
   it.each(["base", "head"])(
-    "diagnoses an unknown order at the %s without comparing that Pack",
+    "diagnoses an unknown order at the %s without reporting an order change",
     async (side) => {
       const known = graphOf(false);
       const unknown = {
@@ -222,6 +232,101 @@ describe("roadmap priority design diff", () => {
     },
   );
 
+  it.each(["base", "head"])(
+    "still compares membership and member order when the %s order is unknown",
+    async (side) => {
+      const original = graphOf(true);
+      const withMembers = (members: string[], unknown: boolean) => ({
+        ...original,
+        nodes: original.nodes.map((node) => ({
+          ...node,
+          members,
+          ...(unknown ? { order: "schedule" } : {}),
+        })),
+      });
+      const result = await diff(
+        withMembers(["spec:probe.a", "spec:probe.c"], side === "base"),
+        withMembers(
+          ["spec:probe.c", "spec:probe.a", "spec:probe.b"],
+          side === "head",
+        ) as GraphSchema,
+      );
+      expect(result.packs).toEqual([
+        {
+          id: "pack:probe.review",
+          change: "changed",
+          membersAdded: ["spec:probe.b"],
+          membersRemoved: [],
+          reordered: true,
+          orderChanged: false,
+          orderBefore: side === "base" ? null : "priority",
+          orderAfter: side === "head" ? null : "priority",
+        },
+      ]);
+      expect(result.totals?.packs).toBe(1);
+      expect(result.diagnostics).toEqual([
+        {
+          part: "order",
+          id: "pack:probe.review",
+          side,
+          value: "schedule",
+          problem: "Part is outside the common schema.",
+        },
+      ]);
+    },
+  );
+
+  it("keeps an order-only change in the selected Pack's comparison scope", async () => {
+    const withOther = (graph: GraphSchema): GraphSchema => {
+      const pack = graph.nodes.find((node) => node.nodeType === "Pack");
+      if (pack === undefined) throw new Error("Missing Pack");
+      return { ...graph, nodes: [...graph.nodes, { ...pack, id: "pack:probe.other" }] };
+    };
+    const base = withOther(graphOf(false)),
+      head = withOther(graphOf(true));
+    const result = await diff(base, head, "pack:probe.review");
+    expect(result.packs).toEqual([
+      {
+        id: "pack:probe.review",
+        change: "changed",
+        membersAdded: [],
+        membersRemoved: [],
+        reordered: false,
+        orderChanged: true,
+        orderBefore: "reading",
+        orderAfter: "priority",
+      },
+    ]);
+    expect(result.totals?.packs).toBe(1);
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it.each([true, false])(
+    "shows no roadmap transition for a membership-only change (priority %s)",
+    async (priority) => {
+      const base = graphOf(priority);
+      const head = {
+        ...base,
+        nodes: base.nodes.map((node) =>
+          node.nodeType === "Pack"
+            ? { ...node, members: [...node.members, "spec:probe.added"] }
+            : node,
+        ),
+      };
+      const data = await createStudioData(createReader(head), undefined, {
+        base: { graph: base, label: "Earlier design" },
+        runs: [],
+      });
+      const pages = renderStudio(data);
+      for (const path of ["diff.html", "packs/probe.review.html"]) {
+        const content = pages.find((page) => page.path === path)?.content;
+        expect(content).toContain("spec:probe.added");
+        expect(content).not.toContain("now a roadmap");
+        expect(content).not.toContain("no longer a roadmap");
+      }
+    },
+  );
+
   it.each([true, false])(
     "shows the roadmap transition to %s on the diff and Pack pages",
     async (priority) => {
@@ -230,10 +335,15 @@ describe("roadmap priority design diff", () => {
         runs: [],
       });
       const pages = renderStudio(data);
+      const diffPage = pages.find((page) => page.path === "diff.html")?.content;
+      expect(diffPage).toContain("1 Pack with membership, member order or order meaning changes.");
+      expect(diffPage).toContain(
+        "<h2>Packs with membership, member order or order meaning changes</h2>",
+      );
       for (const path of ["diff.html", "packs/probe.review.html"]) {
-        expect(pages.find((page) => page.path === path)?.content).toContain(
-          priority ? "now a roadmap" : "no longer a roadmap",
-        );
+        const content = pages.find((page) => page.path === path)?.content;
+        expect(content).toContain("Member order unchanged.");
+        expect(content).toContain(priority ? "now a roadmap" : "no longer a roadmap");
       }
     },
   );

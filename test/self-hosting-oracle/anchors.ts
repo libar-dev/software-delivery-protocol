@@ -23,6 +23,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "test:protocol.roadmap-priority",
     nodeType: "Anchor",
+    label: "checks Pack priority extraction, comparison and Studio change notes",
     file: "test/roadmap-priority.test.ts",
     constant: "priorityAnchor",
     site: 'describe("roadmap priority manifest",',
@@ -1838,7 +1839,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "impl:protocol.open-section-order",
     nodeType: "CodeNode",
-    label: "preserves authored open-section and model-term order",
+    label: "preserves authored open-section and model-term order and Pack field order",
     file: "src/extract/serialize.ts",
     constant: "openSectionOrderAnchor",
     site: "function canonicalDynamicSection",
@@ -5977,7 +5978,6 @@ export const expectedBindingEdges = [
   ["impl:protocol.authoring-grammar-recipes", "satisfies", "spec:model.open-question-fields"],
   ["impl:protocol.authoring-grammar-recipes", "satisfies", "spec:model.relation-reasons"],
   ["impl:protocol.curation-recipe", "references", "spec:model.planned-architecture"],
-  ["test:protocol.roadmap-priority", "verifies", "spec:decisions.roadmap-priority"],
   ["test:protocol.roadmap-priority", "verifies", "spec:carrier.markdown-pack-authoring"],
   ["test:protocol.roadmap-priority", "verifies", "spec:model.pack-aggregate"],
   ["test:protocol.roadmap-priority", "verifies", "spec:extraction.pack-member-order"],

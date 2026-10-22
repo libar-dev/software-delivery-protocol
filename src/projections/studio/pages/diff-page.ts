@@ -43,7 +43,7 @@ function packDelta(ctx: PageContext, pack: NonNullable<Diff["packs"]>[number]): 
   const meaning = pack.orderChanged
     ? `<p>${pack.orderAfter === "priority" ? "now a roadmap" : "no longer a roadmap"}</p>`
     : "";
-  return `<p>${escape(pack.change)} · ${link(ctx, pack.id)}</p><p>Members added: ${pack.membersAdded.map((id) => link(ctx, id)).join(", ") || "None"}</p><p>Members removed: ${pack.membersRemoved.map(code).join(", ") || "None"}</p><p>Order ${pack.reordered ? "changed" : "unchanged"}.</p>${meaning}`;
+  return `<p>${escape(pack.change)} · ${link(ctx, pack.id)}</p><p>Members added: ${pack.membersAdded.map((id) => link(ctx, id)).join(", ") || "None"}</p><p>Members removed: ${pack.membersRemoved.map(code).join(", ") || "None"}</p><p>Member order ${pack.reordered ? "changed" : "unchanged"}.</p>${meaning}`;
 }
 function valueBlock(value: unknown): string {
   if (Array.isArray(value)) return list(value.map(valueBlock));
@@ -99,7 +99,7 @@ export function diffPage(ctx: PageContext): string {
   return frame(
     ctx,
     "Design diff",
-    `<header class="page-head"><h1>Design diff</h1><p>${names}</p><p>The comparison reads the two graphs only. Recipe 35 with detail enabled.</p>${t === undefined ? "" : summary([`${total(t.added, "Spec")} added.`, `${total(t.removed, "Spec")} removed.`, `${total(t.changed, "Spec")} changed.`, `${total(t.packs, "Pack")} with membership or order changes.`, `${total(t.bindings, "Spec")} with binding changes.`])}</header><h2>Specs added</h2>${list((diff.specs?.added ?? []).map((id) => `<span id="${escape(id)}">${titleLink(ctx, id)} · ${code(id)}</span>`))}<h2>Specs removed</h2>${list((diff.specs?.removed ?? []).map(code))}<h2>Specs changed</h2>${
+    `<header class="page-head"><h1>Design diff</h1><p>${names}</p><p>The comparison reads the two graphs only. Recipe 35 with detail enabled.</p>${t === undefined ? "" : summary([`${total(t.added, "Spec")} added.`, `${total(t.removed, "Spec")} removed.`, `${total(t.changed, "Spec")} changed.`, `${total(t.packs, "Pack")} with membership, member order or order meaning changes.`, `${total(t.bindings, "Spec")} with binding changes.`])}</header><h2>Specs added</h2>${list((diff.specs?.added ?? []).map((id) => `<span id="${escape(id)}">${titleLink(ctx, id)} · ${code(id)}</span>`))}<h2>Specs removed</h2>${list((diff.specs?.removed ?? []).map(code))}<h2>Specs changed</h2>${
       (diff.specs?.changed ?? [])
         .map(
           (s) =>
@@ -112,7 +112,7 @@ export function diffPage(ctx: PageContext): string {
               .join("")}</section>`,
         )
         .join("") || "<p>None.</p>"
-    }<h2>Packs with membership or order changes</h2>${(diff.packs ?? []).map((p) => `<section class="spec-row">${packDelta(ctx, p)}</section>`).join("") || "<p>None.</p>"}<h2>Bindings, derived from anchors</h2>${
+    }<h2>Packs with membership, member order or order meaning changes</h2>${(diff.packs ?? []).map((p) => `<section class="spec-row">${packDelta(ctx, p)}</section>`).join("") || "<p>None.</p>"}<h2>Bindings, derived from anchors</h2>${
       (diff.bindings ?? [])
         .map(
           (b) =>

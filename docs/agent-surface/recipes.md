@@ -3185,17 +3185,15 @@ const packs = [];
 for (const id of [...new Set([...basePacks.keys(), ...headPacks.keys()])].sort()) {
   if (packId !== undefined && id !== packId) continue;
   const a = basePacks.get(id), b = headPacks.get(id);
-  const orderOf = (node) => node === undefined ? null : node.order === undefined ? "reading" : node.order;
-  const orderBefore = orderOf(a), orderAfter = orderOf(b);
-  let comparable = true;
-  for (const [side, node, value] of [["base", a, orderBefore], ["head", b, orderAfter]]) {
-    if (node !== undefined && node.order !== undefined && node.order !== "priority") {
-      diagnostics.push({ part: "order", id, side, value, problem: "Part is outside the common schema." });
-      comparable = false;
-    }
-  }
-  if (!comparable) continue;
-  const orderChanged = a !== undefined && b !== undefined && orderBefore !== orderAfter;
+  const orderOf = (node, side) => {
+    if (node === undefined) return null;
+    if (node.order === undefined) return "reading";
+    if (node.order === "priority") return "priority";
+    diagnostics.push({ part: "order", id, side, value: node.order, problem: "Part is outside the common schema." });
+    return null;
+  };
+  const orderBefore = orderOf(a, "base"), orderAfter = orderOf(b, "head");
+  const orderChanged = a !== undefined && b !== undefined && orderBefore !== null && orderAfter !== null && orderBefore !== orderAfter;
   const members = delta(a?.members ?? [], b?.members ?? []);
   const common = new Set((a?.members ?? []).filter((member) => b?.members.includes(member)));
   const reordered = !same((a?.members ?? []).filter((member) => common.has(member)), (b?.members ?? []).filter((member) => common.has(member)));
@@ -3248,6 +3246,11 @@ For a probe whose two rules were keyed and whose second rule was also reworded, 
 ```
 
 `packs` reports membership additions, removals and relative order changes among retained members.
+`orderChanged` reports a change in what the order means, with `orderBefore` and `orderAfter`
+reading `"reading"` or `"priority"`; an absent `order` reads as `"reading"` in every schema version.
+An absent Pack reads null on that side. An unknown value produces an order diagnostic
+`{ part: "order", id, side, value, problem }`, where `side` is `"base"` or `"head"`, and reads null
+on that side; the Pack's membership and member order still compare, with `orderChanged: false`.
 `bindings` keeps anchor-derived changes apart, with added and removed ids for realizing units,
 referencing units, enabled verifiers and delivery facts. Each list has a count in `totals`.
 A schema difference is diagnostic data. Parts outside the schemas' shared capabilities are

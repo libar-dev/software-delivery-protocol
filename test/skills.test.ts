@@ -109,6 +109,12 @@ it("teaches the named-file exception to both carrier-watch descriptions", () => 
   }
 });
 
+it("teaches the optional priority field in the Pack manifest envelope", () => {
+  const { body } = readSkill(".agents/skills/sdp-authoring/SKILL.md");
+  const pack = body.split("## Author a Pack")[1]?.split("## Bind code")[0];
+  expect(pack).toContain("optional `order`, whose one lawful value is `priority`");
+});
+
 // A fence inside a numbered step is indented, so fences are matched after trimming.
 function shellFenceLines(body: string): readonly string[] {
   const lines: string[] = [];

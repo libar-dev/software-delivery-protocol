@@ -283,9 +283,10 @@ fields, or a relation reason; a Spec that needs one is authored in Markdown.
 
 ## Author a Pack
 
-Use a Markdown `*.pack.sdp.md` manifest with frontmatter closed to `id`, `specs`, and optional
-`modelRefs`. The H1 is the Pack title; the remaining body prose is its framing. Preserve authored
-membership order and point to `spec:carrier.markdown-pack-authoring` for the complete carrier law.
+Use a Markdown `*.pack.sdp.md` manifest with frontmatter closed to `id`, `specs`, optional
+`modelRefs`, and optional `order`, whose one lawful value is `priority`. The H1 is the Pack title;
+the remaining body prose is its framing. Preserve authored membership order and point to
+`spec:carrier.markdown-pack-authoring` for the complete carrier law.
 
 ## Bind code, tests, and oracles
 

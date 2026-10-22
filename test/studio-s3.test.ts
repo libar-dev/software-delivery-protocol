@@ -580,7 +580,7 @@ describe("Studio base comparison", () => {
     expect(diff).toContain("1 Spec added.");
     expect(diff).toContain("1 Spec removed.");
     expect(diff).toContain("1 Spec changed.");
-    expect(diff).toContain("1 Pack with membership or order changes.");
+    expect(diff).toContain("1 Pack with membership, member order or order meaning changes.");
     expect(diff).toContain("1 Spec with binding changes.");
     expect(diff).toContain("&lt;script&gt;before&lt;/script&gt;");
     expect(diff).not.toContain("<script>");
