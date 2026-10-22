@@ -1,0 +1,952 @@
+{
+  "scope": {
+    "pack": "pack:roadmaps-and-slices-v1",
+    "title": "Roadmaps, capability maps and design slices",
+    "framing": "How a corpus reads where it stands and what comes next, drawn from the graph. First the architecture the views stand on: a review of which engine units are significant enough to anchor, and the meaning of each role they carry. Then the capability map, epics with their features and stories, and the Protocol's own capabilities stated as epics. Then the diagrams the graph has data for, and the design slice, a Pack read as one design with the architecture it touches. Last the roadmap: the decision that lets the graph hold an advisory priority, the roadmap reading and its page and memo, and the decision that lets the roadmap replace the Protocol's numbered plans.",
+    "subset": false,
+    "members": [
+      "spec:protocol.significant-units-review",
+      "spec:protocol.role-vocabulary",
+      "spec:consumers.capability-map",
+      "spec:protocol.capability-epics",
+      "spec:consumers.spec-studio.capability-map-page",
+      "spec:consumers.spec-studio.diagram-kinds",
+      "spec:consumers.design-slice",
+      "spec:consumers.spec-studio.slice-page",
+      "spec:decisions.roadmap-priority",
+      "spec:consumers.roadmap",
+      "spec:consumers.spec-studio.roadmap-page",
+      "spec:consumers.roadmap.memo",
+      "spec:decisions.roadmap-over-plans",
+      "spec:protocol.roadmap-replaces-plans"
+    ],
+    "unresolved": []
+  },
+  "totals": {
+    "members": 14,
+    "exampleMembers": 0,
+    "relations": 9,
+    "depth": 3,
+    "cycles": 0,
+    "heldBelowNextRung": 13,
+    "waitingForAuthor": 1,
+    "restsOn": 22,
+    "holdingOutside": 0,
+    "restedOnBy": 0,
+    "verifiedBy": 0,
+    "supersededBy": 0,
+    "components": {
+      "touched": 6,
+      "throughMembers": 0,
+      "throughRestsOn": 6,
+      "planned": 0
+    },
+    "componentUses": 11,
+    "decisions": 5,
+    "decisionsBelowReady": 2,
+    "openQuestions": 10,
+    "blockingQuestions": 8
+  },
+  "members": [
+    {
+      "id": "spec:protocol.significant-units-review",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:protocol.role-vocabulary",
+      "specKind": "model",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.capability-map",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 2,
+        "blockingQuestions": 2,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:protocol.capability-epics",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 2,
+      "restsOn": [
+        "spec:consumers.capability-map"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 1,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.capability-map-page",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 2,
+      "restsOn": [
+        "spec:consumers.capability-map"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.diagram-kinds",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 2,
+        "blockingQuestions": 2,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.design-slice",
+      "specKind": "behavior",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 13,
+        "declarations": 11,
+        "openQuestions": 1,
+        "blockingQuestions": 0,
+        "decisions": 2
+      },
+      "rules": {
+        "total": 16,
+        "keyed": 16
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.slice-page",
+      "specKind": "behavior",
+      "statedReadiness": "defined",
+      "floorReached": "defined",
+      "statedNextRung": "ready",
+      "holds": [
+        {
+          "clauseId": "typed-dependency-targets-are-defined",
+          "targets": [
+            "spec:consumers.spec-studio.diagram-kinds"
+          ]
+        }
+      ],
+      "depth": 2,
+      "restsOn": [
+        "spec:consumers.design-slice",
+        "spec:consumers.spec-studio.diagram-kinds"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 9,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 15,
+        "keyed": 15
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:decisions.roadmap-priority",
+      "specKind": "decision",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 1,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.roadmap",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 2,
+      "restsOn": [
+        "spec:decisions.roadmap-priority"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 1,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.roadmap-page",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 3,
+      "restsOn": [
+        "spec:consumers.roadmap"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.roadmap.memo",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 3,
+      "restsOn": [
+        "spec:consumers.roadmap"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:decisions.roadmap-over-plans",
+      "specKind": "decision",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 1,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:protocol.roadmap-replaces-plans",
+      "specKind": "behavior",
+      "statedReadiness": "idea",
+      "floorReached": "idea",
+      "statedNextRung": "scoped",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-present",
+          "targets": []
+        }
+      ],
+      "depth": 3,
+      "restsOn": [
+        "spec:consumers.roadmap",
+        "spec:decisions.roadmap-over-plans"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    }
+  ],
+  "structure": {
+    "edges": [
+      {
+        "from": "spec:consumers.roadmap",
+        "to": "spec:decisions.roadmap-priority",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:consumers.roadmap.memo",
+        "to": "spec:consumers.roadmap",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.capability-map-page",
+        "to": "spec:consumers.capability-map",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.roadmap-page",
+        "to": "spec:consumers.roadmap",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.slice-page",
+        "to": "spec:consumers.design-slice",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.slice-page",
+        "to": "spec:consumers.spec-studio.diagram-kinds",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:protocol.capability-epics",
+        "to": "spec:consumers.capability-map",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:protocol.roadmap-replaces-plans",
+        "to": "spec:decisions.roadmap-over-plans",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:protocol.roadmap-replaces-plans",
+        "to": "spec:consumers.roadmap",
+        "type": "dependsOn"
+      }
+    ],
+    "cycles": []
+  },
+  "boundary": {
+    "restsOn": [
+      {
+        "id": "spec:consumers.agent-surface.design-recipes",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.binding-language-views",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.context-bundle",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.derived-readiness-banner",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.graph-first-planning",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.pack-design",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.projections-model",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.readiness-planner",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.review-perspectives",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio.data.recipe-answers",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio.diagrams",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio.pack-page",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.anchor-binding-grain",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.architectural-annotation",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.planning-truths-placement",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.studio-diagram-renderer",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:model.open-question-fields",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:model.planned-architecture",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:model.rule-keys",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:protocol.self-hosting",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:protocol.structural-self-binding",
+        "statedReadiness": "ready",
+        "holds": []
+      }
+    ],
+    "restedOnBy": [],
+    "verifiedBy": [],
+    "supersededBy": []
+  },
+  "architecture": {
+    "components": [
+      {
+        "id": "component:protocol.cli",
+        "layer": "edge",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 1
+      },
+      {
+        "id": "component:protocol.extract",
+        "layer": "application",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 2
+      },
+      {
+        "id": "component:protocol.projections",
+        "layer": "edge",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 7
+      },
+      {
+        "id": "component:protocol.reader",
+        "layer": "application",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 1
+      },
+      {
+        "id": "component:protocol.studio-elements",
+        "layer": "edge",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 1
+      },
+      {
+        "id": "component:protocol.validate",
+        "layer": "domain",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 1
+      }
+    ],
+    "uses": [
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.extract",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.projections",
+        "count": 2,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.reader",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.extract",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.extract",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.reader",
+        "count": 4,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.reader",
+        "to": "component:protocol.validate",
+        "count": 2,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.studio-elements",
+        "to": "component:protocol.projections",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.studio-elements",
+        "to": "component:protocol.reader",
+        "count": 1,
+        "planned": false
+      }
+    ],
+    "unplaced": [],
+    "differing": []
+  },
+  "decisions": [
+    {
+      "id": "spec:decisions.anchor-binding-grain",
+      "statedReadiness": "ready",
+      "member": false,
+      "shapes": 1
+    },
+    {
+      "id": "spec:decisions.architectural-annotation",
+      "statedReadiness": "ready",
+      "member": false,
+      "shapes": 1
+    },
+    {
+      "id": "spec:decisions.roadmap-over-plans",
+      "statedReadiness": "idea",
+      "member": true,
+      "shapes": 1
+    },
+    {
+      "id": "spec:decisions.roadmap-priority",
+      "statedReadiness": "idea",
+      "member": true,
+      "shapes": 1
+    },
+    {
+      "id": "spec:decisions.studio-diagram-renderer",
+      "statedReadiness": "ready",
+      "member": false,
+      "shapes": 1
+    }
+  ],
+  "questions": [
+    {
+      "address": "spec:consumers.spec-studio.diagram-kinds#question.kindCatalog",
+      "spec": "spec:consumers.spec-studio.diagram-kinds",
+      "origin": "member",
+      "index": 0,
+      "question": "Which diagram kinds does the graph hold honest data for, and which would need data it does not hold, such as message order for a sequence diagram?",
+      "blocking": true,
+      "deferral": false,
+      "decider": "delegated",
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": [
+        "spec:consumers.spec-studio.slice-page"
+      ]
+    },
+    {
+      "address": "spec:consumers.spec-studio.diagram-kinds#question.legibleLabels",
+      "spec": "spec:consumers.spec-studio.diagram-kinds",
+      "origin": "member",
+      "index": 1,
+      "question": "How does a drawing wider than its column keep its labels legible: a wider figure, shorter labels, a smallest scale with scrolling, or a mix?",
+      "blocking": true,
+      "deferral": false,
+      "decider": "delegated",
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": [
+        "spec:consumers.spec-studio.slice-page"
+      ]
+    },
+    {
+      "address": "spec:consumers.capability-map#question.multipleParents",
+      "spec": "spec:consumers.capability-map",
+      "origin": "member",
+      "index": 0,
+      "question": "Where does the map place a Spec that refines more than one parent?",
+      "blocking": true,
+      "deferral": false,
+      "decider": "delegated",
+      "links": [],
+      "provisional": "under every parent, the second and later placements marked as repeats that link to the first",
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:consumers.capability-map#question.unreached",
+      "spec": "spec:consumers.capability-map",
+      "origin": "member",
+      "index": 1,
+      "question": "How does the map show a Spec that no epic reaches through refinement?",
+      "blocking": true,
+      "deferral": false,
+      "decider": "delegated",
+      "links": [],
+      "provisional": "in its own section after the epics, grouped by the highest Spec its refinement reaches",
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:consumers.roadmap#question.lanes",
+      "spec": "spec:consumers.roadmap",
+      "origin": "member",
+      "index": 0,
+      "question": "Which graph facts place an entry in to design, to build or built, and how does an entry that is an epic or a feature count its descendants?",
+      "blocking": true,
+      "deferral": false,
+      "decider": "delegated",
+      "links": [],
+      "provisional": "to build when it or a descendant states `ready` without `implemented`, to design when one states below `ready`, built when every one is implemented; examples and decisions follow the build backlog's exclusions",
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:decisions.roadmap-over-plans#question.planCarrier",
+      "spec": "spec:decisions.roadmap-over-plans",
+      "origin": "member",
+      "index": 0,
+      "question": "Does the roadmap replace the numbered plan as the record an agent reads first, with `plans/` kept as frozen history?",
+      "blocking": true,
+      "deferral": false,
+      "decider": "owner",
+      "links": [],
+      "provisional": "yes; the handbook names the roadmap recipe, and the arc's execution record moves to its pull request description",
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:decisions.roadmap-priority#question.priorityHome",
+      "spec": "spec:decisions.roadmap-priority",
+      "origin": "member",
+      "index": 0,
+      "question": "Where does a roadmap's priority live: in the authored order of a Pack marked as a roadmap, in a Pack the corpus names by convention, or outside the graph as corpus data a recipe reads?",
+      "blocking": true,
+      "deferral": false,
+      "decider": "owner",
+      "links": [],
+      "provisional": "in the authored member order of a Pack whose manifest marks its order as priority",
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:protocol.capability-epics#question.epicHome",
+      "spec": "spec:protocol.capability-epics",
+      "origin": "member",
+      "index": 0,
+      "question": "Does a capability's epic restate the hub Spec that already carries the capability, enriched in place to `epic`, or is it a new Spec the hub refines?",
+      "blocking": true,
+      "deferral": false,
+      "decider": "delegated",
+      "links": [],
+      "provisional": "enrich the hub in place where its outcome already is the capability; author a new epic only where no Spec states the capability",
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:consumers.design-slice#question.sliceTerm",
+      "spec": "spec:consumers.design-slice",
+      "index": 0
+    },
+    {
+      "address": "spec:consumers.spec-studio.slice-page#question.exportCarriesSlice",
+      "spec": "spec:consumers.spec-studio.slice-page",
+      "index": 0
+    }
+  ],
+  "leftOut": [
+    "Titles, altitudes, rested-on-by and example member lists, example and verifier counts, and unit and component ids of unselected members; unit counts kept.",
+    "Relation reasons; relation types kept.",
+    "Boundary titles, kinds, floors, implementation bindings and joined members; ids, stated rungs and holds kept.",
+    "Component labels and the Specs that reach each component; counts kept.",
+    "Decision titles, floors, refinements, supersessions and question counts.",
+    "Non-blocking question text and fields; addresses kept."
+  ]
+}

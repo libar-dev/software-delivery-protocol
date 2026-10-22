@@ -1,0 +1,3068 @@
+{
+  "scope": {
+    "pack": "pack:spec-studio-v1",
+    "title": "Spec Studio",
+    "framing": "The Spec Studio of the original design, `docs/lineage/v0-design/07-spec-studio-and-projections.md` sections 1 to 3, 11 and 12, in the order a reviewer reads it: what the Studio is and why it renders HTML; the data it reads, with the recipe answers it composes and its two named inputs, and the verb that publishes and watches it; its shell, search and navigation; its four lenses, with the index that is the Packs lens and the coverage recipe the tests lens reads; the Pack page and its maturity map; the Spec page with its core and its panels; the register pages, the owner queue, and the diff, runs and glossary pages, with the run-evidence recipe the runs page reads; the composing panel and the memo it hands off; its custom elements, the decisions that shape them, and the diagrams the engine draws for them; its phone layout; the Pack export and print; how a build is stamped and shared; and the skill that teaches an agent to publish, share and read the Studio and to apply what a person composes in it. Each Spec is followed by the examples that will verify it. Recipe 27, references into a design, shows each member's code bindings and the implemented Specs it builds on.",
+    "subset": false,
+    "members": [
+      "spec:consumers.spec-studio",
+      "spec:decisions.studio-html-surface",
+      "spec:consumers.spec-studio.data",
+      "spec:consumers.spec-studio.data.recipe-answers",
+      "spec:consumers.spec-studio.data.inputs",
+      "spec:consumers.spec-studio.data.inputs.graph-only",
+      "spec:consumers.spec-studio.data.inputs.both-given",
+      "spec:consumers.spec-studio.publisher",
+      "spec:consumers.spec-studio.publisher.watch",
+      "spec:consumers.spec-studio.publisher.watch.matches-plain-run",
+      "spec:consumers.spec-studio.shell",
+      "spec:consumers.spec-studio.search",
+      "spec:consumers.spec-studio.navigation",
+      "spec:consumers.spec-studio.lenses",
+      "spec:consumers.spec-studio.lenses.packs",
+      "spec:consumers.spec-studio.index-page",
+      "spec:consumers.spec-studio.lenses.architecture",
+      "spec:consumers.spec-studio.lenses.architecture.planned-apart",
+      "spec:consumers.spec-studio.lenses.tests",
+      "spec:consumers.spec-studio.lenses.tests.coverage-row",
+      "spec:consumers.agent-surface.example-space-coverage",
+      "spec:consumers.agent-surface.example-space-coverage.uncovered-literal",
+      "spec:consumers.agent-surface.example-space-coverage.number-not-enumerable",
+      "spec:consumers.spec-studio.lenses.evidence",
+      "spec:consumers.spec-studio.pack-page",
+      "spec:consumers.spec-studio.pack-page.maturity-map",
+      "spec:consumers.spec-studio.spec-page",
+      "spec:consumers.spec-studio.spec-page.cited-declaration",
+      "spec:consumers.spec-studio.spec-page.core",
+      "spec:consumers.spec-studio.verification-panels",
+      "spec:consumers.spec-studio.verification-panels.rule-coverage",
+      "spec:consumers.spec-studio.registers",
+      "spec:consumers.spec-studio.registers.blocking-first",
+      "spec:consumers.spec-studio.owner-queue",
+      "spec:consumers.spec-studio.owner-queue.dependency-first",
+      "spec:consumers.spec-studio.diff-page",
+      "spec:consumers.spec-studio.diff-page.changed-entry",
+      "spec:consumers.spec-studio.runs-page",
+      "spec:consumers.spec-studio.runs-page.external-evidence",
+      "spec:observation.run-evidence",
+      "spec:observation.run-evidence.absolute-path-joins",
+      "spec:observation.run-evidence.unanchored-file-unjoined",
+      "spec:consumers.spec-studio.glossary-page",
+      "spec:consumers.spec-studio.glossary-page.same-word-twice",
+      "spec:consumers.spec-studio.intent-panel",
+      "spec:consumers.spec-studio.intent-panel.refresh-keeps-intents",
+      "spec:consumers.intent-composition.proposal.memo",
+      "spec:consumers.intent-composition.proposal.memo.shared",
+      "spec:consumers.spec-studio.components",
+      "spec:decisions.studio-web-components",
+      "spec:decisions.studio-build-renders",
+      "spec:decisions.studio-diagram-renderer",
+      "spec:consumers.spec-studio.diagrams",
+      "spec:consumers.spec-studio.diagrams.within-bound",
+      "spec:consumers.spec-studio.diagrams.folds-by-context",
+      "spec:consumers.spec-studio.diagrams.folds-by-layer",
+      "spec:consumers.spec-studio.page-elements",
+      "spec:consumers.spec-studio.responsive",
+      "spec:consumers.spec-studio.export",
+      "spec:consumers.spec-studio.export.self-contained",
+      "spec:consumers.spec-studio.sharing",
+      "spec:consumers.spec-studio.sharing.stamp-written-apart",
+      "spec:consumers.studio-on-ramp"
+    ],
+    "unresolved": []
+  },
+  "totals": {
+    "members": 63,
+    "exampleMembers": 23,
+    "relations": 116,
+    "depth": 10,
+    "cycles": 0,
+    "heldBelowNextRung": 0,
+    "waitingForAuthor": 0,
+    "restsOn": 43,
+    "holdingOutside": 0,
+    "restedOnBy": 8,
+    "verifiedBy": 0,
+    "supersededBy": 0,
+    "components": {
+      "touched": 11,
+      "throughMembers": 5,
+      "throughRestsOn": 10,
+      "planned": 0
+    },
+    "componentUses": 33,
+    "decisions": 9,
+    "decisionsBelowReady": 0,
+    "openQuestions": 1,
+    "blockingQuestions": 0
+  },
+  "members": [
+    {
+      "id": "spec:consumers.spec-studio",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 3,
+      "restsOn": [
+        "spec:decisions.studio-build-renders",
+        "spec:decisions.studio-html-surface",
+        "spec:decisions.studio-web-components"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 4
+      },
+      "rules": {
+        "total": 11,
+        "keyed": 4
+      },
+      "implementedBy": 3,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:decisions.studio-html-surface",
+      "specKind": "decision",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.data",
+      "specKind": "contract",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 4,
+      "restsOn": [
+        "spec:consumers.spec-studio"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 5,
+        "declarations": 5,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 4,
+        "keyed": 4
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.data.recipe-answers",
+      "specKind": "contract",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 5,
+      "restsOn": [
+        "spec:consumers.spec-studio.data"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 2,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 2,
+        "keyed": 2
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.data.inputs",
+      "specKind": "contract",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 6,
+      "restsOn": [
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.publisher",
+        "spec:observation.run-evidence"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 2,
+        "declarations": 2,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 9,
+        "keyed": 9
+      },
+      "implementedBy": 2,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.data.inputs.graph-only",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio.data.inputs"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.data.inputs",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.data.inputs.both-given",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio.data.inputs"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.data.inputs",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.publisher",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 5,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 10,
+        "keyed": 10
+      },
+      "implementedBy": 4,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.publisher.watch",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 6,
+      "restsOn": [
+        "spec:consumers.spec-studio.publisher"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 1,
+        "keyed": 1
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.publisher.watch.matches-plain-run",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio.publisher.watch"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.publisher.watch",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.shell",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.lenses",
+        "spec:consumers.spec-studio.responsive",
+        "spec:consumers.spec-studio.sharing"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 5,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 11,
+        "keyed": 8
+      },
+      "implementedBy": 3,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.search",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.shell"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 6,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 8,
+        "keyed": 5
+      },
+      "implementedBy": 3,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.navigation",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.index-page",
+        "spec:consumers.spec-studio.lenses",
+        "spec:consumers.spec-studio.shell"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 3,
+        "keyed": 3
+      },
+      "implementedBy": 2,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.lenses",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 5,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 1,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 3,
+        "keyed": 3
+      },
+      "implementedBy": 4,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.lenses.packs",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 6,
+      "restsOn": [
+        "spec:consumers.spec-studio.lenses"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 1,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 3,
+        "keyed": 3
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.index-page",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.lenses.packs",
+        "spec:consumers.spec-studio.shell"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 7,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 6,
+        "keyed": 6
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.lenses.architecture",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio.diagrams",
+        "spec:consumers.spec-studio.lenses"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 4,
+        "declarations": 1,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 8,
+        "keyed": 8
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.lenses.architecture.planned-apart",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:consumers.spec-studio.lenses.architecture"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.lenses.architecture",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.lenses.tests",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 6,
+      "restsOn": [
+        "spec:consumers.agent-surface.example-space-coverage",
+        "spec:consumers.spec-studio.lenses",
+        "spec:observation.run-evidence"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 3,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 2
+      },
+      "rules": {
+        "total": 4,
+        "keyed": 4
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.lenses.tests.coverage-row",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio.lenses.tests"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.lenses.tests",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.agent-surface.example-space-coverage",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 7,
+        "declarations": 5,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 7,
+        "keyed": 7
+      },
+      "implementedBy": 2,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.agent-surface.example-space-coverage.uncovered-literal",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:consumers.agent-surface.example-space-coverage"
+      ],
+      "exampleOf": "spec:consumers.agent-surface.example-space-coverage",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.agent-surface.example-space-coverage.number-not-enumerable",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:consumers.agent-surface.example-space-coverage"
+      ],
+      "exampleOf": "spec:consumers.agent-surface.example-space-coverage",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.lenses.evidence",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 6,
+      "restsOn": [
+        "spec:consumers.spec-studio.lenses"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 1,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 3,
+        "keyed": 3
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.pack-page",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.shell"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 7,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 14,
+        "keyed": 13
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.pack-page.maturity-map",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:consumers.spec-studio.pack-page"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 1,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 1,
+        "keyed": 1
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.spec-page",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.diagrams",
+        "spec:consumers.spec-studio.diff-page",
+        "spec:consumers.spec-studio.sharing"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 10,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 11,
+        "keyed": 9
+      },
+      "implementedBy": 2,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.spec-page.cited-declaration",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:consumers.spec-studio.spec-page"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.spec-page",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.spec-page.core",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.shell",
+        "spec:consumers.spec-studio.spec-page"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 8,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 9,
+        "keyed": 8
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.verification-panels",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:consumers.agent-surface.example-space-coverage",
+        "spec:consumers.spec-studio.intent-panel",
+        "spec:consumers.spec-studio.spec-page",
+        "spec:observation.run-evidence"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 8,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 2
+      },
+      "rules": {
+        "total": 6,
+        "keyed": 6
+      },
+      "implementedBy": 2,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.verification-panels.rule-coverage",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 10,
+      "restsOn": [
+        "spec:consumers.spec-studio.verification-panels"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.verification-panels",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.registers",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.shell"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 4,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 9,
+        "keyed": 9
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.registers.blocking-first",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:consumers.spec-studio.registers"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.registers",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.owner-queue",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.shell"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 2,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 6,
+        "keyed": 6
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.owner-queue.dependency-first",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:consumers.spec-studio.owner-queue"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.owner-queue",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.diff-page",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data.inputs"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 4,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 6,
+        "keyed": 6
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.diff-page.changed-entry",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:consumers.spec-studio.diff-page"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.diff-page",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.runs-page",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data.inputs",
+        "spec:observation.run-evidence"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 3,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 7,
+        "keyed": 7
+      },
+      "implementedBy": 2,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.runs-page.external-evidence",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:consumers.spec-studio.runs-page"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.runs-page",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:observation.run-evidence",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 7,
+        "declarations": 5,
+        "openQuestions": 1,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 9,
+        "keyed": 7
+      },
+      "implementedBy": 2,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:observation.run-evidence.absolute-path-joins",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:observation.run-evidence"
+      ],
+      "exampleOf": "spec:observation.run-evidence",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:observation.run-evidence.unanchored-file-unjoined",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:observation.run-evidence"
+      ],
+      "exampleOf": "spec:observation.run-evidence",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.glossary-page",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 5,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 2,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 4,
+        "keyed": 4
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.glossary-page.same-word-twice",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 6,
+      "restsOn": [
+        "spec:consumers.spec-studio.glossary-page"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.glossary-page",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.intent-panel",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:consumers.intent-composition.proposal.memo"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 9,
+        "declarations": 3,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 11,
+        "keyed": 8
+      },
+      "implementedBy": 5,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.intent-panel.refresh-keeps-intents",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 3,
+      "restsOn": [
+        "spec:consumers.spec-studio.intent-panel"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.intent-panel",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.intent-composition.proposal.memo",
+      "specKind": "contract",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 5,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 1,
+        "keyed": 1
+      },
+      "implementedBy": 2,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.intent-composition.proposal.memo.shared",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:consumers.intent-composition.proposal.memo"
+      ],
+      "exampleOf": "spec:consumers.intent-composition.proposal.memo",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.components",
+      "specKind": "contract",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 5,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.data",
+        "spec:consumers.spec-studio.intent-panel",
+        "spec:decisions.studio-build-renders",
+        "spec:decisions.studio-diagram-renderer",
+        "spec:decisions.studio-web-components"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 10,
+        "declarations": 10,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 3
+      },
+      "rules": {
+        "total": 6,
+        "keyed": 5
+      },
+      "implementedBy": 12,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:decisions.studio-web-components",
+      "specKind": "decision",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:decisions.studio-build-renders",
+      "specKind": "decision",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:decisions.studio-web-components"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 7
+    },
+    {
+      "id": "spec:decisions.studio-diagram-renderer",
+      "specKind": "decision",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:decisions.studio-web-components"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 2
+    },
+    {
+      "id": "spec:consumers.spec-studio.diagrams",
+      "specKind": "contract",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 6,
+      "restsOn": [
+        "spec:consumers.spec-studio.components",
+        "spec:consumers.spec-studio.data",
+        "spec:decisions.studio-diagram-renderer"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 10,
+        "declarations": 3,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 17,
+        "keyed": 17
+      },
+      "implementedBy": 4,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.diagrams.within-bound",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio.diagrams"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.diagrams",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.diagrams.folds-by-context",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio.diagrams"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.diagrams",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.diagrams.folds-by-layer",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio.diagrams"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.diagrams",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.page-elements",
+      "specKind": "contract",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:consumers.spec-studio.components",
+        "spec:consumers.spec-studio.search",
+        "spec:consumers.spec-studio.shell",
+        "spec:decisions.studio-web-components"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 6,
+        "declarations": 6,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 5,
+        "keyed": 5
+      },
+      "implementedBy": 7,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.responsive",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 4,
+      "restsOn": [
+        "spec:consumers.spec-studio"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 3,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 1,
+        "keyed": 0
+      },
+      "implementedBy": 2,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.export",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.pack-page",
+        "spec:consumers.spec-studio.publisher",
+        "spec:consumers.spec-studio.spec-page"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 5,
+        "declarations": 1,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 8,
+        "keyed": 8
+      },
+      "implementedBy": 4,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.export.self-contained",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 10,
+      "restsOn": [
+        "spec:consumers.spec-studio.export"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.export",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.sharing",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 6,
+      "restsOn": [
+        "spec:consumers.spec-studio",
+        "spec:consumers.spec-studio.publisher"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 9,
+        "declarations": 3,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 9,
+        "keyed": 8
+      },
+      "implementedBy": 3,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.spec-studio.sharing.stamp-written-apart",
+      "specKind": "example",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:consumers.spec-studio.sharing"
+      ],
+      "exampleOf": "spec:consumers.spec-studio.sharing",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:consumers.studio-on-ramp",
+      "specKind": "behavior",
+      "statedReadiness": "ready",
+      "floorReached": "ready",
+      "statedNextRung": null,
+      "holds": [],
+      "depth": 10,
+      "restsOn": [
+        "spec:consumers.spec-studio.data.inputs",
+        "spec:consumers.spec-studio.export",
+        "spec:consumers.spec-studio.intent-panel",
+        "spec:consumers.spec-studio.publisher",
+        "spec:consumers.spec-studio.sharing"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 7,
+        "keyed": 7
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    }
+  ],
+  "structure": {
+    "edges": [
+      {
+        "from": "spec:consumers.agent-surface.example-space-coverage.number-not-enumerable",
+        "to": "spec:consumers.agent-surface.example-space-coverage",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.agent-surface.example-space-coverage.uncovered-literal",
+        "to": "spec:consumers.agent-surface.example-space-coverage",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.intent-composition.proposal.memo.shared",
+        "to": "spec:consumers.intent-composition.proposal.memo",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio",
+        "to": "spec:decisions.studio-build-renders",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:consumers.spec-studio",
+        "to": "spec:decisions.studio-html-surface",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:consumers.spec-studio",
+        "to": "spec:decisions.studio-web-components",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:consumers.spec-studio.components",
+        "to": "spec:decisions.studio-build-renders",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:consumers.spec-studio.components",
+        "to": "spec:decisions.studio-diagram-renderer",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:consumers.spec-studio.components",
+        "to": "spec:decisions.studio-web-components",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:consumers.spec-studio.components",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.components",
+        "to": "spec:consumers.spec-studio.intent-panel",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.components",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.data",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.data.inputs",
+        "to": "spec:consumers.spec-studio.publisher",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.data.inputs",
+        "to": "spec:observation.run-evidence",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.data.inputs",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.data.inputs.both-given",
+        "to": "spec:consumers.spec-studio.data.inputs",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.data.inputs.graph-only",
+        "to": "spec:consumers.spec-studio.data.inputs",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.data.recipe-answers",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.diagrams",
+        "to": "spec:decisions.studio-diagram-renderer",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:consumers.spec-studio.diagrams",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.diagrams",
+        "to": "spec:consumers.spec-studio.components",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.diagrams.folds-by-context",
+        "to": "spec:consumers.spec-studio.diagrams",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.diagrams.folds-by-layer",
+        "to": "spec:consumers.spec-studio.diagrams",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.diagrams.within-bound",
+        "to": "spec:consumers.spec-studio.diagrams",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.diff-page",
+        "to": "spec:consumers.spec-studio.data.inputs",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.diff-page",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.diff-page.changed-entry",
+        "to": "spec:consumers.spec-studio.diff-page",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.export",
+        "to": "spec:consumers.spec-studio.pack-page",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.export",
+        "to": "spec:consumers.spec-studio.publisher",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.export",
+        "to": "spec:consumers.spec-studio.spec-page",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.export",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.export.self-contained",
+        "to": "spec:consumers.spec-studio.export",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.glossary-page",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.glossary-page",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.glossary-page.same-word-twice",
+        "to": "spec:consumers.spec-studio.glossary-page",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.index-page",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.index-page",
+        "to": "spec:consumers.spec-studio.shell",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.index-page",
+        "to": "spec:consumers.spec-studio.lenses.packs",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.intent-panel",
+        "to": "spec:consumers.intent-composition.proposal.memo",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.intent-panel.refresh-keeps-intents",
+        "to": "spec:consumers.spec-studio.intent-panel",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses.architecture",
+        "to": "spec:consumers.spec-studio.diagrams",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses.architecture",
+        "to": "spec:consumers.spec-studio.lenses",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses.architecture.planned-apart",
+        "to": "spec:consumers.spec-studio.lenses.architecture",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses.evidence",
+        "to": "spec:consumers.spec-studio.lenses",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses.packs",
+        "to": "spec:consumers.spec-studio.lenses",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses.tests",
+        "to": "spec:consumers.agent-surface.example-space-coverage",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses.tests",
+        "to": "spec:observation.run-evidence",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses.tests",
+        "to": "spec:consumers.spec-studio.lenses",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.lenses.tests.coverage-row",
+        "to": "spec:consumers.spec-studio.lenses.tests",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.navigation",
+        "to": "spec:consumers.spec-studio.index-page",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.navigation",
+        "to": "spec:consumers.spec-studio.lenses",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.navigation",
+        "to": "spec:consumers.spec-studio.shell",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.navigation",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.owner-queue",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.owner-queue",
+        "to": "spec:consumers.spec-studio.shell",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.owner-queue",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.owner-queue.dependency-first",
+        "to": "spec:consumers.spec-studio.owner-queue",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.pack-page",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.pack-page",
+        "to": "spec:consumers.spec-studio.shell",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.pack-page",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.pack-page.maturity-map",
+        "to": "spec:consumers.spec-studio.pack-page",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.page-elements",
+        "to": "spec:decisions.studio-web-components",
+        "type": "decidedBy"
+      },
+      {
+        "from": "spec:consumers.spec-studio.page-elements",
+        "to": "spec:consumers.spec-studio.search",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.page-elements",
+        "to": "spec:consumers.spec-studio.shell",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.page-elements",
+        "to": "spec:consumers.spec-studio.components",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.publisher",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.publisher",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.publisher.watch",
+        "to": "spec:consumers.spec-studio.publisher",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.publisher.watch.matches-plain-run",
+        "to": "spec:consumers.spec-studio.publisher.watch",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.registers",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.registers",
+        "to": "spec:consumers.spec-studio.shell",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.registers",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.registers.blocking-first",
+        "to": "spec:consumers.spec-studio.registers",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.responsive",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.runs-page",
+        "to": "spec:consumers.spec-studio.data.inputs",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.runs-page",
+        "to": "spec:observation.run-evidence",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.runs-page",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.runs-page.external-evidence",
+        "to": "spec:consumers.spec-studio.runs-page",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.search",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.search",
+        "to": "spec:consumers.spec-studio.shell",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.sharing",
+        "to": "spec:consumers.spec-studio.publisher",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.sharing",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.sharing.stamp-written-apart",
+        "to": "spec:consumers.spec-studio.sharing",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.shell",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.shell",
+        "to": "spec:consumers.spec-studio.lenses",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.shell",
+        "to": "spec:consumers.spec-studio.responsive",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.shell",
+        "to": "spec:consumers.spec-studio.sharing",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.shell",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.spec-page",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.spec-page",
+        "to": "spec:consumers.spec-studio.diagrams",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.spec-page",
+        "to": "spec:consumers.spec-studio.diff-page",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.spec-page",
+        "to": "spec:consumers.spec-studio.sharing",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.spec-page",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.spec-page.cited-declaration",
+        "to": "spec:consumers.spec-studio.spec-page",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.spec-page.core",
+        "to": "spec:consumers.spec-studio.data",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.spec-page.core",
+        "to": "spec:consumers.spec-studio.shell",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.spec-page.core",
+        "to": "spec:consumers.spec-studio.spec-page",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.verification-panels",
+        "to": "spec:consumers.agent-surface.example-space-coverage",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.verification-panels",
+        "to": "spec:consumers.spec-studio.intent-panel",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.verification-panels",
+        "to": "spec:observation.run-evidence",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.spec-studio.verification-panels",
+        "to": "spec:consumers.spec-studio.spec-page",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.spec-studio.verification-panels.rule-coverage",
+        "to": "spec:consumers.spec-studio.verification-panels",
+        "type": "refines"
+      },
+      {
+        "from": "spec:consumers.studio-on-ramp",
+        "to": "spec:consumers.spec-studio.data.inputs",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.studio-on-ramp",
+        "to": "spec:consumers.spec-studio.export",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.studio-on-ramp",
+        "to": "spec:consumers.spec-studio.intent-panel",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.studio-on-ramp",
+        "to": "spec:consumers.spec-studio.publisher",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:consumers.studio-on-ramp",
+        "to": "spec:consumers.spec-studio.sharing",
+        "type": "dependsOn"
+      },
+      {
+        "from": "spec:decisions.studio-build-renders",
+        "to": "spec:decisions.studio-web-components",
+        "type": "refines"
+      },
+      {
+        "from": "spec:decisions.studio-diagram-renderer",
+        "to": "spec:decisions.studio-web-components",
+        "type": "refines"
+      },
+      {
+        "from": "spec:decisions.studio-html-surface",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:decisions.studio-web-components",
+        "to": "spec:consumers.spec-studio",
+        "type": "refines"
+      },
+      {
+        "from": "spec:observation.run-evidence.absolute-path-joins",
+        "to": "spec:observation.run-evidence",
+        "type": "refines"
+      },
+      {
+        "from": "spec:observation.run-evidence.unanchored-file-unjoined",
+        "to": "spec:observation.run-evidence",
+        "type": "refines"
+      }
+    ],
+    "cycles": []
+  },
+  "boundary": {
+    "restsOn": [
+      {
+        "id": "spec:carrier.markdown-body-grammar",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:carrier.slot-notation",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.agent-surface.design-recipes",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.agent-surface.evaluation-sink",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.agent-surface.recipe-parameters",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.agent-surface.register-recipes",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.binding-language-views",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.derived-readiness-banner",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.design-diff",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.edit-model",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.engine-provenance",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.intent-composition",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.intent-composition.proposal",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.pack-design",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.projections-model",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.reader",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.readiness-planner",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.reading-on-ramp",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.validate-watch",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.wholesale-view-rewrite",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.architectural-annotation",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.authored-entry-order",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.binding-not-liveness",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.shipped-projections-frozen",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.verification-posture-not-realization",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.claim-taxonomy",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.contract-declarations",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.delivery-facts",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.determinism",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.entry-citations",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.entry-locations",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.executable-contracts",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.pack-member-order",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.regenerability",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:extraction.schema-versioning",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:model.open-question-fields",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:model.open-question-keys",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:model.planned-architecture",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:model.relation-reasons",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:model.rule-keys",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:model.term-addresses",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:validation.next-rung-floor",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:validation.prose-mentions",
+        "statedReadiness": "ready",
+        "holds": []
+      }
+    ],
+    "restedOnBy": [
+      {
+        "id": "spec:consumers.command-line",
+        "statedReadiness": "ready",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio.capability-map-page",
+        "statedReadiness": "idea",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio.cited-line-text",
+        "statedReadiness": "idea",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio.diagram-kinds",
+        "statedReadiness": "idea",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio.register-input",
+        "statedReadiness": "idea",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio.roadmap-page",
+        "statedReadiness": "idea",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.spec-studio.slice-page",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:consumers.structural-mermaid",
+        "statedReadiness": "scoped",
+        "holds": []
+      }
+    ],
+    "verifiedBy": [],
+    "supersededBy": []
+  },
+  "architecture": {
+    "components": [
+      {
+        "id": "component:protocol.cli",
+        "layer": "edge",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 5,
+          "references": 0
+        },
+        "restsOn": 7
+      },
+      {
+        "id": "component:protocol.codegen",
+        "layer": "application",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 1
+      },
+      {
+        "id": "component:protocol.extract",
+        "layer": "application",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 11
+      },
+      {
+        "id": "component:protocol.graph",
+        "layer": "domain",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 6
+      },
+      {
+        "id": "component:protocol.import",
+        "layer": "application",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 2
+      },
+      {
+        "id": "component:protocol.model",
+        "layer": "domain",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 2
+      },
+      {
+        "id": "component:protocol.notation",
+        "layer": "domain",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 1,
+          "references": 0
+        },
+        "restsOn": 1
+      },
+      {
+        "id": "component:protocol.projections",
+        "layer": "edge",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 29,
+          "references": 2
+        },
+        "restsOn": 3
+      },
+      {
+        "id": "component:protocol.reader",
+        "layer": "application",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 1,
+          "references": 0
+        },
+        "restsOn": 7
+      },
+      {
+        "id": "component:protocol.studio-elements",
+        "layer": "edge",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 9,
+          "references": 2
+        },
+        "restsOn": 0
+      },
+      {
+        "id": "component:protocol.validate",
+        "layer": "domain",
+        "context": "protocol",
+        "planned": false,
+        "designs": 0,
+        "members": {
+          "satisfies": 0,
+          "references": 0
+        },
+        "restsOn": 5
+      }
+    ],
+    "uses": [
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.codegen",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.extract",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.graph",
+        "count": 2,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.import",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.model",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.projections",
+        "count": 2,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.reader",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.codegen",
+        "to": "component:protocol.graph",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.codegen",
+        "to": "component:protocol.notation",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.codegen",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.extract",
+        "to": "component:protocol.graph",
+        "count": 2,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.extract",
+        "to": "component:protocol.model",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.extract",
+        "to": "component:protocol.notation",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.extract",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.graph",
+        "to": "component:protocol.model",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.graph",
+        "to": "component:protocol.notation",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.import",
+        "to": "component:protocol.extract",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.import",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.extract",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.graph",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.model",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.notation",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.reader",
+        "count": 4,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.reader",
+        "to": "component:protocol.graph",
+        "count": 2,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.reader",
+        "to": "component:protocol.model",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.reader",
+        "to": "component:protocol.validate",
+        "count": 2,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.studio-elements",
+        "to": "component:protocol.projections",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.studio-elements",
+        "to": "component:protocol.reader",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.validate",
+        "to": "component:protocol.graph",
+        "count": 2,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.validate",
+        "to": "component:protocol.model",
+        "count": 1,
+        "planned": false
+      },
+      {
+        "from": "component:protocol.validate",
+        "to": "component:protocol.notation",
+        "count": 1,
+        "planned": false
+      }
+    ],
+    "unplaced": [
+      {
+        "unit": "impl:protocol.example-space-coverage-recipe",
+        "member": "spec:consumers.agent-surface.example-space-coverage",
+        "via": "satisfies"
+      },
+      {
+        "unit": "impl:protocol.run-evidence-recipe",
+        "member": "spec:observation.run-evidence",
+        "via": "satisfies"
+      },
+      {
+        "unit": "impl:protocol.proposal-memo-recipe",
+        "member": "spec:consumers.intent-composition.proposal.memo",
+        "via": "satisfies"
+      },
+      {
+        "unit": "impl:protocol.studio-preview-workflow",
+        "member": "spec:consumers.spec-studio.sharing",
+        "via": "satisfies"
+      },
+      {
+        "unit": "impl:protocol.studio-on-ramp",
+        "member": "spec:consumers.studio-on-ramp",
+        "via": "satisfies"
+      }
+    ],
+    "differing": []
+  },
+  "decisions": [
+    {
+      "id": "spec:decisions.architectural-annotation",
+      "statedReadiness": "ready",
+      "member": false,
+      "shapes": 1
+    },
+    {
+      "id": "spec:decisions.authored-entry-order",
+      "statedReadiness": "ready",
+      "member": false,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.binding-not-liveness",
+      "statedReadiness": "ready",
+      "member": false,
+      "shapes": 5
+    },
+    {
+      "id": "spec:decisions.shipped-projections-frozen",
+      "statedReadiness": "ready",
+      "member": false,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.studio-build-renders",
+      "statedReadiness": "ready",
+      "member": true,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.studio-diagram-renderer",
+      "statedReadiness": "ready",
+      "member": true,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.studio-html-surface",
+      "statedReadiness": "ready",
+      "member": true,
+      "shapes": 1
+    },
+    {
+      "id": "spec:decisions.studio-web-components",
+      "statedReadiness": "ready",
+      "member": true,
+      "shapes": 3
+    },
+    {
+      "id": "spec:decisions.verification-posture-not-realization",
+      "statedReadiness": "ready",
+      "member": false,
+      "shapes": 2
+    }
+  ],
+  "questions": [
+    {
+      "address": "spec:observation.run-evidence#question.freshness",
+      "spec": "spec:observation.run-evidence",
+      "index": 0
+    }
+  ],
+  "leftOut": [
+    "Titles, altitudes, rested-on-by and example member lists, example and verifier counts, and unit and component ids of unselected members; unit counts kept.",
+    "Relation reasons; relation types kept.",
+    "Boundary titles, kinds, floors, implementation bindings and joined members; ids, stated rungs and holds kept.",
+    "Component labels and the Specs that reach each component; counts kept.",
+    "Decision titles, floors, refinements, supersessions and question counts.",
+    "Non-blocking question text and fields; addresses kept."
+  ]
+}
