@@ -17,9 +17,9 @@ import { fileURLToPath } from "node:url";
 //      phase-2 disposition.
 //   3. PACKET AGREEMENT — the ledger's fields agree with the owner-packet
 //      dispositions, embedded here as constants read from those packets.
-//   4. CURRENT RECORD — the handbook names the roadmap Pack and recipe, the generated graph carries it with
-//      priority order, semantic surfaces carry no plan status, and the documented green-gate
-//      legs agree with package.json.
+//   4. CURRENT RECORD — the handbook names the roadmap Pack and recipe, the graph written by
+//      generate:self-hosting carries it with priority order, semantic surfaces carry no plan
+//      status, and the documented green-gate legs agree with package.json.
 //   5. ADR DISPOSITIONS — both flagged §3 rulings carry explicit three-part-test outcomes:
 //      lean diary entries (the strict consumer-exclusion contract (MD-20); the
 //      envelope-grammar ownership posture (MD-21)) with registry rows, and the plan records
@@ -27,6 +27,7 @@ import { fileURLToPath } from "node:url";
 //   6. PLAN-16 RECONCILIATION — every scheduled-session docket origin (the 17/18/19 rows) is
 //      dispositioned, and plan 16 keeps its ✅ RUN stamp (reconciled, never rewritten).
 //
+// Run after npm run generate:self-hosting; this gate reads the graph that command wrote.
 // Usage: node check-self-hosting-gates.mjs [rootDir]
 //   rootDir — tree holding the surfaces; defaults to this repo root. QA passes temp trees of
 //             mutated copies to prove disagreeing surfaces are named. The temporal dry-run

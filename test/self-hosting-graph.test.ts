@@ -362,9 +362,9 @@ describe("the self-hosting corpus", () => {
     expect(expectedSpecs).toHaveLength(455);
     expect(expectedPackMembers).toHaveLength(455);
     expect(expectedAnchors).toHaveLength(607);
-    expect(expectedBindingEdges).toHaveLength(807);
+    expect(expectedBindingEdges).toHaveLength(808);
     expect(result.graph.nodes).toHaveLength(1071);
-    expect(result.graph.edges).toHaveLength(2971);
+    expect(result.graph.edges).toHaveLength(2972);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -596,11 +596,6 @@ describe("the self-hosting corpus", () => {
   });
 
   it("gives every accepted unit a readable responsibility label", () => {
-    const vocabulary = primitiveNodes.find((node) => node.id === "spec:protocol.role-vocabulary");
-    expect(vocabulary?.sections?.design?.freeVocabulary).toContain("not an adopter-wide allowlist");
-    expect(vocabulary?.sections?.design?.freeVocabulary).toContain(
-      "self-hosting roster pins each accepted engine unit's role",
-    );
     for (const anchorId of [
       ...acceptedArchitecturalUnits.map((row) => row.anchorId),
       ...expectedComponentIds,

@@ -257,8 +257,9 @@ binding target. Four node types exist:
   its title, narrative, reified section content, and the derived `deliveryFacts`. Use case, NFR,
   decision record, epic, and story are coordinates on this one type, never separate node types.
 - `Pack` — the review grouping, carrying its title, framing prose, ordered `members` as authored,
-  optional `order`, and `modelRefs`. `belongsTo` edges re-express membership in the global edge order; read
-  authored order from `members`, advisory priority when `order` is `priority` and reading order otherwise. A Pack states no system truth.
+  optional `order`, and `modelRefs`. `belongsTo` edges re-express membership in the global edge
+  order; read authored order from `members`, advisory priority when `order` is `priority` and
+  reading order otherwise. A Pack states no system truth.
 - `Anchor` — a test or oracle binding, with the `file` and `line` of the binding itself.
 - `CodeNode` — the code unit a code anchor mints, from either form: a `codeAnchor` constant or a
   comment-form block whose id sits in the `impl:`, `api:`, or `component:` namespace. It carries

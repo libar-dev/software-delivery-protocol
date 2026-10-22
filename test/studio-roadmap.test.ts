@@ -84,6 +84,8 @@ describe("Studio roadmap page", () => {
       nodes: graph.nodes.filter((node) => node.id !== "spec:probe.missing"),
     });
     const body = main(html);
+    expect(body).toContain("3 entries in priority order:");
+    expect(body).toContain(", 1 unresolved.");
     expect(body).toContain("<h3>Unresolved members</h3>");
     expect(body).toContain('id="roadmap-probe-entry-2">2. <code>spec:probe.missing</code>');
     expect(body).toContain('id="roadmap-probe-entry-3"');

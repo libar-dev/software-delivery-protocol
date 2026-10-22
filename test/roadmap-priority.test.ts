@@ -50,6 +50,7 @@ const priorityAnchor = specTest({
     ref("spec:extraction.pack-member-order"),
     ref("spec:consumers.design-diff"),
     ref("spec:consumers.spec-studio.diff-page"),
+    ref("spec:consumers.spec-studio.pack-page"),
   ],
 });
 void priorityAnchor;
@@ -138,6 +139,22 @@ describe("roadmap priority manifest", () => {
 });
 
 describe("roadmap priority design diff", () => {
+  it.each([true, false])(
+    "names a removed Pack by its order meaning (priority %s)",
+    async (priority) => {
+      const base = graphOf(priority);
+      const head = { ...base, nodes: [], edges: [] };
+      const data = await createStudioData(createReader(head), undefined, {
+        base: { graph: base, label: null },
+        runs: [],
+      });
+      const html = renderStudio(data).find((page) => page.path === "diff.html")?.content ?? "";
+      expect(html).toContain("removed ·");
+      if (priority) expect(html).toContain("removed as a roadmap");
+      else expect(html).not.toContain("removed as a roadmap");
+    },
+  );
+
   it("names an added roadmap and preserves manifest order in its member delta", async () => {
     const source = markdown("order: priority\n").replace(
       "specs: []",

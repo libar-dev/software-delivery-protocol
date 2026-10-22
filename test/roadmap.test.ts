@@ -62,6 +62,14 @@ describe("the roadmap recipes", () => {
     const result = (await roadmap(damaged)).roadmaps[0];
     expect(result?.unresolved).toEqual([{ place: 2, id: "spec:probe.missing" }]);
     expect(result?.totals.entries).toBe(3);
+    expect(result?.totals.unresolved).toBe(1);
+    expect(result?.totals.entries).toBe(
+      ["toDesign", "toState", "toBuild", "built", "apart", "unresolved"].reduce(
+        (sum, key) => sum + (result?.totals[key] ?? 0),
+        0,
+      ),
+    );
+    expect((await roadmap(graph)).roadmaps[0]?.totals.unresolved).toBe(0);
     expect(result?.entries.map(({ place, id }) => ({ place, id }))).toEqual([
       { place: 1, id: "spec:probe.first" },
       { place: 3, id: "spec:probe.last" },

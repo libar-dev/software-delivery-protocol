@@ -161,6 +161,7 @@ describe("upgrade kit", () => {
       "Model upcoming work in the graph; keep review history in git and pull requests",
     );
     expect(records).toContain("Unresolved intended design lives in open questions.");
+    expect(records).toContain("checked by recipe 38. Unresolved intended design");
     expect(records).toContain(
       "Review disposition and acceptance remain in git and the pull request; neither becomes a graph field.",
     );

@@ -6747,6 +6747,7 @@ export const expectedBindingEdges = [
   ["test:protocol.roadmap-priority", "verifies", "spec:extraction.pack-member-order"],
   ["test:protocol.roadmap-priority", "verifies", "spec:consumers.design-diff"],
   ["test:protocol.roadmap-priority", "verifies", "spec:consumers.spec-studio.diff-page"],
+  ["test:protocol.roadmap-priority", "verifies", "spec:consumers.spec-studio.pack-page"],
   ["impl:protocol.pack-aggregate", "references", "spec:decisions.roadmap-priority"],
   ["impl:protocol.pack-member-order", "references", "spec:decisions.roadmap-priority"],
   ["impl:protocol.static-reification", "satisfies", "spec:carrier.markdown-pack-authoring"],

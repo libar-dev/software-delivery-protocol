@@ -199,8 +199,9 @@ Every doc honours both — never mistake one half for the other:
   re-derive corpus state. Acceptance links bound examples and run evidence at the measured commit
   with the commands, never an inherited verdict. A run's commit must match a preview's stamp to
   evidence it; a preview remains a current view. Evidence no test or recipe carries is committed
-  on the arc's branch with its commands, linked from the description at that commit, and removed before merge. The repository merges with merge commits, and GitHub keeps each pull
-  request's head ref, so links at the evidence commit keep resolving. A squash or rebase merge
+  on the arc's branch with its commands, linked from the description at that commit, and removed
+  before merge. The Protocol merges its pull requests with merge commits, and GitHub keeps each
+  pull request's head ref, so links at the evidence commit keep resolving. A squash or rebase merge
   would need the evidence published to a durable ref first.
 - **Commits are recovery boundaries, not workflow gates.** The owner's instruction that opens an
   arc authorizes commits and its push; the convention creates no authority. The first commit message
@@ -215,8 +216,9 @@ Every doc honours both — never mistake one half for the other:
   Push only on the user's explicit request; never use `git stash`.
 - **Reviews travel as proposals.** Findings against Specs form one change proposal
   (`schemas/sdp-proposal-1.schema.json`), based on the branch-head commit the reviewer read;
-  a proposal composed in a preview names the preview's merge commit from its stamp. Check it with recipe 38 against that base, read moved,
-  unresolved or incomparable scopes again, and post recipe 49's memo to the pull request.
+  a proposal composed in a preview names the preview's merge commit from its stamp. Check it with
+  recipe 38 against that base, read moved, unresolved or incomparable scopes again, and post
+  recipe 49's memo to the pull request.
   Findings against code or other files are pull request comments on their lines; a review proposing no Spec edit
   has no proposal. An open design finding becomes an open question with `decider`, `provisional`
   and `links`; a deferral adds its blocking question's `trigger`. A code defect against settled

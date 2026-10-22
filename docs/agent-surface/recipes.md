@@ -5397,8 +5397,10 @@ Pack reads as reading order.
 The answer is `{ decider, roadmaps }`. Each roadmap is
 `{ pack, title, framing, order, totals, entries, apart, unresolved, waiting }`: `entries` carries the work,
 dependencies and earlier statements at each place; `apart` carries entries with no work;
-`unresolved` lists unresolved manifest members as `{ place, id }`, with every place kept as its manifest position; `waiting` carries questions, questions without a decider and readiness statements. The row and
-total fields are defined by `spec:consumers.roadmap#design.roadmapAnswer` and its following entries.
+`unresolved` lists unresolved manifest members as `{ place, id }`, with every place kept as its
+manifest position; `totals.unresolved` counts them. `waiting` carries questions, questions without
+a decider and readiness statements. The row and total fields are defined by
+`spec:consumers.roadmap#design.roadmapAnswer` and its following entries.
 
 ```js
 const accepts = ["pack", "decider"];
@@ -5549,7 +5551,7 @@ const roadmaps = selected.map((pack) => {
   return {
     pack: pack.id, title: pack.title ?? null, framing: pack.framing ?? null, order: pack.order === "priority" ? "priority" : "reading",
     totals: { entries: members.length, toDesign: entries.filter((row) => row.need === "to design").length, toState: entries.filter((row) => row.need === "to state").length, toBuild: entries.filter((row) => row.need === "to build").length,
-      built: entries.filter((row) => row.need === "built").length, apart: apart.length,
+      built: entries.filter((row) => row.need === "built").length, apart: apart.length, unresolved: unresolved.length,
       questions: waiting.questions.length, blockingQuestions: waiting.questions.filter((row) => row.blocking).length,
       withoutDecider: waiting.withoutDecider.length, blockingWithoutDecider: waiting.withoutDecider.filter((row) => row.blocking).length,
       statements: waiting.statements.length },

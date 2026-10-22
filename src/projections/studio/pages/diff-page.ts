@@ -43,9 +43,11 @@ function packDelta(ctx: PageContext, pack: NonNullable<Diff["packs"]>[number]): 
   const meaning =
     pack.change === "added" && pack.orderAfter === "priority"
       ? "<p>added as a roadmap</p>"
-      : pack.change === "changed" && pack.orderBefore !== pack.orderAfter
-        ? `<p>${pack.orderChanged && pack.orderAfter === "priority" ? "now a roadmap" : pack.orderChanged && pack.orderBefore === "priority" ? "no longer a roadmap" : `Order meaning: ${escape(pack.orderBefore ?? "unknown")} → ${escape(pack.orderAfter ?? "unknown")}`}</p>`
-        : "";
+      : pack.change === "removed" && pack.orderBefore === "priority"
+        ? "<p>removed as a roadmap</p>"
+        : pack.change === "changed" && pack.orderBefore !== pack.orderAfter
+          ? `<p>${pack.orderChanged && pack.orderAfter === "priority" ? "now a roadmap" : pack.orderChanged && pack.orderBefore === "priority" ? "no longer a roadmap" : `Order meaning: ${escape(pack.orderBefore ?? "unknown")} → ${escape(pack.orderAfter ?? "unknown")}`}</p>`
+          : "";
   return `<p>${escape(pack.change)} · ${link(ctx, pack.id)}</p><p>Members added: ${pack.membersAdded.map((id) => link(ctx, id)).join(", ") || "None"}</p><p>Members removed: ${pack.membersRemoved.map(code).join(", ") || "None"}</p><p>Member order ${pack.reordered ? "changed" : "unchanged"}.</p>${meaning}`;
 }
 function valueBlock(value: unknown): string {
