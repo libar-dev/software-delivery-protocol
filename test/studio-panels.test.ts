@@ -292,3 +292,9 @@ it("does not assert missing bindings on a boundary Spec whose bindings are outsi
   expect(drawing).not.toContain("impl:basis");
   expect(drawing).not.toContain("basis · declared Spec · no satisfying binding");
 });
+
+it("lets full component ids wrap so every uses column fits the printed page", () => {
+  const css = readFileSync("src/projections/studio/studio.css", "utf8");
+  expect(css).toMatch(/@media print\s*\{\s*\.component-uses\s*\{[^}]*table-layout: fixed/su);
+  expect(css).toMatch(/\.component-uses code\s*\{[^}]*overflow-wrap: anywhere/su);
+});

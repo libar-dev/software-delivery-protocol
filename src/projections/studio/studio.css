@@ -1010,3 +1010,15 @@ sdp-maturity-map .solid .cell-count {
 sdp-maturity-map .cell-count {
   font-weight: 650;
 }
+@media print {
+  .component-uses {
+    table-layout: fixed;
+    font-size: 0.7rem;
+  }
+  .component-uses th,
+  .component-uses td,
+  .component-uses code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
