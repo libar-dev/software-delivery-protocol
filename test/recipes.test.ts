@@ -348,10 +348,12 @@ describe("the agent-surface recipe corpus", () => {
   // A Spec that cites a recipe by number and heading, as "Recipe 32, architecture crossings," or
   // "architecture crossings (recipe 32)", names the heading the catalog gives that number.
   it("cites each recipe that a Spec names by number and heading under the catalog's number", () => {
-    const headings = recipes.map((recipe) => ({
-      ordinal: recipe.ordinal,
-      heading: recipe.title.toLowerCase(),
-    }));
+    const headings = recipes
+      .map((recipe) => ({
+        ordinal: recipe.ordinal,
+        heading: recipe.title.toLowerCase(),
+      }))
+      .sort((a, b) => b.heading.length - a.heading.length);
     const citations: { spec: string; cited: number; named: number }[] = [];
 
     for (const node of derived.graph.nodes) {
@@ -4551,7 +4553,8 @@ describe("recipe parameters and the shipped recipe files", () => {
           !(recipe.ordinal === 51 && name !== "severity") &&
           !(recipe.ordinal === 52 && name === "epic") &&
           !(recipe.ordinal === 54 && name !== "detail") &&
-          !(recipe.ordinal === 50 && ["register", "pattern"].includes(name));
+          !(recipe.ordinal === 50 && ["register", "pattern"].includes(name)) &&
+          !([53, 55].includes(recipe.ordinal) && name === "pack");
         expect({
           recipe: recipe.ordinal,
           fallback:
@@ -8277,4 +8280,16 @@ describe("the shipped design slice", () => {
       ).toEqual(rows);
     }
   });
+});
+
+it("runs the roadmap and its memo from the catalog over a named Pack", async () => {
+  const answer = asRecord(await runRecipe(recipeByOrdinal(53), { pack: "pack:roadmap" }));
+  const roadmaps = asArray(answer.roadmaps);
+  expect(roadmaps).toHaveLength(1);
+  const roadmap = asRecord(roadmaps[0]);
+  expect(roadmap.pack).toBe("pack:roadmap");
+  expect(asArray(roadmap.entries).length).toBeGreaterThan(0);
+  const rendered = asRecord(await runRecipe(recipeByOrdinal(55), { pack: "pack:roadmap" }));
+  expect(rendered.diagnostics).toEqual([]);
+  expect(stringAt(rendered, "memo")).toContain("## The next work, from the roadmap\n");
 });

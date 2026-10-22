@@ -69,7 +69,7 @@ An entry stands for its whole refinement subtree: an epic for its features and s
 ## Example space
 
 ```gwt-vocabulary
-Given a probe roadmap whose one entry holds the work {work:string}
+Given a probe roadmap whose entry holds the work {work:string}
 Given that work {state:"is ready and implemented throughout"|"has one part ready and not implemented"|"has one part below ready whose floor reaches ready"|"has one part below ready whose floor stops short"|"has one part implemented below ready"|"has a ready root and one descendant without its kind's evidence"|"has a ready root and one descendant held by a blocking question"|"has one descendant that also refines a Spec outside the roadmap"}
 Given a probe roadmap whose first entry rests on a Spec of its second entry, both waiting for a statement
 When the roadmap recipe reads the probe roadmap

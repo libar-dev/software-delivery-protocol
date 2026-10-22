@@ -386,6 +386,15 @@ specs:
   - spec:consumers.design-slice.outside-holding
   - spec:consumers.spec-studio.slice-page
   - spec:consumers.roadmap
+  - spec:consumers.roadmap.built-work
+  - spec:consumers.roadmap.buildable-part
+  - spec:consumers.roadmap.statement-part
+  - spec:consumers.roadmap.design-part
+  - spec:consumers.roadmap.drifting-part
+  - spec:consumers.roadmap.missing-evidence
+  - spec:consumers.roadmap.blocking-part
+  - spec:consumers.roadmap.outside-parent
+  - spec:consumers.roadmap.statement-order
   - spec:consumers.spec-studio.roadmap-page
   - spec:consumers.roadmap.memo
   - spec:consumers.spec-studio.cited-line-text

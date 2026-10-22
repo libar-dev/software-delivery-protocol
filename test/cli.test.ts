@@ -304,8 +304,6 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
       for (const [file, specId] of [
-        ["specs/consumers/roadmap.memo.sdp.md", "spec:consumers.roadmap.memo"],
-        ["specs/consumers/roadmap.sdp.md", "spec:consumers.roadmap"],
         [
           "specs/consumers/spec-studio.capability-map-page.sdp.md",
           "spec:consumers.spec-studio.capability-map-page",
@@ -356,12 +354,14 @@ describe("sdp cli", () => {
         "spec:consumers.capability-map",
         "spec:protocol.capability-epics",
         "spec:consumers.design-slice",
+        "spec:consumers.roadmap",
+        "spec:consumers.roadmap.memo",
       ]) {
         expect(stderr).not.toContain(`honesty/gaps — Spec "${specId}"`);
       }
       // Re-measured from the refreshed carriers: no prose-mention pair is retained, and the
       // verifier gaps listed above are the whole warning set.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 16 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

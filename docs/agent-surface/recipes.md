@@ -54,7 +54,9 @@
 | 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
 | 52 | The capability map | epic, detail | Read capability epics, distinct descendants and direct binding evidence |
+| 53 | The roadmap | pack, decider | Read upcoming work in authored order and what each entry needs |
 | 54 | The design slice | pack or specs, members, detail | Read a set of Specs as one design |
+| 55 | The roadmap memo | pack, decider | Render a roadmap as a description's forward section |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -5383,6 +5385,178 @@ return {
 };
 ```
 
+## 53. The roadmap
+
+Read every Pack stating `order: priority`, in Pack-id order, or the Pack named by `params.pack`.
+`params.decider` defaults to `owner`. The answer keeps member places, derives each entry's need
+over its refinement subtree, and follows the statement queue for waiting statements. Invalid
+Pack ids and decider tokens return diagnostics without roadmaps. An explicitly selected ordinary
+Pack reads as reading order.
+
+The answer is `{ decider, roadmaps }`. Each roadmap is
+`{ pack, title, framing, order, totals, entries, apart, waiting }`: `entries` carries the work,
+dependencies and earlier statements at each place; `apart` carries entries with no work;
+`waiting` carries questions, questions without a decider and readiness statements. The row and
+total fields are defined by `spec:consumers.roadmap#design.roadmapAnswer` and its following entries.
+
+```js
+const accepts = ["pack", "decider"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const decider = params.decider ?? "owner";
+const diagnostics = [];
+if (params.decider === null || typeof decider !== "string" || !/^[a-z][a-z0-9-]*$/u.test(decider)) diagnostics.push({ parameter: "decider", problem: "Expected a lowercase token." });
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const packs = graph.nodes.filter((node) => node.nodeType === "Pack");
+let selected = [];
+if (params.pack !== undefined) {
+  const pack = typeof params.pack === "string" ? packs.find((node) => node.id === params.pack) : undefined;
+  if (pack === undefined) diagnostics.push({ parameter: "pack", problem: "Expected the id of a Pack in this graph." });
+  else selected = [pack];
+} else selected = packs.filter((node) => node.order === "priority").sort((a, b) => compare(a.id, b.id));
+if (diagnostics.length > 0) return { diagnostics };
+
+const rungs = ["idea", "scoped", "defined", "ready"];
+const contexts = new Map(g.specs().map((spec) => [spec.id, g.specContext(spec.id)]));
+const children = new Map();
+for (const edge of graph.edges) {
+  if (edge.type !== "refines" || edge.claim !== "declared" || !contexts.has(edge.from) || !contexts.has(edge.to)) continue;
+  children.set(edge.to, [...(children.get(edge.to) ?? []), edge.from]);
+}
+const settledKinds = new Set(["example", "decision"]);
+const needOf = (spec) => spec.statedReadiness !== "ready" ? (spec.derivedReadiness === "ready" ? "to state" : "to design")
+  : settledKinds.has(spec.specKind) ? "settled"
+  : spec.deliveryFacts.includes("implemented") ? "built" : "to build";
+const open = (need) => need === "to design" || need === "to state" || need === "to build";
+const waits = (spec) => rungs.indexOf(spec.derivedReadiness) > rungs.indexOf(spec.statedReadiness);
+const drifts = (spec) => spec.statedReadiness !== "ready" && spec.deliveryFacts.includes("implemented");
+const holds = (spec) => spec.statedNextRungFailures.map((failure) => ({ clause: failure.clauseId, targets: (failure.targets ?? []).map((target) => target.id) }));
+const questionRow = (spec, question) => ({ address: question.key === undefined ? null : `${spec.id}#question.${question.key}`, spec: spec.id,
+  index: question.index, question: question.question, blocking: question.blocking, decider: question.decider ?? null, provisional: question.provisional ?? null });
+const scopeOf = (id) => {
+  const seen = new Set([id]);
+  const queue = [id];
+  for (let at = 0; at < queue.length; at += 1) for (const child of children.get(queue[at]) ?? []) if (!seen.has(child)) { seen.add(child); queue.push(child); }
+  return [...seen].sort(compare);
+};
+
+// The statement queue owns dependency order: its places order every waiting statement, and its
+// `restsOn` names the waiting Specs each statement rests on.
+const queue = await recipes(46, { decider });
+const queuePlace = new Map((queue.statements ?? []).map((row) => [row.id, row.place]));
+const queueRestsOn = new Map((queue.statements ?? []).map((row) => [row.id, row.restsOn]));
+const byQueue = (a, b) => (queuePlace.get(a) ?? Infinity) - (queuePlace.get(b) ?? Infinity) || compare(a, b);
+
+const roadmaps = selected.map((pack) => {
+  const members = pack.members.filter((id) => contexts.has(id));
+  const scopes = members.map((id) => new Set(scopeOf(id)));
+  const placeOf = (id) => { const at = scopes.findIndex((scope) => scope.has(id)); return at === -1 ? null : at + 1; };
+  const entries = [], apart = [];
+  const questionRows = new Map(), undecided = new Map(), statements = new Map();
+  const touch = (map, key, row, place) => { const existing = map.get(key) ?? { ...row, places: [] }; if (!existing.places.includes(place)) existing.places.push(place); map.set(key, existing); };
+  members.forEach((id, index) => {
+    const place = index + 1;
+    const spec = contexts.get(id);
+    const scope = scopes[index];
+    const scopeIds = [...scope];
+    const work = scopeIds.filter((member) => !settledKinds.has(contexts.get(member).specKind));
+    const needs = work.map((member) => needOf(contexts.get(member)));
+
+    // Decisions the entry holds or names by decidedBy, and what waits on a person over both.
+    const decisionIds = new Set(scopeIds.filter((member) => contexts.get(member).specKind === "decision"));
+    for (const member of scopeIds) for (const end of contexts.get(member).relationsOut) if (end.claim === "declared" && end.type === "decidedBy" && contexts.has(end.otherId)) decisionIds.add(end.otherId);
+    const shaping = [...decisionIds].filter((decision) => !scope.has(decision)).sort(compare);
+    const ownStatements = [];
+    for (const member of [...scopeIds, ...shaping]) {
+      const context = contexts.get(member);
+      for (const question of context.designColumns.openQuestions) {
+        const row = questionRow(context, question);
+        if (question.decider === decider) touch(questionRows, `${member}\u0000${question.index}`, row, place);
+        else if (question.decider === undefined) touch(undecided, `${member}\u0000${question.index}`, row, place);
+      }
+      if (waits(context)) { touch(statements, member, { id: member, statedReadiness: context.statedReadiness, floorReached: context.derivedReadiness }, place); ownStatements.push(member); }
+    }
+    if (work.length === 0) { apart.push({ place, id, specKind: spec.specKind, statedReadiness: spec.statedReadiness, need: needOf(spec) }); return; }
+
+    const need = ["to design", "to state", "to build"].find((value) => needs.includes(value)) ?? "built";
+    const decisions = [...decisionIds].sort(compare).map((decision) => contexts.get(decision)).filter((decision) => decision.statedReadiness !== "ready")
+      .map((decision) => ({ id: decision.id, title: decision.title ?? null, statedReadiness: decision.statedReadiness,
+        blockingQuestions: decision.designColumns.openQuestions.filter((question) => question.blocking).map((question) => questionRow(decision, question)) }));
+    const blockingQuestions = scopeIds.flatMap((member) => contexts.get(member).designColumns.openQuestions.filter((question) => question.blocking).map((question) => questionRow(contexts.get(member), question)));
+
+    // What the entry rests on: any Spec of its scope reaching outside it, whichever part reaches.
+    const restsOn = new Map();
+    for (const member of scopeIds) for (const end of contexts.get(member).relationsOut) {
+      if (end.claim !== "declared" || scope.has(end.otherId) || !contexts.has(end.otherId)) continue;
+      if (!(end.type === "dependsOn" || end.type === "constrainedBy" || end.type === "refines")) continue;
+      const target = contexts.get(end.otherId);
+      const targetNeed = needOf(target);
+      if (!open(targetNeed)) continue;
+      const key = `${end.otherId}\u0000${end.type}`;
+      const row = restsOn.get(key) ?? { id: end.otherId, via: end.type, from: [], need: targetNeed, statedReadiness: target.statedReadiness, holdsReady: rungs.indexOf(target.statedReadiness) < rungs.indexOf("defined"), onRoadmap: placeOf(end.otherId) };
+      if (!row.from.includes(member)) row.from.push(member);
+      restsOn.set(key, row);
+    }
+    for (const row of restsOn.values()) row.from.sort(compare);
+    const restedOnBy = new Map();
+    for (const member of scopeIds) for (const end of contexts.get(member).relationsIn) {
+      if (end.claim !== "declared" || scope.has(end.otherId) || !contexts.has(end.otherId)) continue;
+      if (!(end.type === "dependsOn" || end.type === "constrainedBy" || end.type === "decidedBy")) continue;
+      const source = contexts.get(end.otherId);
+      const sourceNeed = needOf(source);
+      if (!open(sourceNeed)) continue;
+      restedOnBy.set(`${end.otherId}\u0000${end.type}`, { id: end.otherId, via: end.type, need: sourceNeed, onRoadmap: placeOf(end.otherId) });
+    }
+
+    const byIdThenVia = (a, b) => compare(a.id, b.id) || compare(a.via, b.via);
+    entries.push({
+      place, id, title: spec.title ?? null, specKind: spec.specKind, altitude: spec.altitude, need,
+      statedReadiness: spec.statedReadiness, floorReached: spec.derivedReadiness ?? null,
+      statedNextRung: spec.statedNextRung ?? null, holdsNextRung: holds(spec),
+      work: { specs: work.length, toDesign: needs.filter((value) => value === "to design").length, toState: needs.filter((value) => value === "to state").length, toBuild: needs.filter((value) => value === "to build").length,
+        built: needs.filter((value) => value === "built").length, drift: work.filter((member) => drifts(contexts.get(member))).length },
+      workRows: work.map((member) => { const context = contexts.get(member); return { id: member, need: needOf(context), statedReadiness: context.statedReadiness,
+        floorReached: context.derivedReadiness ?? null, statedNextRung: context.statedNextRung ?? null, holdsNextRung: holds(context), drift: drifts(context) }; }),
+      buildNow: work.filter((member) => needOf(contexts.get(member)) === "to build"),
+      blockingQuestions, decisions,
+      restsOn: [...restsOn.values()].sort(byIdThenVia), restedOnBy: [...restedOnBy.values()].sort(byIdThenVia),
+      earlierStatements: [], own: new Set([...scopeIds, ...shaping]), ownStatements,
+      packs: [...spec.packs].filter((packId) => packId !== pack.id).sort(compare),
+      sharesScopeWith: scopes.map((other, at) => at !== index && scopeIds.some((member) => other.has(member)) ? at + 1 : null).filter((value) => value !== null),
+    });
+  });
+  // Collect all touches before classifying earlier statements: later entries can name a target.
+  for (const row of entries) {
+    const earlier = new Set();
+    for (const statement of row.ownStatements) for (const target of queueRestsOn.get(statement) ?? []) earlier.add(target);
+    row.earlierStatements = [...earlier].sort(byQueue).map((target) => {
+      const touched = statements.get(target)?.places ?? [];
+      const where = row.own.has(target) ? "entry" : touched.length > 0 ? "roadmap" : "outside";
+      return { id: target, where, onRoadmap: where === "roadmap" ? Math.min(...touched) : null };
+    });
+    delete row.own;
+    delete row.ownStatements;
+  }
+  // Only questions sort by roadmap place; statements keep the queue rank.
+  const byQuestion = (a, b) => a.places[0] - b.places[0] || Number(b.blocking) - Number(a.blocking) || compare(a.spec, b.spec) || a.index - b.index;
+  const waiting = {
+    questions: [...questionRows.values()].sort(byQuestion),
+    withoutDecider: [...undecided.values()].sort(byQuestion),
+    statements: [...statements.values()].sort((a, b) => byQueue(a.id, b.id)),
+  };
+  return {
+    pack: pack.id, title: pack.title ?? null, framing: pack.framing ?? null, order: pack.order === "priority" ? "priority" : "reading",
+    totals: { entries: members.length, toDesign: entries.filter((row) => row.need === "to design").length, toState: entries.filter((row) => row.need === "to state").length, toBuild: entries.filter((row) => row.need === "to build").length,
+      built: entries.filter((row) => row.need === "built").length, apart: apart.length,
+      questions: waiting.questions.length, blockingQuestions: waiting.questions.filter((row) => row.blocking).length,
+      withoutDecider: waiting.withoutDecider.length, blockingWithoutDecider: waiting.withoutDecider.filter((row) => row.blocking).length,
+      statements: waiting.statements.length },
+    entries, apart, waiting,
+  };
+});
+return { decider, roadmaps };
+```
+
 ## 54. The design slice
 
 *When you need this: you are reviewing features that must be reviewed together and want the whole at once.*
@@ -5925,4 +6099,140 @@ return {
   ],
   ...(Array.isArray(detail) ? { diagnostics: detail.filter((id) => !inSlice.has(id)).map((id) => ({ id, reason: "not-member" })) } : {}),
 };
+```
+
+## 55. The roadmap memo
+
+Render the roadmap selected by `params.pack` and `params.decider` as a Markdown forward section.
+Without a Pack, exactly one priority Pack must exist. The roadmap and open-question register
+supply the reading. Purpose and reach describes intent and structural reach; the author supplies
+the reason for an entry's place around the memo.
+
+The answer is `{ diagnostics: [], memo }`, with `memo` one Markdown string. A missing or ambiguous
+Pack selection or an invalid decider returns `{ diagnostics: [{ parameter, problem }], memo: null }`.
+The answer and section formats are defined by `spec:consumers.roadmap.memo#design.memoRecipe`
+and its following entries.
+
+```js
+const accepts = ["pack", "decider"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+let pack = params.pack;
+if (pack === undefined) {
+  const priority = graph.nodes.filter((node) => node.nodeType === "Pack" && node.order === "priority");
+  if (priority.length !== 1) return { diagnostics: [{ parameter: "pack", problem: priority.length === 0 ? "No Pack states order: priority; name one." : "Several Packs state order: priority; name one." }], memo: null };
+  pack = priority[0].id;
+}
+const decider = params.decider === null ? null : params.decider ?? "owner";
+const answer = await recipes(53, { pack, decider });
+if (answer.diagnostics !== undefined) return { diagnostics: answer.diagnostics, memo: null };
+const roadmap = answer.roadmaps[0];
+const register = await recipes(20);
+
+const span = (text) => {
+  const value = String(text);
+  const longest = Math.max(0, ...[...value.matchAll(/`+/gu)].map((match) => match[0].length));
+  const ticks = "`".repeat(longest + 1);
+  const pad = value.startsWith("`") || value.endsWith("`") ? " " : "";
+  return `${ticks}${pad}${value}${pad}${ticks}`;
+};
+const text = (value) => String(value).replace(/\r\n|\r|\n/gu, " ");
+const cell = (value) => text(value).replace(/\|/gu, "\\|");
+const lines = [];
+const push = (...values) => lines.push(...values);
+const contexts = new Map(roadmap.entries.map((entry) => [entry.id, g.specContext(entry.id)]));
+const purposeAndReach = (entry) => {
+  const intent = contexts.get(entry.id).sections?.intent ?? {};
+  const line = (intent.problem ?? intent.outcome ?? "").trim();
+  const own = line === "" || line.endsWith(".") ? line : `${line}.`;
+  const derived = [];
+  const waitingSpecs = new Set(entry.restedOnBy.map((row) => row.id)).size;
+  if (waitingSpecs > 0) derived.push(`Waited on by ${waitingSpecs}.`);
+  if (entry.buildNow.length > 0 && entry.need !== "to build") derived.push(`${entry.buildNow.length} of its parts ready to build now.`);
+  return [own, ...derived].filter((part) => part !== "").join(" ");
+};
+const holdText = (clauses) => clauses.length === 0 ? "nothing holds it" : `held by ${clauses.map((row) => row.targets.length === 0 ? row.clause : `${row.clause} (${row.targets.map(span).join(", ")})`).join(", ")}`;
+const entryCell = (entry) => `${text(entry.title ?? entry.id)} ${span(entry.id)}`;
+
+push("## The next work, from the roadmap", "");
+push(`Roadmap: ${text(roadmap.title ?? roadmap.pack)} ${span(roadmap.pack)}`, "");
+push("To state means the floor allows ready and a person still judges the statement. Built means every Spec of the entry\u0027s work states ready and has an implementation binding; it reports no passing test and no deployment.", "");
+for (const paragraph of (roadmap.framing ?? "").split(/\n\s*\n/u).map((part) => part.trim()).filter((part) => part !== "")) push(text(paragraph), "");
+if (roadmap.order !== "priority") push("This Pack\u0027s order is reading order, not a stated priority.", "");
+
+const need = (name) => roadmap.entries.filter((entry) => entry.need === name);
+push("### To design", "");
+if (need("to design").length === 0) push("No entry needs design.", "");
+else {
+  push("| Place | Entry | Next | Purpose and reach |", "| --- | --- | --- | --- |");
+  for (const entry of need("to design")) {
+    const next = [];
+    // Put the entry before its descendants, then truncate.
+    const parts = entry.workRows.filter((row) => row.need === "to design");
+    const shown = [...parts.filter((row) => row.id === entry.id), ...parts.filter((row) => row.id !== entry.id)].slice(0, 3);
+    for (const row of shown) next.push(`${row.id === entry.id ? "itself" : span(row.id)} ${span(row.statedReadiness)} → ${span(row.statedNextRung)}, ${holdText(row.holdsNextRung)}`);
+    if (parts.length > shown.length) next.push(`and ${parts.length - shown.length} more parts to design`);
+    const blocked = entry.blockingQuestions.map((question) => question.address === null ? span(question.spec) : span(question.address));
+    if (blocked.length > 0) next.push(`blocked by ${blocked.join(", ")}`);
+    if (entry.decisions.length > 0) next.push(`decided by ${entry.decisions.map((decision) => `${span(decision.id)} (${decision.statedReadiness})`).join(", ")}`);
+    push(`| ${entry.place} | ${cell(entryCell(entry))} | ${cell(next.join("; "))} | ${cell(purposeAndReach(entry))} |`);
+  }
+  push("");
+}
+if (need("to state").length > 0) {
+  push("### To state", "");
+  push("| Place | Entry | Earlier waiting statements | Purpose and reach |", "| --- | --- | --- | --- |");
+  for (const entry of need("to state")) {
+    const rows = entry.earlierStatements;
+    const parts = [];
+    const inside = rows.filter((row) => row.where === "entry");
+    const onRoadmap = rows.filter((row) => row.where === "roadmap");
+    const outside = rows.filter((row) => row.where === "outside");
+    if (inside.length > 0) parts.push(`in this entry ${inside.map((row) => span(row.id)).join(", ")}`);
+    if (onRoadmap.length > 0) parts.push(`on the roadmap ${onRoadmap.map((row) => `${span(row.id)} (place ${row.onRoadmap})`).join(", ")}`);
+    if (outside.length > 0) parts.push(`${outside.length} outside the roadmap`);
+    const earlier = parts.length === 0 ? "No preceding waiting statement in the statement queue." : parts.join("; ");
+    push(`| ${entry.place} | ${cell(entryCell(entry))} | ${cell(earlier)} | ${cell(purposeAndReach(entry))} |`);
+  }
+  push("");
+}
+push("### To build", "");
+if (need("to build").length === 0) push("No entry is ready to build.", "");
+else {
+  push("| Place | Entry | Purpose and reach | Rests on |", "| --- | --- | --- | --- |");
+  for (const entry of need("to build")) {
+    const rests = [...new Map(entry.restsOn.map((row) => [row.id, row])).values()].map((row) => `${span(row.id)} (${row.need})`);
+    push(`| ${entry.place} | ${cell(entryCell(entry))} | ${cell(purposeAndReach(entry))} | ${cell(rests.length === 0 ? "nothing unbuilt" : rests.join(", "))} |`);
+  }
+  push("");
+}
+const questions = roadmap.waiting.questions;
+const statements = roadmap.waiting.statements;
+const questionLine = (question) => `- ${question.address === null ? span(question.spec) : span(question.address)}${question.blocking ? " (blocking)" : ""}, place ${question.places.join(", ")}: ${text(question.question)}`;
+if (questions.length + statements.length > 0) {
+  push(`### Waiting on the ${answer.decider}`, "");
+  for (const question of questions) push(questionLine(question));
+  for (const statement of statements) push(`- State ${span(statement.id)}: it states ${span(statement.statedReadiness)} and its floor allows ${span(statement.floorReached)}; place ${statement.places.join(", ")}`);
+  push("");
+}
+if (roadmap.waiting.withoutDecider.length > 0) {
+  push("### Questions without a decider", "", "These questions have no named decider.", "");
+  // Addresses keep this list short; the page carries the question text.
+  for (const question of roadmap.waiting.withoutDecider) push(`- ${question.address === null ? `${span(question.spec)} question ${question.index + 1}` : span(question.address)}${question.blocking ? " (blocking)" : ""}, place ${question.places.join(", ")}`);
+  push("");
+}
+const built = need("built");
+if (built.length > 0) {
+  push("### Built and still on the roadmap", "");
+  for (const entry of built) push(`- Place ${entry.place}: ${entryCell(entry)}`);
+  push("");
+}
+const deferrals = register.specs.flatMap((spec) => spec.questions.filter((question) => question.deferral).map((question) => ({ spec: spec.id, question })));
+if (deferrals.length > 0) {
+  push("### Deferred, with their triggers", "");
+  for (const { spec, question } of deferrals) push(`- ${question.key === undefined || question.key === null ? span(spec) : span(`${spec}#question.${question.key}`)}: ${text(question.question)} Trigger: ${text(question.trigger)}`);
+  push("");
+}
+while (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
+return { diagnostics: [], memo: `${lines.join("\n")}\n` };
 ```

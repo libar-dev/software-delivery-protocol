@@ -26,6 +26,8 @@ export const expectedComponentIds = [
 // component set.
 export const structuralMembershipExceptions = [
   "impl:protocol.design-slice-recipe",
+  "impl:protocol.roadmap-recipe",
+  "impl:protocol.roadmap-memo-recipe",
   "impl:protocol.proposal-memo-recipe",
   "impl:protocol.run-evidence-recipe",
   "impl:protocol.studio-preview-workflow",
