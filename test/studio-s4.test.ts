@@ -745,7 +745,7 @@ const workflowAnchor = codeAnchor({
   satisfies: ref("spec:consumers.spec-studio.sharing"),
 });
 void workflowAnchor;
-it("ships a reusable preview and calls it on pull requests with runs and diff, deployment disabled", () => {
+it("ships a reusable preview, disabled by default, and deploys its own pull requests with runs and diff", () => {
   const workflow = parse(
     readFileSync(join(process.cwd(), ".github/workflows/studio-preview.yml"), "utf8"),
   ) as {
@@ -769,7 +769,7 @@ it("ships a reusable preview and calls it on pull requests with runs and diff, d
   };
   expect(ci.jobs["studio-preview"]).toMatchObject({
     uses: "./.github/workflows/studio-preview.yml",
-    with: { "runs-artifact": "ctrf-runs", diff: true, deploy: false },
+    with: { "runs-artifact": "ctrf-runs", diff: true, deploy: true },
   });
   expect(ci.jobs["studio-preview"]?.if).toContain("needs.check.result == 'success'");
   expect(ci.jobs["studio-preview"]?.if).toContain("needs.check.result == 'failure'");

@@ -54,4 +54,4 @@ jobs:
       sdp: node dist/cli/sdp.js
       runs-artifact: ctrf-runs
       diff: true
-      deploy: false
+      deploy: true
