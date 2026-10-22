@@ -44,6 +44,7 @@ import {
   expectedDesignManagementPackMembers,
   expectedMemberOfEdges,
   expectedPackMembers,
+  expectedRoadmapPackMembers,
   expectedRoadmapsAndSlicesPackMembers,
   expectedStudioPackMembers,
   expectedPacks,
@@ -261,16 +262,16 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // Re-measured from the refreshed tree: 417 Markdown Specs and four Gherkin Specs,
-    // 421 in the self-hosting Pack; eight Pack manifests and 543 source anchors.
-    // The excluded-root validate run corroborates 972 nodes and 2612 edges.
-    expect(result.counts).toEqual({ specs: 421, packs: 8, anchors: 543 });
-    expect(expectedSpecs).toHaveLength(421);
-    expect(expectedPackMembers).toHaveLength(421);
+    // Re-measured from the refreshed tree: 428 Markdown Specs and four Gherkin Specs,
+    // 432 in the self-hosting Pack; nine Pack manifests and 543 source anchors.
+    // The excluded-root validate run corroborates 984 nodes and 2718 edges.
+    expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 543 });
+    expect(expectedSpecs).toHaveLength(432);
+    expect(expectedPackMembers).toHaveLength(432);
     expect(expectedAnchors).toHaveLength(543);
     expect(expectedBindingEdges).toHaveLength(681);
-    expect(result.graph.nodes).toHaveLength(972);
-    expect(result.graph.edges).toHaveLength(2612);
+    expect(result.graph.nodes).toHaveLength(984);
+    expect(result.graph.edges).toHaveLength(2718);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -354,7 +355,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ idea: 21, ready: 399, scoped: 1 });
+    ).toEqual({ defined: 24, idea: 4, ready: 399, scoped: 5 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -377,6 +378,7 @@ describe("the self-hosting corpus", () => {
         "declared",
       ]),
       ...expectedObsidianVaultPackMembers.map((id) => [id, "pack:obsidian-vault-v1", "declared"]),
+      ...expectedRoadmapPackMembers.map((id) => [id, "pack:roadmap", "declared"]),
       ...expectedRoadmapsAndSlicesPackMembers.map((id) => [
         id,
         "pack:roadmaps-and-slices-v1",

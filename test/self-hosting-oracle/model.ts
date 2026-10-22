@@ -6,7 +6,7 @@ export const modelSpecs = [
   {
     id: "spec:model.core-model",
     specKind: "model",
-    altitude: "feature",
+    altitude: "epic",
     readiness: "ready",
     file: "specs/model/core-model.sdp.md",
     title: "The Protocol models delivery with one enrichable Spec",

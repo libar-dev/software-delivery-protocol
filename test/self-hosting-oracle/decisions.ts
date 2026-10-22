@@ -1403,23 +1403,40 @@ export const decisionsSpecs = [
     id: "spec:decisions.roadmap-priority",
     specKind: "decision",
     altitude: "feature",
-    readiness: "idea",
+    readiness: "defined",
     title: "A roadmap states advisory priority in the graph",
-    narrative: null,
+    narrative:
+      "Dependency order already has a graph home: `dependsOn`, which the statement queue reads to order the statements a person can make. Preference has none: which body of work the owner wants next when nothing forces one before another. It lives in prose, in each pull request's forward section and in the plan files, and the graph reads neither. The roadmap views waited for a named reader; the owner, choosing what the next pull requests take up, is that reader. A Pack already keeps its members in authored order and states no truth of its own, so a Pack whose manifest says its order is a priority holds the preference with one optional field and no new relation.",
     sections: {
       intent: {
         outcome:
           "Decide whether and how the graph may hold an advisory priority over upcoming work, a roadmap, without dates, without a new relation, and without gating or sequencing any work.",
-        openQuestions: [
-          {
-            question:
-              "Where does a roadmap's priority live: in the authored order of a Pack marked as a roadmap, in a Pack the corpus names by convention, or outside the graph as corpus data a recipe reads?",
-            blocking: true,
-            key: "priorityHome",
-            decider: "owner",
-            provisional:
-              "in the authored member order of a Pack whose manifest marks its order as priority",
-          },
+      },
+      decision: {
+        context:
+          "The planning truths decision gives each planning truth a ruled graph home and keeps recorded work order out of the graph, so dependency rides `dependsOn` and everything else about order stays in plan files and pull request descriptions. The owner now reads and edits that order and asks for it in the graph: what to design next and a prioritized list of what to build, tied to the pull requests that carry it out. A Pack keeps its members in authored order and states no system truth; the Pack manifest's envelope is closed to `id`, `specs` and `modelRefs`.",
+        decision:
+          "A roadmap is a Pack whose manifest states `order: priority`; its members' authored order is the corpus's advisory priority, first entry first. `order` is an optional manifest field whose one lawful value is `priority`, and a Pack without it keeps the reading order every Pack has. Priority is preference among bodies of work and nothing more: it carries no date, no dependency, no status and no gate, and no check, recipe or page treats a place on a roadmap as permission, obligation or sequence. Everything a roadmap shows about an entry, what it still needs and what holds it, is read from the graph each time. A corpus may keep several roadmaps, and a Spec may be listed on any number of them.",
+        rationale: [
+          "Hard to reverse: the manifest envelope gains a field that both manifest carriers, the graph's Pack node and the reader carry, and corpora author roadmaps against it. Surprising without context: the planning truths decision kept recorded work order out of the graph, so a reader needs to know why one order is now graph data and why it still sequences nothing. A real trade-off: a priority held in the graph is checked where membership is checked, so every entry resolves; it shows in the design diff, as an added, removed or reordered member and as a Pack that becomes or stops being a roadmap; and it reaches the Studio, the vault and a pull request's forward section with no extra input. It costs one optional field and the risk that an order reads as a schedule, which this decision bounds by giving the order no consequence.",
+          "A Pack is the right home because a roadmap says nothing about the system. It is an authored grouping, as a Pack is, whose members already carry an authored order; the field states what that order means and leaves the rest of the Pack law unchanged.",
+        ],
+        alternatives: [
+          "A Pack read as a roadmap by a naming convention, such as a reserved id: the Protocol reads no meaning from an id anywhere else, a reserved name would collide with a corpus's own Packs, and nothing in the manifest would tell its reader that the order means priority.",
+          "Any Pack's order read as a priority, the roadmap named to each recipe and page as a parameter: the Studio takes no corpus configuration, so it could not tell a roadmap from a Pack in reading order, and a reading order would show as a priority nobody stated.",
+          "Priority outside the graph, as corpus data a recipe reads, like a perspective's `order`: an entry that no longer resolves is caught only by a rules file the corpus writes, the design diff, the Studio, the vault and the preview workflow would each need a new input to see it, and planning would gain a second store beside the graph. A perspective suits a reader's own concern; a roadmap is one authored choice for the whole corpus.",
+          "A new relation such as `precedes`, or a rank on each Spec: the planning truths decision refused `precedes` for its engine surface across the model, the carriers, extraction, validators and the agent surface, and a rank on the truth primitive is a status that goes stale with every edit and invites scoring.",
+          "A boolean field such as `roadmap: true`: it names the noun but not what differs, which is the meaning of the order; `order: priority` says that directly.",
+          "Prose, as today: the graph cannot read it, and each forward section is rewritten by hand and drifts from the Specs it names.",
+        ],
+        consequences: [
+          "The planning truths decision's refusal of recorded work order narrows for this one case: a roadmap's priority is graph structure, carried as its Pack's member order, and never workflow authority. Plan numbering, staleness and every other recorded work order stay out of the graph.",
+          "The Pack manifest admits `order`, in the Markdown and the TypeScript manifest alike; the Pack node carries `order` when the manifest states it, after `modelRefs` in the serialized node; any other value refuses at extraction as a malformed envelope field does; and the Pack model names the priority order. These touch the Pack carrier, the Pack model and the Pack node's member-order law, each enriched in place when the field is built.",
+          "No check reads a roadmap's content. An entry already built, an order that disagrees with dependency, an empty roadmap and several roadmaps are never findings, because a place carries no authority and staleness is never a finding.",
+          "Where priority and dependency disagree, a roadmap view shows what an entry rests on and never reorders it; readiness statements keep the statement queue's dependency order, in a roadmap's list of what waits on a person as everywhere else.",
+          "The design diff reports a change in what a Pack's order means apart from a change in its members' order, so a Pack that becomes or stops being a roadmap shows in a comparison even when its members stay. A base graph whose schema predates the field carries no `order` and reads as reading order, as an absent field does in every schema version; a value the head's engine does not know lies outside the common schema and is reported as a diagnostic, never compared. This touches the design diff and its Studio page when the field is built.",
+          "A place on a roadmap confers what membership of any Pack confers, which is nothing: no readiness, no delivery fact and no gate.",
+          "The roadmap reading, its page and its forward-section memo read a roadmap this way, under `spec:consumers.roadmap`.",
         ],
       },
     },
@@ -1430,27 +1447,80 @@ export const decisionsSpecs = [
     id: "spec:decisions.roadmap-over-plans",
     specKind: "decision",
     altitude: "feature",
-    readiness: "idea",
+    readiness: "defined",
     title: "Plan files stop carrying forward planning once the roadmap does",
-    narrative: null,
+    narrative:
+      "Each arc's intent already lives in its capture Specs and its Pack, its rulings in their carrying Specs, its open items in keyed questions, and its story in its pull request description. A plan file still carries the status line the handbook copies and agents read first, the arc's lanes and waves, copies of its ruling tables, and its acceptance as measured. Once a roadmap holds priority in the graph, the forward role has a graph home; what remains of a plan is history, or a second copy of what the pull request description already holds.",
     sections: {
       intent: {
         outcome:
           "Decide whether the Protocol retires its numbered plan files as the carrier of forward planning, reading its next work from the roadmap instead, and what replaces the gate that requires a current plan.",
-        openQuestions: [
-          {
-            question:
-              "Does the roadmap replace the numbered plan as the record an agent reads first, with `plans/` kept as frozen history?",
-            blocking: true,
-            key: "planCarrier",
-            decider: "owner",
-            provisional:
-              "yes; the handbook names the roadmap recipe, and the arc's execution record moves to its pull request description",
-          },
+      },
+      decision: {
+        context:
+          "Plan files grew as the Protocol's working record: every arc adds one, the handbook keeps a status line for each, and the self-hosting gate requires the highest-numbered plan to carry a status header the handbook names. Since the graph-first planning arc, a plan is a thin pointer to its Pack and capture Specs, and the pull request description standard already asks each description for the arc's story, its rulings as tables, its acceptance as measured and a forward section. The owner asked whether plans can be replaced by Specs: no prose in the plan, but designed, grouped and prioritized roadmaps and sets of features or epics.",
+        decision:
+          "The Protocol reads its forward planning from its roadmap and stops adding plan files. `plans/` stands as frozen history, closed by the plan of the arc that builds the roadmap. An agent opening the next work runs the roadmap recipe over the roadmap Pack the handbook names and follows each entry to its Packs and carrying Specs. An arc's execution record, its branch and base, its working rules, its lanes, the rulings with who made them, its acceptance as measured, its deferrals and its refusals, lives in its pull request description, opened as a draft at the arc's first authorized push. Before that push it lives in one record file under `reviews/` named for the arc's Pack, which also keeps the work done and outstanding and the commands that re-measure it, so a session can recover the arc from the branch alone; at the first authorized push the record moves into the draft pull request and the file keeps only its link. Neither the file nor this decision authorizes a push. Evidence no test or recipe carries sits under `reviews/` beside the description that cites it. The handbook names the roadmap Pack and the roadmap recipe where it named the current plan, and the self-hosting gate checks that instead of a current plan.",
+        rationale: [
+          "Hard to reverse: the handbook, the skills, the description standard and a gate all point agents at the newest plan, and every session's first read changes. Surprising without context: a reader finds a numbered folder that stopped. A real trade-off: one forward-planning carrier, in the graph, with no plan status to keep in step with the handbook, against an arc's working record moving from a numbered plan to a short-lived record file and then to its draft pull request; the arc's Pack, that record and git take the plan's role.",
+        ],
+        alternatives: [
+          "Keep plan files for forward planning beside the roadmap: priority would live in two places, and the plan's copy would drift.",
+          "Keep a thin plan file per arc for its execution record alone, with no status gate: the pull request description already carries the same record by the description standard, so the file would be a second copy that the next session must reconcile.",
+          "Record an arc's execution in the graph, as an arc Spec or Pack fields: who ruled what and when is history that git and the description keep, and that a review happened is never a graph fact.",
+          "Keep each arc's whole execution record in a committed file under `reviews/` for its life: once the draft pull request exists the file would duplicate the description, so the file holds the record only until the first authorized push and then only the link.",
+        ],
+        consequences: [
+          "The handbook drops its stack of plan statuses for a short pointer to the roadmap and its recipe. The self-hosting gate's current-record check refuses a numbered plan past the last frozen one, a handbook that does not name the roadmap Pack and recipe, and a roadmap Pack manifest that is missing or does not state priority order; its frozen historical checks, its green-gate legs and its ban on plan status in the registry and the glossary stay.",
+          "The graph-first planning Spec's plan-file rule narrows to a plan document a corpus chooses to keep, which points to its Packs and carrying Specs and confers nothing; an adopter keeps whatever planning documents it wants, and a roadmap is open to it as to the Protocol.",
+          "The description standard renders its forward section with the roadmap memo; the pull request that completes an entry's selected work removes it from the roadmap in the same change, and entries join or move only on the owner's word.",
+          "The commit strategy that authorizes commits on an arc's branch comes from the owner's instruction for the arc, recorded in the arc's record, its record file before the first push and its draft pull request after, where it came from the plan file; uncommitted state that has no clean boundary is accounted for in the same record.",
+          "The plan files stay as they are. A heavy cleanup of superseded material and review reports remains a later arc.",
         ],
       },
     },
     deliveryFacts: [],
     file: "specs/decisions/roadmap-over-plans.sdp.md",
+  },
+  {
+    id: "spec:decisions.epics-of-any-kind",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "scoped",
+    title: "Capability epics keep kind independent of altitude",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Decide whether a capability map admits epics of every kind or only behavior epics.",
+        openQuestions: [
+          {
+            question: "Is a capability epic any Spec at epic altitude, or only a behavior Spec?",
+            blocking: true,
+            key: "epicKinds",
+            decider: "owner",
+            provisional:
+              "Admit every kind, preserving the identity and truth of existing model and rule hubs.",
+          },
+        ],
+      },
+      decision: {
+        context:
+          "The ratified capability glossary limits the map to high-altitude behavior Specs, while kind and altitude are independent descriptors and existing model and rule hubs state capability outcomes.",
+        decision:
+          "Proposed for the owner, admit every Spec at epic altitude and retain its kind; broaden the capability glossary accordingly.",
+        rationale: [
+          "Reusing the intended outcome's owner avoids behavior wrappers that repeat a model or rule solely to enter a view.",
+        ],
+        alternatives: [
+          "Keep behavior-only capability epics and introduce behavior wrappers over the model and rule hubs, preserving the glossary's current boundary.",
+        ],
+        consequences: [
+          "The proposal changes a ratified term and needs the owner's decision before the capability map or the Protocol's epic organization states ready.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/decisions/epics-of-any-kind.sdp.md",
   },
 ] as const;

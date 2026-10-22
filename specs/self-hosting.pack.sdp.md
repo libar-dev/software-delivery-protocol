@@ -105,6 +105,7 @@ specs:
   - spec:extraction.regenerability
   - spec:extraction.schema-versioning
   - spec:extraction.schema-versioning.declared-version
+  - spec:extraction.executable-examples
   - spec:extraction.executable-contracts
   - spec:extraction.executable-contracts.concreteness-refusal
   - spec:extraction.executable-contracts.multi-entry-example
@@ -276,6 +277,7 @@ specs:
   - spec:consumers.spec-studio.navigation
   - spec:consumers.spec-studio.lenses.packs
   - spec:consumers.spec-studio.lenses.architecture
+  - spec:consumers.spec-studio.lenses.architecture.unit-register
   - spec:consumers.spec-studio.lenses.architecture.planned-apart
   - spec:consumers.spec-studio.lenses.tests
   - spec:consumers.spec-studio.lenses.tests.coverage-row
@@ -359,6 +361,14 @@ specs:
   - spec:consumers.capability-map
   - spec:consumers.spec-studio.capability-map-page
   - spec:consumers.spec-studio.diagram-kinds
+  - spec:consumers.spec-studio.diagram-kinds.legibility
+  - spec:consumers.spec-studio.diagram-kinds.edge-routing
+  - spec:consumers.spec-studio.diagram-kinds.mermaid-source
+  - spec:consumers.spec-studio.diagram-kinds.dependency
+  - spec:consumers.spec-studio.diagram-kinds.capability-tree
+  - spec:consumers.spec-studio.diagram-kinds.scoped-architecture
+  - spec:consumers.spec-studio.diagram-kinds.maturity-picture
+  - spec:consumers.spec-studio.diagram-kinds.requirement-trace
   - spec:consumers.design-slice
   - spec:consumers.spec-studio.slice-page
   - spec:consumers.roadmap
@@ -422,6 +432,7 @@ specs:
   - spec:decisions.vault-owned-folder
   - spec:decisions.roadmap-priority
   - spec:decisions.roadmap-over-plans
+  - spec:decisions.epics-of-any-kind
 modelRefs:
   - spec:model.core-model
 ---

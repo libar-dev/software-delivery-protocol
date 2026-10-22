@@ -3,10 +3,21 @@ id: pack:roadmaps-and-slices-v1
 specs:
   - spec:protocol.significant-units-review
   - spec:protocol.role-vocabulary
+  - spec:consumers.spec-studio.lenses.architecture.unit-register
   - spec:consumers.capability-map
+  - spec:decisions.epics-of-any-kind
   - spec:protocol.capability-epics
+  - spec:extraction.executable-examples
   - spec:consumers.spec-studio.capability-map-page
   - spec:consumers.spec-studio.diagram-kinds
+  - spec:consumers.spec-studio.diagram-kinds.legibility
+  - spec:consumers.spec-studio.diagram-kinds.edge-routing
+  - spec:consumers.spec-studio.diagram-kinds.mermaid-source
+  - spec:consumers.spec-studio.diagram-kinds.dependency
+  - spec:consumers.spec-studio.diagram-kinds.capability-tree
+  - spec:consumers.spec-studio.diagram-kinds.scoped-architecture
+  - spec:consumers.spec-studio.diagram-kinds.maturity-picture
+  - spec:consumers.spec-studio.diagram-kinds.requirement-trace
   - spec:consumers.design-slice
   - spec:consumers.spec-studio.slice-page
   - spec:decisions.roadmap-priority
@@ -15,6 +26,7 @@ specs:
   - spec:consumers.roadmap.memo
   - spec:decisions.roadmap-over-plans
   - spec:protocol.roadmap-replaces-plans
+  - spec:consumers.projections-model.roadmap-views
 ---
 # Roadmaps, capability maps and design slices
 

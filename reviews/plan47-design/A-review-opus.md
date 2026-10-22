@@ -1,0 +1,94 @@
+# Lane A review (annotations), Claude Opus
+
+Reviewed `p47/a-annotations` at `f1581ee` against base `44e62ef`: the two lane Specs, `reviews/plan47-annotation-review.md` (the register), and the prototype under `reviews/assets/plan47-prototypes/A-register/`. I re-derived the baseline: 219 code units, 176 with a role, 12 role values. Validation shows one warning, the expected one. Recipe 9 gives both Specs a `ready` floor. Imports were read from the lane's own `/tmp/plan47-A/protocol-imports.json`; I ran no build in the worktree.
+
+**Outcome.** The source walk is thorough, and the transfer ledger and the restraint on the platform are sound. Two rows of the change table are factually wrong and would land false structure, so the change table cannot go to the owner as written. The proposed `uses` edges also create the engine's first component cycle without saying so. The register reads as a generated inventory more than the curated map the owner asked for. The behavior Spec also carries review-procedure rules and a Studio panel that nothing can honestly satisfy.
+
+## Findings, most severe first
+
+1. **Register "Every component pair", row `projections → extract` (line 442). Blocking.** The removal is wrong: `src/projections/gherkin-view.ts:1` imports `GHERKIN_KIND_LIE_REASONS` from `src/extract/gherkin-kind-honesty.ts`. The lane's own imports file records the pair. Recipe 40 misses it only because that file is bare, and the same proposal anchors it into extract (`impl:protocol.gherkin-kind-policy`), so after the build recipe 40 would show the import with the edge removed. This breaks `#dependencyEvidence` ("inspect … unassigned files before calling an edge stale"). Replace the row's action with: "Keep. `src/projections/gherkin-view.ts` imports the Gherkin kind refusal table from `src/extract/gherkin-kind-honesty.ts`. Recipe 40 cannot map it while that file is bare; the proposed `impl:protocol.gherkin-kind-policy` assigns it to extract." Then drop the removal from "What the review found" item 3, from the closing paragraph of the pair table and from report §2 and §6.
+
+2. **Register "Missing responsibilities", `impl:protocol.gherkin-kind-policy` (lines 375, 490). Blocking.** Satisfying `spec:carrier.sdp-import` is a false realization claim. No file under `src/import` imports the table, and `sdp-import` carries no Gherkin or kind promise. The table's consumers are `src/extract/gherkin.ts` and `src/projections/gherkin-view.ts`, so "shared by … import analysis" is also wrong. Replace with: Satisfies `spec:carrier.gherkin-authoring`; References `spec:decisions.carrier-universality`; Why: "The kind refusal table is shared by canonical Gherkin reification and the Gherkin view, so an author and a reader meet the same refused kinds."
+
+3. **Register pair table, rows `notation → graph` and `notation → validate` (lines 439, 441). Should fix; this is an owner decision.** At the base the component `uses` graph is acyclic. With these two rows, `graph`, `notation` and `validate` form one strongly connected set: graph→notation and validate→notation already exist. The register never mentions cycles. The cause is that `notation` holds a leaf codec (`slots.ts`) and a graph-reading decoder (`example-space.ts`, which imports `GraphSchema` and `Finding`). Add an owner question to `spec:protocol.significant-units-review`:
+   `- [non-blocking #notationBoundary] Declaring notation's real imports makes graph, notation and validate a uses cycle. Should example-space decoding join the reader component, leaving notation a leaf codec?`
+   `  - decider: owner`
+   `  - provisional: Move impl:protocol.example-space-decoding into component:protocol.reader by review, declare reader → notation and codegen → reader, and declare neither notation → graph nor notation → validate.`
+   My recommendation is the provisional answer, at medium confidence. Joining `graph` instead would create a validate↔graph cycle.
+
+4. **Register pair row `cli → notation` (line 421). Should fix.** No file in `src/cli` imports from `src/notation`. `build-command.ts` and `vault-command.ts` import only `generateContracts` from `src/codegen/contracts.ts`. The adapter credits `example-space.ts` to them because `contracts.ts` re-exports `contractsFindingIds` (barrel reach). The real dependency runs cli → codegen → notation and is already declared, and the architectural-annotation decision (MD-38) infers no transitive edge. Replace the action with: "Keep absent. The witness is barrel reach through `src/codegen/contracts.ts`'s re-export; cli uses no notation symbol." Sharpen the rule as follows:
+   `- rule: [#dependencyEvidence] Declare a component uses for a value or type import the importing file itself makes from another component's file. An import made only to author anchors, and a pair the imports adapter reports only through a re-export the importer does not use, confer no edge. Before calling a declared edge stale, inspect every file the comparison leaves unassigned. Import evidence proposes an edit and never authors an edge.`
+   That leaves four new uses, or two under finding 3's recommendation.
+
+5. **`spec:protocol.significant-units-review`: scope and realizability. Should fix before any `ready` statement.** The behavior Spec mixes three things:
+   - **Law for the accepted set:** `#significantAbstractions`, `#curatedBoundary`, `#rosterOracle`, `#roleMeaning` and `#dependencyEvidence`.
+   - **Rules for writing one review document:** `#completeReview`, `#helperCoverage` and the Design entries `reviewColumns`, `componentMap`, `dependencyColumns` and `reviewEvidence`. These name "the curation record", a session artifact under `reviews/`. No code or oracle realizes them, so once the Spec is `ready` it either sits in recipe 1 forever or gets a false `satisfies`.
+   - **A Studio panel:** `registerView`.
+
+   `#oneOwner` and `#preservePromises` are general authoring guidance. The lane's proposed skill text already restates them, which gives them two owners. Changes:
+   - Delete `#completeReview`, `#helperCoverage`, `#oneOwner`, `#preservePromises`, `reviewColumns`, `componentMap`, `dependencyColumns` and `reviewEvidence`. The record's preamble may keep them as its own method. The skill text in report §5 already carries the one-owner and promise-preservation guidance.
+   - Move `registerView` to a new capture child of `spec:consumers.spec-studio.lenses.architecture`, for example `spec:consumers.spec-studio.lenses.architecture.unit-register`. Name who authors it (lane G, or integration), since neither lane owns `lenses.architecture`.
+   - Add one line to the report's build section: "`impl:protocol.structural-self-binding` (test/self-hosting-oracle/structural-edges.ts) adds `spec:protocol.significant-units-review` to its satisfies when the replacement roster lands." That is the only honest realization.
+
+6. **`spec:protocol.role-vocabulary#term.readModel` and `#design.helperWord`; register line 123. Should fix.** In `CONTEXT.md`, "the one graph" is "the sole read model", and "a second read model" is the term to avoid. Giving GraphIndex the role `read-model` says the engine has a second one. The platform uses `read-model` in its CQRS sense, which is legitimate there and not what GraphIndex is. Replace the term with:
+   `- **index** — [#index] Builds a disposable lookup structure over the graph for the units that query it; it holds no authored state and is never a second read model.`
+   In `helperWord`, replace "Graph indexes use read-model" with "Graph indexes use index". In the register, set `impl:protocol.graph-index` to `utility → index`.
+
+7. **Criterion sharpening (report §5, register "Exact follow-up text"). Should fix.** Only the `spec:model.structural-patterns` term is edited. Three other places keep the old wording: `spec:protocol.structural-self-binding#rule.criterion` (ready), the `CONTEXT.md` row "architecturally significant unit", and MD-38's consequence "The engine significance criterion stays exported public surface or cross-component reach". The lane Spec's `#significantAbstractions` already depends on the new reading. Propose both texts:
+   - `#criterion`: `- rule: [#criterion] The engine applies the structural-patterns model's significance criterion: exported public surface or cross-component reach whose contract or responsibility a designer or builder must understand; being exported alone is insufficient.`
+   - The `CONTEXT.md` row, middle clause: `a code unit with exported public surface or cross-component reach whose contract or responsibility a designer or builder must understand (being exported or ranking high on imports is not enough by itself), and that warrants graph-visible structural binding — …` with the rest of the row unchanged.
+
+   Also add a sentence to report §3: "This reads MD-38's criterion as a necessary condition, consistent with its 'anchors are curated, never a coverage quota'; it is drift repair, not a new decision. MD-38's text changes only by the owner's hand."
+
+8. **The register as a whole. Should fix: this is the owner's main ask.** It reads as an inventory, not a curated map:
+   - 124 of the 219 disposition reasons repeat or contain the anchor's existing label. Examples: `impl:protocol.anchor-model` reads "binding-only anchor model builders."; `impl:protocol.delivery-facts` reads "computes delivery facts …".
+   - All 14 component rows share one reason ("The X seam groups its reviewed responsibilities …"), and all 38 exception rows share another.
+   - About 330 lines list the 324 test and oracle bindings with "No architectural membership proposed".
+   - The witness column takes the first import pairs it finds rather than the pairs that support the edge. The `cli → model` and `validate → model` witnesses (lines 420, 460) are anchor-only imports, which by `#dependencyEvidence` confer no edge. The real witnesses are `new-spec-command.ts → model/descriptors.ts` and `validate/readiness-floor.ts → model/…`.
+
+   Restructure each component section so it opens with a short "start here" list of its significant abstractions: name, file, role, and one fresh line on what a change to it breaks. Put the disposition ledger under a collapsed `<details>` block. Replace the appendix of evidence bindings with one sentence: "All test and oracle anchors stay evidence bindings; none gains membership and none changes." Rewrite every reason that only repeats a label, or mark it "label stands". Fix the two witnesses.
+
+9. **Merge test applied inconsistently (register lines 203–204, the validate section). Should fix.**
+   - `impl:protocol.binding-language-index-table` and `impl:protocol.binding-language-pack-table` share a file, the single target `spec:consumers.binding-language-views` and a role. Both `#oneOwner` and the current skill ("one identity per Spec") make them one identity, yet both are kept. Add a merge row: pack-table into index-table, same target, label "renders index and Pack-table binding language as present or none".
+   - The build-command identities, each with a different Spec, are merged, while the 16 in `validators.ts` are kept. State the test the lane applied, for example "one function realizing several Specs is one identity; separate entry points a designer opens separately may stay separate", and apply it in one sentence per file that keeps several identities.
+
+10. **Reversal of reviewed coarse-grain rows. Should fix.** `coarseGrainCoverage` in `test/self-hosting-oracle/structural-edges.ts` holds owner-reviewed rulings that `src/cli/params.ts#mergeParams`, `src/import/markdown-fidelity.ts#assertMarkdownEmissionFidelity` and `src/extract/gherkin-kind-honesty.ts#gherkinKindLieReason` have "no honest satisfies target of their own". The proposal gives each its own satisfying identity without naming these rows, and the register never mentions `coarseGrainCoverage`. Add to the change table: "Remove the three coarseGrainCoverage rows for mergeParams, assertMarkdownEmissionFidelity and gherkinKindLieReason; this reverses their reviewed ruling." For `impl:protocol.import-fidelity`, name the `spec:carrier.sdp-import` rule it realizes. If no rule is named, the honest binding is `references`.
+
+11. **Unit-level relationships (owner ask 3, "and the relationships between them"). Should fix.** The register reviews only component pairs. Every new unit gets an empty `uses`, and none of the 12 existing unit-level edges is reviewed. Either propose a small curated set among the significant abstractions, or state why component grain answers the owner. Candidates include extraction's `impl:protocol.extract` → discover-files, carrier-reification and derive-graph; `impl:protocol.studio-diagrams` → `impl:protocol.studio-diagram-model`; and `impl:protocol.vault-sync` → `impl:protocol.vault-notes`. Each must be backed by a real import.
+
+12. **`registerView` and the prototype: where role meanings come from. Should fix in the moved Spec.** `register.mjs` reads definitions from `g.specContext('spec:protocol.role-vocabulary')`. A shipped Studio page cannot name a Protocol-corpus Spec id for an adopter. The moved Spec must state whether the page shows role meanings and from where, or show the role token alone. It must also state the order of components and role groups; the prototype hard-codes a Protocol order list.
+
+13. **Register line 372, `impl:protocol.markdown-results`. Minor.** It would be the engine's first identity-only unit; today there are none. That conflicts with `structural-self-binding#membership` ("carries component membership through a realizing anchor"). The file is a 26-line result union consumed by the parser. Leave it bare and add a coarse-grain row covered by `impl:protocol.markdown-parser`.
+
+14. **Register line 293, `impl:protocol.sdp-import-publish`. Minor.** It is described as "identity-only", but it carries `references spec:carrier.sdp-import`. It realizes that Spec's publication rule ("prepares exclusive temporary siblings and atomically creates targets …"), so the binding-grain set reading (MD-37) calls for `satisfies`, and the lane's own `presentationWord` calls for role `publisher`. Change the row to: "re-target references → satisfies `spec:carrier.sdp-import`; service → publisher."
+
+15. **`spec:protocol.role-vocabulary` contains transition text. Minor.** The `renderer` and `utility` terms ("Existing engine spelling … curation replaces this spelling"), `presentationWord` ("after those edits") and `freeVocabulary` ("current and proposed engine values") describe a migration, not intended truth, and go stale at the build. Delete both terms and put the renames in the register only. Replace `freeVocabulary` with: `- freeVocabulary: These Model terms explain the engine's role values. Token grammar remains the only Protocol check on role, omission remains lawful, and this Model is not an allowlist.` Replace the last clause of `presentationWord` with "a unit that presents uses projection, never renderer."
+
+16. **Role on a component anchor is undefined. Minor.** The register gives all 14 components a role, but `roleChoice` defines a role by "the anchored unit". Add a Design entry: `- componentRole: A component anchor's role names the dominant responsibility of its members as a group, read from the reviewed member roles; a component whose members split evenly states no role.` Under that entry, `component:protocol.projections` (which holds publishers, codecs and contracts) and `component:protocol.cli` need a reason, not boilerplate.
+
+17. **Roles that contradict the lane's own definitions. Minor.**
+    - `impl:protocol.studio-recipes` evaluates bodies and presents nothing: projection → service.
+    - `impl:protocol.studio-data` is a "shared build-time data contract and cache": projection → contract.
+    - `impl:protocol.adopter-help`, a help-text catalog, and `impl:protocol.engine-provenance-cli`, which prints a version, coordinate nothing: service → projection.
+    - The `service` term lists "publication", which blurs the publisher line. Delete "publication, " from it.
+
+18. **Build gaps (report §6). Minor.**
+    - `test/recipes.test.ts` hard-codes `impl:protocol.agent-surface` as the live member it removes or retains, around lines 1501–1761. It must change with the merge into `impl:protocol.reader`.
+    - The relocated `impl:protocol.envelope-contract` must use the comment form, since `markdown-frontmatter.ts` has no builder import. Say so.
+
+19. **`spec:protocol.significant-units-review#design.rosterSource` and `rosterExpectations`. Minor.** They pin test-internal constant names and a test path, which is implementation detail that a rename breaks. Replace with: `- rosterSource: The self-hosting oracle holds the accepted roster: each row names an accepted unit's anchor, its component and its file, and its expectations for components, membership, uses, exceptions, coarse-grain coverage and roles sit beside it. A symbol suffix is a review locator, never extracted symbol identity.`
+
+20. **Prototype. Minor.** It renders only the current graph, so the owner cannot see what accepting the register produces. The honest captions are good. Add a third page, clearly titled "proposed, not applied", rendered from an in-memory application of the change table to the queried graph. That lets the owner compare the component sections before and after.
+
+21. **New terms not flagged. Minor.** "Curation record" is easily confused with the curation report of recipe 40. "Architecture register" adds to the Studio's existing registers. "Seam" is used throughout the register and is not in `CONTEXT.md`. Use "the annotation review" for the document, and "component" instead of "seam".
+
+## What is good and should not change
+
+- The walk of all 156 source files, with a disposition for every bare file and the consuming responsibility named for each helper left bare.
+- The merge and drop ledger: target-by-target transfer, the explicit statement that no false claim is removed, and the warning that a later code change needs a fresh promise pass.
+- The relocation of `impl:protocol.envelope-contract` to the real parser, and the drop of the empty-registration identity in `views.ts` with its realization accounted for.
+- The finding that model imports from adapters, codegen, import, notation, runner and testing are builder-only (verified), and the `import → notation` and `reader → notation` declarations.
+- The role vocabulary as a Model with no validator, one word per pattern (projection, codec, publisher), and adopter roles left alone.
+- The platform section: evidence only, no stale-edge ruling, high fan-in treated as a reason to read the code rather than to anchor it.
+- The arc's planned work lands in existing components; no component is invented.
+- The prototype's honesty: no approval badge, omitted roles and memberships kept visible, readable at 390 and 1440 wide.

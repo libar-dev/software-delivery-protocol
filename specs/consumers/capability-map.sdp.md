@@ -7,7 +7,7 @@ relations:
   refines:
     target: spec:consumers.projections-model
     reason: the capability map projects authored refinement without introducing a grouping
-  decidedBy: spec:consumers.capability-map.epic-kinds
+  decidedBy: spec:decisions.epics-of-any-kind
   dependsOn:
     - target: spec:validation.readiness-floor
       reason: each node reads the existing floor beside the author's statement

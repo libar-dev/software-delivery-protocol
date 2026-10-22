@@ -106,6 +106,7 @@ export const expectedPackMembers = [
   "spec:extraction.regenerability",
   "spec:extraction.schema-versioning",
   "spec:extraction.schema-versioning.declared-version",
+  "spec:extraction.executable-examples",
   "spec:extraction.executable-contracts",
   "spec:extraction.executable-contracts.concreteness-refusal",
   "spec:extraction.executable-contracts.multi-entry-example",
@@ -277,6 +278,7 @@ export const expectedPackMembers = [
   "spec:consumers.spec-studio.navigation",
   "spec:consumers.spec-studio.lenses.packs",
   "spec:consumers.spec-studio.lenses.architecture",
+  "spec:consumers.spec-studio.lenses.architecture.unit-register",
   "spec:consumers.spec-studio.lenses.architecture.planned-apart",
   "spec:consumers.spec-studio.lenses.tests",
   "spec:consumers.spec-studio.lenses.tests.coverage-row",
@@ -360,6 +362,14 @@ export const expectedPackMembers = [
   "spec:consumers.capability-map",
   "spec:consumers.spec-studio.capability-map-page",
   "spec:consumers.spec-studio.diagram-kinds",
+  "spec:consumers.spec-studio.diagram-kinds.legibility",
+  "spec:consumers.spec-studio.diagram-kinds.edge-routing",
+  "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+  "spec:consumers.spec-studio.diagram-kinds.dependency",
+  "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+  "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+  "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+  "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
   "spec:consumers.design-slice",
   "spec:consumers.spec-studio.slice-page",
   "spec:consumers.roadmap",
@@ -423,6 +433,7 @@ export const expectedPackMembers = [
   "spec:decisions.vault-owned-folder",
   "spec:decisions.roadmap-priority",
   "spec:decisions.roadmap-over-plans",
+  "spec:decisions.epics-of-any-kind",
 ] as const;
 
 export const expectedStudioPackMembers = [
@@ -443,6 +454,7 @@ export const expectedStudioPackMembers = [
   "spec:consumers.spec-studio.lenses.packs",
   "spec:consumers.spec-studio.index-page",
   "spec:consumers.spec-studio.lenses.architecture",
+  "spec:consumers.spec-studio.lenses.architecture.unit-register",
   "spec:consumers.spec-studio.lenses.architecture.planned-apart",
   "spec:consumers.spec-studio.lenses.tests",
   "spec:consumers.spec-studio.lenses.tests.coverage-row",
@@ -565,10 +577,21 @@ export const expectedObsidianVaultPackMembers = [
 export const expectedRoadmapsAndSlicesPackMembers = [
   "spec:protocol.significant-units-review",
   "spec:protocol.role-vocabulary",
+  "spec:consumers.spec-studio.lenses.architecture.unit-register",
   "spec:consumers.capability-map",
+  "spec:decisions.epics-of-any-kind",
   "spec:protocol.capability-epics",
+  "spec:extraction.executable-examples",
   "spec:consumers.spec-studio.capability-map-page",
   "spec:consumers.spec-studio.diagram-kinds",
+  "spec:consumers.spec-studio.diagram-kinds.legibility",
+  "spec:consumers.spec-studio.diagram-kinds.edge-routing",
+  "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+  "spec:consumers.spec-studio.diagram-kinds.dependency",
+  "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+  "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+  "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+  "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
   "spec:consumers.design-slice",
   "spec:consumers.spec-studio.slice-page",
   "spec:decisions.roadmap-priority",
@@ -577,6 +600,20 @@ export const expectedRoadmapsAndSlicesPackMembers = [
   "spec:consumers.roadmap.memo",
   "spec:decisions.roadmap-over-plans",
   "spec:protocol.roadmap-replaces-plans",
+  "spec:consumers.projections-model.roadmap-views",
+] as const;
+
+// The authored membership of `pack:roadmap`, in manifest order: the Protocol's proposed priority.
+export const expectedRoadmapPackMembers = [
+  "spec:consumers.roadmap",
+  "spec:consumers.capability-map",
+  "spec:consumers.design-slice",
+  "spec:consumers.spec-studio.diagram-kinds",
+  "spec:protocol.significant-units-review",
+  "spec:protocol.roadmap-replaces-plans",
+  "spec:consumers.spec-studio.cited-line-text",
+  "spec:consumers.spec-studio.register-input",
+  "spec:consumers.edit-model",
 ] as const;
 
 export const expectedCorpusChecksPackMembers = [
@@ -723,6 +760,16 @@ export const expectedPacks = [
       "A human interface for iterating on designs: the one graph regenerated as an Obsidian vault of linked notes, read beside the carriers an agent edits. First the vault, its verb and its place among the projections, with the decision that its generator owns one folder of the vault and never touches a note a person wrote. Then its notes and links, its tables, the loop a design pass runs through it, and the skill that teaches an agent to keep the vault and answer a pass from it. Each Spec is followed by the examples that will verify it. Last, the one model change the vault asks for, an address for a Model term, so a concept links as exactly as a Spec does.",
     file: "specs/obsidian-vault.pack.sdp.md",
     members: expectedObsidianVaultPackMembers,
+  },
+  {
+    id: "pack:roadmap",
+    nodeType: "Pack",
+    claim: "declared",
+    title: "The Protocol's roadmap",
+    framing:
+      "The Protocol's next work, first entry first. The order is a preference: it dates, gates and sequences nothing, and what each entry still needs is read from the graph each time. Until the roadmap priority decision is ratified and its manifest field built, this is an ordinary Pack, and its order is the proposed priority only because this note says so.\n\nFirst come the lead features of the roadmaps and slices arc, whose other Specs are in that arc's Pack. Then the two steps a reader of the Studio's pages could not take, the words of a test line that checks a declaration and an outside register's entries, and then the composed-intent model the build backlog holds. What the first adopter's mass update asks for joins when the owner selects it; a capture landing adds nothing here. An entry leaves by an edit to this manifest once its selected work is complete or no longer belongs among the next work.",
+    file: "specs/roadmap.pack.sdp.md",
+    members: expectedRoadmapPackMembers,
   },
   {
     id: "pack:roadmaps-and-slices-v1",

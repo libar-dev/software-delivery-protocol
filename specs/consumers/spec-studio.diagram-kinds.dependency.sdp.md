@@ -13,12 +13,11 @@ relations:
 - outcome: See multi-hop dependency chains and cycles within a Pack, slice or roadmap without reading them as an execution schedule.
 
 ## Behavior
-- rule: [#declaredOnly] Draw the design slice answer's structure edges and rests-on boundary, preserving each declared refines, dependsOn, constrainedBy and decidedBy relation's exact direction, reason and claim. The design slice owns its rests-on exception for a refines back to a member that names it by another typed relation. Membership is scope, never a dependency.
+- rule: [#declaredOnly] Draw the design slice answer's structure edges and rests-on boundary, preserving each declared refines, dependsOn, constrainedBy and decidedBy relation's exact direction, reason and claim. The design slice owns its rests-on exception for a refines back to a member that names it by another typed relation: such an edge carries `orders: false`, is drawn dashed and says in its legend and text that it orders nothing. Membership is scope, never a dependency.
 - rule: [#depth] Band each member by the depth its supplied answer gives, the design slice's `depth` for a Pack, slice or roadmap scope; the layout never recomputes it. A cycle's members share one band and are named as a cycle in words.
 - rule: [#boundary] Show immediate dependencies outside the supplied scope in a separate boundary band, without traversing their dependencies. An unresolved target is named unresolved and has no invented title or link.
 - rule: [#fold] Above the shared bound, first fold the boundary band into one box per relation type that names its count, keeping as its own box each outside Spec that holds a member's stated next rung or states below defined; then fold whole depth bands in descending box count, ties by ascending depth; if the drawing still exceeds the bound, omit the SVG and open the text equivalent.
-
-- rule: [#examplesInParent] An example member that refines another member is counted on its parent's box and is never drawn as its own box; it keeps its row in the text equivalent.
+- rule: [#examplesInParent] An example member the design slice folds into its parent is counted on that parent's box and is never drawn as its own box; it keeps its row in the text equivalent. An example the slice does not fold is a box like any other member's.
 
 ## Design
 - inputs: `subject` and the design slice answer supply ordered members, exampleOf, exampleMembers, depth, cycles, structure edges and the rests-on boundary with its holds and relation reasons; a roadmap passes its explicitly selected ordered Spec set to that same reader. Duplicate or unknown scope ids are that reader's diagnostics, never repaired by layout.

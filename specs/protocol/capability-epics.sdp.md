@@ -5,7 +5,7 @@ altitude: feature
 readiness: defined
 relations:
   refines: spec:protocol.self-hosting
-  decidedBy: spec:consumers.capability-map.epic-kinds
+  decidedBy: spec:decisions.epics-of-any-kind
   dependsOn:
     - target: spec:consumers.capability-map
       reason: the capability map exposes the corpus's authored refinement

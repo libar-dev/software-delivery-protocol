@@ -211,7 +211,7 @@ export const consumersSpecs = [
   {
     id: "spec:consumers.projections-model",
     specKind: "model",
-    altitude: "feature",
+    altitude: "epic",
     readiness: "ready",
     file: "specs/consumers/projections-model.sdp.md",
     title: "Projections fan out from one graph without becoming truth stores",
@@ -243,7 +243,7 @@ export const consumersSpecs = [
   {
     id: "spec:consumers.agent-surface",
     specKind: "behavior",
-    altitude: "feature",
+    altitude: "epic",
     readiness: "ready",
     file: "specs/consumers/agent-surface.sdp.md",
     title: "Agents script a visible typed graph",
@@ -1076,7 +1076,7 @@ export const consumersSpecs = [
   {
     id: "spec:consumers.authoring-on-ramp",
     specKind: "behavior",
-    altitude: "feature",
+    altitude: "epic",
     readiness: "ready",
     file: "specs/consumers/authoring-on-ramp.sdp.md",
     title: "Authors move one Spec from intent to reviewed evidence",
@@ -3094,11 +3094,11 @@ export const consumersSpecs = [
     id: "spec:consumers.projections-model.roadmap-views",
     specKind: "model",
     altitude: "story",
-    readiness: "idea",
+    readiness: "scoped",
     file: "specs/consumers/projections-model.roadmap-views.sdp.md",
     title: "Roadmap views read releases, baselines and phases from git and the graph",
     narrative:
-      "Release, baseline and roadmap vocabulary belongs to optional projections that wait until a reader needs them.",
+      "Release, baseline and roadmap vocabulary belongs to optional projections that wait until a reader needs them. The owner, choosing what the next pull requests take up, is the reader the roadmap view waited for, and the roadmap reading answers it: a Pack whose manifest states a priority order, read with what each entry still needs, shown on the Studio's roadmap page and rendered as a pull request's forward section. Release and baseline views still wait for a reader of their own.",
     sections: {
       intent: {
         outcome:
@@ -3106,12 +3106,12 @@ export const consumersSpecs = [
         openQuestions: [
           {
             question:
-              "Does a reader need release, baseline or roadmap views that the shipped projections, the recipes and git do not serve?",
+              "Does a reader need release or baseline views that the roadmap, the recipes and git tags do not serve?",
             blocking: true,
-            key: "namedRoadmapReader",
+            key: "releaseReader",
             decider: "owner",
             trigger:
-              "a named reader with that need, and a way to measure it inside the arc that builds the views",
+              "a named reader with that need, such as the package's first published release, and a way to measure it inside the arc that builds the views",
           },
         ],
       },
@@ -3120,8 +3120,10 @@ export const consumersSpecs = [
           release: "A tagged set surfaced as a git-tag projection.",
           baseline:
             "A named approved snapshot whose signed git tag is the approval artifact, with approval remaining outside the authored model.",
+          roadmap:
+            "A Pack whose manifest states a priority order, read with what each entry still needs next; its order is an advisory preference, never a schedule or a gate.",
           "phase / iteration / milestone":
-            "Descriptive vocabulary for optional roadmap projections, never gates or enforced sequences.",
+            "Descriptive words a roadmap's framing may use, never an entry field, a date, a gate or an enforced sequence.",
         },
       },
     },
@@ -5639,6 +5641,45 @@ export const consumersSpecs = [
     file: "specs/consumers/spec-studio.lenses.architecture.sdp.md",
   },
   {
+    id: "spec:consumers.spec-studio.lenses.architecture.unit-register",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    title: "The architecture page lists each component's significant units by role",
+    narrative:
+      "A contributor about to change the engine needs the curated register of its significant units: the ports, contracts, pipeline stages and catalogs each component owns, and the designs each unit realizes or answers to. The graph already records them on the anchors. This panel reads them there, grouped by component and role, and shows what no anchor states rather than guessing it.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a contributor find recorded units and their design bindings through their component and role, with omitted structure visible.",
+      },
+      behavior: {
+        rules: [
+          "The architecture page groups recorded members by role within each recorded component, and shows a component's own source binding apart from its members. A row shows the recorded id, label, file and line and its satisfies and references targets separately. The page reads graph bindings only, never an annotation review or oracle source file.",
+          "Keep a not-stated role group and a no-component section. A binding confers no review approval or execution verdict, and the page shows no inferred accepted badge.",
+          "Show each recorded role token without interpreting it through a Protocol-corpus Spec id. An adopter's unfamiliar roles remain visible and produce no finding.",
+          "Sort components by id, role groups by token and members by id in code-unit order, with not-stated roles last and the no-component section after the components.",
+          "Every row is available without script through native disclosures. The component index links to the existing component section ids, and narrow screens retain readable source paths and separate realization and reference lists.",
+        ],
+        ruleKeys: {
+          recordedOnly: "rules[0]",
+          omissions: "rules[1]",
+          roleTokens: "rules[2]",
+          stableOrder: "rules[3]",
+          staticAccess: "rules[4]",
+        },
+      },
+      verification: {
+        mode: "reviewed",
+        criteria: [
+          "Render the self-hosted corpus and an adopter with unfamiliar roles, omitted roles and omitted membership. Check ordering, component source rows, target separation, keyboard disclosures and narrow-screen overflow, with no inferred approval badge.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.lenses.architecture.unit-register.sdp.md",
+  },
+  {
     id: "spec:consumers.spec-studio.lenses.architecture.planned-apart",
     specKind: "example",
     altitude: "story",
@@ -6459,35 +6500,72 @@ export const consumersSpecs = [
     id: "spec:consumers.capability-map",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "idea",
-    title: "The capability map reads every epic with the features and stories that refine it",
+    readiness: "defined",
+    title: "The capability map reads every epic and its refinement descendants",
     narrative:
-      "A corpus already states its capabilities through refinement: a story refines a feature, a feature refines an epic. No view draws that structure, so a person filtering by altitude sees a flat list and reads the corpus by Pack instead. The capability map draws it as a tree read from `refines`, each Spec with its readiness and delivery facts, and lists every Spec no epic reaches, so the map never hides one.",
+      "The map answers what a corpus intends to do before a reader chooses a Pack. Refinement can skip an altitude, repeat an altitude, or give a Spec several parents. The map keeps that structure. An epic's descendants are a set of Specs, not a measure of completion.",
     sections: {
       intent: {
-        actor:
-          "A person or an agent who wants to see what the corpus can do, capability by capability, before reading any one Pack.",
+        actor: "A person or agent choosing which capability's design to read.",
         problem:
-          "Refinement is authored on every Spec, yet no view draws it, so the corpus reads as Packs and a flat list, and a reader cannot see which capabilities exist or how far each is designed and built.",
+          "An altitude filter gives a flat list and Pack membership does not explain refinement.",
         outcome:
-          "Draw every epic with the features and stories that refine it, each with its stated readiness, the floor it reaches and its delivery facts, and list the Specs no epic reaches.",
-        openQuestions: [
-          {
-            question: "Where does the map place a Spec that refines more than one parent?",
-            blocking: true,
-            key: "multipleParents",
-            decider: "delegated",
-            provisional:
-              "under every parent, the second and later placements marked as repeats that link to the first",
-          },
-          {
-            question: "How does the map show a Spec that no epic reaches through refinement?",
-            blocking: true,
-            key: "unreached",
-            decider: "delegated",
-            provisional:
-              "in its own section after the epics, grouped by the highest Spec its refinement reaches",
-          },
+          "Read every epic with its refinement descendants, its design maturity and direct binding evidence, and expose every Spec no epic reaches.",
+      },
+      behavior: {
+        rules: [
+          "The map follows only declared `refines` edges between resolving Specs, from parent to child for reading. It reads every kind at every altitude, preserves intermediate Specs, and derives no parent from a title, path, Pack, dependency or binding.",
+          "Every Spec at epic altitude is an entry, whatever its kind. An epic may itself refine another epic; both remain selectable, and a parent's descendant set includes the nested epic and its descendants.",
+          "Each Spec carries its own stated readiness, structural floor reached, delivery facts, and open questions with their blocking flags. A missing floor reads `none`. No value propagates from a child to its parent.",
+          "Every refining parent remains in the answer; a Spec appears once in nodes with all its parents, and a page decides where it expands.",
+          "An epic's rollup counts distinct descendants, excluding the epic itself, by stated rung, floor reached, kind and altitude; it counts those with implementation bindings and those with verifier bindings separately. Open and blocking question totals count the questions on those distinct descendants. Rollups for overlapping epics are never added to form a corpus total.",
+          "Examples and decisions participate in reach, counts and edges like every other kind. The page may fold them into labelled disclosures, but exposes their rows and any descendants they parent. A verifier count means a binding exists, never that a test passed; the map states no percent complete, inherited fact or work order.",
+          "A Spec is unreached when no epic reaches it, counting an epic as reaching itself. The answer lists every unreached id, including examples and decisions, and groups the unreached subgraph by its roots. A branch that is also reached remains outside that subgraph, with its cross-edge retained in the full answer.",
+          "Unresolved or non-Spec refinement endpoints are reported in damage and excluded from traversal. Cyclic refinement is reported as sorted groups whose members all reach one another, including self-links. Traversal visits each id once per root. The map displays the damage without inventing ancestry or withholding the rest.",
+          "With an epic selected, the answer contains that epic and its distinct descendants. Node parent and epic memberships still name their full-corpus memberships so narrowing never claims exclusive ownership. Without an epic the answer includes every Spec, including an empty corpus or a corpus with no epics.",
+        ],
+        ruleKeys: {
+          graphOnly: "rules[0]",
+          epics: "rules[1]",
+          nodeEvidence: "rules[2]",
+          multipleParents: "rules[3]",
+          rollup: "rules[4]",
+          examplesAndDecisions: "rules[5]",
+          unreached: "rules[6]",
+          damagedGraph: "rules[7]",
+          scope: "rules[8]",
+        },
+      },
+      design: {
+        mapRecipe:
+          'recipe 52 takes optional `params.epic`, a resolving epic Spec id, and `params.detail`, a boolean. Omitted epic means the whole corpus. An unknown parameter returns `{ unknownParams, accepts: ["epic", "detail"] }`; a wrong type, absent id or non-epic returns `{ diagnostics: [{ parameter, problem }] }` without a map, naming `epic` or `detail` as appropriate. There is no sample epic and no filtering by kind.',
+        mapAnswer:
+          "the full answer is `{ input: { epic }, totals, nodes, edges, epics, unreached: { ids, roots }, cycles, damage }`; `epic` is the selected id or null. The selected node set defines all totals; unselected nodes are never counted. Full-corpus memberships on a selected node are context, not extra selected nodes.",
+        mapDetail:
+          "recipe 52 reads `params.detail`, absent or `false` for the summary and `true` for the full answer; the summary keeps `input`, `totals`, `epics` as `{ id, title, parentEpicIds, rollup }`, `unreached.ids`, `cycles` and `damage`, and adds `leftOut`, one line for each omitted field. `detail: true` adds `nodes`, `edges`, each epic's `descendantIds` and `unreached.roots`, and omits `leftOut`.",
+        nodeRow:
+          "`{ id, title, specKind, altitude, statedReadiness, floorReached, deliveryFacts, questions, parents, children, epicIds }`; parents and children are all resolving direct refinement neighbors in the corpus, and epicIds lists all epics that reach this node, including itself when epic. Questions preserve authored order as `{ index, address, question, blocking }`, with a keyed question's entry address or null.",
+        edgeRow:
+          '`{ from, to, claim: "declared", reason }`, child to parent, for each resolving refinement whose ends are selected. An absent reason is null. Other relation types never enter this list.',
+        epicRow:
+          "`{ id, title, parentEpicIds, descendantIds, rollup }` for every selected epic, with its distinct descendants in the selected set. `parentEpicIds` lists resolving direct refinement parents at epic altitude in the full corpus, in id order. Selection by one epic includes every descendant of a nested epic, so its rollup stays complete.",
+        countShape:
+          "totals and each rollup carry `{ specs, byStatedReadiness, byFloorReached, byKind, byAltitude, withImplementationBinding, withVerifierBinding, openQuestions, blockingQuestions }`; every descriptor value has a key including zero, floor counts add `none`, and totals additionally carry `{ epics, reached, unreached }`. Reached and unreached partition selected nodes, using their full-corpus epic membership. The epic's own evidence stays on its node row, outside its rollup.",
+        unreachedRoots:
+          "a root is an unreached Spec with no unreached parent; a group of unreached Specs that refine one another in a cycle, with no unreached parent outside the group, uses its smallest id as its root. Reach may overlap between roots; unreached.ids stays unique and complete. In an epic selection both lists are empty.",
+        graphDamage:
+          '`damage` lists `{ code: "unresolved-refinement", from, to }` for a missing or non-Spec endpoint touching the selected scope, or every such edge in whole-corpus scope. Cycles are separate `{ members }` rows for cyclic groups in the selected graph, members sorted by id; they are graph damage, not parameter failures or a new validator.',
+        stableOrder:
+          "ids, nodes, epic rows, descendant ids, memberships and unreached roots use code-unit id order; edges and damage sort by from then to; cycles sort by first member. Question order stays authored. The answer has no clock, recorded work order or mutable state.",
+      },
+      verification: {
+        mode: "reviewed",
+        criteria: [
+          "A diamond retains both parent edges, lists the shared child once in nodes, and counts it once in that epic's descendants.",
+          "A corpus with no epics still exposes every Spec; a cyclic unreached component has a root and finite traversal.",
+          "An epic with a bound example and a ratified decision counts both descendants while retaining its own empty delivery facts.",
+          "Summary and full answers have identical totals, epic rollups, cycles and damage; the summary names every omitted field.",
+          "An epic selection includes its whole reachable set and no unrelated roots; invalid parameters return diagnostics without a plausible empty map.",
         ],
       },
     },
@@ -6498,13 +6576,60 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.capability-map-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
-    title: "The capability map page shows each epic as a tree of its features and stories",
+    readiness: "defined",
+    title: "The capability map page makes refinement readable by epic",
     narrative: null,
     sections: {
       intent: {
+        actor: "A reviewer looking for a capability before choosing a Spec or Pack.",
+        problem:
+          "A flat altitude filter hides how a capability is decomposed, and a large refinement drawing becomes unreadable when shrunk to the page width.",
         outcome:
-          "Give the Studio a page that draws the capability map, each epic a tree of its features and stories with their rungs, and lets a person narrow the index's Specs by epic.",
+          "Read an epic overview, inspect its refinement structure and evidence, and narrow the index's Specs to its descendants.",
+      },
+      behavior: {
+        rules: [
+          "The Studio publishes `capabilities.html` on every build and links it as `Capabilities` immediately after `Packs` in the top navigation. The Packs lens keeps its membership order and the index remains the landing page.",
+          "The page reads recipe 52 with `{ detail: true }` and no epic parameter. It renders every epic's own evidence beside its descendant rollup and names the rollup's scope. Examples and decisions have separate counts and expandable rows. There is no combined total obtained by adding epic rows.",
+          "Each epic has a refinement drawing supplied by the shared diagram implementation. It keeps parent-to-child reading order while arrows, if drawn, point child to parent and the legend says `refines`. Repeated nodes link to their first occurrence within that epic section. A nested epic remains a labelled epic, not a new altitude.",
+          "A large branch folds at the shared diagram bound and links to its complete refinement text. It never scales labels below the shared legibility size to fit an entire tree. The text includes every node and edge, repeats and cyclic links labelled in words, and stays readable without script.",
+          "Every node title links to that Spec's Studio page. A separate `Show these Specs` link goes to the index's Specs section with the epic selected. Keyed questions link to their entry on the Spec page; unkeyed questions link to the Spec page's `section.intent`. Unresolved endpoints are text with their diagnostics, never plausible Spec links.",
+          "The index's Specs filter gains `Epic`, with `Any`, `No epic` and every epic by title and id. An epic selects its own Spec and every Spec whose full-corpus epicIds contains it. It intersects with the existing filters, resets with them, and never changes Pack membership or hides Pack cards.",
+          "Native links, disclosures, complete refinement text and all Spec rows work without script. Index filtering is an enhancement: before script applies a requested epic, the index says filtering needs script and shows all rows. A supplied id that is absent or not epic reports `Unknown epic filter` and leaves all rows visible.",
+          "The page always has `No epic reaches these Specs`, including an explicit empty message. With no epics it explains that authors may organize Specs through refinement and still lists the whole corpus. Cycles and unresolved edges are visible diagnostics beside the complete text, without a new validation rule.",
+        ],
+        ruleKeys: {
+          page: "rules[0]",
+          recipeData: "rules[1]",
+          drawing: "rules[2]",
+          bounded: "rules[3]",
+          links: "rules[4]",
+          filter: "rules[5]",
+          withoutScript: "rules[6]",
+          emptyAndDamage: "rules[7]",
+        },
+      },
+      design: {
+        route:
+          "`capabilities.html`; an epic's section id is its Spec id. The filtered-index route is `index.html?epic=<percent-encoded Spec id>#specs`; `epic=none` selects unreached Specs, absence selects Any. An unknown or repeated epic parameter reports the unknown-filter message without applying it.",
+        diagramInput:
+          "recipe 52's node, edge, epic and unreached rows supply the drawing and its text; layout derives no reach, floor or delivery fact. The shared drawing implementation owns folding, label metrics and SVG or Mermaid representation. A capability drawing must support same-altitude edges, skipped altitudes, multiple parents, nested epics, and cycles without pretending to be a strict three-level tree.",
+        disclosureOrder:
+          "epic overview cards and sections follow recipe order. Each section opens with the epic's own rung, floor, binding evidence and questions, then the rollup labelled `Distinct descendants, excluding this epic`. Refinement text expands a depth-first walk with children in id order and renders later visits as references; it follows the recipe's root order and uses per-section visited ids. Examples and decisions fold through native disclosures without pruning their descendants.",
+        rowEvidence:
+          "each row names kind and altitude, `stated <rung>`, `floor <rung>`, the implementation binding and the verifier binding as `present` or `none`, and open and blocking question counts with their text available. Facts that are absent stay absent; a folded branch's counts never become the parent's badges.",
+        nestedEpics:
+          "a card for an epic that refines another epic says `Inside <title>`, using `parentEpicIds`, and a card whose descendants include an epic names it, so overlapping counts read as overlap.",
+        responsive:
+          "overview cards reflow to one column on a narrow viewport; refinement text wraps ids and titles, caps visual indentation, and names the parent in words so deep trees remain readable. Diagram labels use the shared readable size and bounded branches instead of shrinking the whole graph. Print opens the disclosures and retains the complete text.",
+      },
+      verification: {
+        mode: "reviewed",
+        criteria: [
+          "Read the same page on a corpus with one broad epic, several epics, and no epics, with script disabled and at a narrow viewport.",
+          "Follow a shared descendant from both parents and verify that the rollup counts it once and the index filter lists it once.",
+          "Select an epic on the index, combine it with kind and readiness filters, reset it, and open the filtered URL directly; invalid and repeated epic parameters never show a false empty result.",
+        ],
       },
     },
     deliveryFacts: [],
@@ -6514,44 +6639,457 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "idea",
-    title: "The Studio draws every diagram kind the graph holds data for",
+    readiness: "defined",
+    title: "The Studio chooses diagram kinds from graph values",
     narrative:
-      "The Studio draws four diagrams today: the architecture grid, a component's members, a Spec's one-hop relations and a Spec's realization. The graph holds more structure than they show: dependency chains across a Pack, the refinement tree of a capability, the components a Pack's members touch, and the stated and reached rungs of many Specs at once. Each kind the graph has honest data for gets a drawing, and a kind it has no data for is named and refused rather than guessed from prose.",
+      "Dependency chains across a Pack, capability refinement, the components a design touches, and differences between stated readiness and the floor need different pictures. A diagram kind earns its place through the question it answers and the graph values that answer it. Mermaid supplies a useful catalog of visual forms, not the Studio's layout runtime or an instruction to draw every form.",
     sections: {
       intent: {
         outcome:
-          "Draw every diagram kind the graph holds honest data for, legible at a desktop width without zooming, each offering its Mermaid source to copy, and name each kind the graph cannot support.",
-        openQuestions: [
-          {
-            question:
-              "Which diagram kinds does the graph hold honest data for, and which would need data it does not hold, such as message order for a sequence diagram?",
-            blocking: true,
-            key: "kindCatalog",
-            decider: "delegated",
-          },
-          {
-            question:
-              "How does a drawing wider than its column keep its labels legible: a wider figure, shorter labels, a smallest scale with scrolling, or a mix?",
-            blocking: true,
-            key: "legibleLabels",
-            decider: "delegated",
-          },
+          "Choose useful drawings from graph values, keep their labels readable on first view, and offer source a reader can copy without changing the shipped Mermaid projection.",
+      },
+      behavior: {
+        rules: [
+          "A drawing reads the graph through the page's reader values and recipe answers. A visual form never supplies missing intent, order, cardinality, scores, dates or runtime evidence from prose, paths or imports.",
+          "The catalog names each visual family, whether the graph holds its data, its subject, the question it answers, and a refusal or deferral's re-entry trigger. Renderer aliases share their family's row; diagnostic renderers are named apart.",
+          "The Studio adds dependency depth, capability refinement, scoped architecture and the maturity map as a grid of counts; requirement traceability replaces the realization drawing on a Spec page. Equivalent Mermaid forms share one Studio drawing.",
+          "A Pack, slice or roadmap passes an explicit ordered set of Spec ids to a drawing. A grouping or a diagram never authors a delivery fact, ranks work, grants permission or sets a workflow gate.",
+          "Every new drawing keeps the diagram contract's bound, deterministic static SVG, links, words beside style, text equivalent and unique element ids. Layout and copying add no browser layout dependency.",
         ],
+        ruleKeys: {
+          graphData: "rules[0]",
+          kindCatalog: "rules[1]",
+          drawnKinds: "rules[2]",
+          honestScope: "rules[3]",
+          sharedContract: "rules[4]",
+        },
+      },
+      design: {
+        kindCatalog:
+          "`draw`, `equivalent`, `defer` and `refuse` describe catalog choices only. They are not graph fields or delivery states. A deferred form has honest inputs but adds no needed reading beyond the selected views; a refused form lacks typed inputs.",
+        legibleLabels:
+          "The figure keeps the Studio's navigation rail. Title-first labels and width-based cell wrapping reduce width; natural-size SVG with local horizontal scrolling preserves readable labels on desktop. Below the responsive breakpoint the same drawing fits the screen. The legibility child pins these measurements and behavior.",
+        flowchart:
+          "Draw for a Spec set, Pack, slice or roadmap from declared relations; dependency depth reveals chains and cycles the one-hop trace cannot show. Arrows retain their exact relation and direction, never execution order. The existing trace, members and realization remain equivalent flowchart subjects.",
+        mindmap:
+          "Draw capability refinement from declared refines for an epic or capability map. The tree shows nesting absent from a flat list; repeated parents and cycles stay explicit rather than becoming an invented hierarchy.",
+        treeView:
+          "Equivalent to the capability tree for a strict refinement tree. Folder icons and file paths would invent meaning; use plain labels. Repeated parents use the capability view's cross-links or its flowchart source.",
+        block:
+          "Draw scoped architecture and the discrete maturity matrix. Components and anchored uses answer which seams a Spec set touches; stated and reached rungs answer where statements lag or overreach. Cell position is categorical, never a score.",
+        architecture:
+          "Equivalent to the scoped architecture drawing for a component or Spec set, from component, memberOf and uses plus planned-component declarations. Generic boxes keep optional context and layer; cloud, service, network and deployment icons need explicit typed declarations before they can mean anything.",
+        requirement:
+          "Draw a Spec's or bounded Spec set's refinement, satisfying units and declared versus anchored verifiers together. This shows the distinction between intent and binding in one picture; it supplies no risk, test method or passing result.",
+        class:
+          "Defer a role view for a component or slice: units as classes stereotyped by their recorded role, with anchored uses as dependency arrows and no fields, methods or inheritance. Role, memberOf and uses are honest inputs, but the role vocabulary is under review and the architecture page lists roles as text. Re-enter when the role vocabulary settles and a reader needs pattern relationships drawn. Refuse fields, methods, inheritance and multiplicities; Model prose is not a schema.",
+        entityRelationship:
+          "Refuse for a Spec, component or corpus. Terms and relations are not entity attributes, keys or cardinalities. Re-enter with an explicit typed entity and cardinality contract.",
+        sequence:
+          "Refuse for a Spec or slice. Uses and dependsOn hold no messages, participants or temporal order. Re-enter with typed ordered interactions or a separately admitted runtime input.",
+        zenUml:
+          "Refuse for the same missing interaction data as sequence; the optional external renderer adds no graph evidence. Re-enter when ordered interactions have a lawful graph home.",
+        state:
+          "Refuse for a Spec or roadmap. Readiness is a position, not a transition machine, and the graph holds no domain states, events or guards. Re-enter with a typed domain state contract unrelated to delivery gating.",
+        journey:
+          "Refuse for a Spec, Pack or corpus. Intent actors do not define ordered journey tasks or satisfaction scores. Re-enter with typed journey steps and a reader who needs them.",
+        gantt:
+          "Refuse for a roadmap or corpus. No durations, start dates or schedules are held, and dependency depth is not time. Re-enter only with a separately ruled temporal input that never gates work.",
+        pie: "Defer for a Pack or corpus. Counts by kind or readiness are honest, but slices repeat the census while hiding exact comparisons. Re-enter when a reader needs part-to-whole comparison that the census cannot answer.",
+        quadrant:
+          "Refuse normalized quadrant coordinates for a Pack or roadmap. Readiness rungs have no numeric distances and priority is not a score. The maturity map uses a discrete matrix instead. Re-enter with explicitly typed independent numeric measures.",
+        gitGraph:
+          "Refuse for a Spec, Pack or corpus. Git is the event log, but commits and branch ancestry are not nodes in the current graph. Re-enter with a ruled history input and a history reader.",
+        c4: "Refuse C4 semantics for a component or slice. Component anchors do not state people, software systems, containers, trust boundaries or deployment. Re-enter with typed C4 meanings; generic component structure remains in the architecture drawing.",
+        timeline:
+          "Refuse for a roadmap or corpus. A dependency chain and authored Pack order are neither dated events nor time periods. Re-enter with a lawful history input.",
+        sankey:
+          "Refuse for a component, slice or corpus. Uses counts are discrete bindings, not a conserved flow or its magnitude. Re-enter with typed flow units and weights.",
+        xyChart:
+          "Defer categorical count bars for a Pack or corpus because the census already gives the exact counts; refuse a trend without time-series input. Re-enter when a reader needs a count comparison or a separately ruled time series.",
+        packet:
+          "Refuse for a Spec or component. Contract prose contains no typed bit offsets, field widths or packet layout. Re-enter with a typed wire-format layout.",
+        kanban:
+          "Defer a separate readiness board because the maturity map shows both stated and reached rungs; refuse workflow states or inferred work order. The roadmap page's HTML lists by lane already provide the categorical board over explicit graph values. Re-enter for Mermaid kanban export when a reader needs to copy that board.",
+        radar:
+          "Refuse for a Spec, Pack or corpus. There are no comparable numeric quality scores or justified common scales; cardinalities cannot manufacture them. Re-enter with typed independent measures and their units.",
+        treemap:
+          "Defer for a Pack or corpus. Spec counts and membership are honest, but area repeats the census and a multi-parent refinement graph cannot be partitioned without duplication. Re-enter with a named size-comparison reader and an explicit partition and measure.",
+        swimlanes:
+          "Refuse process swimlanes for a slice or component. Context and layer do not define actors, tasks or control flow. The architecture grid remains an equivalent grouping only. Re-enter with typed process participants and flow.",
+        useCase:
+          "Refuse UML use-case associations for an epic or Spec. Intent.actor is prose, not an actor identity or an include, extend or association edge. Re-enter with explicit typed actor associations; behavior altitude alone supplies none.",
+        eventModeling:
+          "Refuse for a component or slice. The graph holds no ordered commands, events, screens or event streams. Re-enter with typed event-modeling declarations.",
+        venn: "Defer Pack-overlap sets for the corpus. Membership allows honest intersections, but no current task needs a bounded overlap picture. Re-enter with named Packs and an overlap question whose intersections remain legible.",
+        ishikawa:
+          "Refuse for a Spec or corpus. A dependency is not a causal explanation and the graph holds no typed cause categories. Re-enter with authored causal relations admitted by the Protocol.",
+        wardley:
+          "Refuse for a capability map or roadmap. Refinement and dependencies hold no value-chain visibility or evolution coordinates. Re-enter with a ruled typed strategy input; never map readiness to evolution.",
+        cynefin:
+          "Refuse for a Spec or roadmap. Kind and readiness are not complexity classifications. Re-enter with explicitly authored complexity assessments in an admitted contract.",
+        agentFlow:
+          "Refuse agent-flow semantics for a component or slice. Anchored uses do not identify agents, tools, prompts or routing decisions. Re-enter with typed agent and routing declarations.",
+        railroad:
+          "Refuse railroad, EBNF, ABNF and PEG forms for a Spec or corpus. A vocabulary's step strings and parameter slots do not state a complete grammar production graph. Re-enter with typed productions and a grammar reader; never parse prose into a grammar.",
+        diagnostics:
+          "Mermaid's info and error renderers are diagnostics, not corpus diagram kinds. Keep them outside the Studio catalog of graph drawings; renderer variants such as flowchart ELK, class and state versions share their semantic family's row.",
       },
     },
     deliveryFacts: [],
     file: "specs/consumers/spec-studio.diagram-kinds.sdp.md",
   },
   {
+    id: "spec:consumers.spec-studio.diagram-kinds.legibility",
+    specKind: "contract",
+    altitude: "story",
+    readiness: "defined",
+    title: "A diagram preserves readable labels before zoom",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Read a drawing's labels on first view while allowing a wide graph to scroll inside its figure.",
+      },
+      behavior: {
+        rules: [
+          "At 720 CSS pixels of viewport width and wider, a diagram's SVG starts at its natural size inside its figure's scroll region and is never shrunk to fit. Overflow scrolls inside the figure, never the page. The build writes `Scroll horizontally to read the whole drawing.` above every drawing wider than the width budget. Below that viewport width the responsive contract's narrow drawing applies.",
+          "A box starts with its title or recorded label at fourteen pixels, then a shortened id at twelve pixels, with full identity in its link title and text equivalent. Shortening changes no identity, target or element id; collisions extend the displayed suffix until it is unique within the figure. The box's remaining words, such as a component's member count, follow the id.",
+        ],
+        ruleKeys: {
+          firstView: "rules[0]",
+          titleFirst: "rules[1]",
+        },
+      },
+      design: {
+        widthBudget:
+          "`880` logical pixels for a band or grid, band labels included, which stay above their band; `264` for one context cell and `24` between boxes. A drawing wider than `880` scrolls inside its figure. Layout reads no browser or font measurement.",
+        labelMetrics:
+          "Title lines hold at most `28` characters at fourteen pixels with an eight-pixel character advance; ids hold at most `30` characters at twelve pixels with an eight-pixel advance. Wrap at spaces or id punctuation, then by code point, with whole-pixel coordinates and height calculated from all lines.",
+        minimumScale:
+          "`1` on first desktop view at viewport widths of at least `720` CSS pixels; below that width the responsive contract fits the same drawing to the screen. Zooming out on desktop remains an explicit reader choice.",
+        shortId:
+          "Drop the namespace and the leading dotted segments every id in the figure shares, and mark the elision with a leading `…`, so a label may show `…markdown-authoring`; keep more segments on collisions. A displayed id never carries a namespace unless it is shown in full. Full ids remain in the link title, the text equivalent and the source.",
+        viewport:
+          "`.diagram-scroll` is a keyboard-focusable named region with overflow auto and max-width one hundred percent. At desktop widths its SVG has natural width and height with no max-width fit; below `720` CSS pixels the SVG fits the region. The caption and legend stay outside. The build emits the scroll instruction only when SVG width exceeds the fixed width budget; CSS leaves the region discoverable on narrower columns.",
+        elementIds:
+          "Keep each kind's text and arrow ids; the viewport uses `diagram.<subject>[.<view>].viewport` and its visible instruction uses `.scroll-help`, inserting the view name exactly where the diagram's own ids do.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.diagram-kinds.legibility.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.diagram-kinds.edge-routing",
+    specKind: "contract",
+    altitude: "story",
+    readiness: "defined",
+    title: "Edges route around boxes with deterministic orthogonal paths",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Follow an arrow without it crossing a box or covering a label, using the engine's own static layout.",
+      },
+      behavior: {
+        rules: [
+          "After box placement and label wrapping, reserve each box and band label rectangle as an obstacle with clearance. An edge may touch only its own source and destination ports; no other segment may intersect a reserved rectangle's interior.",
+          "Route edges deterministically in code-unit order by from, to, kind and claim with orthogonal whole-pixel paths around the reserved obstacles. Add no layout dependency and read no browser measurement. The build owns the search representation, weights and tie-break implementation.",
+          "Choose source and destination sides deterministically for forward, same-band and backward edges. Every incident edge has its own port. A cycle and a backward edge remain directed and route around intervening boxes.",
+          "Reserve an edge label's rectangle beside a free segment. If the exact relation and claim words do not fit, use a stable edge key and name its full wording in the adjacent legend and text equivalent. Every placed label rectangle is an obstacle for later labels and routes; no two labels overlap. An edge carries a label only where spec:consumers.spec-studio.diagrams#rule.wordsBesideStyle asks for one; a drawing whose edges share one relation and one claim names them once in its legend.",
+          "If any required route, distinct lane or label cannot be placed within the deterministic routing budget, omit that SVG and open its text equivalent with an explicit routing explanation. Never draw a straight line through a box as fallback.",
+        ],
+        ruleKeys: {
+          obstacles: "rules[0]",
+          routes: "rules[1]",
+          ports: "rules[2]",
+          labels: "rules[3]",
+          noPath: "rules[4]",
+        },
+      },
+      design: {
+        clearance:
+          "`12` logical pixels around boxes and text, with ports connected through their own clearance by a stub. Lane spacing is `8` pixels and gutter margin is `24` pixels; all coordinates and costs are integers.",
+        cost: "Crossings remain permitted at free points, never through nodes or labels. Two edges never share a collinear segment: they take distinct ports and lanes `8` pixels apart, and an edge that cannot get a lane is a routing failure under the no-path rule.",
+        searchBound:
+          "The build chooses a finite deterministic search budget and tests its routing-failure explanation; tuning the search changes no graph meaning. The shared box and edge bound applies first.",
+        overflow:
+          "Routing gutters may increase SVG width beyond the box layout budget to preserve distinct lanes; the desktop scroll instruction follows that final width. No label is shrunk to fit.",
+        routeModel:
+          "Each route retains from, to, kind, claim, optional aggregation count and relation reason, plus its integer point list; ports and routes are presentation values, never graph edges.",
+        elementIds:
+          "Preserve `.edge` data-from, data-to and data-kind, add data-claim when present and a stable data-edge-key for legend lookup; arrow marker ids remain scoped to subject and view.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.diagram-kinds.edge-routing.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    title: "A diagram offers Mermaid source as copyable text",
+    narrative:
+      "Mermaid source is a second serialization of the drawing's supplied values. It changes neither the static SVG renderer nor the separately shipped Mermaid root, so it requires no decision refining either ruling. A future Mermaid runtime, layout library or change to that root would need its own decision.",
+    sections: {
+      intent: {
+        outcome:
+          "Copy a drawing into another document while keeping the Studio usable without script or a Mermaid runtime.",
+      },
+      behavior: {
+        rules: [
+          "Build escaped Mermaid text from the same selected and folded diagram values as the SVG. Source is an optional export, never a browser rendering path, a network request, a new command or a write to the shipped Mermaid root.",
+          "Each kind names its preferred syntax. Use a labelled flowchart fallback whenever that syntax cannot state the drawing's exact relations, claims or folds. State the chosen syntax and fallback reason beside the source. Preserve full ids in labels or comments and every aggregation count and folded member identity in comments; the text equivalent remains authoritative for the diagram's reading.",
+          "A closed source disclosure contains a read-only text area with a visible label. Without script a reader selects and copies it. The page elements' copy control enhances this same text with its Copy button, Copied feedback and select-the-text fallback. The diagram element keeps only its viewport controls.",
+          "Treat every title, label, id and reason as data. Escape HTML at the page boundary and Mermaid syntax at the source boundary; never emit source directives, executable links, raw HTML or configuration supplied by corpus text.",
+          "A drawing omitted for bounds or routing offers its text equivalent and a reason; it offers no partial Mermaid source that appears complete. Source follows the same explicit scope and folds as its figure.",
+        ],
+        ruleKeys: {
+          sourceOnly: "rules[0]",
+          losslessMeaning: "rules[1]",
+          copy: "rules[2]",
+          escaping: "rules[3]",
+          omission: "rules[4]",
+        },
+      },
+      design: {
+        disclosure:
+          "Summary `Mermaid source`, a paragraph `Copyable source; the Studio draws static SVG.`, a syntax label and optional fallback explanation, then a labelled read-only textarea and the script-added copy button.",
+        sourceElement:
+          "The disclosure's copy button is the page elements' `sdp-copy`, given a `for` attribute that names the source text area so a long source is not repeated in an attribute; no new element is added, and `sdp-diagram` still adds only pan, zoom and pinch.",
+        sourceEscaping:
+          'Inside a quoted label, `"`, `#`, `<` and `>` become Mermaid entity codes (`#quot;`, `#35;`, `#lt;`, `#gt;`), a line break becomes a space, and every other character is kept.',
+        sourceIds:
+          "Stable safe aliases assigned in displayed box order, with full graph ids in quoted labels or escaped comments. Aliases are local serialization names, never graph identities. No click directive or initialization directive is emitted.",
+        elementIds:
+          "Use `diagram.<subject>[.<view>].source` and `.source-text`, inserting the view name exactly where the diagram's own ids do, so a trace graph's source is `diagram.<subject>.source`.",
+        export:
+          "The self-contained Pack export retains source as selectable text and omits the copy script; print expands the text equivalent and may leave source closed unless the reader opened it.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.diagram-kinds.mermaid-source.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.diagram-kinds.dependency",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    title: "A dependency drawing shows the declared footing of a Spec set",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "See multi-hop dependency chains and cycles within a Pack, slice or roadmap without reading them as an execution schedule.",
+      },
+      behavior: {
+        rules: [
+          "Draw the design slice answer's structure edges and rests-on boundary, preserving each declared refines, dependsOn, constrainedBy and decidedBy relation's exact direction, reason and claim. The design slice owns its rests-on exception for a refines back to a member that names it by another typed relation: such an edge carries `orders: false`, is drawn dashed and says in its legend and text that it orders nothing. Membership is scope, never a dependency.",
+          "Band each member by the depth its supplied answer gives, the design slice's `depth` for a Pack, slice or roadmap scope; the layout never recomputes it. A cycle's members share one band and are named as a cycle in words.",
+          "Show immediate dependencies outside the supplied scope in a separate boundary band, without traversing their dependencies. An unresolved target is named unresolved and has no invented title or link.",
+          "Above the shared bound, first fold the boundary band into one box per relation type that names its count, keeping as its own box each outside Spec that holds a member's stated next rung or states below defined; then fold whole depth bands in descending box count, ties by ascending depth; if the drawing still exceeds the bound, omit the SVG and open the text equivalent.",
+          "An example member the design slice folds into its parent is counted on that parent's box and is never drawn as its own box; it keeps its row in the text equivalent. An example the slice does not fold is a box like any other member's.",
+        ],
+        ruleKeys: {
+          declaredOnly: "rules[0]",
+          depth: "rules[1]",
+          boundary: "rules[2]",
+          fold: "rules[3]",
+          examplesInParent: "rules[4]",
+        },
+      },
+      design: {
+        inputs:
+          "`subject` and the design slice answer supply ordered members, exampleOf, exampleMembers, depth, cycles, structure edges and the rests-on boundary with its holds and relation reasons; a roadmap passes its explicitly selected ordered Spec set to that same reader. Duplicate or unknown scope ids are that reader's diagnostics, never repaired by layout.",
+        bands:
+          "Label bands `Depth <n>` from the deepest at the top down to depth 1, then `Outside this scope` at the bottom, so a member sits above what it rests on and boundary edges stay short. Within a band keep supplied order. Depths are structural, never phases, dates or priority.",
+        edgeWords:
+          "Show refines, dependsOn, constrainedBy and decidedBy beside their arrow or as a keyed legend where several kinds occur, and in the text equivalent with claim and optional reason. Mixed relations cannot become an unlabeled dependency arrow.",
+        textEquivalent:
+          "List every scoped and boundary Spec with its full id and title, then every original edge and every cycle's members; folding removes no text row.",
+        elementIds:
+          "Use `diagram.<subject>.dependencies.text`, `.dependencies.arrow` and `.dependencies.fold.<depth>`; a second scope on one page uses a distinct subject occurrence key supplied by the page.",
+        mermaidKind:
+          "`flowchart BT` with depth subgraphs and exact relation labels; export the displayed folds and name the full text equivalent beside the source.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.diagram-kinds.dependency.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    title: "A refinement drawing follows the capability map",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Read the capability map as a hierarchy without inventing parentage from names or hiding multiple parents.",
+      },
+      behavior: {
+        rules: [
+          "Draw the roots, refinement edges, unreached Specs and repeated reach supplied by the capability map. Root selection and reach belong to that reader, never to label prefixes, files or the drawing.",
+          "Place a Spec at its first visit in the capability map page's traversal of the epic and draw each later visit as a repeat box that links to the first occurrence and keeps its own refines arrow. A cycle is a labelled group whose internal relations stay in the text equivalent; the drawing never cuts an edge silently.",
+          "Above the shared bound, retain each root and fold the largest descendant branch below a non-root parent first, ties by root order then id, linking to its full branch list. If leaf siblings still exceed the bound, keep their first entries in supplied order and replace the remaining siblings of one parent with a labelled folded remainder, keeping that parent's relation explicit. Count unique Specs and rendered boxes separately where a cycle or repeated reach needs an occurrence. If no lawful fold fits, omit the SVG and open the text equivalent.",
+        ],
+        ruleKeys: {
+          mapInput: "rules[0]",
+          multipleParents: "rules[1]",
+          fold: "rules[2]",
+        },
+      },
+      design: {
+        layout:
+          "Roots lead, then depth bands of children; label each box with its title, altitude and shortened id. A refines arrow still points child to parent. Unreached Specs occupy a labelled band apart. Within a depth band, children sit together under their placement parent as one labelled sibling group, in parent order; a band never interleaves siblings of different parents.",
+        wordsBesideStyle:
+          "The legend says `Arrows: refines (declared). Later visits repeat a Spec and link to its first occurrence.` A group says `cycle` or `folded` in words and names its unique member count.",
+        textEquivalent:
+          "List every root and reachable Spec, all declared refines edges, cycle membership and unreached ids using full identities. Grouping confers no delivery fact or readiness.",
+        elementIds:
+          "Use `diagram.<subject>.capability.text`, `.capability.arrow` and `.capability.branch.<encoded-root-id>`; encoded identities are injective and stable, not truncated labels.",
+        mermaidKind:
+          "`mindmap` for a strict tree, with title and full id per node. Use `flowchart BT` with exact refines edges whenever there is repeated parentage, a cycle, an unreached band or a fold that mindmap cannot state losslessly. TreeView is an optional equivalent export of a strict tree with icons disabled.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.diagram-kinds.capability-tree.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    title: "A Spec set draws the architecture it touches",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Review a Pack, slice or roadmap's realized and planned seams together while seeing exactly why each component is present.",
+      },
+      behavior: {
+        rules: [
+          "Read the design slice's `architecture` answer: `components` with how the slice reaches each, in words, members' satisfying code, members' referencing code or what the slice rests on; `designs` with their declared values, realization and comparison rows, each drawn as a planned box; `uses` with the unit edges behind each count and its outside mark; `plannedUses`; `outside`; and `unplaced`. The drawing resolves no unit to a component itself and recomputes none of them; the unplaced units remain listed apart.",
+          "Draw anchored components and component designs as separate identities, even when the realization comparison joins them. Planned layer, context and uses stay declared; realized structure stays anchored; a difference is labelled rather than merged away.",
+          "Draw only the uses boundary an explicitly supplied architecture answer includes; never traverse it in layout. Fold any supplied immediate uses neighbours outside scope into one `outside scope` box per context and layer, and keep their names and original unit edges in the text equivalent. The design slice answer itself includes uses only between touched components; planned uses never increase an anchored count.",
+          "Apply the shared architecture folds by context then layer to this selected graph. If no component or planned design resolves, show the empty explanation and unassigned units instead of a blank or invented architecture.",
+        ],
+        ruleKeys: {
+          scopeInput: "rules[0]",
+          separatePlans: "rules[1]",
+          boundary: "rules[2]",
+          bound: "rules[3]",
+        },
+      },
+      design: {
+        layout:
+          "Use the architecture grid's context columns and layer bands, with the legibility child's title-first boxes, cell wrapping and local scroll. Prefix planned boxes with `planned`; outside-scope boxes say `outside scope`.",
+        edgeWords:
+          "The legend reads `Arrows: uses (anchored).` and, when planned uses are drawn, `Dashed arrows: plans to use (declared).`; edges carry no per-edge label. A realization correspondence is its own labelled link, never a uses edge or a delivery fact.",
+        textEquivalent:
+          "List each component's full id, label, layer, context and the scoped Spec and binding kind that brought it in; list unassigned units, unreadable declarations, planned-to-realized comparisons and every original uses edge.",
+        elementIds:
+          "Use `diagram.<subject>.architecture.text` and `.architecture.arrow`; context and layer folds append their encoded full key before the suffix.",
+        mermaidKind:
+          "`block` with generic component boxes and uses arrows for a purely anchored grid; use `flowchart TB` with explicit declared and anchored labels when planned, comparison or folded edges cannot be preserved by block syntax. Architecture icons never infer deployment meaning.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.diagram-kinds.scoped-architecture.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    title: "The maturity map is drawn as a grid of counts",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "See whether a Pack's statements match, lag or exceed its floors without a wall of member cards inside the picture.",
+      },
+      behavior: {
+        rules: [
+          "Draw one equal-sized cell per stated-rung and floor pair. A populated cell shows its exact count and one mark per member, up to `100` marks, beyond which it is filled solid, and links to that cell's full ordered member list; an empty cell is a faint outline with no number. `matches`, `floor above statement` and `statement above floor` are named once each in the legend, and the diagonal carries an outline. Floor none is distinct from idea, and unresolved members are listed apart.",
+          "Use categorical cell position, never normalized coordinates, a quality score, area proportional to maturity, completion percentage or a recommendation to implement. Marks count members and score nothing.",
+          "Every resolved member appears in exactly one cell list in authored order. The picture holds cell counts, not per-member cards. Without script every populated cell links to its already-built list and every member links to its card.",
+        ],
+        ruleKeys: {
+          discreteCells: "rules[0]",
+          noScore: "rules[1]",
+          fullMembership: "rules[2]",
+        },
+      },
+      design: {
+        matrix:
+          "Rows run stated idea, scoped, defined, ready from top to bottom; columns run floor none, idea, scoped, defined, ready from left to right. The grid including axes fits the shared width budget. Empty cells show only a faint outline; the matching diagonal has a stronger outline. Relation phrases appear once in the legend.",
+        bound:
+          "The fixed categorical cells fit the shared box bound and have no edges. Membership volume does not grow the picture; complete lists follow in closed disclosures and print open. Overlong lists are never truncated.",
+        textEquivalent:
+          "Keep the accessible table of cell counts and complete member lists as the diagram's text equivalent; identify every member by its full id, title, stated rung and floor. The axis explanation belongs to the caption.",
+        elementIds:
+          "Use `diagram.<subject>.maturity.text` and `diagram.<subject>.maturity.cell.<stated>.<floor>`; cell links target the built list, with unique member-card targets supplied by the Pack page.",
+        mermaidKind:
+          "`block` with a fixed categorical grid, cell labels and counts. This is not a quadrant chart; source includes each cell's full membership as comments and names its accessible table.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.diagram-kinds.maturity-picture.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "defined",
+    title: "A requirement drawing separates intent from realization and verification",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Read a Spec's refinement, satisfying code and verifier bindings in one picture without mistaking a declared example for a running test.",
+      },
+      behavior: {
+        rules: [
+          "For the Spec page's selected set, draw declared refines, declared and anchored verifies, and anchored satisfies edges incident on the set, plus anchored verifies on its declared verifying examples. Draw code references and oracle models only as their own named kinds, never as realization or successful verification.",
+          "Every box and edge names its claim. A declared verifying example with no resolving test says `no test binding`; an anchored verifier says `binding present`, never passed. Missing satisfies says `no satisfying binding`, never unimplemented by inference through a child.",
+          "Above the shared bound, fold the largest group by edge kind, direction and claim, ties in that lexical order, until it fits. Keep every original edge and box in the text equivalent. If the fold still cannot fit, omit the drawing and open its text.",
+        ],
+        ruleKeys: {
+          exactEdges: "rules[0]",
+          claimsApart: "rules[1]",
+          fold: "rules[2]",
+        },
+      },
+      design: {
+        placement:
+          "On a Spec page the requirement drawing replaces the realization drawing under its heading; its set is the Spec, the Specs that refine it, and the examples that verify any of them.",
+        bands:
+          "Place intended Specs, declared verifying examples, satisfying or referencing units, and test or oracle bindings in labelled bands. A node reached in several bands has one placement at its first band and keeps every edge. Empty bands state which binding or intent is absent.",
+        wordsBesideStyle:
+          "Box subtitles say `declared Spec`, `anchored code`, `anchored test binding` or `anchored oracle binding`; edge labels carry both the exact relation and claim. Verification modes, risk levels and assertion results are not invented.",
+        textEquivalent:
+          "List every full id and title or binding label, each binding's file and line, every exact edge with its claim and reason, and examples with no test binding. This drawing replaces the realization drawing and complements the detailed verification panels.",
+        elementIds:
+          "Use `diagram.<subject>.requirement.text`, `.requirement.arrow` and `.requirement.fold.<kind>.<direction>.<claim>`.",
+        mermaidKind:
+          "`requirementDiagram` for the exact refines, satisfies and verifies subset, generic requirement nodes and element nodes for code and bindings; omit risk and verifyMethod. Put claim words in node text and per-edge comments. Use `flowchart TB` with exact labels when references, models or folds require relations requirement syntax cannot express; never rename them traces.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.diagram-kinds.requirement-trace.sdp.md",
+  },
+  {
     id: "spec:consumers.design-slice",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "idea",
+    readiness: "defined",
     title:
       "A slice reads a Pack as one design, with the architecture it touches and what each member needs next",
     narrative:
-      "Features that must be reviewed together are already grouped as a Pack, and the Pack page shows each member in turn. A design pass also needs the whole at once: how the members depend on each other, which components they touch, realized or planned, which decisions and open questions bound them, and what each member needs for its next rung. Rounds of design add detail a little at a time; the floor sets how little a rung needs, and how much is enough stays a judgment the authoring guidance supports and no check makes.",
+      "Features that must be reviewed together are already grouped as a Pack, and the Pack page shows each member in turn. A design pass also needs the whole at once: how the members rest on each other, which components they touch, realized or planned, which decisions and open questions bound them, and what each member needs for its next rung. Rounds of design add detail a little at a time; the floor sets how little a rung needs, and how much is enough stays a judgment the authoring guidance supports and no check makes.\n\nThe first generation kept a slice as an authored file: a list of members and the one question they answer together, a saved view for design and review that delivered nothing itself (`@libar-dev/architect`, `formal-spec/04-tag-registry.md`, the hierarchy level `slice`). The original design saved AI context slices per Pack, per capability and per changed Spec as files (`docs/lineage/v0-design/07-spec-studio-and-projections.md` §5.5). The Protocol holds the first as a Pack, its members in reading order and its framing saying what they answer together, and it refused the second: a context bundle is composed on each invocation and never saved. A design slice is therefore a reading and not an artifact. It is a Pack read whole, narrowed to one perspective's members when a pass reads for one concern, or an ordered list of Specs, composed from the graph each time, and it adds no grouping, kind, stage or gate. A Spec's planning slice reads one Spec's neighborhood; widening it hop by hop would pick a reach no one authored, so a design slice starts from the set a person chose.\n\nThe reading answers what a card-by-card page leaves a reviewer to assemble. A design that builds on existing code says so through its own `dependsOn` or `refines` to the Spec that code satisfies, so the architecture a design ahead of its code will touch is read from those relations and the anchors of the Specs they name. The first adopter asked for the same separation: the design under review apart from the contracts and decisions it rests on, and the outside Spec whose rung holds a member shown at the boundary with what it holds (`libar-platform/docs/feedback/sdp-feedback-02.md`, items 11 and 12).",
     sections: {
       intent: {
         actor:
@@ -6560,6 +7098,115 @@ export const consumersSpecs = [
           "The Pack page reads member by member, so a reviewer assembles the dependency order, the touched architecture and the open decisions by hand before judging the design as a whole.",
         outcome:
           "Read a Pack as one design slice: its members and their relations, the components they touch, realized and planned, the decisions and open questions that bound them, and what each member needs for its next rung.",
+        value:
+          "A design pass judges the whole before its parts, starting from the members others rest on, and sees how much design each member carries beside its rung without a score.",
+        openQuestions: [
+          {
+            question:
+              "Does `design slice` join the glossary's guidance-only labels beside design pass, design diff and design backlog, so the word names a recipe's answer and is never read as the refused saved AI slice?",
+            blocking: false,
+            key: "sliceTerm",
+            decider: "owner",
+            provisional:
+              "yes, a guidance-only label for the recipe's answer; it names no primitive, artifact or stage",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "A design slice is a reading of a set of Specs that a catalog recipe composes from the graph on each invocation; it is never authored, saved or committed, it adds no grouping, namespace, kind, stage or gate, and reading it records nothing.",
+          "A slice takes one scope: a Pack, its resolved members read in authored order, or an ordered list of Spec ids; a Pack scope may be narrowed to an ordered subset of its members, such as the members the perspective filter selects, and then says that it is a subset.",
+          "Inside the slice a member rests on each other member it names by `refines`, `dependsOn`, `constrainedBy` or `decidedBy`, except a `refines` to a member that names it back by one of the other three, as the statement queue reads them; every relation of those four types between two members is listed with its type, its reason and whether it orders, so a reading tells an ordering link from a relation that orders nothing.",
+          "A member that rests on no other member has depth 1, as the statement queue's rounds start at 1, and any other member has the depth after the deepest member it rests on; members that reach each other through those links form a cycle, share the depth after the deepest member outside the cycle that any of them rests on, and are listed with one closed path, and the slice refuses nothing.",
+          "An example member folds into the member it refines when that `refines` is its only relation of the four types, in either direction, inside the slice or across its boundary: it is listed among that member's example members and keeps its own row, with its own stated rung, floor reached, stated next rung and holds, and folding lends the member none of them; an example with any other such relation is a member like any other.",
+          "Each member carries its stated rung, the floor reached, its stated next rung with the clauses that hold it, its design columns, its rule count as rule coverage counts it, its verifiers and verifying examples with how many are enabled, the units that implement and reference it, and the components those units belong to; the columns are counts and lists beside the rung, never a score, a verdict or a rung.",
+          "The slice's boundary is built over its members as Pack design builds a Pack's, so a whole Pack's slice has the Pack's boundary; each Spec the slice rests on also carries the floor it reaches and the members whose stated next rung it holds, and a Pack member left out of a narrowed slice is marked as in the Pack.",
+          "The components a slice touches are the anchored components it reaches three ways, each named on the component's row and never merged: a unit that satisfies or references a member belongs to it; a unit that satisfies a Spec the slice rests on belongs to it; or a member component design names it.",
+          "Every member that is a component design, as the planned-architecture convention selects it, is its own row whether or not code realizes it: the component it names, the layer, context, role and uses it declares, whether an anchor holds that component, whether that anchor satisfies the design, and the realization comparison's differing and unreadable rows for it; a declared value never stands in for an anchored one, nor an anchored value for a declared one.",
+          "Between touched components the slice lists the anchored `uses` aggregated to component pairs, as the architecture map counts them, a use within one component left out, each pair with the unit edges behind its count; each component a member design declares in `uses` is a planned use of that design, listed apart from the anchored pairs and never added to their counts.",
+          "A component one `uses` step from a touched component, in either direction, or named in a member design's `uses`, that the slice does not touch is listed as outside the slice with how it is reached, and its anchored pairs with touched components are listed and marked outside; the slice reaches no further, and outside components and pairs are counted apart from the touched ones.",
+          "A unit that implements or references a member and belongs to no component is listed apart, so no binding drops out of the reading.",
+          "The slice does not count the code of Specs that rest on it: that code follows a change to the slice, and design-change impact reads it; a component that uses a touched component appears only as an outside neighbor.",
+          "The decisions in scope are the decision members and every decision a member names through `decidedBy`, each with its stated rung, the floor reached, whether it is a member, the members it shapes, the decisions it refines and supersedes, and its open and blocking question counts.",
+          "The open questions in scope are those of every member and of every decision in scope, and the blocking questions of every Spec outside the slice that holds a member's stated next rung, blocking questions first; each carries its address, its fields and the members whose stated next rung its Spec holds.",
+          "The slice shows how much design each member carries and never whether it is enough: it reports no over- or under-designed member, no ratio of design to rung and no finding, because how much to write is the authoring guidance's judgment and checks police conformance and honesty, never content quality.",
+          "The slice reads declared relations, anchored bindings and component designs only; it infers no dependency, component or decision from prose, paths, imports or names.",
+          "Depth gives a reading order, the members others rest on first; it records, schedules and gates nothing, and a member read or designed out of that order is never a finding.",
+        ],
+        ruleKeys: {
+          readingNotArtifact: "rules[0]",
+          scope: "rules[1]",
+          restsOn: "rules[2]",
+          depth: "rules[3]",
+          examplesFold: "rules[4]",
+          memberColumns: "rules[5]",
+          boundary: "rules[6]",
+          touchedComponents: "rules[7]",
+          componentDesigns: "rules[8]",
+          touchedUses: "rules[9]",
+          outsideNeighbors: "rules[10]",
+          unplaced: "rules[11]",
+          notDownstream: "rules[12]",
+          decisionsInScope: "rules[13]",
+          questionsInScope: "rules[14]",
+          noDesignVerdict: "rules[15]",
+          graphOnly: "rules[16]",
+          orderAdvisory: "rules[17]",
+        },
+        exampleSpace: {
+          given: [
+            'a probe Pack whose members {structure:"rest on each other in a chain"|"include a decision that refines the member it shapes"|"include two members that depend on each other"|"include an example that refines a member"|"include an example that refines a member and depends on an outside Spec"}',
+            'one member depends on an outside Spec {outside:"that a component\'s unit satisfies"|"that no code satisfies"|"stated below defined"}',
+            'one member is a component design whose component {anchor:"no anchor holds"|"an anchor holds without satisfying the design"|"an anchor satisfies, matching every declared value"|"an anchor satisfies, with a differing layer and uses"|"an anchor satisfies, with an unreadable layer"}',
+          ],
+          when: ["the design slice runs over the probe Pack"],
+          then: [
+            "the members read in depth order {order:string}",
+            "the slice reports {cycles:number} cycles and {exampleMembers:number} folded example members",
+            "the touched components are {components:string}, {throughRestsOn:number} of them reached through what the slice rests on",
+            'the member design reads {realized:"realized"|"unrealized"} with {differing:number} differing and {unreadable:number} unreadable rows',
+            "the outside components are {outside:string}",
+            "the outside Spec holds {held:string}",
+          ],
+        },
+      },
+      design: {
+        sliceRecipe:
+          "recipe 54, the design slice, takes exactly one scope, `params.pack` or `params.specs`, an optional `params.members` beside `pack`, and an optional `params.detail`; an unknown parameter name returns `{ unknownParams, accepts }` alone, and any input `#design.sliceDiagnostics` refuses returns `{ diagnostics }` and no slice.",
+        sliceDiagnostics:
+          'the checks run in this order and every failure is kept, a check that reads an earlier value being skipped when that value failed: a `detail` that is present and neither a boolean nor a list of strings, null included, gives `{ scope: "detail", problem: "Expected true, false or a list of member ids." }`; neither or both of `pack` and `specs` gives `{ scope: "scope", problem: "Supply exactly one of pack or specs." }`; a `pack` that is not a string naming a Pack gives `{ scope: "pack", problem: "Pack does not resolve." }`; beside a resolved Pack, a `members` that is not a non-empty list of distinct strings gives `{ scope: "members", problem: "Expected a non-empty list of distinct member ids." }`, and otherwise each id that is no resolved member gives `{ scope: <the id>, problem: "Not a resolved member of the Pack." }` in list order; a `specs` that is not a non-empty list of distinct strings gives `{ scope: "specs", problem: "Expected a non-empty list of distinct Spec ids." }`, and otherwise each id the graph does not hold gives `{ scope: <the id>, problem: "Spec does not resolve." }` in list order, as the context bundle names an unresolved id; and a `members` beside `specs` gives `{ scope: "members", problem: "members narrows only a Pack scope." }`.',
+        sliceDetail:
+          '`params.detail` is absent or `false` for the summary, `true` for every row in full, or a list of member ids for full rows of those members beside summary rows of the rest, an id that is no member adding `{ id, reason: "not-member" }` to the slice\'s `diagnostics`, as Pack design reads it; a summary keeps `totals` whole and adds `leftOut`, one line for each kind of detail it omits.',
+        sliceAnswer:
+          "`{ scope, totals, members, structure, boundary, architecture, decisions, questions }`, where `scope` is `{ pack, title, framing, subset, members, unresolved }` for a Pack, `unresolved` naming the manifest ids the graph does not hold, and `{ specs }` for a Spec list.",
+        sliceTotals:
+          "`{ members, exampleMembers, relations, depth, cycles, heldBelowNextRung, waitingForAuthor, restsOn, holdingOutside, restedOnBy, verifiedBy, supersededBy, components: { touched, throughMembers, throughRestsOn, throughDesigns, outside }, designs: { total, realized, matching, unrealized, differing, unreadable }, componentUses: { inside, outside, planned }, decisions, decisionsBelowReady, openQuestions, blockingQuestions }`, where `exampleMembers` counts folded example members, `depth` is the deepest member's depth, `holdingOutside` counts the outside Specs that hold a member, `heldBelowNextRung` and `waitingForAuthor` count as Pack design counts them, `components.touched` counts distinct anchored components however reached and `components.outside` the outside components, `designs` counts member designs as the realization comparison's totals count designs, and `componentUses` counts the anchored pairs inside, the anchored pairs marked outside, and the planned uses.",
+        memberRow:
+          "`{ id, title, specKind, altitude, statedReadiness, floorReached, statedNextRung, holds, depth, restsOn, restedOnBy, exampleOf, exampleMembers, design, rules: { total, keyed }, examples: { total, enabled }, verifiers: { total, enabled }, implementedBy, referencedBy, components }` in the scope's order, where `holds` lists the stated-next-rung failures as `[{ clauseId, description, targets: [{ type, id, statedReadiness }] }]`, `restsOn` and `restedOnBy` are member ids, `exampleOf` is the member an example member refines or null, `exampleMembers` the folded example members, `design` is the design columns as `{ entries, declarations, openQuestions, blockingQuestions, decisions }` counts, `examples` the verifying examples bound to the member wherever they sit, apart from `exampleMembers`, `rules.total` is the keyed and unkeyed rule and flow entries of the primary behavior owner, `implementedBy` and `referencedBy` are unit ids, and `components` the ids of the components those units belong to.",
+        memberSummary:
+          "`{ id, specKind, statedReadiness, floorReached, statedNextRung, holds, depth, restsOn, exampleOf, design, rules, implementedBy, referencedBy }` is a member's summary row, with `holds` as `[{ clauseId, targets: [id] }]`, as Pack design's summary reads it, and `implementedBy` and `referencedBy` as counts.",
+        structureShape:
+          "`{ edges: [{ from, to, type, orders, reason }], cycles: [{ members, cycle }] }`, one edge per declared typed relation between two members, sorted by `from`, `type` and `to`, `orders` false only for a `refines` the target names back, and `reason` present only when the relation states one; `cycles` in the statement queue's cycle row; a summary drops each edge's `reason`.",
+        boundaryRow:
+          "Pack design's boundary row `{ id, title, statedReadiness, implemented, via }` with `specKind`, `floorReached`, `holds`, the member ids whose stated-next-rung failures name it as a target, empty outside `restsOn`, and `inPack: true` on a Pack member left out of a narrowed slice, in `{ restsOn, restedOnBy, verifiedBy, supersededBy }` sorted by id; a summary keeps `{ id, statedReadiness, holds }` and `inPack`.",
+        componentRow:
+          "`{ id, label, layer, context, members: { satisfies, references }, restsOn, designs }` sorted by id, one per touched anchored component, where `members.satisfies` and `members.references` are the members whose units belong to it by each binding, `restsOn` the outside Specs the slice rests on whose satisfying units belong to it, `designs` the member component designs naming it, and `label`, `layer` and `context` come from the architecture map's component row.",
+        componentSummary:
+          "`{ id, layer, context, members: { satisfies, references }, restsOn, designs }`, each list replaced by its count and `label` left out.",
+        designRow:
+          "`{ spec, componentId, layer, context, role, uses, anchorExists, realized, differing, unreadable }` sorted by `spec`, one per member component design, where the declared values are read as spec:model.planned-architecture#design.designKeys reads them, null when unstated or unreadable and `uses` an empty list for `none`, `realized` holds as spec:model.planned-architecture#design.realizedWhen says, `differing` lists the comparison's `{ field, planned, realized }` rows for the design and `unreadable` its `{ key, value }` rows; a summary keeps `{ spec, componentId, anchorExists, realized }` and the two lists as counts.",
+        componentUse:
+          "`{ from, to, count, outside, units }` sorted by `from` and `to`, one per pair of components with an anchored `uses` between them and at least one end touched, where `count` is the architecture map's count of unit `uses` edges for the pair, `units` lists those edges as `{ from, to, claim }` from the architecture map's `usesEdges`, and `outside` is true when one end is not touched; a summary drops `units`.",
+        plannedUse:
+          "`{ design, from, to, outside }` sorted by `from`, `to` and `design`, one per component a member design declares in `uses` other than its own, where `from` is the component the design names and `outside` is true when `to` is neither touched nor named by a member design.",
+        outsideRow:
+          "`{ id, label, layer, context, anchored, reachedBy }` sorted by id, where `reachedBy` lists, in this order, `touchedUses` when a touched component uses it, `usesTouched` when it uses a touched component, and `plannedUse` when a member design declares it, and `anchored` says whether an anchor holds it; a summary keeps `{ id, anchored, reachedBy }`.",
+        architectureShape:
+          "`{ components, designs, uses, plannedUses, outside, unplaced }`, where `unplaced` lists `{ unit, member, via }`, `via` being `satisfies` or `references`, for each unit of a member that belongs to no component.",
+        decisionRow:
+          "`{ id, title, statedReadiness, floorReached, member, shapes, refines, supersedes, supersededBy, openQuestions, blockingQuestions }` sorted by id, where `shapes` lists the members that name the decision through `decidedBy` and the next three lists come from its decision register row; a summary keeps `{ id, statedReadiness, member, shapes }` with `shapes` as a count.",
+        questionRow:
+          "`{ address, spec, origin, index, question, blocking, deferral, decider, links, provisional, trigger, holds }` with the open-question register's fields, where `origin` is `member`, `decision` or `restsOn`, `index` the question's authored position from 0, `address` null without a key, and `holds` the members whose stated next rung its Spec holds when the question blocks, its own Spec first when that Spec is a member held by the floor's blocking-question clause, empty for a non-blocking question; rows sort blocking first, then by how many members they hold, then by Spec id and position; a summary keeps a non-blocking question as `{ address, spec, index }`.",
       },
     },
     deliveryFacts: [],
@@ -6569,13 +7216,99 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.slice-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     title: "A slice page shows a Pack's design as one whole",
-    narrative: null,
+    narrative:
+      "The Pack page reads a Pack card by card, in the order its author wrote. A reviewer judging the design needs the other reading first: which members the rest stand on, what the design will touch in the code, and what decisions and questions bound it. The slice page gives that reading on a page of its own beside the Pack page, one link apart. It keeps the Pack page whole, because a Pack of a hundred members already makes a long page of cards, and the two readings answer different questions in different orders: the author's narrative there, the members others rest on first here.",
     sections: {
       intent: {
         outcome:
           "Give the Studio a page per Pack that shows its design slice: the members' dependency drawing, the components they touch, the decisions and open questions in scope, and each member's next rung.",
+        openQuestions: [
+          {
+            question: "Does a Pack export also carry the Pack's slice page?",
+            blocking: false,
+            key: "exportCarriesSlice",
+            decider: "delegated",
+            provisional:
+              "no; the export keeps the Pack page and its members, and the slice page stays one link away in the page set",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "The page set holds one slice page per Pack, `slices/<name>.html`, its name formed from the Pack's id as the Pack page's name is; it renders the build's design slice answer for that Pack in full and states no value the answer does not hold, apart from counts the build takes of it.",
+          "The page opens with the heading `Design slice` and the Pack's title, the Pack's id as text with a copy action, and a link back to the Pack page, then the summary and a reading note.",
+          "The summary states each slice total in one sentence that opens with its count: the members and the examples counted in their parents; the relations among members, the deepest depth and any cycle; the members held below their stated next rung and those waiting only for their author; the outside Specs the slice rests on, how many of them hold a member, and the outside Specs that rest on it; the components touched, through the members' code, through what the slice rests on, and named by member designs, with the outside components shown beside them; the member component designs, how many are realized and how many of those match; the decisions in scope and how many state below `ready`; and the open and blocking questions.",
+          "The reading note says in words that members read with the ones others rest on first, that the design columns count what each member carries beside its rung and never judge whether it is enough, and that the page records no review and approves nothing.",
+          "Under `How the members rest on each other` comes the slice's dependency drawing, `spec:consumers.spec-studio.diagram-kinds.dependency` given the slice's order: it consumes the answer's members, depths, rests-on links, structure edges, cycles and boundary rows and recomputes no scope, depth or order. Each member that is not a folded example is a box with its title, id, stated rung and floor, and its count of folded example members; every supplied relation keeps its type and direction, and a relation that orders nothing reads apart from one that orders. The drawing kind owns layout, bounded folding and the complete text equivalent, which lists every folded example with its `refines`; a fold changes no value of the answer.",
+          "Under `What each member needs next` comes one row per member that is not a folded example, by depth and then in the scope's order: the member's title linked to its card on the Pack page with its id, its depth, its stated rung beside the floor reached, its stated next rung with `nothing blocks` or each unmet clause and the Specs it names with their stated rungs, then the design it carries, its rules with how many are keyed, its design entries, pinned declarations, open questions with how many block, decisions, and verifying examples with how many are bound, each count on its own line, and its implementation and reference bindings as counts; the table has no total row, and no count is combined with another.",
+          "A folded example member has no row of its own and stays readable in a disclosure within its parent's row, whose summary counts the folded examples and how many are held below their stated next rung; inside, each example shows its title linked to its card on the Pack page, its id, its own stated rung, floor reached and stated next rung with each unmet clause and the Specs it names. Folding lends the parent no rung, hold or binding, and the folded count stays apart from the count of examples that verify the parent.",
+          "Under `The architecture it touches` comes the scoped architecture drawing of the diagram kinds, given the answer's components, designs, uses, planned uses and outside components, then one row per touched component: its id linked to its detail on the architecture lens; its label, layer and context; and how the slice reaches it, the members whose code satisfies it, the members whose code references it, the Specs the slice rests on whose code it holds, and the member designs naming it, each on its own line in words.",
+          "After the component rows comes one row per member component design: the design linked to its Spec page, the component it names, the layer, context, role and uses it declares, whether an anchor holds that component and whether that anchor satisfies the design, in words, and its differing rows with the declared and anchored values side by side and its unreadable rows; a declared value and an anchored value never share a cell.",
+          "Then come the components outside the slice, each with how it is reached and whether an anchor holds it, under a heading that says they are shown for context and not counted as touched.",
+          "After them come the units that implement or reference a member and belong to no component, reading None when empty.",
+          "A slice that touches no component and holds no component design says so in one sentence and names, by count, the Specs it rests on that no code satisfies, so an empty architecture never reads as an architecture nobody needs.",
+          "Under `Decisions in scope` comes one row per decision: its title linked to its Spec page, its stated rung beside the floor reached, whether it is a member, the members it shapes, the decisions it refines or supersedes, and its open and blocking question counts.",
+          "Under `Open questions in scope` comes each question, blocking ones first, with its blocking flag in words, its address linked to the question on its Spec page when it is keyed, its Spec, its text, its decider, links, provisional reading and trigger when present, and the members it holds.",
+          "Under `Where the slice meets the rest` come four closed sections, Rests on, Rested on by, Verified by and Superseded by, each headed with its count; a Rests on row shows the outside Spec linked, its stated rung beside the floor reached, its implementation binding as present or none, the members it joins under each relation type, and the members it holds.",
+          "The page speaks binding language: a unit implements or references a member, a verifier is bound, and no cell reads built, done, verified or approved.",
+          "`Open all` and `Close all` open or close every closed section and text equivalent at once, and the page reads in full without script.",
+        ],
+        ruleKeys: {
+          slicePerPack: "rules[0]",
+          header: "rules[1]",
+          summary: "rules[2]",
+          readingNote: "rules[3]",
+          dependencyDrawing: "rules[4]",
+          memberTable: "rules[5]",
+          exampleRows: "rules[6]",
+          architecture: "rules[7]",
+          designs: "rules[8]",
+          outside: "rules[9]",
+          unplaced: "rules[10]",
+          noArchitecture: "rules[11]",
+          decisions: "rules[12]",
+          questions: "rules[13]",
+          boundary: "rules[14]",
+          bindingWords: "rules[15]",
+          openAll: "rules[16]",
+        },
+      },
+      ui: {
+        pagePath:
+          "`slices/<name>.html`, `<name>` formed from the Pack id as `packs/<name>.html` forms it, so the Pack page and its slice page share a name.",
+        headerBlock:
+          "the page heading `Design slice: <Pack title>`; below it the Pack id with a copy action and the link `Read the Pack member by member` to its Pack page; then the summary under `The design as a whole`, then the reading note.",
+        readingNoteText:
+          "`Members read with the ones others rest on first. The columns count the design each member carries beside its rung; they never judge whether it is enough. This page records no review and approves nothing.`",
+        drawingIds:
+          "both drawings take the Pack id as their subject and the kinds' own view names, so their text equivalents are `diagram.<pack id>.dependency.text` and `diagram.<pack id>.scoped-architecture.text` and their arrow markers `diagram.<pack id>.dependency.arrow` and `diagram.<pack id>.scoped-architecture.arrow`; every other element id is the drawing kind's.",
+        memberTable:
+          "a table in a scroll region with the columns `Member`, `Depth`, `Rung`, `Next rung`, `Design carried` and `Code`, so it fits a desktop column without scrolling; `Member` holds the title link, the id and the kind; `Rung` the rung badge and `floor <rung>`; `Design carried` six lines, `<n> rules, <k> keyed`, `<n> entries`, `<n> declarations`, `<n> questions, <b> blocking`, `<n> decisions` and `<bound> of <n> verifying examples bound`, each count a plain number, a zero written `0`, and a zero part such as `, 0 keyed` left out; `Code` two lines, `<n> implementing` and `<n> referencing`. Below the phone breakpoint each member reads as a stacked block: its title, id and kind, its rung badge and floor, and its next rung with each unmet clause stay together at the top, and its depth, design counts and binding counts follow as labelled runs that wrap; no part of a member sits beyond a horizontal scroll.",
+        foldedExamples:
+          "a row under the parent's row spanning the table, holding a closed disclosure whose summary reads `<n> example members folded in`, followed by `, <h> held below the next rung` when any is held; inside, one line per example with its title link, its id, its rung badge, `floor <rung>` and `next <rung>:` with `nothing blocks` or each unmet clause.",
+        componentTable:
+          "a table with the columns `Component`, `Layer and context` and `Reached through`, the last listing each way the slice reaches the component on its own labelled line.",
+        designTable:
+          "a table with the columns `Design`, `Component`, `Declared`, `Anchor` and `Comparison`; `Declared` one labelled line per key, `not stated` for a key the design leaves out; `Anchor` reads `absent`, `present, does not satisfy the design` or `satisfies the design`; `Comparison` reads `not compared` for a design no anchor satisfies, `matches` for a realized design with no differing or unreadable row, and otherwise one line per differing field as `<field>: declared <value>; anchored <value>`, a `uses` line reading `uses: only declared <components>; only anchored <components>` as the comparison names them, and one line per unreadable key as `<key>: unreadable <value>, not compared`.",
+        outsideList:
+          "a list headed `Outside the slice, shown for context and not counted as touched`, each component with its id, linked when anchored, its label, `anchored` or `not anchored`, and how it is reached in words.",
+        decisionTable:
+          "a table with the columns `Decision`, `Rung`, `In the slice`, `Shapes` and `Questions`.",
+        questionItem:
+          "the blocking flag in words; for a keyed question, `question.<key>` as a link to its address with a copy action for the full address; its Spec; the text; each present field on its own labelled line; then `Holds: ` and the held members, or nothing for a question that holds none.",
+        boundaryTable:
+          "five columns, Spec, rung, implementation binding, joined members and holds, the joined members listing each relation type with its members.",
+      },
+      verification: {
+        mode: "manual",
+        criteria: [
+          "A person given only the slice page of the first adopter's history-view Pack names the member the most others rest on, the components the Pack's code touches and the outside Specs whose code the Pack builds on, from the page alone.",
+          "The same person, given the slice page of a Pack whose members no code realizes yet, names the components the design will touch through what it rests on, and the members carrying pinned declarations while they state below `defined`.",
+          "The same person, given the slice page of a Pack holding member component designs, says for each design whether code realizes it and where its declared values differ from the anchored ones, and reads no declared value as anchored.",
+          "The same person, given the same page on a phone, names each member's stated next rung and what holds it without scrolling sideways, including an example member folded into its parent.",
+        ],
       },
     },
     deliveryFacts: [],
@@ -6585,10 +7318,10 @@ export const consumersSpecs = [
     id: "spec:consumers.roadmap",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "idea",
+    readiness: "defined",
     title: "A roadmap orders the next bodies of work, and the graph says what each still needs",
     narrative:
-      "The Protocol's planning reads the graph: the build backlog lists ready work no code realizes, the design backlog lists defined work, and the statement queue orders what a person can state. None of them says which capability comes first. A roadmap is that one authored choice, the order of the next few bodies of work. Everything else about an entry, whether it still needs design, is ready to build, or is built, is read from the graph each time, so a roadmap never goes stale in what it says about state.",
+      "The Protocol's planning reads the graph: the build backlog lists ready work no code realizes, the design backlog lists defined work, and the statement queue orders what a person can state. None of them says which capability comes first. A roadmap is that one authored choice, the order of the next few bodies of work. Everything else about an entry, whether it still needs design, waits only for a person's statement, is ready to build, or is built, is read from the graph each time, so a roadmap never goes stale in what it says about state. It goes stale only in its order, which its owner edits.\n\nAn entry stands for its whole refinement subtree: an epic for its features and stories, a feature for its stories. The reading counts the subtree's work by what each part needs, so a large entry shows how much of it is designed and built, and the parts that could be built now.",
     sections: {
       intent: {
         actor:
@@ -6596,18 +7329,89 @@ export const consumersSpecs = [
         problem:
           "Priority lives in prose, in each pull request's forward section and in the plan files, which the graph cannot read and which go stale as work lands.",
         outcome:
-          "Read a roadmap as an ordered list of upcoming capabilities, each placed by the graph in what it needs next, to design, to build or built, with the design it lacks and the work it rests on.",
-        openQuestions: [
-          {
-            question:
-              "Which graph facts place an entry in to design, to build or built, and how does an entry that is an epic or a feature count its descendants?",
-            blocking: true,
-            key: "lanes",
-            decider: "delegated",
-            provisional:
-              "to build when it or a descendant states `ready` without `implemented`, to design when one states below `ready`, built when every one is implemented; examples and decisions follow the build backlog's exclusions",
-          },
+          "Read a roadmap as an ordered list of upcoming capabilities, each placed by the graph in what it needs next, to design, to state, to build or built, with the design it lacks and the work it rests on.",
+      },
+      behavior: {
+        rules: [
+          "A roadmap's entries are its Pack's members in authored order, each numbered by its place from 1; an entry may be an epic, a feature or a story, and its place states its owner's preference and nothing else.",
+          "An entry's scope is the entry and every Spec that reaches it through one or more `refines` edges, each counted once whichever parent it reaches through; its work is the Specs of its scope whose kind is neither `example` nor `decision`, the build backlog's exclusions.",
+          "Each Spec in a scope falls in a lane read from the graph: to design when it states a rung below `ready` and its floor does not reach `ready`; to state when it states a rung below `ready` and its floor reaches `ready`, so only a person's statement stands before it; to build when it states `ready`, is neither an example nor a decision, and is not `implemented`; built when it states `ready` and is `implemented`; settled when it is an example or a decision that states `ready`.",
+          "A Spec of an entry's work that is `implemented` while it states below `ready` keeps its lane and counts as drift, as the drift alarm reads it.",
+          "An entry is in the first of to design, to state and to build that any Spec of its work falls in, and built when every Spec of its work is built; an entry reads built only when every Spec of its work states `ready` and is `implemented`.",
+          "An entry that is itself an example or a decision, whose scope holds no work, takes no lane: it is listed apart with its place and its own lane, and it is read through the entries it verifies or shapes.",
+          "Each entry shows its stated rung, the rung its floor reaches, its stated next rung with the floor clauses that hold it, its work counted by lane with the parts to build now, every blocking open question in its scope, and every decision below `ready` that its scope holds or names by `decidedBy`, with that decision's blocking questions, keyed or not.",
+          "Each entry lists every Spec of its work once, with its lane, its stated rung, the rung its floor reaches, its stated next rung with the floor clauses and the dependency targets that hold it, and whether it is drift; the parts in the entry's lane are the ones that set it, so a descendant that holds an entry back is named with what holds it, and the entry's own readiness stays labelled apart.",
+          "An entry rests on each resolving Spec outside its scope that any Spec of its scope names by `dependsOn`, `constrainedBy` or `refines`, while that Spec is to design, to state or to build, so a descendant's second parent outside the entry counts as the entry's own parent does; shaping decisions stay in the decision rows. Each row names the relation, the Specs of the scope that name it, the Spec's lane and stated rung, whether it holds a `ready` statement in the scope because it states below `defined`, and the place of the first entry whose scope holds it, or none when it lies outside the roadmap.",
+          "An entry is rested on by each Spec outside its scope, to design, to state or to build, that names a Spec of its scope by `dependsOn`, `constrainedBy` or `decidedBy`, so a reader sees what waits on it.",
+          "Apart from the entries, the reading lists what waits on the person the caller names, the owner by default: each open question whose `decider` names that person, on a Spec of any entry's scope or on a decision a scope names by `decidedBy`; and each such Spec or decision whose floor reaches a rung above the rung it states, a statement only a person makes, which for a decision is its ratification. Each row carries the places of the entries it touches. Questions follow their first place; statements keep their relative order in the statement queue across the whole roadmap, so a Spec others rest on comes first whatever its place, and their places never reorder them.",
+          "The open questions over the same Specs that name no `decider` are listed apart and counted, blocking and not, so a question nobody is named to settle never reads as an empty workload; the reading never infers a decider from a question's prose.",
+          "Each entry lists the waiting statements the statement queue puts before its own: every Spec that the queue says one of the entry's waiting statements rests on, its work's and its shaping decisions' alike, each once, in the queue's order, marked as inside the entry, at the first place of another entry whose scope or shaping decisions it is among, or outside the roadmap. The list advises the order of statements and is never a readiness requirement.",
+          "A built entry keeps its place and reads built until someone edits the roadmap; nothing removes it, and no check reports it.",
+          "Two entries may share Specs, as an epic and a feature beneath it do; each reads its own scope and names the places of the entries it shares a Spec with.",
+          "A Pack whose manifest does not state `order: priority` reads the same way when it is named, and the answer says its order is reading order, so no view presents it as a priority.",
+          "The reading states, records and gates nothing: it moves no rung, authors no fact and reports no finding, and work taken up out of its place is never a finding.",
         ],
+        ruleKeys: {
+          entries: "rules[0]",
+          scope: "rules[1]",
+          specLane: "rules[2]",
+          drift: "rules[3]",
+          entryLane: "rules[4]",
+          apart: "rules[5]",
+          needs: "rules[6]",
+          workRows: "rules[7]",
+          restsOn: "rules[8]",
+          restedOnBy: "rules[9]",
+          waiting: "rules[10]",
+          withoutDecider: "rules[11]",
+          earlier: "rules[12]",
+          builtStays: "rules[13]",
+          overlap: "rules[14]",
+          readingOrder: "rules[15]",
+          statesNothing: "rules[16]",
+        },
+        exampleSpace: {
+          given: [
+            "a probe roadmap whose one entry holds the work {work:string}",
+            'that work {state:"is ready and implemented throughout"|"has one part ready and not implemented"|"has one part below ready whose floor reaches ready"|"has one part below ready whose floor stops short"|"has one part implemented below ready"|"has a ready root and one descendant without its kind\'s evidence"|"has a ready root and one descendant held by a blocking question"|"has one descendant that also refines a Spec outside the roadmap"}',
+            "a probe roadmap whose first entry rests on a Spec of its second entry, both waiting for a statement",
+          ],
+          when: ["the roadmap recipe reads the probe roadmap"],
+          then: [
+            'the entry reads in the lane {lane:"to design"|"to state"|"to build"|"built"}',
+            "the entry counts {drift:number} parts as drift",
+            "the entry names {part:string} among the parts in its lane, held by {clause:string}",
+            "the entry rests on {target:string} through {origin:string}",
+            "the waiting statements list {earlier:string} before {later:string}",
+          ],
+        },
+      },
+      design: {
+        roadmapRecipe:
+          'recipe 53, the roadmap, takes `params.pack`, one Pack id, and `params.decider`, a token on the `decider` field\'s grammar, `"owner"` by default; without `pack` it reads every Pack whose manifest states `order: priority`, in id order; a `pack` that names no Pack, or a `decider` off the grammar, returns `{ diagnostics: [{ parameter, problem }] }` and no roadmaps.',
+        roadmapAnswer:
+          '`{ decider, roadmaps }`, one roadmap per Pack read: `{ pack, title, framing, order, totals, entries, apart, waiting }`, where `order` is `"priority"` or `"reading"` and `totals` is `{ entries, toDesign, toState, toBuild, built, apart, questions, blockingQuestions, withoutDecider, blockingWithoutDecider, statements }`, the entries in each lane and the rows waiting.',
+        laneValues:
+          'an entry\'s `lane` is `"to design"`, `"to state"`, `"to build"` or `"built"`; a Spec\'s lane is one of those or `"settled"`.',
+        entryRow:
+          "`{ place, id, title, specKind, altitude, lane, statedReadiness, floorReached, statedNextRung, holdsNextRung, work, workRows, buildNow, blockingQuestions, decisions, restsOn, restedOnBy, earlierStatements, packs, sharesScopeWith }` in place order, where `statedNextRung` is null at `ready`, `holdsNextRung` lists the holding rows that keep the floor from the stated next rung, `work` is `{ specs, toDesign, toState, toBuild, built, drift }` counted over the entry's work, `buildNow` lists the ids of its work to build, `packs` lists the entry's Packs other than the roadmap, and `sharesScopeWith` lists places.",
+        workRow:
+          "`workRows` lists every Spec counted in `work` once, in Spec-id order, as `{ id, lane, statedReadiness, floorReached, statedNextRung, holdsNextRung, drift }`, with `statedNextRung` and `holdsNextRung` read as on the entry row and `drift` a boolean; the rows whose `lane` equals the entry's are the ones that set it.",
+        holdsRow:
+          "a holding row is `{ clause, targets }`, `clause` the id of a floor clause that fails at the stated next rung, in the floor evaluator's order, and `targets` the ids that the typed-dependency clause names, in its order, empty for any other clause.",
+        questionRow:
+          "`{ address, spec, index, question, blocking, decider, provisional }` for each blocking question in the entry's scope, `address` null when the question carries no key, `index` its authored position from 0, and `decider` and `provisional` null when absent, sorted by Spec id and authored position.",
+        decisionRow:
+          "`{ id, title, statedReadiness, blockingQuestions }` for each decision below `ready` the entry's scope holds or names by `decidedBy`, sorted by id, `blockingQuestions` listing a question row for each of its blocking questions, keyed or not.",
+        restsOnRow:
+          '`{ id, via, from, lane, statedReadiness, holdsReady, onRoadmap }`, where `via` is `"dependsOn"`, `"constrainedBy"` or `"refines"`, `from` lists in id order the Specs of the scope that name it by that relation, `holdsReady` is true when the Spec states below `defined`, and `onRoadmap` is the place of the first entry whose scope holds it or null; rows sort by id, then `via`.',
+        restedOnByRow:
+          "`{ id, via, lane, onRoadmap }`, where `via` is the relation it names the scope by; rows sort by id, then `via`.",
+        earlierRow:
+          '`earlierStatements` lists `{ id, where, onRoadmap }` in the statement queue\'s order, where `where` is `"entry"` for a Spec of the entry\'s scope or one of its shaping decisions, `"roadmap"` for a waiting statement another entry touches through its scope or its shaping decisions, and `"outside"` otherwise, and `onRoadmap` is the first place of the entries that statement touches, null unless `where` is `"roadmap"`.',
+        apartRow: "`{ place, id, specKind, statedReadiness, lane }` in place order.",
+        waitingRows:
+          "`waiting` is `{ questions, withoutDecider, statements }`: a question in either list is a question row with `places`; a statement is `{ id, statedReadiness, floorReached, places }`. Questions sort by their first place, then blocking ones first, then by Spec id and authored position. Statements keep their relative order in the statement queue, recipe 46, across the whole roadmap; their `places` name the entries they touch and never reorder them.",
       },
     },
     deliveryFacts: [],
@@ -6617,13 +7421,59 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.roadmap-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     title: "The roadmap page shows the upcoming work in priority order, split by what it needs",
-    narrative: null,
+    narrative:
+      "The owner reads a roadmap to choose what the next pull requests take up, and a reviewer reads it to see where an arc stands. The page shows each roadmap at a glance as a board, its entries in the column of what each needs next, and then each entry with what holds it. It ends with the forward section a pull request description carries, ready to copy. The page orders by the owner's places and links; it states nothing.",
     sections: {
       intent: {
+        actor: "The owner choosing the next work, and a reviewer with only a link.",
+        problem:
+          "No page shows what comes next in priority order, so the owner reads it from the last pull request description, and a reviewer cannot tell which upcoming work needs design, a statement or a build.",
         outcome:
-          "Give the Studio a page that shows each roadmap in its priority order, with what to design, what to build and what is built, and for each entry what it lacks.",
+          "Give the Studio a page that shows each roadmap in its priority order, with what to design, what to state, what to build and what is built, and for each entry what it lacks.",
+      },
+      behavior: {
+        rules: [
+          "The page set holds `roadmap.html`, which renders recipe 53 over every Pack whose manifest states `order: priority`, one section per roadmap in id order, each ending with recipe 55's memo for that Pack.",
+          "With no such Pack, the page says the corpus states no roadmap and that a Pack becomes one when its manifest states `order: priority`.",
+          "Each roadmap's section opens with its title linked to its Pack page, its framing, and sentences the build counts from the answer: the entries in each lane and listed apart, said to be in priority order only when the answer's `order` is `priority` and in authored reading order otherwise; the questions waiting on the owner, blocking and not, and those that name no decider; and the statements waiting, with a link to the owner queue.",
+          "A board follows: four columns, to design, to state, to build and built, each headed by its lane and its count and listing its entries in place order, each as its place and its title linked to the entry's row below; an empty column reads `none`.",
+          "Four lists follow in the same order, each keeping the roadmap's order and numbering each entry by its place, so a gap in the numbers shows an entry in another lane; an empty list says no entry is in that lane.",
+          "Each entry shows its place and title, its kind and altitude, its stated rung and the rung its floor reaches, and its work by lane with any drift; opened, it shows its Spec linked, its stated next rung with the clauses that hold it or `nothing blocks`, the parts in its lane, each linked with its rungs and what holds its next rung, its own labelled `itself`, with its other parts folded under one line that counts them, the parts to build now linked, its blocking questions linked to their Spec pages, its decisions below `ready` with their blocking questions, what it rests on with the parts that reach it, what waits on it, for an entry to state the waiting statements the statement queue puts before its own, its other Packs and the entries it shares Specs with.",
+          "Among what an entry rests on, the Specs to design, the Specs on the roadmap and the Specs that hold a `ready` statement show first, each with its relation, its lane and its place on the roadmap or `outside the roadmap`; the rest fold under one line that counts them.",
+          "After the lists, the page lists what waits on the owner, recipe 53's `waiting`: each question with its blocking flag, its address linked to the question on its Spec page with a copy action, its text and its provisional reading when present, and each waiting statement with its stated rung and the rung its floor allows, in the order the answer gives, each row linking the entries it touches. The questions that name no decider follow under the sentence `These questions have no named decider.`, apart from the owner's.",
+          "The entries listed apart follow the lists, each with its place, kind, stated rung and lane.",
+          "Each roadmap ends with a disclosure holding recipe 55's memo as preformatted text with a copy action, so a description's author pastes the forward section the graph holds.",
+          "A filter narrows the lists by lane; without script every row shows.",
+          "The page orders by the roadmap's places and links: it states no rung, approves nothing, and never presents a place as a date, a deadline or permission to start.",
+        ],
+        ruleKeys: {
+          roadmapPage: "rules[0]",
+          noRoadmap: "rules[1]",
+          roadmapSummary: "rules[2]",
+          board: "rules[3]",
+          laneLists: "rules[4]",
+          entryRow: "rules[5]",
+          restsOnShown: "rules[6]",
+          waitingList: "rules[7]",
+          apartList: "rules[8]",
+          forwardSection: "rules[9]",
+          laneFilter: "rules[10]",
+          statesNothing: "rules[11]",
+        },
+      },
+      ui: {
+        boardColumn:
+          "a column headed `To design`, `To state`, `To build` or `Built` with its count, listing `<place>` and the title as a link to the entry's element id; the four columns sit side by side at desktop width and stack at phone width.",
+        entryRow:
+          "a disclosure whose summary reads `<place>. <title>` on its first line and, on its second, the kind and altitude, the stated rung as a badge, `floor <rung>`, and the work as `<n> Specs:` followed by the nonzero counts of `to design`, `to state`, `to build` and `built`, then `<d> drift` when present; its element id is `roadmap-<name>-entry-<place>`, `<name>` the name the page set gives the roadmap's Pack page, and every link to an entry, from the board, a rests-on row, the waiting list or a shared-Specs line, uses the owning roadmap's prefix, so two roadmaps on the page never share an id.",
+        entryFields:
+          "labelled lines Id, Next, Parts, Build now, Blocked by, Decided by, Rests on, Waited on by, Earlier statements, Also in and Shares Specs with, an empty line left out; Parts appears when the entry has more than one part or a part other than itself sets its lane.",
+        restsOnItem:
+          "the Spec linked, its relation in words, followed by `from` and the parts that reach it when any part other than the entry itself does, its lane, `holds ready` when it states below `defined`, and `entry <place>` linked to that row or `outside the roadmap`.",
+        memoDisclosure:
+          "a disclosure whose summary reads `The forward section, as Markdown`, holding a copy action and the memo in a `pre` element.",
       },
     },
     deliveryFacts: [],
@@ -6633,13 +7483,61 @@ export const consumersSpecs = [
     id: "spec:consumers.roadmap.memo",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "defined",
     title: "A roadmap renders as the forward section of a pull request description",
-    narrative: null,
+    narrative:
+      "A pull request description ends with a forward section: the next work in priority order, what waits on the owner, and what is deferred until its trigger. Written by hand, it drifts from the Specs it names and is rewritten each time. The roadmap memo renders it from the roadmap reading at the head of the branch, so the forward section a description carries is the roadmap the graph holds. The memo states what the graph holds and nothing more: why an entry comes now is read from the entry's own intent and from what waits on it, and the re-entry condition of the next pull request and the durable refused list stay the description author's words around it.",
     sections: {
       intent: {
+        actor: "The author of a pull request description, and the owner reading it.",
+        problem:
+          "A description's forward section is written by hand from plan files and recipe answers, so it drifts from the roadmap and the Specs it names.",
         outcome:
-          "Render a roadmap's next entries as Markdown a pull request description carries as its forward section, so the plan a description proposes is the roadmap the graph holds.",
+          "Render a roadmap's entries, what waits on the owner and the deferred questions as Markdown a pull request description carries as its forward section, so the plan a description proposes is the roadmap the graph holds.",
+      },
+      behavior: {
+        rules: [
+          "Recipe 55 renders one roadmap's reading, recipe 53's answer for that Pack, as one Markdown memo a pull request description carries as its forward section; the roadmap page shows the same bytes.",
+          "The memo holds, in order: the roadmap's title and framing; the entries to design, to state and to build, each lane in priority order with every entry's place; what waits on the owner; the questions that name no decider; the entries built and still listed; and the deferred open questions with their triggers. The to design and to build sections always appear and say when they hold no entry; every other section is left out when it holds no row.",
+          "An entry's why now is read, never authored: its intent's problem, or its outcome when it states no problem, then how many Specs outside its scope wait on it and how many of its parts are ready to build now. The memo adds no status, date, estimate or assignment to a pull request.",
+          "An entry to design names the parts that set its lane, its own first, each with its stated next rung and the clauses and dependency targets that hold it, then its blocking questions and its decisions below `ready`; an entry to state names the waiting statements the statement queue puts before its own, inside the entry, elsewhere on the roadmap and outside it, as advice on the order of statements and never as a readiness requirement; an entry to build names each Spec it rests on that is not built.",
+          "The memo carries no re-entry condition and no refused list; the description's author writes those around it.",
+          "A memo of a Pack whose order is reading order says so under the framing, so no description presents it as a priority.",
+          "One graph and one set of parameters render one memo, byte for byte.",
+        ],
+        ruleKeys: {
+          memoRecipe: "rules[0]",
+          sections: "rules[1]",
+          whyNow: "rules[2]",
+          holds: "rules[3]",
+          authorsOwn: "rules[4]",
+          readingOrderNoted: "rules[5]",
+          deterministic: "rules[6]",
+        },
+      },
+      design: {
+        memoRecipe:
+          "recipe 55, the roadmap memo, takes `params.pack` and `params.decider` as recipe 53 does; without `pack` it reads the one Pack whose manifest states `order: priority`, and with none or several it returns `{ diagnostics: [{ parameter, problem }], memo: null }`; otherwise it answers `{ diagnostics: [], memo }`, the memo one string.",
+        memoHead:
+          "the memo opens with the line `## The next work, from the roadmap`, a blank line, the line `Roadmap: ` followed by the Pack's title and its id as a code span, a blank line, each paragraph of the framing as authored followed by a blank line, and for a reading-order Pack the line `This Pack's order is reading order, not a stated priority.` and a blank line.",
+        memoDesign:
+          "the section `### To design` holds a table with the columns `Place`, `Entry`, `Next` and `Why now`; `Next` reads, for at most three of the work rows in the entry's lane, the entry's own first and the rest in Spec-id order, the row's id as a code span or `itself` for the entry's own, its stated rung and stated next rung as code spans joined by ` → `, then `held by` and each clause id followed by its targets as code spans in parentheses, or `nothing holds it`; then `and <n> more parts to design` when rows are left out; then `blocked by` and each blocking question's address as a code span, or its Spec id when unkeyed; then `decided by` and each decision below `ready` as a code span with its stated rung; the parts joined by `; `.",
+        memoState:
+          "the section `### To state` holds a table with the columns `Place`, `Entry`, `Earlier waiting statements` and `Why now`; the third column reads `No preceding waiting statement in the statement queue.` when the entry's `earlierStatements` is empty, and otherwise `in this entry` followed by those inside it as code spans, `on the roadmap` followed by those at another entry as code spans each with `(place <n>)`, and `<n> outside the roadmap`, each part present only when it holds a row and the parts joined by `; `.",
+        memoBuild:
+          "the section `### To build` holds a table with the columns `Place`, `Entry`, `Why now` and `Rests on`; `Rests on` lists each Spec the entry rests on as a code span with its lane, or reads `nothing unbuilt`.",
+        memoEntry:
+          "an `Entry` cell is the entry's title followed by its id as a code span; the `Why now` cell is the intent line, ending with a full stop when it ends with none, then `Waited on by <n>.` when Specs wait on it and `<n> of its parts ready to build now.` for an entry not to build that has such parts.",
+        memoWaiting:
+          "the section `### Waiting on the <decider>` lists one line per row of recipe 53's `waiting.questions` and `waiting.statements`, questions first and statements in the order the answer gives: a question as its address as a code span, or its Spec id when unkeyed, `(blocking)` when it blocks, `place` and the places, and its text; a statement as `State `, the Spec id as a code span, its stated rung and the rung its floor allows, and the places.",
+        memoUndecided:
+          "the section `### Questions without a decider` opens with the line `These questions have no named decider.` and a blank line, then lists one line per row of recipe 53's `waiting.withoutDecider`: its address as a code span, or its Spec id as a code span followed by `question` and its authored position from 1 when unkeyed, then `(blocking)` when it blocks, `place` and the places; the text stays on the roadmap page, so a corpus with many such questions keeps a short memo.",
+        memoBuilt:
+          "the section `### Built and still on the roadmap` lists each built entry as its place, its title and its id as a code span.",
+        memoDeferred:
+          "the section `### Deferred, with their triggers` lists each open question recipe 20 marks as a deferral, in the register's order, as its address as a code span, or its Spec id when unkeyed, its text, and `Trigger:` with its trigger.",
+        memoMarkup:
+          "code spans follow the proposal memo's rule; authored text is written verbatim, with each line break written as a space and, inside a table cell, each `|` written `\\|`; every line ends with a line feed and the memo with one.",
       },
     },
     deliveryFacts: [],
@@ -6649,12 +7547,16 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.cited-line-text",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "scoped",
     title: "A pinned declaration shows the words of each test line that cites it",
     narrative:
-      "A reader checking a pinned declaration reaches the test line that cites it and then follows a source link to read the assertion. The words of that line would close the task on the page.",
+      "A reader checking a pinned declaration reaches the test line that cites it and then follows a source link to read the assertion. The words of that line would close the task on the page. The graph records where a line cites an entry and never what the line says, and the Studio reads only the graph and its named inputs, so one of them has to hold the words. The extractor already reads the line when it records the citation, which makes the citation row the cheapest honest home; the choice is the owner's, because it puts source text in the graph for the first time.",
     sections: {
       intent: {
+        actor:
+          "A reviewer with only a link, checking that a pinned declaration is held to its code.",
+        problem:
+          "The declarations page names each citing line by file and line only, so the reader leaves the page to read it, and has no route at all when the page set carries no source link.",
         outcome:
           "Show beside each pinned declaration the text of every test line that cites it, so a reviewer reads the check without leaving the page.",
         openQuestions: [
@@ -6664,8 +7566,31 @@ export const consumersSpecs = [
             blocking: true,
             key: "lineText",
             decider: "owner",
+            provisional:
+              "the extractor records the citing line's text, trimmed and bounded, on the citation row it already writes, as inferred data that confers nothing, and the Studio reads no source",
+          },
+          {
+            question:
+              "How long may a recorded line be, and how does a page show a line that was cut?",
+            blocking: false,
+            key: "lineBound",
+            decider: "delegated",
+            provisional:
+              "a bound of a few hundred code units, cut at a word boundary and marked as cut, the whole line one source link away",
           },
         ],
+      },
+      behavior: {
+        rules: [
+          "Beside each citing line, the declarations page and the Spec page show the line's words as code after its file and line, and the reader's citation row carries them.",
+          "The words are what the citing line said at the commit the graph was derived from; no page says the line asserts, checks or passes anything because of them.",
+          "A citation whose words are not recorded shows its file and line as it does now.",
+        ],
+        ruleKeys: {
+          lineShown: "rules[0]",
+          wordsNotVerdict: "rules[1]",
+          withoutWords: "rules[2]",
+        },
       },
     },
     deliveryFacts: [],
@@ -6675,14 +7600,59 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.register-input",
     specKind: "behavior",
     altitude: "story",
-    readiness: "idea",
+    readiness: "scoped",
     title: "An outside register is a named Studio input, so a cited token links to its entry",
     narrative:
-      "A corpus that cites an outside register, an open-decisions list or an earlier system's references, writes its tokens in prose. The external-registers recipe checks them; a reader on the page still sees only the token.",
+      "A corpus that cites an outside register, an open-decisions list or an earlier system's references, writes its tokens in prose. The external-registers recipe checks them against a register file the corpus passes; a reader on the page still sees only the token. On the first adopter's pages a reader met a cited open decision and found no route to its entry. The register is the corpus's own data, so it reaches the Studio the way the base graph and the run records do: named on the command line, named on every page that shows it, and never graph data.",
     sections: {
       intent: {
+        actor:
+          "A reviewer with only a link who meets a cited token, such as an open decision's number, in a Spec's text.",
+        problem:
+          "A cited token reads as bare text on every page, and the register that defines it is neither linked nor shown.",
         outcome:
           "Let the Studio take an outside register as a named input, so each token a corpus cites from it links to its entry, named as outside evidence and never as graph data.",
+        openQuestions: [
+          {
+            question:
+              "What does a register file give the Studio beyond what the external-registers recipe reads, so a token's entry can be shown?",
+            blocking: true,
+            key: "registerEntry",
+            decider: "delegated",
+            provisional:
+              "an optional `title` and an optional `href` on a token object; the Studio writes one page per register listing each token with its title, retired tokens marked, each linking to its `href` when present",
+          },
+          {
+            question:
+              "How does the studio verb name a register, its pattern and the words that name it on a page?",
+            blocking: true,
+            key: "inputForm",
+            decider: "delegated",
+            provisional:
+              "a repeatable `--register NAME=PATH` with a matching `--register-pattern NAME=SOURCE`, the name naming the register in words wherever it shows",
+          },
+          {
+            question:
+              "Does a cited token become a link inside the rendered text of a Spec, or only in a list beside it?",
+            blocking: false,
+            key: "textLinks",
+            decider: "delegated",
+            provisional:
+              "inside the text, matched by the register's pattern exactly as the recipe matches it, so the page and the check agree on what is cited",
+          },
+        ],
+      },
+      behavior: {
+        rules: [
+          "A register is a named input like the base graph and the run records: a page that shows it names it in words, and it never becomes graph data, a finding, a fact or a rung.",
+          "Each token the register's pattern finds in a Spec's text routes to that token's entry on the register's page, and a token the register does not list, or retires, reads so beside it.",
+          "Without the input every page is what the graph alone writes.",
+        ],
+        ruleKeys: {
+          registerNamed: "rules[0]",
+          tokenRoute: "rules[1]",
+          withoutRegister: "rules[2]",
+        },
       },
     },
     deliveryFacts: [],

@@ -1,10 +1,12 @@
 ---
-id: spec:consumers.capability-map.epic-kinds
+id: spec:decisions.epics-of-any-kind
 kind: decision
-altitude: story
+altitude: feature
 readiness: scoped
 relations:
-  refines: spec:consumers.capability-map
+  refines:
+    target: spec:consumers.capability-map
+    reason: settles which Specs the capability map reads as epics
 ---
 # Capability epics keep kind independent of altitude
 
