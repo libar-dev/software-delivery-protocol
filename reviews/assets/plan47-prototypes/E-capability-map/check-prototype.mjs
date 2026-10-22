@@ -1,0 +1,24 @@
+// These probes check the throwaway recipe, not a product implementation.
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { evaluateBody } from '../../../../dist/index.js';
+import { recipeBody } from './map-recipe.mjs';
+const spec=(id,altitude='feature',kind='behavior')=>({id:'spec:probe.'+id,nodeType:'Primitive',claim:'declared',specKind:kind,altitude,readiness:'idea',title:id,file:id+'.md',sections:{intent:{outcome:id},behavior:{rules:['An intended rule.']}},deliveryFacts:[]});
+const edge=(from,to)=>({from:'spec:probe.'+from,to:'spec:probe.'+to,type:'refines',claim:'declared'});
+const run=(nodes,edges=[],params={})=>evaluateBody(recipeBody,{graph:{schemaVersion:1,nodes,edges,locations:[],citations:[]},params});
+const diamond=await run([spec('epic','epic'),spec('left'),spec('right'),spec('child','story')],[edge('left','epic'),edge('right','epic'),edge('child','left'),edge('child','right')]);
+assert.equal(diamond.epics[0].rollup.specs,3);assert.equal(diamond.edges.length,4);assert.deepEqual(diamond.nodes.find(n=>n.id.endsWith('.child')).parents,['spec:probe.left','spec:probe.right']);
+const cyclic=await run([spec('a'),spec('b'),spec('c')],[edge('a','b'),edge('b','a'),edge('c','a'),edge('c','missing')]);
+assert.equal(cyclic.totals.unreached,3);assert.deepEqual(cyclic.unreached.roots,['spec:probe.a']);assert.equal(cyclic.cycles.length,1);assert.equal(cyclic.diagnostics.length,1);
+assert.equal((await run([])).totals.specs,0);
+assert.deepEqual((await run([spec('plain')],[],{epic:'spec:probe.plain'})).diagnostics[0].parameter,'epic');
+assert.deepEqual((await run([],[],{bogus:true})).unknownParams,['bogus']);
+const input=JSON.parse(readFileSync(process.argv[2]??'/tmp/plan47-E/head.json','utf8'));
+const all=await evaluateBody(recipeBody,input), selected=await evaluateBody(recipeBody,{...input,params:{epic:'spec:consumers.agent-surface'}});
+assert.equal(selected.totals.specs,48);assert.equal(selected.nodes.find(n=>n.id==='spec:consumers.agent-surface').epicIds.length,2);assert.equal(selected.unreached.ids.length,0);
+const projection=all.epics.find(e=>e.id==='spec:consumers.projections-model');assert.equal(new Set(projection.descendantIds).size,projection.rollup.specs);
+assert.equal(JSON.stringify(await evaluateBody(recipeBody,input)),JSON.stringify(all));
+const prototype = readFileSync(new URL('./protocol-head.html',import.meta.url),'utf8');
+const ids=[...prototype.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length);
+for(const n of all.nodes)assert.ok(prototype.includes(n.id),n.id+' missing from complete text');
+console.log('Prototype probes passed: diamond, cycle, unresolved endpoint, no epics, empty corpus, parameter diagnostics, nested epic scope, unique rollup, deterministic answer, unique HTML ids, complete node text.');
