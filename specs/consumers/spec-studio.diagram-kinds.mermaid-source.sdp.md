@@ -30,4 +30,4 @@ Mermaid source is a second serialization of the drawing's supplied values. It ch
 - sourceEscaping: Inside a quoted label, `"`, `#`, `%`, `<` and `>` become Mermaid entity codes (`#quot;`, `#35;`, `#37;`, `#lt;`, `#gt;`); a backtick becomes `#96;`, a line break becomes a space, and every other character is kept.
 - sourceIds: Stable safe aliases assigned in displayed box order, with full graph ids in quoted labels or escaped comments. Aliases are local serialization names, never graph identities. No click directive or initialization directive is emitted.
 - elementIds: Use `diagram.<subject>[.<view>].source` and `.source-text`, inserting the view name exactly where the diagram's own ids do, so a trace graph's source is `diagram.<subject>.source`.
-- export: The self-contained Pack export retains source as selectable text and omits the copy script; print expands the text equivalent and may leave source closed unless the reader opened it.
+- export: The self-contained Pack export retains source as selectable text and omits the copy script; print expands the text equivalent and leaves source closed unless the reader opened it.

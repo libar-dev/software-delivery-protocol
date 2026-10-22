@@ -122,6 +122,7 @@ export interface SliceAnswer {
     readonly pack: string;
     readonly title: string | null;
     readonly members: readonly string[];
+    readonly unresolved: readonly string[];
   };
   readonly totals: {
     readonly members: number;

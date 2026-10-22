@@ -238,8 +238,11 @@ describe("Studio capabilities", () => {
         listeners = new Map<string, (event?: Event) => void>();
         options = [{ value: "any" }, { value: "none" }, { value: "spec:probe.root" }];
         ownerDocument = {
-          location: { href: `file:///index.html${query}` },
+          location: { href: `file:///index.html${query}`, hash: "" },
           createElement: () => new FakeNode(),
+          getElementById: () => null,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
         };
         setAttribute(name: string, value: string) {
           this.attributes.set(name, value);

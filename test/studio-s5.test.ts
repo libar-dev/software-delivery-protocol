@@ -613,7 +613,10 @@ it("opens disclosures for print and restores exactly their prior state", () => {
     new () => { connectedCallback(): void; disconnectedCallback(): void }
   >();
   const events = new Map<string, () => void>();
-  const details = [{ open: false }, { open: true }];
+  const details = [
+    { open: false, matches: () => false },
+    { open: true, matches: () => false },
+  ];
   const doc = {
     location: { hash: "" },
     createElement: () => ({
@@ -666,6 +669,66 @@ it("opens disclosures for print and restores exactly their prior state", () => {
   expect(details.map((d) => d.open)).toEqual([false, true]);
   expander.disconnectedCallback();
   expect(events.size).toBe(0);
+});
+
+it("leaves Mermaid source closed for print unless the reader opened it", () => {
+  const definitions = new Map<
+    string,
+    new () => { connectedCallback(): void; disconnectedCallback(): void }
+  >();
+  const events = new Map<string, () => void>();
+  const sourceSelector = 'sdp-diagram details[id$=".source"]';
+  const panel = (open: boolean, source: boolean) => ({
+    open,
+    matches: (selector: string) => source && selector.includes(sourceSelector),
+  });
+  // A closed text equivalent, a closed source, a source the reader opened, a closed section.
+  const details = [panel(false, false), panel(false, true), panel(true, true), panel(false, false)];
+  const doc = {
+    location: { hash: "" },
+    createElement: () => ({
+      append: () => undefined,
+      setAttribute: () => undefined,
+      addEventListener: () => undefined,
+    }),
+    defaultView: {
+      addEventListener: (type: string, fn: () => void) => {
+        events.set(type, fn);
+      },
+      removeEventListener: (type: string) => events.delete(type),
+    },
+  };
+  class Host {
+    ownerDocument = doc;
+    querySelectorAll(selector: string) {
+      return selector === "details" ? details : [];
+    }
+    prepend() {
+      /* The print probe does not render controls. */
+    }
+    append() {
+      /* The print probe does not render controls. */
+    }
+  }
+  runInNewContext(readFileSync(assets.script, "utf8"), {
+    HTMLElement: Host,
+    customElements: {
+      get: () => undefined,
+      define: (
+        name: string,
+        ctor: new () => { connectedCallback(): void; disconnectedCallback(): void },
+      ) => definitions.set(name, ctor),
+    },
+  });
+  const Expander = definitions.get("sdp-expander");
+  if (!Expander) throw new Error("No expander");
+  const expander = new Expander();
+  expander.connectedCallback();
+  events.get("beforeprint")?.();
+  expect(details.map((d) => d.open)).toEqual([true, false, true, true]);
+  events.get("afterprint")?.();
+  expect(details.map((d) => d.open)).toEqual([false, false, true, false]);
+  expander.disconnectedCallback();
 });
 
 import { spawn } from "node:child_process";

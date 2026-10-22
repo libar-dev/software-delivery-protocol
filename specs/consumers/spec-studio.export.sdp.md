@@ -28,7 +28,7 @@ A design is sent and archived as well as browsed: attached to a message, handed 
 - rule: [#exportLinks] Inside an export, a link to the Pack or to a member points at its section in the file, a link to an element of the Pack page or of a member's page points at that element in the file, and a link to anything else becomes its id as text, so no link leaves the file.
 - rule: [#uniqueExportIds] Within an export, every element id copied from the Pack page takes the prefix `pack/` and every id copied from a member's page the prefix `<Spec id>/`, while each member's section keeps its Spec id as its own id; every fragment link and every attribute that names an element id, such as `aria-describedby` or a label's `for`, is rewritten to the prefixed id, so no two elements in the file share an id.
 - rule: [#exportFromPackPage] Each Pack page links its export under the header, as `Download this Pack as one file`.
-- rule: [#printAsDocument] Every page prints as a document: the print style hides the navigation, the rail, the search field, the composing panel and every control, gives the canvas the page's width, prints a diagram whole at that width, and prints every disclosure open, the expander opening each before printing and restoring it after.
+- rule: [#printAsDocument] Every page prints as a document: the print style hides the navigation, the rail, the search field, the composing panel and every control, gives the canvas the page's width, prints a diagram whole at that width, and prints every disclosure open except Mermaid source, which prints only when the reader opened it, the expander opening each before printing and restoring it after.
 - rule: [#exportBytes] An export is a function of the graph like every page: the same graph writes the same bytes, and an export holds no time, commit or stamp.
 
 ## UI
@@ -38,7 +38,7 @@ A design is sent and archived as well as browsed: attached to a message, handed 
 
 ## Design
 - exportIds: a copied id is written `pack/<id>` for the Pack page and `<Spec id>/<id>` for a member's page, so a member's `section.behavior` becomes its Spec id, a slash and `section.behavior`; the slash appears in no graph id, so a prefixed id never equals a member's section id or another prefixed id.
-- expanderPrint: `sdp-expander`, before the page prints, opens every `details` inside it, and after printing restores each one's state.
+- expanderPrint: `sdp-expander`, before the page prints, opens every `details` inside it except a drawing's or the maturity map's Mermaid source, which keeps the state the reader left, and after printing restores each one's state.
 
 ## Example space
 ```gwt-vocabulary

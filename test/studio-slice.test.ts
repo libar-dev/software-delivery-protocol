@@ -252,6 +252,25 @@ describe("slice page", () => {
     for (const p of pages.filter((p) => p.path.startsWith("exports/")))
       expect(p.content).not.toMatch(/<code>\.\.\//u);
   });
+  it("names each manifest member that resolves to no Spec beside the summary", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-slice-missing-"));
+    roots.push(root);
+    writeFileSync(
+      join(root, "pack.pack.sdp.md"),
+      "---\nid: pack:probe.Partial\nspecs: [spec:probe.present, spec:probe.gone]\n---\n# Partial\n",
+    );
+    writeFileSync(join(root, "present.sdp.md"), spec("present"));
+    const data = await createStudioData(createReader(extract({ root }).graph));
+    const answer = data.recipes.slices.get("pack:probe.Partial") as SliceAnswer;
+    expect(answer.scope.members).toEqual(["spec:probe.present"]);
+    expect(answer.scope.unresolved).toEqual(["spec:probe.gone"]);
+    const html = page(renderStudio(data), "slices/probe._partial.html");
+    const summary = text(required(html.split('<ul class="summary">')[1]?.split("</ul>")[0]));
+    expect(summary).toContain("1 member;");
+    expect(summary).toContain("1 manifest member resolves to no Spec: spec:probe.gone");
+    expect(html).toContain("resolves to no Spec: <code>spec:probe.gone</code>.</li>");
+    expect(page(shared.pages)).not.toContain("resolves to no Spec");
+  });
   it("uses singular summary nouns and captions that add to the section headings", () => {
     const { data, answer } = shared;
     const single = {

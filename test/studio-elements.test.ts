@@ -18,6 +18,11 @@ import { stampUrl, stampText } from "../src/studio-elements/stamp.js";
 import { copyText } from "../src/studio-elements/copy.js";
 import { fragmentTarget } from "../src/studio-elements/expander.js";
 
+function required<T>(value: T | undefined | null): T {
+  if (value === undefined || value === null) throw new Error("Expected a value");
+  return value;
+}
+
 const anchor = specTest({
   id: testAnchorId("test:protocol.studio-page-elements"),
   verifies: [
@@ -177,6 +182,141 @@ describe("Studio page interactions", () => {
     expect(rowMatches({ kind: "behavior" }, { kind: "any", packs: "any" })).toBe(true);
     expect(rowMatches({ kind: "behavior" }, { kind: "rule" })).toBe(false);
     expect(rowMatches({}, { packs: "pack:a" })).toBe(false);
+  });
+
+  it("clears the filter when a link or fragment targets a row it hides", () => {
+    type Listener = (event?: unknown) => void;
+    const windowListeners = new Map<string, Listener>();
+    const documentListeners = new Map<string, Listener>();
+    const byId = new Map<string, FakeNode>();
+    const scrolled: string[] = [];
+    const location = { href: "file:///roadmap.html", hash: "" };
+    class FakeNode {
+      value = "any";
+      hidden = false;
+      textContent = "";
+      parentNode: FakeNode | null = null;
+      children: FakeNode[] = [];
+      attributes = new Map<string, string>();
+      listeners = new Map<string, Listener>();
+      ownerDocument = {
+        location,
+        defaultView: {
+          addEventListener: (name: string, callback: Listener) =>
+            windowListeners.set(name, callback),
+          removeEventListener: (name: string) => windowListeners.delete(name),
+        },
+        addEventListener: (name: string, callback: Listener) =>
+          documentListeners.set(name, callback),
+        removeEventListener: (name: string) => documentListeners.delete(name),
+        getElementById: (id: string) => byId.get(id) ?? null,
+        createElement: (name: string) => new FakeNode(name),
+      };
+      constructor(public tag = "sdp-filter") {}
+      setAttribute(name: string, value: string) {
+        this.attributes.set(name, value);
+        if (name === "id") byId.set(value, this);
+      }
+      getAttribute(name: string) {
+        return this.attributes.get(name) ?? null;
+      }
+      addEventListener(name: string, callback: Listener) {
+        this.listeners.set(name, callback);
+      }
+      removeEventListener(name: string) {
+        this.listeners.delete(name);
+      }
+      append(...nodes: FakeNode[]) {
+        for (const node of nodes) {
+          node.parentNode = this;
+          this.children.push(node);
+        }
+      }
+      descendants(): FakeNode[] {
+        return this.children.flatMap((child) => [child, ...child.descendants()]);
+      }
+      contains(node: FakeNode | null) {
+        return node !== null && (node === this || this.descendants().includes(node));
+      }
+      matches(selector: string) {
+        return selector
+          .split(",")
+          .map((part) => part.trim())
+          .some((part) => {
+            const parsed = /^([\w-]*)(?:\[([\w-]+)\])?$/u.exec(part);
+            if (!parsed) return false;
+            const [, tag, attribute] = parsed;
+            return (!tag || tag === this.tag) && (!attribute || this.attributes.has(attribute));
+          });
+      }
+      closest(selector: string): FakeNode | null {
+        return this.matches(selector) ? this : (this.parentNode?.closest(selector) ?? null);
+      }
+      querySelector(selector: string) {
+        return this.querySelectorAll(selector)[0] ?? null;
+      }
+      querySelectorAll(selector: string) {
+        const wanted = selector === "select[data-filter]" ? "[data-filter]" : selector;
+        return this.descendants().filter((node) => node.matches(wanted));
+      }
+      scrollIntoView() {
+        scrolled.push(this.getAttribute("id") ?? "");
+      }
+    }
+    const node = (tag: string, attributes: Record<string, string> = {}) => {
+      const made = new FakeNode(tag);
+      for (const [name, value] of Object.entries(attributes)) made.setAttribute(name, value);
+      return made;
+    };
+    const host = new FakeNode("sdp-filter");
+    const form = node("form");
+    const select = node("select", { "data-filter": "need" });
+    form.append(select);
+    const output = node("output");
+    const design = node("li", { "data-row": "", "data-need": "to-design" });
+    const build = node("li", { "data-row": "", "data-need": "to-build" });
+    const card = node("details", { id: "roadmap-4" });
+    build.append(card);
+    host.append(form, output, design, build);
+    const board = node("a", { href: "#roadmap-4" });
+    const defined = new Map<string, new () => FakeNode & { connectedCallback(): void }>();
+    runInNewContext(readFileSync(new URL("../dist/studio/studio.js", import.meta.url), "utf8"), {
+      HTMLElement: FakeNode,
+      Event,
+      queueMicrotask,
+      URL,
+      customElements: {
+        get: () => undefined,
+        define: (name: string, ctor: new () => FakeNode & { connectedCallback(): void }) =>
+          defined.set(name, ctor),
+      },
+    });
+    const filter = Object.assign(new (required(defined.get("sdp-filter")))(), {
+      children: host.children,
+    });
+    for (const child of host.children) child.parentNode = filter;
+    filter.connectedCallback();
+    select.value = "to-design";
+    filter.listeners.get("change")?.();
+    expect([design.hidden, build.hidden]).toEqual([false, true]);
+    // A board card's link clears the filter before the browser follows it.
+    required(documentListeners.get("click"))({ target: board });
+    expect([design.hidden, build.hidden]).toEqual([false, false]);
+    expect(select.value).toBe("any");
+    expect(output.textContent).toBe("2 of 2 shown; the filter was cleared to show roadmap-4");
+    expect(scrolled).toEqual(["roadmap-4"]);
+    // A fragment reached another way, such as history, clears it too.
+    select.value = "to-design";
+    filter.listeners.get("change")?.();
+    location.hash = "#roadmap-4";
+    required(windowListeners.get("hashchange"))();
+    expect([design.hidden, build.hidden, select.value]).toEqual([false, false, "any"]);
+    // A link to a visible row, or outside the filter, leaves the choice alone.
+    select.value = "to-build";
+    filter.listeners.get("change")?.();
+    required(documentListeners.get("click"))({ target: board });
+    required(documentListeners.get("click"))({ target: node("a", { href: "#elsewhere" }) });
+    expect([design.hidden, build.hidden, select.value]).toEqual([true, false, "to-build"]);
   });
 
   it("round-trips term fragments including punctuation, spaces and Unicode", () => {
