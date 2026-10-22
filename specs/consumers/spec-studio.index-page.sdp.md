@@ -5,8 +5,8 @@ altitude: story
 readiness: ready
 relations:
   refines:
-    target: spec:consumers.spec-studio.lenses
-    reason: the index is where the Packs lens lands
+    target: spec:consumers.spec-studio.lenses.packs
+    reason: the index is the Packs lens and where a person lands
   dependsOn:
     - spec:consumers.spec-studio.data
     - spec:consumers.spec-studio.shell
@@ -30,7 +30,7 @@ A reader of a large design needs two ways in: by the task they came to do and by
 
 ## UI
 - summary: a short list of sentences under the page title, each with a count.
-- taskRoutes: four links under a `Start here` heading: Read a Pack's design, Find a Spec, entry or file by a word, Narrow the Specs, Read the findings.
+- taskRoutes: links under a `Start here` heading, these four first: Read a Pack's design, Find a Spec, entry or file by a word, Narrow the Specs, Read the findings.
 - packList: one closed disclosure per Pack, its summary line the Pack's title, id and member count, its body the members in authored order as links with their rung badges.
 - specRow: one line per Spec: the title linked to its page, the id as code, the rung badge, then as plain text the kind, altitude, floor in words, the two binding values, the question counts and the Packs; the line wraps on a narrow screen.
 - filterBar: one labelled select per filter above the Specs, each listing any and the values the rows hold, and a line saying how many of all rows show.

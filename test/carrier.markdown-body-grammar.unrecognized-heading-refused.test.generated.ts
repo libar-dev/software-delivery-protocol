@@ -46,6 +46,7 @@ export function registerUnrecognizedHeadingRefused<World>(
       (execution, params) => {
         compareContractOutcome(execution, {
           kind: "then",
+          key: "the carrier is refused whole with the finding {findingId} whose message contains {reason} at line {line}",
           text: "the carrier is refused whole with the finding {findingId} whose message contains {reason} at line {line}",
           params,
         });
@@ -53,6 +54,7 @@ export function registerUnrecognizedHeadingRefused<World>(
     "the healthy sibling {siblingId} stays in the graph": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the healthy sibling {siblingId} stays in the graph",
         text: "the healthy sibling {siblingId} stays in the graph",
         params,
       });

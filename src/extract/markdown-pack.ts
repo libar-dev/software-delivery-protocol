@@ -1,3 +1,4 @@
+import { extractFindingIds } from "./reify.js";
 import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
 import type { Finding } from "../validate/contracts.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
@@ -11,7 +12,7 @@ import { addMarkdownFinding, capMarkdownFindings, markdownFinding } from "./mark
 import type { MarkdownFrontmatter } from "./markdown-types.js";
 
 function structure(file: string, line: number, message: string): Finding {
-  return markdownFinding(file, line, message, "extract/invalid-markdown-structure");
+  return markdownFinding(file, line, message, extractFindingIds.invalidMarkdownStructure);
 }
 
 function parseMarkdownPackBody(
@@ -56,7 +57,7 @@ function parseMarkdownPackBody(
           file,
           line.line,
           `heading "${heading}" is not recognized; a Pack has no section tier`,
-          "extract/unrecognized-heading",
+          extractFindingIds.unrecognizedHeading,
         ),
       );
       continue;
@@ -85,7 +86,7 @@ function parseMarkdownPackBody(
       );
   }
 
-  const capped = capMarkdownFindings(findings, file, "extract/invalid-markdown-structure");
+  const capped = capMarkdownFindings(findings, file, extractFindingIds.invalidMarkdownStructure);
   if (capped.length > 0) return { ok: false, findings: capped };
 
   const framing = normalizeProse(prose);

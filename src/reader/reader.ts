@@ -1,3 +1,10 @@
+import { resolveEntryAddress } from "../graph/entry-address.js";
+import type { AddressResolution } from "../graph/entry-address.js";
+import { entryCitationsBySpec } from "./entry-citations.js";
+import type { EntryCitation } from "./entry-citations.js";
+export type { EntryCitation } from "./entry-citations.js";
+import { decodeExampleSpaces } from "../notation/example-space.js";
+import type { DecodedExampleSpace } from "../notation/example-space.js";
 import { matchConcept } from "./concept-match.js";
 import type { ConceptMatch } from "./concept-match.js";
 export { matchConcept } from "./concept-match.js";
@@ -26,7 +33,7 @@ import type { CodeAnchorLayer } from "../model/anchors.js";
 import { SPEC_KIND_DISPLAY_LABELS, SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecAltitude, SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSections } from "../model/sections.js";
-import type { Finding } from "../validate/contracts.js";
+import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { buildGraphIndex } from "../validate/graph-index.js";
 import type { GraphIndex } from "../validate/graph-index.js";
 import { deriveReadiness, evaluateReadinessFloor } from "../validate/readiness-floor.js";
@@ -145,6 +152,7 @@ export interface OracleBinding {
 
 /** The irreducible per-spec join — what a Design Review renders and an agent starts from. */
 export interface SpecContext extends SpecSummary {
+  readonly exampleSpace?: DecodedExampleSpace;
   readonly sections?: SpecSections;
   /** Derived design counts and lists, shared with the Pack member's design. */
   readonly designColumns: PackMemberDesign;
@@ -174,6 +182,7 @@ export interface SpecContext extends SpecSummary {
    * locates none; a missing row reads as not located, never as absent.
    */
   readonly entryLocations: readonly EntryLocation[];
+  readonly entryCitations: readonly EntryCitation[];
   /** The graph findings naming this spec (as subject or related) — the holes beside the assertions. */
   readonly findings: readonly Finding[];
 }
@@ -401,6 +410,8 @@ export interface Reader {
   byFile(path: string): FileEntry;
   /** The grep→graph bridge from a changeset — file-level, `coverage-unknown` honest (`06` §2). */
   blastRadius(changedFiles: readonly string[]): BlastRadius;
+  /** Resolves an entry address with the same grammar and entry rules as prose validation. */
+  resolveEntryAddress(address: string): AddressResolution;
   specContext(id: string): SpecContext | undefined;
   packContext(id: string): PackContext | undefined;
 }
@@ -492,8 +503,8 @@ function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
  *
  * @sdpAnchor impl:protocol.pack-design
  * @sdpLabel the Pack design helpers and the Pack context assembly they serve
- * @sdpSatisfies spec:consumers.pack-design, spec:model.design-maturity
- * @sdpReferences spec:extraction.entry-locations, spec:extraction.contract-declarations
+ * @sdpSatisfies spec:consumers.pack-design, spec:model.design-maturity, spec:extraction.contract-declarations
+ * @sdpReferences spec:extraction.entry-locations
  * @sdpComponent component:protocol.reader
  * @sdpRole reader
  */
@@ -682,10 +693,11 @@ function packBoundary(
  * @sdpRole reader
  */
 
-export function createReader(graph: GraphSchema): Reader {
+export function createReader(graph: GraphSchema, report?: ValidationReport): Reader {
+  const exampleSpaces = decodeExampleSpaces(graph).contexts;
   const index = buildGraphIndex(graph);
   const recomputedFacts = computeDeliveryFacts(graph.nodes, graph.edges);
-  const allFindings = validateGraph(graph).findings;
+  const allFindings = (report ?? validateGraph(graph)).findings;
   const oracleEdgesByTarget = new Map<string, GraphEdge[]>();
 
   for (const edge of graph.edges) {
@@ -723,6 +735,8 @@ export function createReader(graph: GraphSchema): Reader {
   }
 
   const locationsOf = (id: string): readonly EntryLocation[] => locationsBySpec.get(id) ?? [];
+
+  const citationsBySpec = entryCitationsBySpec(graph, index);
 
   /** The unit's component: its `memberOf` target (the first by id, should a foreign graph hold more). */
   const componentOf = (codeId: string): CodeUnitComponent | undefined => {
@@ -912,6 +926,7 @@ export function createReader(graph: GraphSchema): Reader {
           })();
 
     const summary = summarize(node);
+    const exampleSpace = exampleSpaces.get(id);
     const nextRung =
       summary.derivedReadiness === undefined
         ? SPEC_READINESS[0]
@@ -921,6 +936,7 @@ export function createReader(graph: GraphSchema): Reader {
 
     return {
       ...summary,
+      ...(exampleSpace === undefined ? {} : { exampleSpace }),
       ...(statedNextRung === undefined ? {} : { statedNextRung }),
       statedNextRungFailures:
         statedNextRung === undefined ? [] : evaluateReadinessFloor(node, index, statedNextRung),
@@ -935,6 +951,7 @@ export function createReader(graph: GraphSchema): Reader {
       verifiers,
       ...(oracle === undefined ? {} : { oracle }),
       entryLocations: locationsOf(id),
+      entryCitations: citationsBySpec.get(id) ?? [],
       findings: findingsNaming(id),
     };
   };
@@ -1190,6 +1207,8 @@ export function createReader(graph: GraphSchema): Reader {
     findByConcept,
     byFile,
     blastRadius,
+    resolveEntryAddress: (address) =>
+      resolveEntryAddress(index.primitivesById.get(address.split("#")[0] ?? ""), address),
     specContext,
     packContext,
   };

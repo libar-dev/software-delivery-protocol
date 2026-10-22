@@ -48,6 +48,7 @@ export function registerLateStalePage<World>(
     "the run exits {exitCode}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the run exits {exitCode}",
         text: "the run exits {exitCode}",
         params,
       });
@@ -55,6 +56,7 @@ export function registerLateStalePage<World>(
     "the view directory survives: {viewSurvives}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the view directory survives: {viewSurvives}",
         text: "the view directory survives: {viewSurvives}",
         params,
       });
@@ -62,6 +64,7 @@ export function registerLateStalePage<World>(
     "the view holds the current page {currentPage}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the view holds the current page {currentPage}",
         text: "the view holds the current page {currentPage}",
         params,
       });
@@ -69,6 +72,7 @@ export function registerLateStalePage<World>(
     "the stale page survives: {staleSurvives}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the stale page survives: {staleSurvives}",
         text: "the stale page survives: {staleSurvives}",
         params,
       });
@@ -76,6 +80,7 @@ export function registerLateStalePage<World>(
     "a temporary view sibling survives: {temporarySurvives}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "a temporary view sibling survives: {temporarySurvives}",
         text: "a temporary view sibling survives: {temporarySurvives}",
         params,
       });

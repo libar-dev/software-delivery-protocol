@@ -847,6 +847,20 @@ function parseDescription(
   };
 }
 
+function stepSourceLines(
+  steps: readonly Step[],
+  prefix: string,
+): { entry: string; line: number }[] {
+  const counts = { given: 0, when: 0, then: 0 };
+  let phase: "given" | "when" | "then" = "given";
+  return steps.map((step) => {
+    if (step.keywordType === StepKeywordType.CONTEXT) phase = "given";
+    else if (step.keywordType === StepKeywordType.ACTION) phase = "when";
+    else if (step.keywordType === StepKeywordType.OUTCOME) phase = "then";
+    return { entry: `${prefix}.${phase}[${String(counts[phase]++)}]`, line: step.location.line };
+  });
+}
+
 function parseSteps(
   steps: readonly Step[],
   file: string,
@@ -1156,13 +1170,16 @@ function reifyOrdinaryScenario(
     id: metadata.value.id,
     file,
     line: metadata.value.idLine,
-    entryLines: authoredRelations.map((relation) => ({
-      entry: `relation.${relation.type}.${relation.target}`,
-      line:
-        metadata.value?.relationLines.find(
-          (row) => row.entry === `relation.${relation.type}.${relation.target}`,
-        )?.line ?? scenario.location.line,
-    })),
+    entryLines: [
+      ...stepSourceLines(scenario.steps, "behavior.examples[0]"),
+      ...authoredRelations.map((relation) => ({
+        entry: `relation.${relation.type}.${relation.target}`,
+        line:
+          metadata.value?.relationLines.find(
+            (row) => row.entry === `relation.${relation.type}.${relation.target}`,
+          )?.line ?? scenario.location.line,
+      })),
+    ],
     data: {
       id: metadata.value.id,
       kind: "example",
@@ -1217,6 +1234,7 @@ function reifyFeature(
   let exampleSpace:
     | { readonly given: string[]; readonly when: string[]; readonly then: string[] }
     | undefined;
+  const exampleSpaceLines: { entry: string; line: number }[] = [];
   let exampleSpaceCount = 0;
 
   for (const child of feature.children) {
@@ -1257,7 +1275,10 @@ function reifyFeature(
         );
       }
       const parsedSpace = parseExampleSpaceScenario(child.scenario, file, sourceIndex, collector);
-      if (parsedSpace !== undefined && exampleSpace === undefined) exampleSpace = parsedSpace;
+      if (parsedSpace !== undefined && exampleSpace === undefined) {
+        exampleSpace = parsedSpace;
+        exampleSpaceLines.push(...stepSourceLines(child.scenario.steps, "behavior.exampleSpace"));
+      }
       continue;
     }
 
@@ -1280,7 +1301,7 @@ function reifyFeature(
     ...(exampleSpace === undefined ? {} : { exampleSpace }),
   };
   const parent: ReifiedSpec = {
-    entryLines: [...ruleLines, ...metadata.value.relationLines],
+    entryLines: [...ruleLines, ...metadata.value.relationLines, ...exampleSpaceLines],
     id: metadata.value.id,
     file,
     line: metadata.value.idLine,

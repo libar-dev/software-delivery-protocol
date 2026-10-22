@@ -128,8 +128,19 @@ code {
   color: var(--text);
 }
 
-.top nav a {
-  margin-right: 0.9rem;
+.top nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+sdp-stamp {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .top form {
@@ -418,6 +429,13 @@ td {
   vertical-align: top;
   padding: 0.35rem 0.5rem;
   border-bottom: 1px solid var(--line);
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+td code,
+th code {
+  overflow-wrap: break-word;
 }
 
 th {
@@ -445,7 +463,7 @@ sdp-copy button {
 }
 
 /* Below the phone breakpoint every layout is one column and the rail follows the canvas. */
-@media (max-width: 720px) {
+@media (max-width: 719.98px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -560,7 +578,6 @@ pre {
 p,
 li,
 dd,
-td,
 .line1 {
   overflow-wrap: anywhere;
 }
@@ -612,7 +629,7 @@ sdp-copy output {
   display: inline;
   margin-left: 0.25rem;
 }
-@media (max-width: 720px) {
+@media (max-width: 719.98px) {
   sdp-search {
     width: 100%;
     margin-left: 0;
@@ -626,5 +643,288 @@ sdp-copy output {
   }
   .layout {
     padding: 1rem 0.75rem;
+  }
+}
+
+/* Diagrams fit the column; pan and zoom enlarge the build-rendered view. */
+sdp-diagram {
+  display: block;
+  min-width: 0;
+}
+sdp-diagram figure {
+  margin: 1.5rem 0;
+}
+sdp-diagram figcaption {
+  font-weight: 650;
+  margin-bottom: 0.75rem;
+}
+.diagram-scroll,
+.table-scroll {
+  overflow: auto;
+  max-width: 100%;
+}
+.diagram-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+sdp-diagram svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  background: var(--surface);
+}
+sdp-diagram svg text {
+  fill: var(--text);
+  font:
+    12px ui-monospace,
+    monospace;
+}
+sdp-diagram .band > text,
+sdp-diagram .lane > text {
+  fill: var(--muted);
+  font-weight: 650;
+}
+sdp-diagram .node rect {
+  fill: var(--surface-2);
+  stroke: var(--muted);
+}
+sdp-diagram .node a:hover rect,
+sdp-diagram .node a:focus rect {
+  stroke: var(--link);
+  stroke-width: 2;
+}
+sdp-diagram .edge path {
+  stroke: var(--muted);
+}
+sdp-diagram marker path {
+  fill: var(--muted);
+}
+sdp-diagram .edge text {
+  fill: var(--muted);
+  font-size: 11px;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3;
+}
+sdp-diagram details {
+  margin-top: 0.75rem;
+}
+@media print {
+  .diagram-scroll {
+    overflow: visible;
+  }
+  sdp-diagram svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .diagram-controls {
+    display: none;
+  }
+}
+
+sdp-spec-card,
+sdp-maturity-map,
+sdp-example-space,
+sdp-trace-graph,
+sdp-impact-view,
+sdp-validation-findings {
+  display: block;
+  min-width: 0;
+}
+sdp-compose:empty {
+  display: none;
+}
+.example-card {
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--muted);
+}
+.example-card h4 {
+  margin-block: 0 0.5rem;
+}
+.citations,
+.rule-coverage {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+sdp-maturity-map table {
+  min-width: 48rem;
+}
+sdp-maturity-map caption {
+  text-align: start;
+  max-width: calc(100vw - 2.5rem);
+}
+sdp-maturity-map td {
+  min-width: 9rem;
+  vertical-align: top;
+}
+sdp-maturity-map td:not(:has(sdp-spec-card)) {
+  min-width: 0;
+}
+sdp-maturity-map td > p {
+  margin-block-start: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+sdp-maturity-map sdp-spec-card + sdp-spec-card {
+  margin-top: 1rem;
+}
+.top nav a[aria-current="page"] {
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-thickness: 0.15em;
+}
+.statement-list {
+  padding-left: 1.8rem;
+}
+
+/* Composing stays beside the reading flow; its requests leave as text. */
+sdp-intent-panel {
+  display: block;
+  margin-top: 2.5rem;
+}
+sdp-intent-panel label,
+dialog label,
+sdp-scenario-editor label {
+  display: grid;
+  gap: 0.35rem;
+  margin-block: 1rem;
+}
+sdp-intent-panel input,
+sdp-intent-panel textarea,
+dialog textarea {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+textarea:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.intent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.intent-actions h3,
+.intent-actions ul {
+  flex-basis: 100%;
+}
+dialog {
+  width: min(40rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 35%);
+}
+dialog h2 {
+  margin-top: 0;
+}
+dialog button {
+  margin-right: 0.75rem;
+}
+sdp-compose button {
+  margin: 0.25rem;
+}
+@media (max-width: 719.98px) {
+  sdp-diagram svg {
+    max-width: 100%;
+    height: auto;
+  }
+  sdp-maturity-map table {
+    min-width: 0;
+  }
+  dialog {
+    padding: 1rem;
+  }
+}
+@media print {
+  :root {
+    color-scheme: light;
+    --bg: white;
+    --surface: white;
+    --surface-2: white;
+    --text: black;
+    --muted: #444;
+    --link: black;
+    --code-bg: #f4f4f4;
+  }
+  .top,
+  .rail,
+  .skip-link,
+  sdp-search,
+  sdp-stamp,
+  sdp-intent-panel,
+  sdp-compose,
+  sdp-copy,
+  button,
+  input,
+  select,
+  textarea,
+  output,
+  dialog,
+  .diagram-controls,
+  .export-download {
+    display: none !important;
+  }
+  .layout {
+    display: block;
+    padding: 0;
+    max-width: none;
+  }
+  main {
+    width: 100%;
+  }
+  .table-scroll,
+  .diagram-scroll {
+    overflow: visible;
+  }
+  sdp-maturity-map table,
+  sdp-maturity-map td {
+    min-width: 0;
+  }
+  details > :not(summary) {
+    display: block !important;
+  }
+  details,
+  .card {
+    break-inside: auto;
+  }
+  summary {
+    list-style: none;
+  }
+  sdp-diagram svg {
+    width: 100%;
+    height: auto;
+  }
+  sdp-expander > div:first-child {
+    display: none;
+  }
+}
+@media print {
+  details::details-content {
+    content-visibility: visible !important;
+  }
+  .badge {
+    background: white;
+    color: black;
+    border-color: #777;
   }
 }

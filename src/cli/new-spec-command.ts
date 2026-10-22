@@ -12,13 +12,7 @@ import type { SpecAltitude, SpecKind } from "../model/descriptors.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
 
-export const NEW_SPEC_HELP_TEXT = `sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME
-
-Scaffold an honest idea-rung Markdown Spec. PATH is cwd-relative and must end
-in .sdp.md; parent directories are created as needed. The file is never
-overwritten. Readiness is always idea; relations are always empty. The kind's
-typed section is a bare heading with no invented content. constraint emits
-envelope, title, and Intent only, with no twin section.`;
+export { NEW_SPEC_HELP_TEXT } from "./help.js";
 
 const requiredFlags = ["--id", "--kind", "--altitude", "--title", "--outcome"] as const;
 
@@ -77,11 +71,6 @@ export function parseNewSpecArgs(
   args: readonly string[],
   output: CliOutput,
 ): NewSpecArgs | undefined {
-  if (args.includes("--help")) {
-    writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
-    return undefined;
-  }
-
   let path: string | undefined;
   const values: Partial<Record<(typeof requiredFlags)[number], string>> = {};
 
@@ -240,7 +229,7 @@ function closestExistingAncestor(path: string): string | undefined {
 
 function workingDirectoryReal(output: CliOutput): string | undefined {
   try {
-    return realpathSync(process.cwd());
+    return realpathSync.native(process.cwd());
   } catch (error) {
     refuse(
       output,
@@ -259,7 +248,7 @@ function assertExistingBoundary(path: string, rootReal: string, output: CliOutpu
   }
 
   try {
-    const existingReal = realpathSync(existing);
+    const existingReal = realpathSync.native(existing);
 
     if (!containedWithin(existingReal, rootReal)) {
       refuse(output, "PATH escapes the current working directory through a parent symlink.");
@@ -429,7 +418,7 @@ export function runNewSpec(
   let restoreCwd: string;
 
   try {
-    restoreCwd = realpathSync(".");
+    restoreCwd = realpathSync.native(".");
     process.chdir(parentPath);
   } catch (error) {
     refuse(
@@ -443,7 +432,7 @@ export function runNewSpec(
     let heldReal: string;
 
     try {
-      heldReal = realpathSync(".");
+      heldReal = realpathSync.native(".");
     } catch (error) {
       refuse(
         output,
@@ -479,7 +468,7 @@ export function runNewSpec(
     // undo a relocated scaffold. The success report happens here, immediately after the check and
     // while the handle is still held, so no operation separates the revalidation from the claim.
     try {
-      if (!containedWithin(realpathSync("."), cwdReal)) {
+      if (!containedWithin(realpathSync.native("."), cwdReal)) {
         unlinkSync(scaffoldName);
         refuse(output, "PATH escapes the current working directory through a parent symlink.");
         return 1;

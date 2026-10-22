@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { Project } from "ts-morph";
 import type { Program, SourceFile } from "ts-morph";
 
-import type { GraphSchema } from "../graph/schema.js";
+import type { EntryCitationLocation, GraphSchema } from "../graph/schema.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
@@ -11,6 +11,7 @@ import { reifyAnchorSourceFile } from "./anchors.js";
 import type { ReifiedAnchor } from "./anchors.js";
 import { reifyGherkinCarrier, reifyTypeScriptCarrier } from "./carrier.js";
 import { deriveGraph } from "./derive.js";
+import { compareCitations, scanEntryCitations } from "./entry-citations.js";
 import { discoverFiles } from "./discover.js";
 import type { DiscoveredSourceFile } from "./discover.js";
 import { reifyMarkdownCarrier } from "./markdown.js";
@@ -211,6 +212,7 @@ export function extract(options: ExtractOptions): ExtractionResult {
   const packs: ReifiedPack[] = [];
   const anchors: ReifiedAnchor[] = [];
   const findings: Finding[] = [];
+  const citations: EntryCitationLocation[] = [];
 
   for (const file of files.specFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
@@ -269,6 +271,11 @@ export function extract(options: ExtractOptions): ExtractionResult {
       source.bindingScope,
     );
     anchors.push(...reified.anchors);
+    if (reified.anchors.length > 0) {
+      citations.push(
+        ...scanEntryCitations(source.sourceFile.getFullText(), source.file.relativePath),
+      );
+    }
     findings.push(...reified.findings);
   }
 
@@ -280,7 +287,10 @@ export function extract(options: ExtractOptions): ExtractionResult {
   // anchor is graph-validly reified, its structural edges remain visible even when graph-level
   // validation rejects an endpoint or relationship: the unresolved edge is the sentinel, and
   // structural metadata cannot erase the anchor's independent `satisfies` binding.
-  const graph = deriveGraph(uniqueSpecs, uniquePacks, uniqueAnchors);
+  const graph = {
+    ...deriveGraph(uniqueSpecs, uniquePacks, uniqueAnchors),
+    citations: citations.sort(compareCitations),
+  };
 
   return {
     graph,

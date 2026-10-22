@@ -744,6 +744,8 @@ describe("query body positions and merged parameters", () => {
 
   it.each([
     ["return )", 1, 8],
+    ["return 1;\nfoo bar", 2, 5],
+    ["let x = 'a' 'bcdef';", 1, 13],
     ["const value = 1;\n\nreturn )", 3, 8],
     ["return (", 1, 9],
   ])("locates a refused body %s", async (body, line, column) => {

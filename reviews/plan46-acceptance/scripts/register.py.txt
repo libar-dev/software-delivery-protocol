@@ -1,0 +1,7 @@
+import re,json
+from pathlib import Path
+tokens=re.findall(r'^\| (E-\d+) \|',Path('design/README.md').read_text(),re.M)
+p=Path('design/rules/extensions.json')
+p.write_text(json.dumps({'tokens':tokens},indent=2)+'\n')
+Path('design/rules/extensions.js').write_text('return await recipes(50, params);\n')
+print(json.dumps({'tokens':len(tokens),'unique':len(set(tokens))}))

@@ -41,6 +41,7 @@ export function registerKeyedQuestionResolves<World>(
     "the first carrier is reified: {reified}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the first carrier is reified: {reified}",
         text: "the first carrier is reified: {reified}",
         params,
       });
@@ -48,6 +49,7 @@ export function registerKeyedQuestionResolves<World>(
     "the extraction findings name {extractMessage}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the extraction findings name {extractMessage}",
         text: "the extraction findings name {extractMessage}",
         params,
       });
@@ -55,6 +57,7 @@ export function registerKeyedQuestionResolves<World>(
     "the graph holds the question keys {keys}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph holds the question keys {keys}",
         text: "the graph holds the question keys {keys}",
         params,
       });
@@ -62,6 +65,7 @@ export function registerKeyedQuestionResolves<World>(
     "the report holds {mentionErrors} prose-mention errors": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report holds {mentionErrors} prose-mention errors",
         text: "the report holds {mentionErrors} prose-mention errors",
         params,
       });

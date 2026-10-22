@@ -1,3 +1,5 @@
+import { readStudioBase, readStudioRuns } from "./studio-inputs.js";
+import type { StudioInputs } from "../projections/studio/inputs.js";
 import { mergeParams } from "./params.js";
 import { realpathSync, statSync } from "node:fs";
 import { resolve } from "node:path";
@@ -7,15 +9,22 @@ import type { CliOutput } from "./output.js";
 import { writeStderr } from "./output.js";
 
 export interface BuildArgs {
+  readonly studioInputs?: StudioInputs;
+  readonly studioBaseFile?: string;
+  readonly studioBaseLabel?: string;
   readonly root: string;
   readonly exclude: readonly string[];
   readonly checkClean: boolean;
   readonly watch?: boolean;
+  readonly runs?: readonly string[];
   readonly imports?: string;
+  readonly vault?: string;
   readonly rules?: readonly RulesInput[];
 }
 
 export interface RulesInput {
+  readonly paramForms?: readonly string[];
+  readonly rereadParams?: boolean;
   readonly rulesFile: string;
   readonly params: Readonly<Record<string, unknown>>;
 }
@@ -25,10 +34,14 @@ export function parseBuildArgs(
   output: CliOutput,
   command: string,
 ): BuildArgs | undefined {
+  let base: string | undefined;
+  let baseLabel: string | undefined;
   let root: string | undefined;
   let checkClean = false;
   let watchMode = false;
   let imports: string | undefined;
+  let vault: string | undefined;
+  const runs: string[] = [];
   const rawExcludes: string[] = [];
   const rawRules: { rulesFile: string; forms: string[] }[] = [];
   const rulePaths = new Set<string>();
@@ -37,6 +50,51 @@ export function parseBuildArgs(
     const argument = args[index];
 
     if (argument === undefined) {
+      continue;
+    }
+
+    if (argument === "--base" || argument === "--base-label") {
+      if (command !== "studio") {
+        writeStderr(output, `sdp ${command}: ${argument} is only valid on studio.\n`);
+        return undefined;
+      }
+      const value = args[index + 1];
+      if (value === undefined || value.trim() === "" || value.startsWith("--")) {
+        writeStderr(
+          output,
+          `sdp studio: ${argument} requires ${argument === "--base" ? "a path" : "text"}.\n`,
+        );
+        return undefined;
+      }
+      if (
+        (argument === "--base" && base !== undefined) ||
+        (argument === "--base-label" && baseLabel !== undefined)
+      ) {
+        writeStderr(output, `sdp studio: ${argument} may be supplied only once.\n`);
+        return undefined;
+      }
+      if (argument === "--base") base = value;
+      else baseLabel = value;
+      index += 1;
+      continue;
+    }
+
+    if (argument === "--runs") {
+      const path = args[index + 1];
+      if (
+        command !== "studio" ||
+        path === undefined ||
+        path.trim() === "" ||
+        path.startsWith("--")
+      ) {
+        writeStderr(
+          output,
+          `sdp ${command}: --runs requires a path and is only valid on studio.\n`,
+        );
+        return undefined;
+      }
+      runs.push(path);
+      index += 1;
       continue;
     }
 
@@ -56,7 +114,7 @@ export function parseBuildArgs(
       if (argument === "--rules") {
         let path = resolve(value);
         try {
-          path = realpathSync(path);
+          path = realpathSync.native(path);
         } catch {
           // An unreadable file remains the runner's failure, with the operator's path.
         }
@@ -81,8 +139,53 @@ export function parseBuildArgs(
       continue;
     }
 
+    if (command === "vault" && (argument === "--root" || argument === "--out")) {
+      const value = args[index + 1];
+      if (value === undefined || value.trim() === "" || value.startsWith("--")) {
+        writeStderr(output, `sdp vault: ${argument} requires a path.\n`);
+        return undefined;
+      }
+      if (argument === "--root") {
+        if (root !== undefined) {
+          writeStderr(output, "sdp vault: give the root once, as an argument or --root.\n");
+          return undefined;
+        }
+        root = value;
+      } else {
+        if (vault !== undefined) {
+          writeStderr(output, "sdp vault: --out may be supplied only once.\n");
+          return undefined;
+        }
+        vault = value;
+      }
+      index++;
+      continue;
+    }
     if (argument === "--check-clean") {
+      if (command === "vault") {
+        writeStderr(output, "sdp vault: unknown option --check-clean\n");
+        return undefined;
+      }
       checkClean = true;
+      continue;
+    }
+
+    if (argument === "--vault") {
+      if (command !== "generate") {
+        writeStderr(output, `sdp ${command}: --vault is only valid on generate.\n`);
+        return undefined;
+      }
+      const directory = args[index + 1];
+      if (directory === undefined || directory.trim() === "" || directory.startsWith("--")) {
+        writeStderr(output, "sdp generate: --vault requires a directory.\n");
+        return undefined;
+      }
+      if (vault !== undefined) {
+        writeStderr(output, "sdp generate: --vault may be supplied only once.\n");
+        return undefined;
+      }
+      vault = directory;
+      index += 1;
       continue;
     }
 
@@ -106,8 +209,11 @@ export function parseBuildArgs(
     }
 
     if (argument === "--watch") {
-      if (command !== "validate") {
-        writeStderr(output, `sdp ${command}: --watch is only valid on validate.\n`);
+      if (command !== "validate" && command !== "vault" && command !== "studio") {
+        writeStderr(
+          output,
+          `sdp ${command}: --watch is only valid on validate, vault or studio.\n`,
+        );
         return undefined;
       }
 
@@ -146,6 +252,10 @@ export function parseBuildArgs(
     root = argument;
   }
 
+  if (baseLabel !== undefined && base === undefined) {
+    writeStderr(output, "sdp studio: --base-label requires --base.\n");
+    return undefined;
+  }
   let exclude: readonly string[];
 
   try {
@@ -168,21 +278,29 @@ export function parseBuildArgs(
   for (const item of rawRules) {
     const params = mergeParams(item.forms, output, "validate");
     if (params === undefined) return undefined;
-    rules.push({ rulesFile: item.rulesFile, params });
+    rules.push({ rulesFile: item.rulesFile, params, paramForms: item.forms });
   }
 
   const resolvedRoot = resolveExtractionRoot(root, output, command);
+  if (resolvedRoot === undefined) return undefined;
+  const studioInputs =
+    base === undefined ? undefined : readStudioBase(base, baseLabel ?? null, output, resolvedRoot);
+  if (base !== undefined && studioInputs === undefined) return undefined;
+  if (readStudioRuns(runs, resolvedRoot, output, command) === undefined) return undefined;
 
-  return resolvedRoot === undefined
-    ? undefined
-    : {
-        root: resolvedRoot,
-        exclude,
-        checkClean,
-        ...(rules.length === 0 ? {} : { rules }),
-        watch: watchMode,
-        ...(imports === undefined ? {} : { imports }),
-      };
+  return {
+    ...(studioInputs === undefined ? {} : { studioInputs }),
+    ...(base === undefined ? {} : { studioBaseFile: base }),
+    ...(baseLabel === undefined ? {} : { studioBaseLabel: baseLabel }),
+    ...(runs.length === 0 ? {} : { runs }),
+    root: resolvedRoot,
+    exclude,
+    checkClean,
+    ...(rules.length === 0 ? {} : { rules }),
+    watch: watchMode,
+    ...(imports === undefined ? {} : { imports }),
+    ...(vault === undefined ? {} : { vault }),
+  };
 }
 
 /**

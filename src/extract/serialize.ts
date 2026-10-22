@@ -12,6 +12,7 @@ import type {
   VerificationSection,
 } from "../model/sections.js";
 import { setOwn } from "./set-own.js";
+import { compareCitations } from "./entry-citations.js";
 
 /**
  * Every output byte is owned here, so no `ts-morph` upgrade can change them silently: nodes sorted
@@ -88,6 +89,7 @@ function canonicalBehavior(
     ...(section.exampleSpace === undefined
       ? {}
       : { exampleSpace: canonicalGwt(section.exampleSpace) }),
+    ...(section.stepKeys === undefined ? {} : { stepKeys: section.stepKeys }),
   };
 }
 
@@ -103,7 +105,12 @@ function canonicalConstraint(constraint: ConstraintSection): Record<string, unkn
 const openSectionOrderAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.open-section-order"),
   label: "preserves authored open-section and model-term order",
-  satisfies: [ref("spec:extraction.open-section-order"), ref("spec:model.open-question-keys")],
+  satisfies: [
+    ref("spec:extraction.open-section-order"),
+    ref("spec:model.open-question-keys"),
+    ref("spec:carrier.step-keys"),
+    ref("spec:model.term-addresses"),
+  ],
   component: componentAnchorId("component:protocol.extract"),
   role: "codec",
 });
@@ -163,6 +170,7 @@ function canonicalSections(sections: SpecSections): Record<string, unknown> {
       ...(sections.model.terms === undefined
         ? {}
         : { terms: canonicalDynamicSection(sections.model.terms) }),
+      ...(sections.model.termKeys === undefined ? {} : { termKeys: sections.model.termKeys }),
     };
   }
 
@@ -278,6 +286,9 @@ export function serializeGraph(graph: GraphSchema): string {
         ...(location.key === undefined ? {} : { key: location.key }),
         line: location.line,
       })),
+    citations: [...(graph.citations ?? [])]
+      .sort(compareCitations)
+      .map(({ address, file, line }) => ({ address, file, line })),
   };
 
   return `${JSON.stringify(canonical, null, 2)}\n`;

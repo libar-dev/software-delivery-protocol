@@ -37,6 +37,7 @@ export function registerMalformedRefusal<World>(
     "parsing {outcome}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "parsing {outcome}",
         text: "parsing {outcome}",
         params,
       });
@@ -44,6 +45,7 @@ export function registerMalformedRefusal<World>(
     "the refusal names the reason {reason}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the refusal names the reason {reason}",
         text: "the refusal names the reason {reason}",
         params,
       });

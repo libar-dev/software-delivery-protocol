@@ -1,0 +1,149 @@
+{
+ "small-trace-desktop": {
+  "viewport": 1280,
+  "page": 1280,
+  "offenders": [],
+  "tables": [],
+  "svgs": [
+   {
+    "w": 321,
+    "h": 391,
+    "parent": 900,
+    "vb": "0 0 321 391",
+    "labels": 2,
+    "edges": 2
+   }
+  ],
+  "maturity": [],
+  "codeCells": [
+   {
+    "text": "spec:facts.f05-react-client-retries-until-confirmed",
+    "wrap": "break-word"
+   },
+   {
+    "text": "spec:facts.f05-react-client-retries-until-confirmed",
+    "wrap": "break-word"
+   }
+  ],
+  "legends": []
+ },
+ "small-member-desktop": {
+  "viewport": 1280,
+  "page": 1280,
+  "offenders": [],
+  "tables": [],
+  "svgs": [
+   {
+    "w": 928,
+    "h": 374,
+    "parent": 928,
+    "vb": "0 0 1770 713",
+    "labels": 0,
+    "edges": 39
+   },
+   {
+    "w": 928,
+    "h": 165,
+    "parent": 928,
+    "vb": "0 0 1140 203",
+    "labels": 0,
+    "edges": 0
+   },
+   {
+    "w": 314,
+    "h": 203,
+    "parent": 928,
+    "vb": "0 0 314 203",
+    "labels": 0,
+    "edges": 0
+   },
+   {
+    "w": 928,
+    "h": 169,
+    "parent": 928,
+    "vb": "0 0 1112 203",
+    "labels": 0,
+    "edges": 0
+   },
+   {
+    "w": 276,
+    "h": 186,
+    "parent": 928,
+    "vb": "0 0 276 186",
+    "labels": 0,
+    "edges": 0
+   },
+   {
+    "w": 928,
+    "h": 165,
+    "parent": 928,
+    "vb": "0 0 1140 203",
+    "labels": 0,
+    "edges": 0
+   },
+   {
+    "w": 928,
+    "h": 186,
+    "parent": 928,
+    "vb": "0 0 1686 338",
+    "labels": 0,
+    "edges": 0
+   },
+   {
+    "w": 928,
+    "h": 205,
+    "parent": 928,
+    "vb": "0 0 1686 372",
+    "labels": 0,
+    "edges": 0
+   },
+   {
+    "w": 846,
+    "h": 186,
+    "parent": 928,
+    "vb": "0 0 846 186",
+    "labels": 0,
+    "edges": 0
+   },
+   {
+    "w": 594,
+    "h": 203,
+    "parent": 928,
+    "vb": "0 0 594 203",
+    "labels": 0,
+    "edges": 0
+   },
+   {
+    "w": 928,
+    "h": 121,
+    "parent": 928,
+    "vb": "0 0 1686 220",
+    "labels": 0,
+    "edges": 0
+   }
+  ],
+  "maturity": [],
+  "codeCells": [
+   {
+    "text": "component:platform.history-view",
+    "wrap": "break-word"
+   },
+   {
+    "text": "component:platform.context",
+    "wrap": "break-word"
+   },
+   {
+    "text": "component:platform.gate",
+    "wrap": "break-word"
+   },
+   {
+    "text": "component:platform.read-model",
+    "wrap": "break-word"
+   }
+  ],
+  "legends": [
+   "Arrows: uses. Dashed arrows: plans to use."
+  ]
+ },
+ "remote": []
+}

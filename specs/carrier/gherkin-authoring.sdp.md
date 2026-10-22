@@ -14,6 +14,8 @@ relations:
   dependsOn:
     - spec:carrier.slot-notation
     - spec:model.rule-keys
+    - target: spec:carrier.step-keys
+      reason: a step may open with a step key marker
 ---
 # Gherkin authoring enters the one graph
 
@@ -37,6 +39,7 @@ relations:
 - rule: At most one `@example-space` pseudo-scenario supplies the parent vocabulary without producing a Spec node, while each ordinary Scenario supplies exactly one bound example point.
 - rule: An ordinary Scenario and an `@example-space` pseudo-scenario must each carry at least one step; a step-less Scenario is refused at its Scenario line without inventing a complete-GWT rule.
 - rule: Gherkin steps reuse the Protocol-owned slot notation; conjunctions inherit the preceding phase, and outlines, backgrounds, star steps, doc strings, data tables, and leading conjunctions are refused.
+- rule: A step of an ordinary Scenario or of the `@example-space` pseudo-scenario may open its text with a step key marker, `[#key]` and a space, after its keyword, `And` included, under `spec:carrier.step-keys`.
 - rule: Independent semantic Gherkin findings accumulate in physical source order up to a hard cap of 100; any semantic finding excludes the entire invalid carrier from the graph while healthy sibling files survive.
 - rule: Gherkin is a canonical authoring carrier rather than a Cucumber execution path; generated contracts and resolving code-side anchors remain the execution and delivery-fact boundary.
 - rule: Markdown remains the default Spec carrier; a default flip to Gherkin is refused before full honest round-trip exists.

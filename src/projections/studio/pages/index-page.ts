@@ -7,7 +7,7 @@ import { codeSpans } from "./text.js";
 /**
  * Counts reader values and writes native Pack disclosures and filterable Spec rows.
  * @sdpAnchor impl:protocol.studio-index-page
- * @sdpSatisfies spec:consumers.spec-studio.index-page
+ * @sdpSatisfies spec:consumers.spec-studio.index-page, spec:consumers.spec-studio.lenses.packs, spec:consumers.spec-studio.navigation
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
@@ -72,7 +72,7 @@ export function indexPage(ctx: PageContext): string {
               ? 1
               : 0,
       );
-      return `<label>${label}<select data-facet="${name}"><option value="any">Any</option>${values.map((v) => `<option value="${escape(v)}">${escape(v)}</option>`).join("")}</select></label>`;
+      return `<label>${label}<select data-filter="${name}"><option value="any">Any</option>${values.map((v) => `<option value="${escape(v)}">${escape(v)}</option>`).join("")}</select></label>`;
     })
     .join("");
   const specRows = specs
@@ -94,6 +94,6 @@ export function indexPage(ctx: PageContext): string {
   return frame(
     ctx,
     "Spec Studio",
-    `<header class="page-head"><h1>Spec Studio</h1><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header><h2>Start here</h2><ul class="plain-list task-routes"><li><a href="#packs">Read a Pack's design</a></li><li><a href="search.html">Find a Spec, entry or file by a word</a></li><li><a href="#specs">Narrow the Specs</a></li><li><a href="#findings">Read the findings</a></li></ul><section id="packs"><h2>Packs</h2>${packList || "<p>No Packs.</p>"}</section><section id="specs"><h2>Specs</h2><sdp-filter><form hidden class="filter-bar">${filters}</form><output aria-live="polite">${String(specs.length)} of ${String(specs.length)} shown</output><ul class="spec-list">${specRows}</ul></sdp-filter></section><section id="findings"><h2>Findings</h2>${findingList(ctx, findings)}</section>`,
+    `<header class="page-head"><h1>Packs</h1><p>Specs grouped by the Packs that hold them, from the reader.</p><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header><h2>Start here</h2><ul class="plain-list task-routes"><li><a href="#packs">Read a Pack's design</a></li><li><a href="search.html">Find a Spec, entry or file by a word</a></li><li><a href="#specs">Narrow the Specs</a></li><li><a href="#findings">Read the findings</a></li><li><a href="queue.html">See what the owner can state first</a></li><li><a href="architecture.html">See the components by context and layer</a></li>${ctx.data.inputs.base === undefined ? "" : '<li><a href="diff.html">See what changed since the base</a></li>'}</ul><section id="packs"><h2>Packs</h2>${packList || "<p>No Packs.</p>"}</section><section id="specs"><h2>Specs</h2><sdp-filter><form hidden class="filter-bar">${filters}</form><output aria-live="polite">${String(specs.length)} of ${String(specs.length)} shown</output><ul class="spec-list">${specRows}</ul></sdp-filter></section><section id="findings"><h2>Findings</h2>${findingList(ctx, findings)}</section>`,
   );
 }

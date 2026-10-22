@@ -53,6 +53,7 @@ export function registerDifferingLayerAndUses<World>(
       (execution, params) => {
         compareContractOutcome(execution, {
           kind: "then",
+          key: "the comparison lists {unrealized} unrealized designs, {matching} matching designs and {differing} differing rows",
           text: "the comparison lists {unrealized} unrealized designs, {matching} matching designs and {differing} differing rows",
           params,
         });
@@ -60,6 +61,7 @@ export function registerDifferingLayerAndUses<World>(
     "the differing fields are {fields}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the differing fields are {fields}",
         text: "the differing fields are {fields}",
         params,
       });

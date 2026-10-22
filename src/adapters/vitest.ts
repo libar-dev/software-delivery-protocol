@@ -12,8 +12,8 @@ import { codeAnchor } from "../model/code-anchor.js";
  * examples and no reset hook exists to forget. One example is one test: the scenario's steps are
  * one causal chain, not independent assertions. The failure law (a red step names itself in the
  * spec's own language) lives in the core (`runExamplePlan`), where it is unit-tested
- * framework-free. vitest is an **optional peer of this subpath only** — the package's
- * single-runtime-dependency posture holds everywhere else.
+ * framework-free. This subpath needs Vitest 2 or later installed beside the package; the runner
+ * core and other entry points do not load it.
  */
 const adaptersComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.adapters"),

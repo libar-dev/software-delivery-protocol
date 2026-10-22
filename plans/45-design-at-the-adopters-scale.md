@@ -157,7 +157,7 @@ Delegated; each awaits the owner's review.
 | Run evidence | The platform's CI writes CTRF for its native tier, or the Studio's verification panels open |
 | Example-space coverage | A design pass asks which slot values no example exercises |
 | The Obsidian vault | A reader asks for it after the Studio's phase 0 ships |
-| Lineage roots and checked external references | The owner rules what of the earlier system the platform may cite |
+| Lineage roots and checked external references | Ruled by the owner at plan 46's close: for now the platform may cite its earlier system, `@libar-dev/architect` (Architect), and recipe 50 checks those citations against a register of Architect references the platform keeps |
 | A readiness-statement planner | The owner cannot order the platform's `ready` statements with recipes 9, 21, 29 and 30 |
 | Wording-stable step keys | Rewording breaks bound examples during the platform's next slices |
 

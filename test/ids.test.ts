@@ -45,31 +45,31 @@ const entryAddressRefusals = [
   ["spec:x#a#b", "malformed # suffix"],
   [
     "spec:x#foo",
-    "entry address must be <section>.<key> with section design, ui, question, or rule",
+    "entry address must be <section>.<key> with section design, ui, question, rule, or term",
   ],
   [
     "spec:x#model.foo",
-    "entry address must be <section>.<key> with section design, ui, question, or rule",
+    "entry address must be <section>.<key> with section design, ui, question, rule, or term",
   ],
   [
     "spec:x#design",
-    "entry address must be <section>.<key> with section design, ui, question, or rule",
+    "entry address must be <section>.<key> with section design, ui, question, rule, or term",
   ],
   [
     "spec:x#question",
-    "entry address must be <section>.<key> with section design, ui, question, or rule",
+    "entry address must be <section>.<key> with section design, ui, question, rule, or term",
   ],
   [
     "spec:x#questions.k",
-    "entry address must be <section>.<key> with section design, ui, question, or rule",
+    "entry address must be <section>.<key> with section design, ui, question, rule, or term",
   ],
   [
     "spec:x#openQuestions.k",
-    "entry address must be <section>.<key> with section design, ui, question, or rule",
+    "entry address must be <section>.<key> with section design, ui, question, rule, or term",
   ],
   [
     "spec:orders.create-order#valid-cart",
-    "entry address must be <section>.<key> with section design, ui, question, or rule",
+    "entry address must be <section>.<key> with section design, ui, question, rule, or term",
   ],
   ["spec:x#design.1", "entry address key must be lower-camel ASCII"],
   ["spec:x#design.Foo", "entry address key must be lower-camel ASCII"],
@@ -160,8 +160,8 @@ describe("ids", () => {
     });
   });
 
-  it("names the four sections an entry address may carry", () => {
-    expect(ENTRY_ADDRESS_SECTIONS).toEqual(["design", "ui", "question", "rule"]);
+  it("names the five sections an entry address may carry", () => {
+    expect(ENTRY_ADDRESS_SECTIONS).toEqual(["design", "ui", "question", "rule", "term"]);
   });
 
   it("parses a question address with its key verbatim", () => {

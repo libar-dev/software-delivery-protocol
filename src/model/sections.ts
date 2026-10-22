@@ -86,6 +86,7 @@ export interface BehaviorSection {
   readonly examples?: readonly BehaviorExample[];
   readonly flows?: readonly string[];
   readonly exampleSpace?: ExampleSpaceVocabulary;
+  readonly stepKeys?: Readonly<Record<string, string>>;
 }
 
 export interface ConstraintSection {
@@ -98,6 +99,7 @@ export interface ConstraintSection {
 export interface ModelSection {
   readonly description?: string;
   readonly terms?: Readonly<Record<string, string>>;
+  readonly termKeys?: Readonly<Record<string, string>>;
 }
 
 export type DesignSection = SpecSectionContent & { readonly description?: string };
@@ -136,7 +138,11 @@ export interface SpecSections {
 const specSectionsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.spec-sections"),
   label: "typed Spec section shapes",
-  satisfies: ref("spec:model.spec-sections"),
+  satisfies: [
+    ref("spec:model.spec-sections"),
+    ref("spec:carrier.step-keys"),
+    ref("spec:model.term-addresses"),
+  ],
   component: componentAnchorId("component:protocol.model"),
   role: "contract",
 });

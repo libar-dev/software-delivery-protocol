@@ -312,7 +312,7 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            then: ['the payload declares the schema version {schemaVersion: "0.10.0"}'],
+            then: ['the payload declares the schema version {schemaVersion: "0.11.0"}'],
           },
         ],
       },
@@ -342,9 +342,11 @@ export const extractionSpecs = [
           "The concreteness law is a refusal, never a guess — an example carrying an unbound slot in any used step of any entry is not the bindable form and receives no step contract, and a prose-only example receives none either.",
           "Concreteness reads the example's own form, whether or not a parent declares shared vocabulary. Vocabulary resolution is a separate later check; incompatible resolution withholds the step contract with `contracts/unmatched-vocabulary-step`.",
           "An example is one point, so the step contract and bound point derive from the same first complete structured Given/When/Then entry. A further entry, which the TypeScript carrier can carry, is named `contracts/multi-entry-example` rather than left silently inert.",
+          "Each step of a step contract carries its contract key beside its skeleton: its step key, from its own marker or from the vocabulary step it resolves to, under `spec:carrier.step-keys`, and its skeleton when it has none. The `Step` union and the `StepParams` properties are the contract keys in first-occurrence order, and the runner dispatches each step to the handler bound under its contract key.",
           "Degradation is loud and local: an undeclared slot or a value outside its declared type is named and left out of the bound point; an off-type value stays in the step contract, widened to its scalar kind, so the emitted module still compiles; and a conflicting re-binding is named and its first value wins, in the bound point for a slot bound twice and in the step contract for a step that recurs with other values.",
           "A vocabulary slot group that declares no usable type is named rather than dropped in silence, and no dimension enters the space for it.",
-          "Each Then step of the parent's example space is one variant of the space contract's Outcome union, whose `kind` is that step's skeleton text; the build derives no slug or ordinal, and the runner core adds `unspecified`.",
+          "Each Then step of the parent's example space is one variant of the space contract's Outcome union, whose `kind` is that step's contract key, its step key or else its skeleton text; the build derives no slug or ordinal, and the runner core adds `unspecified`.",
+          "A contract never holds two steps under one contract key. An example marker that disagrees with the key of its vocabulary step withholds the example's step contract with `contracts/conflicting-step-key`. A step or space contract whose steps would share a contract key, two skeletons under one key or a key equal to another step's skeleton, is withheld with `contracts/duplicate-step-key`, naming the key and both skeletons; a withheld space contract withholds every registrar of its children.",
           "Two contract paths differing only by letter case cannot coexist on a case-insensitive filesystem, so the contracts tree is withheld whole and the finding names the colliding pair.",
           "Every generation finding is a warning that describes what did not emit; gating belongs to graph validation alone, so a withheld contract never fails the build by itself.",
         ],
@@ -366,13 +368,25 @@ export const extractionSpecs = [
         ruleKeys: {
           concreteness: "rules[2]",
           onePoint: "rules[4]",
-          outcomeIdentity: "rules[7]",
-          caseCollision: "rules[8]",
+          contractKeys: "rules[5]",
+          outcomeIdentity: "rules[8]",
+          keyConflicts: "rules[9]",
+          caseCollision: "rules[10]",
         },
       },
       design: {
         findingIds:
-          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths`, each at warning severity.",
+          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key`, each at warning severity.",
+        duplicateStepKey:
+          '`contracts/duplicate-step-key` is a warning on the parent at `behavior.exampleSpace` for a space collision, or on the example at `behavior.examples` for a step-contract collision. Its message is `contract key "<key>" names both "<first skeleton>" and "<second skeleton>"; <space|step> contract withheld`, with the skeletons in first-occurrence order.',
+        contractStep:
+          "`export interface ContractStep<K extends string, P extends ParamShape> { readonly kind: StepKind; readonly key: K; readonly text: string; readonly params: P; }` is the step shape the runner exports, where `key` is the contract key and `text` the skeleton the natural reading renders.",
+        stepContractModule:
+          '`export type Step = "<contract key>" | …;` is the union of the example\'s contract keys in first-occurrence order, `StepParams` maps each contract key to its parameters, and `export const <camel>Contract: ExampleContract<Step, StepParams>` lists every step as `{ kind, key, text, params }` in authored order.',
+        outcomeVariant:
+          '`{ readonly kind: "<contract key>"; readonly <slot>: <type>; … }` is the Outcome variant of one Then step of the example space, one per Then step, beside `UnspecifiedOutcome`.',
+        planDispatch:
+          "the runner's `planExample` runs each step through `bindings[step.key]`, carries `key` on each planned step beside `text` and `label`, and renders the label from `text` and `params`, so a red keyed step still names itself in the Spec's own words.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -496,17 +510,17 @@ export const extractionSpecs = [
           "`generated/registrars.json` is a versioned, sorted manifest of every extraction-root-relative registrar sibling owed by the build. Publication reconciles the manifest and removes siblings no longer owed under the build-pipeline law. `--check-clean` compares the manifest and every sibling byte with fresh generation. Preflight independently compares every tracked adopted registrar in the worktree and Git index with regenerated bytes.",
           "Registration-path loudness — multiple anchors in one authored suite still locate one registrar sibling; when one example resolves to more than one distinct authored suite path, generation emits a named finding and withholds that registrar rather than selecting a path silently.",
           "Generated registrars import shared runtime helpers from `@libar-dev/software-delivery-protocol/testing` and types through public package subpaths. Public exports are the root for model, anchors and public types, `./anchors` for zero-dependency anchor builders, `./runner` for the framework-neutral plan/run core, `./vitest` for `bindExample`, and `./testing` for the registrar runtime. Authored suites may import anchor builders through the root or `./anchors`. Authored and generated modules never import private `src` paths. The supported optional Vitest peer range is `>=2`, as declared by the package.",
-          "Step identity is the authored skeleton text; wording changes intentionally fail typechecks. Generation introduces no ordinal or slug identity. A wording-stable operation key requires separate model and carrier design.",
-          "Handler resolution — the generated registrar's internal dispatch object is an exhaustive mapped type over the contract's step skeletons: removing or staling one of those generated callbacks is a `tsc` error naming that step. The adopted authored surface retains no per-step callbacks (and therefore no literal step-skeleton keys); its five adapters are required keys (`assertions` optional), so a missing or stale authored callback is a `tsc` error naming that adapter. These are the two exhaustive mapped-type checks; demanding an authored error name a step while simultaneously retaining no authored per-step surface is refused as contradictory. Codegen cannot statically see authored handlers, so no generation-time handler refusal is promised — the type system carries it. Existing generation-time refusals (unbindable example, incompatible vocabulary, colliding path) are reused unchanged.",
+          "Step identity is the step's contract key: its step key under `spec:carrier.step-keys`, or its skeleton text when it has none, and generation introduces no ordinal or slug identity. A directly authored `bindExample` handler map fails the typecheck when one of its keys goes stale. An adopted registrar holds no authored per-step handler: a stale committed registrar fails the regeneration preflight, and its internal handlers change with the contract when it is regenerated. The contract key of a Then step of the example space also names an Outcome `kind`, so changing it fails the typecheck of an authored oracle that names the old kind.",
+          "Handler resolution — the generated registrar's internal dispatch object is an exhaustive mapped type over the contract's step keys: removing or staling one of those generated callbacks is a `tsc` error naming that step. The adopted authored surface retains no per-step callbacks (and therefore no step keys); its five adapters are required keys (`assertions` optional), so a missing or stale authored callback is a `tsc` error naming that adapter. These are the two exhaustive mapped-type checks; demanding an authored error name a step while simultaneously retaining no authored per-step surface is refused as contradictory. Codegen cannot statically see authored handlers, so no generation-time handler refusal is promised — the type system carries it. Existing generation-time refusals (unbindable example, incompatible vocabulary, colliding path) are reused unchanged.",
           "Scenario-level invocation — the five-adapter interface carries one product `invoke` per example, so the first `When` occurrence invokes it and later `When` occurrences in the same lawful scenario do not repeat side effects.",
-          "At the first Then, the comparator refuses an incomplete point before calling the oracle and otherwise evaluates and caches `expected(point)`. It finds the authored Then whose skeleton equals `expected.kind`, compares that step's authored parameters with the oracle payload, reads `observe(world)`, compares observed and oracle outcomes, and runs additional assertions separately. Actual-equals-oracle alone is insufficient: a Spec parameter mutation must fail. The oracle accepts `Partial<Conditions>`; the registrar never casts a partial point to Conditions.",
+          "At the first Then, the comparator refuses an incomplete point before calling the oracle and otherwise evaluates and caches `expected(point)`. It finds the authored Then whose contract key equals `expected.kind`, compares that step's authored parameters with the oracle payload, reads `observe(world)`, compares observed and oracle outcomes, and runs additional assertions separately. Actual-equals-oracle alone is insufficient: a Spec parameter mutation must fail. The oracle accepts `Partial<Conditions>`; the registrar never casts a partial point to Conditions.",
           "Oracle payload versus Spec Then parameters and observed versus oracle outcomes use deep structural equality on the authored shape. Diagnostics name missing, extra or changed values by path and show expected and actual values. The comparator quotes authored Then parameters and skeleton text without rephrasing them.",
-          "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When the oracle selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and available Then skeletons; preserve the original assertion as `cause`.",
+          "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When the oracle selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and the contract keys of the available Then steps; preserve the original assertion as `cause`.",
           "Bound unspecified outcome — `unspecified` names a coverage gap in the example space, but a bound executable example selecting it reddens because no authored Then may silently witness that gap.",
           "The authored top-level `specTest` carries a non-empty `verifies` target naming the example. It remains the source of `has-verifier`; generated execution confers no delivery fact and records no pass state.",
           "Additive assertions — optional `assertions` may add domain checks the Outcome union cannot express; they never replace steps (3) or (5) of the three-way comparator and never silence a Spec-param or oracle mismatch.",
           "Case mapping and outlines — outline rows map one deterministic case per row in carrier order when a multi-row table sugar expands statically into sibling examples (point-per-example). Scenario Outlines and inline Examples tables stay refused as executable carrier constructs inside a single example; one example remains one point and earns exactly one generated registration.",
-          "Registrars use no environment, global or module side channel, mutable global registry or singleton world shared across examples. Generated siblings export the registrar and never self-register. Generation derives no domain observation; the engine never loads or executes adopter code. Registrars do not become generated test harnesses. Scenario Outlines stay refused. The interface changes neither the claim taxonomy, anchor bindings nor skeleton-text identity.",
+          "Registrars use no environment, global or module side channel, mutable global registry or singleton world shared across examples. Generated siblings export the registrar and never self-register. Generation derives no domain observation; the engine never loads or executes adopter code. Registrars do not become generated test harnesses. Scenario Outlines stay refused. The interface changes neither the claim taxonomy, anchor bindings nor the contract-key identity of steps.",
         ],
       },
       design: {
@@ -520,6 +534,10 @@ export const extractionSpecs = [
           "The authored suite directory plus the example id without the `spec:` prefix and the suffix `.test.generated.ts`, retaining the id's dots.",
         registrarManifest:
           "`generated/registrars.json` carries the versioned, sorted extraction-root-relative registrar paths owed by the build.",
+        thenBinding:
+          '`compareContractOutcome(execution, { kind: "then", key, text, params })` is the generated binding of a Then step; it compares only the step whose `key` equals the oracle\'s `kind`.',
+        noMatchingThen:
+          '`scenario <spec>: oracle selected "<kind>"; available Then steps: "<key>", …` is the diagnostic when no authored Then matches, listing each Then step\'s contract key in contract order, with the original assertion as `cause`.',
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -657,7 +675,7 @@ export const extractionSpecs = [
         rules: [
           "Every command that checks the graph checks the graph its own run derived, through the one validation seam; `sdp build` stops at extraction checks.",
           "`sdp build` publishes derived outputs only after extraction reports no error. A warning does not fail the build; a contract-generation warning may withhold the contract or registrar it names under the executable-contracts law.",
-          "Before replacing current outputs, `sdp build` stages the graph, the owed contracts, the registrar manifest and the registrar siblings, and the imports when `--imports` is supplied, in temporary locations. It then publishes the staged set and removes registrar siblings no longer owed.",
+          "Before replacing current outputs, `sdp build` stages the graph, the owed contracts, the registrar manifest, each registrar sibling whose bytes differ from the file on disk, and the imports when `--imports` is supplied, in temporary locations; a sibling whose bytes are unchanged is left untouched, with no temporary write and no rename. It then publishes the staged set and removes registrar siblings no longer owed.",
           "On failure, `sdp build` removes its graph, contracts, manifest, temporary outputs and the confined registrar siblings known from the previous and new manifests. It removes imports only when that invocation requested them. A failed removal names the surviving path and says it must not be read as current; an untrusted registrar path is outside generated ownership.",
         ],
         flows: [
@@ -755,7 +773,7 @@ export const extractionSpecs = [
     id: "spec:extraction.contract-declarations",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/contract-declarations.sdp.md",
     title: "Pinned declarations give an adopter a derived module to typecheck",
     narrative:
@@ -778,7 +796,7 @@ export const extractionSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:extraction.pack-member-order.manifest-order-kept",
@@ -861,19 +879,19 @@ export const extractionSpecs = [
     file: "specs/extraction/entry-locations.sdp.md",
     title: "The graph records where each addressable entry is written",
     narrative:
-      "An entry address names one keyed Design or UI entry, one keyed rule or flow, or one keyed open question. A reader following an address needs its recorded source line.",
+      "An entry address names one keyed Design or UI entry, one keyed rule or flow, one keyed open question, or one keyed Model term. A reader following an address needs its recorded source line.",
     sections: {
       intent: {
         problem:
           "The graph records the file of a Spec and the line of every anchor, but not the line of an entry inside a Spec, so a page that links an address to its text, or a review that cites one, re-reads carrier syntax the extractor already parsed.",
         outcome:
-          "Record source lines for Design and UI entries, rules and flows, open questions and their optional fields, and authored relation targets beside the graph's nodes, so consumers locate text without parsing carriers.",
+          "Record source lines for Design and UI entries, rules and flows, Model terms, open questions and their optional fields, and authored relation targets beside the graph's nodes, so consumers locate text without parsing carriers.",
       },
       behavior: {
         rules: [
-          "The graph carries a location table beside its nodes and edges. Each row names a Spec id, carrier file, entry and 1-based source line. Entries are `design.<key>` or `ui.<key>` for keys other than `description`, `rule[<i>]` or `flow[<i>]` for entries of the primary behavior owner, `question[<i>]` for an open question, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger` for each of those optional fields present, and `relation.<type>.<target>` for an authored relation target. Indexes count from 0 within their authored lists. A rule, flow or question row carries `key` when that entry has one.",
+          "The graph carries a location table beside its nodes and edges. Each row names a Spec id, carrier file, entry and 1-based source line. Entries are `design.<key>` or `ui.<key>` for keys other than `description`, `rule[<i>]` or `flow[<i>]` for entries of the primary behavior owner, `term[<i>]` for a Model term, `question[<i>]` for an open question, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger` for each of those optional fields present, and `relation.<type>.<target>` for an authored relation target. Indexes count from 0 within their authored lists, a term's among the Spec's terms in authored order. A rule, flow, term or question row carries `key` when that entry has one.",
           "Primitive and Pack nodes stay free of lines, so a comparison of nodes and edges is unchanged by an edit that only moves an entry, and carrier parity compares nodes and edges and never the location table, whose lines differ by carrier by nature.",
-          "Markdown and TypeScript record the entry forms their syntax carries. TypeScript questions are located at the question property or string literal. Gherkin records its Rule lines and authored or defaulted relation sites; it carries no Design or UI section, open question or question field. A missing row means not located, never absent.",
+          "Markdown and TypeScript record the entry forms their syntax carries. TypeScript questions are located at the question property or string literal. Gherkin records its Rule lines and authored or defaulted relation sites; it carries no Design, UI or Model section, open question or question field. A missing row means not located, never absent.",
           "An authored relation target has a location row whose entry is `relation.<type>.<target>`, at its carrier's recorded relation site. A defaulted Gherkin relation uses the Scenario identity line when no explicit relation tag locates it.",
           "Rows sort by Spec id, then by entry, in code-unit order. The table is a deterministic function of the carriers at the extracted commit, as every other part of the graph is.",
           "A location names where an entry is written and nothing else: it is not an identity, never an anchor target or a binding, and an edit above an entry moves its line.",
@@ -882,5 +900,222 @@ export const extractionSpecs = [
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.entry-citations",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/entry-citations.sdp.md",
+    title: "The graph records where anchored source cites an entry address",
+    narrative:
+      "A test that checks a pinned declaration names the entry in its own text, often as the test's title, and the graph does not see that link: a reader of the declaration finds the suite's file through its anchor but not the assertion. The first adopter's type test names each comparison by the address of the Design entry it binds (`libar-platform/tests/types/pinned.test-d.ts`), and a reader of its pages could not find the comparison for one declaration. The extractor already reads every anchored source file for its anchors, so it records where such a file writes an entry address, and a page or a recipe shows the line that checks a declaration.\n\nA citation is where text names an entry, read by the machine from comments and strings. It carries the `inferred` claim and confers nothing, and it sits in a table beside the location table, as a position does. A citation is inferred location data in the graph. It adds no node or edge, confers no delivery fact, moves no readiness floor, feeds no Protocol validator and records no test verdict.",
+    sections: {
+      intent: {
+        problem:
+          "A test that checks one pinned declaration names its entry address only in its own text, so no view links the declaration to the line that checks it, and a reader holding the declaration cannot find its assertion.",
+        outcome:
+          "Record each entry address an anchored source file cites, with its file and line, as an inferred citation that confers nothing, so a view can show the test line that checks a pinned declaration.",
+      },
+      behavior: {
+        rules: [
+          "The extractor reads citations from each source file it reads for anchors that carries at least one anchor, of either form and any namespace, after the same exclusions; a file that carries no anchor, a carrier and any other file is not read for citations.",
+          "A citation is a token the prose-mention scan would read as a mention, found anywhere in such a file's text, in a comment, a string or a template literal, that holds `#`; a token followed by `${`, directly or after the trailing punctuation the mention scan strips, is the prefix of a computed address and records no citation, whether or not the prefix parses as an entry address; a bare Spec id is not a citation.",
+          "Each citation records the address as written, the file's root-relative path and the 1-based line the token starts on; one address written twice on one line is one row.",
+          "The citations ride in a table of their own beside the location table, sorted and deterministic as the graph is, and Primitive and Pack nodes stay free of them.",
+          "The table's definition gives every citation the `inferred` claim, and every reader row of a citation carries it, so no consumer reads a citation as an authored binding.",
+          "A citation mints no node or edge, confers no delivery fact, moves no readiness floor, feeds no Protocol validator and records no verdict on the citing file; removing every citation changes no node, edge, fact, floor or finding.",
+          "The reader resolves each citation by the rules address resolution applies, and the Spec context carries the citations whose address names that Spec as its entry citations, each with the entry it names, whether it resolves and why not, the citing file and line, the anchors recorded at that file and those of them that are test anchors verifying the Spec.",
+          "Those rows let a view show, beside each pinned declaration of a Spec, the anchored lines that cite it, with no join of its own; a row reads as a test line only when a `test:` anchor at its file verifies the cited Spec, directly or through an example that verifies it, every other row stays a citation with its file and line, and no row says what a test asserts or whether it passed.",
+          "Entry citations, recipe 51, lists for a Pack, a list of Specs or the corpus each pinned declaration and every other cited entry with the lines that cite it, and every citation that does not resolve, and answers each citation that does not resolve, and only those, as a finding, so a corpus may name the shipped file as a rules file.",
+          "An unresolved citation stays in the table and reports only through the reader's rows and the recipe's answer, never as a Protocol finding: whether it fails a gate is the corpus's choice of rules file.",
+        ],
+        exampleSpace: {
+          given: [
+            "a probe corpus whose Spec pins the declaration {declaration:string}",
+            'a source file that {anchored:"carries a test anchor verifying the Spec"|"carries a code anchor referencing the Spec"|"carries no anchor"} and names the address {address:string} on line {line:number}',
+          ],
+          when: ["the graph is derived"],
+          then: [
+            "the Spec context lists {citations:number} entry citations",
+            'the citation {recorded:"resolves"|"does not resolve"|"is not recorded"}',
+            "the citing line reads as a test line: {testLine:boolean}",
+            "the shipped entry-citations file named as a rules file exits {exitCode:number}",
+          ],
+        },
+        ruleKeys: {
+          anchoredFilesOnly: "rules[0]",
+          citationToken: "rules[1]",
+          citationRow: "rules[2]",
+          citationTable: "rules[3]",
+          inferredClaim: "rules[4]",
+          confersNothing: "rules[5]",
+          readerRows: "rules[6]",
+          declarationLines: "rules[7]",
+          citationRecipe: "rules[8]",
+          unresolvedReports: "rules[9]",
+        },
+      },
+      design: {
+        citationTable:
+          "`citations?: readonly { address: string; file: string; line: number }[]` on the graph schema beside `locations`, rows sorted by `file`, then `line`, then `address`, in code-unit order; an absent table reads as empty, and the field is additive, so the schema version's minor part rises.",
+        citationAddress:
+          "`address` is the token as the prose-mention scan cuts it, its trailing punctuation removed; the sections it may name are the package's exported `ENTRY_ADDRESS_SECTIONS`, so an address section the grammar gains is read with no change here.",
+        readerCitation:
+          '`entryCitations: readonly { address: string; entry: string | null; resolves: boolean; reason: "malformed" | "section" | "entry" | null; file: string; line: number; anchors: readonly string[]; testAnchors: readonly string[]; claim: "inferred" }[]` on the Spec context, for every row whose address\'s Spec part, the text before its `#`, is this Spec\'s id, where `entry` is the location-table entry the address names, such as `design.<key>` or `rule[<i>]`, or null when it does not resolve, `reason` is address resolution\'s reason for a miss, `anchors` lists the ids of the anchors recorded at `file` in code-unit order, and `testAnchors` lists those of them that are `test:` anchors verifying this Spec, directly or through an example that verifies it; rows sort by `address`, then `file`, then `line`.',
+        citationsRecipe:
+          'recipe 51, entry citations, takes at most one scope, `params.pack` or `params.specs`, the whole corpus with neither, and `params.severity`, `"error"` by default or `"warning"`; both scopes, an id that does not resolve or another severity returns `{ diagnostics: [{ parameter, problem }] }` and no findings.',
+        citationsAnswer:
+          "`{ scope, totals: { citations, citedEntries, declarations, citedDeclarations, unresolved }, entries, unresolved, findings }`, where `scope` is `{ corpus: true }`, `{ pack }` or `{ specs }`, and the totals count within the scope: the citations whose Spec part names a Spec in it, the entry rows that some citation names, the pinned declarations, those an anchored line cites, and the unresolved rows.",
+        entryRow:
+          "`{ address, spec, pinned, line, citedBy: [{ file, line, anchors, testAnchors }] }`, one per pinned declaration in scope and per other entry in scope that a citation names, sorted by `address`; `line` is the entry's own recorded line or null, `citedBy` sorts by `file`, then `line`, and an uncited pinned declaration has an empty `citedBy`.",
+        unresolvedRow:
+          "`{ address, reason, file, line }`, one per citation that does not resolve whose Spec part names a Spec in scope, or every such citation with no scope, `reason` being address resolution's, `spec` for an absent Spec; rows sort by `file`, then `line`, then `address`.",
+        citationFinding:
+          '`{ validatorId: "unresolved-citation", subjectId, severity, message, file, line }` for each unresolved row, in that order, where `subjectId` is the address, `file` and `line` the citing site, and `message` reads `<address> cited at <file>:<line> does not resolve: <why>`, `<why>` as address resolution\'s finding words it.',
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:extraction.entry-citations.code-comment-cites-declaration",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/entry-citations.code-comment-cites-declaration.sdp.md",
+    title: "A code file's comment cites a declaration without reading as a test line",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the test-line rule on a source file that carries a code anchor and names a pinned declaration's address in a comment.",
+        assumptions: [
+          "The world writes the probe corpus of the test-title example and a source file whose comment-form code anchor references that Spec and whose line comment, on the line the step names, holds the address. It derives the graph and reads the Spec context's entry citations, the row's `resolves`, its `anchors`, which name the code anchor, and its `testAnchors`, which are empty.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec pins the declaration {declaration: "spec:probe.one#design.typeOne"}',
+              'a source file that {anchored: "carries a code anchor referencing the Spec"} and names the address {address: "spec:probe.one#design.typeOne"} on line {line: 9}',
+            ],
+            when: ["the graph is derived"],
+            then: [
+              "the Spec context lists {citations: 1} entry citations",
+              'the citation {recorded: "resolves"}',
+              "the citing line reads as a test line: {testLine: false}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.entry-citations.test-title-cites-declaration",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/entry-citations.test-title-cites-declaration.sdp.md",
+    title: "A test title in an anchored file cites a pinned declaration",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the citation record on a test file that carries a test anchor and names a pinned declaration's address as a test title.",
+        assumptions: [
+          "The world writes a probe corpus of one story-altitude behavior Spec stating `idea` with an Intent outcome and one Design entry, `typeOne`, whose value opens with the code span `type One = string`. It writes a test file that carries a constant-form test anchor verifying that Spec and, on the line the step names, calls `test` with the address as its title. It derives the graph, reads the Spec context's entry citations, the row's `resolves` and whether its `testAnchors` names the file's anchor, then runs `sdp validate` on the probe root with `dist/recipes/51-entry-citations.js` named by `--rules`.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec pins the declaration {declaration: "spec:probe.one#design.typeOne"}',
+              'a source file that {anchored: "carries a test anchor verifying the Spec"} and names the address {address: "spec:probe.one#design.typeOne"} on line {line: 9}',
+            ],
+            when: ["the graph is derived"],
+            then: [
+              "the Spec context lists {citations: 1} entry citations",
+              'the citation {recorded: "resolves"}',
+              "the citing line reads as a test line: {testLine: true}",
+              "the shipped entry-citations file named as a rules file exits {exitCode: 0}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.entry-citations.unanchored-file-unread",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/entry-citations.unanchored-file-unread.sdp.md",
+    title: "A file that carries no anchor is not read for citations",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the anchored-file rule on a test file with no anchor that names a pinned declaration's address.",
+        assumptions: [
+          "The world writes the probe corpus of the test-title example and the same test file without its test anchor, derives the graph and reads the Spec context's entry citations.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec pins the declaration {declaration: "spec:probe.one#design.typeOne"}',
+              'a source file that {anchored: "carries no anchor"} and names the address {address: "spec:probe.one#design.typeOne"} on line {line: 9}',
+            ],
+            when: ["the graph is derived"],
+            then: [
+              "the Spec context lists {citations: 0} entry citations",
+              'the citation {recorded: "is not recorded"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.entry-citations.unresolved-citation",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/extraction/entry-citations.unresolved-citation.sdp.md",
+    title:
+      "A citation of an entry its Spec lacks reports through the recipe, never as a Protocol finding",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the unresolved path on an anchored test file that names a Design key its Spec does not carry.",
+        assumptions: [
+          "The world writes the probe corpus and anchored test file of the test-title example, the title naming the address below. It derives the graph and reads the Spec context's entry citations, checks that the validation report holds no finding about the citation, then runs the shipped entry-citations file as a rules file as that example does.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec pins the declaration {declaration: "spec:probe.one#design.typeOne"}',
+              'a source file that {anchored: "carries a test anchor verifying the Spec"} and names the address {address: "spec:probe.one#design.typeTwo"} on line {line: 9}',
+            ],
+            when: ["the graph is derived"],
+            then: [
+              "the Spec context lists {citations: 1} entry citations",
+              'the citation {recorded: "does not resolve"}',
+              "the shipped entry-citations file named as a rules file exits {exitCode: 1}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
 ] as const;

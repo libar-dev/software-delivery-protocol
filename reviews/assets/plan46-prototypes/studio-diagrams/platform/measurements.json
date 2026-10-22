@@ -1,0 +1,127 @@
+{
+  "bound": 40,
+  "edgeBound": 100,
+  "synthetic": 0,
+  "diagrams": [
+    {
+      "diagram": "architecture",
+      "nodes": 12,
+      "edges": 36,
+      "width": 1458,
+      "height": 476,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:example.inventory-context",
+      "nodes": 6,
+      "edges": 2,
+      "width": 1663,
+      "height": 256,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:example.inventory-domain",
+      "nodes": 2,
+      "edges": 1,
+      "width": 364,
+      "height": 240,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:example.orders-context",
+      "nodes": 6,
+      "edges": 2,
+      "width": 1542,
+      "height": 256,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:example.orders-domain",
+      "nodes": 2,
+      "edges": 1,
+      "width": 334,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:example.parent",
+      "nodes": 13,
+      "edges": 9,
+      "width": 1528,
+      "height": 352,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:platform.command",
+      "nodes": 13,
+      "edges": 6,
+      "width": 1954,
+      "height": 336,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:platform.context",
+      "nodes": 10,
+      "edges": 2,
+      "width": 1870,
+      "height": 336,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:platform.gate",
+      "nodes": 7,
+      "edges": 4,
+      "width": 972,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:platform.kernel",
+      "nodes": 2,
+      "edges": 0,
+      "width": 614,
+      "height": 112,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:platform.read-model",
+      "nodes": 10,
+      "edges": 4,
+      "width": 1947,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "trace of spec:platform.transactional-domain-platform (64 before folding)",
+      "nodes": 14,
+      "edges": 13,
+      "width": 1631,
+      "height": 552,
+      "drawn": true
+    },
+    {
+      "diagram": "trace of spec:application.first-experiment (59 before folding)",
+      "nodes": 28,
+      "edges": 27,
+      "width": 1565,
+      "height": 1280,
+      "drawn": true
+    },
+    {
+      "diagram": "trace of spec:command.command-pipeline (52 before folding)",
+      "nodes": 40,
+      "edges": 39,
+      "width": 1571,
+      "height": 1520,
+      "drawn": true
+    },
+    {
+      "diagram": "trace of spec:decisions.d03-events-only-source-of-next-state (12 before folding)",
+      "nodes": 12,
+      "edges": 11,
+      "width": 1444,
+      "height": 784,
+      "drawn": true
+    }
+  ]
+}

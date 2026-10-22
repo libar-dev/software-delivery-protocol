@@ -1,0 +1,66 @@
+---
+id: pack:adopter-speed-v1
+specs:
+  - spec:consumers.agent-surface.evaluation-sink
+  - spec:consumers.agent-surface.evaluation-sink.exported-evaluator
+  - spec:consumers.agent-surface.evaluation-sink.recipe-call
+  - spec:consumers.agent-surface.evaluation-sink.unknown-recipe
+  - spec:validation.corpus-rules
+  - spec:validation.corpus-rules.params-edit-starts-a-cycle
+  - spec:validation.corpus-rules.rules-edit-starts-a-cycle
+  - spec:validation.corpus-rules.unreadable-params-fail-one-file
+  - spec:consumers.validate-watch
+  - spec:consumers.agent-surface.address-and-cycle-recipes
+  - spec:consumers.agent-surface.address-and-cycle-recipes.chain-reports-nothing
+  - spec:consumers.agent-surface.address-and-cycle-recipes.cycle-fails-a-rules-run
+  - spec:consumers.agent-surface.address-and-cycle-recipes.unresolved-address-fails-a-rules-run
+  - spec:validation.external-registers
+  - spec:validation.external-registers.uncited-on-request
+  - spec:validation.external-registers.unknown-and-retired
+  - spec:consumers.command-line
+  - spec:consumers.command-line.generate-check-failure
+  - spec:consumers.command-line.generate-writes-every-root
+  - spec:consumers.command-line.verb-help-touches-nothing
+  - spec:carrier.step-keys
+  - spec:carrier.step-keys.conflicting-example-key-withheld
+  - spec:carrier.step-keys.gherkin-keyed-step-stays-bound
+  - spec:carrier.step-keys.key-equal-to-a-skeleton-withheld
+  - spec:carrier.step-keys.malformed-marker-refused
+  - spec:carrier.step-keys.renamed-key-breaks
+  - spec:carrier.step-keys.repeated-key-refused
+  - spec:carrier.step-keys.reworded-keyed-step-stays-bound
+  - spec:carrier.step-keys.reworded-unkeyed-step-breaks
+  - spec:carrier.step-keys.two-keys-on-one-step-refused
+  - spec:carrier.step-keys.typescript-keyed-step-imports-keyed
+  - spec:extraction.executable-contracts
+  - spec:extraction.runnable-modules
+  - spec:model.term-addresses
+  - spec:model.term-addresses.keyed-term-resolves
+  - spec:model.term-addresses.malformed-term-marker-refused
+  - spec:model.term-addresses.repeated-term-key-refused
+  - spec:model.term-addresses.typescript-term-imports-keyed
+  - spec:model.term-addresses.unknown-term-key-refused
+  - spec:decisions.checked-mentions
+  - spec:extraction.entry-citations
+  - spec:extraction.entry-citations.code-comment-cites-declaration
+  - spec:extraction.entry-citations.test-title-cites-declaration
+  - spec:extraction.entry-citations.unanchored-file-unread
+  - spec:extraction.entry-citations.unresolved-citation
+  - spec:consumers.context-bundle
+  - spec:consumers.context-bundle.oversized-member-named
+  - spec:consumers.context-bundle.parts-cover-the-pack
+  - spec:consumers.readiness-planner
+  - spec:consumers.readiness-planner.cycle-shares-a-round
+  - spec:consumers.readiness-planner.decision-first
+  - spec:consumers.readiness-planner.dependency-order
+  - spec:consumers.readiness-planner.owner-question-holds
+  - spec:consumers.upgrade-kit
+  - spec:consumers.upgrade-kit.capability-adoption
+  - spec:consumers.upgrade-kit.capability-adoption.counts-a-corpus
+  - spec:consumers.upgrade-kit.rule-key-proposal
+  - spec:consumers.upgrade-kit.rule-key-proposal.collision-and-unkeyable
+  - spec:consumers.upgrade-kit.rule-key-proposal.proposal-applies-clean
+---
+# An adopter at full speed
+
+What a corpus needs to move onto the Protocol's capabilities at scale and keep designing fast. First the reach of a body and a rules file: shipped recipes called as functions, recipes that answer as rules files, rules and parameter files watched, outside registers checked by pattern, help on every verb and one verb that writes every projection root. Then keys that survive rewording, for example steps and for Model terms, and the test lines that cite a pinned declaration. Then reading material that fits a budget in parts. Last, the order a person makes the waiting statements in, and the kit that shows a corpus what it could adopt next. Each Spec is followed by the examples that verify it.

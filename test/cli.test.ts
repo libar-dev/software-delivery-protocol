@@ -151,6 +151,8 @@ describe("sdp cli", () => {
       ".agents/skills/sdp-agent-surface/SKILL.md",
       ".agents/skills/sdp-authoring/SKILL.md",
       ".agents/skills/sdp-sessions/SKILL.md",
+      ".agents/skills/sdp-studio/SKILL.md",
+      ".agents/skills/sdp-vault/SKILL.md",
       "docs/agent-surface/recipes.md",
       "docs/agent-surface/architecture.md",
       "schemas/sdp-proposal-1.schema.json",
@@ -306,44 +308,9 @@ describe("sdp cli", () => {
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
-      for (const [file, line, target, specId] of [
-        [
-          "specs/consumers/obsidian-vault.iteration.sdp.md",
-          30,
-          "spec:consumers.validate-watch",
-          "spec:consumers.obsidian-vault.iteration",
-        ],
-        [
-          "specs/consumers/spec-studio.lenses.sdp.md",
-          30,
-          "spec:consumers.structural-mermaid",
-          "spec:consumers.spec-studio.lenses",
-        ],
-        [
-          "specs/consumers/spec-studio.lenses.sdp.md",
-          37,
-          "spec:observation.run-evidence",
-          "spec:consumers.spec-studio.lenses",
-        ],
-        [
-          "specs/consumers/spec-studio.verification-panels.sdp.md",
-          28,
-          "spec:observation.run-evidence",
-          "spec:consumers.spec-studio.verification-panels",
-        ],
-        [
-          "specs/consumers/structural-mermaid.sdp.md",
-          23,
-          "spec:consumers.spec-studio.lenses",
-          "spec:consumers.structural-mermaid",
-        ],
-      ] as const) {
-        expect(stderr).toContain(
-          `${file}:${String(line)} — [warning] conformance/prose-mentions — Mention of "${target}" in "${specId}"`,
-        );
-      }
-      // Re-measured from the refreshed carriers and their retained warning pairs.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 6 warnings");
+      expect(stderr).not.toContain("conformance/prose-mentions");
+      // Re-measured from the refreshed carriers: no prose-mention pair is retained.
+      expect(capture.readStdout()).toContain("validate: 0 errors · 1 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
@@ -994,6 +961,7 @@ export const probe = spec({
     try {
       expect(runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
       const registrar = join(root, "test/orders/orders.create-order.valid-cart.test.generated.ts");
+      writeFileSync(registrar, "Changed registrar bytes require replacement.\n", "utf8");
       const capture = createCaptureOutput();
 
       expect(
@@ -1795,7 +1763,9 @@ relations: {}
       expect(exitCode).toBe(1);
       expect(created).toBe(0);
       expect(capture.readStdout()).toBe("");
-      expect(capture.readStderr()).toBe(`sdp ${command}: --watch is only valid on validate.\n`);
+      expect(capture.readStderr()).toBe(
+        `sdp ${command}: --watch is only valid on validate, vault or studio.\n`,
+      );
     },
   );
 
@@ -2455,7 +2425,7 @@ describe("sdp --version", () => {
     expect(SDP_HELP_TEXT).toContain("  sdp --version\n");
     expect(SDP_HELP_TEXT).toContain("sdp <package version> (<commit>)");
     expect(SDP_HELP_TEXT).toContain("[--params JSON | --params @PATH | --params KEY=@PATH]...");
-    expect(SDP_HELP_TEXT).toContain("Four bindings are injected");
+    expect(SDP_HELP_TEXT).toContain("Five bindings are injected");
     expect(SDP_HELP_TEXT).toContain("dist/recipes/NN-slug.js");
   });
 

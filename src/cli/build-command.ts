@@ -15,6 +15,7 @@ import { generateContracts } from "../codegen/contracts.js";
 import { extract } from "../extract/index.js";
 import { serializeGraph } from "../extract/serialize.js";
 import type { GraphSchema } from "../graph/schema.js";
+import type { ValidationReport } from "../validate/contracts.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { removeArtifact, removeArtifacts } from "./artifacts.js";
@@ -51,6 +52,32 @@ export interface BuildHooks {
 export interface BuildOutcome {
   readonly exitCode: number;
   readonly graph?: GraphSchema;
+  readonly extractionReport?: ValidationReport;
+}
+
+const buildOutputs = {
+  graph: "generated/graph.json",
+  contracts: "generated/contracts",
+  registrars: "generated/registrars.json",
+  imports: "generated/imports.json",
+} as const;
+const projectionOutputs = ["design-review", "census", "mermaid", "gherkin", "spec-studio"].map(
+  (name) => `generated/${name}`,
+);
+export const buildOwnedPaths = [...Object.values(buildOutputs), ...projectionOutputs].flatMap(
+  (path) => [path, `${path}.tmp`],
+);
+
+export function buildOwnedRegistrarPaths(
+  root: string,
+  next: readonly string[] = [],
+): readonly string[] {
+  const prior = readRegistrarManifest(
+    join(root, buildOutputs.registrars),
+    root,
+    realpathSync.native(root),
+  );
+  return [...new Set([...prior, ...next])].sort().flatMap((path) => [path, `${path}.tmp`]);
 }
 
 function contractFilesEqual(
@@ -138,7 +165,7 @@ function confinedRegistrarPath(
   let existingParentReal: string;
 
   try {
-    existingParentReal = realpathSync(existingParent);
+    existingParentReal = realpathSync.native(existingParent);
   } catch (error) {
     throw new Error(`unsafe registrar sibling path "${path}": ${errorMessage(error)}`);
   }
@@ -158,7 +185,7 @@ function confinedRegistrarPath(
   let parentReal: string;
 
   try {
-    parentReal = realpathSync(lexicalParent);
+    parentReal = realpathSync.native(lexicalParent);
   } catch (error) {
     throw new Error(`unsafe registrar sibling path "${path}": ${errorMessage(error)}`);
   }
@@ -269,22 +296,16 @@ export function runBuild(
   const runGenerateContracts = hooks.generateContracts ?? generateContracts;
   const recoveryRm = hooks.rmSync ?? rmSync;
   const write = hooks.writeFileSync ?? writeFileSync;
-  const graphPath = join(resolvedRoot, "generated", "graph.json");
-  const importsPath = join(resolvedRoot, "generated", "imports.json");
-  const contractsPath = join(resolvedRoot, "generated", "contracts");
-  const registrarManifestPath = join(resolvedRoot, "generated", "registrars.json");
-  const registrarRootReal = realpathSync(resolvedRoot);
+  const graphPath = join(resolvedRoot, buildOutputs.graph);
+  const importsPath = join(resolvedRoot, buildOutputs.imports);
+  const contractsPath = join(resolvedRoot, buildOutputs.contracts);
+  const registrarManifestPath = join(resolvedRoot, buildOutputs.registrars);
+  const registrarRootReal = realpathSync.native(resolvedRoot);
   let priorRegistrarPaths: readonly string[] = [];
   let nextRegistrarPaths: readonly string[] = [];
-  const projectionPaths = [
-    join(resolvedRoot, "generated", "design-review"),
-    join(resolvedRoot, "generated", "census"),
-    join(resolvedRoot, "generated", "mermaid"),
-    join(resolvedRoot, "generated", "gherkin"),
-    join(resolvedRoot, "generated", "spec-studio"),
-  ];
+  const projectionPaths = projectionOutputs.map((path) => join(resolvedRoot, path));
 
-  const failBuild = (message: string): BuildOutcome => {
+  const failBuild = (message: string, report?: ValidationReport): BuildOutcome => {
     writeStderr(output, message);
     removeArtifacts(
       [
@@ -313,7 +334,7 @@ export function runBuild(
       }
     }
 
-    return { exitCode: 1 };
+    return { exitCode: 1, ...(report === undefined ? {} : { extractionReport: report }) };
   };
 
   for (const projectionPath of projectionPaths) {
@@ -364,7 +385,10 @@ export function runBuild(
         output,
         `${String(result.counts.specs)} specs · ${String(result.counts.packs)} packs · ${String(result.counts.anchors)} anchors → ${String(result.graph.nodes.length)} nodes · ${String(result.graph.edges.length)} edges (${String(extractionErrorCount)} errors, ${String(warningCount)} warnings)\n`,
       );
-      return failBuild(`sdp ${command}: hard errors present — graph.json not written.\n`);
+      return failBuild(
+        `sdp ${command}: hard errors present — graph.json not written.\n`,
+        result.report,
+      );
     }
 
     const serialized = serializeGraph(result.graph);
@@ -463,6 +487,7 @@ export function runBuild(
       }
     }
 
+    const changedRegistrarPaths = new Set<string>();
     for (const [relativePath, content] of contracts.registrars) {
       const createdRegistrarPath = confinedRegistrarPath(
         resolvedRoot,
@@ -482,13 +507,15 @@ export function runBuild(
         throw new Error(`unsafe registrar sibling path "${relativePath}"`);
       }
 
+      if (existsSync(registrarPath) && readFileSync(registrarPath, "utf8") === content) continue;
       write(`${registrarPath}.tmp`, content, "utf8");
+      changedRegistrarPaths.add(relativePath);
     }
 
     const registrarManifestTemporaryPath = `${registrarManifestPath}.tmp`;
     write(registrarManifestTemporaryPath, serializeRegistrarManifest(nextRegistrarPaths), "utf8");
 
-    // Every owed byte now exists in a temporary location. Publish, reconcile, and remove stale
+    // Changed bytes now exist in temporary locations. Publish, reconcile, and remove stale
     // siblings; any later failure falls through failBuild, which removes the whole known set so
     // partially current output cannot survive.
     renameSync(temporaryPath, graphPath);
@@ -505,7 +532,7 @@ export function runBuild(
         rmSync(registrarPath, { force: true });
       }
     }
-    for (const relativePath of nextRegistrarPaths) {
+    for (const relativePath of changedRegistrarPaths) {
       const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, relativePath);
 
       if (registrarPath === undefined) {

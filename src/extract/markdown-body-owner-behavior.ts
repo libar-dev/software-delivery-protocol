@@ -104,6 +104,11 @@ export function mapIntent(
         // The GWT result key is the literal word `then`, written directly here and at the
         // vocabulary site below — never assembled from fragments; nothing in the toolchain
         // requires or rewards indirection, and the frozen key set stays greppable.
+        for (const row of fence.stepLines)
+          entryLines.push({
+            entry: `behavior.examples[0].${row.phase}[${String(row.index)}]`,
+            line: row.line,
+          });
         const example: Record<string, unknown> = {
           given: fence.steps.given,
           when: fence.steps.when,
@@ -255,6 +260,7 @@ export function mapExampleSpace(
   lines: readonly MarkdownLine[],
   file: string,
   findings: Finding[],
+  entryLines: ReifiedEntryLine[],
 ): void {
   const parsed = parseSectionContent(lines, file, findings);
   addDescription(section, parsed.description, file, lines[0]?.line ?? 1, findings);
@@ -281,4 +287,9 @@ export function mapExampleSpace(
     then: fence.steps.result,
   };
   section.exampleSpace = vocabulary;
+  for (const row of fence.stepLines)
+    entryLines.push({
+      entry: `behavior.exampleSpace.${row.phase}[${String(row.index)}]`,
+      line: row.line,
+    });
 }

@@ -1,6 +1,6 @@
 ---
 name: sdp-authoring
-description: Author and mature Protocol Specs through the graph-first workflow. Use when creating or editing `.sdp.md` or lawful `.sdp.gherkin` carriers, deciding the honest readiness rung, promoting inline content, generating executable contracts, binding examples or implementation anchors, mutation-probing evidence, or preparing a Spec for human review and a `ready` statement.
+description: Author and mature a corpus's Specs and Packs through the graph-first workflow. Use when creating or editing `.sdp.md` or `.sdp.gherkin` carriers, choosing the honest readiness rung, promoting inline content, binding code, tests or executable examples, preparing a Spec for review and a `ready` statement, upgrading a corpus to new Protocol capabilities, or writing and changing corpus rules files.
 ---
 
 # Author Specs through the graph
@@ -62,10 +62,10 @@ runner.
    After the carrier exists, `sdp validate --watch [root]` is the authoring loop: it installs the
    watcher first, then re-runs the same `validate` path from scratch on carrier create, change,
    delete, or rename. Findings print and the process stays alive; operator stop (SIGINT) exits 0.
-   `--watch` is validate-only and cannot combine with `--check-clean`. The watcher ignores
+   `validate --watch` cannot combine with `--check-clean`. The watcher ignores
    `generated`, `dist`, `node_modules`, `coverage`, dot-directories, configured `--exclude` prefixes,
-   and non-carrier paths. Events during a run coalesce to one pending rerun. In this source
-   checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
+   and non-carrier paths, except named rules and parameter files. Events during a run coalesce to
+   one pending rerun. In this source checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
    not invent extra watch flags:
 
    ```sh
@@ -205,21 +205,8 @@ so it needs no extra tag, status key, or side table.
   and a change's review scope from changed-file blast radius (recipe 4).
   In prose, name the recipe and leave the number out.
 
-Run a project policy, such as a required Design key or a naming rule, as an operator-selected
-rules file through `sdp validate --rules PATH [--params FORM]...`. The file is a local async
-JavaScript body with `g`, `graph`, `report` and `params`, returning `{ findings }`, as
-`spec:validation.corpus-rules` states. Each `--params` follows its own `--rules`; the query grammar
-admits JSON, `@PATH` and `KEY=@PATH`, and repeatable parameters merge within that file only:
-
-```sh
-pnpm exec sdp validate . --rules design/policy.js --params '{"requiredKey":"id"}' --rules node_modules/@libar-dev/software-delivery-protocol/dist/recipes/42-the-architecture-walk.js --params @design/architecture.json
-```
-
-Corpus findings name their rule and rules file and print apart from Protocol conformance and
-honesty findings. The corpus summary also counts failed files; any Protocol error, corpus error
-or failed rules file exits 1. Under `--watch`, each carrier cycle rereads the rules files, but a
-rules-file edit alone starts no cycle. The architecture walk is recipe 42; planned against
-realized components is recipe 43. These are corpus guidance, never Protocol validators.
+- Group a body of work in a Pack named for its capability, never its plan number; keep its Specs in reading order. Membership confers no readiness, delivery fact or gate; the Pack remains a review aggregate after the work ends.
+- A plan file points to the Pack and carrying Specs for intended truth and derived state. It may keep an advisory execution and recovery record; plan numbering, recorded work order and staleness confer no graph structure or workflow authority.
 
 ### Say why a relation holds
 
@@ -263,6 +250,23 @@ and a reviewer.
 - Once the code and its verifier exist, slimming candidates (recipe 39) lists pinned declarations
   the bound code may now carry. Compare each with the code; removing one is your edit, never the
   recipe's.
+
+### Key a step or a term
+
+To keep a step's binding through later rewording, add its key after the keyword in the parent's
+vocabulary, for example `Given [#cartSize] a cart with {items:number} items`. A child step
+matching that vocabulary step inherits the key; omit its marker or repeat the same key. Keying
+only the child when the vocabulary step is unkeyed withholds its contract.
+
+Introducing a key changes the contract key from the skeleton to that key. Update any directly
+authored handler and, for a Then step, the oracle's outcome `kind`; regenerate contracts and
+adopted registrars, then typecheck and run the bound examples. Later rewording must update the
+vocabulary and its examples together. Follow `spec:carrier.step-keys#rule.vocabularyHome` and
+`spec:carrier.step-keys#rule.contractKey`. The rule-key proposal (recipe 48) proposes rule keys
+only and performs no step-key migration.
+
+A Model definition may begin with `[#key]` after the term separator; its address is
+`spec:<id>#term.<key>`, as `spec:model.term-addresses` states.
 
 ### Author behavior and examples in Gherkin
 
@@ -394,8 +398,8 @@ export async function rebuild(stream: string): Promise<void> {
 - The file is the binding grain of both forms. A block names no declaration, and the graph records
   no symbol, so keep a file's blocks together rather than writing one block above each
   declaration.
-- `sdp validate --watch` re-runs on carrier edits only, never on source edits. After editing an
-  anchor, run `sdp validate` or query the graph again.
+- `sdp validate --watch` re-runs on edits to carriers and named rules and parameter files,
+  never on source edits. After editing an anchor, run `sdp validate` or query the graph again.
 
 The law is `spec:decisions.anchor-comment-form`. The decorator form stays an unextracted
 representation and mints nothing.
@@ -485,6 +489,16 @@ names the document realization rather than the test body, and file-level blast r
 coverage-unknown for the Markdown file. This repository binds its own skills exactly this way in
 `test/skills.test.ts`.
 
+### Cite an entry from source
+
+An entry address cited in source is recorded only when the source file carries a recognized
+anchor. Cite it in the comment or test title beside the implementation or check, and inspect
+entry citations (recipe 51). A non-empty `testAnchors` list identifies a citing file whose test
+anchor verifies the cited Spec directly or through an example. It records no assertion result.
+Unresolved source citations become corpus findings only when recipe 51 is selected through
+`validate --rules`; ordinary validation does not report them. The law is
+`spec:extraction.entry-citations`.
+
 ## Make an example executable
 
 1. Put the typed `gwt-vocabulary` example space on the parent.
@@ -493,43 +507,47 @@ coverage-unknown for the Markdown file. This repository binds its own skills exa
    exercises on its `verifies` target, `verifies: { target: spec:<parent>, exercises: [graphOnly] }`;
    validation checks each key against the parent, and rule coverage (recipe 34) lists the keyed
    rules no example exercises. The list confers nothing: `verifies` stays whole-Spec.
-3. Generate contracts and registrars from the extraction root. In this source checkout use the
-   repository scripts, which supply the three fixture exclusions:
+3. Create the authored test suite first, with a top-level `specTest` anchor whose `verifies`
+   names the example. The build uses that suite's path to place the registrar sibling. Generate
+   the contracts and registrar; step 5 imports and activates that sibling.
+
+   In the Protocol checkout, run `npm run generate:self-hosting`. Run `npm run generate:example`
+   as well when the worked example is in scope. The self-hosting script supplies the fixture
+   exclusions, and both scripts also publish the five page roots:
 
    ```sh
    npm run generate:self-hosting
    npm run generate:example
-   pnpm --silent sdp build . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
    ```
 
-   The `sdp` script is the same verb with the exclusions written out. In an adopter, select that
-   repository's root and exclusions:
+   In an adopter, run `pnpm exec sdp build .` with its root and exclusions to generate contracts
+   and registrars. Use `pnpm exec sdp generate .` when the five page roots and vault are also
+   wanted:
 
    ```sh
    pnpm exec sdp build .
+   pnpm exec sdp generate .
    ```
 
    Diagnose contract refusals from `sdp build`; `sdp q` receives graph-validation findings, not
    codegen findings.
 
    The build emits one registrar per bindable example, named `<spec-id-path>.test.generated.ts`
-   and placed beside the authored suite whose `specTest` anchor verifies that example; the Spec ID
-   owns the filename, so one consolidated suite can bind many examples without collisions.
-   Repository generation also publishes the independent Design Review, census, Mermaid,
-   Gherkin-shaped read roots, and Studio pages. Use the repository generate/check scripts to certify
-   the complete projection suite; do not treat the Gherkin read root as an authored carrier. In an adopter,
-   each publisher leaves only its own root current, because every build first removes all five;
-   run the publisher for the root you need to read.
+   and placed beside the authored suite whose `specTest` anchor verifies that example; without
+   that anchored suite no registrar is emitted. The Spec ID owns the filename, so one consolidated
+   suite can bind many examples without collisions. The Gherkin read root is a published page
+   root, never an authored carrier. For publishing, follow `sdp-agent-surface`'s "Publish pages
+   and notes" and `spec:consumers.command-line`.
 
 4. Author the oracle for the space and bind it with a top-level `specOracle` anchor whose `models`
    names the parent. Eligibility follows example-space ownership, not kind: a missing target, a
    wrong namespace, an absent space, or a competing oracle is a conformance error, and consumers
    fail closed. Type the oracle against the generated space contract and treat `unspecified` as a
    first-class answer. Follow `spec:validation.oracle-target-eligibility`.
-5. Activate the registrar from the authored suite. Keep one top-level `specTest` anchor with a
-   non-empty `verifies` naming the example. Import the generated registrar sibling and make one
-   activation call passing the five adapters: `createWorld`, `invoke`, `observe`, `expected`, and
-   optional `assertions`. Import direction is authored to generated only; the generated module never
+5. Import the registrar sibling generated beside the anchored suite and activate it with
+   `createWorld`, `invoke`, `observe`, `expected`, and optional `assertions`, in one activation
+   call. Keep the suite's one top-level `specTest` anchor with a non-empty `verifies` naming the
+   example. Import direction is authored to generated only; the generated module never
    imports authored code. The registrar owns runner registration, step dispatch, the three-way
    comparator, and failure rendering. The law is `spec:extraction.runnable-modules`.
 6. Commit an adopted registrar. A registrar becomes adopted the moment tracked authored code
@@ -553,11 +571,80 @@ Ready examples normally carry verification evidence rather than build-backlog wo
 backlog recipe excludes them while reporting their count and any missing verifier binding; it does
 not infer `implemented` through their parent.
 
+## Write and run corpus rules
+
+Run a project policy, such as a required Design key or a naming rule, as an operator-selected
+rules file through `sdp validate --rules PATH [--params FORM]...`. The file is a local async
+JavaScript body with `g`, `graph`, `report`, `params` and `recipes`, returning `{ findings }`, as
+`spec:validation.corpus-rules` states. For custom findings, read
+`spec:validation.corpus-rules#design.ruleFinding`; for permitted inputs, read
+`spec:validation.corpus-rules#rule.readsGraphOnly`. Keep rule implementations over the graph,
+report and supplied parameters.
+
+Start with a shipped rules-capable recipe when it expresses the corpus's policy: address
+resolution, dependency cycles, the architecture walk, external registers or entry citations
+(recipes 25, 26, 42, 50 and 51). Each shipped file also runs unchanged as a rules file. Pass each
+call only the parameters its catalog entry documents: recipe 25 takes `addresses` and `severity`,
+while recipe 26 takes `severity` alone. Recipe 50 takes a register object and a pattern, commonly
+supplied with `--params register=@PATH`.
+
+Each `--params` follows its own `--rules`; the query grammar admits JSON, `@PATH` and `KEY=@PATH`,
+and repeatable parameters merge within that file only:
+
+```sh
+pnpm exec sdp validate . --rules design/policy.js --params '{"requiredKey":"id"}' --rules node_modules/@libar-dev/software-delivery-protocol/dist/recipes/42-the-architecture-walk.js --params @design/architecture.json
+```
+
+A rules file combining address resolution and dependency cycles can be:
+
+```js
+const severity = params.severity ?? "error";
+const addresses = await recipes(25, { addresses: params.addresses ?? [], severity });
+const cycles = await recipes(26, { severity });
+
+for (const answer of [addresses, cycles]) {
+  if (!Array.isArray(answer.findings)) {
+    throw new Error(JSON.stringify(answer));
+  }
+}
+
+return { findings: [...addresses.findings, ...cycles.findings] };
+```
+
+Pass a recipe's subject explicitly, as `addresses` is here: a recipe called without its parameter
+falls back to the catalog's sample. Throw when an answer has no `findings` array, so recipe
+diagnostics fail the file instead of reading as an empty success.
+
+Corpus findings name their rule and rules file and print apart from Protocol conformance and
+honesty findings. The corpus summary also counts failed files; any Protocol error, corpus error
+or failed rules file exits 1. Under `--watch`, every cycle rereads rules and parameter files;
+edits to either start a cycle wherever they live. Rules files and the recipes they call are
+corpus guidance, never Protocol validators.
+
+## Upgrade a corpus
+
+For a corpus upgrade, follow the shipped upgrade guide: `docs/agent-surface/upgrade-guide.md` in
+the Protocol checkout, or
+`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/upgrade-guide.md` in an
+adopter. It owns re-pinning and build verification, recipe 47's before and after measurements,
+recipe 48's proposal, the saved base graph, recipe 38's per-change check, validation and
+publication. Recipe 48's `proposal` may be null when no entry needs a key; review its `unkeyable`
+rows separately. Recipe 49 renders the proposal's memo.
+
 ## Review and state ready
 
 Regenerate the Design Review, inspect the Spec in context, and run recipes 7–11. Tooling never
 confers `ready`: after the floor clears and the evidence is reviewed, a human may state it by
 editing the canonical carrier.
+
+For a large review, read the complete scope through the context bundle (recipe 36), following
+`sdp-agent-surface`'s "Read a large scope in parts", which also covers a refused bundle. Use
+recipe 46 to order waiting statements and questions. Recipe 44 reports example-space coverage,
+recipe 45 reads external runs, and recipe 51 locates entry citations. Follow
+`spec:consumers.context-bundle` and `spec:consumers.readiness-planner`. To publish the Studio,
+stamp a preview or synchronize linked notes, follow `sdp-agent-surface`'s "Publish pages and
+notes". To apply intent a person composed in the Studio or wrote in the vault, follow
+`sdp-studio` or `sdp-vault`.
 
 The graph outranks this skill. If a recipe or instruction disagrees with current graph data or a
 carrying Spec, report the skill as drift and follow the graph and Spec.

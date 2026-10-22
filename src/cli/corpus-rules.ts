@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { posix, win32 } from "node:path";
 import type { RulesInput } from "./build-args.js";
-import { compileBody } from "./q-command.js";
+import { BodyParseError, evaluateBody } from "../reader/evaluate-body.js";
+import { mergeParams } from "./params.js";
 import { errorMessage, oneLine } from "./output.js";
 import type { GraphSchema } from "../graph/schema.js";
-import { createReader } from "../reader/reader.js";
 import type {
   CorpusFinding,
   CorpusValidationReport,
@@ -70,7 +70,8 @@ export async function runCorpusRules(
 ): Promise<CorpusValidationReport> {
   const corpusFindings: CorpusFinding[] = [];
   const corpusFailures: { rulesFile: string; reason: string }[] = [];
-  for (const { rulesFile, params } of files) {
+  for (const file of files) {
+    const { rulesFile } = file;
     let source: string;
     try {
       source = readFileSync(rulesFile, "utf8");
@@ -81,24 +82,37 @@ export async function runCorpusRules(
       });
       continue;
     }
-    let body: ReturnType<typeof compileBody>;
-    try {
-      body = compileBody(source);
-    } catch (error) {
-      corpusFailures.push({
-        rulesFile,
-        reason: oneLine(errorMessage(error)).replace(/^the body /u, ""),
-      });
-      continue;
+    let params = file.params;
+    if (file.rereadParams === true) {
+      let diagnostic = "";
+      const reread = mergeParams(
+        file.paramForms ?? [],
+        {
+          stderr: {
+            write(text) {
+              diagnostic += text;
+            },
+          },
+        },
+        "validate",
+      );
+      if (reread === undefined) {
+        corpusFailures.push({
+          rulesFile,
+          reason: `its parameters cannot be read (${oneLine(diagnostic)
+            .replace(/^sdp validate: /u, "")
+            .replace(/\.$/u, "")})`,
+        });
+        continue;
+      }
+      params = reread;
     }
     try {
-      const cloned = structuredClone(graph);
-      const answer: unknown = await body(
-        createReader(cloned),
-        cloned,
-        structuredClone(report),
-        structuredClone(params),
-      );
+      const answer = await evaluateBody(source, {
+        graph: structuredClone(graph),
+        report: structuredClone(report),
+        params: structuredClone(params),
+      });
       if (!object(answer) || !Array.isArray(answer.findings)) {
         let reason = "returned no findings array";
         if (object(answer) && Object.hasOwn(answer, "diagnostics"))
@@ -121,7 +135,13 @@ export async function runCorpusRules(
       if (failure === undefined) corpusFindings.push(...findings);
       else corpusFailures.push({ rulesFile, reason: failure });
     } catch (error) {
-      corpusFailures.push({ rulesFile, reason: `threw: ${oneLine(errorMessage(error))}` });
+      corpusFailures.push({
+        rulesFile,
+        reason:
+          error instanceof BodyParseError
+            ? error.message.replace(/^the body /u, "")
+            : `threw: ${oneLine(errorMessage(error))}`,
+      });
     }
   }
   return { ...report, corpusFindings, corpusFailures };

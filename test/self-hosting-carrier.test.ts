@@ -1,6 +1,20 @@
-import { readFileSync } from "node:fs";
+import { specOracle, oracleAnchorId } from "@libar-dev/software-delivery-protocol";
+import { oneLiteralBindingContract } from "../generated/contracts/carrier.slot-notation.one-literal-binding.contract.js";
+import { droppedListWarnsContract } from "../generated/contracts/model.open-question-fields.dropped-list-warns.contract.js";
+import type {
+  OpenQuestionFieldsConditions,
+  OpenQuestionFieldsOutcome,
+} from "../generated/contracts/model.open-question-fields.space.js";
+import { registerOneLiteralBinding } from "./carrier.slot-notation.one-literal-binding.test.generated.js";
+import { registerDroppedListWarns } from "./model.open-question-fields.dropped-list-warns.test.generated.js";
+import { generateContracts } from "../src/codegen/contracts.js";
+import { extract, schemaVersion } from "../src/index.js";
+import type { ExtractionResult } from "../src/index.js";
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { expect } from "vitest";
+import { expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
@@ -156,7 +170,7 @@ interface SlotWorld {
 }
 
 function createSlotWorld(point: Partial<SlotNotationConditions>): SlotWorld {
-  return { stepText: point.stepText ?? "", slots: undefined };
+  return { stepText: (point.stepText ?? "").replaceAll("'", '"'), slots: undefined };
 }
 
 function invokeSlotParse(world: SlotWorld): void {
@@ -173,6 +187,12 @@ function observeSlotCount(world: SlotWorld): SlotNotationOutcome {
     slotCount: world.slots.length,
   };
 }
+
+const slotNotationOracleAnchor = specOracle({
+  id: oracleAnchorId("oracle:protocol.slot-notation"),
+  models: ref("spec:carrier.slot-notation"),
+});
+void slotNotationOracleAnchor;
 
 function expectedSlotCount(point: Partial<SlotNotationConditions>): SlotNotationOutcome {
   if (point.stepText === undefined) {
@@ -233,4 +253,145 @@ registerRefusedGuess({
     // The stray brace stays prose in the skeleton; only the identifier-led group normalizes.
     expect(stepSkeleton(world.stepText)).toBe(skeleton);
   },
+});
+
+const oneLiteralBindingAnchor = specTest({
+  id: testAnchorId("test:protocol.slot-notation.one-literal-binding"),
+  verifies: ref("spec:carrier.slot-notation.one-literal-binding"),
+});
+void oneLiteralBindingAnchor;
+registerOneLiteralBinding({
+  createWorld: createSlotWorld,
+  invoke: invokeSlotParse,
+  observe: observeSlotCount,
+  expected: expectedSlotCount,
+  assertions: (world) => {
+    const { form, slotName } = paramsForStep(
+      oneLiteralBindingContract,
+      "the first group has the form {form} and the name {slotName}",
+    );
+    expect(world.slots?.[0]).toMatchObject({ form, name: slotName });
+    expect(stepSkeleton(world.stepText)).toBe(
+      paramsForStep(oneLiteralBindingContract, "the step skeleton is {skeleton}").skeleton,
+    );
+    const generated = generateContracts({
+      schemaVersion,
+      nodes: [
+        {
+          id: "spec:probe.slot-parent",
+          nodeType: "Primitive",
+          claim: "declared",
+          specKind: "rule",
+          altitude: "story",
+          readiness: "idea",
+          title: "Probe",
+          file: "probe.sdp.md",
+          sections: { behavior: { exampleSpace: { given: [world.stepText], when: [], then: [] } } },
+        },
+      ],
+      edges: [],
+    });
+    const params = paramsForStep(
+      oneLiteralBindingContract,
+      "contract generation declares {dimensionCount} dimensions and reports {generationFinding}",
+    );
+    const space = generated.files.get("probe.slot-parent.space.ts");
+    expect(space).toBeDefined();
+    expect(space?.match(/\{ name: /gu) ?? []).toHaveLength(params.dimensionCount);
+    expect(generated.findings.map((f) => f.validatorId)).toEqual([params.generationFinding]);
+  },
+});
+
+interface DroppedQuestionWorld {
+  construct: OpenQuestionFieldsConditions["construct"];
+  result?: ExtractionResult;
+}
+function createDroppedQuestionWorld(
+  point: Partial<OpenQuestionFieldsConditions>,
+): DroppedQuestionWorld {
+  return { construct: point.construct ?? "a non-static question text" };
+}
+function invokeDroppedQuestion(world: DroppedQuestionWorld): void {
+  const root = mkdtempSync(join(tmpdir(), "sdp-dropped-question-"));
+  const question =
+    world.construct === "a non-static question text"
+      ? "{ text: questionText(), blocking: true }"
+      : world.construct === "a non-static blocking flag"
+        ? '{ text: "An open question", blocking: blockingFlag() }'
+        : '{ text: "An open question", blocking: true }, ...otherQuestions';
+  try {
+    writeFileSync(
+      join(root, "probe.sdp.ts"),
+      `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const probe = spec({ id: specId("spec:probe.questions"), title: "Probe question drop", kind: "rule", altitude: "story", readiness: "idea", intent: { outcome: "Read the blocking question.", openQuestions: [${question}] }, behavior: { rules: ["Keep one rule."] } });`,
+    );
+    world.result = extract({ root });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+function observeDroppedQuestion(world: DroppedQuestionWorld): OpenQuestionFieldsOutcome {
+  const finding = world.result?.report.findings[0];
+  if (!finding) throw new Error("The non-static question must be reported.");
+  return {
+    kind: "the extractor reports {findingId} at severity {severity}",
+    findingId: finding.validatorId,
+    severity: finding.severity,
+  };
+}
+const droppedQuestionOracleAnchor = specOracle({
+  id: oracleAnchorId("oracle:protocol.open-question-fields"),
+  models: ref("spec:model.open-question-fields"),
+});
+void droppedQuestionOracleAnchor;
+
+function expectedDroppedQuestion(
+  point: Partial<OpenQuestionFieldsConditions>,
+): OpenQuestionFieldsOutcome {
+  return point.construct === undefined
+    ? unspecified
+    : {
+        kind: "the extractor reports {findingId} at severity {severity}",
+        findingId: "extract/non-static-section",
+        severity: "warning",
+      };
+}
+function assertDroppedQuestion(world: DroppedQuestionWorld, questionCount: number): void {
+  expect(world.result?.report.findings).toHaveLength(1);
+  const node = world.result?.graph.nodes.find((n) => n.id === "spec:probe.questions");
+  expect(node).toBeDefined();
+  expect(
+    node?.nodeType === "Primitive" ? (node.sections?.intent?.openQuestions ?? []) : undefined,
+  ).toHaveLength(questionCount);
+}
+const droppedListWarnsAnchor = specTest({
+  id: testAnchorId("test:protocol.open-question-fields.dropped-list-warns"),
+  verifies: ref("spec:model.open-question-fields.dropped-list-warns"),
+});
+void droppedListWarnsAnchor;
+registerDroppedListWarns({
+  createWorld: createDroppedQuestionWorld,
+  invoke: invokeDroppedQuestion,
+  observe: observeDroppedQuestion,
+  expected: expectedDroppedQuestion,
+  assertions: (world) => {
+    assertDroppedQuestion(
+      world,
+      paramsForStep(
+        droppedListWarnsContract,
+        "the Spec stays in the graph with {questionCount} open questions",
+      ).questionCount,
+    );
+  },
+});
+
+it.each([
+  "a non-static question text",
+  "a non-static blocking flag",
+  "a spread in the list",
+] as const)("drops the whole question list for %s", (construct) => {
+  const world = createDroppedQuestionWorld({ construct });
+  invokeDroppedQuestion(world);
+  expect(observeDroppedQuestion(world)).toEqual(expectedDroppedQuestion({ construct }));
+  assertDroppedQuestion(world, 0);
 });

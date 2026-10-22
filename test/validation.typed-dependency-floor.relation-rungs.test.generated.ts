@@ -46,6 +46,7 @@ export function registerRelationRungs<World>(
       (execution, params) => {
         compareContractOutcome(execution, {
           kind: "then",
+          key: "the matrix reports {targetFailures} target failures and {resolutionFailures} resolution failures and {questionFailures} blocking question failures",
           text: "the matrix reports {targetFailures} target failures and {resolutionFailures} resolution failures and {questionFailures} blocking question failures",
           params,
         });

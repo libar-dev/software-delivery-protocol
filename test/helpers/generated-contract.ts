@@ -14,7 +14,7 @@ export function paramsForStep<S extends string, PM extends Record<S, ParamShape>
   text: K,
 ): PM[K] {
   const step = contract.steps.find(
-    (candidate): candidate is ContractStep<K, PM[K]> => candidate.text === text,
+    (candidate): candidate is ContractStep<K, PM[K]> => candidate.key === text,
   );
 
   if (step === undefined) {

@@ -1,3 +1,4 @@
+import { extractFindingIds } from "./reify.js";
 import { setOwn } from "./set-own.js";
 import { relationOptionsRefusal } from "./authoring-normalization.js";
 import { Buffer } from "node:buffer";
@@ -10,7 +11,7 @@ import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, markdownFinding, markdownLine } from "./markdown-support.js";
 import { entryAddressSlotReason } from "./reify.js";
 
-const invalidIdFindingId = "extract/invalid-id";
+const invalidIdFindingId = extractFindingIds.invalidId;
 
 const nonStringPlainScalars =
   /^(?:true|false|null|~|0o[0-7]+|0x[0-9a-f]+|[-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+\.[0-9]*)|[-+]?\.inf|\.nan)$/iu;

@@ -935,18 +935,19 @@ export const decisionsSpecs = [
     sections: {
       intent: {
         outcome:
-          "Make a Spec id written in prose resolve, and make one keyed entry of an open section, one keyed open question, or one keyed entry of the primary behavior owner addressable, so a reference below the Spec level can be checked.",
+          "Make a Spec id written in prose resolve, and make one keyed entry of an open section, one keyed open question, one keyed entry of the primary behavior owner, or one keyed Model term addressable, so a reference below the Spec level can be checked.",
       },
       decision: {
         context:
           "Specs name other Specs, and single entries of them, in prose. Referential integrity reads edges and Pack references only. A prose id that does not resolve passes validation, a mention that no relation backs hides a dependent from blast radius, and finding every Spec that repeats an entry is a text search. The first adopter corpus carried its design as keyed entries, and most of its prose mentions had no declared relation.",
         decision:
-          "A Spec id in narrative or section text, outside `gwt` and `gwt-vocabulary` fences, is a mention. A mention that does not resolve is a conformance error. A mention of another Spec that shares no declared relation with the mentioning Spec, in either direction, is one warning per mentioning Spec and target Spec pair, whatever the number of locations; an address on the mentioning Spec's own id is checked for its entry and never warned. An entry address is a Spec id followed by `#`, the section name `design`, `ui`, `question`, or `rule`, a dot, and the entry's lower-camel ASCII key, as in `spec:<id>#design.<key>` or `spec:<id>#question.<key>`. A `design` or `ui` address resolves when the Spec exists and that section holds the key as its own key, other than `description`; a `question` address resolves when the Spec exists and one of its open questions carries that key. The `#` sub-part is reserved for the entry address in every namespace: a Spec's own id, a relation target, a Pack member or model reference, an anchor id or target, and the `specId` and `ref` builders all refuse it. A mention mints no edge, and the reader gains no join.",
+          "A Spec id in narrative or section text, outside `gwt` and `gwt-vocabulary` fences, is a mention. A mention that does not resolve is a conformance error. A mention of another Spec that shares no declared relation with the mentioning Spec, in either direction, is one warning per mentioning Spec and target Spec pair, whatever the number of locations; an address on the mentioning Spec's own id is checked for its entry and never warned. An entry address is a Spec id followed by `#`, the section name `design`, `ui`, `question`, `rule`, or `term`, a dot, and the entry's lower-camel ASCII key, as in `spec:<id>#design.<key>` or `spec:<id>#question.<key>`. A `design` or `ui` address resolves when the Spec exists and that section holds the key as its own key, other than `description`; a `question` address resolves when the Spec exists and one of its open questions carries that key; a `term` address resolves when the Spec exists and one of its Model terms carries that key. The `#` sub-part is reserved for the entry address in every namespace: a Spec's own id, a relation target, a Pack member or model reference, an anchor id or target, and the `specId` and `ref` builders all refuse it. A mention mints no edge, and the reader gains no join.",
         rationale: [
           "The warning asks for a relation that already exists, so linkage keeps one home. A relation in either direction backs a mention because blast radius walks its one hop both ways, so a reverse edge already surfaces the dependent. One warning per pair keeps the report readable where a Spec names one neighbor in many bullets, and the mention audit keeps every location.",
           "This applies the content-only sections ruling rather than contradicting it. A mention mints no edge, so no consumer branches on a reference union, and the warning names the double-linkage drift the earlier ruling left legal and silent. The id grammar already parses and formats a `#` sub-part; this record gives it its only meaning, and the dot inside the sub-part is the one grammar change.",
           "The owner ruled that an open question may carry an optional key in its marker, as in `- [blocking #aggregateReach] text`, addressed as `spec:<id>#question.aggregateReach`. The key grammar is the Design key grammar, a key is unique among one Spec's open questions, and an unkeyed question stays lawful. A register that cites a question by its position breaks silently when a question above it moves or closes, and the first adopter's register had drifted in such citations; a key breaks loudly where it is renamed.",
           "The owner ruled that the address carries the section, because open-section keys are unique within a section and not within a Spec, so `spec:<id>#design.shared` and `spec:<id>#ui.shared` stay distinct when one carrier holds both; that `#` is refused in every identity, because neither this corpus nor the first adopter's carries one, and one meaning per sub-part keeps resolution a lookup instead of a precedence rule; and that one lower-camel key grammar serves every carrier, so an address is typeable from memory and a lawful TypeScript key outside it is simply unaddressable.",
+          "A Model term carries an authored key in a marker that opens its definition, as a rule carries its own, addressed through the segment `term`. A key derived from the term would break every address whenever the term is reworded, and the segment names the kind of entry, as `question` and `rule` do. The ratified glossary stays a document, so its terms gain no address; a term gains one where a Spec defines it.",
         ],
         alternatives: [
           "A new edge type for mentions costs the schema, the edge contract, the census, the Mermaid view, and every recipe that filters edges. The warning reaches the same dependents through relations that exist.",
@@ -957,9 +958,9 @@ export const decisionsSpecs = [
           "Warning only on a missing forward relation would turn a parent's mention of its own child into a finding the child's `refines` edge already answers. Refused by the owner.",
         ],
         consequences: [
-          "Keyed Design and UI entries, keyed open questions and keyed entries of the primary behavior owner are addressable, a `rule` address resolving when the Spec's `behavior.ruleKeys` carries the key. Model terms and unkeyed entries have no address; a reference to one stays a Spec-level mention, and a sequence that must be addressed is authored as keyed entries.",
+          "Keyed Design and UI entries, keyed open questions, keyed entries of the primary behavior owner and keyed Model terms are addressable, a `rule` address resolving when the Spec's `behavior.ruleKeys` carries the key and a `term` address when its `model.termKeys` does. Unkeyed entries have no address; a reference to one stays a Spec-level mention, and a sequence that must be addressed is authored as keyed entries.",
           "The key `description` names the leading prose of a `design` or `ui` section and is never an entry there, so a `design` or `ui` address ending in `.description` never resolves. A question key is a value on the question, not a property beside section prose, so `description` is an ordinary question key. A TypeScript key outside the lower-camel ASCII grammar is lawful and has no address.",
-          "A renamed or removed open-section key, question key or rule key fails validation in every Spec that addresses it.",
+          "A renamed or removed open-section key, question key, rule key or term key fails validation in every Spec that addresses it.",
           "Blast radius and delta review scope include a mentioning Spec once a declared relation backs its mention.",
           "A family pattern written in id form reads as an unresolved mention, so such a pattern is written as plain words.",
           "No reference check detects two Specs that restate one shape in their own words. The check narrows that defect class and never closes it.",
@@ -1166,7 +1167,7 @@ export const decisionsSpecs = [
       },
       decision: {
         context:
-          "Before this ruling a code anchor carried one required `satisfies` and a test anchor one `verifies`. The first adopter split Specs so that an anchor could claim only what its code does, a stub reads as `implemented` because the only way to name a design from code is to claim to realize it, and a relationship the design states in prose cannot reach a page. The original design made `satisfies` optional and plural on a marker (`docs/lineage/v0-design/04-authoring-surfaces.md` §2.4) and drew the line that markers carry identity and structure, never readiness, intent, behavior, or verification. The annotation scout under `docs/lineage/` found no informational code-to-Spec edge in either lineage and proposed one as the smallest extension.",
+          "Before this ruling a code anchor carried one required `satisfies` and a test anchor one `verifies`. The first adopter split Specs so that an anchor could claim only what its code does, a stub reads as `implemented` because the only way to name a design from code is to claim to realize it, and a relationship the design states in prose cannot reach a page. The original design made `satisfies` optional and plural on an anchor (`docs/lineage/v0-design/04-authoring-surfaces.md` §2.4) and drew the line that anchors carry identity and structure, never readiness, intent, behavior, or verification. The annotation scout under `docs/lineage/` found no informational code-to-Spec edge in either lineage and proposed one as the smallest extension.",
         decision:
           "On a code anchor, `satisfies` is optional and plural; on a test anchor, `verifies` is plural and non-empty. The constant form accepts one `ref(…)` or a fresh array literal of them. Each resolving target confers its fact, and `implemented` stays a whole-Spec fact. An anchored edge `references` runs from a CodeNode to a Spec, from `references?: readonly SpecId[]` on a code anchor; it may target any Spec, decisions included, confers no delivery fact, moves no readiness floor, and the drift alarm ignores it. It says this code answers to that design without claiming to realize it: the unit follows the design without realizing any of its promises, or realizes part of a Spec whose remaining promises no unit yet realizes, so a change to the design asks the code to follow. A design that builds on existing code states that by a typed relation to the Spec the code satisfies, never by a reference from the code. A target named in both `satisfies` and `references` is an error. An identity-only code anchor, with no `satisfies` and no `references`, is lawful: it mints a CodeNode for structure and for `byFile`, and nothing else.",
         rationale: [
@@ -1289,5 +1290,113 @@ export const decisionsSpecs = [
       },
     },
     deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.vault-owned-folder",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    title: "The vault's generator owns one folder and synchronizes it",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Regenerate the vault from the one graph as often as a design pass needs without ever removing or rewriting a note a person wrote in it.",
+      },
+      decision: {
+        context:
+          "Every projection root is rewritten wholesale, and every command that enters the shared build removes all of them first, because an absent view is honest and a stale one is not. A vault is different: a person keeps it open in Obsidian, keeps Obsidian's settings in it, and writes intent notes beside the generated ones.",
+        decision:
+          "The vault's generator owns one folder of the vault, `sdp/`, and keeps there a file list naming every file it wrote with a hash of its content. A `.DS_Store` file under `sdp/` is ignored. A listed `.base` file a person changed is kept, even when it leaves the generated set, with its recorded content unchanged in the list; the run warns with its path and the words `delete it to regenerate` and goes on. For every other file, a run refuses, writing and removing nothing, while that folder holds a file the list does not name or one whose content the list does not record. Otherwise it synchronizes the folder: it writes the files whose content changed, leaves the others untouched, and removes the files it wrote that the graph no longer holds. The vault is not one of the projection roots the shared build rewrites: no build removes it, a vault directory where the build writes or removes is refused, and only the vault's synchronization writes it, whether `sdp vault` or the verb that writes every projection root runs it.",
+        rationale: [
+          "A wholesale rewrite removes whatever a person put in the root, and a regeneration that removes or rewrites a note a person wrote is refused.",
+          "Writing only the files that changed keeps every other note's bytes and modification time, so Obsidian keeps a person's place while a pass runs; a wholesale rename shows Obsidian every note removed and created again.",
+          "A list of written contents tells the generator's files from a person's without marking any note, and it is a function of the graph like the notes it lists, so the vault keeps its determinism.",
+        ],
+        alternatives: [
+          "Rewrite the folder wholesale through a temporary sibling, as the five roots are rewritten; refused, because it moves a reader off their place and removes any note a person left in the folder.",
+          "Overwrite a generated note a person changed and report it afterwards; refused, because the overwrite loses what the person wrote.",
+          "Mark each generated note with a hash in its own properties; refused, because a person's copy of a generated note carries a valid mark and would be removed as stale, and the mark shows on every note.",
+          "Make the vault a sixth projection root; refused, because the shared build's invalidation would remove a person's intent notes with it.",
+        ],
+        consequences: [
+          "While a run is under way the folder may hold notes of two generations, each note whole, and the file list lets the next run recognize what an interrupted run left.",
+          "A run whose extraction fails keeps the last notes and says so on the index note, so a broken carrier never empties the vault a person is reading.",
+          "The vault's determinism is checked by tests, since the repository's projection suite certifies the five projection roots only.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/decisions/vault-owned-folder.sdp.md",
+  },
+  {
+    id: "spec:decisions.studio-diagram-renderer",
+    specKind: "decision",
+    altitude: "story",
+    readiness: "ready",
+    title: "The engine lays out every Studio diagram as static SVG when the page set is built",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give the Studio diagrams that a reader with only a link reads without script, that two builds of one graph draw byte for byte, and that need no layout code in the page.",
+      },
+      decision: {
+        context:
+          "The Studio's pages read in full without script and open from `file://`, two builds of one graph write the same bytes, and the custom-elements decision admits a framework runtime only through a decision that refines it. The architecture lens, a component's members, a Spec's relations and the code that realizes a Spec all need a drawing. A prototype over the Protocol's own components and the first adopter's, read through `sdp q`, measured how large those drawings are (`reviews/assets/plan46-prototypes/studio-diagrams/`).",
+        decision:
+          "The engine lays out every Studio diagram at build time with its own deterministic layered layout and writes it into the page as inline SVG followed by a text equivalent. The custom element that holds a diagram adds only pan, zoom and pinch, by changing the SVG's view box. One diagram draws at most the bound `spec:consumers.spec-studio.diagrams#design.bound` names, and above it the diagram folds, by context and then by layer, as that Spec states.",
+        rationale: [
+          "Inline SVG reads without script, prints, survives the Pack export and opens from `file://`, so the page carries no layout code and the element stays small.",
+          "A layout computed from graph values, with no font, clock or random value, draws the same bytes from the same graph, which the Studio's reproducibility rule and `--check-clean` need.",
+          "The bound sits between what the two corpora need and what a page reads well: in the prototype the largest real drawing is the Protocol's thirty-five-box member diagram, and a synthetic sixty-two-component drawing spanned about two and a half screen widths unfolded; nothing between forty and sixty-two boxes was measured, and the edge bound is headroom over the thirty-nine edges the largest real diagram draws.",
+        ],
+        alternatives: [
+          "Mermaid rendered in the page needs its script and a runtime of several hundred kilobytes, lays out differently per browser, and shows nothing without script; the shipped Mermaid projection stays frozen for its own readers.",
+          "A layout library such as ELK or Dagre run at build time adds a dependency whose version moves the bytes, while the Studio's diagrams need only labelled bands and a grid.",
+          "Drawing on a canvas from embedded data puts the diagram out of reach of a screen reader, of print and of a reader without script.",
+        ],
+        consequences: [
+          "The engine owns a small layout module and its tests; the layout's look is judged in review, and its determinism and fold by test.",
+          "The text equivalent states every box and edge, so a diagram is never the only way to read what it shows.",
+          "A change to the layout moves the Studio's bytes like any other rendering change, and `--check-clean` catches one nobody intended.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/decisions/studio-diagram-renderer.sdp.md",
+  },
+  {
+    id: "spec:decisions.studio-build-renders",
+    specKind: "decision",
+    altitude: "story",
+    readiness: "ready",
+    title: "The build renders every Studio view, and an element only enhances it",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let every Studio view read in full without script, print, and travel inside a Pack export, while its custom element adds only the interaction the view needs.",
+      },
+      decision: {
+        context:
+          "The custom-elements decision frames an element as a view that renders from graph data its host page supplies. The Studio's pages read in full without script and open from `file://`, a Pack export carries no script, two builds of one graph write the same bytes, and the page computes no join, claim, fact or floor; the page elements the Studio ships already add behavior to markup the build wrote.",
+        decision:
+          "The build renders every Studio view into the page's markup from reader values and the recipe answers its page names, and a custom element adds only the interaction its view needs; a host page that embeds a view carries the markup the build wrote and loads the element script, and supplies no graph data.",
+        rationale: [
+          "A view rendered at build time reads without script, prints, survives the Pack export, and keeps one graph to one set of bytes.",
+          "An element that holds no graph data cannot compute a join, claim, fact or floor in the browser, which the Studio refuses.",
+        ],
+        alternatives: [
+          "Elements that render their views from graph data a host supplies, as the custom-elements decision first framed them, show nothing without script and put a second rendering path in the browser.",
+        ],
+        consequences: [
+          "An element's attributes name its subject and its interaction, never a setting the build did not render, so the original's `readiness-pill`, `depth`, `highlight` and `group-by` attributes are gone.",
+          "The custom-elements decision still rules how the elements are written: as custom elements without a framework.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/decisions/studio-build-renders.sdp.md",
   },
 ] as const;

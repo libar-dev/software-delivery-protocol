@@ -1,3 +1,5 @@
+import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
+import { deriveGraph } from "../src/extract/derive.js";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,7 +13,6 @@ import type { GraphSchema } from "../src/graph/schema.js";
 import {
   createStudioData,
   embedData,
-  packTotals,
   railValues,
   searchIndex,
 } from "../src/projections/studio/data.js";
@@ -75,9 +76,10 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
 
   it("counts every Pack exactly as recipe 29", async () => {
     expect(reader.packs().length).toBeGreaterThan(0);
+    const data = await createStudioData(reader);
     for (const pack of reader.packs()) {
       const answer = await recipe<{ totals: unknown }>(29, corpus, { pack: pack.id });
-      expect(packTotals(required(reader.packContext(pack.id)))).toEqual(answer.totals);
+      expect(data.packs.find((p) => p.context.id === pack.id)?.totals).toEqual(answer.totals);
     }
   });
 
@@ -148,7 +150,7 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
     },
   );
 
-  it("keeps rails in Pack-id and authored-member order, with severity and space ownership", () => {
+  it("keeps rails in Pack-id and authored-member order, with severity and space ownership", async () => {
     const rails = railValues(reader);
     expect(rails.packs.map((pack) => pack.id)).toEqual(
       reader
@@ -169,7 +171,7 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
       errors: reader.findings().filter((finding) => finding.severity === "error").length,
       warnings: reader.findings().filter((finding) => finding.severity === "warning").length,
     });
-    const data = createStudioData(reader);
+    const data = await createStudioData(reader);
     expect(data.specs).toEqual(reader.specs().map((spec) => reader.specContext(spec.id)));
     expect(data.findings).toEqual(reader.findings());
     expect(data.packs.map((pack) => pack.context)).toEqual(
@@ -265,4 +267,82 @@ it("preserves coined non-string entries, question and rule addresses and their l
         entry.entry?.includes("ruleKeys") === true || entry.entry?.endsWith(".key") === true,
     ),
   ).toBe(false);
+});
+
+it("keeps term addresses, keys and physical lines aligned with recipe 23", async () => {
+  const source = `---
+id: spec:probe.terms
+kind: model
+altitude: story
+readiness: scoped
+relations: {}
+---
+# Terms
+
+## Intent
+- outcome: Address terms.
+
+## Model
+- **step key** — [#durableIdentity] Stable identity across wording changes.
+- **slot** — An unkeyed parameter.
+`;
+  const reified = reifyMarkdownCarrier(source, "terms.sdp.md");
+  const graph = deriveGraph(reified.specs, [], []);
+  const corpus = {
+    name: "terms",
+    root,
+    exclude: [],
+    extracted: {
+      graph,
+      report: { validatorId: "extract", findings: reified.findings },
+      counts: { specs: 1, packs: 0, anchors: 0 },
+    },
+  };
+  const index = searchIndex(createReader(graph));
+  const record = required(index.records[0]);
+  const row = required(record.entries.find((entry) => entry.entry === "terms.step key"));
+  expect(row.address).toBe("spec:probe.terms#term.durableIdentity");
+  expect(row.line).toBe(
+    source.split("\n").findIndex((line) => line.startsWith("- **step key**")) + 1,
+  );
+  expect(record.entries.some((entry) => entry.entry?.startsWith("termKeys"))).toBe(false);
+  for (const term of ["step key", "durableIdentity", "slot"]) {
+    const answer = await recipe<{
+      matches: {
+        id: string;
+        section: string;
+        entry: string;
+        address: string | null;
+        line: number | null;
+        text: string;
+        matchedIn: string[];
+      }[];
+    }>(23, corpus, { term });
+    if (term === "durableIdentity") {
+      expect(answer.matches).toEqual([
+        {
+          id: "spec:probe.terms",
+          section: "model",
+          entry: "terms.step key",
+          address: "spec:probe.terms#term.durableIdentity",
+          line: row.line,
+          text: "Stable identity across wording changes.",
+          matchedIn: ["key"],
+        },
+      ]);
+      expect(entryMatches(record, row, term)).toBe(true);
+    }
+    const rows = record.entries
+      .filter((entry) => entryMatches(record, entry, term))
+      .map(({ key, ...row }) => {
+        void key;
+        return { id: record.id, ...row };
+      });
+    expect(rows).toEqual(
+      answer.matches.map(({ matchedIn, ...row }) => {
+        void matchedIn;
+        return row;
+      }),
+    );
+  }
 });

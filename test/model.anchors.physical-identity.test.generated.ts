@@ -37,6 +37,7 @@ export function registerPhysicalIdentity<World>(
     "the extraction mints {anchorCount} anchors": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the extraction mints {anchorCount} anchors",
         text: "the extraction mints {anchorCount} anchors",
         params,
       });
@@ -44,6 +45,7 @@ export function registerPhysicalIdentity<World>(
     "the extraction reports {findingCount} findings": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the extraction reports {findingCount} findings",
         text: "the extraction reports {findingCount} findings",
         params,
       });

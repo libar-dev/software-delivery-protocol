@@ -1,3 +1,4 @@
+import { renderMemo } from "../src/studio-elements/memo.js";
 import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
 import { deriveGraph } from "../src/extract/derive.js";
 import {
@@ -26,7 +27,11 @@ import {
   validateGraph,
 } from "../src/index.js";
 import type { ExtractionResult, GraphEdge, GraphNode, GraphSchema } from "../src/index.js";
-import { expectedComponentIds, expectedUsesEdges } from "./self-hosting-oracle/structural-edges.js";
+import {
+  expectedComponentIds,
+  expectedMemberOfEdges,
+  expectedUsesEdges,
+} from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { countMapSets } from "./helpers/map-sets.js";
 
@@ -195,6 +200,12 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function answerWithoutFindings(value: unknown): Record<string, unknown> {
+  const { findings, ...answer } = asRecord(value);
+  expect(Array.isArray(findings)).toBe(true);
+  return answer;
+}
+
 function asArray(value: unknown): readonly unknown[] {
   if (!Array.isArray(value)) {
     throw new Error(`expected an array, got ${JSON.stringify(value)}`);
@@ -321,21 +332,6 @@ function structuralGroundTruth() {
   };
 }
 
-const registerRecipesImplementationAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.register-recipes"),
-  label: "asserts realization of the shipped register recipes",
-  satisfies: [
-    ref("spec:consumers.agent-surface.register-recipes"),
-    ref("spec:model.open-question-keys"),
-  ],
-});
-void registerRecipesImplementationAnchor;
-const registerRecipesTestAnchor = specTest({
-  id: testAnchorId("test:protocol.register-recipes"),
-  label: "recipe checks verify the register recipes",
-  verifies: ref("spec:consumers.agent-surface.register-recipes"),
-});
-void registerRecipesTestAnchor;
 const authoringRecipesImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authoring-recipes"),
   label: "asserts realization of the shipped authoring recipe catalog",
@@ -503,7 +499,7 @@ describe("the agent-surface recipe corpus", () => {
       expect(agentSurfaceProse).toContain(phrase);
     }
 
-    for (let ordinal = 12; ordinal <= recipes.length; ordinal += 1) {
+    for (const { ordinal } of recipes.filter((recipe) => recipe.ordinal >= 12)) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
@@ -515,12 +511,15 @@ describe("the agent-surface recipe corpus", () => {
         hasReturn: true,
       });
       expect(recipe.body).not.toMatch(/^\s*import\s/mu);
+      expect(recipe.body).not.toMatch(/\bimport\s*\(/u);
       expect(recipe.body).not.toMatch(/^\s*export\s/mu);
       // Single quotes would break the documented `sdp q '<body>'` invocation in any shell.
       expect(recipe.body).not.toContain("'");
     }
   });
 
+  // Every catalog body runs over the whole corpus here, so the time grows with the corpus; under
+  // the full suite's parallel load it outruns the default five seconds.
   it("runs every body through the front door without throwing", async () => {
     for (const recipe of recipes) {
       const value = await runRecipe(recipe);
@@ -530,7 +529,7 @@ describe("the agent-surface recipe corpus", () => {
         returned: true,
       });
     }
-  });
+  }, 30_000);
 
   it("returns the non-example build backlog and audits excluded example evidence", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(1)));
@@ -1151,7 +1150,10 @@ describe("the agent-surface recipe corpus", () => {
   it("returns exact component uses fan-in and fan-out from the structural oracle", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(13)));
     const rows = asArray(result.components).map(asRecord);
-    const expectedUses = expectedUsesEdges.map(([from, to]) => ({ from, to }));
+    const owners = new Map<string, string>(expectedMemberOfEdges);
+    const expectedUses = expectedUsesEdges
+      .map(([from, to]) => ({ from: owners.get(from) ?? from, to: owners.get(to) ?? to }))
+      .filter((edge) => edge.from !== edge.to);
 
     expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual([...expectedComponentIds].sort());
 
@@ -1159,14 +1161,12 @@ describe("the agent-surface recipe corpus", () => {
       const id = stringAt(row, "id");
       const usesOut = asArray(row.usesOut).map((target) => stringAt({ target }, "target"));
       const usedBy = asArray(row.usedBy).map((source) => stringAt({ source }, "source"));
-      const expectedOut = expectedUses
-        .filter((edge) => edge.from === id)
-        .map((edge) => edge.to)
-        .sort();
-      const expectedIn = expectedUses
-        .filter((edge) => edge.to === id)
-        .map((edge) => edge.from)
-        .sort();
+      const expectedOut = [
+        ...new Set(expectedUses.filter((edge) => edge.from === id).map((edge) => edge.to)),
+      ].sort();
+      const expectedIn = [
+        ...new Set(expectedUses.filter((edge) => edge.to === id).map((edge) => edge.from)),
+      ].sort();
 
       expect(usesOut).toEqual(expectedOut);
       expect(usedBy).toEqual(expectedIn);
@@ -1549,6 +1549,7 @@ describe("the agent-surface recipe corpus", () => {
 
     expect(unresolved).toEqual({
       id: missingMemberId,
+      role: null,
       label: null,
       file: null,
       line: null,
@@ -2050,6 +2051,26 @@ export const probe = spec({
   }
 }
 
+const registerRecipesImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.register-recipes"),
+  label: "asserts realization of the shipped register recipes",
+  satisfies: [
+    ref("spec:consumers.agent-surface.register-recipes"),
+    ref("spec:model.open-question-keys"),
+    ref("spec:extraction.contract-declarations"),
+    ref("spec:model.term-addresses"),
+  ],
+});
+void registerRecipesImplementationAnchor;
+const registerRecipesTestAnchor = specTest({
+  id: testAnchorId("test:protocol.register-recipes"),
+  label: "recipe checks verify the register recipes",
+  verifies: [
+    ref("spec:consumers.agent-surface.register-recipes"),
+    ref("spec:extraction.contract-declarations"),
+  ],
+});
+void registerRecipesTestAnchor;
 describe("register recipe semantics", () => {
   it("lists key families across the corpus in key, Spec and section order with the documented sample", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(41)));
@@ -3544,7 +3565,10 @@ function expectCyclesToMatchOracle(result: Record<string, unknown>, extraction: 
 const addressAndCycleRecipesImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.address-and-cycle-recipes"),
   label: "asserts realization of the shipped address resolution and dependency cycle recipes",
-  satisfies: ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
+  satisfies: [
+    ref("spec:consumers.agent-surface.address-and-cycle-recipes"),
+    ref("spec:model.term-addresses"),
+  ],
 });
 void addressAndCycleRecipesImplementationAnchor;
 const addressAndCycleRecipesTestAnchor = specTest({
@@ -3562,7 +3586,7 @@ describe("address resolution and dependency cycles", () => {
       (row) => row.spec === "spec:consumers.design-review" && row.entry === "ui.packPage",
     );
     expect(location).toBeDefined();
-    expect(await runRecipe(recipeByOrdinal(25))).toEqual({
+    expect(answerWithoutFindings(await runRecipe(recipeByOrdinal(25)))).toEqual({
       totals: { addresses: 4, resolved: 1, malformed: 1, spec: 1, section: 0, entry: 1 },
       rows: [
         {
@@ -3613,7 +3637,7 @@ describe("address resolution and dependency cycles", () => {
           ...(reason === "malformed"
             ? {
                 expected:
-                  "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+                  "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII",
               }
             : {}),
         })),
@@ -3629,7 +3653,7 @@ describe("address resolution and dependency cycles", () => {
   it("reports the probe's one set and one self-dependent Spec, and nothing for a Spec that only reaches a set", async () => {
     const extraction = cycleProbe();
     const result = asRecord(await runRecipe(recipeByOrdinal(26), undefined, extraction));
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { sets: 1, selfDependent: 1, specsInCycles: 4 },
       cycles: [
         {
@@ -3673,7 +3697,7 @@ describe("address resolution and dependency cycles", () => {
       "lower.sdp.md": cycleProbeSpec("b", ["A"]),
     });
     const result = asRecord(await runRecipe(recipeByOrdinal(26), undefined, extraction));
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { sets: 1, selfDependent: 0, specsInCycles: 3 },
       cycles: [
         {
@@ -3691,6 +3715,7 @@ describe("address resolution and dependency cycles", () => {
       await runRecipe(recipeByOrdinal(26), undefined, dependencyChain(10_000)),
     );
     expect(chain).toEqual({
+      findings: [],
       totals: { sets: 0, selfDependent: 0, specsInCycles: 0 },
       cycles: [],
     });
@@ -3738,7 +3763,7 @@ relations: {}
       },
       extraction,
     );
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { addresses: 2, resolved: 1, malformed: 0, spec: 0, section: 0, entry: 1 },
       rows: [
         {
@@ -3781,7 +3806,7 @@ relations: {}
       },
       cycleProbe(),
     );
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { addresses: 4, resolved: 1, malformed: 1, spec: 1, section: 1, entry: 0 },
       rows: [
         {
@@ -3813,7 +3838,7 @@ relations: {}
           ...(reason === "malformed"
             ? {
                 expected:
-                  "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+                  "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII",
               }
             : {}),
         })),
@@ -3863,7 +3888,7 @@ relations: {}
       ...(reason === "malformed"
         ? {
             expected:
-              "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+              "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII",
           }
         : {}),
     });
@@ -3885,7 +3910,7 @@ relations: {}
       },
       extraction,
     );
-    expect(result).toEqual({
+    expect(answerWithoutFindings(result)).toEqual({
       totals: { addresses: 10, resolved: 4, malformed: 3, spec: 0, section: 0, entry: 3 },
       rows: [
         resolved(
@@ -4337,7 +4362,7 @@ describe("design references and the architecture taxonomy", () => {
     expect(asArray(valueRow("layers", "domain")?.units)).toContain("component:probe.studio-seam");
   });
 
-  // The sink compiles a body this way and calls it with the same four bindings; calling the
+  // The sink compiles a body this way and calls it with the same bindings; calling the
   // compiled body directly keeps the count to the body alone.
   it("creates each taxonomy bucket once, however many units share the value", async () => {
     const ids = Array.from(
@@ -4510,17 +4535,28 @@ describe("recipe parameters and the shipped recipe files", () => {
       for (const name of names) {
         const hasSample =
           recipe.ordinal !== 34 &&
+          recipe.ordinal !== 45 &&
           !(
             [35, 36, 37, 38].includes(recipe.ordinal) &&
             !["budget", "detail", "declarations"].includes(name)
           ) &&
+          !(recipe.ordinal === 47 && name === "perspectives") &&
+          recipe.ordinal !== 48 &&
+          recipe.ordinal !== 49 &&
           !(recipe.ordinal === 39 && name === "pack") &&
           !(recipe.ordinal === 40 && name === "imports") &&
           !(recipe.ordinal === 41 && name !== "prefixes") &&
-          !(recipe.ordinal === 42 && name !== "severity");
+          !(recipe.ordinal === 42 && name !== "severity") &&
+          !(recipe.ordinal === 51 && name !== "severity") &&
+          !(recipe.ordinal === 50 && ["register", "pattern"].includes(name));
         expect({
           recipe: recipe.ordinal,
-          fallback: recipe.body.includes(`params.${name} ?? `),
+          fallback:
+            recipe.body.includes(`params.${name} ?? `) ||
+            recipe.body.includes(`Object.hasOwn(params, "${name}") ? params.${name} : `) ||
+            (recipe.ordinal === 51 &&
+              name === "severity" &&
+              recipe.body.includes(`params.${name} === undefined ? `)),
         }).toEqual({ recipe: recipe.ordinal, fallback: hasSample });
         expect({
           recipe: recipe.ordinal,
@@ -5145,6 +5181,7 @@ describe("design recipes", () => {
       const members = asArray(result.members).map(asRecord);
       expect(result.found).toBe(true);
       expect(members.map((member) => member.id)).toEqual(pack.members);
+      const context = reader.packContext(pack.id);
 
       for (const member of members) {
         const node = primitivesById.get(stringAt(member, "id"));
@@ -5201,7 +5238,6 @@ describe("design recipes", () => {
           referencedBy: rawUnits(derived, "references", node.id).map(unitOf),
         });
         // The stated next rung's clauses pass through from the one floor evaluator unchanged.
-        const context = reader.packContext(pack.id);
         const fromReader = context?.members.find((entry) => entry.id === node.id);
         expect(member.statedNextRungFailures).toEqual(
           (fromReader?.statedNextRungFailures ?? []).map((failure) => ({ ...failure })),
@@ -6782,7 +6818,7 @@ describe("authoring grammar recipes", () => {
       key: null,
       reason: "malformed",
       expected:
-        "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII",
+        "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII",
     });
     const design = asRecord(
       await runRecipe(
@@ -6795,6 +6831,7 @@ describe("authoring grammar recipes", () => {
     expect(await runRecipe(recipeByOrdinal(25), { addresses: [] }, extraction)).toEqual({
       totals: { addresses: 0, resolved: 0, malformed: 0, spec: 0, section: 0, entry: 0 },
       rows: [],
+      findings: [],
     });
   });
   it("counts rule coverage from bound examples and reports unbound intent beside it", async () => {
@@ -6852,3 +6889,605 @@ describe("authoring grammar recipes", () => {
     });
   });
 });
+
+function citationRecipeProbe(): ExtractionResult {
+  const extraction = syntheticExtraction(
+    [
+      {
+        id: "spec:probe.cited",
+        nodeType: "Primitive",
+        claim: "declared",
+        file: "cited.sdp.md",
+        specKind: "behavior",
+        altitude: "story",
+        readiness: "idea",
+        sections: {
+          intent: { outcome: "Read citations" },
+          design: {
+            used: "`type Used = string`",
+            unused: "``type Unused = string``",
+            prose: "A design entry",
+          },
+        },
+      },
+      {
+        id: "pack:probe.citations",
+        nodeType: "Pack",
+        claim: "declared",
+        file: "group.pack.sdp.md",
+        members: ["spec:probe.cited"],
+      },
+      {
+        id: "test:probe.citations",
+        nodeType: "Anchor",
+        claim: "anchored",
+        file: "test.ts",
+        line: 1,
+      },
+    ],
+    [{ from: "test:probe.citations", to: "spec:probe.cited", type: "verifies", claim: "anchored" }],
+  );
+  const addresses = [
+    "design.used",
+    "design.prose",
+    "design.missing",
+    "ui.missing",
+    "invalid.section",
+  ].map((suffix) => `spec:probe.cited#${suffix}`);
+  return {
+    ...extraction,
+    graph: {
+      ...extraction.graph,
+      locations: [
+        { spec: "spec:probe.cited", file: "cited.sdp.md", entry: "design.used", line: 12 },
+      ],
+      citations: [
+        ...addresses.map((address, index) => ({ address, file: "test.ts", line: index + 2 })),
+        { address: "spec:probe.absent#design.key", file: "z.ts", line: 2 },
+        { address: "spec:bad_token#design.key", file: "z.ts", line: 3 },
+      ],
+    },
+  };
+}
+
+const entryCitationRecipeAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.entry-citation-recipe"),
+  label: "asserts realization of Entry citations in docs/agent-surface/recipes.md",
+  satisfies: ref("spec:extraction.entry-citations"),
+});
+void entryCitationRecipeAnchor;
+
+describe("entry citations recipe", () => {
+  it("runs the catalog body in the evaluator without a module loader", async () => {
+    const extraction = citationRecipeProbe();
+    const result = await compileBody(recipeByOrdinal(51).body)(
+      createReader(extraction.graph),
+      extraction.graph,
+      extraction.report,
+      {},
+    );
+    expect(result).toMatchObject({ totals: { unresolved: 5 } });
+  });
+  it("orders a declaration's citing files and lines independently of input order", async () => {
+    const extraction = citationRecipeProbe();
+    const address = "spec:probe.cited#design.used";
+    const citations = [
+      { address, file: "z.ts", line: 1 },
+      { address, file: "a.ts", line: 9 },
+      { address, file: "a.ts", line: 2 },
+    ];
+    const graph = { ...extraction.graph, citations };
+    const reader = createReader(graph);
+    // Keep this test independent of the reader's own ordering guarantee.
+    const unorderedReader = {
+      ...reader,
+      specContext: (id: string) => {
+        const context = reader.specContext(id);
+        return context === undefined
+          ? undefined
+          : {
+              ...context,
+              entryCitations: [...context.entryCitations].reverse(),
+            };
+      },
+    };
+    const result = asRecord(
+      await compileBody(recipeByOrdinal(51).body)(unorderedReader, graph, extraction.report, {}),
+    );
+    const entry = asArray(result.entries)
+      .map(asRecord)
+      .find((row) => row.address === address);
+    expect(
+      asArray(entry?.citedBy)
+        .map(asRecord)
+        .map(({ file, line }) => ({ file, line })),
+    ).toEqual([
+      { file: "a.ts", line: 2 },
+      { file: "a.ts", line: 9 },
+      { file: "z.ts", line: 1 },
+    ]);
+  });
+  it("joins declarations and other cited entries, including uncited declarations", async () => {
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(51), { pack: "pack:probe.citations" }, citationRecipeProbe()),
+    );
+    expect(result.scope).toEqual({ pack: "pack:probe.citations" });
+    expect(result.totals).toEqual({
+      citations: 5,
+      citedEntries: 2,
+      declarations: 2,
+      citedDeclarations: 1,
+      unresolved: 3,
+    });
+    expect(result.entries).toEqual([
+      {
+        address: "spec:probe.cited#design.prose",
+        spec: "spec:probe.cited",
+        pinned: false,
+        line: null,
+        citedBy: [
+          {
+            file: "test.ts",
+            line: 3,
+            anchors: ["test:probe.citations"],
+            testAnchors: ["test:probe.citations"],
+          },
+        ],
+      },
+      {
+        address: "spec:probe.cited#design.unused",
+        spec: "spec:probe.cited",
+        pinned: true,
+        line: null,
+        citedBy: [],
+      },
+      {
+        address: "spec:probe.cited#design.used",
+        spec: "spec:probe.cited",
+        pinned: true,
+        line: 12,
+        citedBy: [
+          {
+            file: "test.ts",
+            line: 2,
+            anchors: ["test:probe.citations"],
+            testAnchors: ["test:probe.citations"],
+          },
+        ],
+      },
+    ]);
+    expect(
+      asArray(result.findings)
+        .map(asRecord)
+        .map((row) => row.message),
+    ).toEqual([
+      "spec:probe.cited#design.missing cited at test.ts:4 does not resolve: spec:probe.cited has no design entry missing",
+      "spec:probe.cited#ui.missing cited at test.ts:5 does not resolve: spec:probe.cited has no ui entries",
+      "spec:probe.cited#invalid.section cited at test.ts:6 does not resolve: not an entry address",
+    ]);
+  });
+  it("includes absent Specs and malformed tokens only in the corpus unresolved list", async () => {
+    const extraction = citationRecipeProbe();
+    const result = asRecord(
+      await runRecipe(recipeByOrdinal(51), { severity: "warning" }, extraction),
+    );
+    expect(result.totals).toEqual({
+      citations: 5,
+      citedEntries: 2,
+      declarations: 2,
+      citedDeclarations: 1,
+      unresolved: 5,
+    });
+    expect(asArray(result.unresolved).slice(-2)).toEqual([
+      { address: "spec:probe.absent#design.key", reason: "spec", file: "z.ts", line: 2 },
+      { address: "spec:bad_token#design.key", reason: "malformed", file: "z.ts", line: 3 },
+    ]);
+    for (const finding of asArray(result.findings).map(asRecord))
+      expect(finding).toMatchObject({
+        validatorId: "unresolved-citation",
+        severity: "warning",
+      });
+    const scoped = asRecord(
+      await runRecipe(recipeByOrdinal(51), { specs: ["spec:probe.cited"] }, extraction),
+    );
+    expect(asArray(scoped.unresolved)).toHaveLength(3);
+  });
+  it.each([
+    { pack: "pack:missing" },
+    { specs: ["spec:missing"] },
+    { specs: "spec:probe.cited" },
+    { pack: "pack:probe.citations", specs: [] },
+    { severity: "fatal" },
+    { severity: null },
+  ])("returns diagnostics without findings for %j", async (params) => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(51), params, citationRecipeProbe()));
+    expect(result).toHaveProperty("diagnostics");
+    expect(result).not.toHaveProperty("findings");
+  });
+  it("reads an absent table as empty, and accepts an empty Spec scope", async () => {
+    const extraction = citationRecipeProbe();
+    expect(
+      asRecord(
+        await runRecipe(
+          recipeByOrdinal(51),
+          {},
+          { ...extraction, graph: { ...extraction.graph, citations: [] } },
+        ),
+      ),
+    ).toMatchObject({
+      totals: { citations: 0, declarations: 2, unresolved: 0 },
+      unresolved: [],
+      findings: [],
+    });
+    expect(asRecord(await runRecipe(recipeByOrdinal(51), { specs: [] }, extraction))).toEqual({
+      scope: { specs: [] },
+      totals: {
+        citations: 0,
+        citedEntries: 0,
+        declarations: 0,
+        citedDeclarations: 0,
+        unresolved: 0,
+      },
+      entries: [],
+      unresolved: [],
+      findings: [],
+    });
+  });
+});
+describe("Studio architecture and example-space recipe additions", () => {
+  it("adds recorded component fields, references, member roles and exact crossing-use counts", async () => {
+    const answer = asRecord(await runRecipe(recipeByOrdinal(17)));
+    for (const raw of asArray(answer.components)) {
+      const row = asRecord(raw),
+        id = stringAt(row, "id");
+      const node = derived.graph.nodes.find((n) => n.id === id);
+      for (const key of ["label", "file", "line", "role", "layer", "context"] as const)
+        expect(row[key]).toEqual(node && key in node ? node[key as keyof typeof node] : null);
+      const members = asArray(row.members).map(asRecord);
+      const owners = new Map(
+        derived.graph.edges.filter((e) => e.type === "memberOf").map((e) => [e.from, e.to]),
+      );
+      const own = (value: string) => (value.startsWith("component:") ? value : owners.get(value));
+      const anchors = new Set([id, ...members.map((m) => stringAt(m, "id"))]);
+      expect(row.referencedSpecs).toEqual(
+        [
+          ...new Set(
+            derived.graph.edges
+              .filter((e) => e.type === "references" && anchors.has(e.from))
+              .map((e) => e.to),
+          ),
+        ].sort(),
+      );
+      for (const member of members)
+        expect(member.role).toEqual(
+          (derived.graph.nodes.find((n) => n.id === member.id) as { role?: string } | undefined)
+            ?.role ?? null,
+        );
+      for (const [direction, key] of [
+        ["out", "usesCounts"],
+        ["in", "usedByCounts"],
+      ] as const) {
+        for (const rawPair of asArray(row[key])) {
+          const pair = asRecord(rawPair);
+          expect(pair.edges).toBe(
+            derived.graph.edges.filter(
+              (e) =>
+                e.type === "uses" &&
+                (direction === "out"
+                  ? own(e.from) === id && own(e.to) === pair.component
+                  : own(e.to) === id && own(e.from) === pair.component),
+            ).length,
+          );
+        }
+      }
+    }
+  });
+  it("runs shipped recipe 44 over every decoded space and refuses bad scopes", async () => {
+    const answer = asRecord(await runRecipe(recipeByOrdinal(44)));
+    const spaces = asArray(answer.spaces).map(asRecord);
+    expect(spaces.map((s) => s.spec)).toEqual(
+      reader
+        .specs()
+        .filter((s) => reader.specContext(s.id)?.exampleSpace !== undefined)
+        .map((s) => s.id)
+        .sort(),
+    );
+    expect(asRecord(answer.totals).spaces).toBe(spaces.length);
+    for (const raw of spaces) {
+      const space = required(required(reader.specContext(stringAt(raw, "spec"))).exampleSpace);
+      expect(raw.examples).toEqual(space.points.map((p) => p.example));
+      for (const slot of asArray(raw.slots).map(asRecord)) {
+        expect(slot.enumerable).toBe(slot.type === "enum");
+        expect(slot.unbound).toEqual(
+          space.points
+            .filter((p) => p.values[stringAt(slot, "name")] === undefined)
+            .map((p) => p.example),
+        );
+      }
+    }
+    for (const params of [
+      { spec: "spec:missing" },
+      { pack: "pack:missing" },
+      { spec: "spec:missing", pack: "pack:missing" },
+    ])
+      expect(asRecord(await runRecipe(recipeByOrdinal(44), params)).diagnostics).toBeDefined();
+  });
+});
+
+function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) throw new Error("Expected a value");
+  return value;
+}
+
+const runRecipeAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.run-evidence-recipe"),
+  label: "asserts realization of Run evidence in docs/agent-surface/recipes.md",
+  satisfies: ref("spec:observation.run-evidence"),
+});
+void runRecipeAnchor;
+it("runs recipe 45 as shipped and reports missing and malformed CTRF metadata", async () => {
+  expect(await runRecipe(recipeByOrdinal(45), {})).toEqual({
+    diagnostics: [{ input: null, problem: "params.runs is required." }],
+  });
+  for (const runs of [
+    {},
+    { reportFormat: "CTRF", results: { tests: [] } },
+    { reportFormat: "other", specVersion: "0.0.0", results: { tests: [] } },
+  ]) {
+    const answer = asRecord(await runRecipe(recipeByOrdinal(45), { runs }));
+    expect(asArray(answer.diagnostics)).toHaveLength(1);
+    expect(answer.inputs).toBeUndefined();
+  }
+});
+
+const memoRecipeImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.proposal-memo-recipe"),
+  label: "realizes the catalog proposal memo through its verbatim body check",
+  satisfies: ref("spec:consumers.intent-composition.proposal.memo"),
+});
+void memoRecipeImplementationAnchor;
+it("recipe 49 renders the panel memo from its catalog body and refuses a malformed document", async () => {
+  const proposal = {
+    schema: "sdp-proposal/1" as const,
+    base: "abc",
+    reason: "Review this design.",
+    changes: [
+      {
+        scope: ["spec:probe#rule.read"],
+        request: "Use the exact text.",
+        text: "Use ``` here",
+        replaces: "spec:probe#rule.read",
+      },
+      {
+        scope: ["spec:probe"],
+        request: "Declare a relation.",
+        relation: {
+          action: "declare" as const,
+          from: "spec:probe",
+          type: "dependsOn",
+          target: "spec:basis",
+        },
+      },
+    ],
+  };
+  expect(await runRecipe(recipeByOrdinal(49), { proposal })).toEqual({
+    schemaProblems: [],
+    memo: renderMemo(proposal),
+  });
+  expect(
+    await runRecipe(recipeByOrdinal(49), { proposal: { ...proposal, reason: "two\nlines" } }),
+  ).toEqual({ schemaProblems: [{ path: "$.reason", problem: "Expected one line." }], memo: null });
+});
+
+it("reports text-preserving rule and flow key changes apart from rewording", async () => {
+  const root = mkdtempSync(join(tmpdir(), "sdp-keying-diff-"));
+  const path = join(root, "probe.sdp.md");
+  const write = (rules: string) => {
+    writeFileSync(
+      path,
+      `---\nid: spec:probe.keying\nkind: behavior\naltitude: story\nreadiness: scoped\nrelations: {}\n---\n# Keying probe\n\n## Intent\n- outcome: Review key changes.\n\n## Behavior\n${rules}\n`,
+    );
+  };
+  try {
+    write("- rule: First rule.\n- rule: Second rule.\n- flow: [#oldFlow] One flow.");
+    const base = extract({ root }).graph;
+    write(
+      "- rule: [#first] First rule.\n- rule: [#second] Revised second rule.\n- flow: [#newFlow] One flow.",
+    );
+    const head = extract({ root });
+    const diff = await runRecipe(recipeByOrdinal(35), { base, detail: true }, head);
+    expect(asRecord(diff).specs).toEqual({
+      added: [],
+      removed: [],
+      changed: [
+        {
+          id: "spec:probe.keying",
+          parts: [
+            { part: "rule.first", change: "keyed", from: null, to: "spec:probe.keying#rule.first" },
+            {
+              part: "rule.newFlow",
+              change: "keyed",
+              from: "spec:probe.keying#rule.oldFlow",
+              to: "spec:probe.keying#rule.newFlow",
+            },
+            {
+              part: "rule.second",
+              change: "changed",
+              from: { list: "rules", text: "Second rule." },
+              to: { list: "rules", text: "Revised second rule." },
+            },
+          ],
+        },
+      ],
+    });
+    const sampleText = /```json\n([\s\S]*?)\n```/u.exec(recipeProse(recipeByOrdinal(35)))?.[1];
+    const changed = asArray(asRecord(asRecord(diff).specs).changed).map((row) => {
+      const entry = asRecord(row);
+      return {
+        ...entry,
+        parts: asArray(entry.parts).filter((part) => asRecord(part).part !== "rule.newFlow"),
+      };
+    });
+    expect(changed).toEqual(JSON.parse(sampleText ?? "null"));
+    expect(await runRecipe(recipeByOrdinal(35), { base, detail: true }, head)).toEqual(diff);
+    write("- rule: First rule.\n- rule: [#second] Revised second rule.\n- flow: One flow.");
+    const unkeyed = await runRecipe(
+      recipeByOrdinal(35),
+      { base: head.graph, detail: true },
+      extract({ root }),
+    );
+    expect(asRecord(unkeyed).specs).toEqual({
+      added: [],
+      removed: [],
+      changed: [
+        {
+          id: "spec:probe.keying",
+          parts: [
+            { part: "rule.first", change: "keyed", from: "spec:probe.keying#rule.first", to: null },
+            {
+              part: "rule.newFlow",
+              change: "keyed",
+              from: "spec:probe.keying#rule.newFlow",
+              to: null,
+            },
+          ],
+        },
+      ],
+    });
+    const renamedBase = extract({ root }).graph;
+    write("- rule: First rule.\n- rule: [#third] Third rule wording.\n- flow: One flow.");
+    const renamed = await runRecipe(
+      recipeByOrdinal(35),
+      { base: renamedBase, detail: true },
+      extract({ root }),
+    );
+    expect(asRecord(renamed).specs).toEqual({
+      added: [],
+      removed: [],
+      changed: [
+        {
+          id: "spec:probe.keying",
+          parts: [
+            {
+              part: "rule.second",
+              change: "removed",
+              from: { list: "rules", text: "Revised second rule." },
+              to: null,
+            },
+            {
+              part: "rule.third",
+              change: "added",
+              from: null,
+              to: { list: "rules", text: "Third rule wording." },
+            },
+          ],
+        },
+      ],
+    });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it.each(["rule", "flow"])(
+  "preserves a removed keyed %s address beside new unkeyed text",
+  async (kind) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-keyed-removal-"));
+    const path = join(root, "probe.sdp.md");
+    const write = (text: string) => {
+      writeFileSync(
+        path,
+        `---\nid: spec:probe.removal\nkind: behavior\naltitude: story\nreadiness: scoped\nrelations: {}\n---\n# Removal probe\n\n## Intent\n- outcome: Keep removed addresses visible.\n\n## Behavior\n- ${kind}: ${text}\n`,
+      );
+    };
+    try {
+      write("[#old] Old wording.");
+      const base = extract({ root }).graph;
+      write("New wording.");
+      const list = kind === "rule" ? "rules" : "flows";
+      const diff = asRecord(
+        await runRecipe(recipeByOrdinal(35), { base, detail: true }, extract({ root })),
+      );
+      expect(diff.specs).toEqual({
+        added: [],
+        removed: [],
+        changed: [
+          {
+            id: "spec:probe.removal",
+            parts: [
+              {
+                part: `behavior.${list}[0]`,
+                change: "added",
+                from: null,
+                to: { list, text: "New wording." },
+              },
+              {
+                part: "rule.old",
+                change: "removed",
+                from: { list, text: "Old wording." },
+                to: null,
+              },
+            ],
+          },
+        ],
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  },
+);
+
+it.each(["rule", "flow"])(
+  "distinguishes removed unkeyed %s base positions from head positions",
+  async (kind) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-unkeyed-removal-"));
+    const path = join(root, "probe.sdp.md");
+    const write = (entries: string[]) => {
+      writeFileSync(
+        path,
+        `---\nid: spec:probe.removal\nkind: behavior\naltitude: story\nreadiness: scoped\nrelations: {}\n---\n# Removal probe\n\n## Intent\n- outcome: Name removed entries unambiguously.\n\n## Behavior\n${entries.map((entry) => `- ${kind}: ${entry}`).join("\n")}\n`,
+      );
+    };
+    try {
+      write(["A.", "B.", "C."]);
+      const base = extract({ root }).graph;
+      write(["C.", "D."]);
+      const head = extract({ root });
+      const list = kind === "rule" ? "rules" : "flows";
+      const diff = asRecord(await runRecipe(recipeByOrdinal(35), { base, detail: true }, head));
+      const parts = [
+        {
+          part: `behavior.${list}[0]`,
+          change: "moved",
+          from: { list, text: "C." },
+          to: { list, text: "C." },
+        },
+        {
+          part: `behavior.${list}[1]`,
+          change: "changed",
+          from: { list, text: "A." },
+          to: { list, text: "D." },
+        },
+        {
+          part: `behavior.${list}[1] (base)`,
+          change: "removed",
+          from: { list, text: "B." },
+          to: null,
+        },
+      ];
+      expect(diff.specs).toEqual({
+        added: [],
+        removed: [],
+        changed: [{ id: "spec:probe.removal", parts }],
+      });
+      const summary = asRecord(await runRecipe(recipeByOrdinal(35), { base }, head));
+      expect(summary.specs).toEqual({
+        added: [],
+        removed: [],
+        changed: [{ id: "spec:probe.removal", parts: parts.map((p) => p.part) }],
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  },
+);

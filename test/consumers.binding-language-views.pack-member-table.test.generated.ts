@@ -51,6 +51,7 @@ export function registerPackMemberTable<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the pack member table repeats those binding values for the spec: {memberTableRepeats}",
         text: "the pack member table repeats those binding values for the spec: {memberTableRepeats}",
         params,
       });
@@ -59,6 +60,7 @@ export function registerPackMemberTable<World>(
       (execution, params) => {
         compareContractOutcome(execution, {
           kind: "then",
+          key: "the internal delivery-fact name {factName} appears as rendered label text: {factNameRendered}",
           text: "the internal delivery-fact name {factName} appears as rendered label text: {factNameRendered}",
           params,
         });

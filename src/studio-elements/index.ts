@@ -1,3 +1,8 @@
+import { registerCompose } from "./compose.js";
+import { registerIntentPanel } from "./intent-panel-element.js";
+import { registerScenarioEditor } from "./scenario-editor.js";
+import { registerViews } from "./views.js";
+import { registerDiagram } from "./diagram.js";
 import { registerCopy } from "./copy.js";
 import { registerExpander } from "./expander.js";
 import { registerFilter } from "./filter.js";
@@ -9,7 +14,7 @@ import { registerStamp } from "./stamp.js";
  * Registers the browser interactions from one bundled entry point.
  *
  * @sdpAnchor component:protocol.studio-elements
- * @sdpSatisfies spec:consumers.spec-studio.page-elements
+ * @sdpSatisfies spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.components
  * @sdpUses component:protocol.reader, component:protocol.projections
  * @sdpLayer edge
  * @sdpContext protocol
@@ -20,3 +25,11 @@ registerFilter();
 registerExpander();
 registerCopy();
 registerStamp();
+
+registerDiagram();
+
+registerViews();
+
+registerIntentPanel();
+registerScenarioEditor();
+registerCompose();

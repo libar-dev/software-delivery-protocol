@@ -2,7 +2,7 @@
 id: spec:model.structural-patterns
 kind: model
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:model.anchors
   decidedBy: spec:decisions.architectural-annotation

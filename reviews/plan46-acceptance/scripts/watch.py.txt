@@ -1,0 +1,53 @@
+import subprocess,time,signal,json,hashlib
+from pathlib import Path
+root=Path('/tmp/plan46/accept/platform')
+evidence=Path('/tmp/plan46/accept/evidence')
+command=['npx','sdp','studio','--watch','--base','/tmp/plan46/accept/base-graph.json',
+ '--base-label','Before the history-view rule-key proposal','--runs','evidence/plan46-ctrf.json']
+def manifest():
+    directory=root/'generated/spec-studio'
+    return {str(p.relative_to(directory)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(directory.rglob('*')) if p.is_file()}
+def wait_for(log,minimum):
+    deadline=time.monotonic()+25
+    while time.monotonic()<deadline:
+        text=log.read_text()
+        if text.count('Wrote ' + str(root.resolve()) + '/generated/spec-studio')>=minimum:return text
+        time.sleep(.15)
+    raise RuntimeError('watch did not finish: '+log.read_text()[-2500:])
+carrier=root/'design/specs/application/history-view-component.sdp.md'
+carrier.write_text(carrier.read_text().replace(' This sentence was added for the watch acceptance measurement.',''))
+log=evidence/'watch-output.log'
+with log.open('w') as out:
+    p=subprocess.Popen(command,cwd=root,stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+    try:
+        wait_for(log,1)
+        carrier.write_text(carrier.read_text().replace('before either is built.','before either is built. This sentence was added for the watch acceptance measurement.'))
+        wait_for(log,2)
+        # Give a duplicate cycle time to appear if the watcher emitted one.
+        time.sleep(1)
+        watched=manifest()
+    finally:
+        # Stop the CLI, then let npx report the CLI's exit status.
+        processes=subprocess.check_output(['ps','-axo','pid=,ppid=,args='],text=True)
+        candidates=[]
+        for line in processes.splitlines():
+            fields=line.strip().split(None,2)
+            if len(fields)==3 and ('node_modules/.bin/sdp studio --watch' in fields[2] or '/dist/cli/sdp.js studio --watch' in fields[2]):
+                candidates.append(int(fields[0]))
+        assert len(candidates)==1,candidates
+        import os
+        os.kill(candidates[0],signal.SIGINT)
+        p.wait(timeout=10)
+text=log.read_text()
+watch_cycles=text.count('Wrote '+str(root.resolve())+'/generated/spec-studio')
+plain=command.copy();plain.remove('--watch')
+started=time.monotonic()
+run=subprocess.run(plain,cwd=root,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+(evidence/'watch-plain.log').write_text(run.stdout)
+result={'watchCommand':command,'plainCommand':plain,'watchExit':p.returncode,
+ 'plainExit':run.returncode,'plainSeconds':round(time.monotonic()-started,3),
+ 'cycles':watch_cycles,'rebuildsAfterEdit':watch_cycles-1,'files':len(watched),
+ 'byteIdentical':watched==manifest(),'carrier':str(carrier.relative_to(root))}
+(evidence/'watch.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps(result,indent=2))
+assert watch_cycles==2 and watched==manifest() and p.returncode==0 and run.returncode==0

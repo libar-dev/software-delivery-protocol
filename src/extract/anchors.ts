@@ -121,7 +121,7 @@ const STRUCTURAL_TOKEN = /^[a-z][a-z0-9-]*$/u;
 const anchorExtractionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.anchor-extraction"),
   label: "anchor reification seam: the constant form and the comment form",
-  satisfies: ref("spec:model.anchors"),
+  satisfies: [ref("spec:model.anchors"), ref("spec:model.structural-patterns")],
   component: componentAnchorId("component:protocol.extract"),
   references: [ref("spec:decisions.anchor-comment-form")],
   role: "extractor",

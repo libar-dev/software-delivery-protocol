@@ -10,13 +10,14 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import * as validators from "../src/validate/validators.js";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import { runSdpCli, SDP_HELP_TEXT } from "../src/cli/sdp.js";
 import { runStudio } from "../src/cli/studio-command.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderStudio } from "../src/projections/studio/pages/index.js";
+import { renderStudio } from "./helpers/studio-render.js";
 import { createReader } from "../src/reader/reader.js";
 import { extract } from "../src/extract/index.js";
 import type { Finding } from "../src/validate/contracts.js";
@@ -24,7 +25,7 @@ import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 const anchor = specTest({
   id: testAnchorId("test:protocol.studio-publisher"),
-  verifies: ref("spec:consumers.spec-studio.publisher"),
+  verifies: [ref("spec:consumers.spec-studio.publisher"), ref("spec:consumers.spec-studio")],
 });
 void anchor;
 
@@ -84,21 +85,41 @@ function seed(path: string) {
 }
 
 describe("Studio publication", () => {
-  it("publishes the layout, copies fixture assets and replaces stale pages and temporary siblings", () => {
+  it("validates once and passes the build report through the reader and recipe evaluations", async () => {
+    const c = corpus();
+    const validate = vi.spyOn(validators, "validateGraph");
+    try {
+      expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
+      expect(validate).toHaveBeenCalledTimes(1);
+    } finally {
+      validate.mockRestore();
+    }
+  });
+  it("publishes the layout, copies fixture assets and replaces stale pages and temporary siblings", async () => {
     const c = corpus();
     seed(c.studio);
     seed(`${c.studio}.tmp`);
     const before = ["member.sdp.md", "probe.pack.sdp.md", "source.ts"].map((file) =>
       readFileSync(join(c.root, file)),
     );
-    expect(runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
+    expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
     expect(Object.keys(files(c.studio)).sort()).toEqual([
+      "architecture.html",
       "assets/studio.css",
       "assets/studio.js",
+      "backlog.html",
+      "decisions.html",
+      "declarations.html",
+      "evidence.html",
+      "exports/probe.html",
+      "glossary.html",
       "index.html",
       "packs/probe.html",
+      "questions.html",
+      "queue.html",
       "search.html",
       "specs/probe.member.html",
+      "tests.html",
     ]);
     expect(readFileSync(join(c.studio, "assets/studio.js"))).toEqual(readFileSync(c.assets.script));
     expect(readFileSync(join(c.studio, "assets/studio.css"))).toEqual(
@@ -113,11 +134,11 @@ describe("Studio publication", () => {
     expect(existsSync(join(c.studio, "stamp.json"))).toBe(false);
   });
 
-  it("writes byte-identical pages twice and opens every placeholder link inside the page set", () => {
+  it("writes byte-identical pages twice and opens every placeholder link inside the page set", async () => {
     const c = corpus();
-    expect(runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
+    expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
     const first = files(c.studio);
-    expect(runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
+    expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
     expect(files(c.studio)).toEqual(first);
     for (const [path, encoded] of Object.entries(first).filter(([path]) =>
       path.endsWith(".html"),
@@ -144,9 +165,9 @@ describe("Studio publication", () => {
         expect(Buffer.from(content, "base64").toString()).not.toContain('id="sdp-data"');
   });
 
-  it("publishes validation findings and returns nonzero without withholding the pages", () => {
+  it("publishes validation findings and returns nonzero without withholding the pages", async () => {
     const c = corpus("validation");
-    expect(runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(1);
+    expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(1);
     const index = readFileSync(join(c.studio, "index.html"), "utf8");
     const spec = readFileSync(join(c.studio, "specs/probe.member.html"), "utf8");
     expect(index).toContain("spec:probe.missing");
@@ -154,7 +175,7 @@ describe("Studio publication", () => {
     expect(c.capture.readStdout()).toContain("validate: 1 errors");
   });
 
-  it("shows a finding with an anchor subject or no subject only on the index", () => {
+  it("shows a finding with an anchor subject or no subject only on the index", async () => {
     const c = corpus();
     const reader = createReader(extract({ root: c.root }).graph);
     const finding: Finding = {
@@ -165,7 +186,7 @@ describe("Studio publication", () => {
       subjectId: "test:probe",
     };
     const data = {
-      ...createStudioData(reader),
+      ...(await createStudioData(reader)),
       findings: [finding, { ...finding, subjectId: undefined, message: "No subject finding" }],
     };
     const pages = renderStudio(data);
@@ -177,11 +198,11 @@ describe("Studio publication", () => {
       expect(page.content).not.toMatch(/Anchor finding|No subject finding/u);
   });
 
-  it("leaves no root or temporary after an extraction failure", () => {
+  it("leaves no root or temporary after an extraction failure", async () => {
     const c = corpus("extraction");
     seed(c.studio);
     seed(`${c.studio}.tmp`);
-    expect(runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(1);
+    expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(1);
     expect(existsSync(c.studio)).toBe(false);
     expect(existsSync(`${c.studio}.tmp`)).toBe(false);
   });
@@ -198,11 +219,11 @@ describe("Studio publication", () => {
     },
   );
 
-  it("refuses extraction when invalidation cannot remove the Studio", () => {
+  it("refuses extraction when invalidation cannot remove the Studio", async () => {
     const c = corpus();
     let extracted = false;
     expect(
-      runStudio(c.parsed, c.capture.output, {
+      await runStudio(c.parsed, c.capture.output, {
         studioAssets: c.assets,
         extract: (options) => {
           extracted = true;
@@ -218,35 +239,42 @@ describe("Studio publication", () => {
     expect(c.capture.readStderr()).toContain("cannot remove");
   });
 
-  it("check-clean accepts clean pages and replaces them with identical bytes", () => {
+  it("check-clean accepts clean pages and replaces them with identical bytes", async () => {
     const c = corpus();
-    expect(runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
+    expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
     const before = files(c.studio);
     expect(
-      runStudio({ ...c.parsed, checkClean: true }, c.capture.output, { studioAssets: c.assets }),
+      await runStudio({ ...c.parsed, checkClean: true }, c.capture.output, {
+        studioAssets: c.assets,
+      }),
     ).toBe(0);
     expect(files(c.studio)).toEqual(before);
   });
 
-  it.each(["missing", "drift", "stale"])("check-clean refuses %s output and removes it", (mode) => {
-    const c = corpus();
-    if (mode !== "missing")
-      expect(runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
-    if (mode === "drift") writeFileSync(join(c.studio, "index.html"), "changed");
-    if (mode === "stale") writeFileSync(join(c.studio, "stale.html"), "old");
-    expect(
-      runStudio({ ...c.parsed, checkClean: true }, c.capture.output, { studioAssets: c.assets }),
-    ).toBe(1);
-    expect(existsSync(c.studio)).toBe(false);
-    expect(existsSync(`${c.studio}.tmp`)).toBe(false);
-  });
+  it.each(["missing", "drift", "stale"])(
+    "check-clean refuses %s output and removes it",
+    async (mode) => {
+      const c = corpus();
+      if (mode !== "missing")
+        expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
+      if (mode === "drift") writeFileSync(join(c.studio, "index.html"), "changed");
+      if (mode === "stale") writeFileSync(join(c.studio, "stale.html"), "old");
+      expect(
+        await runStudio({ ...c.parsed, checkClean: true }, c.capture.output, {
+          studioAssets: c.assets,
+        }),
+      ).toBe(1);
+      expect(existsSync(c.studio)).toBe(false);
+      expect(existsSync(`${c.studio}.tmp`)).toBe(false);
+    },
+  );
 
-  it("check-clean refuses independently divergent renders", () => {
+  it("check-clean refuses independently divergent renders", async () => {
     const c = corpus();
-    expect(runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
+    expect(await runStudio(c.parsed, c.capture.output, { studioAssets: c.assets })).toBe(0);
     let count = 0;
     expect(
-      runStudio({ ...c.parsed, checkClean: true }, c.capture.output, {
+      await runStudio({ ...c.parsed, checkClean: true }, c.capture.output, {
         studioAssets: c.assets,
         renderStudio: (data) =>
           renderStudio(data).map((page) => ({
@@ -259,11 +287,11 @@ describe("Studio publication", () => {
     expect(existsSync(c.studio)).toBe(false);
   });
 
-  it("removes output when an asset cannot be read", () => {
+  it("removes output when an asset cannot be read", async () => {
     const c = corpus();
     seed(c.studio);
     expect(
-      runStudio(c.parsed, c.capture.output, {
+      await runStudio(c.parsed, c.capture.output, {
         studioAssets: { ...c.assets, script: join(c.root, "missing.js") },
       }),
     ).toBe(1);
@@ -271,11 +299,11 @@ describe("Studio publication", () => {
     expect(existsSync(`${c.studio}.tmp`)).toBe(false);
   });
 
-  it("refuses a renderer path that would overwrite authored source", () => {
+  it("refuses a renderer path that would overwrite authored source", async () => {
     const c = corpus();
     const before = readFileSync(join(c.root, "source.ts"));
     expect(
-      runStudio(c.parsed, c.capture.output, {
+      await runStudio(c.parsed, c.capture.output, {
         studioAssets: c.assets,
         renderStudio: () => [{ path: "../../source.ts", content: "overwritten" }],
       }),
@@ -294,9 +322,13 @@ describe("Studio publication", () => {
         studioAssets: c.assets,
       }),
     ).toBe(0);
-    expect(SDP_HELP_TEXT).toContain("sdp studio [root] [--exclude PATH]... [--check-clean]");
+    expect(SDP_HELP_TEXT).toContain(
+      "sdp studio [root] [--exclude PATH]... [--base PATH [--base-label TEXT]] [--check-clean | --watch]",
+    );
     expect(SDP_HELP_TEXT).toContain("generated/spec-studio/");
     expect(await runSdpCli(["studio", c.root, "--out", "elsewhere"], c.capture.output)).toBe(1);
-    expect(await runSdpCli(["studio", c.root, "--watch"], c.capture.output)).toBe(1);
+    expect(await runSdpCli(["studio", c.root, "--watch", "--check-clean"], c.capture.output)).toBe(
+      1,
+    );
   });
 });

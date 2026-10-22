@@ -2,7 +2,7 @@
 id: spec:consumers.graph-first-planning
 kind: behavior
 altitude: feature
-readiness: scoped
+readiness: ready
 relations:
   refines:
     target: spec:consumers.authoring-on-ramp

@@ -1,0 +1,159 @@
+{
+  "bound": 40,
+  "edgeBound": 100,
+  "synthetic": 0,
+  "diagrams": [
+    {
+      "diagram": "architecture",
+      "nodes": 14,
+      "edges": 38,
+      "width": 1302,
+      "height": 460,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.adapters",
+      "nodes": 3,
+      "edges": 2,
+      "width": 712,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.cli",
+      "nodes": 35,
+      "edges": 9,
+      "width": 2058,
+      "height": 784,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.codegen",
+      "nodes": 5,
+      "edges": 3,
+      "width": 730,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.extract",
+      "nodes": 26,
+      "edges": 5,
+      "width": 2139,
+      "height": 560,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.graph",
+      "nodes": 8,
+      "edges": 2,
+      "width": 1908,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.import",
+      "nodes": 4,
+      "edges": 2,
+      "width": 645,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.model",
+      "nodes": 8,
+      "edges": 0,
+      "width": 1766,
+      "height": 208,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.notation",
+      "nodes": 1,
+      "edges": 0,
+      "width": 312,
+      "height": 112,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.projections",
+      "nodes": 28,
+      "edges": 6,
+      "width": 2568,
+      "height": 576,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.reader",
+      "nodes": 7,
+      "edges": 5,
+      "width": 1228,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.runner",
+      "nodes": 2,
+      "edges": 1,
+      "width": 312,
+      "height": 208,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.studio-elements",
+      "nodes": 8,
+      "edges": 2,
+      "width": 2230,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.testing",
+      "nodes": 3,
+      "edges": 2,
+      "width": 495,
+      "height": 224,
+      "drawn": true
+    },
+    {
+      "diagram": "members of component:protocol.validate",
+      "nodes": 25,
+      "edges": 4,
+      "width": 2254,
+      "height": 560,
+      "drawn": true
+    },
+    {
+      "diagram": "trace of spec:carrier.markdown-body-grammar (43 before folding)",
+      "nodes": 29,
+      "edges": 28,
+      "width": 1473,
+      "height": 1360,
+      "drawn": true
+    },
+    {
+      "diagram": "trace of spec:carrier.gherkin-authoring (36 before folding)",
+      "nodes": 36,
+      "edges": 35,
+      "width": 1474,
+      "height": 1440,
+      "drawn": true
+    },
+    {
+      "diagram": "trace of spec:protocol.self-hosting (25 before folding)",
+      "nodes": 25,
+      "edges": 24,
+      "width": 1505,
+      "height": 880,
+      "drawn": true
+    },
+    {
+      "diagram": "trace of spec:consumers.agent-surface.register-recipes (10 before folding)",
+      "nodes": 10,
+      "edges": 9,
+      "width": 951,
+      "height": 832,
+      "drawn": true
+    }
+  ]
+}

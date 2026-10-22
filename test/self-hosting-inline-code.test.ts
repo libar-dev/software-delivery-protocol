@@ -43,6 +43,8 @@ const probes = [
   { text: "``Promise<T>`` is literal.", accepted: true },
   { text: "Use a < b and Promise<T.", accepted: true },
   { text: "Use <!-`x`-> here.", accepted: true },
+  { text: "Use \\`<b>\\` here.", accepted: true },
+  { text: 'Use <a title="`">x` here.', accepted: true },
   { text: "Use Promise<T>.", accepted: false },
   { text: "Use `Promise<T>.", accepted: false },
   { text: "Use ``Promise<T> `.", accepted: false },
@@ -82,7 +84,7 @@ function expectedInlineCodeOutcome(
   return locations.some((location) => location === point.location)
     ? {
         kind: OUTCOME,
-        accepted: point.location === "list" ? 12 : 13,
+        accepted: point.location === "list" ? 14 : 15,
         refused: point.location === "list" ? 18 : 20,
       }
     : unspecified;

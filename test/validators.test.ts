@@ -1393,7 +1393,7 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
         "spec:probe.mentioning",
         "spec:x#foo",
         "design.step1",
-        'Mention "spec:x#foo" in "spec:probe.mentioning" at design.step1 is not a Spec id or entry address: entry address must be <section>.<key> with section design, ui, question, or rule',
+        'Mention "spec:x#foo" in "spec:probe.mentioning" at design.step1 is not a Spec id or entry address: entry address must be <section>.<key> with section design, ui, question, rule, or term',
       ),
     ]);
   });
@@ -2034,13 +2034,13 @@ describe("conformance/prose-mentions — prose mentions and their entry addresse
       "an entry suffix with no key",
       "spec:probe.target#design.",
       "spec:probe.target#design",
-      "entry address must be <section>.<key> with section design, ui, question, or rule",
+      "entry address must be <section>.<key> with section design, ui, question, rule, or term",
     ],
     [
       "an entry suffix outside design, ui, question, and rule",
       "spec:probe.target#model.x",
       "spec:probe.target#model.x",
-      "entry address must be <section>.<key> with section design, ui, question, or rule",
+      "entry address must be <section>.<key> with section design, ui, question, rule, or term",
     ],
   ])(
     "reads the whole token through %s and refuses it, never the existing prefix",

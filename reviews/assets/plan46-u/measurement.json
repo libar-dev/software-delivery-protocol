@@ -1,0 +1,105 @@
+{
+  "commit": "b038bd4a77d51690b1ac5bdc31223576193e1266",
+  "pack": "pack:application",
+  "before": {
+    "specs": 243,
+    "packs": 6,
+    "examples": 122,
+    "decisions": 22,
+    "componentUnits": 12,
+    "statedReady": 0,
+    "floorReady": 221
+  },
+  "capabilities": [
+    {
+      "capability": "ruleKeys",
+      "inUse": 0,
+      "applicable": 987,
+      "carriedBy": "spec:model.rule-keys"
+    },
+    {
+      "capability": "questionKeys",
+      "inUse": 166,
+      "applicable": 166,
+      "carriedBy": "spec:model.open-question-keys"
+    },
+    {
+      "capability": "questionFields",
+      "inUse": 0,
+      "applicable": 166,
+      "carriedBy": "spec:model.open-question-fields"
+    },
+    {
+      "capability": "relationReasons",
+      "inUse": 0,
+      "applicable": 978,
+      "carriedBy": "spec:model.relation-reasons"
+    },
+    {
+      "capability": "exercises",
+      "inUse": 0,
+      "applicable": 123,
+      "carriedBy": "spec:model.rule-keys"
+    },
+    {
+      "capability": "pinnedDeclarations",
+      "inUse": 401,
+      "applicable": 987,
+      "carriedBy": "spec:extraction.contract-declarations"
+    },
+    {
+      "capability": "componentDesigns",
+      "inUse": 0,
+      "applicable": 12,
+      "carriedBy": "spec:model.planned-architecture"
+    },
+    {
+      "capability": "stepKeys",
+      "inUse": 0,
+      "applicable": 941,
+      "carriedBy": "spec:carrier.step-keys"
+    },
+    {
+      "capability": "termKeys",
+      "inUse": 0,
+      "applicable": 103,
+      "carriedBy": "spec:model.term-addresses"
+    },
+    {
+      "capability": "entryCitations",
+      "inUse": 82,
+      "applicable": 401,
+      "carriedBy": "spec:extraction.entry-citations"
+    },
+    {
+      "capability": "perspectives",
+      "inUse": 0,
+      "applicable": null,
+      "carriedBy": "spec:consumers.review-perspectives"
+    }
+  ],
+  "proposal": {
+    "specs": 54,
+    "entries": 251,
+    "keyed": 0,
+    "proposed": 251,
+    "unkeyable": 0
+  },
+  "check": {
+    "schemaProblems": 0,
+    "changes": 251,
+    "moved": 0,
+    "unresolved": 0
+  },
+  "filesEdited": 12,
+  "beforeWarnings": 12,
+  "afterWarnings": 12,
+  "findingsChanged": false,
+  "validation": "243 specs · 6 packs · 181 anchors → 430 nodes · 1510 edges (0 errors, 0 warnings)\nWrote /tmp/plan46-u-platform-final/generated/graph.json\nWrote /tmp/plan46-u-platform-final/generated/contracts (140 modules)\nvalidate: 0 errors · 12 warnings (conformance + honesty over the one graph)",
+  "afterRuleKeys": {
+    "capability": "ruleKeys",
+    "inUse": 251,
+    "applicable": 987,
+    "carriedBy": "spec:model.rule-keys"
+  }
+}

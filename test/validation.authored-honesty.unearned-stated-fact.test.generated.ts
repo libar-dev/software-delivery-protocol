@@ -40,6 +40,7 @@ export function registerUnearnedStatedFact<World>(
     "the report names {findingId} at severity {severity}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report names {findingId} at severity {severity}",
         text: "the report names {findingId} at severity {severity}",
         params,
       });
@@ -47,6 +48,7 @@ export function registerUnearnedStatedFact<World>(
     "the finding names the fact {relatedId} and states {phrase}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the finding names the fact {relatedId} and states {phrase}",
         text: "the finding names the fact {relatedId} and states {phrase}",
         params,
       });

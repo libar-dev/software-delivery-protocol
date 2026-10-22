@@ -1,3 +1,25 @@
+import {
+  authoredStepKey,
+  duplicateContractKeys,
+  scalarKind,
+  STEP_PHASES,
+  structuredEntriesOf,
+  typeExpression,
+  valueExpression,
+  valueFitsType,
+  contractsFinding,
+  contractsFindingIds,
+  pointEntryOf,
+  isCompleteEntry,
+  decodeExampleSpaces,
+} from "../notation/example-space.js";
+import type {
+  StepPhase,
+  StructuredEntry,
+  VocabularyEntry,
+  SpaceModel,
+  ExamplePointModel,
+} from "../notation/example-space.js";
 import { posix } from "node:path";
 
 import { resolveExampleVocabulary } from "../graph/example-space.js";
@@ -5,7 +27,7 @@ import type { GraphSchema, PrimitiveNode } from "../graph/schema.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { parseSlots, stepSkeleton } from "../notation/slots.js";
-import type { SlotDeclaredType, SlotScalar } from "../notation/slots.js";
+import type { SlotScalar } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
 import { buildGraphIndex } from "../validate/graph-index.js";
 
@@ -24,7 +46,7 @@ import { buildGraphIndex } from "../validate/graph-index.js";
  * - a prose-only example, or one with an unbound slot in a used step (the concreteness law),
  *   is not the `defined`-rung bindable form — it gets no step contract; refusing is the honest
  *   behavior, not a degraded run.
- * - an outcome variant's `kind` is the Then step's own **skeleton text** — the no-guessing rule:
+ * - an outcome variant's `kind` is the Then step's own **contract key** — the no-guessing rule:
  *   naming an outcome IS naming an authored Then step, so "the oracle may never claim more than
  *   the specs state" stays a `tsc` error with zero derived slugs (prettier names are the grammar
  *   session's, sugar over this identity).
@@ -34,29 +56,7 @@ import { buildGraphIndex } from "../validate/graph-index.js";
  * one slot — the generated artifact always compiles, and the drift is named at build time.
  */
 
-export const contractsFindingIds = {
-  /** A child binds a slot name its parent's example space never declares. */
-  undeclaredSlot: "contracts/undeclared-slot",
-  /** A bound value does not fit the slot's declared type (off a closed union, wrong scalar). */
-  offDimensionValue: "contracts/off-dimension-value",
-  /** One example binds the same step skeleton twice with different values — first wins. */
-  conflictingBinding: "contracts/conflicting-binding",
-  /** Two vocabulary steps declare the same slot name at different types — first wins. */
-  conflictingDimension: "contracts/conflicting-dimension",
-  /** A vocabulary slot group that declares no usable type (bare, malformed, non-string value). */
-  untypedVocabularySlot: "contracts/untyped-vocabulary-slot",
-  /** An example carries more than one structured entry — only the point entry is executable. */
-  multiEntryExample: "contracts/multi-entry-example",
-  /** A child step does not resolve compatibly against an existing parent example space. */
-  unmatchedVocabularyStep: "contracts/unmatched-vocabulary-step",
-  /** Two contract paths differ only by letter case — they cannot coexist on a case-insensitive
-   *  filesystem, so the contracts tree is withheld WHOLE (the emitted artifact is all-or-nothing
-   *  — a partial tree reading as current would be its own dishonesty) and the warning names the
-   *  colliding pair; gating stays `validateGraph`'s alone (MD-14). */
-  caseCollidingPath: "contracts/case-colliding-path",
-  /** More than one authored suite claims the registrar path for one example. */
-  multipleRegistrarPaths: "contracts/multiple-registrar-paths",
-} as const;
+export { contractsFindingIds } from "../notation/example-space.js";
 
 export interface GeneratedContracts {
   /** POSIX path under `generated/contracts/` → file content, sorted by path. */
@@ -78,120 +78,6 @@ const GENERATED_HEADER = (subject: string): string =>
   `// never the authored spec module (JS-B2.3: no spec↔code import edges).\n`;
 
 /* ----- defensive access over reified section content (value data, never typed instances) ----- */
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-
-  return undefined;
-}
-
-function asStringArray(value: unknown): readonly string[] {
-  return Array.isArray(value)
-    ? value.filter((entry): entry is string => typeof entry === "string")
-    : [];
-}
-
-const STEP_PHASES = ["given", "when", "then"] as const;
-type StepPhase = (typeof STEP_PHASES)[number];
-
-interface StructuredEntry {
-  readonly given: readonly string[];
-  readonly when: readonly string[];
-  readonly then: readonly string[];
-}
-
-function structuredEntriesOf(node: PrimitiveNode): readonly StructuredEntry[] {
-  const behavior = asRecord(node.sections?.behavior);
-  const entries = Array.isArray(behavior?.examples) ? behavior.examples : [];
-  const structured: StructuredEntry[] = [];
-
-  for (const entry of entries) {
-    const record = asRecord(entry);
-
-    if (record === undefined) {
-      continue;
-    }
-
-    structured.push({
-      given: asStringArray(record.given),
-      when: asStringArray(record.when),
-      then: asStringArray(record.then),
-    });
-  }
-
-  return structured;
-}
-
-interface VocabularyEntry {
-  readonly phase: StepPhase;
-  readonly skeleton: string;
-  /** Slot name → declared type, authored order. Only the ratified type-form declares (`number` /
-   *  `string` / `boolean` / a closed union of two or more quoted literals). Every other
-   *  identifier-led form — bare, malformed, or value-form (whose vocabulary reading is the
-   *  grammar session's to rule) — declares nothing and warns
-   *  (`contracts/untyped-vocabulary-slot`), never silently drops (L2). */
-  readonly slots: ReadonlyMap<string, SlotDeclaredType>;
-}
-
-function vocabularyOf(
-  node: PrimitiveNode,
-  findings: Finding[],
-): readonly VocabularyEntry[] | undefined {
-  const behavior = asRecord(node.sections?.behavior);
-  const space = asRecord(behavior?.exampleSpace);
-
-  if (space === undefined) {
-    return undefined;
-  }
-
-  const entries: VocabularyEntry[] = [];
-
-  for (const phase of STEP_PHASES) {
-    for (const text of asStringArray(space[phase])) {
-      const slots = new Map<string, SlotDeclaredType>();
-      const skeleton = stepSkeleton(text);
-
-      for (const slot of parseSlots(text)) {
-        if (slot.form === "typed") {
-          const existing = slots.get(slot.name);
-
-          if (existing === undefined) {
-            slots.set(slot.name, slot.type);
-          } else if (!sameType(existing, slot.type)) {
-            findings.push(
-              contractsFinding(
-                contractsFindingIds.conflictingDimension,
-                `slot "{${slot.name}}" is declared at type ${typeExpression(slot.type)} after ${typeExpression(existing)} within one vocabulary step ("${skeleton}") — the first declaration wins (ambiguity is loud, L2)`,
-                node,
-                "behavior.exampleSpace",
-              ),
-            );
-          }
-          continue;
-        }
-
-        // A bare group, a malformed one, or a value-form binding declares no type here — the
-        // value-form's vocabulary reading is a grammar-design question the carrier ruling
-        // session owns, so the codegen refuses to guess. An authored slot must never silently
-        // fall out of the space (L2), so the parent is named.
-        findings.push(
-          contractsFinding(
-            contractsFindingIds.untypedVocabularySlot,
-            `vocabulary step "${skeleton}" carries slot "{${slot.name}}" without a usable type declaration — a dimension declares number/string/boolean or a closed union of two or more quoted literals; the slot declares nothing`,
-            node,
-            "behavior.exampleSpace",
-          ),
-        );
-      }
-
-      entries.push({ phase, skeleton, slots });
-    }
-  }
-
-  return entries;
-}
 
 /* ----- naming (deterministic, from the spec id's last path segment) ----- */
 
@@ -224,225 +110,6 @@ function camelCase(specId: string): string {
 
 /* ----- type/value rendering ----- */
 
-function typeExpression(type: SlotDeclaredType): string {
-  return type.kind === "enum"
-    ? type.values.map((value) => JSON.stringify(value)).join(" | ")
-    : type.kind;
-}
-
-function valueExpression(value: SlotScalar): string {
-  return typeof value === "string" ? JSON.stringify(value) : String(value);
-}
-
-function scalarKind(value: SlotScalar): "number" | "string" | "boolean" {
-  return typeof value === "number" ? "number" : typeof value === "string" ? "string" : "boolean";
-}
-
-function valueFitsType(value: SlotScalar, type: SlotDeclaredType): boolean {
-  if (type.kind === "enum") {
-    return typeof value === "string" && type.values.includes(value);
-  }
-
-  return scalarKind(value) === type.kind;
-}
-
-function sameType(left: SlotDeclaredType, right: SlotDeclaredType): boolean {
-  return typeExpression(left) === typeExpression(right);
-}
-
-/* ----- findings ----- */
-
-function contractsFinding(
-  validatorId: string,
-  message: string,
-  node: PrimitiveNode,
-  path: string,
-): Finding {
-  return {
-    validatorId,
-    family: "conformance",
-    severity: "warning",
-    message,
-    subjectId: node.id,
-    path,
-    file: node.file,
-  };
-}
-
-/* ----- the space contract ----- */
-
-interface Dimension {
-  readonly name: string;
-  readonly type: SlotDeclaredType;
-  /** The skeleton of the first vocabulary step declaring the slot — the deterministic label. */
-  readonly label: string;
-}
-
-interface SpaceModel {
-  readonly parent: PrimitiveNode;
-  readonly dimensions: readonly Dimension[];
-  /** Skeleton → vocabulary entry (first per skeleton, given → when → then). */
-  readonly bySkeleton: ReadonlyMap<string, VocabularyEntry>;
-  readonly thenEntries: readonly VocabularyEntry[];
-}
-
-function buildSpaceModel(
-  parent: PrimitiveNode,
-  vocabulary: readonly VocabularyEntry[],
-  findings: Finding[],
-): SpaceModel {
-  const dimensions: Dimension[] = [];
-  const byName = new Map<string, Dimension>();
-  const bySkeleton = new Map<string, VocabularyEntry>();
-
-  for (const entry of vocabulary) {
-    if (!bySkeleton.has(entry.skeleton)) {
-      bySkeleton.set(entry.skeleton, entry);
-    }
-
-    if (entry.phase === "then") {
-      continue;
-    }
-
-    for (const [name, type] of entry.slots) {
-      const existing = byName.get(name);
-
-      if (existing === undefined) {
-        const dimension = { name, type, label: entry.skeleton };
-        byName.set(name, dimension);
-        dimensions.push(dimension);
-        continue;
-      }
-
-      if (!sameType(existing.type, type)) {
-        findings.push(
-          contractsFinding(
-            contractsFindingIds.conflictingDimension,
-            `slot "{${name}}" is declared at type ${typeExpression(type)} in "${entry.skeleton}" but already at ${typeExpression(existing.type)} in "${existing.label}" — the first declaration wins (ambiguity is loud, L2)`,
-            parent,
-            "behavior.exampleSpace",
-          ),
-        );
-      }
-    }
-  }
-
-  return {
-    parent,
-    dimensions,
-    bySkeleton,
-    thenEntries: vocabulary.filter((entry) => entry.phase === "then"),
-  };
-}
-
-interface ExamplePointModel {
-  readonly spec: string;
-  /** Dimension name → bound value, in dimension order. */
-  readonly point: ReadonlyMap<string, SlotScalar>;
-}
-
-/**
- * A child's bound point: the first binding per slot name from the child's point entry — the SAME
- * entry the step contract derives from (`pointEntryOf`), so point and contract can never mix
- * cases — filtered to the parent's declared dimensions. An undeclared or off-type binding warns
- * and drops (the generated artifact always compiles; the drift is named here instead).
- */
-function bindPoint(
-  space: SpaceModel,
-  child: PrimitiveNode,
-  findings: Finding[],
-): ExamplePointModel {
-  const bound = new Map<string, SlotScalar>();
-  const flagged = new Set<string>();
-  const dimensionByName = new Map(space.dimensions.map((dimension) => [dimension.name, dimension]));
-  const pointEntry = pointEntryOf(child);
-
-  for (const entry of pointEntry === undefined ? [] : [pointEntry]) {
-    for (const phase of STEP_PHASES) {
-      for (const text of entry[phase]) {
-        for (const slot of parseSlots(text)) {
-          if (slot.form !== "bound" || flagged.has(slot.name)) {
-            continue;
-          }
-
-          const dimension = dimensionByName.get(slot.name);
-
-          if (dimension === undefined) {
-            // Then-vocabulary slots are outcome payload, not dimensions — a binding for one is
-            // ordinary (the outcome point), so only names foreign to the whole vocabulary warn.
-            if (!vocabularyDeclaresSlot(space, slot.name)) {
-              findings.push(
-                contractsFinding(
-                  contractsFindingIds.undeclaredSlot,
-                  `bound slot "{${slot.name}}" is not declared in the parent's example space ("${space.parent.id}") — the binding is dropped from the point`,
-                  child,
-                  "behavior.examples",
-                ),
-              );
-              flagged.add(slot.name);
-            }
-            continue;
-          }
-
-          const existing = bound.get(slot.name);
-
-          if (existing !== undefined) {
-            if (existing !== slot.value) {
-              findings.push(
-                contractsFinding(
-                  contractsFindingIds.conflictingBinding,
-                  `slot "{${slot.name}}" is bound to ${valueExpression(slot.value)} after ${valueExpression(existing)} in the same example — the first binding wins (an example is one point, MD-17)`,
-                  child,
-                  "behavior.examples",
-                ),
-              );
-              flagged.add(slot.name);
-            }
-            continue;
-          }
-
-          if (!valueFitsType(slot.value, dimension.type)) {
-            findings.push(
-              contractsFinding(
-                contractsFindingIds.offDimensionValue,
-                `slot "{${slot.name}}" binds ${valueExpression(slot.value)}, outside its declared type ${typeExpression(dimension.type)} — the binding is dropped from the point`,
-                child,
-                "behavior.examples",
-              ),
-            );
-            flagged.add(slot.name);
-            continue;
-          }
-
-          bound.set(slot.name, slot.value);
-        }
-      }
-    }
-  }
-
-  const point = new Map<string, SlotScalar>();
-
-  for (const dimension of space.dimensions) {
-    const value = bound.get(dimension.name);
-
-    if (value !== undefined) {
-      point.set(dimension.name, value);
-    }
-  }
-
-  return { spec: child.id, point };
-}
-
-function vocabularyDeclaresSlot(space: SpaceModel, name: string): boolean {
-  for (const entry of space.bySkeleton.values()) {
-    if (entry.slots.has(name)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 function renderSpaceContract(space: SpaceModel, points: readonly ExamplePointModel[]): string {
   const pascal = pascalCase(space.parent.id);
   const camel = camelCase(space.parent.id);
@@ -455,7 +122,7 @@ function renderSpaceContract(space: SpaceModel, points: readonly ExamplePointMod
     `/** The Outcome union — one variant per Then-vocabulary step, its \`kind\` the step's own`,
   );
   lines.push(
-    ` *  skeleton text (naming an outcome IS naming an authored Then step); \`unspecified\` is`,
+    ` *  contract key (naming an outcome IS naming an authored Then step); \`unspecified\` is`,
   );
   lines.push(` *  contributed by the runner core — the one outcome no spec ever states. */`);
   lines.push(`export type ${pascal}Outcome =`);
@@ -464,7 +131,7 @@ function renderSpaceContract(space: SpaceModel, points: readonly ExamplePointMod
     const payload = [...entry.slots]
       .map(([name, type]) => `; readonly ${name}: ${typeExpression(type)}`)
       .join("");
-    lines.push(`  | { readonly kind: ${JSON.stringify(entry.skeleton)}${payload} }`);
+    lines.push(`  | { readonly kind: ${JSON.stringify(entry.key)}${payload} }`);
   }
 
   lines.push(`  | UnspecifiedOutcome;`);
@@ -537,25 +204,10 @@ function renderSpaceContract(space: SpaceModel, points: readonly ExamplePointMod
 /* ----- the step contract ----- */
 
 interface ContractStepModel {
+  readonly key: string;
   readonly kind: StepPhase;
   readonly skeleton: string;
   readonly params: ReadonlyMap<string, SlotScalar>;
-}
-
-function isCompleteEntry(entry: StructuredEntry): boolean {
-  return entry.given.length > 0 && entry.when.length > 0 && entry.then.length > 0;
-}
-
-/**
- * THE entry an example derives from — the first complete structured entry (falling back to the
- * first structured entry when none is complete): the one place the step contract AND the bound
- * point read, so the two artifacts can never mix cases across entries (one point per example,
- * MD-17; entries beyond the first are the loud `multi-entry-example` degradation).
- */
-function pointEntryOf(node: PrimitiveNode): StructuredEntry | undefined {
-  const entries = structuredEntriesOf(node);
-
-  return entries.find(isCompleteEntry) ?? entries[0];
 }
 
 /**
@@ -590,13 +242,28 @@ function buildContractSteps(
   spacesByParent: ReadonlyMap<string, SpaceModel>,
   parentIds: readonly string[],
   findings: Finding[],
-): readonly ContractStepModel[] {
+): readonly ContractStepModel[] | undefined {
   const steps: ContractStepModel[] = [];
   const firstParamsBySkeleton = new Map<string, ReadonlyMap<string, SlotScalar>>();
 
   for (const phase of STEP_PHASES) {
     for (const text of scenario[phase]) {
       const skeleton = stepSkeleton(text);
+      const ownKey = authoredStepKey(node, skeleton);
+      const vocabularyEntry = resolveVocabularyEntry(skeleton, spacesByParent, parentIds);
+      const vocabularyKey = vocabularyEntry?.stepKey;
+      if (vocabularyEntry !== undefined && ownKey !== undefined && ownKey !== vocabularyKey) {
+        findings.push(
+          contractsFinding(
+            contractsFindingIds.conflictingStepKey,
+            `example "${node.id}" step "${skeleton}" carries key "${ownKey}" but its vocabulary step carries ${vocabularyKey === undefined ? "none" : `"${vocabularyKey}"`}; step contract withheld`,
+            node,
+            "behavior.examples",
+          ),
+        );
+        return undefined;
+      }
+      const key = vocabularyEntry?.key ?? ownKey ?? skeleton;
       const params = new Map<string, SlotScalar>();
 
       for (const slot of parseSlots(text)) {
@@ -629,7 +296,7 @@ function buildContractSteps(
 
       if (first === undefined) {
         firstParamsBySkeleton.set(skeleton, params);
-        steps.push({ kind: phase, skeleton, params });
+        steps.push({ kind: phase, key, skeleton, params });
         continue;
       }
 
@@ -645,7 +312,7 @@ function buildContractSteps(
       }
 
       // Duplicate text dedupes to one handler and one params shape; every occurrence still runs.
-      steps.push({ kind: phase, skeleton, params: first });
+      steps.push({ kind: phase, key, skeleton, params: first });
     }
   }
 
@@ -675,7 +342,7 @@ function buildContractSteps(
     }
   }
 
-  return steps;
+  return duplicateContractKeys(steps, node, "step", findings) ? undefined : steps;
 }
 
 function sameParams(
@@ -741,21 +408,21 @@ function renderStepContract(
   parentIds: readonly string[],
 ): string {
   const camel = camelCase(node.id);
-  const uniqueSkeletons: string[] = [];
+  const uniqueKeys: string[] = [];
   const seen = new Set<string>();
 
   for (const step of steps) {
-    if (!seen.has(step.skeleton)) {
-      seen.add(step.skeleton);
-      uniqueSkeletons.push(step.skeleton);
+    if (!seen.has(step.key)) {
+      seen.add(step.key);
+      uniqueKeys.push(step.key);
     }
   }
 
-  const paramsBySkeleton = new Map<string, ContractStepModel>();
+  const paramsByKey = new Map<string, ContractStepModel>();
 
   for (const step of steps) {
-    if (!paramsBySkeleton.has(step.skeleton)) {
-      paramsBySkeleton.set(step.skeleton, step);
+    if (!paramsByKey.has(step.key)) {
+      paramsByKey.set(step.key, step);
     }
   }
 
@@ -764,22 +431,20 @@ function renderStepContract(
   lines.push(`import type { ExampleContract } from "${RUNNER_SPECIFIER}";`);
   lines.push("");
   lines.push(
-    `export type Step =\n${uniqueSkeletons.map((skeleton) => `  | ${JSON.stringify(skeleton)}`).join("\n")};`,
+    `export type Step =\n${uniqueKeys.map((key) => `  | ${JSON.stringify(key)}`).join("\n")};`,
   );
   lines.push("");
   lines.push(`export type StepParams = {`);
 
-  for (const skeleton of uniqueSkeletons) {
-    const step = paramsBySkeleton.get(skeleton);
+  for (const key of uniqueKeys) {
+    const step = paramsByKey.get(key);
 
     if (step === undefined) {
       continue;
     }
 
-    const vocabularyEntry = resolveVocabularyEntry(skeleton, spacesByParent, parentIds);
-    lines.push(
-      `  readonly ${JSON.stringify(skeleton)}: ${paramTypeExpression(step, vocabularyEntry)};`,
-    );
+    const vocabularyEntry = resolveVocabularyEntry(step.skeleton, spacesByParent, parentIds);
+    lines.push(`  readonly ${JSON.stringify(key)}: ${paramTypeExpression(step, vocabularyEntry)};`);
   }
 
   lines.push(`};`);
@@ -794,7 +459,7 @@ function renderStepContract(
       .map(([name, value]) => `${name}: ${valueExpression(value)}`)
       .join(", ");
     lines.push(
-      `    { kind: ${JSON.stringify(step.kind)}, text: ${JSON.stringify(step.skeleton)}, params: {${
+      `    { kind: ${JSON.stringify(step.kind)}, key: ${JSON.stringify(step.key)}, text: ${JSON.stringify(step.skeleton)}, params: {${
         params.length > 0 ? ` ${params} ` : ""
       }} },`,
     );
@@ -874,11 +539,11 @@ function renderRunnableRegistrar(
   const renderedBindings = new Set<string>();
 
   for (const step of steps) {
-    if (renderedBindings.has(step.skeleton)) {
+    if (renderedBindings.has(step.key)) {
       continue;
     }
-    renderedBindings.add(step.skeleton);
-    const bindingKey = `    ${JSON.stringify(step.skeleton)}:`;
+    renderedBindings.add(step.key);
+    const bindingKey = `    ${JSON.stringify(step.key)}:`;
     const opening =
       step.kind === "given"
         ? `() => {`
@@ -918,6 +583,7 @@ function renderRunnableRegistrar(
     } else {
       lines.push(`${bodyIndent}compareContractOutcome(execution, {`);
       lines.push(`${bodyIndent}  kind: "then",`);
+      lines.push(`${bodyIndent}  key: ${JSON.stringify(step.key)},`);
       lines.push(`${bodyIndent}  text: ${JSON.stringify(step.skeleton)},`);
       lines.push(`${bodyIndent}  params,`);
       lines.push(`${bodyIndent}});`);
@@ -974,7 +640,7 @@ const codegenComponentAnchor = codeAnchor({
 const executableContractsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.executable-contracts"),
   label: "derives step and example-space contracts from the graph",
-  satisfies: ref("spec:extraction.executable-contracts"),
+  satisfies: [ref("spec:extraction.executable-contracts"), ref("spec:carrier.step-keys")],
   component: componentAnchorId("component:protocol.codegen"),
   role: "projection",
 });
@@ -1000,10 +666,8 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
     }
   }
 
-  // Declared refines edges, both directions: children resolve their vocabulary through them,
-  // spaces collect their children's points through them.
+  // Children resolve their vocabulary through declared refines edges.
   const parentsByChild = new Map<string, string[]>();
-  const childrenByParent = new Map<string, string[]>();
 
   for (const edge of graph.edges) {
     if (edge.type !== "refines" || edge.claim !== "declared") {
@@ -1012,50 +676,24 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
 
     if (primitives.has(edge.from) && primitives.has(edge.to)) {
       parentsByChild.set(edge.from, [...(parentsByChild.get(edge.from) ?? []), edge.to]);
-      childrenByParent.set(edge.to, [...(childrenByParent.get(edge.to) ?? []), edge.from]);
     }
   }
 
   const sortedIds = [...primitives.keys()].sort((left, right) =>
     left < right ? -1 : left > right ? 1 : 0,
   );
-  const spacesByParent = new Map<string, SpaceModel>();
+  const decoded = decodeExampleSpaces(graph);
+  const spacesByParent = decoded.spaces;
+  const withheldSpaces = decoded.withheldSpaces;
+  findings.push(...decoded.findings);
   const boundPoints = new Map<string, ExamplePointModel>();
-
-  for (const id of sortedIds) {
-    const node = primitives.get(id);
-
-    if (node === undefined) {
-      continue;
-    }
-
-    const vocabulary = vocabularyOf(node, findings);
-
-    if (vocabulary !== undefined) {
-      spacesByParent.set(id, buildSpaceModel(node, vocabulary, findings));
-    }
-  }
-
   const files = new Map<string, string>();
   const registrars = new Map<string, string>();
-
-  for (const [parentId, space] of spacesByParent) {
-    const childIds = [...(childrenByParent.get(parentId) ?? [])].sort((left, right) =>
-      left < right ? -1 : left > right ? 1 : 0,
-    );
-    const points: ExamplePointModel[] = [];
-
-    for (const childId of childIds) {
-      const child = primitives.get(childId);
-
-      if (child?.specKind === "example" && structuredEntriesOf(child).length > 0) {
-        const point = bindPoint(space, child, findings);
-        points.push(point);
-        boundPoints.set(`${parentId}\u0000${childId}`, point);
-      }
-    }
-
-    files.set(`${idPath(parentId)}.space.ts`, renderSpaceContract(space, points));
+  for (const [parentId, space] of decoded.spaces) {
+    const points = decoded.points.get(parentId) ?? [];
+    for (const point of points) boundPoints.set(`${parentId}\u0000${point.spec}`, point);
+    if (!withheldSpaces.has(parentId))
+      files.set(`${idPath(parentId)}.space.ts`, renderSpaceContract(space, points));
   }
 
   for (const id of sortedIds) {
@@ -1105,6 +743,7 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
       left < right ? -1 : left > right ? 1 : 0,
     );
     const steps = buildContractSteps(node, scenario, spacesByParent, parentIds, findings);
+    if (steps === undefined) continue;
     files.set(
       `${idPath(id)}.contract.ts`,
       renderStepContract(node, steps, spacesByParent, parentIds),
@@ -1114,7 +753,11 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
     const space = parentId === undefined ? undefined : spacesByParent.get(parentId);
     const point = parentId === undefined ? undefined : boundPoints.get(`${parentId}\u0000${id}`);
 
-    if (space !== undefined && point !== undefined) {
+    if (
+      space !== undefined &&
+      point !== undefined &&
+      !parentIds.some((id) => withheldSpaces.has(id))
+    ) {
       const anchoredTestFiles = [
         ...new Set(
           graph.edges

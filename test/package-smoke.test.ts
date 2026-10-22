@@ -1,10 +1,22 @@
-import { execFileSync } from "node:child_process";
-import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { execFileSync, spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
+import { readdirSync, statSync } from "node:fs";
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
+import { glob } from "tinyglobby";
 
 import {
   codeAnchor,
@@ -56,6 +68,7 @@ const expectedRootExports = [
   "GHERKIN_KIND_LIE_REASONS",
   "gherkinKindLieReason",
   "evaluateReadinessFloor",
+  "evaluateBody",
   "extract",
   "extractAnchor",
   "extractFindingIds",
@@ -121,8 +134,74 @@ const typeOnlyRootExports = [
   "GherkinRefusedKind",
 ] as const;
 
+// npm 11.6.2 selects a directory's files with exactly these two packages, pinned to the versions it
+// bundles: pacote loads the actual tree with Arborist and hands it to npm-packlist. Calling them in
+// process makes the reference need no registry and run no lifecycle script.
+const requireCommonJs = createRequire(import.meta.url);
+const Arborist = requireCommonJs("@npmcli/arborist") as new (options: { path: string }) => {
+  loadActual(): Promise<unknown>;
+};
+const packlist = requireCommonJs("npm-packlist") as (
+  tree: unknown,
+  options: { path: string },
+) => Promise<string[]>;
+
+async function npm11Selection(path: string): Promise<string[]> {
+  return packlist(await new Arborist({ path }).loadActual(), { path });
+}
+
 function run(command: string, args: readonly string[], cwd: string): string {
   return execFileSync(command, args, { cwd, encoding: "utf8" });
+}
+
+interface PackedPackage {
+  readonly filename: string;
+  readonly files: readonly { readonly path: string; readonly size: number }[];
+}
+
+async function packBuiltPackage(destination: string): Promise<PackedPackage> {
+  const source = await mkdtemp(join(tmpdir(), "sdp-pack-source-"));
+  try {
+    const manifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8")) as {
+      readonly files: string[];
+      scripts?: Record<string, string>;
+    };
+    // npm 10 runs prepare even with --ignore-scripts. Pack a script-free copy so the pooled
+    // suite cannot rebuild dist/ while another worker reads its CLI or Studio assets.
+    delete manifest.scripts;
+    await writeFile(join(source, "package.json"), JSON.stringify(manifest));
+    const paths = [
+      ...(await glob(manifest.files, { cwd: repositoryRoot, absolute: true, dot: true })),
+      join(repositoryRoot, "README.md"),
+      join(repositoryRoot, "LICENSE"),
+    ];
+    for (const path of new Set(paths)) {
+      const target = join(source, relative(repositoryRoot, path));
+      await mkdir(dirname(target), { recursive: true });
+      await copyFile(path, target);
+    }
+    const [packed] = JSON.parse(
+      run("npm", ["pack", "--json", "--pack-destination", destination], source),
+    ) as [PackedPackage];
+    return packed;
+  } finally {
+    await rm(source, { recursive: true, force: true });
+  }
+}
+
+function distFiles(): Record<string, { inode: string; size: string; mtime: string }> {
+  return Object.fromEntries(
+    readdirSync(join(repositoryRoot, "dist"), { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => {
+        const path = join(entry.parentPath, entry.name);
+        const stats = statSync(path, { bigint: true });
+        return [
+          path,
+          { inode: String(stats.ino), size: String(stats.size), mtime: String(stats.mtimeNs) },
+        ];
+      }),
+  );
 }
 
 function consumerDriver(): string {
@@ -158,6 +237,9 @@ if (
   throw new Error("Installed package did not reify both carriers into a graph.");
 }
 
+const cycleAnswer = await protocol.evaluateBody("return recipes(26)", { graph });
+if (cycleAnswer.findings.length !== 0) throw new Error("Installed evaluator could not run its shipped recipe.");
+
 console.log(
   JSON.stringify({
     exports: Object.keys(protocol).sort(),
@@ -182,6 +264,121 @@ const shippedProtocolCorpusTestAnchor = specTest({
 void shippedProtocolCorpusTestAnchor;
 
 describe("published package surface", () => {
+  it("packing leaves every repository dist file's inode, size and mtime untouched", async () => {
+    const destination = await mkdtemp(join(tmpdir(), "sdp-pack-unchanged-"));
+    try {
+      const before = distFiles();
+      await packBuiltPackage(destination);
+      expect(distFiles()).toEqual(before);
+    } finally {
+      await rm(destination, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it("packs the same files and bytes as npm 11 selects from the built repository", async () => {
+    const destination = await mkdtemp(join(tmpdir(), "sdp-pack-selection-"));
+    try {
+      const before = distFiles();
+      const expected = await npm11Selection(repositoryRoot);
+      const packed = await packBuiltPackage(destination);
+      expect(distFiles()).toEqual(before);
+      expect(packed.files.map((file) => file.path).sort()).toEqual([...expected].sort());
+      const tarball = join(destination, packed.filename);
+      const paths = run("tar", ["-tzf", tarball], destination).trim().split("\n");
+      expect(paths.sort()).toEqual(expected.map((path) => `package/${path}`).sort());
+      const unpacked = join(destination, "unpacked");
+      await mkdir(unpacked);
+      run("tar", ["-xzf", tarball, "-C", unpacked], destination);
+      const manifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8")) as {
+        scripts?: Record<string, string>;
+      };
+      delete manifest.scripts;
+      expect(JSON.parse(await readFile(join(unpacked, "package/package.json"), "utf8"))).toEqual(
+        manifest,
+      );
+      for (const path of expected) {
+        if (path === "package.json") continue;
+        expect(await readFile(join(unpacked, "package", path)), path).toEqual(
+          await readFile(join(repositoryRoot, path)),
+        );
+      }
+    } finally {
+      await rm(destination, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it.each(["dist/adapters/vitest.js", "dist/index.cjs"])(
+    "%s keeps Vitest runner code outside the package",
+    async (entry) => {
+      const built = await readFile(join(repositoryRoot, entry), "utf8");
+      expect(built.match(/\b(?:initSuite|createSuiteCollector)\b/gu) ?? []).toEqual([]);
+      if (entry === "dist/adapters/vitest.js") {
+        expect(built).toMatch(/from ["'](?:vitest|@vitest\/[^"']+)["']/u);
+      }
+    },
+  );
+
+  it("registers and passes one bindExample test with the installed consumer's Vitest", async () => {
+    const packageRoot = await mkdtemp(join(tmpdir(), "sdp-vitest-smoke-"));
+    const consumer = join(packageRoot, "consumer");
+
+    try {
+      const packed = await packBuiltPackage(packageRoot);
+      await mkdir(consumer);
+      await writeFile(
+        join(consumer, "package.json"),
+        JSON.stringify({ name: "sdp-vitest-smoke", private: true, type: "module" }),
+      );
+      run(
+        "npm",
+        [
+          "install",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund",
+          join(packageRoot, packed.filename),
+        ],
+        consumer,
+      );
+      // npm 10 crashes installing Vitest 4.1 from the registry, with or without this package, so
+      // the consumer takes the repository's installed Vitest through a link; the adapter still
+      // resolves `vitest` from the consumer's own node_modules.
+      await symlink(
+        join(repositoryRoot, "node_modules/vitest"),
+        join(consumer, "node_modules/vitest"),
+        "dir",
+      );
+      await writeFile(
+        join(consumer, "bound.test.js"),
+        `import { expect } from "vitest";
+import { bindExample } from "${packageName}/vitest";
+
+bindExample({
+  spec: "spec:package.bound-example",
+  title: "The installed adapter uses the consumer's runner",
+  steps: [{ kind: "then", key: "freshWorld", text: "the world is fresh", params: {} }],
+}, () => ({ fresh: true }), {
+  freshWorld: world => expect(world.fresh).toBe(true),
+});
+`,
+      );
+      const executed = spawnSync(
+        process.execPath,
+        ["node_modules/vitest/vitest.mjs", "run", "--reporter=json"],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect(executed.status, executed.stdout + executed.stderr).toBe(0);
+      const result = JSON.parse(executed.stdout) as {
+        readonly numTotalTests: number;
+        readonly numPassedTests: number;
+        readonly numFailedTests: number;
+      };
+      expect(result).toMatchObject({ numTotalTests: 1, numPassedTests: 1, numFailedTests: 0 });
+    } finally {
+      await rm(packageRoot, { force: true, recursive: true });
+    }
+  }, 60_000);
+
   it("proves the installed tarball lists import, dry-runs conversion without writes, and exposes the barrel", async () => {
     const packageRoot = await mkdtemp(join(tmpdir(), "sdp-package-smoke-"));
     const consumer = join(packageRoot, "consumer");
@@ -189,22 +386,17 @@ describe("published package surface", () => {
     try {
       // npm ci or the check gate has built dist/. Reuse that build here; the separate git-install
       // gate proves prepare from a clean commit without rebuilding inside the pooled suite.
-      const packed = JSON.parse(
-        run(
-          "npm",
-          ["pack", "--ignore-scripts", "--json", "--pack-destination", packageRoot],
-          repositoryRoot,
-        ),
-      ) as readonly [
-        { readonly filename: string; readonly files: readonly { readonly path: string }[] },
-      ];
-      const packedPaths = packed[0].files.map((file) => file.path);
+      const packed = await packBuiltPackage(packageRoot);
+      const packedPaths = packed.files.map((file) => file.path);
       const adopterAssets = [
         "CONTEXT.md",
         ".agents/skills/sdp-agent-surface/SKILL.md",
         ".agents/skills/sdp-authoring/SKILL.md",
         ".agents/skills/sdp-sessions/SKILL.md",
+        ".agents/skills/sdp-studio/SKILL.md",
+        ".agents/skills/sdp-vault/SKILL.md",
         "docs/agent-surface/recipes.md",
+        "docs/agent-surface/upgrade-guide.md",
         "docs/agent-surface/architecture.md",
       ];
 
@@ -244,7 +436,15 @@ describe("published package surface", () => {
         packedPaths.filter((path) => !path.startsWith("dist/") && /\.tsx?$/u.test(path)),
       ).toEqual([]);
 
-      const tarball = packed[0].filename;
+      const tarball = packed.filename;
+      const packedManifest = JSON.parse(
+        run("tar", ["-xOf", join(packageRoot, tarball), "package/package.json"], repositoryRoot),
+      ) as {
+        peerDependencies?: Record<string, string>;
+        peerDependenciesMeta?: Record<string, unknown>;
+      };
+      expect(packedManifest.peerDependencies ?? {}).not.toHaveProperty("vitest");
+      expect(packedManifest.peerDependenciesMeta ?? {}).not.toHaveProperty("vitest");
 
       await mkdir(consumer);
       await writeFile(
@@ -257,13 +457,14 @@ describe("published package surface", () => {
         [
           "install",
           "--ignore-scripts",
+          "--no-audit",
+          "--no-fund",
           "--omit=dev",
           join(packageRoot, tarball),
-          "--prefix",
-          consumer,
         ],
-        repositoryRoot,
+        consumer,
       );
+      expect(await readdir(join(consumer, "node_modules"))).not.toContain("vitest");
       await writeFile(join(consumer, "consumer.mjs"), consumerDriver());
       await writeFile(
         join(consumer, "node-free-loader.mjs"),
@@ -443,6 +644,19 @@ relations: {}
       expect(installedAgentSkill).toContain("name: sdp-agent-surface");
       expect(installedAuthoringSkill).toContain("name: sdp-authoring");
       expect(installedSessionsSkill).toContain("name: sdp-sessions");
+      for (const skill of ["sdp-studio", "sdp-vault"]) {
+        const installed = await readFile(
+          join(
+            consumer,
+            "node_modules",
+            "@libar-dev",
+            "software-delivery-protocol",
+            `.agents/skills/${skill}/SKILL.md`,
+          ),
+          "utf8",
+        );
+        expect(installed).toContain(`name: ${skill}`);
+      }
     } finally {
       await rm(packageRoot, { force: true, recursive: true });
     }

@@ -57,6 +57,8 @@ export function readPublishedStudio(root: string): readonly StudioFile[] | undef
   const walk = (directory: string): void => {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const path = join(directory, entry.name);
+      // The publishing stamp is written apart and is not part of the deterministic render.
+      if (path === join(root, "stamp.json")) continue;
       if (entry.isDirectory()) walk(path);
       else if (entry.isFile())
         files.push({

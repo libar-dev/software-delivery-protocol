@@ -1,13 +1,14 @@
+import { extractFindingIds } from "./reify.js";
 import type { Finding } from "../validate/contracts.js";
 
 const MAX_FINDINGS = 100;
-const invalidFrontmatterFindingId = "extract/invalid-frontmatter";
+const invalidFrontmatterFindingId = extractFindingIds.invalidFrontmatter;
 
 export function markdownFinding(
   file: string,
   line: number,
   message: string,
-  validatorId = invalidFrontmatterFindingId,
+  validatorId: string = invalidFrontmatterFindingId,
 ): Finding {
   return { validatorId, family: "conformance", severity: "error", message, file, line };
 }
@@ -33,7 +34,7 @@ export function report(
 export function capMarkdownFindings(
   findings: readonly Finding[],
   file: string,
-  validatorId = invalidFrontmatterFindingId,
+  validatorId: string = invalidFrontmatterFindingId,
 ): readonly Finding[] {
   return findings.length < MAX_FINDINGS
     ? findings

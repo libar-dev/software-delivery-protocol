@@ -1,0 +1,113 @@
+{
+  "method": "Three sequential CLI Studio builds per state, measured with performance.now around spawnSync. Includes extraction, contract generation and publication. Wall times under workstation load; not a performance threshold.",
+  "before": {
+    "head": "f06fe2a8ede6617dc58dd84891a65c5142ed1142",
+    "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/integrate-2a",
+    "node": "v24.21.0",
+    "measurements": [
+      {
+        "trial": 1,
+        "seconds": 3.548061708,
+        "command": [
+          "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+          "dist/cli/sdp.js",
+          "studio",
+          ".",
+          "--exclude",
+          "explorations",
+          "--exclude",
+          "examples",
+          "--exclude",
+          "test/fixtures/import/parity"
+        ]
+      },
+      {
+        "trial": 2,
+        "seconds": 3.4498091250000003,
+        "command": [
+          "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+          "dist/cli/sdp.js",
+          "studio",
+          ".",
+          "--exclude",
+          "explorations",
+          "--exclude",
+          "examples",
+          "--exclude",
+          "test/fixtures/import/parity"
+        ]
+      },
+      {
+        "trial": 3,
+        "seconds": 3.2947327919999996,
+        "command": [
+          "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+          "dist/cli/sdp.js",
+          "studio",
+          ".",
+          "--exclude",
+          "explorations",
+          "--exclude",
+          "examples",
+          "--exclude",
+          "test/fixtures/import/parity"
+        ]
+      }
+    ]
+  },
+  "after": {
+    "base": "f06fe2a8ede6617dc58dd84891a65c5142ed1142",
+    "cwd": "/Users/darkomijic/dev-libar/sdp-plan46-lanes/integrate-2a",
+    "node": "v24.21.0",
+    "measurements": [
+      {
+        "trial": 1,
+        "seconds": 3.404811291,
+        "command": [
+          "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+          "dist/cli/sdp.js",
+          "studio",
+          ".",
+          "--exclude",
+          "explorations",
+          "--exclude",
+          "examples",
+          "--exclude",
+          "test/fixtures/import/parity"
+        ]
+      },
+      {
+        "trial": 2,
+        "seconds": 3.2141278749999995,
+        "command": [
+          "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+          "dist/cli/sdp.js",
+          "studio",
+          ".",
+          "--exclude",
+          "explorations",
+          "--exclude",
+          "examples",
+          "--exclude",
+          "test/fixtures/import/parity"
+        ]
+      },
+      {
+        "trial": 3,
+        "seconds": 3.2315582909999994,
+        "command": [
+          "/opt/homebrew/Cellar/node@24/24.21.0/bin/node",
+          "dist/cli/sdp.js",
+          "studio",
+          ".",
+          "--exclude",
+          "explorations",
+          "--exclude",
+          "examples",
+          "--exclude",
+          "test/fixtures/import/parity"
+        ]
+      }
+    ]
+  }
+}

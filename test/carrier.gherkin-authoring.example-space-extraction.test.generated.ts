@@ -37,6 +37,7 @@ export function registerExampleSpaceExtraction<World>(
     "extraction reports {findingCount} findings": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "extraction reports {findingCount} findings",
         text: "extraction reports {findingCount} findings",
         params,
       });
@@ -44,6 +45,7 @@ export function registerExampleSpaceExtraction<World>(
     "the graph contains exactly {specCount} Specs": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph contains exactly {specCount} Specs",
         text: "the graph contains exactly {specCount} Specs",
         params,
       });
@@ -51,6 +53,7 @@ export function registerExampleSpaceExtraction<World>(
     "the parent example space contains {spaceStep}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the parent example space contains {spaceStep}",
         text: "the parent example space contains {spaceStep}",
         params,
       });
@@ -58,6 +61,7 @@ export function registerExampleSpaceExtraction<World>(
     "the graph omits the Spec {absentId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph omits the Spec {absentId}",
         text: "the graph omits the Spec {absentId}",
         params,
       });

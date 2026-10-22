@@ -1,0 +1,25 @@
+from pathlib import Path
+import sys,json,hashlib,re
+root=Path('generated/obsidian-vault')
+state=Path('/tmp/plan46/accept/evidence/vault-state.json')
+stage=sys.argv[1]
+if stage=='edit':
+    intent=root/'intent/acceptance.md';intent.parent.mkdir(exist_ok=True)
+    intent.write_bytes(b'# Acceptance reader note\n\nThese bytes belong to a person.\n')
+    note=sorted((root/'sdp').rglob('*.md'))[0]
+    original=note.read_bytes()
+    Path('/tmp/plan46/accept/vault-original.bin').write_bytes(original)
+    data={'intent':str(intent),'sha256':hashlib.sha256(intent.read_bytes()).hexdigest(),'note':str(note)}
+    state.write_text(json.dumps(data,indent=2)+'\n')
+    note.write_bytes(original+b'\nHuman edit: regeneration must refuse this path.\n')
+    print(json.dumps(data,indent=2))
+elif stage=='restore':
+    data=json.loads(state.read_text());Path(data['note']).write_bytes(Path('/tmp/plan46/accept/vault-original.bin').read_bytes());print('Restored',data['note'])
+elif stage=='count':
+    data=json.loads(state.read_text());intent=Path(data['intent'])
+    digest=hashlib.sha256(intent.read_bytes()).hexdigest();assert digest==data['sha256']
+    files=[p for p in (root/'sdp').rglob('*') if p.is_file()]
+    notes=[p for p in files if p.suffix=='.md']
+    links=sum(len(re.findall(r'\[\[[^\]]+\]\]',p.read_text())) for p in notes)
+    data.update(files=len(files),notes=len(notes),wikilinks=links,intentUnchanged=True)
+    state.write_text(json.dumps(data,indent=2)+'\n');print(json.dumps(data,indent=2))

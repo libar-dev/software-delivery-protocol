@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -89,9 +88,9 @@ function importClosure(entry: string): readonly string[] {
 
 describe("the anchors subpath", () => {
   it("builds to a module whose import closure is relative only: no node: specifier, no ts-morph, no dependency", async () => {
-    if (!existsSync(builtSubpath)) {
-      execFileSync("npm", ["run", "build"], { cwd: repositoryRoot, encoding: "utf8" });
-    }
+    expect(existsSync(builtSubpath), "run npm run build before the anchors subpath check").toBe(
+      true,
+    );
 
     const closure = importClosure(builtSubpath);
     expect(closure.filter((specifier) => !isRelative(specifier))).toEqual([]);

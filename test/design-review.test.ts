@@ -182,9 +182,9 @@ describe("the generated Design Review", () => {
         line.startsWith("| [`spec:protocol.self-hosting`](../spec/protocol.self-hosting.md) ("),
       );
     expect(row).toContain(
-      ") The Protocol authors and validates itself | behavior | epic | defined | ready | ready · nothing blocks | 0 | 0 | 0 |",
+      ") The Protocol authors and validates itself | behavior | epic | ready | ready | — | 0 | 0 | 0 |",
     );
-    expect(row?.endsWith("| none | none | present |")).toBe(true);
+    expect(row?.endsWith("| none | present | present |")).toBe(true);
   });
 
   it("renders every owned description as escaped prose and omits absent prose artifacts", () => {

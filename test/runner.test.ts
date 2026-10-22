@@ -38,10 +38,20 @@ const recurringContract: ExampleContract<Step, StepParams> = {
   spec: "spec:orders.recurring",
   title: "A recurring step runs its one handler at each occurrence",
   steps: [
-    { kind: "given", text: "a cart with {n} line items", params: { n: 2 } },
-    { kind: "given", text: "a cart with {n} line items", params: { n: 2 } },
-    { kind: "when", text: "the cart is submitted", params: {} },
-    { kind: "then", text: "an order is created", params: {} },
+    {
+      kind: "given",
+      key: "a cart with {n} line items",
+      text: "a cart with {n} line items",
+      params: { n: 2 },
+    },
+    {
+      kind: "given",
+      key: "a cart with {n} line items",
+      text: "a cart with {n} line items",
+      params: { n: 2 },
+    },
+    { kind: "when", key: "the cart is submitted", text: "the cart is submitted", params: {} },
+    { kind: "then", key: "an order is created", text: "an order is created", params: {} },
   ],
 };
 
@@ -82,7 +92,11 @@ describe("the runner core — plan, renderer, execution loop", () => {
     expect(stepKindLabel("when")).toBe("When");
     expect(stepKindLabel("then")).toBe("Then");
     expect(
-      renderContractStep({ kind: "given", text: "a cart with {n} line items", params: { n: 2 } }),
+      renderContractStep({
+        kind: "given",
+        text: "a cart with {n} line items",
+        params: { n: 2 },
+      }),
     ).toBe("Given a cart with 2 line items");
     // A skeleton slot with no param stays visible as {name} — an absence never renders silently.
     expect(

@@ -1,0 +1,23 @@
+from pathlib import Path
+import sys
+root=Path('/tmp/plan46/accept/platform')
+parent=root/'design/specs/kernel/domain-kernel.sdp.md'
+example=root/'design/specs/kernel/domain-kernel.evaluate-twice.sdp.md'
+suite=root/'tests/pure/domain-kernel.evaluate-twice.test.ts'
+original='every input is frozen before the kernel runs'
+key='freezeInputs'
+stage=sys.argv[1]
+saved=Path('/tmp/plan46/accept/step-originals');saved.mkdir(exist_ok=True)
+if stage=='key':
+    for p in [parent,example,suite]: (saved/p.name).write_bytes(p.read_bytes())
+    for p in [parent,example]: p.write_text(p.read_text().replace(original, f'[#{key}] {original}'))
+    suite.write_text(suite.read_text().replace('"'+original+'"', '"'+key+'"'))
+elif stage=='reword':
+    for p in [parent,example]: p.write_text(p.read_text().replace(original,'all decision inputs are frozen before evaluation'))
+elif stage=='remove':
+    for p in [parent,example]: p.write_text(p.read_text().replace(f'[#{key}] all decision inputs are frozen before evaluation','the decision inputs are immutable before evaluation'))
+elif stage=='restore':
+    # Keep the keyed, reworded state for the reader job.
+    for p in [parent,example]:
+        p.write_text(p.read_text().replace('the decision inputs are immutable before evaluation',f'[#{key}] all decision inputs are frozen before evaluation'))
+print(stage)

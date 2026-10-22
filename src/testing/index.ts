@@ -65,7 +65,7 @@ export function createRunnableExample<W, C, O extends RunnableOutcome>(
     world: adapters.createWorld(point),
     point,
     adapters,
-    availableThen: thenSteps.map((step) => step.text),
+    availableThen: thenSteps.map((step) => step.key),
     missingConditions: missing,
     invoked: false,
     compared: false,
@@ -103,7 +103,7 @@ export function compareContractOutcome<W, C, O extends RunnableOutcome>(
 ): void {
   const oracle = oracleForComparison(execution);
 
-  if (step.text !== oracle.kind) {
+  if (step.key !== oracle.kind) {
     return;
   }
 
@@ -130,7 +130,7 @@ export async function completeRunnableExample<W, C, O extends RunnableOutcome>(
   if (!execution.compared) {
     const cause = new Error(`oracle kind ${JSON.stringify(oracle.kind)} has no matching Then`);
     throw new Error(
-      `scenario ${execution.spec}: oracle selected ${JSON.stringify(oracle.kind)}; available Then skeletons: ${execution.availableThen.map((step) => JSON.stringify(step)).join(", ")}`,
+      `scenario ${execution.spec}: oracle selected ${JSON.stringify(oracle.kind)}; available Then steps: ${execution.availableThen.map((step) => JSON.stringify(step)).join(", ")}`,
       { cause },
     );
   }
