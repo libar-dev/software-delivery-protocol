@@ -89,9 +89,10 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
     boxes: d.boxes.map((b) => ({ ...b, words: words(b) })),
     edges: [...d.edges].sort(edgeOrder),
   };
-  let l = fits ? layoutDiagram(normalized) : null,
-    routed = l ? routeDiagram(l, normalized.edges) : null;
-  if (l && !routed) {
+  let l = fits ? layoutDiagram(normalized) : null;
+  const tooTall = l !== null && d.heightBudget !== undefined && l.height > d.heightBudget;
+  let routed = l && !tooTall ? routeDiagram(l, normalized.edges) : null;
+  if (l && !routed && !tooTall) {
     l = layoutDiagram(normalized, false);
     routed = routeDiagram(l, normalized.edges);
   }
@@ -131,5 +132,5 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
     ? `<details id="${escape(sourceId)}"><summary>Mermaid source</summary><p>Copyable source; the Studio draws static SVG.${d.mermaidKind === "dependencies" ? ` See the <a href="#${escape(textId)}">full text equivalent</a> for every original relation and folded member.` : ""}</p><p>${d.source ? escape(d.source.explanation) : d.mermaidExplanation ? escape(d.mermaidExplanation) : d.mermaidKind === "block" ? "Chosen syntax: block, with anchored component boxes and uses arrows." : d.mermaidKind === "mindmap" || d.mermaidKind === "flowchart BT" ? `Chosen syntax: ${d.mermaidKind}; full identities and declared refinement.` : d.grid ? "Preferred syntax: block; flowchart fallback because block cannot carry edge claims and counts." : "Preferred syntax: flowchart. Chosen syntax: labelled flowchart, preserving exact relations, claims and folds."}</p><label for="${escape(areaId)}">Mermaid source for ${escape(d.caption)}</label><textarea readonly id="${escape(areaId)}" rows="8">${escape(d.source?.text ?? mermaidSource(normalized))}</textarea><sdp-copy for="${escape(areaId)}"></sdp-copy></details>`
     : "";
   const sectionId = d.sectionId === undefined ? d.subject : d.sectionId;
-  return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${d.note ? `<p class="diagram-note">${escape(d.note)}</p>` : ""}${legend}${help}${routed && l ? `<div class="diagram-scroll" id="${escape(viewportId)}" tabindex="0" role="region" aria-label="${escape(d.caption)}"${help ? ` aria-describedby="${escape(helpId)}"` : ""}>${svg(normalized, textId, diagramId, l, routed)}</div>` : `<p>${fits ? "Shown as text: a distinct route or label could not be placed within the routing budget." : "Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges."}</p>`}${text}${source}</figure></sdp-diagram></section>`;
+  return `<section${sectionId === null ? "" : ` id="${escape(sectionId)}"`}><sdp-diagram subject="${escape(d.subject)}"><figure><figcaption>${escape(d.caption)}</figcaption>${d.note ? `<p class="diagram-note">${escape(d.note)}</p>` : ""}${legend}${help}${routed && l ? `<div class="diagram-scroll" id="${escape(viewportId)}" tabindex="0" role="region" aria-label="${escape(d.caption)}"${help ? ` aria-describedby="${escape(helpId)}"` : ""}>${svg(normalized, textId, diagramId, l, routed)}</div>` : `<p>${tooTall ? `Shown as text: this drawing exceeds the height budget of ${String(d.heightBudget)} pixels after folding.` : fits ? "Shown as text: a distinct route or label could not be placed within the routing budget." : "Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges."}</p>`}${text}${source}</figure></sdp-diagram></section>`;
 }

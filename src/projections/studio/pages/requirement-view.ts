@@ -96,7 +96,11 @@ export function requirementView(ctx: PageContext, spec: SpecContext): string {
     };
   });
   const empty = [
-    ...(examples.size === 0 ? ["Declared verifying examples: no declared verifying example."] : []),
+    ...(![...selected].some((id) =>
+      ctx.data.specs.some((s) => s.id === id && s.specKind === "example"),
+    )
+      ? ["Declared verifying examples: no declared verifying example."]
+      : []),
     ...(!edges.some((e) => e.claim === "anchored" && ["satisfies", "references"].includes(e.kind))
       ? ["Satisfying or referencing units: no recorded binding."]
       : []),

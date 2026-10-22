@@ -1,7 +1,8 @@
 import { plainTitle } from "../pages/code-spans.js";
 import type { SliceAnswer, SliceArchitecture } from "../slice-answer.js";
 import type { Diagram, DiagramBox, DiagramEdge } from "./model.js";
-import { aggregate, combinePairs, needsFold } from "./model.js";
+import { aggregate, combinePairs } from "./model.js";
+import { needsFold, reducesHeight, foldHeightBudget } from "./layout.js";
 import { architectureDiagrams } from "./architecture.js";
 type Target = (id: string) => string;
 const rung = (row: { statedReadiness: string | null; floorReached: string | null }) =>
@@ -124,6 +125,7 @@ export function dependencyDiagram(
     caption: "Declared relations by depth",
     sectionId: null,
     preserveOrder: true,
+    heightBudget: foldHeightBudget,
     mermaidKind: "dependencies",
     boxes,
     edges: combinePairs(aggregate(edges, mapping)),
@@ -136,7 +138,9 @@ export function dependencyDiagram(
     if (!needsFold(drawing)) break;
     const members = shown.filter((m) => m.depth === depth),
       id = `diagram.${diagramId}.fold.${String(depth)}`;
-    for (const m of members) mapping.set(m.id, id);
+    if (members.length < 2) continue;
+    const candidateMapping = new Map(mapping);
+    for (const m of members) candidateMapping.set(m.id, id);
     const at = drawing.boxes.findIndex((b) => b.band === `Depth ${String(depth)}`);
     const remaining = drawing.boxes.filter((b) => b.band !== `Depth ${String(depth)}`);
     remaining.splice(at, 0, {
@@ -150,7 +154,14 @@ export function dependencyDiagram(
       hideIdentity: true,
       foldedIds: members.map((m) => m.id),
     });
-    drawing = { ...drawing, boxes: remaining, edges: combinePairs(aggregate(edges, mapping)) };
+    const candidate = {
+      ...drawing,
+      boxes: remaining,
+      edges: combinePairs(aggregate(edges, candidateMapping)),
+    };
+    if (!reducesHeight(drawing, candidate)) continue;
+    for (const m of members) mapping.set(m.id, id);
+    drawing = candidate;
   }
   return {
     ...drawing,

@@ -56,27 +56,12 @@ export interface Diagram extends DiagramInput {
   readonly occurrenceKey?: string;
   readonly source?: { readonly text: string; readonly explanation: string };
   readonly sectionId?: string | null;
+  readonly heightBudget?: number;
 }
 export const layers = ["edge", "application", "domain", "adapter", "infrastructure", "not stated"];
 export const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 export const withinBound = (d: DiagramInput): boolean =>
   d.boxes.length <= 40 && d.edges.length <= 100;
-// Fold before the hard bound when a picture would become a tall, dense edge bundle.
-export const needsFold = (d: DiagramInput): boolean => {
-  const bands = new Map<string, number>();
-  for (const b of d.boxes) bands.set(b.band ?? "Units", (bands.get(b.band ?? "Units") ?? 0) + 1);
-  const estimatedHeight =
-    [...bands.values()].reduce((n, size) => n + 200 + Math.ceil(size / 3) * 176, 0) +
-    d.edges.length * 16;
-  return (
-    !withinBound(d) ||
-    d.boxes.length > 18 ||
-    d.edges.length > 28 ||
-    estimatedHeight > 2000 ||
-    (d.boxes.length > 6 &&
-      d.boxes.some((b) => d.edges.filter((e) => e.from === b.id || e.to === b.id).length > 10))
-  );
-};
 
 // Keep direction, claim and ordering apart; original relations remain in the text equivalent.
 export function combinePairs(edges: readonly DiagramEdge[]): DiagramEdge[] {

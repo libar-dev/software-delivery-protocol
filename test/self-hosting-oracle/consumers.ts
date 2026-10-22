@@ -5423,7 +5423,7 @@ export const consumersSpecs = [
         bound:
           "`40` boxes and `100` edges per diagram, counting every box a drawing holds, folded and planned boxes included, and every edge it draws.",
         density:
-          "The build may trigger the existing folds before the hard bound when incident-edge density or estimated height would make the picture unreadable. Such a fold keeps the same scope, claims and complete text equivalent.",
+          "For requirement, trace, capability and dependency drawings, trigger the existing folds before the hard bound when deterministic layout height exceeds `2000` logical pixels. Measure height from the box and lane layout before routing, using the same label metrics and width budget as the drawing. A fold triggered by these limits must strictly lower that height and hold at least two boxes, keeping the same scope, claims and complete text equivalent. If no lawful fold fits the height budget, omit the SVG and open the text equivalent.",
         labelMetrics:
           "A title or recorded label leads at fourteen pixels, followed by the displayed id at twelve pixels and remaining words such as a component's member count. Title lines hold at most `28` characters and id lines `30`, with an eight-pixel character advance. Wrap at spaces or id punctuation, then by code point, and calculate box height from every line.",
         cellWrap:
@@ -5441,7 +5441,7 @@ export const consumersSpecs = [
         elementIds:
           "a diagram's text equivalent has the id `diagram.<subject>.text` and its arrow has the id `diagram.<subject>.arrow`. A page that draws a second view of one subject inserts that view's name before `text` or `arrow`, so the Spec page's realization drawing uses `diagram.<subject>.realization.text` and `diagram.<subject>.realization.arrow`; its trace graph keeps the unqualified ids. Every id is unique on its page.",
         omittedDrawing:
-          "A drawing over the bound keeps its figure and caption, writes `Shown as text: this drawing exceeds the bound of <b> boxes and <e> edges.`, and opens its text equivalent. A routing failure instead writes `Shown as text: a distinct route or label could not be placed within the routing budget.` and opens the same complete box-and-edge reading. Neither omission offers partial Mermaid source.",
+          "A drawing over the bound keeps its figure and caption, writes `Shown as text: this drawing exceeds the bound of <b> boxes and <e> edges.`, and opens its text equivalent. A routing failure instead writes `Shown as text: a distinct route or label could not be placed within the routing budget.` and opens the same complete box-and-edge reading. A drawing still above the height budget after lawful folds instead writes `Shown as text: this drawing exceeds the height budget of <h> pixels after folding.` and opens its text equivalent. No omission offers partial Mermaid source.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -7074,7 +7074,7 @@ export const consumersSpecs = [
         rules: [
           "For the Spec page's selected set, draw declared refines, declared and anchored verifies, and anchored satisfies edges incident on the set, plus anchored verifies on its declared verifying examples. Draw code references and oracle models only as their own named kinds, never as realization or successful verification.",
           "Every box and edge names its claim. A declared verifying example with no resolving test says `no test binding`; an anchored verifier says `binding present`, never passed. Missing satisfies says `no satisfying binding`, never unimplemented by inference through a child. Examples and decision records, which code never satisfies, carry no satisfying-binding label.",
-          "Combine arrows with the same ends, direction and claim into one labelled arrow naming every relation. Fold verifying examples together with their exclusive test bindings beyond a small readable count, naming both claims and counts. Above the shared bound or readable density, fold the largest remaining group by edge kind, direction and claim, ties in that lexical order, until it fits. A fold names its relation and claim and hides its internal identity. Keep every original edge and box in the text equivalent. If the fold still cannot fit, omit the drawing and open its text.",
+          "Combine arrows with the same ends, direction and claim into one labelled arrow naming every relation. Fold verifying examples together with their exclusive test bindings beyond a small readable count, naming both claims and counts. Above the shared bound or readable density, fold the largest remaining group within each band by edge kind, direction and claim, ties in that lexical order and then by band order, until it fits. A fold names its relation and claim and hides its internal identity. Keep every original edge and box in the text equivalent. If the fold still cannot fit, omit the drawing and open its text.",
         ],
         ruleKeys: {
           exactEdges: "rules[0]",
@@ -7087,14 +7087,18 @@ export const consumersSpecs = [
           "On a Spec page the requirement drawing replaces the realization drawing under its heading; its set is the Spec, the Specs that refine it, and the examples that verify any of them.",
         bands:
           "Place selected non-example Specs, declared verifying examples, satisfying or referencing units, and test or oracle bindings in labelled bands. An example in the selected set always sits in the examples band, including when it also refines a selected Spec. Place Specs outside the selected set in a separate labelled band. Each node has one placement and keeps every edge. Derive each absence statement from the selected examples and recorded edge kinds, never from which bands contain boxes.",
+        exampleFoldCount:
+          "Fold more than `4` selected verifying examples, excluding the subject, with their exclusive test bindings; retain the fold only when it lowers layout height. A generic examples-band fold is named `verifying examples`, never `refining Specs`.",
+        foldTitles:
+          "Name incoming and outgoing refinement folds `refining Specs` and `refined Specs`; incoming satisfies, references, anchored verifies and models folds read `satisfying units`, `referencing units`, `test bindings` and `oracle bindings`. Every fold includes its claim and hides its internal identity.",
         wordsBesideStyle:
           "Box subtitles say `declared Spec`, `anchored code`, `anchored test binding` or `anchored oracle binding`; edge labels carry both the exact relation and claim. Verification modes, risk levels and assertion results are not invented.",
         textEquivalent:
           "List every full id and title or binding label, each binding's file and line, every exact edge with its claim and reason, and examples with no test binding. This drawing replaces the realization drawing and complements the detailed verification panels.",
         elementIds:
-          "Use `diagram.<subject>.requirement.text`, `.requirement.arrow` and `.requirement.fold.<kind>.<direction>.<claim>`.",
+          "Use `diagram.<subject>.requirement.text`, `.requirement.arrow` and `.requirement.fold.<kind>.<direction>.<claim>`; when the same group occurs in multiple bands, append `.band.<band-index>` in the stated band order.",
         mermaidKind:
-          "`requirementDiagram` for the exact refines, satisfies and verifies subset, generic requirement nodes and element nodes for code and bindings; omit risk and verifyMethod. Put claim words in node text and per-edge comments. Use `flowchart TB` with exact labels when references, models or folds require relations requirement syntax cannot express; never rename them traces.",
+          "`requirementDiagram` for the exact refines, satisfies and verifies subset, generic requirement nodes and element nodes for code and bindings; omit risk and verifyMethod. Serialize the original exact relations separately even when the SVG combines their arrow. Put claim words in node text and per-edge comments. Use `flowchart TB` with exact labels when references, models or folds require relations requirement syntax cannot express; never rename them traces.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],

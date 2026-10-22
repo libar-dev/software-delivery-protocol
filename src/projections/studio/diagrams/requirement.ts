@@ -1,4 +1,5 @@
-import { aggregate, compare, needsFold, combinePairs } from "./model.js";
+import { aggregate, compare, combinePairs } from "./model.js";
+import { needsFold, reducesHeight, foldHeightBudget } from "./layout.js";
 import type { Diagram, DiagramBox, DiagramInput } from "./model.js";
 import { mermaidSource, mermaidText } from "./mermaid.js";
 const bandOrder = [
@@ -28,6 +29,7 @@ export function requirementDiagram(input: DiagramInput & { subject: string }): D
     caption: `Requirement drawing for ${input.subject}`,
     textEquivalent: input,
     edges: combinePairs(input.edges),
+    heightBudget: foldHeightBudget,
   };
   const ids = new Map(input.boxes.map((b) => [b.id, b.id]));
   const examples = input.boxes.filter(
@@ -49,11 +51,12 @@ export function requirementDiagram(input: DiagramInput & { subject: string }): D
     );
     const members = [...examples, ...tests];
     const id = `diagram.${input.subject}.requirement.fold.verifies.incoming.declared`;
-    for (const b of members) ids.set(b.id, id);
-    drawing = {
+    const candidateIds = new Map(ids);
+    for (const b of members) candidateIds.set(b.id, id);
+    const candidate = {
       ...drawing,
       boxes: order([
-        ...drawing.boxes.filter((b) => ids.get(b.id) === b.id),
+        ...drawing.boxes.filter((b) => candidateIds.get(b.id) === b.id),
         {
           id,
           title: `${String(examples.length)} verifying examples · declared`,
@@ -66,8 +69,12 @@ export function requirementDiagram(input: DiagramInput & { subject: string }): D
           band: "Declared verifying examples",
         },
       ]),
-      edges: combinePairs(aggregate(input.edges, ids)),
+      edges: combinePairs(aggregate(input.edges, candidateIds)),
     };
+    if (reducesHeight(drawing, candidate)) {
+      for (const b of members) ids.set(b.id, id);
+      drawing = candidate;
+    }
   }
   const protectedIds = new Set([input.subject]);
   // A peripheral box has one fold group, even when several bindings reach it.
@@ -82,38 +89,63 @@ export function requirementDiagram(input: DiagramInput & { subject: string }): D
         ),
       )[0];
     const key = edge
-      ? `${edge.kind}.${edge.from === box.id ? "incoming" : "outgoing"}.${edge.claim ?? ""}`
+      ? `${box.band === "Declared verifying examples" ? "verifies" : edge.kind}.${edge.from === box.id ? "incoming" : "outgoing"}.${edge.claim ?? ""}`
       : `unbound.incoming.declared`;
-    groups.set(key, [...(groups.get(key) ?? []), box]);
+    const groupKey = `${key}|${box.band ?? ""}`;
+    groups.set(groupKey, [...(groups.get(groupKey) ?? []), box]);
   }
-  for (const [key, members] of [...groups].sort(
-    ([a, aa], [b, bb]) => bb.length - aa.length || compare(a, b),
+  for (const [groupKey, members] of [...groups].sort(
+    ([a, aa], [b, bb]) =>
+      bb.length - aa.length ||
+      compare(a.split("|")[0] ?? "", b.split("|")[0] ?? "") ||
+      bandOrder.indexOf(aa[0]?.band ?? "") - bandOrder.indexOf(bb[0]?.band ?? ""),
   )) {
     if (!needsFold(drawing)) break;
     if (members.length < 2) continue;
-    const id = `diagram.${input.subject}.requirement.fold.${key}`;
-    for (const b of members) ids.set(b.id, id);
-    drawing = {
+    const [key = ""] = groupKey.split("|");
+    const [kind, direction, claim] = key.split(".");
+    const names: Record<string, readonly [string, string]> = {
+      refines: ["refining Specs", "refined Specs"],
+      verifies: [
+        members[0]?.band === "Declared verifying examples" ? "verifying examples" : "test bindings",
+        "verified Specs",
+      ],
+      satisfies: ["satisfying units", "satisfied Specs"],
+      references: ["referencing units", "referenced Specs"],
+      models: ["oracle bindings", "modeled Specs"],
+      unbound: ["unbound units", "unbound Specs"],
+    };
+    const title = `${String(members.length)} ${names[kind ?? ""]?.[direction === "incoming" ? 0 : 1] ?? kind ?? "related units"} · ${claim ?? ""}`;
+    const splitBands = [...groups.keys()].filter((k) => k.startsWith(`${key}|`)).length > 1;
+    const id = `diagram.${input.subject}.requirement.fold.${key}${splitBands ? `.band.${String(bandOrder.indexOf(members[0]?.band ?? ""))}` : ""}`;
+    const candidateIds = new Map(ids);
+    for (const b of members) candidateIds.set(b.id, id);
+    const candidate = {
       ...drawing,
       boxes: order([
         ...drawing.boxes.filter((b) => !members.some((m) => m.id === b.id)),
         {
           id,
-          title: `${String(members.length)} ${key.startsWith("refines.") && key.endsWith(".declared") ? "refining Specs" : key.split(".").slice(0, 2).join(" ")} · ${key.split(".").at(-1) ?? ""}`,
+          title,
           hideIdentity: true,
-          words: `${String(members.length)} ${key.split(".").join(" · ")}, folded`,
+          words: `${title}, folded`,
           target: `#diagram.${input.subject}.requirement.text`,
           folded: true,
           foldedIds: members.map((m) => m.id),
           band: members[0]?.band ?? bandOrder[3],
         },
       ]),
-      edges: combinePairs(aggregate(input.edges, ids)),
+      edges: combinePairs(aggregate(input.edges, candidateIds)),
     };
+    if (!reducesHeight(drawing, candidate)) continue;
+    for (const b of members) ids.set(b.id, id);
+    drawing = candidate;
   }
+  // Pair labels belong to the SVG; requirement syntax keeps each exact relation.
+  const exactEdges = aggregate(input.edges, ids);
   const unsupported = [
     ...new Set(
-      drawing.edges
+      exactEdges
         .filter((e) => !["refines", "satisfies", "verifies"].includes(e.kind))
         .map((e) => e.kind),
     ),
@@ -129,7 +161,7 @@ export function requirementDiagram(input: DiagramInput & { subject: string }): D
           (b) =>
             `  ${b.id.startsWith("spec:") ? "requirement" : "element"} ${aliases.get(b.id) ?? ""} {\n    ${b.id.startsWith("spec:") ? "text" : "type"}: "${mermaidText(`${b.words} · ${b.id}`)}"\n  }`,
         ),
-        ...drawing.edges.flatMap((e) => [
+        ...exactEdges.flatMap((e) => [
           `  %% claim: ${mermaidText(e.claim ?? "")}${e.reason ? `; reason: ${mermaidText(e.reason)}` : ""}`,
           `  ${aliases.get(e.from) ?? ""} - ${e.kind} -> ${aliases.get(e.to) ?? ""}`,
         ]),

@@ -80,15 +80,17 @@ export function registerFilter(): void {
       this.update();
     };
 
-    private readonly reset = (event: Event): void => {
-      event.preventDefault();
-      for (const select of Array.from(
-        this.querySelectorAll<HTMLSelectElement>("select[data-filter]"),
-      ))
-        select.value = "any";
-      const note = this.querySelector<HTMLElement>("[data-filter-note]");
-      if (note) note.textContent = "";
-      this.update();
+    private readonly reset = (): void => {
+      // Native defaults apply after the event; let other form controls reset too.
+      queueMicrotask(() => {
+        for (const select of Array.from(
+          this.querySelectorAll<HTMLSelectElement>("select[data-filter]"),
+        ))
+          select.value = "any";
+        const note = this.querySelector<HTMLElement>("[data-filter-note]");
+        if (note) note.textContent = "";
+        this.update();
+      });
     };
 
     private readonly preventSubmit = (event: Event): void => {

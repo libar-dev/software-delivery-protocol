@@ -213,7 +213,7 @@ describe("Studio capabilities", () => {
     expect(drawing.boxes[0]?.title).toBe("Root title");
     expect(mermaidSource(drawing)).not.toContain("`Root`");
   });
-  it("initializes epic filtering from the URL, intersects every control and resets native rows", () => {
+  it("initializes epic filtering from the URL, intersects every control and resets native rows", async () => {
     const row = {
       epic: "spec:probe.root",
       kind: "example",
@@ -279,6 +279,7 @@ describe("Studio capabilities", () => {
       runInNewContext(readFileSync(new URL("../dist/studio/studio.js", import.meta.url), "utf8"), {
         HTMLElement: FakeNode,
         Event,
+        queueMicrotask,
         URL,
         customElements: {
           get: () => undefined,
@@ -308,8 +309,12 @@ describe("Studio capabilities", () => {
         }
       const event = new Event("reset", { cancelable: true });
       form.listeners.get("reset")?.(event);
+      expect(event.defaultPrevented).toBe(false);
       // The browser applies option defaults only after an uncancelled reset event.
       if (!event.defaultPrevented) for (const select of selects) select.value = "native-default";
+      await new Promise<void>((resolve) => {
+        queueMicrotask(resolve);
+      });
       expect(rows.map((r) => r.hidden)).toEqual([false, false]);
       expect(note.textContent).toBe("");
       expect(selects.every((s) => s.value === "any")).toBe(true);
@@ -374,9 +379,9 @@ describe("Studio capabilities", () => {
       )
     ).recipes.all.get(52) as CapabilityMap;
     const d = capabilityDiagrams(answer, [root.id], root.id)[0];
-    expect(d.boxes.length).toBeLessThanOrEqual(18);
+    expect(d.boxes).toHaveLength(31);
     expect(d.boxes[1]?.identity).toBe("spec:probe.leaf00");
-    expect(d.boxes.at(-1)?.foldedIds?.length).toBeGreaterThanOrEqual(12);
+    expect(d.boxes.at(-1)?.foldedIds).toHaveLength(21);
     expect(d.edges.at(-1)?.to).toBe(d.boxes[0]?.id);
     const isolated = leaves.map((n) => ({ ...n, altitude: "epic" as const }));
     const many = (await createStudioData(createReader(graph(isolated)))).recipes.all.get(

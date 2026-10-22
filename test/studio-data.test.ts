@@ -369,4 +369,8 @@ it("shares only parameterless recipe answers within one Studio evaluation", asyn
   expect(first[0]).toBe(first[1]);
   expect(first[0]).not.toBe(first[2]);
   expect(first[0]).not.toBe(second[0]);
+  expect(Object.isFrozen(first[0])).toBe(true);
+  const answer = first[0] as { questions: unknown[] };
+  expect(Object.isFrozen(answer.questions)).toBe(true);
+  expect(() => answer.questions.push("changed")).toThrow(TypeError);
 });

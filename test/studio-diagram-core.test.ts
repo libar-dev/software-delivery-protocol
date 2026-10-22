@@ -40,6 +40,8 @@ const core = specTest({
     ref("spec:consumers.spec-studio.diagram-kinds.legibility"),
     ref("spec:consumers.spec-studio.diagram-kinds.edge-routing"),
     ref("spec:consumers.spec-studio.diagram-kinds.mermaid-source"),
+    ref("spec:consumers.spec-studio.diagram-kinds.requirement-trace"),
+    ref("spec:consumers.spec-studio.diagrams"),
   ],
 });
 void core;
@@ -604,6 +606,88 @@ it("names folded declared refiners by their relation and claim without an intern
   expect(fold.title).toBe("48 refining Specs · declared");
   expect(fold.hideIdentity).toBe(true);
   expect(layoutDiagram(d).boxes.find((b) => b.box.folded)?.identity).toEqual([]);
+});
+it("keeps examples apart from refiners when dense requirement groups fold", () => {
+  const subject = { id: "spec:root", words: "Root", target: "#main", band: "Intended Specs" };
+  const refiners = Array.from({ length: 15 }, (_, i) => ({
+    id: `spec:child${String(i)}`,
+    words: "Child",
+    target: "#main",
+    band: "Intended Specs",
+  }));
+  const examples = Array.from({ length: 3 }, (_, i) => ({
+    id: `spec:example${String(i)}`,
+    words: "Example",
+    target: "#main",
+    band: "Declared verifying examples",
+  }));
+  const d = requirementDiagram({
+    subject: subject.id,
+    boxes: [subject, ...refiners, ...examples],
+    edges: [
+      ...refiners.map((b) => ({ from: b.id, to: subject.id, kind: "refines", claim: "declared" })),
+      ...examples.flatMap((b) =>
+        ["refines", "verifies"].map((kind) => ({
+          from: b.id,
+          to: subject.id,
+          kind,
+          claim: "declared",
+        })),
+      ),
+    ],
+  });
+  const placed = d.boxes.filter((b) => b.band === "Declared verifying examples");
+  expect(placed.length).toBeGreaterThan(0);
+  for (const box of placed) if (box.folded) expect(box.title).toContain("verifying examples");
+  expect(
+    d.boxes
+      .filter((b) => b.band === "Intended Specs")
+      .flatMap((b) => b.foldedIds ?? [])
+      .some((id) => id.startsWith("spec:example")),
+  ).toBe(false);
+});
+it.each([
+  ["refines", "declared", "Outside the selected set", "refined Specs", true],
+  ["satisfies", "anchored", "Satisfying or referencing units", "satisfying units", false],
+  ["verifies", "anchored", "Test or oracle bindings", "test bindings", false],
+])(
+  "names %s folds in plain words and preserves direction",
+  (kind, claim, band, title, outgoing) => {
+    const subject = { id: "spec:root", words: "Root", target: "#main", band: "Intended Specs" };
+    const members = Array.from({ length: 48 }, (_, i) => ({
+      id: `spec:item${String(i)}`,
+      words: "Item",
+      target: "#main",
+      band,
+    }));
+    const d = requirementDiagram({
+      subject: subject.id,
+      boxes: [subject, ...members],
+      edges: members.map((b) => ({
+        from: outgoing ? subject.id : b.id,
+        to: outgoing ? b.id : subject.id,
+        kind,
+        claim,
+      })),
+    });
+    expect(d.boxes.find((b) => b.folded)?.title).toBe(`48 ${title} · ${claim}`);
+  },
+);
+it("keeps a short drawing unfolded even with many boxes and incident edges", () => {
+  const subject = { id: "spec:root", words: "Root", target: "#main" };
+  const members = Array.from({ length: 18 }, (_, i) => ({
+    id: `spec:item${String(i)}`,
+    words: "Item",
+    target: "#main",
+  }));
+  const d = traceDiagram({
+    subject: subject.id,
+    boxes: [subject, ...members],
+    edges: members.map((b) => ({ from: b.id, to: subject.id, kind: "refines", claim: "declared" })),
+  });
+  expect(d.boxes).toHaveLength(19);
+  expect(layoutDiagram(d).height).toBeLessThanOrEqual(2000);
+  expect(d.boxes.some((b) => b.folded)).toBe(false);
 });
 it("packs disjoint endpoint intervals into shared horizontal lanes", () => {
   const boxes = Array.from({ length: 5 }, (_, i) => ({

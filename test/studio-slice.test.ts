@@ -354,6 +354,42 @@ const dependencyAnchor = specTest({
 void dependencyAnchor;
 
 describe("slice dependency drawing", () => {
+  it("preserves single-member depths and opens complete text when no height-reducing fold fits", () => {
+    const member = required(shared.answer.members[0]);
+    const members = Array.from({ length: 10 }, (_, i) => ({
+      ...member,
+      id: `spec:probe.depth${String(i)}`,
+      depth: i + 1,
+      exampleOf: null,
+      exampleMembers: [],
+    }));
+    const d = dependencyDiagram(
+      "probe",
+      {
+        ...shared.answer,
+        members,
+        boundary: { ...shared.answer.boundary, restsOn: [], restedOnBy: [] },
+        structure: {
+          edges: members.slice(1).map((m, i) => ({
+            from: m.id,
+            to: required(members[i]).id,
+            type: "dependsOn",
+            orders: true,
+          })),
+          cycles: [],
+          unresolved: [],
+        },
+      },
+      (id) => id,
+    );
+    expect(d.boxes.some((b) => b.folded)).toBe(false);
+    for (const m of members) expect(d.boxes.some((b) => b.id === m.id)).toBe(true);
+    const html = renderDiagram(d, "probe.dependencies");
+    expect(html).not.toContain("<svg");
+    expect(html).toContain('<details open id="diagram.probe.dependencies.text"');
+    expect(html).toContain("height budget");
+    for (const m of members) expect(html).toContain(m.id);
+  });
   it("aggregates boundary arrows before testing the bound, retaining every original relation in text", () => {
     const { answer } = shared;
     const member = required(answer.members.find((m) => m.id === "spec:probe.a"));

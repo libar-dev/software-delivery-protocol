@@ -89,6 +89,13 @@ function plainObject(value: unknown): value is Readonly<Record<string, unknown>>
   return prototype === Object.prototype || prototype === null;
 }
 
+function freezeAnswer(value: unknown, seen = new Set<object>()): unknown {
+  if (typeof value !== "object" || value === null || seen.has(value)) return value;
+  seen.add(value);
+  for (const child of Object.values(value)) freezeAnswer(child, seen);
+  return Object.freeze(value);
+}
+
 // Both source tests and bundled entries read this package's built bodies. Walking from the
 // module also works for the CommonJS main entry, whose bundle supplies __dirname.
 function recipeDirectory(): string {
@@ -168,7 +175,9 @@ export async function evaluateBodyWithReader(
     if (input.memoizeParameterlessRecipes && Object.keys(parameters).length === 0) {
       const previous = answers.get(number);
       if (previous !== undefined) return previous;
-      const answer = recipeBody(g, graph, report, parameters, recipes);
+      const answer = recipeBody(g, graph, report, parameters, recipes).then((value) =>
+        freezeAnswer(value),
+      );
       answers.set(number, answer);
       return answer;
     }
