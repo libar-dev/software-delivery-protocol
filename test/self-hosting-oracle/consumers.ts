@@ -1848,7 +1848,7 @@ export const consumersSpecs = [
           "The memo the panel writes for a proposal is byte for byte the memo recipe 49 returns for the same proposal.",
           "A proposal's base is the commit a present build stamp names, otherwise one the person supplies, and the person gives one reason for the whole proposal; without a base and a reason the panel exports its intents as scoped-intent text, and the agent that receives them writes the proposal against a commit it knows.",
           "A request scoped to a Pack records the members this page set renders for that Pack, and expands to them at hand-off only when the proposal's base is the commit the page set's stamp names; otherwise it stays scoped-intent text for an agent to resolve against the base. A request that changes a Pack's membership or framing, names an empty Pack or names a Pack with an unresolved member, stays scoped-intent text too, so the change-proposal contract keeps its Spec and entry scopes.",
-          "The proposal holds only the intents its contract can carry; every intent that stays scoped-intent text is listed apart under `Not in the proposal`, and `Copy scoped intent` copies those intents, so the panel drops none.",
+          "The proposal holds only the intents its contract can carry; every intent that stays scoped-intent text is listed apart under `Not in the proposal`, and `Copy scoped intent` copies those intents, so the panel drops none. The copied text names each intent's action and recorded scope: the member Spec ids for a member change, with the Pack id as context, or the Pack id for a membership or framing change.",
           "The panel requests nothing over the network and sends its intents nowhere.",
         ],
         ruleKeys: {
@@ -5686,9 +5686,9 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "The lens lists one row per Spec that is not an example, in id order: its verifier binding as present or none, with its verifiers and how many are enabled; its keyed rules with how many an enabled example exercises, from recipe 34; its unkeyed rules, counted apart because the graph cannot tell which examples exercise a rule with no key; and, when it owns an example space, its uncovered values and the examples that leave a slot unbound, from recipe 44. Each row links to the verification panel of the Spec's page.",
+          "The lens lists one row per Spec that is not an example, in id order: its verifier binding as present or none, with its verifiers and how many are enabled; its keyed rules with how many an enabled example exercises, from recipe 34; its unkeyed rules, counted apart because the graph cannot tell which examples exercise a rule with no key; and, when it owns an example space, its uncovered values and the examples that leave a slot unbound, from recipe 44. Each row links to the verification panel of the Spec's page. A space with no enumerable slot is `not measurable`, whether or not it has examples; otherwise it is `uncovered` when any enumerable value has no example and `covered` when all enumerable values have examples. Non-enumerable slots do not affect a mixed space's classification.",
           "The lens shows verifier bindings and states no run result of its own; with the run records input, a row adds how many of the results recipe 45 joins from its verifiers' test files passed, failed, were skipped, pending or other, labelled as external run evidence from those files and never as a verdict on the Spec or on one verifier.",
-          "Filters narrow the rows by verifier binding, by whether a keyed rule goes unexercised, by whether an example-space value goes uncovered, and by Pack, and the section says how many rows it shows; without script every row shows.",
+          "Filters narrow the rows by verifier binding, by whether a keyed rule goes unexercised, by example-space classification (`covered`, `uncovered`, `not measurable` or no space), and by Pack, and the section says how many rows it shows; without script every row shows.",
           "The page opens with sentences the build counts from the recipes' answers: the Specs with and without a verifier binding, the keyed rules exercised and unexercised, the unkeyed rules, the example spaces with an uncovered value, and, with run records, the inputs it names.",
         ],
         ruleKeys: {
@@ -5713,7 +5713,7 @@ export const consumersSpecs = [
         testsPage:
           "in order, the page title `Tests`, the summary sentences, the filter bar, and the rows, each a line that wraps on a narrow screen.",
         coverageRow:
-          "the Spec's title linked to its page's verification panel, its id as code, then as plain text: verifier binding present or none with `<n> verifiers, <m> enabled`, `<e> of <k> keyed rules exercised`, `<u> unkeyed rules`, and `<v> uncovered values` when it owns an example space; with run records, `external run evidence:` and the count of each result.",
+          "the Spec's title linked to its page's verification panel, its id as code, then as plain text: verifier binding present or none with `<n> verifiers, <m> enabled`, `<e> of <k> keyed rules exercised`, `<u> unkeyed rules`, and `<v> uncovered values` when its example space has an enumerable slot, or `not measurable` when it has a space with no enumerable slot; with run records, `external run evidence:` and the count of each result.",
         filterBar:
           "one labelled select per filter, each listing any and the values the rows hold, and a line saying how many of all rows show.",
       },

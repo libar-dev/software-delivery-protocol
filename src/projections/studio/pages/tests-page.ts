@@ -23,6 +23,14 @@ export interface RuleCoverage {
   totals: { keyedRules: number; exercised: number; unexercised: number; unkeyedRules: number };
   rows: { address: string; exercisedBy: { example: string; enabled: boolean }[] }[];
 }
+function spaceClassification(space: CoverageSpace | undefined): string {
+  if (space === undefined) return "none";
+  const enumerable = space.slots.filter((slot) => slot.enumerable);
+  if (enumerable.length === 0) return "not-measurable";
+  return enumerable.some((slot) => slot.values.some((value) => value.examples.length === 0))
+    ? "uncovered"
+    : "covered";
+}
 /**
  * @sdpAnchor impl:protocol.studio-tests-lens
  * @sdpSatisfies spec:consumers.spec-studio.lenses.tests, spec:consumers.spec-studio.lenses
@@ -47,6 +55,7 @@ export function testsPage(ctx: PageContext): string {
       unexercised += totals.unexercised;
       unkeyed += totals.unkeyedRules;
       const space = coverage.spaces.find((p) => p.spec === s.id);
+      const classification = spaceClassification(space);
       const missing =
         space?.slots.reduce(
           (n, slot) =>
@@ -84,7 +93,13 @@ export function testsPage(ctx: PageContext): string {
         /href="([^"]+)"/u,
         'href="$1#panel.verification"',
       );
-      return `<li class="spec-row" data-row data-binding="${binding}" data-rules="${totals.keyedRules === 0 ? "none" : totals.unexercised > 0 ? "unexercised" : "exercised"}" data-values="${space === undefined ? "none" : missing > 0 ? "uncovered" : "covered"}" data-pack="${escape(s.packs.join(" "))}">${target} · ${code(s.id)} · verifier binding ${binding}: ${String(s.verifiers.length)} verifiers, ${String(enabled)} enabled · ${String(totals.exercised)} of ${String(totals.keyedRules)} keyed rules exercised · ${String(totals.unkeyedRules)} unkeyed rules${space ? ` · ${String(missing)} uncovered values` : ""}${s.verifiers.length ? `<ul>${s.verifiers.map((v) => `<li>${link(ctx, v.verifierId)} · ${v.enabled ? "enabled" : "not enabled"}${v.file ? ` · ${sourceCode(v.file, v.line)}` : ""}</li>`).join("")}</ul>` : ""}${spaceDetails ? `<p>${spaceDetails}</p>` : ""}${runSummary}</li>`;
+      const spaceSummary =
+        classification === "not-measurable"
+          ? " · not measurable"
+          : space
+            ? ` · ${String(missing)} uncovered values`
+            : "";
+      return `<li class="spec-row" data-row data-binding="${binding}" data-rules="${totals.keyedRules === 0 ? "none" : totals.unexercised > 0 ? "unexercised" : "exercised"}" data-values="${classification}" data-pack="${escape(s.packs.join(" "))}">${target} · ${code(s.id)} · verifier binding ${binding}: ${String(s.verifiers.length)} verifiers, ${String(enabled)} enabled · ${String(totals.exercised)} of ${String(totals.keyedRules)} keyed rules exercised · ${String(totals.unkeyedRules)} unkeyed rules${spaceSummary}${s.verifiers.length ? `<ul>${s.verifiers.map((v) => `<li>${link(ctx, v.verifierId)} · ${v.enabled ? "enabled" : "not enabled"}${v.file ? ` · ${sourceCode(v.file, v.line)}` : ""}</li>`).join("")}</ul>` : ""}${spaceDetails ? `<p>${spaceDetails}</p>` : ""}${runSummary}</li>`;
     })
     .join("");
   const filters = [
@@ -120,13 +135,7 @@ export function testsPage(ctx: PageContext): string {
         ...new Set(
           specs.map((s) => {
             const space = coverage.spaces.find((p) => p.spec === s.id);
-            return space === undefined
-              ? "none"
-              : space.slots.some(
-                    (slot) => slot.enumerable && slot.values.some((v) => v.examples.length === 0),
-                  )
-                ? "uncovered"
-                : "covered";
+            return spaceClassification(space);
           }),
         ),
       ],
@@ -140,6 +149,6 @@ export function testsPage(ctx: PageContext): string {
   return frame(
     ctx,
     "Tests",
-    `<header class="page-head"><h1>Tests</h1><p>Verifier bindings, keyed rules from recipe 34 and example-space values from recipe 44.</p><p>${String(present)} Specs with a verifier binding and ${String(specs.length - present)} without. ${String(exercised)} keyed rules exercised and ${String(unexercised)} unexercised. ${String(unkeyed)} unkeyed rules. ${String(withMissing)} example spaces with an uncovered value.</p>${(evidence?.inputs ?? []).map((input) => runInputSentence(input)).join("")}</header><sdp-filter><form hidden class="filter-bar">${filters.map((f) => `<label>${f.label}<select data-filter="${f.name}"><option value="any">Any</option>${f.values.map((v) => `<option value="${escape(v)}">${escape(v)}</option>`).join("")}</select></label>`).join("")}</form><output aria-live="polite">${String(specs.length)} of ${String(specs.length)} shown</output><ul class="spec-list">${rows}</ul></sdp-filter>`,
+    `<header class="page-head"><h1>Tests</h1><p>Verifier bindings, keyed rules from recipe 34 and example-space values from recipe 44.</p><p>${String(present)} Specs with a verifier binding and ${String(specs.length - present)} without. ${String(exercised)} keyed rules exercised and ${String(unexercised)} unexercised. ${String(unkeyed)} unkeyed rules. ${String(withMissing)} example spaces with an uncovered value.</p>${(evidence?.inputs ?? []).map((input) => runInputSentence(input)).join("")}</header><sdp-filter><form hidden class="filter-bar">${filters.map((f) => `<label>${f.label}<select data-filter="${f.name}"><option value="any">Any</option>${f.values.map((v) => `<option value="${escape(v)}">${escape(v === "not-measurable" ? "not measurable" : v)}</option>`).join("")}</select></label>`).join("")}</form><output aria-live="polite">${String(specs.length)} of ${String(specs.length)} shown</output><ul class="spec-list">${rows}</ul></sdp-filter>`,
   );
 }

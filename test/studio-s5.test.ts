@@ -971,6 +971,40 @@ it("uses the stamp base, labels fields, orders actions and copies and saves the 
   expect(dom.copied).toEqual([memo, document]);
 });
 
+it("copies distinct actions and recorded scopes for both Pack choices without a stamp", () => {
+  // spec:consumers.spec-studio.intent-panel#rule.textApart
+  const copies = ["members", "pack"].map((choice) => {
+    const dom = studioDom(assets.script, "https://studio.test/packs/probe.html", storage());
+    const panel = dom.mount("sdp-intent-panel", { "page-root": "../" });
+    const compose = dom.mount("sdp-compose", {
+      scope: "pack:probe",
+      action: "change-entry",
+      members: "spec:probe.s1 spec:probe.s2",
+    });
+    compose.querySelector("button")?.dispatch("click");
+    const dialog = dom.doc.querySelector("dialog");
+    const request = dialog?.querySelector("textarea");
+    const select = dialog?.querySelector("select");
+    if (!dialog || !request || !select) throw new Error("Missing Pack compose dialog");
+    request.value = "Clarify this design";
+    select.value = choice;
+    dialog.querySelector("form")?.dispatch("submit");
+    const copy = panel
+      .querySelectorAll("button")
+      .find((b) => b.textContent === "Copy scoped intent");
+    if (!copy) throw new Error("Missing scoped-intent copy action");
+    copy.dispatch("click");
+    expect(dom.copied).toHaveLength(1);
+    return dom.copied[0];
+  });
+  expect(copies[0]).not.toBe(copies[1]);
+  expect(copies[0]).toContain("Action: change-entry");
+  expect(copies[0]).toContain("Scope: spec:probe.s1, spec:probe.s2");
+  expect(copies[1]).toContain("Action: change-pack");
+  expect(copies[1]).toContain("Scope: pack:probe");
+  for (const text of copies) expect(text).toContain("Clarify this design");
+});
+
 it("keeps Pack framing changes apart and gathers scenario editor steps verbatim", () => {
   const saved = storage();
   const dom = studioDom(assets.script, "https://studio.test/index.html", saved);

@@ -49,6 +49,7 @@ import {
 } from "../src/projections/studio/diagrams/index.js";
 import { createStudioData } from "../src/projections/studio/data.js";
 import { renderStudio } from "./helpers/studio-render.js";
+import { studioDom } from "./helpers/studio-dom.js";
 import { createReader } from "../src/reader/reader.js";
 import { schemaVersion } from "../src/graph/schema.js";
 import type { GraphSchema } from "../src/graph/schema.js";
@@ -419,6 +420,84 @@ describe("Studio lenses", () => {
     expect.soft(page).not.toContain('<option value="exercised">');
     expect.soft(page).not.toContain('<option value="covered">');
   });
+  it("labels a primitive-only space with no examples not measurable and hides it under covered", async () => {
+    // spec:consumers.spec-studio.lenses.tests#rule.coverageRows
+    // spec:consumers.spec-studio.lenses.tests#rule.filters
+    const reader = fixture({
+      "parent.sdp.md": carrier(
+        "spec:probe.parent",
+        "behavior",
+        "{}",
+        "\n## Behavior\n- rule: Read the values.\n\n## Example space\n```gwt-vocabulary\nGiven values {count:number}, {label:string} and {flag:boolean}\nWhen read\nThen shown\n```\n",
+      ),
+    });
+    expect(reader.specContext("spec:probe.parent")?.exampleSpace?.points).toEqual([]);
+    const page = required(
+      renderStudio(await createStudioData(reader)).find((p) => p.path === "tests.html"),
+    ).content;
+    const rowHtml = required(/<li class="spec-row"[^>]*>.*?<\/li>/u.exec(page)?.[0]);
+    expect.soft(rowHtml).toContain('data-values="not-measurable"');
+    expect.soft(rowHtml).toContain(" · not measurable");
+    expect.soft(rowHtml).not.toContain("0 uncovered values");
+    expect.soft(page).toContain('<option value="not-measurable">not measurable</option>');
+    expect.soft(page).not.toContain('<option value="covered">');
+
+    const dom = studioDom(resolve("dist/studio/studio.js"), "https://studio.test/tests.html", {
+      getItem: () => null,
+      setItem: () => undefined,
+    });
+    const filter = dom.doc.createElement("sdp-filter");
+    const select = dom.doc.createElement("select");
+    select.setAttribute("data-filter", "values");
+    select.value = "covered";
+    const row = dom.doc.createElement("li");
+    row.setAttribute("data-row", "");
+    row.setAttribute("data-values", required(/data-values="([^"]*)"/u.exec(rowHtml)?.[1]));
+    filter.append(select, row);
+    dom.doc.body.append(filter);
+    expect.soft(row).toHaveProperty("hidden", true);
+    select.value = "not-measurable";
+    filter.dispatch("change");
+    expect.soft(row).toHaveProperty("hidden", false);
+  });
+  it.each([
+    { declaration: "number", points: ["1"], mixed: false, expected: "not-measurable" },
+    { declaration: "string", points: ['"a"'], mixed: false, expected: "not-measurable" },
+    { declaration: "boolean", points: ["true"], mixed: false, expected: "not-measurable" },
+    { declaration: '"a"|"b"', points: [], mixed: false, expected: "uncovered" },
+    { declaration: '"a"|"b"', points: ['"a"'], mixed: false, expected: "uncovered" },
+    { declaration: '"a"|"b"', points: ['"a"', '"b"'], mixed: false, expected: "covered" },
+    { declaration: '"a"|"b"', points: ['"a"'], mixed: true, expected: "uncovered" },
+    { declaration: '"a"|"b"', points: ['"a"', '"b"'], mixed: true, expected: "covered" },
+  ])("classifies $declaration with points $points and mixed=$mixed as $expected", async (input) => {
+    const files: Record<string, string> = {
+      "parent.sdp.md": carrier(
+        "spec:probe.parent",
+        "behavior",
+        "{}",
+        `\n## Behavior\n- rule: Read the values.\n\n## Example space\n\`\`\`gwt-vocabulary\nGiven a value {value:${input.declaration}}${input.mixed ? " and count {count:number}" : ""}\nWhen read\nThen shown\n\`\`\`\n`,
+      ),
+    };
+    input.points.forEach((value, index) => {
+      files[`child${String(index)}.sdp.md`] = carrier(
+        `spec:probe.child${String(index)}`,
+        "example",
+        "\n  refines: spec:probe.parent\n  verifies: spec:probe.parent",
+        `\n\`\`\`gwt\nGiven a value {value: ${value}}${input.mixed ? " and count {count: 1}" : ""}\nWhen read\nThen shown\n\`\`\`\n`,
+      );
+    });
+    const reader = fixture(files);
+    expect(reader.specContext("spec:probe.parent")?.exampleSpace?.points).toHaveLength(
+      input.points.length,
+    );
+    const page = required(
+      renderStudio(await createStudioData(reader)).find((p) => p.path === "tests.html"),
+    ).content;
+    expect(page).toContain(`data-values="${input.expected}"`);
+    expect(page).toContain(
+      `<option value="${input.expected}">${input.expected.replace("-", " ")}</option>`,
+    );
+  });
   it("renders member subjects, code spans, used-by counts, differences and empty components", async () => {
     const reader = fixture({
       "design.sdp.md": carrier(
@@ -598,7 +677,7 @@ void foldsByLayerAnchor;
 registerFoldsByLayer(diagramAdapters(foldsByLayerContract));
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { afterEach } from "vitest";
 import { extract } from "../src/extract/index.js";
 import { evaluateStudioRecipe } from "../src/projections/studio/recipes.js";
