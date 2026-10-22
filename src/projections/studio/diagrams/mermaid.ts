@@ -11,8 +11,8 @@ export const mermaidText = (value: string): string =>
     .replace(/[\r\n\u2028\u2029]/gu, " ");
 /**
  * @sdpAnchor impl:protocol.studio-diagram-source
- * @sdpLabel escaped Mermaid flowchart source in placed box order
- * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.mermaid-source
+ * @sdpLabel escaped Mermaid flowchart and mindmap source in placed box order
+ * @sdpSatisfies spec:consumers.spec-studio.diagram-kinds.mermaid-source, spec:consumers.spec-studio.diagram-kinds.capability-tree
  * @sdpReferences spec:consumers.spec-studio.diagram-kinds
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
@@ -40,6 +40,9 @@ export function mermaidSource(d: Diagram): string {
       ...(b.folded
         ? [`  %% folded ${mermaidText(b.id)}: ${(b.foldedIds ?? []).map(mermaidText).join(", ")}`]
         : []),
+      ...(b.cycleIds
+        ? [`  %% cycle ${mermaidText(b.id)}: ${b.cycleIds.map(mermaidText).join(", ")}`]
+        : []),
     ]),
     ...d.edges.flatMap((e) => [
       `  ${aliases.get(e.from) ?? ""} -->|"${mermaidText(edgeWords(e))}"| ${aliases.get(e.to) ?? ""}`,
@@ -47,5 +50,6 @@ export function mermaidSource(d: Diagram): string {
         ? []
         : [`  %% count: ${String(e.count)}; ${mermaidText(e.from)} to ${mermaidText(e.to)}`]),
     ]),
+    ...(d.mermaidNotes ?? []).map((note) => `  %% ${mermaidText(note)}`),
   ].join("\n");
 }

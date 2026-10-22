@@ -183,7 +183,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "impl:protocol.studio-diagram-source",
     nodeType: "CodeNode",
-    label: "escaped Mermaid flowchart source in placed box order",
+    label: "escaped Mermaid flowchart and mindmap source in placed box order",
     file: "src/projections/studio/diagrams/mermaid.ts",
     site: "export function mermaidSource(",
     role: "projection",
@@ -4727,6 +4727,11 @@ export const expectedBindingEdges = [
     "impl:protocol.studio-diagram-source",
     "satisfies",
     "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+  ],
+  [
+    "impl:protocol.studio-diagram-source",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.capability-tree",
   ],
   ["impl:protocol.studio-diagram-source", "references", "spec:consumers.spec-studio.diagram-kinds"],
   ["impl:protocol.studio-diagrams", "references", "spec:consumers.spec-studio.diagram-kinds"],

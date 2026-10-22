@@ -47,7 +47,11 @@ function completeText(
   roots: readonly string[],
   subject: string,
 ): string {
-  const visits = capabilityWalk(map, roots);
+  const visits = capabilityWalk(
+    map,
+    roots,
+    subject === "unreached" ? new Set(map.unreached.ids) : undefined,
+  );
   return `<details class="capability-complete" id="${escape(`capability.${subject}.complete`)}"><summary>Complete refinement text</summary><ol class="capability-walk">${visits
     .map((v) => {
       const first = capabilityBranchId(subject, v.node.id);
@@ -59,9 +63,15 @@ function completeText(
 }
 const damage = (map: CapabilityMap, ids: ReadonlySet<string>): string => {
   const rows = map.damage.filter((d) => ids.has(d.from) || ids.has(d.to));
-  return rows.length
-    ? `<p>Unresolved refinement endpoints</p><ul>${rows.map((d) => `<li>${escape(d.code)}: ${code(d.from)} refines ${code(d.to)} · unresolved endpoint</li>`).join("")}</ul>`
-    : "";
+  const cycles = map.cycles.filter((c) => c.members.some((id) => ids.has(id)));
+  return (
+    (cycles.length
+      ? `<p>Refinement cycles</p><ul>${cycles.map((c) => `<li>Refinement cycle: ${c.members.map(code).join(", ")}</li>`).join("")}</ul>`
+      : "") +
+    (rows.length
+      ? `<p>Unresolved refinement endpoints</p><ul>${rows.map((d) => `<li>${escape(d.code)}: ${code(d.from)} refines ${code(d.to)} · unresolved endpoint</li>`).join("")}</ul>`
+      : "")
+  );
 };
 
 /**
@@ -101,11 +111,12 @@ export function capabilitiesPage(ctx: PageContext): string {
         .join("")}${completeText(ctx, map, [epic.id], epic.id)}${damage(map, ids)}</section>`;
     })
     .join("");
-  const unreached = map.unreached.ids.length
-    ? `${capabilityDiagrams(map, map.unreached.roots, "unreached", (id) => specPath(id))
-        .map((d) => renderDiagram(d, "unreached.capability"))
-        .join("")}${completeText(ctx, map, map.unreached.roots, "unreached")}`
-    : "<p>No unreached Specs.</p>";
+  const unreached =
+    (map.unreached.ids.length
+      ? `${capabilityDiagrams(map, map.unreached.roots, "unreached", (id) => specPath(id))
+          .map((d) => renderDiagram(d, "unreached.capability"))
+          .join("")}${completeText(ctx, map, map.unreached.roots, "unreached")}`
+      : "<p>No unreached Specs.</p>") + damage(map, new Set(map.unreached.ids));
   return frame(
     ctx,
     "Capabilities",

@@ -54,7 +54,11 @@ export interface CapabilityVisit {
 }
 
 // Placement is a finite traversal of the recipe's ordered adjacency, not a second reach calculation.
-export function capabilityWalk(map: CapabilityMap, roots: readonly string[]): CapabilityVisit[] {
+export function capabilityWalk(
+  map: CapabilityMap,
+  roots: readonly string[],
+  scope?: ReadonlySet<string>,
+): CapabilityVisit[] {
   const nodes = new Map(map.nodes.map((n) => [n.id, n]));
   const seen = new Set<string>();
   const active = new Set<string>();
@@ -71,7 +75,7 @@ export function capabilityWalk(map: CapabilityMap, roots: readonly string[]): Ca
       continue;
     }
     const node = nodes.get(next.id);
-    if (!node) continue;
+    if (!node || (scope && !scope.has(node.id))) continue;
     const repeat = seen.has(next.id);
     result.push({
       node,
@@ -106,7 +110,11 @@ export function capabilityDiagrams(
   target: (id: string) => string = (id) =>
     `#${encodeURIComponent(capabilityBranchId(subject, id))}`,
 ): readonly [Diagram] {
-  const walk = capabilityWalk(map, roots);
+  const walk = capabilityWalk(
+    map,
+    roots,
+    subject === "unreached" ? new Set(map.unreached.ids) : undefined,
+  );
   const cycleOf = new Map(
     map.cycles.flatMap((c) => c.members.map((id) => [id, c.members] as const)),
   );
@@ -153,7 +161,7 @@ export function capabilityDiagrams(
             ? "Unreached roots"
             : "Roots"
           : `Depth ${String(placedDepth)} · Children of ${placementParent ?? ""}`,
-      ...(cycle ? { foldedIds: members } : {}),
+      ...(cycle ? { foldedIds: members, cycleIds: members } : {}),
       ...(parent ? { parent } : {}),
     });
     depths.set(id, placedDepth);
@@ -179,6 +187,7 @@ export function capabilityDiagrams(
     const id = `${parent.id}.folded`;
     const remainder: DiagramBox = {
       id,
+      identity: `branch of ${parent.identity ?? parent.id}`,
       words: `folded · ${String(memberIds.length)} unique Specs`,
       title: `Folded branch`,
       detail: `${String(memberIds.length)} unique Specs`,
@@ -195,19 +204,18 @@ export function capabilityDiagrams(
     depths.set(id, (depths.get(parent.id) ?? 0) + 1);
     rootOrder.set(id, rootOrder.get(parent.id) ?? 0);
   };
+  const descendants = (parent: DiagramBox): DiagramBox[] => {
+    const ids = new Set([parent.id]);
+    return boxes.filter((b) => {
+      if (!b.parent || !ids.has(b.parent)) return false;
+      ids.add(b.id);
+      return true;
+    });
+  };
   while (!withinBound({ boxes, edges })) {
     const branches = boxes
       .filter((b) => b.parent && !b.folded)
-      .map((parent) => {
-        const ids = new Set([parent.id]);
-        const removed: DiagramBox[] = [];
-        for (const b of boxes)
-          if (b.parent && ids.has(b.parent)) {
-            ids.add(b.id);
-            removed.push(b);
-          }
-        return { parent, removed };
-      })
+      .map((parent) => ({ parent, removed: descendants(parent) }))
       .filter((b) => b.removed.length > 1)
       .sort(
         (a, b) =>
@@ -229,8 +237,16 @@ export function capabilityDiagrams(
       );
     const group = siblings[0];
     if (!group) break;
-    const remove = Math.min(group.children.length, Math.max(2, boxes.length - 39));
-    fold(group.parent, group.children.slice(-remove));
+    const removed = new Set<DiagramBox>();
+    for (const sibling of group.children.slice().reverse()) {
+      removed.add(sibling);
+      for (const child of descendants(sibling)) removed.add(child);
+      if (removed.size >= Math.max(2, boxes.length - 39)) break;
+    }
+    fold(
+      group.parent,
+      boxes.filter((b) => removed.has(b)),
+    );
   }
   const placementOrder = new Map(boxes.map((b, i) => [b.id, i]));
   boxes.sort(
@@ -246,6 +262,13 @@ export function capabilityDiagrams(
     subject !== "unreached" &&
     !boxes.some((b) => b.folded);
   const identities = new Set(walk.map((v) => v.node.id));
+  const fallbackReasons = [
+    ...(roots.length !== 1 ? ["multiple roots"] : []),
+    ...(walk.some((v) => v.repeat && !v.cycle) ? ["repeated parentage"] : []),
+    ...(walk.some((v) => cycleOf.has(v.node.id)) ? ["a cycle"] : []),
+    ...(subject === "unreached" ? ["an unreached band"] : []),
+    ...(boxes.some((b) => b.folded) ? ["a fold"] : []),
+  ];
   const complete = `<p>${String(identities.size)} unique Specs; ${String(boxes.length)} rendered boxes.</p><ul>${walk.map((v) => `<li>${code(v.node.id)}: ${escape(v.node.title)} · ${escape(v.node.altitude)}${v.repeat ? ` · ${v.cycle ? "cyclic link" : "repeat"}` : ""}</li>`).join("")}${map.edges
     .filter((e) => identities.has(e.from) && identities.has(e.to))
     .map(
@@ -267,6 +290,15 @@ export function capabilityDiagrams(
       edges,
       boxOrder: "supplied",
       mermaidKind: strict ? "mindmap" : "flowchart BT",
+      mermaidExplanation: `Preferred syntax: mindmap. Chosen syntax: ${strict ? "mindmap" : `flowchart BT because the drawing has ${fallbackReasons.join(", ")}`}.`,
+      mermaidNotes: map.edges
+        .filter(
+          (e) =>
+            identities.has(e.from) &&
+            identities.has(e.to) &&
+            (cycleOf.has(e.from) || cycleOf.has(e.to)),
+        )
+        .map((e) => `${e.from} refines ${e.to} · ${e.claim}${e.reason ? ` — ${e.reason}` : ""}`),
       legend:
         "Arrows: refines (declared). Later visits repeat a Spec and link to its first occurrence.",
       textEquivalent: complete,
