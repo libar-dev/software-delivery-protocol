@@ -39,9 +39,22 @@
       "touched": 6,
       "throughMembers": 0,
       "throughRestsOn": 6,
+      "throughDesigns": 0,
+      "outside": 6
+    },
+    "designs": {
+      "total": 0,
+      "realized": 0,
+      "matching": 0,
+      "unrealized": 0,
+      "differing": 0,
+      "unreadable": 0
+    },
+    "componentUses": {
+      "inside": 11,
+      "outside": 19,
       "planned": 0
     },
-    "componentUses": 11,
     "decisions": 5,
     "decisionsBelowReady": 2,
     "openQuestions": 10,
@@ -237,15 +250,15 @@
       "restsOn": [],
       "exampleOf": null,
       "design": {
-        "entries": 13,
-        "declarations": 11,
+        "entries": 18,
+        "declarations": 15,
         "openQuestions": 1,
         "blockingQuestions": 0,
         "decisions": 2
       },
       "rules": {
-        "total": 16,
-        "keyed": 16
+        "total": 18,
+        "keyed": 18
       },
       "implementedBy": 0,
       "referencedBy": 0
@@ -271,15 +284,15 @@
       ],
       "exampleOf": null,
       "design": {
-        "entries": 9,
+        "entries": 12,
         "declarations": 0,
         "openQuestions": 1,
         "blockingQuestions": 0,
         "decisions": 0
       },
       "rules": {
-        "total": 15,
-        "keyed": 15
+        "total": 17,
+        "keyed": 17
       },
       "implementedBy": 0,
       "referencedBy": 0
@@ -473,47 +486,56 @@
       {
         "from": "spec:consumers.roadmap",
         "to": "spec:decisions.roadmap-priority",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:consumers.roadmap.memo",
         "to": "spec:consumers.roadmap",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.capability-map-page",
         "to": "spec:consumers.capability-map",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.roadmap-page",
         "to": "spec:consumers.roadmap",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.slice-page",
         "to": "spec:consumers.design-slice",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.slice-page",
         "to": "spec:consumers.spec-studio.diagram-kinds",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:protocol.capability-epics",
         "to": "spec:consumers.capability-map",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:protocol.roadmap-replaces-plans",
         "to": "spec:decisions.roadmap-over-plans",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:protocol.roadmap-replaces-plans",
         "to": "spec:consumers.roadmap",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       }
     ],
     "cycles": []
@@ -641,145 +663,300 @@
         "id": "component:protocol.cli",
         "layer": "edge",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 1
+        "restsOn": 1,
+        "designs": 0
       },
       {
         "id": "component:protocol.extract",
         "layer": "application",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 2
+        "restsOn": 2,
+        "designs": 0
       },
       {
         "id": "component:protocol.projections",
         "layer": "edge",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 7
+        "restsOn": 7,
+        "designs": 0
       },
       {
         "id": "component:protocol.reader",
         "layer": "application",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 1
+        "restsOn": 1,
+        "designs": 0
       },
       {
         "id": "component:protocol.studio-elements",
         "layer": "edge",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 1
+        "restsOn": 1,
+        "designs": 0
       },
       {
         "id": "component:protocol.validate",
         "layer": "domain",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 1
+        "restsOn": 1,
+        "designs": 0
       }
     ],
+    "designs": [],
     "uses": [
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.adapters",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.codegen",
+        "count": 1,
+        "outside": true
+      },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.extract",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.graph",
+        "count": 2,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.import",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.model",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.projections",
         "count": 2,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.reader",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.validate",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:protocol.codegen",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.extract",
+        "to": "component:protocol.graph",
+        "count": 2,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.extract",
+        "to": "component:protocol.model",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.extract",
+        "to": "component:protocol.notation",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:protocol.extract",
         "to": "component:protocol.validate",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:protocol.import",
+        "to": "component:protocol.extract",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.import",
+        "to": "component:protocol.validate",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:protocol.projections",
         "to": "component:protocol.extract",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.graph",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.model",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.projections",
+        "to": "component:protocol.notation",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:protocol.projections",
         "to": "component:protocol.reader",
         "count": 4,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.projections",
         "to": "component:protocol.validate",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:protocol.reader",
+        "to": "component:protocol.graph",
+        "count": 2,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.reader",
+        "to": "component:protocol.model",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:protocol.reader",
         "to": "component:protocol.validate",
         "count": 2,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.studio-elements",
         "to": "component:protocol.projections",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.studio-elements",
         "to": "component:protocol.reader",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:protocol.validate",
+        "to": "component:protocol.graph",
+        "count": 2,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.validate",
+        "to": "component:protocol.model",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:protocol.validate",
+        "to": "component:protocol.notation",
+        "count": 1,
+        "outside": true
       }
     ],
-    "unplaced": [],
-    "differing": []
+    "plannedUses": [],
+    "outside": [
+      {
+        "id": "component:protocol.adapters",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses"
+        ]
+      },
+      {
+        "id": "component:protocol.codegen",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses",
+          "usesTouched"
+        ]
+      },
+      {
+        "id": "component:protocol.graph",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses"
+        ]
+      },
+      {
+        "id": "component:protocol.import",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses",
+          "usesTouched"
+        ]
+      },
+      {
+        "id": "component:protocol.model",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses"
+        ]
+      },
+      {
+        "id": "component:protocol.notation",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses"
+        ]
+      }
+    ],
+    "unplaced": []
   },
   "decisions": [
     {
@@ -946,6 +1123,9 @@
     "Relation reasons; relation types kept.",
     "Boundary titles, kinds, floors, implementation bindings and joined members; ids, stated rungs and holds kept.",
     "Component labels and the Specs that reach each component; counts kept.",
+    "Declared values, differing rows and unreadable rows of each member design; their counts kept.",
+    "The unit edges behind each component pair; counts kept.",
+    "Labels, layers and contexts of outside components.",
     "Decision titles, floors, refinements, supersessions and question counts.",
     "Non-blocking question text and fields; addresses kept."
   ]

@@ -64,7 +64,7 @@
   },
   "totals": {
     "members": 54,
-    "exampleMembers": 33,
+    "exampleMembers": 32,
     "relations": 91,
     "depth": 10,
     "cycles": 0,
@@ -79,9 +79,22 @@
       "touched": 11,
       "throughMembers": 9,
       "throughRestsOn": 2,
+      "throughDesigns": 0,
+      "outside": 1
+    },
+    "designs": {
+      "total": 0,
+      "realized": 0,
+      "matching": 0,
+      "unrealized": 0,
+      "differing": 0,
+      "unreadable": 0
+    },
+    "componentUses": {
+      "inside": 30,
+      "outside": 6,
       "planned": 0
     },
-    "componentUses": 30,
     "decisions": 13,
     "decisionsBelowReady": 13,
     "openQuestions": 63,
@@ -1021,7 +1034,7 @@
       "restsOn": [
         "spec:application.first-experiment"
       ],
-      "exampleOf": "spec:application.first-experiment",
+      "exampleOf": null,
       "design": {
         "entries": 0,
         "declarations": 0,
@@ -1522,457 +1535,548 @@
       {
         "from": "spec:application.aggregate-projection",
         "to": "spec:application.generation-registry",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.aggregate-projection",
         "to": "spec:application.projection-contract",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.aggregate-projection",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:constraints.no-application-wide-counter",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:constraints.no-queue-recovery-for-essential-reads",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:constraints.one-call-per-context-per-use-case",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:constraints.one-commit-per-successful-command",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:constraints.one-public-execution-per-intent",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:constraints.zero-core-projection-jobs",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:application.generation-registry",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:application.history-projection",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:application.history-rebuild",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:application.parent-use-cases",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:application.read-models",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:application.rebuild",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment",
         "to": "spec:application.restore",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment.native-acceptance-production-configuration",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment.native-contention",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment.order-at-stock-item-id-bound",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment.order-of-1-line",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment.order-of-10-lines",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment.order-of-max-lines",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment.receive-stock-item-id-past-bound-refused",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.first-experiment.stock-item-id-past-bound-refused",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.generation-registry",
         "to": "spec:application.projection-contract",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.generation-registry",
         "to": "spec:application.rebuild",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:application.generation-registry.command-without-generation-fails",
         "to": "spec:application.generation-registry",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.generation-registry.first-rebuild-installs-read-model",
         "to": "spec:application.generation-registry",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.history-projection",
         "to": "spec:application.projection-contract",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.history-projection",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild",
         "to": "spec:application.generation-registry",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild",
         "to": "spec:application.history-projection",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild",
         "to": "spec:application.rebuild",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild",
         "to": "spec:application.write-pause",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild.write-pause-rebuild-abort",
         "to": "spec:application.history-rebuild",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild.write-pause-rebuild-installation",
         "to": "spec:application.history-rebuild",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild.write-pause-rebuild-interrupt",
         "to": "spec:application.history-rebuild",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild.write-pause-rebuild-source-order-mismatch",
         "to": "spec:application.history-rebuild",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.history-rebuild.write-pause-rebuild-version-change",
         "to": "spec:application.history-rebuild",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.orders-inventory-example",
         "to": "spec:application.history-projection",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.orders-inventory-example",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.orders-inventory-example.cancel-duplicate-answered-from-receipt",
         "to": "spec:application.orders-inventory-example",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.orders-inventory-example.cancel-placed-order",
         "to": "spec:application.orders-inventory-example",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.orders-inventory-example.cancel-second-context-rejects",
         "to": "spec:application.orders-inventory-example",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.orders-inventory-example.cancel-twice-rejected",
         "to": "spec:application.orders-inventory-example",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.orders-inventory-example.cancel-unknown-order-rejected",
         "to": "spec:application.orders-inventory-example",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.orders-inventory-example.cancel-without-grant-refused",
         "to": "spec:application.orders-inventory-example",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.parent-use-cases",
         "to": "spec:constraints.one-call-per-context-per-use-case",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.parent-use-cases",
         "to": "spec:constraints.one-commit-per-successful-command",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.parent-use-cases.second-context-rejects",
         "to": "spec:application.parent-use-cases",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.parent-use-cases.second-context-throws",
         "to": "spec:application.parent-use-cases",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.projection-contract",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.read-models",
         "to": "spec:constraints.no-queue-recovery-for-essential-reads",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.read-models",
         "to": "spec:constraints.zero-core-projection-jobs",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.read-models.committed-state-read-through-query",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.read-models.committed-state-visible",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.read-models.list-pages-by-cursor",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.read-models.query-refused-before-disclosure",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.read-models.query-refused-without-grant",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.rebuild",
         "to": "spec:constraints.bulk-operations-bounded",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.rebuild",
         "to": "spec:application.generation-registry",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.rebuild",
         "to": "spec:application.history-projection",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.rebuild",
         "to": "spec:application.projection-contract",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.rebuild",
         "to": "spec:application.write-pause",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.rebuild",
         "to": "spec:application.read-models",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.rebuild.online-rebuild-interrupt-resume",
         "to": "spec:application.rebuild",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.restore",
         "to": "spec:constraints.bulk-operations-bounded",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:application.restore",
         "to": "spec:application.generation-registry",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.restore",
         "to": "spec:application.history-rebuild",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.restore",
         "to": "spec:application.parent-use-cases",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.restore",
         "to": "spec:application.projection-contract",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.restore",
         "to": "spec:application.rebuild",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.restore",
         "to": "spec:application.write-pause",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.restore",
         "to": "spec:operations.baseline-operations",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.restore.restore-representative-dataset",
         "to": "spec:application.restore",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:application.write-pause",
         "to": "spec:operations.baseline-operations",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:application.write-pause",
         "to": "spec:application.rebuild",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:application.write-pause.restore-door-without-deploy",
         "to": "spec:application.write-pause",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:constraints.bulk-operations-bounded",
         "to": "spec:operations.baseline-operations",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:constraints.events-stay-small",
         "to": "spec:operations.baseline-operations",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:constraints.no-application-wide-counter",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:constraints.no-queue-recovery-for-essential-reads",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:constraints.one-call-per-context-per-use-case",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:constraints.one-commit-per-successful-command",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:constraints.one-public-execution-per-intent",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:constraints.zero-core-projection-jobs",
         "to": "spec:application.first-experiment",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:operations.baseline-operations",
         "to": "spec:constraints.bulk-operations-bounded",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:operations.baseline-operations",
         "to": "spec:constraints.events-stay-small",
-        "type": "constrainedBy"
+        "type": "constrainedBy",
+        "orders": true
       },
       {
         "from": "spec:operations.baseline-operations.broken-audit-aborts",
         "to": "spec:operations.baseline-operations",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:operations.baseline-operations.broken-metrics-never-abort",
         "to": "spec:operations.baseline-operations",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       }
     ],
     "cycles": []
@@ -2306,319 +2410,354 @@
         "id": "component:example.inventory-context",
         "layer": "adapter",
         "context": "inventory",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 1
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       },
       {
         "id": "component:example.inventory-domain",
         "layer": "domain",
         "context": "inventory",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 1
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       },
       {
         "id": "component:example.orders-context",
         "layer": "adapter",
         "context": "orders",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 1
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       },
       {
         "id": "component:example.orders-domain",
         "layer": "domain",
         "context": "orders",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 1
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       },
       {
         "id": "component:example.parent",
         "layer": "application",
         "context": "orders-inventory",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 3
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       },
       {
         "id": "component:platform.audit",
         "layer": "infrastructure",
         "context": "platform",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 1
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       },
       {
         "id": "component:platform.command",
         "layer": "application",
         "context": "platform",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 2
+        "restsOn": 2,
+        "designs": 0
       },
       {
         "id": "component:platform.context",
         "layer": "adapter",
         "context": "platform",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 2
+        "restsOn": 2,
+        "designs": 0
       },
       {
         "id": "component:platform.gate",
         "layer": "infrastructure",
         "context": "platform",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 1,
           "references": 0
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       },
       {
         "id": "component:platform.operations",
         "layer": "infrastructure",
         "context": "platform",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 1
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       },
       {
         "id": "component:platform.read-model",
         "layer": "application",
         "context": "platform",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 5
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       }
     ],
+    "designs": [],
     "uses": [
       {
         "from": "component:example.inventory-context",
         "to": "component:example.inventory-domain",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.inventory-context",
         "to": "component:platform.context",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:example.inventory-domain",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:example.orders-context",
         "to": "component:example.orders-domain",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.orders-context",
         "to": "component:platform.context",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:example.orders-domain",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:example.parent",
         "to": "component:example.inventory-context",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.parent",
         "to": "component:example.inventory-domain",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.parent",
         "to": "component:example.orders-context",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.parent",
         "to": "component:example.orders-domain",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.parent",
         "to": "component:platform.audit",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.parent",
         "to": "component:platform.command",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.parent",
         "to": "component:platform.context",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.parent",
         "to": "component:platform.gate",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:example.parent",
         "to": "component:platform.read-model",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.audit",
         "to": "component:platform.command",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.audit",
         "to": "component:platform.context",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.command",
         "to": "component:platform.audit",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.command",
         "to": "component:platform.context",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.command",
         "to": "component:platform.gate",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:platform.command",
         "to": "component:platform.operations",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.command",
         "to": "component:platform.read-model",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.context",
         "to": "component:platform.command",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:platform.context",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:platform.gate",
         "to": "component:platform.audit",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.gate",
         "to": "component:platform.command",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.gate",
         "to": "component:platform.context",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.gate",
         "to": "component:platform.read-model",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.operations",
         "to": "component:platform.command",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.operations",
         "to": "component:platform.context",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:platform.operations",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:platform.read-model",
         "to": "component:platform.command",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.read-model",
         "to": "component:platform.context",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:platform.read-model",
         "to": "component:platform.gate",
         "count": 1,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:platform.read-model",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
       }
     ],
-    "unplaced": [],
-    "differing": []
+    "plannedUses": [],
+    "outside": [
+      {
+        "id": "component:platform.kernel",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses"
+        ]
+      }
+    ],
+    "unplaced": []
   },
   "decisions": [
     {
@@ -3033,6 +3172,9 @@
     "Relation reasons; relation types kept.",
     "Boundary titles, kinds, floors, implementation bindings and joined members; ids, stated rungs and holds kept.",
     "Component labels and the Specs that reach each component; counts kept.",
+    "Declared values, differing rows and unreadable rows of each member design; their counts kept.",
+    "The unit edges behind each component pair; counts kept.",
+    "Labels, layers and contexts of outside components.",
     "Decision titles, floors, refinements, supersessions and question counts.",
     "Non-blocking question text and fields; addresses kept."
   ]

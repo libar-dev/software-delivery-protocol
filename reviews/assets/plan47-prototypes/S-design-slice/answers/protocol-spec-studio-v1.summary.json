@@ -88,9 +88,22 @@
       "touched": 11,
       "throughMembers": 5,
       "throughRestsOn": 10,
+      "throughDesigns": 0,
+      "outside": 2
+    },
+    "designs": {
+      "total": 0,
+      "realized": 0,
+      "matching": 0,
+      "unrealized": 0,
+      "differing": 0,
+      "unreadable": 0
+    },
+    "componentUses": {
+      "inside": 33,
+      "outside": 2,
       "planned": 0
     },
-    "componentUses": 33,
     "decisions": 9,
     "decisionsBelowReady": 0,
     "openQuestions": 1,
@@ -1787,582 +1800,698 @@
       {
         "from": "spec:consumers.agent-surface.example-space-coverage.number-not-enumerable",
         "to": "spec:consumers.agent-surface.example-space-coverage",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.agent-surface.example-space-coverage.uncovered-literal",
         "to": "spec:consumers.agent-surface.example-space-coverage",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.intent-composition.proposal.memo.shared",
         "to": "spec:consumers.intent-composition.proposal.memo",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio",
         "to": "spec:decisions.studio-build-renders",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio",
         "to": "spec:decisions.studio-html-surface",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio",
         "to": "spec:decisions.studio-web-components",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.components",
         "to": "spec:decisions.studio-build-renders",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.components",
         "to": "spec:decisions.studio-diagram-renderer",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.components",
         "to": "spec:decisions.studio-web-components",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.components",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.components",
         "to": "spec:consumers.spec-studio.intent-panel",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.components",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.data",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.data.inputs",
         "to": "spec:consumers.spec-studio.publisher",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.data.inputs",
         "to": "spec:observation.run-evidence",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.data.inputs",
         "to": "spec:consumers.spec-studio.data",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.data.inputs.both-given",
         "to": "spec:consumers.spec-studio.data.inputs",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.data.inputs.graph-only",
         "to": "spec:consumers.spec-studio.data.inputs",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.data.recipe-answers",
         "to": "spec:consumers.spec-studio.data",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.diagrams",
         "to": "spec:decisions.studio-diagram-renderer",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.diagrams",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.diagrams",
         "to": "spec:consumers.spec-studio.components",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.diagrams.folds-by-context",
         "to": "spec:consumers.spec-studio.diagrams",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.diagrams.folds-by-layer",
         "to": "spec:consumers.spec-studio.diagrams",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.diagrams.within-bound",
         "to": "spec:consumers.spec-studio.diagrams",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.diff-page",
         "to": "spec:consumers.spec-studio.data.inputs",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.diff-page",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.diff-page.changed-entry",
         "to": "spec:consumers.spec-studio.diff-page",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.export",
         "to": "spec:consumers.spec-studio.pack-page",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.export",
         "to": "spec:consumers.spec-studio.publisher",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.export",
         "to": "spec:consumers.spec-studio.spec-page",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.export",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.export.self-contained",
         "to": "spec:consumers.spec-studio.export",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.glossary-page",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.glossary-page",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.glossary-page.same-word-twice",
         "to": "spec:consumers.spec-studio.glossary-page",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.index-page",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.index-page",
         "to": "spec:consumers.spec-studio.shell",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.index-page",
         "to": "spec:consumers.spec-studio.lenses.packs",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.intent-panel",
         "to": "spec:consumers.intent-composition.proposal.memo",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.intent-panel.refresh-keeps-intents",
         "to": "spec:consumers.spec-studio.intent-panel",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses.architecture",
         "to": "spec:consumers.spec-studio.diagrams",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses.architecture",
         "to": "spec:consumers.spec-studio.lenses",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses.architecture.planned-apart",
         "to": "spec:consumers.spec-studio.lenses.architecture",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses.evidence",
         "to": "spec:consumers.spec-studio.lenses",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses.packs",
         "to": "spec:consumers.spec-studio.lenses",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses.tests",
         "to": "spec:consumers.agent-surface.example-space-coverage",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses.tests",
         "to": "spec:observation.run-evidence",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses.tests",
         "to": "spec:consumers.spec-studio.lenses",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.lenses.tests.coverage-row",
         "to": "spec:consumers.spec-studio.lenses.tests",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.navigation",
         "to": "spec:consumers.spec-studio.index-page",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.navigation",
         "to": "spec:consumers.spec-studio.lenses",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.navigation",
         "to": "spec:consumers.spec-studio.shell",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.navigation",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.owner-queue",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.owner-queue",
         "to": "spec:consumers.spec-studio.shell",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.owner-queue",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.owner-queue.dependency-first",
         "to": "spec:consumers.spec-studio.owner-queue",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.pack-page",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.pack-page",
         "to": "spec:consumers.spec-studio.shell",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.pack-page",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.pack-page.maturity-map",
         "to": "spec:consumers.spec-studio.pack-page",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.page-elements",
         "to": "spec:decisions.studio-web-components",
-        "type": "decidedBy"
+        "type": "decidedBy",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.page-elements",
         "to": "spec:consumers.spec-studio.search",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.page-elements",
         "to": "spec:consumers.spec-studio.shell",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.page-elements",
         "to": "spec:consumers.spec-studio.components",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.publisher",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.publisher",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.publisher.watch",
         "to": "spec:consumers.spec-studio.publisher",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.publisher.watch.matches-plain-run",
         "to": "spec:consumers.spec-studio.publisher.watch",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.registers",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.registers",
         "to": "spec:consumers.spec-studio.shell",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.registers",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.registers.blocking-first",
         "to": "spec:consumers.spec-studio.registers",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.responsive",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.runs-page",
         "to": "spec:consumers.spec-studio.data.inputs",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.runs-page",
         "to": "spec:observation.run-evidence",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.runs-page",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.runs-page.external-evidence",
         "to": "spec:consumers.spec-studio.runs-page",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.search",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.search",
         "to": "spec:consumers.spec-studio.shell",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.sharing",
         "to": "spec:consumers.spec-studio.publisher",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.sharing",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.sharing.stamp-written-apart",
         "to": "spec:consumers.spec-studio.sharing",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.shell",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.shell",
         "to": "spec:consumers.spec-studio.lenses",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.shell",
         "to": "spec:consumers.spec-studio.responsive",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.shell",
         "to": "spec:consumers.spec-studio.sharing",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.shell",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.spec-page",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.spec-page",
         "to": "spec:consumers.spec-studio.diagrams",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.spec-page",
         "to": "spec:consumers.spec-studio.diff-page",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.spec-page",
         "to": "spec:consumers.spec-studio.sharing",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.spec-page",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.spec-page.cited-declaration",
         "to": "spec:consumers.spec-studio.spec-page",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.spec-page.core",
         "to": "spec:consumers.spec-studio.data",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.spec-page.core",
         "to": "spec:consumers.spec-studio.shell",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.spec-page.core",
         "to": "spec:consumers.spec-studio.spec-page",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.verification-panels",
         "to": "spec:consumers.agent-surface.example-space-coverage",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.verification-panels",
         "to": "spec:consumers.spec-studio.intent-panel",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.verification-panels",
         "to": "spec:observation.run-evidence",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.verification-panels",
         "to": "spec:consumers.spec-studio.spec-page",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.spec-studio.verification-panels.rule-coverage",
         "to": "spec:consumers.spec-studio.verification-panels",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:consumers.studio-on-ramp",
         "to": "spec:consumers.spec-studio.data.inputs",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.studio-on-ramp",
         "to": "spec:consumers.spec-studio.export",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.studio-on-ramp",
         "to": "spec:consumers.spec-studio.intent-panel",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.studio-on-ramp",
         "to": "spec:consumers.spec-studio.publisher",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:consumers.studio-on-ramp",
         "to": "spec:consumers.spec-studio.sharing",
-        "type": "dependsOn"
+        "type": "dependsOn",
+        "orders": true
       },
       {
         "from": "spec:decisions.studio-build-renders",
         "to": "spec:decisions.studio-web-components",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:decisions.studio-diagram-renderer",
         "to": "spec:decisions.studio-web-components",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:decisions.studio-html-surface",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:decisions.studio-web-components",
         "to": "spec:consumers.spec-studio",
-        "type": "refines"
+        "type": "refines",
+        "orders": false
       },
       {
         "from": "spec:observation.run-evidence.absolute-path-joins",
         "to": "spec:observation.run-evidence",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       },
       {
         "from": "spec:observation.run-evidence.unanchored-file-unjoined",
         "to": "spec:observation.run-evidence",
-        "type": "refines"
+        "type": "refines",
+        "orders": true
       }
     ],
     "cycles": []
@@ -2636,333 +2765,352 @@
         "id": "component:protocol.cli",
         "layer": "edge",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 5,
           "references": 0
         },
-        "restsOn": 7
+        "restsOn": 7,
+        "designs": 0
       },
       {
         "id": "component:protocol.codegen",
         "layer": "application",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 1
+        "restsOn": 1,
+        "designs": 0
       },
       {
         "id": "component:protocol.extract",
         "layer": "application",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 11
+        "restsOn": 11,
+        "designs": 0
       },
       {
         "id": "component:protocol.graph",
         "layer": "domain",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 6
+        "restsOn": 6,
+        "designs": 0
       },
       {
         "id": "component:protocol.import",
         "layer": "application",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 2
+        "restsOn": 2,
+        "designs": 0
       },
       {
         "id": "component:protocol.model",
         "layer": "domain",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 2
+        "restsOn": 2,
+        "designs": 0
       },
       {
         "id": "component:protocol.notation",
         "layer": "domain",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 1,
           "references": 0
         },
-        "restsOn": 1
+        "restsOn": 1,
+        "designs": 0
       },
       {
         "id": "component:protocol.projections",
         "layer": "edge",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 29,
           "references": 2
         },
-        "restsOn": 3
+        "restsOn": 3,
+        "designs": 0
       },
       {
         "id": "component:protocol.reader",
         "layer": "application",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 1,
           "references": 0
         },
-        "restsOn": 7
+        "restsOn": 7,
+        "designs": 0
       },
       {
         "id": "component:protocol.studio-elements",
         "layer": "edge",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 9,
           "references": 2
         },
-        "restsOn": 0
+        "restsOn": 0,
+        "designs": 0
       },
       {
         "id": "component:protocol.validate",
         "layer": "domain",
         "context": "protocol",
-        "planned": false,
-        "designs": 0,
         "members": {
           "satisfies": 0,
           "references": 0
         },
-        "restsOn": 5
+        "restsOn": 5,
+        "designs": 0
       }
     ],
+    "designs": [],
     "uses": [
+      {
+        "from": "component:protocol.cli",
+        "to": "component:protocol.adapters",
+        "count": 1,
+        "outside": true
+      },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.codegen",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.extract",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.graph",
         "count": 2,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.import",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.model",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.projections",
         "count": 2,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.reader",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.cli",
         "to": "component:protocol.validate",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.codegen",
         "to": "component:protocol.graph",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.codegen",
         "to": "component:protocol.notation",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.codegen",
         "to": "component:protocol.validate",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.extract",
         "to": "component:protocol.graph",
         "count": 2,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.extract",
         "to": "component:protocol.model",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.extract",
         "to": "component:protocol.notation",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.extract",
         "to": "component:protocol.validate",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.graph",
         "to": "component:protocol.model",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.graph",
         "to": "component:protocol.notation",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.import",
         "to": "component:protocol.extract",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.import",
         "to": "component:protocol.validate",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.projections",
         "to": "component:protocol.extract",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.projections",
         "to": "component:protocol.graph",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.projections",
         "to": "component:protocol.model",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.projections",
         "to": "component:protocol.notation",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.projections",
         "to": "component:protocol.reader",
         "count": 4,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.projections",
         "to": "component:protocol.validate",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.reader",
         "to": "component:protocol.graph",
         "count": 2,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.reader",
         "to": "component:protocol.model",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.reader",
         "to": "component:protocol.validate",
         "count": 2,
-        "planned": false
+        "outside": false
+      },
+      {
+        "from": "component:protocol.runner",
+        "to": "component:protocol.notation",
+        "count": 1,
+        "outside": true
       },
       {
         "from": "component:protocol.studio-elements",
         "to": "component:protocol.projections",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.studio-elements",
         "to": "component:protocol.reader",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.validate",
         "to": "component:protocol.graph",
         "count": 2,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.validate",
         "to": "component:protocol.model",
         "count": 1,
-        "planned": false
+        "outside": false
       },
       {
         "from": "component:protocol.validate",
         "to": "component:protocol.notation",
         "count": 1,
-        "planned": false
+        "outside": false
+      }
+    ],
+    "plannedUses": [],
+    "outside": [
+      {
+        "id": "component:protocol.adapters",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses"
+        ]
+      },
+      {
+        "id": "component:protocol.runner",
+        "anchored": true,
+        "reachedBy": [
+          "usesTouched"
+        ]
       }
     ],
     "unplaced": [
@@ -2991,8 +3139,7 @@
         "member": "spec:consumers.studio-on-ramp",
         "via": "satisfies"
       }
-    ],
-    "differing": []
+    ]
   },
   "decisions": [
     {
@@ -3062,6 +3209,9 @@
     "Relation reasons; relation types kept.",
     "Boundary titles, kinds, floors, implementation bindings and joined members; ids, stated rungs and holds kept.",
     "Component labels and the Specs that reach each component; counts kept.",
+    "Declared values, differing rows and unreadable rows of each member design; their counts kept.",
+    "The unit edges behind each component pair; counts kept.",
+    "Labels, layers and contexts of outside components.",
     "Decision titles, floors, refinements, supersessions and question counts.",
     "Non-blocking question text and fields; addresses kept."
   ]
