@@ -317,24 +317,12 @@ describe("sdp cli", () => {
           "spec:consumers.spec-studio.diagram-kinds.dependency",
         ],
         [
-          "specs/consumers/spec-studio.diagram-kinds.maturity-picture.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
-        ],
-        [
-          "specs/consumers/spec-studio.diagram-kinds.requirement-trace.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
-        ],
-        [
           "specs/consumers/spec-studio.diagram-kinds.scoped-architecture.sdp.md",
           "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
         ],
         [
           "specs/consumers/spec-studio.diagram-kinds.sdp.md",
           "spec:consumers.spec-studio.diagram-kinds",
-        ],
-        [
-          "specs/consumers/spec-studio.lenses.architecture.unit-register.sdp.md",
-          "spec:consumers.spec-studio.lenses.architecture.unit-register",
         ],
         [
           "specs/consumers/spec-studio.roadmap-page.sdp.md",
@@ -350,6 +338,10 @@ describe("sdp cli", () => {
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
       for (const specId of [
+        "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+        "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+        "spec:consumers.spec-studio.lenses.architecture.unit-register",
+
         "spec:protocol.significant-units-review",
         "spec:consumers.capability-map",
         "spec:protocol.capability-epics",
@@ -361,7 +353,7 @@ describe("sdp cli", () => {
       }
       // Re-measured from the refreshed carriers: no prose-mention pair is retained, and the
       // verifier gaps listed above are the whole warning set.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 11 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );
