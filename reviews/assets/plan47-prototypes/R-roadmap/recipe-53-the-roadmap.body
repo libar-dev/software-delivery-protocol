@@ -26,6 +26,11 @@ const laneOf = (spec) => spec.statedReadiness !== "ready" ? (spec.derivedReadine
   : settledKinds.has(spec.specKind) ? "settled"
   : spec.deliveryFacts.includes("implemented") ? "built" : "to build";
 const open = (lane) => lane === "to design" || lane === "to state" || lane === "to build";
+const waits = (spec) => rungs.indexOf(spec.derivedReadiness) > rungs.indexOf(spec.statedReadiness);
+const drifts = (spec) => spec.statedReadiness !== "ready" && spec.deliveryFacts.includes("implemented");
+const holds = (spec) => spec.statedNextRungFailures.map((failure) => ({ clause: failure.clauseId, targets: (failure.targets ?? []).map((target) => target.id) }));
+const questionRow = (spec, question) => ({ address: question.key === undefined ? null : `${spec.id}#question.${question.key}`, spec: spec.id,
+  index: question.index, question: question.question, blocking: question.blocking, decider: question.decider ?? null, provisional: question.provisional ?? null });
 const scopeOf = (id) => {
   const seen = new Set([id]);
   const queue = [id];
@@ -33,14 +38,19 @@ const scopeOf = (id) => {
   return [...seen].sort(compare);
 };
 
+// The statement queue owns dependency order: its places order every waiting statement, and its
+// `restsOn` names the waiting Specs each statement rests on.
 const queue = await recipes(46, { decider });
 const queuePlace = new Map((queue.statements ?? []).map((row) => [row.id, row.place]));
+const queueRestsOn = new Map((queue.statements ?? []).map((row) => [row.id, row.restsOn]));
+const byQueue = (a, b) => (queuePlace.get(a) ?? Infinity) - (queuePlace.get(b) ?? Infinity) || compare(a, b);
+
 const roadmaps = selected.map((pack) => {
   const members = pack.members.filter((id) => contexts.has(id));
   const scopes = members.map((id) => new Set(scopeOf(id)));
   const placeOf = (id) => { const at = scopes.findIndex((scope) => scope.has(id)); return at === -1 ? null : at + 1; };
   const entries = [], apart = [];
-  const questionRows = new Map(), statements = new Map();
+  const questionRows = new Map(), undecided = new Map(), statements = new Map();
   const touch = (map, key, row, place) => { const existing = map.get(key) ?? { ...row, places: [] }; if (!existing.places.includes(place)) existing.places.push(place); map.set(key, existing); };
   members.forEach((id, index) => {
     const place = index + 1;
@@ -49,39 +59,45 @@ const roadmaps = selected.map((pack) => {
     const scopeIds = [...scope];
     const work = scopeIds.filter((member) => !settledKinds.has(contexts.get(member).specKind));
     const lanes = work.map((member) => laneOf(contexts.get(member)));
-    for (const member of scopeIds) {
-      const context = contexts.get(member);
-      for (const question of context.designColumns.openQuestions) if (question.decider === decider)
-        touch(questionRows, `${member}\u0000${question.index}`, { address: question.key === undefined ? null : `${member}#question.${question.key}`, spec: member, index: question.index, question: question.question, blocking: question.blocking, provisional: question.provisional ?? null }, place);
-      if (rungs.indexOf(context.derivedReadiness) > rungs.indexOf(context.statedReadiness))
-        touch(statements, member, { id: member, statedReadiness: context.statedReadiness, floorReached: context.derivedReadiness }, place);
-    }
+
+    // Decisions the entry holds or names by decidedBy, and what waits on a person over both.
     const decisionIds = new Set(scopeIds.filter((member) => contexts.get(member).specKind === "decision"));
     for (const member of scopeIds) for (const end of contexts.get(member).relationsOut) if (end.claim === "declared" && end.type === "decidedBy" && contexts.has(end.otherId)) decisionIds.add(end.otherId);
-    const decisions = [...decisionIds].sort(compare).map((decision) => contexts.get(decision)).filter((decision) => decision.statedReadiness !== "ready")
-      .map((decision) => ({ id: decision.id, title: decision.title ?? null, statedReadiness: decision.statedReadiness,
-        blockingQuestions: decision.designColumns.openQuestions.filter((question) => question.blocking && question.key !== undefined).map((question) => `${decision.id}#question.${question.key}`) }));
-    for (const decision of decisions) {
-      if (scope.has(decision.id)) continue;
-      const shaping = contexts.get(decision.id);
-      if (rungs.indexOf(shaping.derivedReadiness) > rungs.indexOf(shaping.statedReadiness))
-        touch(statements, decision.id, { id: decision.id, statedReadiness: shaping.statedReadiness, floorReached: shaping.derivedReadiness }, place);
-      for (const question of contexts.get(decision.id).designColumns.openQuestions) if (question.decider === decider)
-        touch(questionRows, `${decision.id}\u0000${question.index}`, { address: question.key === undefined ? null : `${decision.id}#question.${question.key}`, spec: decision.id, index: question.index, question: question.question, blocking: question.blocking, provisional: question.provisional ?? null }, place);
+    const shaping = [...decisionIds].filter((decision) => !scope.has(decision)).sort(compare);
+    const ownStatements = [];
+    for (const member of [...scopeIds, ...shaping]) {
+      const context = contexts.get(member);
+      if (scope.has(member) || context.statedReadiness !== "ready") {
+        for (const question of context.designColumns.openQuestions) {
+          const row = questionRow(context, question);
+          if (question.decider === decider) touch(questionRows, `${member}\u0000${question.index}`, row, place);
+          else if (question.decider === undefined) touch(undecided, `${member}\u0000${question.index}`, row, place);
+        }
+        if (waits(context)) { touch(statements, member, { id: member, statedReadiness: context.statedReadiness, floorReached: context.derivedReadiness }, place); ownStatements.push(member); }
+      }
     }
     if (work.length === 0) { apart.push({ place, id, specKind: spec.specKind, statedReadiness: spec.statedReadiness, lane: laneOf(spec) }); return; }
+
     const lane = ["to design", "to state", "to build"].find((value) => lanes.includes(value)) ?? "built";
-    const blockingQuestions = scopeIds.flatMap((member) => contexts.get(member).designColumns.openQuestions.filter((question) => question.blocking)
-      .map((question) => ({ address: question.key === undefined ? null : `${member}#question.${question.key}`, spec: member, question: question.question, decider: question.decider ?? null, provisional: question.provisional ?? null })));
+    const decisions = [...decisionIds].sort(compare).map((decision) => contexts.get(decision)).filter((decision) => decision.statedReadiness !== "ready")
+      .map((decision) => ({ id: decision.id, title: decision.title ?? null, statedReadiness: decision.statedReadiness,
+        blockingQuestions: decision.designColumns.openQuestions.filter((question) => question.blocking).map((question) => questionRow(decision, question)) }));
+    const blockingQuestions = scopeIds.flatMap((member) => contexts.get(member).designColumns.openQuestions.filter((question) => question.blocking).map((question) => questionRow(contexts.get(member), question)));
+
+    // What the entry rests on: any Spec of its scope reaching outside it, whichever part reaches.
     const restsOn = new Map();
     for (const member of scopeIds) for (const end of contexts.get(member).relationsOut) {
       if (end.claim !== "declared" || scope.has(end.otherId) || !contexts.has(end.otherId)) continue;
-      if (!(end.type === "dependsOn" || end.type === "constrainedBy" || (end.type === "refines" && member === id))) continue;
+      if (!(end.type === "dependsOn" || end.type === "constrainedBy" || end.type === "refines")) continue;
       const target = contexts.get(end.otherId);
       const targetLane = laneOf(target);
       if (!open(targetLane)) continue;
-      restsOn.set(`${end.otherId}\u0000${end.type}`, { id: end.otherId, via: end.type, lane: targetLane, statedReadiness: target.statedReadiness, holdsReady: rungs.indexOf(target.statedReadiness) < rungs.indexOf("defined"), onRoadmap: placeOf(end.otherId) });
+      const key = `${end.otherId}\u0000${end.type}`;
+      const row = restsOn.get(key) ?? { id: end.otherId, via: end.type, from: [], lane: targetLane, statedReadiness: target.statedReadiness, holdsReady: rungs.indexOf(target.statedReadiness) < rungs.indexOf("defined"), onRoadmap: placeOf(end.otherId) };
+      if (!row.from.includes(member)) row.from.push(member);
+      restsOn.set(key, row);
     }
+    for (const row of restsOn.values()) row.from.sort(compare);
     const restedOnBy = new Map();
     for (const member of scopeIds) for (const end of contexts.get(member).relationsIn) {
       if (end.claim !== "declared" || scope.has(end.otherId) || !contexts.has(end.otherId)) continue;
@@ -91,31 +107,51 @@ const roadmaps = selected.map((pack) => {
       if (!open(sourceLane)) continue;
       restedOnBy.set(`${end.otherId}\u0000${end.type}`, { id: end.otherId, via: end.type, lane: sourceLane, onRoadmap: placeOf(end.otherId) });
     }
+
     const byIdThenVia = (a, b) => compare(a.id, b.id) || compare(a.via, b.via);
     entries.push({
       place, id, title: spec.title ?? null, specKind: spec.specKind, altitude: spec.altitude, lane,
       statedReadiness: spec.statedReadiness, floorReached: spec.derivedReadiness ?? null,
-      statedNextRung: spec.statedNextRung ?? null, holdsNextRung: spec.statedNextRungFailures.map((failure) => failure.clauseId),
+      statedNextRung: spec.statedNextRung ?? null, holdsNextRung: holds(spec),
       work: { specs: work.length, toDesign: lanes.filter((value) => value === "to design").length, toState: lanes.filter((value) => value === "to state").length, toBuild: lanes.filter((value) => value === "to build").length,
-        built: lanes.filter((value) => value === "built").length,
-        drift: work.filter((member) => contexts.get(member).statedReadiness !== "ready" && contexts.get(member).deliveryFacts.includes("implemented")).length },
+        built: lanes.filter((value) => value === "built").length, drift: work.filter((member) => drifts(contexts.get(member))).length },
+      workRows: work.map((member) => { const context = contexts.get(member); return { id: member, lane: laneOf(context), statedReadiness: context.statedReadiness,
+        floorReached: context.derivedReadiness ?? null, statedNextRung: context.statedNextRung ?? null, holdsNextRung: holds(context), drift: drifts(context) }; }),
       buildNow: work.filter((member) => laneOf(contexts.get(member)) === "to build"),
       blockingQuestions, decisions,
       restsOn: [...restsOn.values()].sort(byIdThenVia), restedOnBy: [...restedOnBy.values()].sort(byIdThenVia),
+      earlierStatements: [], own: new Set([...scopeIds, ...shaping]), ownStatements,
       packs: [...spec.packs].filter((packId) => packId !== pack.id).sort(compare),
       sharesScopeWith: scopes.map((other, at) => at !== index && scopeIds.some((member) => other.has(member)) ? at + 1 : null).filter((value) => value !== null),
     });
   });
-  const byPlace = (a, b) => a.places[0] - b.places[0];
+  // The waiting statements the statement queue puts before each entry's own, read once every entry
+  // has touched its statements, so a statement another entry touches names that entry's place.
+  for (const row of entries) {
+    const earlier = new Set();
+    for (const statement of row.ownStatements) for (const target of queueRestsOn.get(statement) ?? []) earlier.add(target);
+    row.earlierStatements = [...earlier].sort(byQueue).map((target) => {
+      const touched = statements.get(target)?.places ?? [];
+      const where = row.own.has(target) ? "entry" : touched.length > 0 ? "roadmap" : "outside";
+      return { id: target, where, onRoadmap: where === "roadmap" ? Math.min(...touched) : null };
+    });
+    delete row.own;
+    delete row.ownStatements;
+  }
+  // Questions follow the roadmap's places; statements keep the statement queue's order across the
+  // whole roadmap, so a Spec others rest on comes first whatever its place.
+  const byQuestion = (a, b) => a.places[0] - b.places[0] || Number(b.blocking) - Number(a.blocking) || compare(a.spec, b.spec) || a.index - b.index;
   const waiting = {
-    questions: [...questionRows.values()].sort((a, b) => byPlace(a, b) || Number(b.blocking) - Number(a.blocking) || compare(a.spec, b.spec) || a.index - b.index),
-    statements: [...statements.values()].sort((a, b) => byPlace(a, b) || (queuePlace.get(a.id) ?? Infinity) - (queuePlace.get(b.id) ?? Infinity) || compare(a.id, b.id)),
+    questions: [...questionRows.values()].sort(byQuestion),
+    withoutDecider: [...undecided.values()].sort(byQuestion),
+    statements: [...statements.values()].sort((a, b) => byQueue(a.id, b.id)),
   };
   return {
     pack: pack.id, title: pack.title ?? null, framing: pack.framing ?? null, order: pack.order === "priority" ? "priority" : "reading",
     totals: { entries: members.length, toDesign: entries.filter((row) => row.lane === "to design").length, toState: entries.filter((row) => row.lane === "to state").length, toBuild: entries.filter((row) => row.lane === "to build").length,
       built: entries.filter((row) => row.lane === "built").length, apart: apart.length,
       questions: waiting.questions.length, blockingQuestions: waiting.questions.filter((row) => row.blocking).length,
+      withoutDecider: waiting.withoutDecider.length, blockingWithoutDecider: waiting.withoutDecider.filter((row) => row.blocking).length,
       statements: waiting.statements.length },
     entries, apart, waiting,
   };

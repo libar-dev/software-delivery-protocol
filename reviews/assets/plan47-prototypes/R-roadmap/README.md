@@ -12,7 +12,19 @@ Throwaway design evidence for `spec:consumers.roadmap`, `spec:consumers.roadmap.
   `<corpus>/memo.md`, `<corpus>/roadmap.html` (linking `assets/` here) and `<corpus>/memo.html`
   (the memo rendered as a description would show it, by a renderer for the memo's own grammar
   only), and drops `roadmap.html` and `roadmap-expanded.html` (every entry opened, for
-  screenshots) into each corpus's built Studio, where their links resolve.
+  screenshots) into each corpus's built Studio, where their links resolve. It renders one memo per
+  roadmap, gives every entry the element id `roadmap-<pack page name>-entry-<place>`, and says
+  "in priority order" only for a Pack whose answer reads `order: "priority"`.
+- `probes.mjs`: the review's probes. It writes a small probe corpus into a scratch directory
+  outside the repository, with two probe roadmaps, and checks each fix the review asked for:
+  statements in the statement queue's order whatever the places (finding 1), a ready root whose
+  descendants lack evidence or wait on a blocking question (2), earlier waiting statements from
+  the statement queue (4), a descendant's second parent outside the roadmap (5), questions with no
+  decider (6), unique entry ids and links that stay in their own roadmap on a two-roadmap page
+  (7), and the reading-order label (10). It writes `probes/answer.json`, `probes/checks.json`,
+  `probes/memo.md`, `probes/roadmap.html` and, with the capture command below,
+  `probes/roadmap-1440-expanded.png`. The reviewed body fails the checks for findings 1, 2, 5
+  and 6 on the same corpus.
 
 The bodies are `.body` files because a bare function body is not a module the repository's lint
 can parse. The HTML kept here links only the copied stylesheet, so it reads as the page does
@@ -35,8 +47,13 @@ cd /tmp/plan47-wt/R
 node dist/cli/sdp.js studio . --exclude explorations --exclude examples --exclude test/fixtures/import/parity
 node dist/cli/sdp.js studio /tmp/plan47-platform-R
 node reviews/assets/plan47-prototypes/R-roadmap/build.mjs /tmp/plan47-wt/R /tmp/plan47-platform-R
+node reviews/assets/plan47-prototypes/R-roadmap/probes.mjs /tmp/plan47-wt/R /tmp/plan47-probe-R
 node /tmp/plan47-tools/capture.mjs file:///tmp/plan47-wt/R/generated/spec-studio/roadmap.html protocol/roadmap-1440.png 1440 1000 0
+node /tmp/plan47-tools/capture.mjs file:///tmp/plan47-probe-R/generated/spec-studio/roadmap-expanded.html probes/roadmap-1440-expanded.png 1440 1000 1
 ```
+
+`sdp validate` rewrites `generated/` and removes the built Studio, so build the Studio again after
+validating and before running `build.mjs`.
 
 ## Screenshots
 
@@ -49,6 +66,7 @@ node /tmp/plan47-tools/capture.mjs file:///tmp/plan47-wt/R/generated/spec-studio
 | `platform/roadmap-1440.png` | The platform copy's trial roadmap: every entry is "to state", waiting only for the owner's statements |
 | `platform/roadmap-1440-expanded.png` | The platform page with every entry opened, including the long dependency folds |
 | `platform/memo-1440.png` | The platform's memo |
+| `probes/roadmap-1440-expanded.png` | Both probe roadmaps on one page, every entry opened: the parts that set an entry's lane, the outside parent, earlier statements and the questions without a decider |
 
 ## What the prototype showed
 
@@ -56,7 +74,11 @@ node /tmp/plan47-tools/capture.mjs file:///tmp/plan47-wt/R/generated/spec-studio
   soon as they reached `defined`: the board tracks the graph with no edit to the roadmap.
 - On the platform, nothing is stated `ready`, so every entry is "to state" and each rests on
   many Specs that also wait for a statement. The page folds those, and the waiting list follows
-  the statement queue's order, decisions first. That matches the platform's own roadmap unit
+  the statement queue's order across the whole roadmap, decisions first, so the event envelope
+  comes before the journal and both before the history projection, whatever their places.
+- The platform's entries carry 27 open questions that name no decider, among them the history
+  rebuild's verify pass that its prose leaves to the owner. They are listed apart, and the memo
+  names them by address only so it stays short. That matches the platform's own roadmap unit
   that makes `ready` the approval to build.
 - A decision named by `decidedBy` from an entry must count in what waits on the owner; the first
   draft missed the Protocol's two roadmap decisions until it did.

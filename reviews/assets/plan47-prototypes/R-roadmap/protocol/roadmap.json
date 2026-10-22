@@ -4,7 +4,7 @@
     {
       "pack": "pack:roadmap",
       "title": "The Protocol's roadmap",
-      "framing": "The Protocol's next work, first entry first. The order is a preference: it dates, gates and sequences nothing, and what each entry still needs is read from the graph each time. Until the roadmap priority decision is ratified and its manifest field built, this is an ordinary Pack, and its order is the proposed priority only because this note says so.\n\nFirst come the lead features of the roadmaps and slices arc, whose other Specs are in that arc's Pack. Then the two steps a reader of the Studio's pages could not take, the words of a test line that checks a declaration and an outside register's entries, and then the composed-intent model the build backlog holds. What the first adopter's mass update asks for joins as its captures land. An entry leaves when the pull request that builds it merges.",
+      "framing": "The Protocol's next work, first entry first. The order is a preference: it dates, gates and sequences nothing, and what each entry still needs is read from the graph each time. Until the roadmap priority decision is ratified and its manifest field built, this is an ordinary Pack, and its order is the proposed priority only because this note says so.\n\nFirst come the lead features of the roadmaps and slices arc, whose other Specs are in that arc's Pack. Then the two steps a reader of the Studio's pages could not take, the words of a test line that checks a declaration and an outside register's entries, and then the composed-intent model the build backlog holds. What the first adopter's mass update asks for joins when the owner selects it; a capture landing adds nothing here. An entry leaves by an edit to this manifest once its selected work is complete or no longer belongs among the next work.",
       "order": "reading",
       "totals": {
         "entries": 9,
@@ -15,6 +15,8 @@
         "apart": 0,
         "questions": 1,
         "blockingQuestions": 1,
+        "withoutDecider": 0,
+        "blockingWithoutDecider": 0,
         "statements": 5
       },
       "entries": [
@@ -37,6 +39,26 @@
             "built": 0,
             "drift": 0
           },
+          "workRows": [
+            {
+              "id": "spec:consumers.roadmap",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.roadmap.memo",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
+              "drift": false
+            }
+          ],
           "buildNow": [],
           "blockingQuestions": [],
           "decisions": [
@@ -68,6 +90,18 @@
               "onRoadmap": 6
             }
           ],
+          "earlierStatements": [
+            {
+              "id": "spec:decisions.roadmap-priority",
+              "where": "entry",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:consumers.roadmap",
+              "where": "entry",
+              "onRoadmap": null
+            }
+          ],
           "packs": [
             "pack:roadmaps-and-slices-v1",
             "pack:self-hosting-v1"
@@ -85,7 +119,10 @@
           "floorReached": "idea",
           "statedNextRung": "scoped",
           "holdsNextRung": [
-            "kind-evidence-present"
+            {
+              "clause": "kind-evidence-present",
+              "targets": []
+            }
           ],
           "work": {
             "specs": 1,
@@ -95,19 +132,39 @@
             "built": 0,
             "drift": 0
           },
+          "workRows": [
+            {
+              "id": "spec:consumers.capability-map",
+              "lane": "to design",
+              "statedReadiness": "idea",
+              "floorReached": "idea",
+              "statedNextRung": "scoped",
+              "holdsNextRung": [
+                {
+                  "clause": "kind-evidence-present",
+                  "targets": []
+                }
+              ],
+              "drift": false
+            }
+          ],
           "buildNow": [],
           "blockingQuestions": [
             {
               "address": "spec:consumers.capability-map#question.multipleParents",
               "spec": "spec:consumers.capability-map",
+              "index": 0,
               "question": "Where does the map place a Spec that refines more than one parent?",
+              "blocking": true,
               "decider": "delegated",
               "provisional": "under every parent, the second and later placements marked as repeats that link to the first"
             },
             {
               "address": "spec:consumers.capability-map#question.unreached",
               "spec": "spec:consumers.capability-map",
+              "index": 1,
               "question": "How does the map show a Spec that no epic reaches through refinement?",
+              "blocking": true,
               "decider": "delegated",
               "provisional": "in its own section after the epics, grouped by the highest Spec its refinement reaches"
             }
@@ -128,6 +185,7 @@
               "onRoadmap": null
             }
           ],
+          "earlierStatements": [],
           "packs": [
             "pack:roadmaps-and-slices-v1",
             "pack:self-hosting-v1"
@@ -145,7 +203,10 @@
           "floorReached": "idea",
           "statedNextRung": "scoped",
           "holdsNextRung": [
-            "kind-evidence-present"
+            {
+              "clause": "kind-evidence-present",
+              "targets": []
+            }
           ],
           "work": {
             "specs": 1,
@@ -155,6 +216,22 @@
             "built": 0,
             "drift": 0
           },
+          "workRows": [
+            {
+              "id": "spec:consumers.design-slice",
+              "lane": "to design",
+              "statedReadiness": "idea",
+              "floorReached": "idea",
+              "statedNextRung": "scoped",
+              "holdsNextRung": [
+                {
+                  "clause": "kind-evidence-present",
+                  "targets": []
+                }
+              ],
+              "drift": false
+            }
+          ],
           "buildNow": [],
           "blockingQuestions": [],
           "decisions": [],
@@ -167,6 +244,7 @@
               "onRoadmap": null
             }
           ],
+          "earlierStatements": [],
           "packs": [
             "pack:roadmaps-and-slices-v1",
             "pack:self-hosting-v1"
@@ -184,7 +262,10 @@
           "floorReached": "idea",
           "statedNextRung": "scoped",
           "holdsNextRung": [
-            "kind-evidence-present"
+            {
+              "clause": "kind-evidence-present",
+              "targets": []
+            }
           ],
           "work": {
             "specs": 1,
@@ -194,19 +275,39 @@
             "built": 0,
             "drift": 0
           },
+          "workRows": [
+            {
+              "id": "spec:consumers.spec-studio.diagram-kinds",
+              "lane": "to design",
+              "statedReadiness": "idea",
+              "floorReached": "idea",
+              "statedNextRung": "scoped",
+              "holdsNextRung": [
+                {
+                  "clause": "kind-evidence-present",
+                  "targets": []
+                }
+              ],
+              "drift": false
+            }
+          ],
           "buildNow": [],
           "blockingQuestions": [
             {
               "address": "spec:consumers.spec-studio.diagram-kinds#question.kindCatalog",
               "spec": "spec:consumers.spec-studio.diagram-kinds",
+              "index": 0,
               "question": "Which diagram kinds does the graph hold honest data for, and which would need data it does not hold, such as message order for a sequence diagram?",
+              "blocking": true,
               "decider": "delegated",
               "provisional": null
             },
             {
               "address": "spec:consumers.spec-studio.diagram-kinds#question.legibleLabels",
               "spec": "spec:consumers.spec-studio.diagram-kinds",
+              "index": 1,
               "question": "How does a drawing wider than its column keep its labels legible: a wider figure, shorter labels, a smallest scale with scrolling, or a mix?",
+              "blocking": true,
               "decider": "delegated",
               "provisional": null
             }
@@ -214,6 +315,7 @@
           "decisions": [],
           "restsOn": [],
           "restedOnBy": [],
+          "earlierStatements": [],
           "packs": [
             "pack:roadmaps-and-slices-v1",
             "pack:self-hosting-v1"
@@ -231,7 +333,10 @@
           "floorReached": "idea",
           "statedNextRung": "scoped",
           "holdsNextRung": [
-            "kind-evidence-present"
+            {
+              "clause": "kind-evidence-present",
+              "targets": []
+            }
           ],
           "work": {
             "specs": 1,
@@ -241,11 +346,28 @@
             "built": 0,
             "drift": 0
           },
+          "workRows": [
+            {
+              "id": "spec:protocol.significant-units-review",
+              "lane": "to design",
+              "statedReadiness": "idea",
+              "floorReached": "idea",
+              "statedNextRung": "scoped",
+              "holdsNextRung": [
+                {
+                  "clause": "kind-evidence-present",
+                  "targets": []
+                }
+              ],
+              "drift": false
+            }
+          ],
           "buildNow": [],
           "blockingQuestions": [],
           "decisions": [],
           "restsOn": [],
           "restedOnBy": [],
+          "earlierStatements": [],
           "packs": [
             "pack:roadmaps-and-slices-v1",
             "pack:self-hosting-v1"
@@ -271,6 +393,17 @@
             "built": 0,
             "drift": 0
           },
+          "workRows": [
+            {
+              "id": "spec:protocol.roadmap-replaces-plans",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "floorReached": "ready",
+              "statedNextRung": "ready",
+              "holdsNextRung": [],
+              "drift": false
+            }
+          ],
           "buildNow": [],
           "blockingQuestions": [],
           "decisions": [
@@ -285,6 +418,9 @@
             {
               "id": "spec:consumers.roadmap",
               "via": "dependsOn",
+              "from": [
+                "spec:protocol.roadmap-replaces-plans"
+              ],
               "lane": "to state",
               "statedReadiness": "defined",
               "holdsReady": false,
@@ -293,6 +429,9 @@
             {
               "id": "spec:consumers.roadmap.memo",
               "via": "dependsOn",
+              "from": [
+                "spec:protocol.roadmap-replaces-plans"
+              ],
               "lane": "to state",
               "statedReadiness": "defined",
               "holdsReady": false,
@@ -300,6 +439,28 @@
             }
           ],
           "restedOnBy": [],
+          "earlierStatements": [
+            {
+              "id": "spec:decisions.roadmap-priority",
+              "where": "roadmap",
+              "onRoadmap": 1
+            },
+            {
+              "id": "spec:consumers.roadmap",
+              "where": "roadmap",
+              "onRoadmap": 1
+            },
+            {
+              "id": "spec:decisions.roadmap-over-plans",
+              "where": "entry",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:consumers.roadmap.memo",
+              "where": "roadmap",
+              "onRoadmap": 1
+            }
+          ],
           "packs": [
             "pack:roadmaps-and-slices-v1",
             "pack:self-hosting-v1"
@@ -317,7 +478,10 @@
           "floorReached": "scoped",
           "statedNextRung": "defined",
           "holdsNextRung": [
-            "no-blocking-open-questions"
+            {
+              "clause": "no-blocking-open-questions",
+              "targets": []
+            }
           ],
           "work": {
             "specs": 1,
@@ -327,12 +491,30 @@
             "built": 0,
             "drift": 0
           },
+          "workRows": [
+            {
+              "id": "spec:consumers.spec-studio.cited-line-text",
+              "lane": "to design",
+              "statedReadiness": "scoped",
+              "floorReached": "scoped",
+              "statedNextRung": "defined",
+              "holdsNextRung": [
+                {
+                  "clause": "no-blocking-open-questions",
+                  "targets": []
+                }
+              ],
+              "drift": false
+            }
+          ],
           "buildNow": [],
           "blockingQuestions": [
             {
               "address": "spec:consumers.spec-studio.cited-line-text#question.lineText",
               "spec": "spec:consumers.spec-studio.cited-line-text",
+              "index": 0,
               "question": "May the Studio show source text the graph does not hold, and if so is it recorded in the graph beside the citation or read as a named input?",
+              "blocking": true,
               "decider": "owner",
               "provisional": "the extractor records the citing line's text, trimmed and bounded, on the citation row it already writes, as inferred data that confers nothing, and the Studio reads no source"
             }
@@ -340,6 +522,7 @@
           "decisions": [],
           "restsOn": [],
           "restedOnBy": [],
+          "earlierStatements": [],
           "packs": [
             "pack:self-hosting-v1"
           ],
@@ -356,7 +539,10 @@
           "floorReached": "scoped",
           "statedNextRung": "defined",
           "holdsNextRung": [
-            "no-blocking-open-questions"
+            {
+              "clause": "no-blocking-open-questions",
+              "targets": []
+            }
           ],
           "work": {
             "specs": 1,
@@ -366,19 +552,39 @@
             "built": 0,
             "drift": 0
           },
+          "workRows": [
+            {
+              "id": "spec:consumers.spec-studio.register-input",
+              "lane": "to design",
+              "statedReadiness": "scoped",
+              "floorReached": "scoped",
+              "statedNextRung": "defined",
+              "holdsNextRung": [
+                {
+                  "clause": "no-blocking-open-questions",
+                  "targets": []
+                }
+              ],
+              "drift": false
+            }
+          ],
           "buildNow": [],
           "blockingQuestions": [
             {
               "address": "spec:consumers.spec-studio.register-input#question.registerEntry",
               "spec": "spec:consumers.spec-studio.register-input",
+              "index": 0,
               "question": "What does a register file give the Studio beyond what the external-registers recipe reads, so a token's entry can be shown?",
+              "blocking": true,
               "decider": "delegated",
               "provisional": "an optional `title` and an optional `href` on a token object; the Studio writes one page per register listing each token with its title, retired tokens marked, each linking to its `href` when present"
             },
             {
               "address": "spec:consumers.spec-studio.register-input#question.inputForm",
               "spec": "spec:consumers.spec-studio.register-input",
+              "index": 1,
               "question": "How does the studio verb name a register, its pattern and the words that name it on a page?",
+              "blocking": true,
               "decider": "delegated",
               "provisional": "a repeatable `--register NAME=PATH` with a matching `--register-pattern NAME=SOURCE`, the name naming the register in words wherever it shows"
             }
@@ -386,6 +592,7 @@
           "decisions": [],
           "restsOn": [],
           "restedOnBy": [],
+          "earlierStatements": [],
           "packs": [
             "pack:self-hosting-v1"
           ],
@@ -410,6 +617,53 @@
             "built": 3,
             "drift": 0
           },
+          "workRows": [
+            {
+              "id": "spec:consumers.edit-model",
+              "lane": "to build",
+              "statedReadiness": "ready",
+              "floorReached": "ready",
+              "statedNextRung": null,
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.intent-composition",
+              "lane": "to build",
+              "statedReadiness": "ready",
+              "floorReached": "ready",
+              "statedNextRung": null,
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.intent-composition.proposal",
+              "lane": "built",
+              "statedReadiness": "ready",
+              "floorReached": "ready",
+              "statedNextRung": null,
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.intent-composition.proposal.memo",
+              "lane": "built",
+              "statedReadiness": "ready",
+              "floorReached": "ready",
+              "statedNextRung": null,
+              "holdsNextRung": [],
+              "drift": false
+            },
+            {
+              "id": "spec:consumers.spec-studio.intent-panel",
+              "lane": "built",
+              "statedReadiness": "ready",
+              "floorReached": "ready",
+              "statedNextRung": null,
+              "holdsNextRung": [],
+              "drift": false
+            }
+          ],
           "buildNow": [
             "spec:consumers.edit-model",
             "spec:consumers.intent-composition"
@@ -425,6 +679,7 @@
               "onRoadmap": 1
             }
           ],
+          "earlierStatements": [],
           "packs": [
             "pack:self-hosting-v1"
           ],
@@ -440,12 +695,14 @@
             "index": 0,
             "question": "May the Studio show source text the graph does not hold, and if so is it recorded in the graph beside the citation or read as a named input?",
             "blocking": true,
+            "decider": "owner",
             "provisional": "the extractor records the citing line's text, trimmed and bounded, on the citation row it already writes, as inferred data that confers nothing, and the Studio reads no source",
             "places": [
               7
             ]
           }
         ],
+        "withoutDecider": [],
         "statements": [
           {
             "id": "spec:decisions.roadmap-priority",
@@ -464,19 +721,19 @@
             ]
           },
           {
-            "id": "spec:consumers.roadmap.memo",
-            "statedReadiness": "defined",
-            "floorReached": "ready",
-            "places": [
-              1
-            ]
-          },
-          {
             "id": "spec:decisions.roadmap-over-plans",
             "statedReadiness": "defined",
             "floorReached": "ready",
             "places": [
               6
+            ]
+          },
+          {
+            "id": "spec:consumers.roadmap.memo",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              1
             ]
           },
           {

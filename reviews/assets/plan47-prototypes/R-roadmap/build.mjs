@@ -6,21 +6,13 @@
 import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const [worktree, platform] = process.argv.slice(2);
-if (!worktree || !platform) throw new Error("usage: node build.mjs <worktree> <platform-copy>");
-const sdp = join(worktree, "dist/cli/sdp.js");
-const body53 = readFileSync(join(here, "recipe-53-the-roadmap.body"), "utf8");
-const body55 = readFileSync(join(here, "recipe-55-the-roadmap-memo.body"), "utf8").replace("/*RECIPE53*/", body53);
+export const body53 = readFileSync(join(here, "recipe-53-the-roadmap.body"), "utf8");
+export const body55 = readFileSync(join(here, "recipe-55-the-roadmap-memo.body"), "utf8").replace("/*RECIPE53*/", body53);
 
-const corpora = [
-  { name: "protocol", root: worktree, exclude: ["explorations", "examples", "test/fixtures/import/parity"] },
-  { name: "platform", root: platform, exclude: [] },
-];
-
-const query = (corpus, body, params) => {
+export const query = (sdp, corpus, body, params) => {
   const args = [sdp, "q", body, "--root", corpus.root, ...corpus.exclude.flatMap((path) => ["--exclude", path]), "--params", JSON.stringify(params), "--json"];
   return JSON.parse(execFileSync("node", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }));
 };
@@ -38,7 +30,12 @@ const laneNames = ["to design", "to state", "to build", "built"];
 const laneSlug = (lane) => lane.replace(/\s+/gu, "-");
 const viaWords = { dependsOn: "depends on", constrainedBy: "constrained by", decidedBy: "decided by", refines: "refines" };
 
-function entryCard(entry, titles) {
+// An entry's element id carries its roadmap's Pack page name, so two roadmaps never share one.
+const entryId = (pack, place) => `roadmap-${pageName(pack)}-entry-${place}`;
+const holdsText = (clauses) => clauses.length === 0 ? "nothing holds it" : `held by ${clauses.map((row) => `<code>${escape(row.clause)}</code>${row.targets.length === 0 ? "" : ` (${row.targets.map((id) => specLink(id)).join(", ")})`}`).join(", ")}`;
+
+function entryCard(pack, entry, titles) {
+  const toEntry = (place) => `<a href="#${entryId(pack, place)}">entry ${place}</a>`;
   const work = entry.work;
   const counts = [`${work.toDesign} to design`, `${work.toState} to state`, `${work.toBuild} to build`, `${work.built} built`].filter((text) => !text.startsWith("0 "));
   const line2 = [
@@ -49,11 +46,22 @@ function entryCard(entry, titles) {
   const fields = [];
   const field = (label, html) => { if (html !== "") fields.push(`<p class="field"><b>${label}</b> ${html}</p>`); };
   field("Id", `${specLink(entry.id, entry.id)}`);
-  if (entry.statedNextRung !== null) field("Next", `${badge(entry.statedReadiness)} → ${badge(entry.statedNextRung)} ${entry.holdsNextRung.length === 0 ? "nothing blocks; it waits only for its author's statement" : `held by ${entry.holdsNextRung.map((clause) => `<code>${escape(clause)}</code>`).join(", ")}`}`);
+  if (entry.statedNextRung !== null) field("Next", `${badge(entry.statedReadiness)} → ${badge(entry.statedNextRung)} ${entry.holdsNextRung.length === 0 ? "nothing blocks; it waits only for its author's statement" : holdsText(entry.holdsNextRung)}`);
+  // The parts in the entry's lane set it; they show first, the entry's own part labelled "itself".
+  const partRow = (row) => `${row.id === entry.id ? `${specLink(row.id, "itself")}` : specLink(row.id, titles.get(row.id) ?? row.id)} <span class="floor">${escape(row.lane)}</span> ${badge(row.statedReadiness)} <span class="floor">floor ${escape(row.floorReached ?? "none")}</span>${row.statedNextRung === null ? "" : ` → ${badge(row.statedNextRung)} ${holdsText(row.holdsNextRung)}`}${row.drift ? " <strong>drift</strong>" : ""}`;
+  const setting = entry.workRows.filter((row) => row.lane === entry.lane && entry.lane !== "built");
+  const ordered = [...setting.filter((row) => row.id === entry.id), ...setting.filter((row) => row.id !== entry.id)];
+  const rest = entry.workRows.filter((row) => !setting.includes(row));
+  if (entry.workRows.length > 1 || setting.some((row) => row.id !== entry.id)) {
+    let parts = ordered.map(partRow).join("<br>");
+    if (rest.length > 0) parts += `${parts === "" ? "" : "<br>"}<details><summary>${rest.length} other ${rest.length === 1 ? "part" : "parts"}</summary>${rest.map(partRow).join("<br>")}</details>`;
+    field(entry.lane === "built" ? "Parts" : `Parts ${escape(entry.lane)}`, parts);
+  }
   if (entry.buildNow.length > 0) field("Build now", entry.buildNow.map((id) => specLink(id, titles.get(id) ?? id)).join(", "));
   field("Blocked by", entry.blockingQuestions.map((question) => question.address === null ? specLink(question.spec) : `${addressLink(question.address)} <span class="floor">${escape(question.decider ?? "no decider")}</span>`).join("<br>"));
-  field("Decided by", entry.decisions.map((decision) => `${specLink(decision.id, decision.id)} ${badge(decision.statedReadiness)}${decision.blockingQuestions.length > 0 ? ` blocked by ${decision.blockingQuestions.map(addressLink).join(", ")}` : ""}`).join("<br>"));
-  const restItem = (row) => `${specLink(row.id, row.id)} <span class="floor">${escape(viaWords[row.via])} · ${escape(row.lane)}${row.holdsReady ? " · holds ready" : ""}</span> ${row.onRoadmap === null ? "outside the roadmap" : `<a href="#entry-${row.onRoadmap}">entry ${row.onRoadmap}</a>`}`;
+  field("Decided by", entry.decisions.map((decision) => `${specLink(decision.id, decision.id)} ${badge(decision.statedReadiness)}${decision.blockingQuestions.length > 0 ? ` blocked by ${decision.blockingQuestions.map((question) => question.address === null ? specLink(question.spec) : addressLink(question.address)).join(", ")}` : ""}`).join("<br>"));
+  const fromText = (row) => row.from.length === 1 && row.from[0] === entry.id ? "" : ` from ${row.from.map((id) => id === entry.id ? "itself" : specLink(id)).join(", ")}`;
+  const restItem = (row) => `${specLink(row.id, row.id)} <span class="floor">${escape(viaWords[row.via])}${fromText(row)} · ${escape(row.lane)}${row.holdsReady ? " · holds ready" : ""}</span> ${row.onRoadmap === null ? "outside the roadmap" : toEntry(row.onRoadmap)}`;
   const design = entry.restsOn.filter((row) => row.lane === "to design" || row.onRoadmap !== null || row.holdsReady);
   const others = entry.restsOn.filter((row) => !design.includes(row));
   let rests = design.map(restItem).join("<br>");
@@ -62,23 +70,27 @@ function entryCard(entry, titles) {
   field("Waited on by", entry.restedOnBy.length === 0 ? "" : entry.restedOnBy.length <= 4
     ? entry.restedOnBy.map((row) => `${specLink(row.id, row.id)} <span class="floor">${escape(viaWords[row.via])} · ${escape(row.lane)}</span>`).join("<br>")
     : `<details><summary>${entry.restedOnBy.length} Specs</summary>${entry.restedOnBy.map((row) => `${specLink(row.id, row.id)} <span class="floor">${escape(viaWords[row.via])} · ${escape(row.lane)}</span>`).join("<br>")}</details>`);
+  if (entry.lane === "to state") field("Earlier statements", entry.earlierStatements.length === 0 ? "No preceding waiting statement in the statement queue."
+    : entry.earlierStatements.map((row) => `${specLink(row.id)} <span class="floor">${row.where === "entry" ? "in this entry" : row.where === "roadmap" ? "" : "outside the roadmap"}</span>${row.where === "roadmap" ? ` ${toEntry(row.onRoadmap)}` : ""}`).join("<br>"));
   field("Also in", entry.packs.map((pack) => `<a href="packs/${pageName(pack)}.html">${escape(pack)}</a>`).join(", "));
-  if (entry.sharesScopeWith.length > 0) field("Shares Specs with", entry.sharesScopeWith.map((place) => `<a href="#entry-${place}">entry ${place}</a>`).join(", "));
-  return `<li data-row data-lane="${laneSlug(entry.lane)}"><details class="card" id="entry-${entry.place}"><summary><span class="line1">${entry.place}. ${escape(entry.title ?? entry.id)}</span><span class="line2">${line2}</span></summary><div class="card-body">${fields.join("")}</div></details></li>`;
+  if (entry.sharesScopeWith.length > 0) field("Shares Specs with", entry.sharesScopeWith.map(toEntry).join(", "));
+  return `<li data-row data-lane="${laneSlug(entry.lane)}"><details class="card" id="${entryId(pack, entry.place)}"><summary><span class="line1">${entry.place}. ${escape(entry.title ?? entry.id)}</span><span class="line2">${line2}</span></summary><div class="card-body">${fields.join("")}</div></details></li>`;
 }
 
 function roadmapSection(roadmap, memo, titles) {
   const t = roadmap.totals;
+  const toEntry = (place) => `<a href="#${entryId(roadmap.pack, place)}">entry ${place}</a>`;
   const parts = [];
   parts.push(`<section aria-labelledby="roadmap-${escape(pageName(roadmap.pack))}"><h2 id="roadmap-${escape(pageName(roadmap.pack))}"><a href="packs/${pageName(roadmap.pack)}.html">${escape(roadmap.title)}</a> <code>${escape(roadmap.pack)}</code></h2>`);
   for (const paragraph of (roadmap.framing ?? "").split(/\n\s*\n/u).filter((text) => text.trim() !== "")) parts.push(`<p>${inline(paragraph.trim())}</p>`);
   if (roadmap.order !== "priority") parts.push(`<p><strong>Prototype note:</strong> this Pack does not state <code>order: priority</code> yet, because the engine has no such field before the build; the page reads it because it was named.</p>`);
-  parts.push(`<ul class="summary"><li>${t.entries} entries in priority order: ${t.toDesign} to design, ${t.toState} to state, ${t.toBuild} to build, ${t.built} built${t.apart > 0 ? `, ${t.apart} listed apart` : ""}.</li><li>${t.blockingQuestions} blocking and ${t.questions - t.blockingQuestions} non-blocking questions wait on the owner.</li><li>${t.statements} statements in the entries wait for a person; the <a href="queue.html">owner queue</a> orders them.</li></ul>`);
+  const orderWords = roadmap.order === "priority" ? "in priority order" : "in authored reading order";
+  parts.push(`<ul class="summary"><li>${t.entries} entries ${orderWords}: ${t.toDesign} to design, ${t.toState} to state, ${t.toBuild} to build, ${t.built} built${t.apart > 0 ? `, ${t.apart} listed apart` : ""}.</li><li>${t.blockingQuestions} blocking and ${t.questions - t.blockingQuestions} non-blocking questions wait on the owner${t.withoutDecider > 0 ? `; ${t.withoutDecider} more name no decider, ${t.blockingWithoutDecider} of them blocking` : ""}.</li><li>${t.statements} statements in the entries wait for a person, in the statement queue's order; the <a href="queue.html">owner queue</a> lists them all.</li></ul>`);
   // The board: one column per lane, each listing its entries in place order.
   parts.push(`<div class="roadmap-board" role="group" aria-label="Entries by what each needs next">`);
   for (const lane of laneNames) {
     const rows = roadmap.entries.filter((entry) => entry.lane === lane);
-    parts.push(`<section class="board-column"><h3>${escape(lane[0].toUpperCase() + lane.slice(1))} <span class="floor">${rows.length}</span></h3>${rows.length === 0 ? "<p>none</p>" : `<ol>${rows.map((entry) => `<li value="${entry.place}"><span class="place">${entry.place}</span><a href="#entry-${entry.place}">${escape(entry.title ?? entry.id)}</a></li>`).join("")}</ol>`}</section>`);
+    parts.push(`<section class="board-column"><h3>${escape(lane[0].toUpperCase() + lane.slice(1))} <span class="floor">${rows.length}</span></h3>${rows.length === 0 ? "<p>none</p>" : `<ol>${rows.map((entry) => `<li value="${entry.place}"><span class="place">${entry.place}</span><a href="#${entryId(roadmap.pack, entry.place)}">${escape(entry.title ?? entry.id)}</a></li>`).join("")}</ol>`}</section>`);
   }
   parts.push(`</div>`);
   parts.push(`<sdp-filter><form hidden class="filter-bar"><label>Needs<select data-filter="lane"><option value="any">Any</option>${laneNames.map((lane) => `<option value="${laneSlug(lane)}">${escape(lane)}</option>`).join("")}</select></label></form><output aria-live="polite">${roadmap.entries.length} of ${roadmap.entries.length} shown</output>`);
@@ -86,15 +98,19 @@ function roadmapSection(roadmap, memo, titles) {
     const rows = roadmap.entries.filter((entry) => entry.lane === lane);
     const heading = { "to design": "To design", "to state": "To state", "to build": "To build", built: "Built, still listed" }[lane];
     parts.push(`<h3>${heading}</h3>`);
-    parts.push(rows.length === 0 ? `<p>No entry is ${lane === "built" ? "built" : lane}.</p>` : `<ul class="roadmap-list">${rows.map((entry) => entryCard(entry, titles)).join("")}</ul>`);
+    parts.push(rows.length === 0 ? `<p>No entry is ${lane === "built" ? "built" : lane}.</p>` : `<ul class="roadmap-list">${rows.map((entry) => entryCard(roadmap.pack, entry, titles)).join("")}</ul>`);
   }
   parts.push(`</sdp-filter>`);
   if (roadmap.apart.length > 0) parts.push(`<h3>Listed apart</h3><ul class="plain-list">${roadmap.apart.map((row) => `<li>${row.place}. ${specLink(row.id)} · ${escape(row.specKind)} · ${badge(row.statedReadiness)} · ${escape(row.lane)}</li>`).join("")}</ul>`);
-  parts.push(`<h3>Waiting on the owner</h3>`);
+  parts.push(`<h3>Waiting on the owner</h3><p>Questions follow the roadmap's places; statements keep the statement queue's order, so a Spec others rest on comes first.</p>`);
   const waiting = [];
-  for (const question of roadmap.waiting.questions) waiting.push(`<li><p>${question.blocking ? "blocking" : "non-blocking"} · ${question.address === null ? specLink(question.spec) : addressLink(question.address)}${question.address === null ? "" : `<sdp-copy text="${escape(question.address)}"></sdp-copy>`}</p><p>${inline(question.question)}</p>${question.provisional === null ? "" : `<p>Provisional: ${inline(question.provisional)}</p>`}<p>touches ${question.places.map((place) => `<a href="#entry-${place}">entry ${place}</a>`).join(", ")}</p></li>`);
-  for (const statement of roadmap.waiting.statements) waiting.push(`<li><p>statement · ${specLink(statement.id)} states ${badge(statement.statedReadiness)}, floor allows ${badge(statement.floorReached)} · ${statement.places.map((place) => `<a href="#entry-${place}">entry ${place}</a>`).join(", ")}</p></li>`);
+  for (const question of roadmap.waiting.questions) waiting.push(`<li><p>${question.blocking ? "blocking" : "non-blocking"} · ${question.address === null ? specLink(question.spec) : addressLink(question.address)}${question.address === null ? "" : `<sdp-copy text="${escape(question.address)}"></sdp-copy>`}</p><p>${inline(question.question)}</p>${question.provisional === null ? "" : `<p>Provisional: ${inline(question.provisional)}</p>`}<p>touches ${question.places.map(toEntry).join(", ")}</p></li>`);
+  for (const statement of roadmap.waiting.statements) waiting.push(`<li><p>statement · ${specLink(statement.id)} states ${badge(statement.statedReadiness)}, floor allows ${badge(statement.floorReached)} · ${statement.places.map(toEntry).join(", ")}</p></li>`);
   parts.push(waiting.length === 0 ? `<p>Nothing in these entries waits on the owner.</p>` : `<ul class="plain-list">${waiting.join("")}</ul>`);
+  if (roadmap.waiting.withoutDecider.length > 0) {
+    parts.push(`<h3>Questions without a decider</h3><p>These questions have no named decider.</p>`);
+    parts.push(`<ul class="plain-list">${roadmap.waiting.withoutDecider.map((question) => `<li><p>${question.blocking ? "blocking" : "non-blocking"} · ${question.address === null ? specLink(question.spec) : addressLink(question.address)}</p><p>${inline(question.question)}</p><p>touches ${question.places.map(toEntry).join(", ")}</p></li>`).join("")}</ul>`);
+  }
   parts.push(`<details class="section"><summary>The forward section, as Markdown</summary><div class="section-body"><sdp-copy text="${escape(memo)}"></sdp-copy><pre>${escape(memo)}</pre></div></details>`);
   parts.push(`</section>`);
   return parts.join("\n");
@@ -112,33 +128,52 @@ const style = `<style>
 @media (max-width: 720px) { .roadmap-board { grid-template-columns: 1fr; } }
 </style>`;
 
-mkdirSync(join(here, "assets"), { recursive: true });
-copyFileSync(join(worktree, "generated/spec-studio/assets/studio.css"), join(here, "assets/studio.css"));
-
-for (const corpus of corpora) {
-  const answer = query(corpus, body53, { pack: "pack:roadmap" });
-  const memoAnswer = query(corpus, body55, { pack: "pack:roadmap" });
-  if (answer.diagnostics || memoAnswer.diagnostics?.length) throw new Error(JSON.stringify([answer.diagnostics, memoAnswer.diagnostics]));
-  const titles = new Map(query(corpus, "return g.specs().map((spec) => [spec.id, spec.title ?? null])", {}));
-  const out = join(here, corpus.name);
-  mkdirSync(out, { recursive: true });
-  writeFileSync(join(out, "roadmap.json"), `${JSON.stringify(answer, null, 2)}\n`);
-  writeFileSync(join(out, "memo.md"), memoAnswer.memo);
-  const shell = readFileSync(join(corpus.root, "generated/spec-studio/queue.html"), "utf8");
+export function renderPage(shell, roadmaps, memos, titles) {
   const head = shell.slice(0, shell.indexOf('<main id="main">'))
     .replace("<title>Owner queue · Spec Studio</title>", `<title>Roadmap · Spec Studio</title>${style}`)
     .replace('<a href="queue.html" aria-current="page">Queue</a>', '<a href="roadmap.html" aria-current="page">Roadmap</a><a href="queue.html">Queue</a>');
   const tail = shell.slice(shell.indexOf("</main>"));
   const main = `<main id="main"><header class="page-head"><h1>Roadmap</h1><p>Recipe 53, the roadmap, over every Pack whose manifest states <code>order: priority</code>. A place is a preference: never a date, a deadline or permission to start. What each entry needs is read from the graph.</p></header>
-${answer.roadmaps.map((roadmap) => roadmapSection(roadmap, memoAnswer.memo, titles)).join("\n")}
+${roadmaps.map((roadmap, at) => roadmapSection(roadmap, memos[at], titles)).join("\n")}
 `;
-  const page = `${head}${main}${tail}`;
-  // The copy kept here links only the stylesheet; the copy in the built Studio runs its script.
-  writeFileSync(join(out, "roadmap.html"), page.replace('<script defer src="assets/studio.js"></script>', "").replaceAll('href="assets/', 'href="../assets/'));
-  writeFileSync(join(corpus.root, "generated/spec-studio/roadmap.html"), page);
-  // A screenshot variant with every entry opened; the page itself opens none.
-  writeFileSync(join(corpus.root, "generated/spec-studio/roadmap-expanded.html"), page.replaceAll('<details class="card"', '<details open class="card"'));
-  console.log(`${corpus.name}: ${answer.roadmaps[0].entries.length} entries, memo ${memoAnswer.memo.length} characters`);
+  return `${head}${main}${tail}`;
+}
+
+function main(worktree, platform) {
+  const sdp = join(worktree, "dist/cli/sdp.js");
+  const corpora = [
+    { name: "protocol", root: worktree, exclude: ["explorations", "examples", "test/fixtures/import/parity"] },
+    { name: "platform", root: platform, exclude: [] },
+  ];
+  mkdirSync(join(here, "assets"), { recursive: true });
+  copyFileSync(join(worktree, "generated/spec-studio/assets/studio.css"), join(here, "assets/studio.css"));
+  for (const corpus of corpora) {
+    const answer = query(sdp, corpus, body53, { pack: "pack:roadmap" });
+    if (answer.diagnostics) throw new Error(JSON.stringify(answer.diagnostics));
+    // One memo per roadmap, each rendered for its own Pack.
+    const memos = answer.roadmaps.map((roadmap) => {
+      const memoAnswer = query(sdp, corpus, body55, { pack: roadmap.pack });
+      if (memoAnswer.diagnostics?.length) throw new Error(JSON.stringify(memoAnswer.diagnostics));
+      return memoAnswer.memo;
+    });
+    const titles = new Map(query(sdp, corpus, "return g.specs().map((spec) => [spec.id, spec.title ?? null])", {}));
+    const out = join(here, corpus.name);
+    mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, "roadmap.json"), `${JSON.stringify(answer, null, 2)}\n`);
+    writeFileSync(join(out, "memo.md"), memos[0]);
+    const page = renderPage(readFileSync(join(corpus.root, "generated/spec-studio/queue.html"), "utf8"), answer.roadmaps, memos, titles);
+    // The copy kept here links only the stylesheet; the copy in the built Studio runs its script.
+    writeFileSync(join(out, "roadmap.html"), page.replace('<script defer src="assets/studio.js"></script>', "").replaceAll('href="assets/', 'href="../assets/'));
+    writeFileSync(join(corpus.root, "generated/spec-studio/roadmap.html"), page);
+    // A screenshot variant with every entry opened; the page itself opens none.
+    writeFileSync(join(corpus.root, "generated/spec-studio/roadmap-expanded.html"), page.replaceAll('<details class="card"', '<details open class="card"'));
+    console.log(`${corpus.name}: ${answer.roadmaps[0].entries.length} entries, memo ${memos[0].length} characters`);
+  }
+  for (const corpus of corpora) {
+    const memo = readFileSync(join(here, corpus.name, "memo.md"), "utf8");
+    const page = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>The forward section, rendered</title><link rel="stylesheet" href="../assets/studio.css"><style>main { max-width: 64rem; margin: 2rem auto; padding: 0 1.5rem; } table { width: 100%; } td, th { vertical-align: top; }</style></head><body><main><p class="floor">Recipe 55's memo, rendered as a pull request description renders its Markdown (prototype renderer).</p>${renderMemo(memo)}</main></body></html>\n`;
+    writeFileSync(join(here, corpus.name, "memo.html"), page);
+  }
 }
 
 // The memo rendered as a pull request description would show it: a small renderer for the
@@ -162,7 +197,7 @@ const spans = (text) => {
   return out;
 };
 const cells = (line) => line.slice(1, -1).split(/(?<!\\)\|/u).map((cell) => cell.trim().replace(/\\\|/gu, "|"));
-function renderMemo(markdown) {
+export function renderMemo(markdown) {
   const lines = markdown.split("\n");
   const html = [];
   for (let at = 0; at < lines.length; at += 1) {
@@ -188,8 +223,8 @@ function renderMemo(markdown) {
   }
   return html.join("\n");
 }
-for (const corpus of corpora) {
-  const memo = readFileSync(join(here, corpus.name, "memo.md"), "utf8");
-  const page = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>The forward section, rendered</title><link rel="stylesheet" href="../assets/studio.css"><style>main { max-width: 64rem; margin: 2rem auto; padding: 0 1.5rem; } table { width: 100%; } td, th { vertical-align: top; }</style></head><body><main><p class="floor">Recipe 55's memo, rendered as a pull request description renders its Markdown (prototype renderer).</p>${renderMemo(memo)}</main></body></html>\n`;
-  writeFileSync(join(here, corpus.name, "memo.html"), page);
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const [worktree, platform] = process.argv.slice(2);
+  if (!worktree || !platform) throw new Error("usage: node build.mjs <worktree> <platform-copy>");
+  main(worktree, platform);
 }

@@ -1,0 +1,91 @@
+{
+  "validation": "validate: 0 errors · 2 warnings (conformance + honesty over the one graph)",
+  "links": 19,
+  "checks": [
+    {
+      "finding": 1,
+      "claim": "delta (place 2) is listed before gamma (place 1), which rests on it",
+      "pass": true
+    },
+    {
+      "finding": 1,
+      "claim": "the second roadmap lists the statements in the same order",
+      "pass": true
+    },
+    {
+      "finding": 2,
+      "claim": "alpha states ready and reads to design",
+      "pass": true
+    },
+    {
+      "finding": 2,
+      "claim": "the bare descendant is a part in alpha's lane, held by kind-evidence-present",
+      "pass": true
+    },
+    {
+      "finding": 2,
+      "claim": "the open descendant is a part in alpha's lane, held by no-blocking-open-questions",
+      "pass": true
+    },
+    {
+      "finding": 4,
+      "claim": "gamma's earlier statement is delta, on the roadmap at place 2",
+      "pass": true
+    },
+    {
+      "finding": 4,
+      "claim": "delta has no earlier statement",
+      "pass": true
+    },
+    {
+      "finding": 4,
+      "claim": "the memo says so for delta",
+      "pass": true
+    },
+    {
+      "finding": 5,
+      "claim": "epsilon rests on outside through refines from the diamond",
+      "pass": true
+    },
+    {
+      "finding": 5,
+      "claim": "the diamond's holding row names outside as the typed-dependency target",
+      "pass": true
+    },
+    {
+      "finding": 6,
+      "claim": "epsilon's undecided question is listed apart and counted",
+      "pass": true
+    },
+    {
+      "finding": 6,
+      "claim": "the owner's questions are listed as before",
+      "pass": true
+    },
+    {
+      "finding": 6,
+      "claim": "the memo names the questions with no decider",
+      "pass": true
+    },
+    {
+      "finding": 7,
+      "claim": "no element id repeats",
+      "pass": true
+    },
+    {
+      "finding": 7,
+      "claim": "every entry link names an id on the page",
+      "pass": true
+    },
+    {
+      "finding": 7,
+      "claim": "every entry link lands in its own roadmap's section",
+      "pass": true
+    },
+    {
+      "finding": 10,
+      "claim": "the summary says authored reading order, never priority order",
+      "pass": true
+    }
+  ]
+}
