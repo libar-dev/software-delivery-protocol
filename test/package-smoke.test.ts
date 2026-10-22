@@ -446,7 +446,14 @@ bindExample({
 
       run(
         "npm",
-        ["install", "--ignore-scripts", "--omit=dev", join(packageRoot, tarball)],
+        [
+          "install",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund",
+          "--omit=dev",
+          join(packageRoot, tarball),
+        ],
         consumer,
       );
       expect(await readdir(join(consumer, "node_modules"))).not.toContain("vitest");
