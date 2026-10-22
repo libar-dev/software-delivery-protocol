@@ -101,6 +101,7 @@ export interface Roadmap {
     readonly statements: number;
   };
   readonly entries: readonly RoadmapEntry[];
+  readonly unresolved: readonly { readonly place: number; readonly id: string }[];
   readonly apart: readonly {
     readonly place: number;
     readonly id: string;

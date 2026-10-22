@@ -21,6 +21,13 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.vault-priority",
+    nodeType: "Anchor",
+    file: "test/vault.test.ts",
+    constant: "priorityNoteTest",
+    site: 'it("changes the Pack note\'s meaning when only advisory priority changes",',
+  },
+  {
     id: "test:protocol.studio-diagram-catalog",
     nodeType: "Anchor",
     file: "test/studio-diagram-catalog.test.ts",
@@ -6724,6 +6731,7 @@ export const expectedBindingEdges = [
   ["test:protocol.studio-on-ramp", "verifies", "spec:consumers.studio-on-ramp"],
   ["impl:protocol.vault-on-ramp", "satisfies", "spec:consumers.vault-on-ramp"],
   ["test:protocol.vault-on-ramp", "verifies", "spec:consumers.vault-on-ramp"],
+  ["test:protocol.vault-priority", "verifies", "spec:consumers.obsidian-vault.notes"],
   ["test:protocol.self-hosting", "verifies", "spec:protocol.self-hosting"],
   [
     "test:protocol.derived-readiness-banner.idea-floor-unmet",

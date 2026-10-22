@@ -3198,7 +3198,7 @@ for (const id of [...new Set([...basePacks.keys(), ...headPacks.keys()])].sort()
   };
   const orderBefore = orderOf(a, "base"), orderAfter = orderOf(b, "head");
   const orderChanged = a !== undefined && b !== undefined && orderBefore !== null && orderAfter !== null && orderBefore !== orderAfter;
-  const members = delta(a?.members ?? [], b?.members ?? []);
+  const members = { added: (b?.members ?? []).filter((member) => !a?.members.includes(member)), removed: (a?.members ?? []).filter((member) => !b?.members.includes(member)) };
   const common = new Set((a?.members ?? []).filter((member) => b?.members.includes(member)));
   const reordered = !same((a?.members ?? []).filter((member) => common.has(member)), (b?.members ?? []).filter((member) => common.has(member)));
   if (!a || !b || members.added.length || members.removed.length || reordered || orderChanged) packs.push({ id,
@@ -3250,6 +3250,7 @@ For a probe whose two rules were keyed and whose second rule was also reworded, 
 ```
 
 `packs` reports membership additions, removals and relative order changes among retained members.
+`membersAdded` and `membersRemoved` keep their respective manifest order.
 `orderChanged` reports a change in what the order means, with `orderBefore` and `orderAfter`
 reading `"reading"` or `"priority"`; an absent `order` reads as `"reading"` in every schema version.
 An absent Pack reads null on that side. An unknown value produces an order diagnostic
@@ -5394,9 +5395,9 @@ Pack ids and decider tokens return diagnostics without roadmaps. An explicitly s
 Pack reads as reading order.
 
 The answer is `{ decider, roadmaps }`. Each roadmap is
-`{ pack, title, framing, order, totals, entries, apart, waiting }`: `entries` carries the work,
+`{ pack, title, framing, order, totals, entries, apart, unresolved, waiting }`: `entries` carries the work,
 dependencies and earlier statements at each place; `apart` carries entries with no work;
-`waiting` carries questions, questions without a decider and readiness statements. The row and
+`unresolved` lists unresolved manifest members as `{ place, id }`, with every place kept as its manifest position; `waiting` carries questions, questions without a decider and readiness statements. The row and
 total fields are defined by `spec:consumers.roadmap#design.roadmapAnswer` and its following entries.
 
 ```js
@@ -5448,15 +5449,16 @@ const queueRestsOn = new Map((queue.statements ?? []).map((row) => [row.id, row.
 const byQueue = (a, b) => (queuePlace.get(a) ?? Infinity) - (queuePlace.get(b) ?? Infinity) || compare(a, b);
 
 const roadmaps = selected.map((pack) => {
-  const members = pack.members.filter((id) => contexts.has(id));
-  const scopes = members.map((id) => new Set(scopeOf(id)));
+  const members = pack.members;
+  const scopes = members.map((id) => new Set(contexts.has(id) ? scopeOf(id) : []));
   const placeOf = (id) => { const at = scopes.findIndex((scope) => scope.has(id)); return at === -1 ? null : at + 1; };
-  const entries = [], apart = [];
+  const entries = [], apart = [], unresolved = [];
   const questionRows = new Map(), undecided = new Map(), statements = new Map();
   const touch = (map, key, row, place) => { const existing = map.get(key) ?? { ...row, places: [] }; if (!existing.places.includes(place)) existing.places.push(place); map.set(key, existing); };
   members.forEach((id, index) => {
     const place = index + 1;
     const spec = contexts.get(id);
+    if (spec === undefined) { unresolved.push({ place, id }); return; }
     const scope = scopes[index];
     const scopeIds = [...scope];
     const work = scopeIds.filter((member) => !settledKinds.has(contexts.get(member).specKind));
@@ -5551,7 +5553,7 @@ const roadmaps = selected.map((pack) => {
       questions: waiting.questions.length, blockingQuestions: waiting.questions.filter((row) => row.blocking).length,
       withoutDecider: waiting.withoutDecider.length, blockingWithoutDecider: waiting.withoutDecider.filter((row) => row.blocking).length,
       statements: waiting.statements.length },
-    entries, apart, waiting,
+    entries, apart, unresolved, waiting,
   };
 });
 return { decider, roadmaps };
@@ -6148,7 +6150,22 @@ const span = (text) => {
   const pad = value.startsWith("`") || value.endsWith("`") ? " " : "";
   return `${ticks}${pad}${value}${pad}${ticks}`;
 };
-const text = (value) => String(value).replace(/\r\n|\r|\n/gu, " ");
+const html = (value) => value.replace(/[<>&]/gu, (char) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[char]);
+const text = (value) => {
+  const source = String(value).replace(/\r\n|\r|\n/gu, " ");
+  const runs = [...source.matchAll(/`+/gu)];
+  let at = 0, out = "";
+  for (let i = 0; i < runs.length; i += 1) {
+    const open = runs[i];
+    const closing = runs.findIndex((run, j) => j > i && run[0].length === open[0].length);
+    if (closing < 0) continue;
+    const close = runs[closing];
+    out += html(source.slice(at, open.index)) + source.slice(open.index, close.index + close[0].length);
+    at = close.index + close[0].length;
+    i = closing;
+  }
+  return out + html(source.slice(at));
+};
 const cell = (value) => text(value).replace(/\|/gu, "\\|");
 const lines = [];
 const push = (...values) => lines.push(...values);
@@ -6164,7 +6181,7 @@ const purposeAndReach = (entry) => {
   return [own, ...derived].filter((part) => part !== "").join(" ");
 };
 const holdText = (clauses) => clauses.length === 0 ? "nothing holds it" : `held by ${clauses.map((row) => row.targets.length === 0 ? row.clause : `${row.clause} (${row.targets.map(span).join(", ")})`).join(", ")}`;
-const entryCell = (entry) => `${text(entry.title ?? entry.id)} ${span(entry.id)}`;
+const entryCell = (entry) => `${entry.title ?? entry.id} ${span(entry.id)}`;
 
 push("## The next work, from the roadmap", "");
 push(`Roadmap: ${text(roadmap.title ?? roadmap.pack)} ${span(roadmap.pack)}`, "");
@@ -6236,7 +6253,12 @@ if (roadmap.waiting.withoutDecider.length > 0) {
 const built = need("built");
 if (built.length > 0) {
   push("### Built and still on the roadmap", "");
-  for (const entry of built) push(`- Place ${entry.place}: ${entryCell(entry)}`);
+  for (const entry of built) push(`- Place ${entry.place}: ${text(entryCell(entry))}`);
+  push("");
+}
+if (roadmap.unresolved.length > 0) {
+  push("### Unresolved members", "");
+  for (const row of roadmap.unresolved) push(`- Place ${row.place}: ${span(row.id)}`);
   push("");
 }
 const deferrals = register.specs.flatMap((spec) => spec.questions.filter((question) => question.deferral).map((question) => ({ spec: spec.id, question })));

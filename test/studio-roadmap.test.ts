@@ -72,6 +72,22 @@ function mixedGraph() {
 }
 
 describe("Studio roadmap page", () => {
+  it("shows unresolved members with their original manifest places", async () => {
+    const graph = probeGraph({
+      "pack.sdp.md": probePack("probe", ["first", "missing", "last"]),
+      "first.sdp.md": probeSpec("first"),
+      "missing.sdp.md": probeSpec("missing"),
+      "last.sdp.md": probeSpec("last"),
+    });
+    const { html } = await page({
+      ...graph,
+      nodes: graph.nodes.filter((node) => node.id !== "spec:probe.missing"),
+    });
+    const body = main(html);
+    expect(body).toContain("<h3>Unresolved members</h3>");
+    expect(body).toContain('id="roadmap-probe-entry-2">2. <code>spec:probe.missing</code>');
+    expect(body).toContain('id="roadmap-probe-entry-3"');
+  });
   it("publishes the empty state and navigation even with no roadmap", async () => {
     const { html, pages } = await page(probeGraph({}, []));
     expect(main(html)).toContain("This corpus states no roadmap.");

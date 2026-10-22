@@ -117,7 +117,7 @@ describe("upgrade kit", () => {
     expect([...guide.matchAll(/^## (.+)$/gmu)].map((match) => match[1])).toEqual([
       "Measure the corpus",
       "Organize features in epics",
-      "Move planning and review records into the graph",
+      "Model upcoming work in the graph; keep review history in git and pull requests",
       "Propose and apply rule keys",
       "Choose capabilities to adopt",
       "Move rules files onto shipped recipes",
@@ -157,7 +157,13 @@ describe("upgrade kit", () => {
       "Unreached Specs",
     ])
       expect(epics).toContain(clause);
-    const records = section("Move planning and review records into the graph");
+    const records = section(
+      "Model upcoming work in the graph; keep review history in git and pull requests",
+    );
+    expect(records).toContain("Unresolved intended design lives in open questions.");
+    expect(records).toContain(
+      "Review disposition and acceptance remain in git and the pull request; neither becomes a graph field.",
+    );
     for (const clause of [
       "order: priority",
       "recipe 53",
