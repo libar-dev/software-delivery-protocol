@@ -515,3 +515,27 @@ it("extends overflow rails past earlier labels on the adopter's dense traces", (
     assertGeometry(l, r);
   }
 });
+
+it("keeps high-degree boxes inside their cells when contexts share a grid", () => {
+  const boxes = Array.from({ length: 40 }, (_, i) => ({
+    id: `component:wide.${String(i)}`,
+    words: "Component",
+    target: "#main",
+    context: i === 0 ? "first" : "second",
+    layer: "domain",
+  }));
+  const d = {
+    subject: "architecture",
+    caption: "Shared contexts",
+    grid: true,
+    boxes,
+    edges: boxes
+      .slice(1)
+      .map((b) => ({ from: required(boxes[0]).id, to: b.id, kind: "uses", claim: "anchored" })),
+  };
+  const l = layoutDiagram(d);
+  expect(l.boxes.every((b) => b.width <= 264)).toBe(true);
+  const first = required(l.boxes.find((b) => b.box.context === "first"));
+  const second = required(l.boxes.find((b) => b.box.context === "second"));
+  expect(first.x + first.width + 24).toBeLessThanOrEqual(second.x);
+});

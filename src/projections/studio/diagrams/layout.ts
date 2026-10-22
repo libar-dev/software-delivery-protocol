@@ -69,6 +69,8 @@ export function layoutDiagram(d: Diagram): Layout {
   const degree = (id: string) =>
     d.edges.reduce((n, e) => n + Number(e.from === id) + Number(e.to === id), 0);
   const margin = 24;
+  const multipleContexts =
+    d.grid && new Set(d.boxes.filter((b) => !foldedBand(b)).map(contextOf)).size > 1;
   const measure = (box: DiagramBox) => {
     const title = labelLines(box.title ?? box.words, 28),
       identity = labelLines(short.get(box.id) ?? box.id),
@@ -81,7 +83,7 @@ export function layoutDiagram(d: Diagram): Layout {
         Math.max(
           96,
           ...[...title, ...identity, ...detail].map((s) => Array.from(s).length * 8 + 24),
-          Math.min(832, degree(box.id) * 8 + 32),
+          Math.min(multipleContexts ? 264 : 832, degree(box.id) * 8 + 32),
         ),
       ),
       height: snap(24 + (title.length + identity.length + detail.length) * 18),

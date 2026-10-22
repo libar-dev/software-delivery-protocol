@@ -176,7 +176,7 @@ export function routeDiagram(
               ...r.points.map((p) => p.x),
               ...(r.label ? [r.label.x + r.label.width + 12] : []),
             ]),
-          ) + 264,
+          ) + 48,
         ),
       ]),
     ];
