@@ -625,6 +625,11 @@ function renderRunnableRegistrar(
 
 /* ----- the stage ----- */
 
+/**
+ * Start with GeneratedContracts and generateContracts here.
+ * Read space and step rendering for parameter types and outcome unions, then
+ * registrar rendering for dispatch, suite adoption and sibling output paths.
+ */
 const codegenComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.codegen"),
   label: "Protocol runnable code generation seam",
@@ -636,6 +641,7 @@ const codegenComponentAnchor = codeAnchor({
   ],
   layer: "application",
   context: "protocol",
+  role: "projection",
 });
 const executableContractsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.executable-contracts"),

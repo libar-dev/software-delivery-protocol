@@ -5,6 +5,13 @@ import type { Finding } from "../../../validate/contracts.js";
 import type { CodeUnitBinding, PackMemberQuestion } from "../../../reader/reader.js";
 import type { Architecture } from "./architecture-page.js";
 
+/**
+ * @sdpAnchor impl:protocol.studio-html
+ * @sdpLabel shared Studio HTML, source and link encoding
+ * @sdpSatisfies spec:consumers.spec-studio.shell
+ * @sdpComponent component:protocol.projections
+ * @sdpRole codec
+ */
 export interface PageContext {
   readonly data: StudioData;
   readonly path: string;

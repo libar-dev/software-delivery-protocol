@@ -25,7 +25,8 @@ export async function copyText(
  * @sdpAnchor impl:protocol.studio-copy
  * @sdpSatisfies spec:consumers.spec-studio.page-elements
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
+ * @sdpLabel copies text with selection fallback and failure feedback
  */
 export function registerCopy(): void {
   class Copy extends globalThis.HTMLElement {

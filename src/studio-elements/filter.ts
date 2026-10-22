@@ -15,7 +15,8 @@ export function rowMatches(
  * @sdpAnchor impl:protocol.studio-filter
  * @sdpSatisfies spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
+ * @sdpLabel filters build-rendered rows through their recorded attributes
  */
 export function registerFilter(): void {
   class Filter extends globalThis.HTMLElement {

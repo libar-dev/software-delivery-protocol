@@ -89,7 +89,11 @@ const structuralSelfBindingTestAnchor = specTest({
   id: testAnchorId("test:protocol.structural-self-binding"),
   label:
     "checks the accepted membership and helper coverage, authored uses, and pinned anchor roles, layers and contexts",
-  verifies: [ref("spec:protocol.structural-self-binding"), ref("spec:model.structural-patterns")],
+  verifies: [
+    ref("spec:protocol.structural-self-binding"),
+    ref("spec:model.structural-patterns"),
+    ref("spec:protocol.significant-units-review"),
+  ],
 });
 void structuralSelfBindingTestAnchor;
 
@@ -214,12 +218,97 @@ function compareCoverageMismatch(
   );
 }
 
+function structuralRosterMismatches(graph: typeof result.graph) {
+  const acceptedIds = new Set<string>(acceptedArchitecturalUnits.map((row) => row.anchorId));
+  const exceptionIds = new Set<string>(structuralMembershipExceptions);
+  const componentIds = new Set<string>(expectedComponentIds);
+  const mismatches: {
+    unit: string;
+    anchorId: string;
+    target: string;
+    reason: string;
+  }[] = [];
+
+  for (const row of acceptedArchitecturalUnits) {
+    const path = row.unit.slice(0, row.unit.indexOf("#"));
+    const node = graph.nodes.find((entry) => entry.id === row.anchorId);
+    const memberships = graph.edges.filter(
+      (edge) => edge.from === row.anchorId && edge.type === "memberOf",
+    );
+    const target = memberships[0]?.to ?? "";
+
+    if (node?.nodeType !== "CodeNode") {
+      mismatches.push({
+        unit: row.unit,
+        anchorId: row.anchorId,
+        target,
+        reason: "anchor is not a CodeNode",
+      });
+      continue;
+    }
+
+    if (node.file !== path) {
+      mismatches.push({
+        unit: row.unit,
+        anchorId: row.anchorId,
+        target,
+        reason: `file ${node.file} !== ${path}`,
+      });
+    }
+
+    if (memberships.length !== 1) {
+      mismatches.push({
+        unit: row.unit,
+        anchorId: row.anchorId,
+        target,
+        reason: `memberOf count ${String(memberships.length)}`,
+      });
+    } else {
+      if (target !== row.componentId) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.anchorId,
+          target,
+          reason: `memberOf target ${target} !== ${row.componentId}`,
+        });
+      }
+
+      if (!componentIds.has(target)) {
+        mismatches.push({
+          unit: row.unit,
+          anchorId: row.anchorId,
+          target,
+          reason: "target not in expectedComponentIds",
+        });
+      }
+    }
+  }
+
+  for (const edge of graph.edges.filter((entry) => entry.type === "memberOf")) {
+    if (!acceptedIds.has(edge.from) && !exceptionIds.has(edge.from)) {
+      const node = graph.nodes.find((entry) => entry.id === edge.from);
+      mismatches.push({
+        unit: node && "file" in node ? node.file : edge.from,
+        anchorId: edge.from,
+        target: edge.to,
+        reason: "unrostered memberOf",
+      });
+    }
+  }
+
+  return mismatches;
+}
+
 describe("the self-hosting corpus", () => {
   it.each([
     {
       file: "test/self-hosting-oracle/structural-edges.ts",
       anchor: "impl:protocol.structural-self-binding",
-      specs: ["spec:protocol.structural-self-binding", "spec:model.structural-patterns"],
+      specs: [
+        "spec:protocol.structural-self-binding",
+        "spec:model.structural-patterns",
+        "spec:protocol.significant-units-review",
+      ],
     },
     {
       file: "test/helpers/validator-probes.ts",
@@ -262,17 +351,13 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // Re-measured from the refreshed tree: 428 Markdown Specs and four Gherkin Specs,
-    // 432 in the self-hosting Pack; nine Pack manifests and 543 source anchors.
-    // The excluded-root validate run corroborates 984 nodes and 2719 edges; the capability-epics
-    // decision's dependency on the one-primitive decision added the latest edge.
-    expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 543 });
+    expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 545 });
     expect(expectedSpecs).toHaveLength(432);
     expect(expectedPackMembers).toHaveLength(432);
-    expect(expectedAnchors).toHaveLength(543);
-    expect(expectedBindingEdges).toHaveLength(681);
-    expect(result.graph.nodes).toHaveLength(984);
-    expect(result.graph.edges).toHaveLength(2719);
+    expect(expectedAnchors).toHaveLength(545);
+    expect(expectedBindingEdges).toHaveLength(696);
+    expect(result.graph.nodes).toHaveLength(986);
+    expect(result.graph.edges).toHaveLength(2746);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -415,7 +500,7 @@ describe("the self-hosting corpus", () => {
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedMemberOfEdges).toHaveLength(167);
+    expect(expectedMemberOfEdges).toHaveLength(169);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>
@@ -440,7 +525,7 @@ describe("the self-hosting corpus", () => {
 
   it("derives exactly the sparse authored component uses edges", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedUsesEdges).toHaveLength(48);
+    expect(expectedUsesEdges).toHaveLength(58);
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "uses")
@@ -450,82 +535,7 @@ describe("the self-hosting corpus", () => {
   });
 
   it("covers every accepted architecturally significant unit", () => {
-    const acceptedIds = new Set<string>(acceptedArchitecturalUnits.map((row) => row.anchorId));
-    const exceptionIds = new Set<string>(structuralMembershipExceptions);
-    const componentIds = new Set<string>(expectedComponentIds);
-    const mismatches: {
-      unit: string;
-      anchorId: string;
-      target: string;
-      reason: string;
-    }[] = [];
-
-    for (const row of acceptedArchitecturalUnits) {
-      const path = row.unit.slice(0, row.unit.indexOf("#"));
-      const node = result.graph.nodes.find((entry) => entry.id === row.anchorId);
-      const memberships = result.graph.edges.filter(
-        (edge) => edge.from === row.anchorId && edge.type === "memberOf",
-      );
-      const target = memberships[0]?.to ?? "";
-
-      if (node?.nodeType !== "CodeNode") {
-        mismatches.push({
-          unit: row.unit,
-          anchorId: row.anchorId,
-          target,
-          reason: "anchor is not a CodeNode",
-        });
-        continue;
-      }
-
-      if (node.file !== path) {
-        mismatches.push({
-          unit: row.unit,
-          anchorId: row.anchorId,
-          target,
-          reason: `file ${node.file} !== ${path}`,
-        });
-      }
-
-      if (memberships.length !== 1) {
-        mismatches.push({
-          unit: row.unit,
-          anchorId: row.anchorId,
-          target,
-          reason: `memberOf count ${String(memberships.length)}`,
-        });
-      } else {
-        if (target !== row.componentId) {
-          mismatches.push({
-            unit: row.unit,
-            anchorId: row.anchorId,
-            target,
-            reason: `memberOf target ${target} !== ${row.componentId}`,
-          });
-        }
-
-        if (!componentIds.has(target)) {
-          mismatches.push({
-            unit: row.unit,
-            anchorId: row.anchorId,
-            target,
-            reason: "target not in expectedComponentIds",
-          });
-        }
-      }
-    }
-
-    for (const edge of result.graph.edges.filter((entry) => entry.type === "memberOf")) {
-      if (!acceptedIds.has(edge.from) && !exceptionIds.has(edge.from)) {
-        const node = result.graph.nodes.find((entry) => entry.id === edge.from);
-        mismatches.push({
-          unit: node && "file" in node ? node.file : edge.from,
-          anchorId: edge.from,
-          target: edge.to,
-          reason: "unrostered memberOf",
-        });
-      }
-    }
+    const mismatches = structuralRosterMismatches(result.graph);
 
     for (const row of coarseGrainCoverage) {
       const memberships = result.graph.edges.filter(
@@ -553,7 +563,12 @@ describe("the self-hosting corpus", () => {
         });
       }
 
-      const coverage = auditStructuralCoverage(structuralCoverageProgram, row.unit, covering.file);
+      const coverage = auditStructuralCoverage(
+        structuralCoverageProgram,
+        row.unit,
+        covering.file,
+        "consumption" in row ? row.consumption : "value",
+      );
       if (coverage !== "ok") {
         mismatches.push({
           unit: row.unit,
@@ -573,9 +588,66 @@ describe("the self-hosting corpus", () => {
     expect(mismatches, message).toEqual([]);
   });
 
+  it("gives every accepted unit a readable responsibility label", () => {
+    for (const { anchorId } of acceptedArchitecturalUnits) {
+      const node = result.graph.nodes.find((entry) => entry.id === anchorId);
+      expect(node && "label" in node ? node.label?.trim() : undefined, anchorId).toBeTruthy();
+    }
+  });
+
+  it("detects a missing accepted member independently of the source", () => {
+    const id = "impl:protocol.parameter-codec";
+    const graph = {
+      ...result.graph,
+      nodes: result.graph.nodes.filter((node) => node.id !== id),
+      edges: result.graph.edges.filter((edge) => edge.from !== id && edge.to !== id),
+    };
+    expect(structuralRosterMismatches(graph)).toContainEqual({
+      unit: "src/cli/params.ts#mergeParams",
+      anchorId: id,
+      target: "",
+      reason: "anchor is not a CodeNode",
+    });
+  });
+
+  it("detects extra unrostered membership independently of the source", () => {
+    const graph: typeof result.graph = {
+      ...result.graph,
+      nodes: [
+        ...result.graph.nodes,
+        {
+          id: "impl:protocol.unreviewed-helper",
+          nodeType: "CodeNode",
+          claim: "anchored",
+          file: "src/cli/params.ts",
+          line: 1,
+          role: "codec",
+        },
+      ],
+      edges: [
+        ...result.graph.edges,
+        {
+          from: "impl:protocol.unreviewed-helper",
+          to: "component:protocol.cli",
+          type: "memberOf",
+          claim: "anchored",
+        },
+      ],
+    };
+    expect(validateGraph(graph).findings.filter((finding) => finding.severity === "error")).toEqual(
+      [],
+    );
+    expect(structuralRosterMismatches(graph)).toContainEqual({
+      unit: "src/cli/params.ts",
+      anchorId: "impl:protocol.unreviewed-helper",
+      target: "component:protocol.cli",
+      reason: "unrostered memberOf",
+    });
+  });
+
   it("finds every converted comment anchor at its block's first line", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedCommentAnchorIds).toHaveLength(93);
+    expect(expectedCommentAnchorIds).toHaveLength(104);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)
@@ -660,9 +732,7 @@ describe("the self-hosting corpus", () => {
 
       expect(anchorLine).toBeGreaterThan(0);
       expect(siteLine, anchor.id).toBeGreaterThan(0);
-      // The build-command constants precede the Studio invalidation block beside runBuild.
-      // Preserve the tighter bound for every other declaration group.
-      const maxDistance = anchor.file === "src/cli/build-command.ts" ? 36 : 29;
+      const maxDistance = 29;
       expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(maxDistance);
       expect(node).toMatchObject({ file: anchor.file, line: anchorLine, claim: "anchored" });
     }

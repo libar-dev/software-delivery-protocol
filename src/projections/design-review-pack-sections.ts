@@ -24,7 +24,7 @@ import {
  * @sdpLabel renders the Pack page's next-rung, boundary, question and code sections
  * @sdpReferences spec:consumers.design-review.pack-design-page
  * @sdpComponent component:protocol.projections
- * @sdpRole renderer
+ * @sdpRole projection
  */
 
 /** A relative link from a view page to one line of a repository file. */

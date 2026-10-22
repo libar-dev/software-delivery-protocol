@@ -212,6 +212,7 @@ function svg(d: Diagram, textId: string, diagramId: string): string {
  * @sdpReferences spec:decisions.studio-diagram-renderer, spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpUses impl:protocol.studio-diagram-model
  */
 export function renderDiagram(d: Diagram, diagramId = d.subject): string {
   const textId = `diagram.${diagramId}.text`,

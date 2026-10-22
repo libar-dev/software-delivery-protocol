@@ -7,8 +7,6 @@ import { createReader } from "./reader.js";
 import type { Reader } from "./reader.js";
 import type { ValidationReport } from "../validate/contracts.js";
 import { validateGraph } from "../validate/validators.js";
-import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
-import { codeAnchor } from "../model/code-anchor.js";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -84,15 +82,6 @@ export class BodyParseError extends Error {
     super(`the body does not parse at line ${String(line)}, column ${String(column)}: ${message}`);
   }
 }
-
-const queryAnswerShapeAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.query-answer-shapes"),
-  label: "reports parse positions in the caller's query body",
-  satisfies: ref("spec:consumers.agent-surface.evaluation-sink"),
-  component: componentAnchorId("component:protocol.reader"),
-  role: "service",
-});
-void queryAnswerShapeAnchor;
 
 function plainObject(value: unknown): value is Readonly<Record<string, unknown>> {
   if (typeof value !== "object" || value === null) return false;

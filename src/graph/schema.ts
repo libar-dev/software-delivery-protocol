@@ -8,10 +8,15 @@ export const schemaVersion = "0.11.0" as const;
 
 const schemaVersionAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.schema-version"),
-  label: "declares the graph schema version",
-  satisfies: ref("spec:extraction.schema-versioning"),
+  label: "versioned graph nodes, claims, edges and located evidence",
+  satisfies: [
+    ref("spec:extraction.schema-versioning"),
+    ref("spec:extraction.claim-taxonomy"),
+    ref("spec:extraction.derive-graph"),
+  ],
   component: componentAnchorId("component:protocol.graph"),
   role: "contract",
+  references: [ref("spec:decisions.anchor-binding-grain")],
 });
 void schemaVersionAnchor;
 
@@ -21,6 +26,11 @@ export type GraphNodeType = (typeof graphNodeTypes)[number];
 export const graphClaims = ["declared", "anchored", "inferred"] as const;
 export type GraphClaim = (typeof graphClaims)[number];
 
+/**
+ * Start with GraphSchema here for nodes, edge claims and located evidence.
+ * Read delivery-facts.ts and oracle-bindings.ts for resolving-binding decisions,
+ * then entry-address.ts for the address joins shared by mentions and citations.
+ */
 const graphComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.graph"),
   label: "Protocol graph seam",
@@ -31,16 +41,9 @@ const graphComponentAnchor = codeAnchor({
   ],
   layer: "domain",
   context: "protocol",
-});
-const graphClaimsAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.graph-claims"),
-  label: "declares the graph claim taxonomy",
-  satisfies: ref("spec:extraction.claim-taxonomy"),
-  component: componentAnchorId("component:protocol.graph"),
   role: "contract",
 });
 void graphComponentAnchor;
-void graphClaimsAnchor;
 
 export const deliveryFactNames = ["implemented", "has-verifier", "observed"] as const;
 export type DeliveryFactName = (typeof deliveryFactNames)[number];
@@ -74,16 +77,6 @@ export type DerivedEdgeType = (typeof derivedEdgeTypes)[number];
 
 export const graphEdgeTypes = [...authoredEdgeTypes, ...derivedEdgeTypes] as const;
 export type GraphEdgeType = (typeof graphEdgeTypes)[number];
-
-const graphEdgeTypesAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.graph-edge-types"),
-  label: "declares the closed list of graph edge types",
-  satisfies: ref("spec:extraction.derive-graph"),
-  component: componentAnchorId("component:protocol.graph"),
-  references: [ref("spec:decisions.anchor-binding-grain")],
-  role: "contract",
-});
-void graphEdgeTypesAnchor;
 
 interface GraphNodeBase {
   readonly id: string;

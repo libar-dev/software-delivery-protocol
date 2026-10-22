@@ -1326,6 +1326,7 @@ export const gherkinAuthoringAnchor = codeAnchor({
   satisfies: ref("spec:carrier.gherkin-authoring"),
   component: componentAnchorId("component:protocol.extract"),
   role: "extractor",
+  uses: [codeAnchorId("impl:protocol.gherkin-kind-policy")],
 });
 
 export function reifyGherkinCarrier(sourceText: string, relativePath: string): CarrierReification {

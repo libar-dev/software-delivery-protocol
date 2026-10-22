@@ -27,12 +27,18 @@ export interface DesignReviewPage {
 }
 
 /**
+ * Start with studio/diagrams/model.ts and svg.ts for diagram inputs and layout.
+ * Read studio/data.ts for cache and browser search shapes, then recipes.ts for
+ * shared evaluations and pages/index.ts for page selection and Pack exports.
+ * Read vault/sync.ts separately for manifest guards and publication recovery.
+ *
  * @sdpAnchor component:protocol.projections
  * @sdpLabel Protocol projections seam
  * @sdpSatisfies spec:consumers.projections-model
  * @sdpUses component:protocol.reader, component:protocol.graph, component:protocol.extract, component:protocol.model, component:protocol.notation, component:protocol.validate
  * @sdpLayer edge
  * @sdpContext protocol
+ * @sdpRole projection
  */
 
 /**

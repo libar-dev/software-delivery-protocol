@@ -20,7 +20,7 @@ import {
  * @sdpLabel renders stated readiness beside the structural floor and dishonest divergence
  * @sdpSatisfies spec:consumers.derived-readiness-banner
  * @sdpComponent component:protocol.projections
- * @sdpRole renderer
+ * @sdpRole projection
  */
 
 export function renderReadiness(context: SpecContext): readonly string[] {
@@ -97,7 +97,7 @@ function renderCodeUnitRow(binding: CodeUnitBinding, page: string): string {
  * @sdpLabel renders implementation, verifier, oracle, and observation binding language
  * @sdpSatisfies spec:consumers.binding-language-views
  * @sdpComponent component:protocol.projections
- * @sdpRole renderer
+ * @sdpRole projection
  */
 export function renderBindings(context: SpecContext, page: string): readonly string[] {
   const present = (fact: "implemented" | "has-verifier"): string =>
@@ -210,7 +210,7 @@ export function renderRelationsAndImpact(context: SpecContext, page: string): re
  * @sdpLabel renders structured finding locations in the Design Review table
  * @sdpSatisfies spec:validation.diagnostic-rendering
  * @sdpComponent component:protocol.projections
- * @sdpRole renderer
+ * @sdpRole projection
  */
 
 export function renderFindings(findings: readonly Finding[]): readonly string[] {

@@ -22,6 +22,7 @@ export interface GherkinViewPage {
  * @sdpSatisfies spec:consumers.gherkin-view
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpUses impl:protocol.gherkin-kind-policy
  */
 
 const CANONICAL_KINDS = new Set<SpecKind>(["behavior", "example"]);

@@ -70,6 +70,7 @@ function memberCard(ctx: PageContext, member: PackMemberSummary, index: number):
  * @sdpSatisfies spec:consumers.spec-studio.pack-page, spec:consumers.spec-studio.export, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders Pack members, maturity and boundary joins
  */
 export function packPage(ctx: PageContext, pack: PackContext, totals: PackTotals): string {
   const held = pack.members.filter((m) => (m.statedNextRungFailures?.length ?? 0) > 0);

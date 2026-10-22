@@ -183,6 +183,12 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
  * adapters and file-level impact) resolve off the curated layers (`06` §2), so the first inferred
  * producer is the aspirational impact graph.
  */
+/**
+ * Start with extract here for discovery, stage ordering and duplicate exclusion.
+ * Read carrier.ts for the common reification port, then anchors.ts for binding input.
+ * Markdown owner mapping lives in markdown-body.ts; scalar and relation forms
+ * live in markdown-yaml-policy.ts. Read those policies before changing a provider.
+ */
 const extractComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.extract"),
   label: "Protocol extraction seam",
@@ -195,6 +201,7 @@ const extractComponentAnchor = codeAnchor({
   ],
   layer: "application",
   context: "protocol",
+  role: "extractor",
 });
 void extractComponentAnchor;
 
@@ -204,6 +211,11 @@ export const extractAnchor = codeAnchor({
   satisfies: ref("spec:extraction.derive-graph"),
   component: componentAnchorId("component:protocol.extract"),
   role: "extractor",
+  uses: [
+    codeAnchorId("impl:protocol.discover-files"),
+    codeAnchorId("impl:protocol.carrier-reification"),
+    codeAnchorId("impl:protocol.derive-graph"),
+  ],
 });
 
 export function extract(options: ExtractOptions): ExtractionResult {

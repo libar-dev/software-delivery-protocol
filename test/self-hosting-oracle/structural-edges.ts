@@ -69,9 +69,81 @@ export const structuralMembershipExceptions = [
 /**
  * @sdpAnchor impl:protocol.structural-self-binding
  * @sdpLabel realizes the declared significant-unit set and its structural self-binding
- * @sdpSatisfies spec:protocol.structural-self-binding, spec:model.structural-patterns
+ * @sdpSatisfies spec:protocol.structural-self-binding, spec:model.structural-patterns, spec:protocol.significant-units-review
  */
 export const acceptedArchitecturalUnits = [
+  {
+    unit: "src/cli/params.ts#mergeParams",
+    anchorId: "impl:protocol.parameter-codec",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/import/markdown-fidelity.ts#assertMarkdownEmissionFidelity",
+    anchorId: "impl:protocol.import-fidelity",
+    componentId: "component:protocol.import",
+  },
+  {
+    unit: "src/extract/gherkin-kind-honesty.ts#gherkinKindLieReason",
+    anchorId: "impl:protocol.gherkin-kind-policy",
+    componentId: "component:protocol.extract",
+  },
+
+  {
+    unit: "src/cli/build-args.ts#parseBuildArgs",
+    anchorId: "impl:protocol.build-args",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/corpus-rules.ts#runCorpusRules",
+    anchorId: "impl:protocol.corpus-rule-runner",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/extract/markdown-yaml-policy.ts#inspectMarkdownNodes",
+    anchorId: "impl:protocol.markdown-yaml-policy",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/extract/markdown-body-content.ts#parseSectionContent",
+    anchorId: "impl:protocol.markdown-content",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/projections/studio/diagrams/model.ts#DiagramInput",
+    anchorId: "impl:protocol.studio-diagram-model",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/html.ts#PageContext",
+    anchorId: "impl:protocol.studio-html",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/inputs.ts#StudioInputs",
+    anchorId: "impl:protocol.studio-inputs",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/studio-elements/proposal.ts#Proposal",
+    anchorId: "impl:protocol.studio-proposal-contract",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/projections/design-review-markdown.ts#pagePathOf",
+    anchorId: "impl:protocol.design-review-codec",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/register-answers.ts#RegisterAnswers",
+    anchorId: "impl:protocol.studio-register-contracts",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/index.ts#renderStudio",
+    anchorId: "impl:protocol.studio-page-catalog",
+    componentId: "component:protocol.projections",
+  },
+
   {
     unit: "src/studio-elements/memo.ts#renderMemo",
     anchorId: "impl:protocol.studio-proposal-memo",
@@ -121,11 +193,6 @@ export const acceptedArchitecturalUnits = [
     unit: "src/projections/studio/pages/maturity-map.ts#maturityMap",
     anchorId: "impl:protocol.studio-maturity-map",
     componentId: "component:protocol.projections",
-  },
-  {
-    unit: "src/studio-elements/views.ts#registerViews",
-    anchorId: "impl:protocol.studio-view-elements",
-    componentId: "component:protocol.studio-elements",
   },
 
   {
@@ -306,11 +373,6 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.cli",
   },
   {
-    unit: "src/cli/build-command.ts#runBuild",
-    anchorId: "impl:protocol.studio-build-invalidation",
-    componentId: "component:protocol.cli",
-  },
-  {
     unit: "src/reader/concept-match.ts#matchConcept",
     anchorId: "impl:protocol.studio-concept-match",
     componentId: "component:protocol.reader",
@@ -407,22 +469,7 @@ export const acceptedArchitecturalUnits = [
   },
   {
     unit: "src/cli/build-command.ts#runBuild",
-    anchorId: "impl:protocol.regenerability",
-    componentId: "component:protocol.cli",
-  },
-  {
-    unit: "src/cli/build-command.ts#runBuild",
-    anchorId: "impl:protocol.wholesale-view-build-invalidation",
-    componentId: "component:protocol.cli",
-  },
-  {
-    unit: "src/cli/build-command.ts#runBuild",
     anchorId: "impl:protocol.build-pipeline-emit",
-    componentId: "component:protocol.cli",
-  },
-  {
-    unit: "src/cli/build-command.ts#runBuild",
-    anchorId: "impl:protocol.extraction-determinism",
     componentId: "component:protocol.cli",
   },
   {
@@ -516,18 +563,8 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.extract",
   },
   {
-    unit: "src/extract/markdown.ts#parseMarkdownFrontmatter",
+    unit: "src/extract/markdown-frontmatter.ts#parseMarkdownFrontmatter",
     anchorId: "impl:protocol.envelope-contract",
-    componentId: "component:protocol.extract",
-  },
-  {
-    unit: "src/extract/markdown.ts#readMarkdownBody",
-    anchorId: "impl:protocol.prose-ownership",
-    componentId: "component:protocol.extract",
-  },
-  {
-    unit: "src/extract/markdown.ts#reifyMarkdownCarrier",
-    anchorId: "impl:protocol.markdown-authoring",
     componentId: "component:protocol.extract",
   },
   {
@@ -563,16 +600,6 @@ export const acceptedArchitecturalUnits = [
   {
     unit: "src/graph/schema.ts#schemaVersion",
     anchorId: "impl:protocol.schema-version",
-    componentId: "component:protocol.graph",
-  },
-  {
-    unit: "src/graph/schema.ts#graphClaims",
-    anchorId: "impl:protocol.graph-claims",
-    componentId: "component:protocol.graph",
-  },
-  {
-    unit: "src/graph/schema.ts#graphEdgeTypes",
-    anchorId: "impl:protocol.graph-edge-types",
     componentId: "component:protocol.graph",
   },
   {
@@ -661,11 +688,6 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.projections",
   },
   {
-    unit: "src/projections/design-review-pages.ts#renderPackPage",
-    anchorId: "impl:protocol.binding-language-pack-table",
-    componentId: "component:protocol.projections",
-  },
-  {
     unit: "src/projections/design-review-pages.ts#renderIndexPage",
     anchorId: "impl:protocol.binding-language-index-table",
     componentId: "component:protocol.projections",
@@ -693,11 +715,6 @@ export const acceptedArchitecturalUnits = [
   {
     unit: "src/reader/reader.ts#BlastRadius",
     anchorId: "impl:protocol.reader",
-    componentId: "component:protocol.reader",
-  },
-  {
-    unit: "src/reader/reader.ts#createReader",
-    anchorId: "impl:protocol.agent-surface",
     componentId: "component:protocol.reader",
   },
   {
@@ -866,11 +883,6 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.cli",
   },
   {
-    unit: "src/reader/evaluate-body.ts#compileBody",
-    anchorId: "impl:protocol.query-answer-shapes",
-    componentId: "component:protocol.reader",
-  },
-  {
     unit: "src/extract/key-markers.ts#normalizeKeyedContent",
     anchorId: "impl:protocol.key-markers",
     componentId: "component:protocol.extract",
@@ -917,7 +929,6 @@ export const acceptedArchitecturalUnits = [
   },
 ] as const;
 
-// re-measured under plan 41
 export const expectedMemberOfEdges = acceptedArchitecturalUnits
   .map((row) => [row.anchorId, row.componentId] as const)
   .filter(
@@ -928,16 +939,24 @@ export const expectedMemberOfEdges = acceptedArchitecturalUnits
 
 // Helpers with no honest satisfies target of their own. Coverage rides the nearest honest
 // realization that consumes them; these rows never mint an anchor.
-// re-measured under plan 41: runValidateWatch left this list when it gained its own anchor,
-// impl:protocol.validate-watch, and joined the accepted units above. Plan 43 removed the
-// unused targetsForRelationType helper after the emitter switched to full relation objects.
 export const coarseGrainCoverage = [
   {
-    unit: "src/cli/params.ts#mergeParams",
-    coveredBy: "impl:protocol.query-params",
-    componentId: "component:protocol.cli",
-    rationale: "src/cli/q-command.ts#parseQueryArgs value-calls mergeParams",
+    unit: "src/extract/markdown-types.ts#MarkdownFrontmatterResult",
+    coveredBy: "impl:protocol.markdown-parser",
+    componentId: "component:protocol.extract",
+    consumption: "type",
+    rationale:
+      "src/extract/markdown.ts uses the imported MarkdownFrontmatterResult as a parser return type",
   },
+  {
+    unit: "src/extract/markdown-types.ts#MarkdownBodyResult",
+    coveredBy: "impl:protocol.markdown-parser",
+    componentId: "component:protocol.extract",
+    consumption: "type",
+    rationale:
+      "src/extract/markdown.ts uses the imported MarkdownBodyResult as a parser return type",
+  },
+
   {
     unit: "src/studio-elements/dom.ts#button",
     coveredBy: "impl:protocol.studio-search-results",
@@ -949,13 +968,6 @@ export const coarseGrainCoverage = [
     coveredBy: "impl:protocol.studio-search-results",
     componentId: "component:protocol.studio-elements",
     rationale: "src/studio-elements/search-results.ts#registerSearchResults value-calls liveOutput",
-  },
-  {
-    unit: "src/import/markdown-fidelity.ts#assertMarkdownEmissionFidelity",
-    coveredBy: "impl:protocol.sdp-import-markdown-emit",
-    componentId: "component:protocol.import",
-    rationale:
-      "src/import/emit-markdown.ts#emitMarkdownSpec value-calls assertMarkdownEmissionFidelity",
   },
   {
     unit: "src/import/data-access.ts#importData",
@@ -975,19 +987,23 @@ export const coarseGrainCoverage = [
     componentId: "component:protocol.import",
     rationale: "src/import/emit-markdown.ts#emitMarkdownSpec value-calls importTexts",
   },
-  {
-    unit: "src/extract/gherkin-kind-honesty.ts#gherkinKindLieReason",
-    coveredBy: "impl:protocol.gherkin-authoring",
-    componentId: "component:protocol.extract",
-    rationale: "src/extract/gherkin.ts#decorationTagFinding value-calls gherkinKindLieReason",
-  },
 ] as const;
 
 // A uses edge tracks real imports (value or type) from another component's source files; imports
 // that exist only to author the anchors themselves (the stable-id and anchor-builder modules)
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
-// re-measured under plan 41
 export const expectedUsesEdges = [
+  ["component:protocol.import", "component:protocol.notation"],
+  ["component:protocol.reader", "component:protocol.notation"],
+  ["component:protocol.notation", "component:protocol.graph"],
+  ["component:protocol.notation", "component:protocol.validate"],
+  ["impl:protocol.extract", "impl:protocol.discover-files"],
+  ["impl:protocol.extract", "impl:protocol.carrier-reification"],
+  ["impl:protocol.extract", "impl:protocol.derive-graph"],
+  ["impl:protocol.studio-diagrams", "impl:protocol.studio-diagram-model"],
+  ["impl:protocol.gherkin-authoring", "impl:protocol.gherkin-kind-policy"],
+  ["impl:protocol.gherkin-view", "impl:protocol.gherkin-kind-policy"],
+
   ["impl:protocol.stamp-command", "impl:protocol.schema-version"],
   ["impl:protocol.vault-command", "component:protocol.projections"],
   ["impl:protocol.vault-notes", "impl:protocol.reader"],

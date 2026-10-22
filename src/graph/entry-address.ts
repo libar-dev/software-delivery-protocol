@@ -8,7 +8,7 @@ const entryAddressAnchor = codeAnchor({
   label: "resolves entry addresses for prose validation and citation readers",
   satisfies: [ref("spec:extraction.entry-citations"), ref("spec:validation.prose-mentions")],
   component: componentAnchorId("component:protocol.graph"),
-  role: "utility",
+  role: "reader",
 });
 void entryAddressAnchor;
 

@@ -4,7 +4,7 @@
  * @sdpLabel encodes uppercase id letters for collision-free Pack and Spec page paths
  * @sdpSatisfies spec:consumers.spec-studio.publisher
  * @sdpComponent component:protocol.projections
- * @sdpRole utility
+ * @sdpRole codec
  */
 export function pagePath(id: string): string | null {
   const namespace = id.startsWith("spec:") ? "specs" : id.startsWith("pack:") ? "packs" : null;

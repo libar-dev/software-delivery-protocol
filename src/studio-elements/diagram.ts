@@ -26,7 +26,7 @@ export function zoomViewBox(
  * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.export, spec:consumers.spec-studio.components
  * @sdpReferences spec:decisions.studio-diagram-renderer, spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
  */
 export function registerDiagram(): void {
   class Diagram extends globalThis.HTMLElement {

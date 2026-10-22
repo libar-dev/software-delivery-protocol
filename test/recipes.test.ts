@@ -1151,9 +1151,10 @@ describe("the agent-surface recipe corpus", () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(13)));
     const rows = asArray(result.components).map(asRecord);
     const owners = new Map<string, string>(expectedMemberOfEdges);
-    const expectedUses = expectedUsesEdges
-      .map(([from, to]) => ({ from: owners.get(from) ?? from, to: owners.get(to) ?? to }))
-      .filter((edge) => edge.from !== edge.to);
+    const expectedUses = expectedUsesEdges.map(([from, to]) => ({
+      from: owners.get(from) ?? from,
+      to: owners.get(to) ?? to,
+    }));
 
     expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual([...expectedComponentIds].sort());
 
@@ -1389,6 +1390,7 @@ describe("the agent-surface recipe corpus", () => {
       "component:protocol.cli",
       "component:protocol.codegen",
       "component:protocol.extract",
+      "component:protocol.notation",
       "component:protocol.projections",
       "component:protocol.reader",
       "component:protocol.validate",
@@ -1428,7 +1430,7 @@ describe("the agent-surface recipe corpus", () => {
     expect(asArray(component?.usesOut)).not.toContain("component:protocol.graph");
     expect(asArray(component?.usedBy)).not.toContain("component:protocol.graph");
     expect(component?.fanOut).toBe(2);
-    expect(component?.fanIn).toBe(6);
+    expect(component?.fanIn).toBe(7);
   });
 
   it("preserves an unresolved responsibility without inventing its design", async () => {
@@ -1498,13 +1500,13 @@ describe("the agent-surface recipe corpus", () => {
     });
   });
 
-  // Given: a clone of the live ExtractionResult with impl:protocol.agent-surface removed
+  // Given: a clone of the live ExtractionResult with impl:protocol.reader removed
   // and its memberOf edge retained — invalid, but still a graph validateGraph can report.
   // When: catalog recipe 17 runs through real runSdpCli on that override.
   // Then: validateGraph reports conformance/referential-integrity, the sink exits 0, and
   // the unresolved member row keeps null label/file/line under component:protocol.reader.
   it("preserves an unresolved architecture-map member when memberOf outlives the node", async () => {
-    const missingMemberId = "impl:protocol.agent-surface";
+    const missingMemberId = "impl:protocol.reader";
     const ownerComponentId = "component:protocol.reader";
     const dirty: ExtractionResult = {
       counts: derived.counts,
@@ -1754,11 +1756,11 @@ describe("the agent-surface recipe corpus", () => {
   // memberOf edges retained — invalid, but still a graph validateGraph can report.
   // When: catalog recipe 19 runs through real runSdpCli on that override.
   // Then: validateGraph reports conformance/referential-integrity, the sink exits 0, the
-  // unresolved component row keeps null label/file/line, impl:protocol.agent-surface is retained,
+  // unresolved component row keeps null label/file/line, impl:protocol.reader is retained,
   // and that component contributes no entry point.
   it("preserves an unresolved component row when memberOf outlives the node", async () => {
     const missingComponentId = "component:protocol.reader";
-    const retainedImplId = "impl:protocol.agent-surface";
+    const retainedImplId = "impl:protocol.reader";
     const dirty: ExtractionResult = {
       counts: derived.counts,
       report: derived.report,

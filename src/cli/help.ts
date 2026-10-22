@@ -169,7 +169,7 @@ export const NEW_SPEC_HELP_TEXT = verbHelpText("new") ?? "";
  * @sdpLabel SDP_HELP_TEXT indexes the shipped skills, recipe catalog, schema, walkthrough, glossary and specs/ by package-relative path
  * @sdpSatisfies spec:consumers.adopter-on-ramp, spec:consumers.command-line
  * @sdpComponent component:protocol.cli
- * @sdpRole service
+ * @sdpRole projection
  */
 export const SDP_HELP_TEXT =
   `sdp — Libar Software Delivery Protocol

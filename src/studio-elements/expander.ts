@@ -15,7 +15,8 @@ export function fragmentTarget(fragment: string): string | null {
  * @sdpAnchor impl:protocol.studio-expander
  * @sdpSatisfies spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.export
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
+ * @sdpLabel opens fragment ancestors and expands disclosures for print
  */
 export function registerExpander(): void {
   class Expander extends globalThis.HTMLElement {

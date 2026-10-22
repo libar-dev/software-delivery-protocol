@@ -64,6 +64,11 @@ const validationFamiliesAnchor = codeAnchor({
   component: componentAnchorId("component:protocol.validate"),
   role: "contract",
 });
+/**
+ * Start with contracts.ts for the shared finding and report shapes.
+ * Read graph-index.ts for disposable lookups and readiness-floor.ts for ordered
+ * floor clauses. The catalog here composes independently callable checks.
+ */
 const validateComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.validate"),
   label: "Protocol validation seam",
@@ -75,6 +80,7 @@ const validateComponentAnchor = codeAnchor({
   ],
   layer: "domain",
   context: "protocol",
+  role: "validator",
 });
 
 void validationFamiliesAnchor;

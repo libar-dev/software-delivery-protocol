@@ -11,6 +11,10 @@ import { registerSearchResults } from "./search-results.js";
 import { registerStamp } from "./stamp.js";
 
 /**
+ * Start with proposal.ts for the browser handoff shape and schema checks.
+ * Read intent-panel.ts for storage and request partition, then diagram.ts for
+ * view-box controls over build-rendered SVG and its text equivalent.
+ *
  * Registers the browser interactions from one bundled entry point.
  *
  * @sdpAnchor component:protocol.studio-elements
@@ -18,6 +22,8 @@ import { registerStamp } from "./stamp.js";
  * @sdpUses component:protocol.reader, component:protocol.projections
  * @sdpLayer edge
  * @sdpContext protocol
+ * @sdpRole interaction
+ * @sdpLabel optional Studio browser controls
  */
 registerSearch();
 registerSearchResults();

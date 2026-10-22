@@ -30,6 +30,13 @@ function refusal(file: string, message: string): MarkdownFrontmatterResult {
   return { ok: false, findings: [markdownFinding(file, 1, message)] };
 }
 
+/**
+ * @sdpAnchor impl:protocol.envelope-contract
+ * @sdpLabel parses the bounded Markdown frontmatter envelope
+ * @sdpSatisfies spec:carrier.envelope-contract
+ * @sdpComponent component:protocol.extract
+ * @sdpRole codec
+ */
 export function parseMarkdownFrontmatter(
   sourceText: string,
   file: string,

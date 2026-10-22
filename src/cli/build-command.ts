@@ -23,6 +23,12 @@ import type { BuildArgs } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
 
+/**
+ * Start with runBuild here for invalidation, deterministic comparison and
+ * registrar confinement. Read build-args.ts for shared flags, q-command.ts for
+ * query input and output, corpus-rules.ts for isolated rule results, and
+ * import-publish.ts for exclusive staging, publication and rollback.
+ */
 const cliComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.cli"),
   label: "Protocol CLI seam",
@@ -40,6 +46,7 @@ const cliComponentAnchor = codeAnchor({
   ],
   layer: "edge",
   context: "protocol",
+  role: "service",
 });
 
 export interface BuildHooks {
@@ -241,55 +248,26 @@ function readRegistrarManifest(path: string, root: string, rootReal: string): re
  * @sdpRole publisher
  */
 
-const wholesaleViewBuildInvalidationAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.wholesale-view-build-invalidation"),
-  label: "invalidates the prior Design Review before every build attempt",
-  satisfies: ref("spec:consumers.wholesale-view-rewrite"),
-  component: componentAnchorId("component:protocol.cli"),
-  role: "service",
-});
 const buildPipelineEmitAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.build-pipeline-emit"),
-  label:
-    "runBuild stages graph, contracts and registrar outputs in temporary paths before publishing them, repeating derivation under --check-clean",
-  satisfies: ref("spec:extraction.build-pipeline"),
+  label: "stages build outputs, checks determinism and invalidates projections",
+  satisfies: [
+    ref("spec:extraction.build-pipeline"),
+    ref("spec:consumers.wholesale-view-rewrite"),
+    ref("spec:consumers.spec-studio.publisher"),
+    ref("spec:extraction.determinism"),
+    ref("spec:extraction.regenerability"),
+  ],
   component: componentAnchorId("component:protocol.cli"),
   role: "service",
 });
-const determinismAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.extraction-determinism"),
-  label: "repeats and byte-compares graph and contract generation under --check-clean",
-  satisfies: ref("spec:extraction.determinism"),
-  component: componentAnchorId("component:protocol.cli"),
-  role: "service",
-});
-const regenerabilityAnchor = codeAnchor({
-  id: codeAnchorId("impl:protocol.regenerability"),
-  label: "repeats graph and contract producers for deterministic regeneration",
-  satisfies: ref("spec:extraction.regenerability"),
-  component: componentAnchorId("component:protocol.cli"),
-  role: "service",
-});
-/**
- * @sdpAnchor impl:protocol.studio-build-invalidation
- * @sdpLabel removes the Studio root and temporary sibling before shared extraction
- * @sdpSatisfies spec:consumers.spec-studio.publisher
- * @sdpComponent component:protocol.cli
- * @sdpRole service
- */
 export function runBuild(
   parsed: BuildArgs,
   output: CliOutput,
   command: string,
   hooks: BuildHooks,
 ): BuildOutcome {
-  void [
-    cliComponentAnchor,
-    determinismAnchor,
-    regenerabilityAnchor,
-    wholesaleViewBuildInvalidationAnchor,
-    buildPipelineEmitAnchor,
-  ];
+  void [cliComponentAnchor, buildPipelineEmitAnchor];
   const { root: resolvedRoot, exclude, checkClean } = parsed;
   const extractionOptions = { root: resolvedRoot, exclude };
   const runExtract = hooks.extract ?? extract;

@@ -111,7 +111,7 @@ export const protocolSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:protocol.role-vocabulary",

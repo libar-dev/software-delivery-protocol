@@ -668,26 +668,25 @@ function packBoundary(
 }
 
 /**
+ * Start with Reader and createReader here for public query contracts and joins.
+ * Read the Pack design helpers here for member and boundary assembly, then
+ * notation/example-space.ts for example cards and evaluate-body.ts for binding
+ * injection and shipped recipe evaluation.
+ *
  * @sdpAnchor component:protocol.reader
  * @sdpLabel Protocol reader seam
  * @sdpSatisfies spec:consumers.reader
- * @sdpUses component:protocol.graph, component:protocol.validate, component:protocol.model
+ * @sdpUses component:protocol.graph, component:protocol.validate, component:protocol.model, component:protocol.notation
  * @sdpLayer application
  * @sdpContext protocol
- */
-/**
- * @sdpAnchor impl:protocol.agent-surface
- * @sdpLabel typed graph reader and agent entry adapters
- * @sdpSatisfies spec:consumers.agent-surface
- * @sdpComponent component:protocol.reader
  * @sdpRole reader
  */
 
 /**
  * @sdpAnchor impl:protocol.reader
- * @sdpLabel thin typed graph reader construction
+ * @sdpLabel typed graph queries, entry adapters and context joins
  * @sdpReferences spec:consumers.agent-surface.answer-shapes
- * @sdpSatisfies spec:consumers.reader, spec:extraction.entry-locations, spec:validation.next-rung-floor
+ * @sdpSatisfies spec:consumers.reader, spec:extraction.entry-locations, spec:validation.next-rung-floor, spec:consumers.agent-surface
  * @sdpComponent component:protocol.reader
  * @sdpUses impl:protocol.delivery-facts, impl:protocol.next-rung-floor
  * @sdpRole reader
