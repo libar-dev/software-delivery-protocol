@@ -501,3 +501,17 @@ it("routes the current Protocol architecture and recorded adopter architecture w
     }
   }
 }, 30000);
+
+it("extends overflow rails past earlier labels on the adopter's dense traces", () => {
+  const inputs = JSON.parse(
+    readFileSync(new URL("./fixtures/studio/platform-traces.json", import.meta.url), "utf8"),
+  ) as (DiagramInput & { subject: string })[];
+  for (const input of inputs) {
+    const d = traceDiagram(input),
+      l = layoutDiagram(d),
+      r = routeDiagram(l, d.edges);
+    expect(r).not.toBeNull();
+    if (!r) throw new Error(`Missing routes for ${d.subject}`);
+    assertGeometry(l, r);
+  }
+});

@@ -168,6 +168,16 @@ export function routeDiagram(
         a.port.x,
         ...Array.from({ length: Math.floor(layout.width / 8) }, (_, n) => (n + 1) * 8),
         ...Array.from({ length: edges.length + 1 }, (_, n) => layout.width + 24 + n * 8),
+        // Earlier labels can consume the fixed gutter. Keep one free rail beyond them.
+        snap(
+          Math.max(
+            layout.width,
+            ...routes.flatMap((r) => [
+              ...r.points.map((p) => p.x),
+              ...(r.label ? [r.label.x + r.label.width + 12] : []),
+            ]),
+          ) + 264,
+        ),
       ]),
     ];
     let chosen: Route | undefined;
