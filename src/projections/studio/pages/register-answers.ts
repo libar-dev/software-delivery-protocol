@@ -16,6 +16,112 @@ interface RegisterAnswers {
   35: Diff;
   46: Queue;
   51: Citations;
+  53: Roadmaps;
+}
+
+export type RoadmapNeed = "to design" | "to state" | "to build" | "built";
+interface RoadmapHold {
+  readonly clause: string;
+  readonly targets: readonly string[];
+}
+export interface RoadmapPart {
+  readonly id: string;
+  readonly need: RoadmapNeed;
+  readonly statedReadiness: string;
+  readonly floorReached: string | null;
+  readonly statedNextRung: string | null;
+  readonly holdsNextRung: readonly RoadmapHold[];
+  readonly drift: boolean;
+}
+export interface RoadmapQuestion {
+  readonly spec: string;
+  readonly address: string | null;
+  readonly index: number;
+  readonly question: string;
+  readonly blocking: boolean;
+  readonly decider: string | null;
+  readonly provisional: string | null;
+}
+interface RoadmapRelation {
+  readonly id: string;
+  readonly via: string;
+  readonly need: string;
+  readonly onRoadmap: number | null;
+}
+export interface RoadmapEntry extends Omit<RoadmapPart, "drift"> {
+  readonly place: number;
+  readonly title: string | null;
+  readonly specKind: string;
+  readonly altitude: string;
+  readonly work: {
+    readonly specs: number;
+    readonly toDesign: number;
+    readonly toState: number;
+    readonly toBuild: number;
+    readonly built: number;
+    readonly drift: number;
+  };
+  readonly workRows: readonly RoadmapPart[];
+  readonly buildNow: readonly string[];
+  readonly blockingQuestions: readonly RoadmapQuestion[];
+  readonly decisions: readonly {
+    readonly id: string;
+    readonly statedReadiness: string;
+    readonly blockingQuestions: readonly RoadmapQuestion[];
+  }[];
+  readonly restsOn: readonly (RoadmapRelation & {
+    readonly from: readonly string[];
+    readonly holdsReady: boolean;
+  })[];
+  readonly restedOnBy: readonly RoadmapRelation[];
+  readonly earlierStatements: readonly {
+    readonly id: string;
+    readonly where: string;
+    readonly onRoadmap: number | null;
+  }[];
+  readonly packs: readonly string[];
+  readonly sharesScopeWith: readonly number[];
+}
+export interface Roadmap {
+  readonly pack: string;
+  readonly title: string | null;
+  readonly framing: string | null;
+  readonly order: "priority" | "reading";
+  readonly totals: {
+    readonly entries: number;
+    readonly toDesign: number;
+    readonly toState: number;
+    readonly toBuild: number;
+    readonly built: number;
+    readonly apart: number;
+    readonly questions: number;
+    readonly blockingQuestions: number;
+    readonly withoutDecider: number;
+    readonly blockingWithoutDecider: number;
+    readonly statements: number;
+  };
+  readonly entries: readonly RoadmapEntry[];
+  readonly apart: readonly {
+    readonly place: number;
+    readonly id: string;
+    readonly specKind: string;
+    readonly statedReadiness: string;
+    readonly need: string;
+  }[];
+  readonly waiting: {
+    readonly questions: readonly (RoadmapQuestion & { readonly places: readonly number[] })[];
+    readonly withoutDecider: readonly (RoadmapQuestion & { readonly places: readonly number[] })[];
+    readonly statements: readonly {
+      readonly id: string;
+      readonly statedReadiness: string;
+      readonly floorReached: string;
+      readonly places: readonly number[];
+    }[];
+  };
+}
+export interface Roadmaps {
+  readonly decider: string;
+  readonly roadmaps: readonly Roadmap[];
 }
 export function answer<N extends keyof RegisterAnswers>(
   ctx: PageContext,

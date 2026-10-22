@@ -358,13 +358,13 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 455, packs: 9, anchors: 590 });
+    expect(result.counts).toEqual({ specs: 455, packs: 9, anchors: 592 });
     expect(expectedSpecs).toHaveLength(455);
     expect(expectedPackMembers).toHaveLength(455);
-    expect(expectedAnchors).toHaveLength(590);
-    expect(expectedBindingEdges).toHaveLength(774);
-    expect(result.graph.nodes).toHaveLength(1054);
-    expect(result.graph.edges).toHaveLength(2932);
+    expect(expectedAnchors).toHaveLength(592);
+    expect(expectedBindingEdges).toHaveLength(779);
+    expect(result.graph.nodes).toHaveLength(1056);
+    expect(result.graph.edges).toHaveLength(2938);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -507,7 +507,7 @@ describe("the self-hosting corpus", () => {
 
   it("gives every owned impl/api CodeNode exactly one component", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedMemberOfEdges).toHaveLength(174);
+    expect(expectedMemberOfEdges).toHaveLength(175);
     const exceptions = new Set<string>(structuralMembershipExceptions);
     const codeUnits = result.graph.nodes.filter(
       (node) =>
@@ -661,7 +661,7 @@ describe("the self-hosting corpus", () => {
 
   it("finds every converted comment anchor at its block's first line", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedCommentAnchorIds).toHaveLength(109);
+    expect(expectedCommentAnchorIds).toHaveLength(111);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)

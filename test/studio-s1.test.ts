@@ -382,6 +382,7 @@ describe("Studio lenses", () => {
       "Architecture",
       "Tests",
       "Evidence",
+      "Roadmap",
       "Queue",
       "Questions",
       "Decisions",
@@ -1036,6 +1037,7 @@ it.each([false, true])(
       const expected = [
         ...[17, 20, 24, 31, 33, 43, 44, 46, 51].map((number) => ({ number, params: {} })),
         { number: 52, params: { detail: true } },
+        { number: 53, params: {} },
         ...(withBase ? [{ number: 35, params: { base: reader.graph, detail: true } }] : []),
         { number: 29, params: { pack: "pack:probe" } },
         ...(withBase

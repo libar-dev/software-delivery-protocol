@@ -2155,7 +2155,7 @@ export const consumersSpecs = [
         rules: [
           "After the lens entries, the top navigation lists Roadmap, Queue, Questions, Decisions, Declarations, Backlog and Glossary, then Diff when the build was given a base graph and Runs when it was given run records, each linking its page; the search field follows them.",
           'The top-navigation link to the page being read carries `aria-current="page"` and an underline, so it shows by more than color.',
-          "After its four routes, the index's `Start here` list adds See what the owner can state first, linking the owner queue; See the components by context and layer, linking the architecture lens; and, given a base graph, See what changed since the base, linking the diff page.",
+          "After its four routes, the index's `Start here` list adds See what comes next, linking the roadmap page; See what the owner can state first, linking the owner queue; See the components by context and layer, linking the architecture lens; and, given a base graph, See what changed since the base, linking the diff page.",
         ],
         ruleKeys: {
           topEntries: "rules[0]",
@@ -7484,7 +7484,7 @@ export const consumersSpecs = [
           "a disclosure whose summary reads `The forward section, as Markdown`, holding a copy action and the memo in a `pre` element.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.roadmap-page.sdp.md",
   },
   {
