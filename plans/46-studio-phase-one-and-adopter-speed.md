@@ -204,6 +204,14 @@ Made by the executing thread on the owner's delegation; each awaits the owner's 
 | CI's gate checks the pull request's merge commit, and the preview records runs for and stamps that commit | `spec:consumers.spec-studio.sharing#rule.previewWorkflow` |
 | The package declares no Vitest peer: npm 10 crashes installing any package with an optional Vitest peer; the `./vitest` subpath's need is documented | `spec:consumers.adopter-on-ramp#rule.installGuidance` |
 | `edit-model` and `intent-composition` stay referenced: their open promises belong to the agent that applies a change | — |
+| No Studio page is wider than a phone's viewport: the navigation and stamp wrap, and a wide table scrolls inside its own box | `spec:consumers.spec-studio.responsive#ui.singleColumn` |
+| The maturity map's axis explanation is its caption, and an empty cell shows a dash | `spec:consumers.spec-studio.pack-page.maturity-map` |
+| A run's duration shows in milliseconds with at most two decimals, and table headers never break inside a word | `spec:consumers.spec-studio.runs-page`, `spec:observation.run-evidence` |
+| A drawing whose edges are all one relation names it once in its legend; a drawing is never wider than its box nor larger than its own size | `spec:consumers.spec-studio.diagrams` |
+| Recipe 35 compares rules and flows by text: a keying change is one `keyed` change with its old and new address, a keyed entry left unmatched is removed, and a removed unkeyed entry is named by its base position | `spec:consumers.design-diff` |
+| The diff page lists keyed rules in rule order with their text; a Spec's change note counts rules keyed with wording unchanged, and the Pack page marks a member keyed only | `spec:consumers.spec-studio.diff-page` |
+| The Protocol ships two more skills, `sdp-studio` and `sdp-vault`, each realizing its own on-ramp Spec; upgrade, corpus-rules and review guidance stay sections of the existing skills | `spec:consumers.studio-on-ramp`, `spec:consumers.vault-on-ramp` |
+| The package smoke test packs a scratch copy of the package: npm 10 runs `prepare` on `npm pack` even with `--ignore-scripts`, which rebuilt `dist/` mid-suite on CI's Node 20 | — |
 
 ## Rulings by the coordinating session during the close
 
