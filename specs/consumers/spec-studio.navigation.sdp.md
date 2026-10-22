@@ -23,4 +23,4 @@ The shell's top navigation reaches the index and each lens, and the index routes
 ## Behavior
 - rule: [#topEntries] After the lens entries, the top navigation lists Roadmap, Queue, Questions, Decisions, Declarations, Backlog and Glossary, then Diff when the build was given a base graph and Runs when it was given run records, each linking its page; the search field follows them.
 - rule: [#currentPage] The top-navigation link to the page being read carries `aria-current="page"` and an underline, so it shows by more than color.
-- rule: [#indexRoutes] After its four routes, the index's `Start here` list adds See what the owner can state first, linking the owner queue; See the components by context and layer, linking the architecture lens; and, given a base graph, See what changed since the base, linking the diff page.
+- rule: [#indexRoutes] After its four routes, the index's `Start here` list adds See what comes next, linking the roadmap page; See what the owner can state first, linking the owner queue; See the components by context and layer, linking the architecture lens; and, given a base graph, See what changed since the base, linking the diff page.

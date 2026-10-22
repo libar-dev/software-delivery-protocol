@@ -1,5 +1,5 @@
 import { frame } from "./frame.js";
-import { badge, code, copy, escape, link, list, relative, rungLine } from "./html.js";
+import { badge, code, copy, escape, link, list, relative, rungLine, verb } from "./html.js";
 import type { PageContext } from "./html.js";
 import { answer } from "./register-answers.js";
 import type {
@@ -18,8 +18,8 @@ const labels = ["To design", "To state", "To build", "Built"] as const;
 const slug = (need: RoadmapNeed) => need.replaceAll(" ", "-");
 const prefix = (pack: string) => `roadmap-${pagePath(pack)?.slice(6, -5) ?? ""}`;
 const entryId = (pack: string, place: number) => `${prefix(pack)}-entry-${String(place)}`;
-const entryLink = (pack: string, place: number, label = `entry ${String(place)}`) =>
-  `<a href="#${escape(entryId(pack, place))}">${escape(label)}</a>`;
+const entryLink = (pack: string, place: number, labelHtml = escape(`entry ${String(place)}`)) =>
+  `<a href="#${escape(entryId(pack, place))}">${labelHtml}</a>`;
 const via: Readonly<Record<string, string>> = {
   dependsOn: "depends on",
   constrainedBy: "constrained by",
@@ -108,7 +108,7 @@ function entryRow(ctx: PageContext, pack: string, entry: RoadmapEntry): string {
                 `${link(ctx, row.id)} · ${row.where === "entry" ? "in this entry" : row.where === "roadmap" && row.onRoadmap !== null ? entryLink(pack, row.onRoadmap) : "outside the roadmap"}`,
             ),
           )
-        : "No preceding waiting statement in the statement queue.",
+        : "",
     );
   field("Also in", entry.packs.map((id) => link(ctx, id)).join(", "));
   field(
@@ -130,7 +130,7 @@ function roadmapSection(ctx: PageContext, r: Roadmap, memo: string): string {
   const board = `<div class="roadmap-board" role="group" aria-label="Entries by what each needs next">${needs
     .map((need, at) => {
       const rows = r.entries.filter((entry) => entry.need === need);
-      return `<section class="board-column"><h3>${labels[at] ?? ""} <span class="floor">${String(rows.length)}</span></h3>${rows.length ? `<ol>${rows.map((entry) => `<li value="${String(entry.place)}"><span class="place">${String(entry.place)}</span>${entryLink(r.pack, entry.place, entry.title ?? entry.id)}</li>`).join("")}</ol>` : "<p>none</p>"}</section>`;
+      return `<section class="board-column"><h3>${labels[at] ?? ""} <span class="floor">${String(rows.length)}</span></h3>${rows.length ? `<ol>${rows.map((entry) => `<li value="${String(entry.place)}"><span class="place">${String(entry.place)}</span>${entryLink(r.pack, entry.place, codeSpans(entry.title ?? entry.id))}</li>`).join("")}</ol>` : "<p>none</p>"}</section>`;
     })
     .join("")}</div>`;
   const lists = needs
@@ -151,7 +151,8 @@ function roadmapSection(ctx: PageContext, r: Roadmap, memo: string): string {
     ),
   ];
   const memoId = `${prefix(r.pack)}-memo`;
-  return `<section class="roadmap" aria-labelledby="${escape(prefix(r.pack))}"><h2 id="${escape(prefix(r.pack))}">${link(ctx, r.pack, r.title ?? r.pack, codeSpans(r.title ?? r.pack))}</h2>${(
+  const headingId = `${prefix(r.pack)}-heading`;
+  return `<section class="roadmap" aria-labelledby="${escape(headingId)}"><h2 id="${escape(headingId)}">${link(ctx, r.pack, r.title ?? r.pack, codeSpans(r.title ?? r.pack))}</h2>${(
     r.framing ?? ""
   )
     .split(/\n\s*\n/u)
@@ -160,7 +161,7 @@ function roadmapSection(ctx: PageContext, r: Roadmap, memo: string): string {
     .join("")}${summary([
     `${total(t.entries, "entry", "entries")} ${r.order === "priority" ? "in priority order" : "in authored reading order"}: ${String(t.toDesign)} to design, ${String(t.toState)} to state, ${String(t.toBuild)} to build, ${String(t.built)} built, ${String(t.apart)} listed apart.`,
     `${String(t.blockingQuestions)} blocking and ${String(t.questions - t.blockingQuestions)} non-blocking questions wait on the owner; ${String(t.withoutDecider)} name no decider, ${String(t.blockingWithoutDecider)} of them blocking.`,
-    `${String(t.statements)} statements wait for a person; the <a href="${relative(ctx, "queue.html")}">owner queue</a> lists them all.`,
+    `${total(t.statements, "statement")} ${verb(t.statements, "wait")} for a person; the <a href="${relative(ctx, "queue.html")}">owner queue</a> lists them all.`,
   ])}${board}<p class="prose">${escape("To state means the floor allows ready and a person still judges the statement. Built means every Spec of the entry's work states ready and has an implementation binding; it reports no passing test and no deployment. The entry's own readiness is shown separately.")}</p>${filtered(lists, filters, r.entries.length)}${r.apart.length ? `<h3>Listed apart</h3>${list(r.apart.map((row) => `<span id="${escape(entryId(r.pack, row.place))}">${String(row.place)}. ${titleLink(ctx, row.id)} · ${escape(row.specKind)} · ${badge(row.statedReadiness)} · ${escape(row.need)}</span>`))}` : ""}<h3>Waiting on the owner</h3>${waiting.length ? list(waiting) : "<p>Nothing in these entries waits on the owner.</p>"}${r.waiting.withoutDecider.length ? `<h3>Questions without a decider</h3><p>These questions have no named decider.</p>${list(r.waiting.withoutDecider.map(question))}` : ""}<details class="section"><summary>The forward section, as Markdown</summary><div class="section-body">${copy(memo)}<pre id="${escape(memoId)}">${escape(memo)}</pre></div></details></section><!-- roadmap -->`;
 }
 

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createReader } from "../src/reader/reader.js";
 import { createStudioData } from "../src/projections/studio/data.js";
+import { rowMatches } from "../src/studio-elements/filter.js";
 import { renderStudio } from "./helpers/studio-render.js";
 import {
   implementation,
@@ -45,7 +46,11 @@ const unescape = (value: string) =>
 
 function mixedGraph() {
   return probeGraph({
-    "pack.sdp.md": probePack("probe", ["build", "design", "state", "built", "choice"]),
+    "pack.sdp.md": probePack(
+      "probe",
+      ["build", "design", "state", "built", "choice"],
+      "First & inspect.\n\nRead the `work` next.",
+    ),
     "build.sdp.md": probeSpec("build", "ready", "\n  dependsOn: spec:probe.state"),
     "design.sdp.md": probeSpec(
       "design",
@@ -75,7 +80,7 @@ describe("Studio roadmap page", () => {
     expect(html.indexOf('href="evidence.html"')).toBeLessThan(html.indexOf('href="roadmap.html"'));
     expect(html.indexOf('href="roadmap.html"')).toBeLessThan(html.indexOf('href="queue.html"'));
     expect(pages.find((row) => row.path === "index.html")?.content).toContain(
-      '<a href="roadmap.html">See the next work in priority order</a>',
+      '<a href="roadmap.html">See what comes next</a></li><li><a href="queue.html">See what the owner can state first</a>',
     );
     expect(pages.find((row) => row.path.startsWith("specs/"))?.content).toContain(
       'href="../roadmap.html"',
@@ -85,11 +90,34 @@ describe("Studio roadmap page", () => {
   it("renders the board, four need lists, numbered gaps, legend and entries listed apart", async () => {
     const { html } = await page(mixedGraph());
     const body = main(html);
-    expect(body).toContain(
+    const summary = required(/<ul class="summary">(.*?)<\/ul>/su.exec(body)?.[1]);
+    expect(summary).toContain(
       "5 entries in priority order: 1 to design, 1 to state, 1 to build, 1 built, 1 listed apart.",
     );
-    for (const label of ["To design", "To state", "To build", "Built"])
-      expect(body).toContain(label);
+    expect(summary).toContain(
+      "1 blocking and 0 non-blocking questions wait on the owner; 1 name no decider, 0 of them blocking.",
+    );
+    expect(summary).toContain('<a href="queue.html">owner queue</a>');
+    expect(body).toContain("<p>First &amp; inspect.</p><p>Read the <code>work</code> next.</p>");
+    expect(body).toContain(
+      '<header class="page-head"><h1>Roadmap</h1><p>What comes next, from the graph. A place is advisory priority: never a date, a deadline or permission to start.</p></header>',
+    );
+    const board = required(/<div class="roadmap-board".*?<\/div>/su.exec(body)?.[0]);
+    const lists = required(/<sdp-filter>.*?<\/sdp-filter>/su.exec(body)?.[0]);
+    for (const [at, label] of ["To design", "To state", "To build", "Built"].entries()) {
+      expect(board).toContain(`<h3>${label} <span class="floor">1</span></h3>`);
+      expect(lists).toContain(`<h3>${label}</h3><ol class="roadmap-list">`);
+      if (at > 0) {
+        const preceding = ["To design", "To state", "To build"][at - 1] ?? "";
+        expect(board.indexOf(`<h3>${preceding} `)).toBeLessThan(board.indexOf(`<h3>${label} `));
+        expect(lists.indexOf(`<h3>${preceding}</h3>`)).toBeLessThan(
+          lists.indexOf(`<h3>${label}</h3>`),
+        );
+      }
+    }
+    expect(lists).toContain(
+      '<span class="line2">behavior · story · <span class="badge rung-scoped">scoped</span> <span class="floor">floor scoped</span> · 1 Spec: 1 to design</span>',
+    );
     for (const [place, need] of [
       [1, "to-build"],
       [2, "to-design"],
@@ -106,6 +134,19 @@ describe("Studio roadmap page", () => {
     expect(body).toContain('id="roadmap-probe-entry-5"');
     expect(body).toContain("decision");
     expect(body).toContain("settled");
+  });
+
+  it("counts empty board columns and gives each empty need list its own sentence", async () => {
+    const { html } = await page(workGraph(workStates[0]));
+    const body = main(html);
+    const board = required(/<div class="roadmap-board".*?<\/div>/su.exec(body)?.[0]);
+    expect([...board.matchAll(/<p>none<\/p>/gu)]).toHaveLength(3);
+    for (const label of ["To design", "To state", "To build"])
+      expect(board).toContain(`<h3>${label} <span class="floor">0</span></h3><p>none</p>`);
+    expect(board).toContain('<h3>Built <span class="floor">1</span></h3>');
+    const lists = required(/<sdp-filter>.*?<\/sdp-filter>/su.exec(body)?.[0]);
+    for (const need of ["to design", "to state", "to build"])
+      expect(lists).toContain(`<p>No entry has the need ${need}.</p>`);
   });
 
   it.each([workStates[4], workStates[6], workStates[7]])(
@@ -136,16 +177,21 @@ describe("Studio roadmap page", () => {
   it("keeps waiting questions, provisional readings, unnamed deciders and statements in recipe order", async () => {
     const graph = mixedGraph();
     const { html } = await page(graph);
-    const waiting = main(html).split("<h3>Waiting on the owner</h3>")[1] ?? "";
-    expect(waiting).toContain('href="specs/probe.design.html#question.choose"');
+    const waiting =
+      required(main(html).split("<h3>Waiting on the owner</h3>")[1]).split(
+        '<details class="section"><summary>The forward section',
+      )[0] ?? "";
+    expect(waiting).toContain('<p>blocking · <a href="specs/probe.design.html#question.choose"');
     expect(waiting).toContain('text="spec:probe.design#question.choose"');
-    expect(waiting).toContain("blocking");
     expect(waiting).toContain("Choose &amp; inspect.");
     expect(waiting).toContain("Provisional: Keep &amp; inspect.");
     expect(waiting).toContain("These questions have no named decider.");
+    expect(waiting).toContain('<p>non-blocking · <a href="specs/probe.design.html#question.later"');
     expect(waiting).toContain("Discuss the other option.");
     expect(waiting).toContain('href="#roadmap-probe-entry-2"');
-    expect(waiting).toContain("floor allows");
+    expect(waiting).toContain(
+      '<p data-statement="spec:probe.state">Statement · <a href="specs/probe.state.html">spec:probe.state</a> states <span class="badge rung-defined">defined</span>, floor allows <span class="badge rung-ready">ready</span>',
+    );
     expect(main(html)).toContain("<b>Next:</b>");
     expect(main(html)).toContain("nothing blocks");
     expect(main(html)).toContain("<b>Build now:</b>");
@@ -155,6 +201,58 @@ describe("Studio roadmap page", () => {
     );
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
+  it("leaves out Earlier statements when no waiting statement precedes the entry", async () => {
+    const { html } = await page(
+      probeGraph({
+        "pack.sdp.md": probePack("probe", ["state"]),
+        "state.sdp.md": probeSpec("state", "defined"),
+      }),
+    );
+    const card = required(
+      /<details class="card" id="roadmap-probe-entry-1">.*?<\/details>/su.exec(main(html))?.[0],
+    );
+    expect(card).not.toContain("Earlier statements");
+    expect(card).not.toContain("No preceding waiting statement");
+  });
+
+  it.each([0, 1, 2])(
+    "uses the correct statement count and verb for %i waiting statements",
+    async (n) => {
+      const names = Array.from({ length: n }, (_, i) => `state-${String(i)}`);
+      const { html } = await page(
+        probeGraph({
+          "pack.sdp.md": probePack("probe", ["built", ...names]),
+          "built.sdp.md": probeSpec("built"),
+          "built.ts": implementation("built"),
+          ...Object.fromEntries(
+            names.map((name) => [`${name}.sdp.md`, probeSpec(name, "defined")]),
+          ),
+        }),
+      );
+      const summary = required(/<ul class="summary">(.*?)<\/ul>/su.exec(main(html))?.[1]);
+      expect(summary).toContain(
+        `${String(n)} ${n === 1 ? "statement waits" : "statements wait"} for a person; the <a href="queue.html">owner queue</a> lists them all.`,
+      );
+    },
+  );
+
+  it("renders code spans and escapes authored titles consistently on the board and entry", async () => {
+    const { html } = await page(
+      probeGraph({
+        "pack.sdp.md": probePack("probe", ["root"]),
+        "root.sdp.md": probeSpec("root").replace("# root", "# Read `<work>` & inspect"),
+      }),
+    );
+    const body = main(html);
+    const board = required(/<div class="roadmap-board".*?<\/div>/su.exec(body)?.[0]);
+    expect(board).toContain(
+      '<a href="#roadmap-probe-entry-1">Read <code>&lt;work&gt;</code> &amp; inspect</a>',
+    );
+    expect(body).toContain(
+      '<span class="line1">1. Read <code>&lt;work&gt;</code> &amp; inspect</span>',
+    );
   });
 
   it("shows decisions and their questions, dependency folds, incoming work and other Packs", async () => {
@@ -257,13 +355,36 @@ describe("Studio roadmap page", () => {
     const { html } = await page(mixedGraph());
     expect(html).toContain('<form hidden class="filter-bar">');
     expect(html).toContain('data-filter="need"');
-    expect([...html.matchAll(/data-row data-need="([^"]+)"/gu)].map((m) => m[1])).toEqual([
-      "to-design",
-      "to-state",
-      "to-build",
-      "built",
-    ]);
+    const rows = [...html.matchAll(/data-row data-need="([^"]+)"/gu)].map((m) => ({
+      need: required(m[1]),
+    }));
+    expect(rows.map((row) => row.need)).toEqual(["to-design", "to-state", "to-build", "built"]);
+    const select = required(/<select data-filter="need">(.*?)<\/select>/su.exec(html)?.[1]);
+    const options = [...select.matchAll(/<option value="([^"]+)"/gu)].map((m) => required(m[1]));
+    expect(options).toEqual(["any", "to-design", "to-state", "to-build", "built"]);
+    for (const need of options) {
+      const matching = rows.filter((row) => rowMatches(row, { need }));
+      expect(matching).toEqual(need === "any" ? rows : [{ need }]);
+    }
     expect(html).not.toMatch(/data-row[^>]*\bhidden/u);
+  });
+
+  it("keeps heading, memo and entry ids distinct when roadmap names contain their suffixes", async () => {
+    const names = ["a", "a-entry-1", "a-memo", "a-heading"];
+    const { html } = await page(
+      probeGraph(
+        {
+          ...Object.fromEntries(names.map((name) => [`${name}.sdp.md`, probePack(name, ["root"])])),
+          "root.sdp.md": probeSpec("root"),
+        },
+        names,
+      ),
+    );
+    const ids = [...html.matchAll(/\bid="([^"]+)"/gu)].map((m) => required(m[1]));
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const match of html.matchAll(/(?:href="#|aria-labelledby=")([^"]+)"/gu))
+      expect(ids).toContain(match[1]);
+    for (const name of names) expect(ids).toContain(`roadmap-${name}-entry-1`);
   });
 
   it("stacks the board at phone width using the Studio breakpoint", () => {
