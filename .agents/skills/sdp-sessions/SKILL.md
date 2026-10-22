@@ -92,6 +92,9 @@ show what the next pass could take up.
 
 ### Implement
 
+Read the roadmap (recipe 53) for the owner's order and each entry's need; render the roadmap memo
+(recipe 55) for a pull request description's forward section.
+
 Use the build backlog (recipe 1) to orient the available ready work and the target Spec context
 (recipe 3) to read guarantees, relations, implementation bindings, and verifiers. Inspect the
 planning slice (recipe 19) before writing code. In a declared seam, read component membership

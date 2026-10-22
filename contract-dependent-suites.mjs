@@ -24,6 +24,17 @@ export const contractDependentSuites = [
     contracts: "generated/contracts",
     generation: "npm run generate:self-hosting",
     testPaths: [
+      "test/roadmap-examples.test.ts",
+      "test/consumers.roadmap.built-work.test.generated.ts",
+      "test/consumers.roadmap.buildable-part.test.generated.ts",
+      "test/consumers.roadmap.statement-part.test.generated.ts",
+      "test/consumers.roadmap.design-part.test.generated.ts",
+      "test/consumers.roadmap.drifting-part.test.generated.ts",
+      "test/consumers.roadmap.missing-evidence.test.generated.ts",
+      "test/consumers.roadmap.blocking-part.test.generated.ts",
+      "test/consumers.roadmap.outside-parent.test.generated.ts",
+      "test/consumers.roadmap.statement-order.test.generated.ts",
+
       "test/studio-s5.test.ts",
       "test/consumers.spec-studio.intent-panel.refresh-keeps-intents.test.generated.ts",
       "test/consumers.intent-composition.proposal.memo.shared.test.generated.ts",

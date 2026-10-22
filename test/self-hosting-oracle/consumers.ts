@@ -7372,7 +7372,7 @@ export const consumersSpecs = [
         },
         exampleSpace: {
           given: [
-            "a probe roadmap whose one entry holds the work {work:string}",
+            "a probe roadmap whose entry holds the work {work:string}",
             'that work {state:"is ready and implemented throughout"|"has one part ready and not implemented"|"has one part below ready whose floor reaches ready"|"has one part below ready whose floor stops short"|"has one part implemented below ready"|"has a ready root and one descendant without its kind\'s evidence"|"has a ready root and one descendant held by a blocking question"|"has one descendant that also refines a Spec outside the roadmap"}',
             "a probe roadmap whose first entry rests on a Spec of its second entry, both waiting for a statement",
           ],
@@ -7414,7 +7414,7 @@ export const consumersSpecs = [
           "`waiting` is `{ questions, withoutDecider, statements }`: a question in either list is a question row with `places`; a statement is `{ id, statedReadiness, floorReached, places }`. Questions sort by their first place, then blocking ones first, then by Spec id and authored position. Statements keep their relative order in the statement queue, recipe 46, across the whole roadmap; their `places` name the entries they touch and never reorder them.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/roadmap.sdp.md",
   },
   {
@@ -7542,7 +7542,7 @@ export const consumersSpecs = [
           "code spans follow the proposal memo's rule; authored text is written verbatim, with each line break written as a space and, inside a table cell, each `|` written `\\|`; every line ends with a line feed and the memo with one.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/roadmap.memo.sdp.md",
   },
   {
@@ -7659,5 +7659,284 @@ export const consumersSpecs = [
     },
     deliveryFacts: [],
     file: "specs/consumers/spec-studio.register-input.sdp.md",
+  },
+  {
+    id: "spec:consumers.roadmap.built-work",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/roadmap.built-work.sdp.md",
+    title: "Built work stays on the roadmap",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute one roadmap reading over a probe corpus.",
+        assumptions: [
+          "The world writes a roadmap Pack with one ready behavior root and one behavior descendant, each with an Intent outcome. The root has one rule and a direct implementation binding; both Specs have resolving relations. Every part states ready and has a direct implementation binding. The roadmap reads the shipped body over the extracted probe corpus.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe roadmap whose entry holds the work {work: "spec:probe.root, spec:probe.part"}',
+              'that work {state: "is ready and implemented throughout"}',
+            ],
+            when: ["the roadmap recipe reads the probe roadmap"],
+            then: ['the entry\'s need reads {need: "built"}'],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.roadmap.buildable-part",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/roadmap.buildable-part.sdp.md",
+    title: "A ready unbound part needs building",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute one roadmap reading over a probe corpus.",
+        assumptions: [
+          "The world writes a roadmap Pack with one ready behavior root and one behavior descendant, each with an Intent outcome. The root has one rule and a direct implementation binding; both Specs have resolving relations. The root has a binding and its ready descendant has none. The roadmap reads the shipped body over the extracted probe corpus.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe roadmap whose entry holds the work {work: "spec:probe.root, spec:probe.part"}',
+              'that work {state: "has one part ready and not implemented"}',
+            ],
+            when: ["the roadmap recipe reads the probe roadmap"],
+            then: ['the entry\'s need reads {need: "to build"}'],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.roadmap.statement-part",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/roadmap.statement-part.sdp.md",
+    title: "A complete part waits for a statement",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute one roadmap reading over a probe corpus.",
+        assumptions: [
+          "The world writes a roadmap Pack with one ready behavior root and one behavior descendant, each with an Intent outcome. The root has one rule and a direct implementation binding; both Specs have resolving relations. The descendant states defined with complete behavior evidence and a ready parent. The roadmap reads the shipped body over the extracted probe corpus.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe roadmap whose entry holds the work {work: "spec:probe.root, spec:probe.part"}',
+              'that work {state: "has one part below ready whose floor reaches ready"}',
+            ],
+            when: ["the roadmap recipe reads the probe roadmap"],
+            then: ['the entry\'s need reads {need: "to state"}'],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.roadmap.design-part",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/roadmap.design-part.sdp.md",
+    title: "An unfinished part needs design",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute one roadmap reading over a probe corpus.",
+        assumptions: [
+          "The world writes a roadmap Pack with one ready behavior root and one behavior descendant, each with an Intent outcome. The root has one rule and a direct implementation binding; both Specs have resolving relations. The descendant states scoped and has a blocking question. The roadmap reads the shipped body over the extracted probe corpus.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe roadmap whose entry holds the work {work: "spec:probe.root, spec:probe.part"}',
+              'that work {state: "has one part below ready whose floor stops short"}',
+            ],
+            when: ["the roadmap recipe reads the probe roadmap"],
+            then: ['the entry\'s need reads {need: "to design"}'],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.roadmap.drifting-part",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/roadmap.drifting-part.sdp.md",
+    title: "A binding below ready remains drift",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute one roadmap reading over a probe corpus.",
+        assumptions: [
+          "The world writes a roadmap Pack with one ready behavior root and one behavior descendant, each with an Intent outcome. The root has one rule and a direct implementation binding; both Specs have resolving relations. The descendant states scoped, has a blocking question and an implementation binding. The roadmap reads the shipped body over the extracted probe corpus.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe roadmap whose entry holds the work {work: "spec:probe.root, spec:probe.part"}',
+              'that work {state: "has one part implemented below ready"}',
+            ],
+            when: ["the roadmap recipe reads the probe roadmap"],
+            then: ["the entry counts {drift: 1} parts as drift"],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.roadmap.missing-evidence",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/roadmap.missing-evidence.sdp.md",
+    title: "A descendant without evidence names its holding clause",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute one roadmap reading over a probe corpus.",
+        assumptions: [
+          "The world writes a roadmap Pack with one ready behavior root and one behavior descendant, each with an Intent outcome. The root has one rule and a direct implementation binding; both Specs have resolving relations. The descendant states scoped, refines the ready root and has no behavior evidence. The roadmap reads the shipped body over the extracted probe corpus.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe roadmap whose entry holds the work {work: "spec:probe.root, spec:probe.part"}',
+              'that work {state: "has a ready root and one descendant without its kind\'s evidence"}',
+            ],
+            when: ["the roadmap recipe reads the probe roadmap"],
+            then: [
+              'the entry names {part: "spec:probe.part"} among the parts with its need, held by {clause: "kind-evidence-present"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.roadmap.blocking-part",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/roadmap.blocking-part.sdp.md",
+    title: "A descendant question holds the entry for design",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute one roadmap reading over a probe corpus.",
+        assumptions: [
+          "The world writes a roadmap Pack with one ready behavior root and one behavior descendant, each with an Intent outcome. The root has one rule and a direct implementation binding; both Specs have resolving relations. The descendant states scoped, refines the ready root, has one rule and a blocking question. The roadmap reads the shipped body over the extracted probe corpus.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe roadmap whose entry holds the work {work: "spec:probe.root, spec:probe.part"}',
+              'that work {state: "has a ready root and one descendant held by a blocking question"}',
+            ],
+            when: ["the roadmap recipe reads the probe roadmap"],
+            then: [
+              'the entry names {part: "spec:probe.part"} among the parts with its need, held by {clause: "no-blocking-open-questions"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.roadmap.outside-parent",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/roadmap.outside-parent.sdp.md",
+    title: "A descendant names its outside parent",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute one roadmap reading over a probe corpus.",
+        assumptions: [
+          "The world writes a roadmap Pack with one ready behavior root and one behavior descendant, each with an Intent outcome. The root has one rule and a direct implementation binding; both Specs have resolving relations. The defined descendant refines both the ready root and an outside scoped Spec. The roadmap reads the shipped body over the extracted probe corpus.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe roadmap whose entry holds the work {work: "spec:probe.root, spec:probe.part"}',
+              'that work {state: "has one descendant that also refines a Spec outside the roadmap"}',
+            ],
+            when: ["the roadmap recipe reads the probe roadmap"],
+            then: [
+              'the entry rests on {target: "spec:probe.outside"} through {origin: "spec:probe.part"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.roadmap.statement-order",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/roadmap.statement-order.sdp.md",
+    title: "Waiting statements keep dependency order against roadmap places",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute one roadmap reading over a probe corpus.",
+        assumptions: [
+          "The world writes two defined behavior Specs with complete evidence and resolving relations. The first roadmap entry depends on the second; both floors reach ready. The roadmap reads the shipped body over the extracted probe corpus.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe roadmap whose entry holds the work {work: "spec:probe.dependent"}',
+              'that work {state: "has one part below ready whose floor reaches ready"}',
+              "a probe roadmap whose first entry rests on a Spec of its second entry, both waiting for a statement",
+            ],
+            when: ["the roadmap recipe reads the probe roadmap"],
+            then: [
+              'the waiting statements list {earlier: "spec:probe.base"} before {later: "spec:probe.dependent"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
 ] as const;

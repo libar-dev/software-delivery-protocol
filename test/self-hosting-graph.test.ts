@@ -262,20 +262,14 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // Re-measured from the refreshed tree: 428 Markdown Specs and four Gherkin Specs,
-    // 432 in the self-hosting Pack; nine Pack manifests and 543 source anchors.
-    // The excluded-root validate run corroborates 984 nodes and 2727 edges; the advisory review's
-    // accepted changes added the latest eight: five refines from the Studio's capability map,
-    // slice and roadmap pages and the legibility and edge-routing contracts to the readings they
-    // serve, and three dependsOn from the roadmap-replaces-plans behavior to the change proposal,
-    // its memo and run evidence.
-    expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 543 });
-    expect(expectedSpecs).toHaveLength(432);
-    expect(expectedPackMembers).toHaveLength(432);
-    expect(expectedAnchors).toHaveLength(543);
-    expect(expectedBindingEdges).toHaveLength(681);
-    expect(result.graph.nodes).toHaveLength(984);
-    expect(result.graph.edges).toHaveLength(2727);
+    // Re-measured with the roadmap example carriers and their test, oracle and catalog bindings.
+    expect(result.counts).toEqual({ specs: 441, packs: 9, anchors: 557 });
+    expect(expectedSpecs).toHaveLength(441);
+    expect(expectedPackMembers).toHaveLength(441);
+    expect(expectedAnchors).toHaveLength(557);
+    expect(expectedBindingEdges).toHaveLength(695);
+    expect(result.graph.nodes).toHaveLength(1007);
+    expect(result.graph.edges).toHaveLength(2777);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -359,7 +353,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ idea: 4, ready: 424, scoped: 4 });
+    ).toEqual({ idea: 4, ready: 433, scoped: 4 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
