@@ -5,8 +5,10 @@ altitude: story
 readiness: ready
 relations:
   refines:
-    target: spec:consumers.spec-studio.lenses
-    reason: the Capabilities page is a lens that reads refinement
+    - target: spec:consumers.spec-studio.lenses
+      reason: the Capabilities page is a lens that reads refinement
+    - target: spec:consumers.capability-map
+      reason: the page is the capability map's reading for a person
   dependsOn:
     - target: spec:consumers.spec-studio.index-page
       reason: the Epic filter extends the index's Specs filters

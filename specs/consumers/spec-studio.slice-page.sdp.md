@@ -4,7 +4,10 @@ kind: behavior
 altitude: story
 readiness: ready
 relations:
-  refines: spec:consumers.spec-studio
+  refines:
+    - spec:consumers.spec-studio
+    - target: spec:consumers.design-slice
+      reason: the page is the design slice's reading for a person
   dependsOn:
     - target: spec:consumers.design-slice
       reason: the page renders the slice's answer
@@ -61,7 +64,7 @@ The Pack page reads a Pack card by card, in the order its author wrote. A review
 - pagePath: `slices/<name>.html`, `<name>` formed from the Pack id as `packs/<name>.html` forms it, so the Pack page and its slice page share a name.
 - headerBlock: the page heading `Design slice: <Pack title>`; below it the Pack id with a copy action and the link `Read the Pack member by member` to its Pack page; then the summary under `The design as a whole`, then the reading note.
 - readingNoteText: `Members read with the ones others rest on first. The columns count the design each member carries beside its rung; they never judge whether it is enough. This page records no review and approves nothing.`
-- drawingIds: both drawings take the Pack id as their subject and the kinds' own view names, so their text equivalents are `diagram.<pack id>.dependency.text` and `diagram.<pack id>.scoped-architecture.text` and their arrow markers `diagram.<pack id>.dependency.arrow` and `diagram.<pack id>.scoped-architecture.arrow`; every other element id is the drawing kind's.
+- drawingIds: Both drawings take the Pack id as their subject and use their drawing kind's element-id contract. The dependency text and arrow ids are `diagram.<pack id>.dependencies.text` and `diagram.<pack id>.dependencies.arrow`; scoped architecture uses `diagram.<pack id>.architecture.text` and `diagram.<pack id>.architecture.arrow`. The kinds also own viewport, source, fold and occurrence suffixes; the page invents no singular dependency or scoped-architecture alias.
 - memberTable: a table in a scroll region with the columns `Member`, `Depth`, `Rung`, `Next rung`, `Design carried` and `Code`, so it fits a desktop column without scrolling; `Member` holds the title link, the id and the kind; `Rung` the rung badge and `floor <rung>`; `Design carried` six lines, `<n> rules, <k> keyed`, `<n> entries`, `<n> declarations`, `<n> questions, <b> blocking`, `<n> decisions` and `<bound> of <n> verifying examples bound`, each count a plain number, a zero written `0`, and a zero part such as `, 0 keyed` left out; `Code` two lines, `<n> implementing` and `<n> referencing`. Below the phone breakpoint each member reads as a stacked block: its title, id and kind, its rung badge and floor, and its next rung with each unmet clause stay together at the top, and its depth, design counts and binding counts follow as labelled runs that wrap; no part of a member sits beyond a horizontal scroll.
 - foldedExamples: a row under the parent's row spanning the table, holding a closed disclosure whose summary reads `<n> example members folded in`, followed by `, <h> held below the next rung` when any is held; inside, one line per example with its title link, its id, its rung badge, `floor <rung>` and `next <rung>:` with `nothing blocks` or each unmet clause.
 - componentTable: a table with the columns `Component`, `Layer and context` and `Reached through`, the last listing each way the slice reaches the component on its own labelled line.

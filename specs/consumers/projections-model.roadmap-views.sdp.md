@@ -21,7 +21,8 @@ Release, baseline and roadmap vocabulary belongs to optional projections that wa
 
 - [blocking #releaseReader] Does a reader need release or baseline views that the roadmap, the recipes and git tags do not serve?
   - decider: owner
-  - trigger: a named reader with that need, such as the package's first published release, and a way to measure it inside the arc that builds the views
+  - provisional: Keep release and baseline views deferred; the trigger opens this question and does not authorize either view's build.
+  - trigger: the first published release
 
 ## Model
 

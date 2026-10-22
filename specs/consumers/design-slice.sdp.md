@@ -43,12 +43,6 @@ The reading answers what a card-by-card page leaves a reviewer to assemble. A de
 - outcome: Read a Pack as one design slice: its members and their relations, the components they touch, realized and planned, the decisions and open questions that bound them, and what each member needs for its next rung.
 - value: A design pass judges the whole before its parts, starting from the members others rest on, and sees how much design each member carries beside its rung without a score.
 
-### Open questions
-
-- [non-blocking #sliceTerm] Does `design slice` join the glossary's guidance-only labels beside design pass, design diff and design backlog, so the word names a recipe's answer and is never read as the refused saved AI slice?
-  - decider: owner
-  - provisional: yes, a guidance-only label for the recipe's answer; it names no primitive, artifact or stage
-
 ## Behavior
 
 - rule: [#readingNotArtifact] A design slice is a reading of a set of Specs that a catalog recipe composes from the graph on each invocation; it is never authored, saved or committed, it adds no grouping, namespace, kind, stage or gate, and reading it records nothing.

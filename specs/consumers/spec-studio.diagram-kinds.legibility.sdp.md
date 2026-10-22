@@ -4,7 +4,10 @@ kind: contract
 altitude: story
 readiness: ready
 relations:
-  refines: spec:consumers.spec-studio.diagrams
+  refines:
+    - spec:consumers.spec-studio.diagrams
+    - target: spec:consumers.spec-studio.diagram-kinds
+      reason: readable labels are part of the outcome the diagram kinds state
   dependsOn: spec:consumers.spec-studio.responsive
 ---
 # A diagram preserves readable labels before zoom

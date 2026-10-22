@@ -15,6 +15,6 @@ relations:
 
 ## Model
 
-- **architecturally significant unit** — A code unit with exported public surface or cross-component reach that warrants graph-visible structural binding: component membership, a role, and `references` to the designs it answers to. An architectural dependency is declared as `uses`, normally between components; a unit's own `uses` is optional.
+- **architecturally significant unit** — A code unit with exported public surface or cross-component reach whose contract or responsibility a designer or builder must understand; export status or import rank alone is insufficient. Ports, shared data shapes, pipeline stages, decision tables, catalogs, layout policies and adapters may qualify. Its anchor records component membership, a role and `references` to the designs it answers to. An architectural dependency is declared as `uses`, normally between components; a unit's own `uses` is optional.
 - **structural attributes** — `role` on any code anchor; `layer` and `context` on a `component:` anchor; they describe the unit's architecture and carry no readiness or delivery fact, and the census renders their taxonomy from the graph.
 - **accepted set** — The set of architecturally significant units in a corpus is an owner-reviewed declaration, never derived from imports or exports; anchors are curated, never a coverage quota.

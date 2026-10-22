@@ -41,7 +41,7 @@ export const protocolSpecs = [
       },
       behavior: {
         rules: [
-          "The engine applies the structural-patterns model's significance criterion: exported public surface or cross-component reach.",
+          "The engine applies the structural-patterns model's significance criterion: exported public surface or cross-component reach whose contract or responsibility a designer or builder must understand; export status or import rank alone is insufficient.",
           "Every architecturally significant engine unit carries component membership through a realizing anchor; a helper with no realization target of its own is covered through the nearest realization anchor that consumes it.",
           "An architectural dependency of the engine is declared as `uses`, normally from one engine component to another; a unit's own `uses` is optional.",
           "A component-level `uses` declaration tracks real value or type imports from another component's source files; imports made only to author anchors through the stable-id or anchor-builder modules confer no edge.",
@@ -248,48 +248,60 @@ export const protocolSpecs = [
     altitude: "feature",
     readiness: "ready",
     file: "specs/protocol/roadmap-replaces-plans.sdp.md",
-    title: "The Protocol reads its next work from its roadmap, and its plan files are history",
+    title:
+      "The Protocol reads its next work from its roadmap and keeps its delivery record in git and its pull requests",
     narrative:
-      "Each arc's intent already lives in its capture Specs and Pack, its rulings in their carrying Specs, and its story in its pull request description. What a plan file still carries is the status line agents read first, the lanes and waves of the arc, and copies of ruling tables. Once a roadmap holds priority, the Protocol reads its next work from the graph and lets the plan files stand as the record of how earlier arcs were run. The Protocol keeps one living roadmap: its owner selects what it lists, and the pull requests that complete that work remove it.",
+      "Each arc's intent already lives in its capture Specs and Pack, its rulings in their carrying Specs, and its story in its pull request description. What a plan file still carries is the status line agents read first, the lanes and waves of the arc, and copies of ruling tables; what a committed review file carries, a change proposal, its memo and git already hold. Once a roadmap holds priority, the Protocol reads its next work from the graph, keeps each arc's record in git and its pull request, with review findings and evidence beside the story, and lets the plan and review files stand as the record of how earlier arcs were run. The Protocol keeps one living roadmap: its owner selects what it lists, and the pull requests that complete that work remove it.",
     sections: {
       intent: {
         actor:
-          "An agent or a person opening the Protocol's next body of work, and the owner keeping its order.",
+          "An agent or a person opening, reviewing or resuming the Protocol's work, and the owner keeping its order.",
         problem:
-          "The handbook points every session at the newest plan file and keeps a status line for each, and a gate requires both, so forward planning lives in prose beside the graph that already holds the arc's intent.",
+          "The handbook points every session at the newest plan file and keeps a status line for each, and a gate requires both, so forward planning lives in prose beside the graph that already holds the arc's intent, and committed review files repeat what change proposals, git and the pull request already carry.",
         outcome:
-          "Let an agent opening the Protocol's next work read it from the roadmap recipe, and keep the numbered plan files as frozen history no gate requires to grow.",
+          "Let an agent opening the Protocol's next work read it from the roadmap recipe, review and recover an arc from git and its pull request, and keep the plan and review files as frozen history no gate requires to grow.",
       },
       behavior: {
         rules: [
           "An agent opening the Protocol's next work runs the roadmap recipe over the roadmap Pack the handbook names and follows each entry to its Packs and carrying Specs; no plan file answers for forward work.",
           "The Protocol keeps one living roadmap Pack, edited in place. Its owner selects captured work for the upcoming pull requests; landing a capture does not add it. Entries leave by an ordinary manifest edit when the selected work is complete or no longer belongs among the next work, and move on the owner's word, with git as history.",
-          "`plans/` keeps the plans of the arcs that had one as history; no plan file is added, and a plan file changes only to correct the record it keeps.",
-          "An arc's execution record, its branch and base, its working rules, its lanes, the rulings with who made them, its acceptance as measured, its deferrals and its refusals, lives in its pull request description, opened as a draft at the arc's first authorized push. Before that push it lives in the arc's record file under `reviews/`, with the work done and outstanding and the commands that re-measure it; at the first authorized push the record moves into the draft pull request and the file keeps only its link. Nothing here authorizes a push, and no check reads the record. Evidence no test or recipe carries sits under `reviews/` beside the description that cites it.",
-          "Each description's forward section is the roadmap memo rendered at the branch's head, with the re-entry condition and the refused list in the author's words around it; the pull request that completes an entry's selected work removes it from the roadmap in the same change, entries join or move only on the owner's word, and nothing checks either.",
+          "`plans/` and `reviews/` keep the plans and review records of the arcs that had them as history until a cleanup arc removes or archives them; no file is added to either, and a file in either changes only to correct the record it keeps.",
+          "Before an arc's first push its record is its branch, git being the event log: the first commit message states the owner's working rules for the arc and the arc's Pack, each later message says what its unit did, and outstanding work is read from the arc's Pack, the backlogs and the open-question register; no record file is kept under `reviews/` or anywhere else. The arc pushes and opens its draft pull request at its first coherent commit, normally the scaffold, so the window in which only local git holds the record stays short and a session restarted on another machine sees the work. The draft pull request description then holds the record: its branch and base, working rules, lanes, the rulings with who made them, review findings as change proposals and their memos, acceptance as measured, deferrals and refusals. A session resuming without its predecessor's context reads the branch, its commits, the draft pull request and the graph, and never claims git kept what was never committed. The authority to commit and push comes from the owner's instruction for the arc, never from this rule, and no check reads the record.",
+          "A review's findings against Specs travel as one change proposal in the shape `spec:consumers.intent-composition.proposal` states, whose base is the branch-head commit the reviewer read, never a preview's merge commit; the proposal check runs it against the graph at that base, a moved, unresolved or incomparable scope is read again before its change applies, and its memo, as `spec:consumers.intent-composition.proposal.memo` renders it, is posted to the pull request. A finding against code or another file is a review comment on its line, and a review that proposes no Spec edit has no proposal. The commit that applies a proposal carries its reason line and base, and whether a change was accepted stays in the pull request's discussion and git, never in the proposal or the graph. No review file is committed, and a brief or prompt stays in the session that used it.",
+          "A finding left open against intended design becomes an open question on its carrying Spec with its `decider`, `provisional` reading and `links`, and a deferral is a blocking question with its re-entry `trigger`; a code defect against settled intent stays a code finding until it is repaired and never becomes an invented design question.",
+          "Evidence no test or recipe carries, such as a prototype of a view not yet built, an adopter measurement's raw output or a screenshot for the description, is committed on the arc's branch with the commands that made it, linked from the description at that commit, and removed before the merge; the merge keeps the commit reachable, so the link lasts.",
+          "An arc's acceptance links its bound examples and their run evidence, and re-derives each recipe measurement at the commit the description names, with its commands, never inheriting an earlier result. A run record is evidence from its test file as `spec:observation.run-evidence` reads it, never a verdict for one verifier, and it counts as evidence for a preview only when its recorded commit is the commit the preview's stamp names; a preview stays a current view, never an acceptance record.",
+          "Each description's forward section is the roadmap memo rendered at the branch's head, with the re-entry condition, the owner's reason for each entry's place and the refused list in the author's words around it; the pull request that completes an entry's selected work removes it from the roadmap in the same change, entries join or move only on the owner's word, and nothing checks either.",
           "The handbook names the roadmap Pack and the roadmap recipe where it named the current plan, and keeps no status line for any plan.",
-          "The self-hosting gate's current-record check refuses a primary-numbered plan above the last frozen plan, a handbook that does not name the roadmap Pack or the roadmap recipe, and a roadmap Pack manifest that is missing or does not state `order: priority`; it keeps the frozen historical checks, the documented green-gate legs, and the ban on plan status in the decision registry and the glossary.",
+          "The self-hosting gate's current-record check refuses a handbook that does not name the roadmap Pack or the roadmap recipe, and a roadmap Pack manifest that is missing or does not state `order: priority`; it keeps the frozen historical checks, the documented green-gate legs, and the ban on plan status in the decision registry and the glossary until the cleanup arc removes the folders they read. It checks no plan number, roadmap content, freshness, work order or review disposition.",
         ],
         ruleKeys: {
           readsRoadmap: "rules[0]",
           oneRoadmap: "rules[1]",
           plansFrozen: "rules[2]",
           executionRecord: "rules[3]",
-          forwardSection: "rules[4]",
-          handbookPointer: "rules[5]",
-          gateRecord: "rules[6]",
+          reviewFindings: "rules[4]",
+          openFindings: "rules[5]",
+          evidence: "rules[6]",
+          acceptance: "rules[7]",
+          forwardSection: "rules[8]",
+          handbookPointer: "rules[9]",
+          gateRecord: "rules[10]",
         },
       },
       design: {
         roadmapPack: "`pack:roadmap`, carried by `specs/roadmap.pack.sdp.md`.",
-        recordFile:
-          "`reviews/<name>-record.md`, `<name>` the arc's Pack id after `pack:`; before the arc's first authorized push it holds the branch and base, the owner's working rules for the arc, the work done and outstanding, uncommitted state with no clean boundary, and the commands that re-measure the arc; after that push it holds one line linking the draft pull request.",
         handbookTokens:
           "the gate reads the handbook for the strings `pack:roadmap` and `recipe 53`, and the roadmap Pack's manifest for a frontmatter line `order: priority`.",
-        frozenCeiling:
-          "the number of the last frozen plan is a constant of the gate, set when the gate changes; a file under `plans/` whose name opens with a number above it, zero-padded or not, is refused, and a letter-suffixed or unnumbered file is not read.",
         gateMessages:
-          "`plans/<name> — a numbered plan above the last frozen plan; forward work reads from the roadmap`, `AGENTS.md — the handbook does not name the roadmap Pack`, `AGENTS.md — the handbook does not name the roadmap recipe`, `specs/roadmap.pack.sdp.md — the roadmap Pack's manifest is missing`, and `specs/roadmap.pack.sdp.md — the roadmap Pack's manifest does not state order: priority`.",
+          "`AGENTS.md — the handbook does not name the roadmap Pack`, `AGENTS.md — the handbook does not name the roadmap recipe`, `specs/roadmap.pack.sdp.md — the roadmap Pack's manifest is missing`, and `specs/roadmap.pack.sdp.md — the roadmap Pack's manifest does not state order: priority`.",
+      },
+      verification: {
+        mode: "reviewed",
+        criteria: [
+          "Resume an arc from its branch and draft pull request alone, reading the tree, its commits and the graph, and name any context that lived only in the earlier session.",
+          "Run the gate with a handbook that does not name the roadmap Pack and with a roadmap manifest that does not state `order: priority`, and see each refused; an empty roadmap, a built entry and an order contrary to dependency add no finding.",
+        ],
       },
     },
     deliveryFacts: [],

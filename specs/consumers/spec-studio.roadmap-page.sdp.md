@@ -4,7 +4,10 @@ kind: behavior
 altitude: story
 readiness: ready
 relations:
-  refines: spec:consumers.spec-studio
+  refines:
+    - spec:consumers.spec-studio
+    - target: spec:consumers.roadmap
+      reason: the page is the roadmap's reading for a person
   dependsOn:
     - spec:consumers.spec-studio.data
     - spec:consumers.spec-studio.shell
@@ -31,6 +34,7 @@ The owner reads a roadmap to choose what the next pull requests take up, and a r
 - rule: [#noRoadmap] With no such Pack, the page says the corpus states no roadmap and that a Pack becomes one when its manifest states `order: priority`.
 - rule: [#roadmapSummary] Each roadmap's section opens with its title linked to its Pack page, its framing, and sentences the build counts from the answer: the entries with each need and those listed apart, said to be in priority order only when the answer's `order` is `priority` and in authored reading order otherwise; the questions waiting on the owner, blocking and not, and those that name no decider; and the statements waiting, with a link to the owner queue.
 - rule: [#board] A board follows: four columns, to design, to state, to build and built, each headed by its need and its count and listing its entries in place order, each as its place and its title linked to the entry's row below; an empty column reads `none`.
+- rule: [#readingLegend] Beside the board, a legend reads `To state means the floor allows ready and a person still judges the statement. Built means every Spec of the entry's work states ready and has an implementation binding; it reports no passing test and no deployment. The entry's own readiness is shown separately.`
 - rule: [#needLists] Four lists follow in the same order, each keeping the roadmap's order and numbering each entry by its place, so a gap in the numbers shows an entry with another need; an empty list says no entry has that need.
 - rule: [#entryRow] Each entry shows its place and title, its kind and altitude, its stated rung and the rung its floor reaches, and its work by need with any drift; opened, it shows its Spec linked, its stated next rung with the clauses that hold it or `nothing blocks`, the parts with its need, each linked with its rungs and what holds its next rung, its own labelled `itself`, with its other parts folded under one line that counts them, the parts to build now linked, its blocking questions linked to their Spec pages, its decisions below `ready` with their blocking questions, what it rests on with the parts that reach it, what waits on it, for an entry to state the waiting statements the statement queue puts before its own, its other Packs and the entries it shares Specs with.
 - rule: [#restsOnShown] Among what an entry rests on, the Specs to design, the Specs on the roadmap and the Specs that hold a `ready` statement show first, each with its relation, its need and its place on the roadmap or `outside the roadmap`; the rest fold under one line that counts them.

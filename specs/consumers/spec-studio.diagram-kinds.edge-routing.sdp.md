@@ -4,7 +4,10 @@ kind: contract
 altitude: story
 readiness: ready
 relations:
-  refines: spec:consumers.spec-studio.diagrams
+  refines:
+    - spec:consumers.spec-studio.diagrams
+    - target: spec:consumers.spec-studio.diagram-kinds
+      reason: arrows that cover no label serve the readable drawings the diagram kinds state
 ---
 # Edges route around boxes with deterministic orthogonal paths
 

@@ -4257,6 +4257,12 @@ export const expectedDeclaredRelations: readonly (readonly [
   ],
   [
     "spec:consumers.spec-studio.capability-map-page",
+    "refines",
+    "spec:consumers.capability-map",
+    "the page is the capability map's reading for a person",
+  ],
+  [
+    "spec:consumers.spec-studio.capability-map-page",
     "dependsOn",
     "spec:consumers.spec-studio.index-page",
     "the Epic filter extends the index's Specs filters",
@@ -4293,6 +4299,12 @@ export const expectedDeclaredRelations: readonly (readonly [
   ],
   [
     "spec:consumers.spec-studio.diagram-kinds.legibility",
+    "refines",
+    "spec:consumers.spec-studio.diagram-kinds",
+    "readable labels are part of the outcome the diagram kinds state",
+  ],
+  [
+    "spec:consumers.spec-studio.diagram-kinds.legibility",
     "dependsOn",
     "spec:consumers.spec-studio.responsive",
   ],
@@ -4300,6 +4312,12 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.spec-studio.diagram-kinds.edge-routing",
     "refines",
     "spec:consumers.spec-studio.diagrams",
+  ],
+  [
+    "spec:consumers.spec-studio.diagram-kinds.edge-routing",
+    "refines",
+    "spec:consumers.spec-studio.diagram-kinds",
+    "arrows that cover no label serve the readable drawings the diagram kinds state",
   ],
   [
     "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
@@ -4439,6 +4457,12 @@ export const expectedDeclaredRelations: readonly (readonly [
   ["spec:consumers.spec-studio.slice-page", "refines", "spec:consumers.spec-studio"],
   [
     "spec:consumers.spec-studio.slice-page",
+    "refines",
+    "spec:consumers.design-slice",
+    "the page is the design slice's reading for a person",
+  ],
+  [
+    "spec:consumers.spec-studio.slice-page",
     "dependsOn",
     "spec:consumers.design-slice",
     "the page renders the slice's answer",
@@ -4520,6 +4544,12 @@ export const expectedDeclaredRelations: readonly (readonly [
   ],
   ["spec:consumers.roadmap", "decidedBy", "spec:decisions.roadmap-priority"],
   ["spec:consumers.spec-studio.roadmap-page", "refines", "spec:consumers.spec-studio"],
+  [
+    "spec:consumers.spec-studio.roadmap-page",
+    "refines",
+    "spec:consumers.roadmap",
+    "the page is the roadmap's reading for a person",
+  ],
   ["spec:consumers.spec-studio.roadmap-page", "dependsOn", "spec:consumers.spec-studio.data"],
   ["spec:consumers.spec-studio.roadmap-page", "dependsOn", "spec:consumers.spec-studio.shell"],
   [
@@ -4577,6 +4607,24 @@ export const expectedDeclaredRelations: readonly (readonly [
     "dependsOn",
     "spec:consumers.roadmap.memo",
     "each description's forward section is the roadmap memo",
+  ],
+  [
+    "spec:protocol.roadmap-replaces-plans",
+    "dependsOn",
+    "spec:consumers.intent-composition.proposal",
+    "a review's findings against Specs travel as a checked change proposal",
+  ],
+  [
+    "spec:protocol.roadmap-replaces-plans",
+    "dependsOn",
+    "spec:consumers.intent-composition.proposal.memo",
+    "the pull request carries a review's proposal as its memo",
+  ],
+  [
+    "spec:protocol.roadmap-replaces-plans",
+    "dependsOn",
+    "spec:observation.run-evidence",
+    "an arc's acceptance reads run records as evidence from test files at their recorded commit",
   ],
   ["spec:protocol.roadmap-replaces-plans", "decidedBy", "spec:decisions.roadmap-over-plans"],
   ["spec:consumers.spec-studio.cited-line-text", "refines", "spec:consumers.spec-studio"],
