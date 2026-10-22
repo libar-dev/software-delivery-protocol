@@ -6,7 +6,7 @@ readiness: defined
 relations:
   refines:
     target: spec:protocol.structural-self-binding
-    reason: names what each role value the engine's anchors carry means, as the curated architecture register reads it
+    reason: names what each role value the engine's significant units carry means
   decidedBy: spec:decisions.architectural-annotation
 ---
 # The engine's architectural roles each name one pattern
@@ -27,19 +27,18 @@ Authors choose a role by the architectural responsibility a unit owns. The same 
 - **interaction** — [#interaction] Adds browser controls and feedback to build-rendered content without owning its graph joins or layout. This is a corpus role for optional element behavior.
 - **projection** — [#projection] Derives read-only presentation or generated contract content from the graph, the reader or an explicitly supplied answer. A page fragment and a complete page use the same role when both own presentation.
 - **publisher** — [#publisher] Writes or synchronizes an owned artifact set, including its path checks, replacement, recovery and clean comparison.
-- **read-model** — [#readModel] Builds a disposable lookup structure over the graph for its readers, with no independently authored state or separate persistence.
+- **index** — [#index] Builds a disposable lookup structure over the graph for the units that query it; it holds no authored state and is never a second read model.
 - **reader** — [#reader] Answers queries over graph content, resolving or joining recorded identities and bindings without reading source files.
-- **renderer** — [#renderer] Existing engine spelling for presentation code that the projection role already describes; curation replaces this spelling with projection.
-- **service** — [#service] Coordinates a use case or pipeline across collaborators, including execution, publication and failure handling, while each collaborator owns its own contract.
-- **utility** — [#utility] Existing broad helper label that states no architectural responsibility by itself; curation chooses the specific role a significant unit owns or leaves a mechanical helper bare.
+- **service** — [#service] Coordinates a use case or pipeline across collaborators, including execution and failure handling, while each collaborator owns its own contract.
 - **validator** — [#validator] Evaluates a stated contract and reports its failures, including readiness clauses, import fidelity and corpus-selected checks. A role does not determine a Protocol validator family.
 
 ## Design
 
 - roleChoice: Use the dominant responsibility of the anchored unit. A catalog of shared shapes is a contract, a table computing a semantic answer is a decider, and a failure-producing check is a validator. File size, caller count and naming style never select a role.
-- presentationWord: Use projection for pure page, fragment and text-equivalent rendering. Use publisher for filesystem publication, codec for representation encoding and interaction for optional DOM behavior; no renderer spelling remains on the engine's curated anchors after those edits.
-- helperWord: Replace utility only after reading the code. Graph indexes use read-model, concept queries use reader, parameter and path encoders use codec, browser controls use interaction and test-runtime integration uses adapter. Removing a helper's anchor requires the realization-preservation review, not a vocabulary substitution.
-- freeVocabulary: These Model terms explain the current and proposed engine values. Token grammar remains the only Protocol check on role, omission remains lawful, and neither this Model nor its historical spellings form an allowlist.
+- componentRole: A component anchor's role names the dominant responsibility of its members as a group, read from the reviewed member roles; a component whose members split evenly states no role.
+- presentationWord: Use projection for pure page, fragment and text-equivalent rendering. Use publisher for filesystem publication, codec for representation encoding and interaction for optional DOM behavior; a unit that presents uses projection, never renderer.
+- helperWord: Choose a specific responsibility after reading the code. Graph indexes use index, concept queries use reader, parameter and path encoders use codec, browser controls use interaction and test-runtime integration uses adapter.
+- freeVocabulary: These Model terms explain the engine's role values. Token grammar remains the only Protocol check on role, omission remains lawful, and this Model is not an allowlist.
 
 ## Verification — reviewed
 
