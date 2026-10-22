@@ -316,10 +316,21 @@ ${i.text}`}
       control;
       selected;
       static get observedAttributes() {
-        return ["text"];
+        return ["text", "for"];
+      }
+      target() {
+        const id = this.getAttribute("for");
+        if (!id) return void 0;
+        return Array.from(this.ownerDocument.querySelectorAll("textarea")).find(
+          (area) => area.id === id || area.getAttribute("id") === id
+        );
       }
       attributeChangedCallback() {
-        this.control?.setAttribute("aria-label", `Copy ${this.getAttribute("text") ?? ""}`);
+        const target = this.target();
+        const label = target ? Array.from(this.ownerDocument.querySelectorAll("label")).find(
+          (label2) => label2.getAttribute("for") === (target.id || target.getAttribute("id"))
+        )?.textContent ?? target.getAttribute("aria-label") ?? "text" : this.getAttribute("text") ?? "";
+        this.control?.setAttribute("aria-label", `Copy ${label}`);
       }
       connectedCallback() {
         if (this.control) return;
@@ -328,7 +339,14 @@ ${i.text}`}
         this.control.addEventListener("click", () => {
           const clipboard = this.ownerDocument.defaultView?.navigator.clipboard;
           const write = clipboard === void 0 ? void 0 : (text) => clipboard.writeText(text);
-          void copyText(this.getAttribute("text") ?? "", write, (text) => {
+          const target = this.target();
+          if (this.getAttribute("for") && !target) return;
+          void copyText(target?.value ?? this.getAttribute("text") ?? "", write, (text) => {
+            if (target) {
+              target.focus();
+              target.select();
+              return;
+            }
             this.selected?.parentElement?.remove();
             const label = this.ownerDocument.createElement("label");
             label.textContent = "Text to copy ";
@@ -851,6 +869,11 @@ ${i.text}`}
             "Reset",
             () => {
               this.view = this.original;
+              const viewport = this.querySelector(".diagram-scroll");
+              if (viewport) {
+                viewport.scrollLeft = 0;
+                viewport.scrollTop = 0;
+              }
               this.draw();
             }
           ]
