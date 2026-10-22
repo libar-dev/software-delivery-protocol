@@ -64,7 +64,6 @@ const gap = (subjectId: string) =>
 
 export const expectedWarnings = [
   gap("spec:consumers.capability-map"),
-  gap("spec:consumers.design-slice"),
   gap("spec:consumers.roadmap.memo"),
   gap("spec:consumers.roadmap"),
   gap("spec:consumers.spec-studio.capability-map-page"),

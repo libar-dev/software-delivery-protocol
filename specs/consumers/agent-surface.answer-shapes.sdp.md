@@ -22,7 +22,7 @@ A usability trial gave agents only the skills, the recipe catalog and `sdp q` an
 
 ## Behavior
 
-- rule: Changed-file impact, Pack design and design diff, recipes 4, 29 and 35, accept `detail: true` and default to summaries preserving every total and explicitly naming omitted detail.
+- rule: Changed-file impact, Pack design, design diff and the design slice, recipes 4, 29, 35 and 54, accept `detail: true` and default to summaries preserving every total and explicitly naming omitted detail.
 - rule: The guarantees recipe (recipe 3) returns each section's entries as the Spec states them and the binding fields the Spec context carries, not only the names of the sections.
 - rule: The orphans and gaps recipe (recipe 8) reports each kind the verifier-gap signal exempts and how many ready Specs it exempts, as the build backlog reports its exclusions.
 - rule: A design-backlog recipe lists the Specs stated `defined` that no code realizes, with their design columns, excluding examples and decisions as the build backlog does.
@@ -30,7 +30,7 @@ A usability trial gave agents only the skills, the recipe catalog and `sdp q` an
 
 ## Design
 
-- detailParameter: recipes 4, 29 and 35 read `params.detail`, absent or `false` for the summary and `true` for every row in full; recipe 29's `detail` may also be a list of member ids, which returns full rows for those members and summary rows for the rest of the Pack, and an id that is not a member is a diagnostic in the result. A summary keeps `totals` as the full answer counts them and adds `leftOut`, one line for each kind of detail it omits.
+- detailParameter: recipes 4, 29, 35 and 54 read `params.detail`, absent or `false` for the summary and `true` for every row in full; recipe 29's and recipe 54's `detail` may also be a list of member ids, which returns full rows for those members and summary rows for the rest of the Pack, and an id that is not a member is a diagnostic in the result. A summary keeps `totals` as the full answer counts them and adds `leftOut`, one line for each kind of detail it omits.
 - impactSummary: `{ changedFiles, totals, impactedSpecs: [id], impactedPacks: [id], atRisk: { incomingSpecs: [id], outgoingSpecs: [id], other: [id] }, coverageUnknownFiles, unlinkedUnits: [id], leftOut }` is recipe 4's summary. Incoming and outgoing name the connecting edge's direction relative to the impacted node and assert no dependency, since the edge may be any type; a Spec reached both ways is listed in both, and `other` holds the at-risk nodes that are not Specs.
 - impactDetail: With `detail: true`, recipe 4 returns full rows and reasons; every at-risk reason carries `direction`, `incoming` or `outgoing`, relative to its impacted end.
 - packDesignSummary: `{ id, specKind, statedReadiness, floorReached, statedNextRung, holds: [{ clauseId, targets: [id] }], openQuestions, blockingQuestions, implementedBy, referencedBy }` is recipe 29's summary row, with counts for the last four; the summary's boundary lists ids per direction, and `totals` is unchanged. `holds` is the summary of `statedNextRungFailures`, retaining each `clauseId` and target ids.

@@ -70,6 +70,7 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Compare stated readiness with the floor                        | readiness divergence (recipe 7)                                                                            |
 | Read warnings, gaps and verifier health                        | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
 | Review a Pack                                                  | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
+| Read a Pack or a set of Specs as one design                    | the design slice (recipe 54)                                                                               |
 | List open questions                                            | the open-question register (recipe 20)                                                                     |
 | See what a Spec rests on                                       | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
 | Change a Spec others rest on                                   | design-change impact (recipe 30); the planning slice (recipe 19)                                           |

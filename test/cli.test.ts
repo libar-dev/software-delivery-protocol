@@ -305,7 +305,6 @@ describe("sdp cli", () => {
       const stderr = capture.readStderr();
       for (const [file, specId] of [
         ["specs/consumers/capability-map.sdp.md", "spec:consumers.capability-map"],
-        ["specs/consumers/design-slice.sdp.md", "spec:consumers.design-slice"],
         ["specs/consumers/roadmap.memo.sdp.md", "spec:consumers.roadmap.memo"],
         ["specs/consumers/roadmap.sdp.md", "spec:consumers.roadmap"],
         [
@@ -370,10 +369,9 @@ describe("sdp cli", () => {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
-      // Re-measured from the refreshed carriers: no prose-mention pair is retained. The owner's
-      // ready statements on plan 47's roadmaps-and-slices Pack add 22 verifier gaps beside the
-      // retained one on the Spec-sections Model.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 23 warnings");
+      expect(stderr).not.toContain('honesty/gaps — Spec "spec:consumers.design-slice"');
+      // The bound slice verifier removes its gap; the remaining gaps stay visible.
+      expect(capture.readStdout()).toContain("validate: 0 errors · 22 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

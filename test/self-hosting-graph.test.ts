@@ -262,17 +262,15 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    // Re-measured from the refreshed tree: 428 Markdown Specs and four Gherkin Specs,
-    // 432 in the self-hosting Pack; nine Pack manifests and 543 source anchors.
-    // The excluded-root validate run corroborates 984 nodes and 2719 edges; the capability-epics
-    // decision's dependency on the one-primitive decision added the latest edge.
-    expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 543 });
-    expect(expectedSpecs).toHaveLength(432);
-    expect(expectedPackMembers).toHaveLength(432);
-    expect(expectedAnchors).toHaveLength(543);
-    expect(expectedBindingEdges).toHaveLength(681);
-    expect(result.graph.nodes).toHaveLength(984);
-    expect(result.graph.edges).toHaveLength(2719);
+    // The design-slice examples add their carriers, Pack memberships and bound registrars;
+    // the recipe realization, direct verifier and oracle add their source bindings.
+    expect(result.counts).toEqual({ specs: 445, packs: 9, anchors: 559 });
+    expect(expectedSpecs).toHaveLength(445);
+    expect(expectedPackMembers).toHaveLength(445);
+    expect(expectedAnchors).toHaveLength(559);
+    expect(expectedBindingEdges).toHaveLength(697);
+    expect(result.graph.nodes).toHaveLength(1013);
+    expect(result.graph.edges).toHaveLength(2787);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -356,7 +354,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ idea: 4, ready: 424, scoped: 4 });
+    ).toEqual({ idea: 4, ready: 437, scoped: 4 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {

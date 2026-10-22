@@ -4548,14 +4548,15 @@ describe("recipe parameters and the shipped recipe files", () => {
           !(recipe.ordinal === 41 && name !== "prefixes") &&
           !(recipe.ordinal === 42 && name !== "severity") &&
           !(recipe.ordinal === 51 && name !== "severity") &&
+          !(recipe.ordinal === 54 && name !== "detail") &&
           !(recipe.ordinal === 50 && ["register", "pattern"].includes(name));
         expect({
           recipe: recipe.ordinal,
           fallback:
             recipe.body.includes(`params.${name} ?? `) ||
             recipe.body.includes(`Object.hasOwn(params, "${name}") ? params.${name} : `) ||
-            (recipe.ordinal === 51 &&
-              name === "severity" &&
+            ([51, 54].includes(recipe.ordinal) &&
+              ["severity", "detail"].includes(name) &&
               recipe.body.includes(`params.${name} === undefined ? `)),
         }).toEqual({ recipe: recipe.ordinal, fallback: hasSample });
         expect({
@@ -7491,3 +7492,17 @@ it.each(["rule", "flow"])(
     }
   },
 );
+
+describe("the shipped design slice", () => {
+  it("runs the catalog body over the arc Pack through the CLI and keeps its summary totals", async () => {
+    const recipe = recipeByOrdinal(54);
+    const full = asRecord(
+      await runRecipe(recipe, { pack: "pack:roadmaps-and-slices-v1", detail: true }),
+    );
+    const summary = asRecord(await runRecipe(recipe, { pack: "pack:roadmaps-and-slices-v1" }));
+    expect(summary.totals).toEqual(full.totals);
+    expect(asArray(full.members).length).toBeGreaterThan(0);
+    expect(asArray(summary.leftOut).length).toBeGreaterThan(0);
+    expect(full).not.toHaveProperty("diagnostics");
+  });
+});

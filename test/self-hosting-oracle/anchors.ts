@@ -21,6 +21,121 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.design-slice-recipe",
+    nodeType: "CodeNode",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "sliceDocumentAnchor",
+    site: 'describe("design slice",',
+    role: "projection",
+    label: "realizes the design slice in the shipped recipe catalog",
+  },
+  {
+    id: "test:protocol.design-slice",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "sliceTestAnchor",
+    site: 'describe("design slice",',
+  },
+  {
+    id: "oracle:protocol.design-slice",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "sliceOracleAnchor",
+    site: "function expected(",
+  },
+  {
+    id: "test:protocol.design-slice.chain",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "chainAnchor",
+    site: "registerChain(",
+  },
+  {
+    id: "test:protocol.design-slice.decision-backlink",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "decisionBacklinkAnchor",
+    site: "registerDecisionBacklink(",
+  },
+  {
+    id: "test:protocol.design-slice.dependency-cycle",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "dependencyCycleAnchor",
+    site: "registerDependencyCycle(",
+  },
+  {
+    id: "test:protocol.design-slice.folded-example",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "foldedExampleAnchor",
+    site: "registerFoldedExample(",
+  },
+  {
+    id: "test:protocol.design-slice.independent-example",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "independentExampleAnchor",
+    site: "registerIndependentExample(",
+  },
+  {
+    id: "test:protocol.design-slice.component-absent",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "componentAbsentAnchor",
+    site: "registerComponentAbsent(",
+  },
+  {
+    id: "test:protocol.design-slice.component-unrelated",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "componentUnrelatedAnchor",
+    site: "registerComponentUnrelated(",
+  },
+  {
+    id: "test:protocol.design-slice.component-matching",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "componentMatchingAnchor",
+    site: "registerComponentMatching(",
+  },
+  {
+    id: "test:protocol.design-slice.component-differing",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "componentDifferingAnchor",
+    site: "registerComponentDiffering(",
+  },
+  {
+    id: "test:protocol.design-slice.component-unreadable",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "componentUnreadableAnchor",
+    site: "registerComponentUnreadable(",
+  },
+  {
+    id: "test:protocol.design-slice.outside-satisfied",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "outsideSatisfiedAnchor",
+    site: "registerOutsideSatisfied(",
+  },
+  {
+    id: "test:protocol.design-slice.outside-unbound",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "outsideUnboundAnchor",
+    site: "registerOutsideUnbound(",
+  },
+  {
+    id: "test:protocol.design-slice.outside-holding",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "outsideHoldingAnchor",
+    site: "registerOutsideHolding(",
+  },
+
+  {
     id: "test:protocol.studio-navigation",
     nodeType: "Anchor",
     file: "test/studio-s3.test.ts",
@@ -4312,6 +4427,71 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.design-slice-recipe", "satisfies", "spec:consumers.design-slice"],
+  ["test:protocol.design-slice", "verifies", "spec:consumers.design-slice"],
+  ["oracle:protocol.design-slice", "models", "spec:consumers.design-slice"],
+  ["test:protocol.design-slice.chain", "verifies", "spec:consumers.design-slice.chain"],
+  [
+    "test:protocol.design-slice.decision-backlink",
+    "verifies",
+    "spec:consumers.design-slice.decision-backlink",
+  ],
+  [
+    "test:protocol.design-slice.dependency-cycle",
+    "verifies",
+    "spec:consumers.design-slice.dependency-cycle",
+  ],
+  [
+    "test:protocol.design-slice.folded-example",
+    "verifies",
+    "spec:consumers.design-slice.folded-example",
+  ],
+  [
+    "test:protocol.design-slice.independent-example",
+    "verifies",
+    "spec:consumers.design-slice.independent-example",
+  ],
+  [
+    "test:protocol.design-slice.component-absent",
+    "verifies",
+    "spec:consumers.design-slice.component-absent",
+  ],
+  [
+    "test:protocol.design-slice.component-unrelated",
+    "verifies",
+    "spec:consumers.design-slice.component-unrelated",
+  ],
+  [
+    "test:protocol.design-slice.component-matching",
+    "verifies",
+    "spec:consumers.design-slice.component-matching",
+  ],
+  [
+    "test:protocol.design-slice.component-differing",
+    "verifies",
+    "spec:consumers.design-slice.component-differing",
+  ],
+  [
+    "test:protocol.design-slice.component-unreadable",
+    "verifies",
+    "spec:consumers.design-slice.component-unreadable",
+  ],
+  [
+    "test:protocol.design-slice.outside-satisfied",
+    "verifies",
+    "spec:consumers.design-slice.outside-satisfied",
+  ],
+  [
+    "test:protocol.design-slice.outside-unbound",
+    "verifies",
+    "spec:consumers.design-slice.outside-unbound",
+  ],
+  [
+    "test:protocol.design-slice.outside-holding",
+    "verifies",
+    "spec:consumers.design-slice.outside-holding",
+  ],
+
   ["impl:protocol.studio-pack-page", "satisfies", "spec:consumers.spec-studio.components"],
   ["impl:protocol.studio-diagram-element", "satisfies", "spec:consumers.spec-studio.components"],
   [
