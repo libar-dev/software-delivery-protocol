@@ -7278,3 +7278,216 @@ it("recipe 49 renders the panel memo from its catalog body and refuses a malform
     await runRecipe(recipeByOrdinal(49), { proposal: { ...proposal, reason: "two\nlines" } }),
   ).toEqual({ schemaProblems: [{ path: "$.reason", problem: "Expected one line." }], memo: null });
 });
+
+it("reports text-preserving rule and flow key changes apart from rewording", async () => {
+  const root = mkdtempSync(join(tmpdir(), "sdp-keying-diff-"));
+  const path = join(root, "probe.sdp.md");
+  const write = (rules: string) => {
+    writeFileSync(
+      path,
+      `---\nid: spec:probe.keying\nkind: behavior\naltitude: story\nreadiness: scoped\nrelations: {}\n---\n# Keying probe\n\n## Intent\n- outcome: Review key changes.\n\n## Behavior\n${rules}\n`,
+    );
+  };
+  try {
+    write("- rule: First rule.\n- rule: Second rule.\n- flow: [#oldFlow] One flow.");
+    const base = extract({ root }).graph;
+    write(
+      "- rule: [#first] First rule.\n- rule: [#second] Revised second rule.\n- flow: [#newFlow] One flow.",
+    );
+    const head = extract({ root });
+    const diff = await runRecipe(recipeByOrdinal(35), { base, detail: true }, head);
+    expect(asRecord(diff).specs).toEqual({
+      added: [],
+      removed: [],
+      changed: [
+        {
+          id: "spec:probe.keying",
+          parts: [
+            { part: "rule.first", change: "keyed", from: null, to: "spec:probe.keying#rule.first" },
+            {
+              part: "rule.newFlow",
+              change: "keyed",
+              from: "spec:probe.keying#rule.oldFlow",
+              to: "spec:probe.keying#rule.newFlow",
+            },
+            {
+              part: "rule.second",
+              change: "changed",
+              from: { list: "rules", text: "Second rule." },
+              to: { list: "rules", text: "Revised second rule." },
+            },
+          ],
+        },
+      ],
+    });
+    const sampleText = /```json\n([\s\S]*?)\n```/u.exec(recipeProse(recipeByOrdinal(35)))?.[1];
+    const changed = asArray(asRecord(asRecord(diff).specs).changed).map((row) => {
+      const entry = asRecord(row);
+      return {
+        ...entry,
+        parts: asArray(entry.parts).filter((part) => asRecord(part).part !== "rule.newFlow"),
+      };
+    });
+    expect(changed).toEqual(JSON.parse(sampleText ?? "null"));
+    expect(await runRecipe(recipeByOrdinal(35), { base, detail: true }, head)).toEqual(diff);
+    write("- rule: First rule.\n- rule: [#second] Revised second rule.\n- flow: One flow.");
+    const unkeyed = await runRecipe(
+      recipeByOrdinal(35),
+      { base: head.graph, detail: true },
+      extract({ root }),
+    );
+    expect(asRecord(unkeyed).specs).toEqual({
+      added: [],
+      removed: [],
+      changed: [
+        {
+          id: "spec:probe.keying",
+          parts: [
+            { part: "rule.first", change: "keyed", from: "spec:probe.keying#rule.first", to: null },
+            {
+              part: "rule.newFlow",
+              change: "keyed",
+              from: "spec:probe.keying#rule.newFlow",
+              to: null,
+            },
+          ],
+        },
+      ],
+    });
+    const renamedBase = extract({ root }).graph;
+    write("- rule: First rule.\n- rule: [#third] Third rule wording.\n- flow: One flow.");
+    const renamed = await runRecipe(
+      recipeByOrdinal(35),
+      { base: renamedBase, detail: true },
+      extract({ root }),
+    );
+    expect(asRecord(renamed).specs).toEqual({
+      added: [],
+      removed: [],
+      changed: [
+        {
+          id: "spec:probe.keying",
+          parts: [
+            {
+              part: "rule.second",
+              change: "removed",
+              from: { list: "rules", text: "Revised second rule." },
+              to: null,
+            },
+            {
+              part: "rule.third",
+              change: "added",
+              from: null,
+              to: { list: "rules", text: "Third rule wording." },
+            },
+          ],
+        },
+      ],
+    });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it.each(["rule", "flow"])(
+  "preserves a removed keyed %s address beside new unkeyed text",
+  async (kind) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-keyed-removal-"));
+    const path = join(root, "probe.sdp.md");
+    const write = (text: string) => {
+      writeFileSync(
+        path,
+        `---\nid: spec:probe.removal\nkind: behavior\naltitude: story\nreadiness: scoped\nrelations: {}\n---\n# Removal probe\n\n## Intent\n- outcome: Keep removed addresses visible.\n\n## Behavior\n- ${kind}: ${text}\n`,
+      );
+    };
+    try {
+      write("[#old] Old wording.");
+      const base = extract({ root }).graph;
+      write("New wording.");
+      const list = kind === "rule" ? "rules" : "flows";
+      const diff = asRecord(
+        await runRecipe(recipeByOrdinal(35), { base, detail: true }, extract({ root })),
+      );
+      expect(diff.specs).toEqual({
+        added: [],
+        removed: [],
+        changed: [
+          {
+            id: "spec:probe.removal",
+            parts: [
+              {
+                part: `behavior.${list}[0]`,
+                change: "added",
+                from: null,
+                to: { list, text: "New wording." },
+              },
+              {
+                part: "rule.old",
+                change: "removed",
+                from: { list, text: "Old wording." },
+                to: null,
+              },
+            ],
+          },
+        ],
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  },
+);
+
+it.each(["rule", "flow"])(
+  "distinguishes removed unkeyed %s base positions from head positions",
+  async (kind) => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-unkeyed-removal-"));
+    const path = join(root, "probe.sdp.md");
+    const write = (entries: string[]) => {
+      writeFileSync(
+        path,
+        `---\nid: spec:probe.removal\nkind: behavior\naltitude: story\nreadiness: scoped\nrelations: {}\n---\n# Removal probe\n\n## Intent\n- outcome: Name removed entries unambiguously.\n\n## Behavior\n${entries.map((entry) => `- ${kind}: ${entry}`).join("\n")}\n`,
+      );
+    };
+    try {
+      write(["A.", "B.", "C."]);
+      const base = extract({ root }).graph;
+      write(["C.", "D."]);
+      const head = extract({ root });
+      const list = kind === "rule" ? "rules" : "flows";
+      const diff = asRecord(await runRecipe(recipeByOrdinal(35), { base, detail: true }, head));
+      const parts = [
+        {
+          part: `behavior.${list}[0]`,
+          change: "moved",
+          from: { list, text: "C." },
+          to: { list, text: "C." },
+        },
+        {
+          part: `behavior.${list}[1]`,
+          change: "changed",
+          from: { list, text: "A." },
+          to: { list, text: "D." },
+        },
+        {
+          part: `behavior.${list}[1] (base)`,
+          change: "removed",
+          from: { list, text: "B." },
+          to: null,
+        },
+      ];
+      expect(diff.specs).toEqual({
+        added: [],
+        removed: [],
+        changed: [{ id: "spec:probe.removal", parts }],
+      });
+      const summary = asRecord(await runRecipe(recipeByOrdinal(35), { base }, head));
+      expect(summary.specs).toEqual({
+        added: [],
+        removed: [],
+        changed: [{ id: "spec:probe.removal", parts: parts.map((p) => p.part) }],
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  },
+);

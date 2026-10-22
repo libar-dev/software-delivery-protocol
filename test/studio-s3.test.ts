@@ -817,3 +817,174 @@ it("reads each owner question's provisional reading from its reader Spec and key
   expect(required(rows.find((row) => row.includes("No reading?")))).not.toContain("Provisional:");
   expect(JSON.stringify(queue)).toBe(before);
 });
+
+it("renders a keying proposal as one line per keyed entry and readable changed rule text", async () => {
+  const root = corpus({
+    "probe.sdp.md": carrier(
+      "spec:probe.keying",
+      "\n## Behavior\n- rule: First rule.\n- rule: Second rule.\n",
+    ),
+  });
+  const base = extract({ root }).graph;
+  const path = join(root, "probe.sdp.md");
+  writeFileSync(
+    path,
+    readFileSync(path, "utf8")
+      .replace("- rule: First rule.", "- rule: [#first] First rule.")
+      .replace("- rule: Second rule.", "- rule: [#second] Revised second rule."),
+  );
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: "Before keying" },
+    runs: [],
+  });
+  const html = main(content(renderStudio(data), "diff.html"));
+  const entries = [...html.matchAll(/<div class="entry">(.*?)<\/div>/gsu)].map((m) => m[1] ?? "");
+  expect(entries).toHaveLength(2);
+  expect(entries[0]).toBe(
+    "<p><code>rule.first</code> · keyed · First rule. · Base: none · Now: <code>spec:probe.keying#rule.first</code></p>",
+  );
+  expect(entries[1]).toContain("<b>Base</b><p>Second rule.</p>");
+  expect(entries[1]).toContain("<b>Now</b><p>Revised second rule.</p>");
+  expect(entries[1]).not.toMatch(/<pre>|&quot;list&quot;|&quot;text&quot;/u);
+});
+
+it("lists keyed lines in head rule order with rendered text for added, renamed and removed keys", async () => {
+  const root = corpus({
+    "probe.sdp.md": carrier(
+      "spec:probe.keying",
+      "\n## Behavior\n- rule: [#zOld] Same `<script>` text.\n- flow: Middle flow.\n- rule: [#aDrop] Dropped key text.\n",
+    ),
+  });
+  const base = extract({ root }).graph;
+  writeFileSync(
+    join(root, "probe.sdp.md"),
+    carrier(
+      "spec:probe.keying",
+      "\n## Behavior\n- rule: Dropped key text.\n- flow: [#fMiddle] Middle flow.\n- rule: [#bNew] Same `<script>` text.\n",
+    ),
+  );
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: null },
+    runs: [],
+  });
+  const before = JSON.stringify(data.recipes.all.get(35));
+  const rendered = renderStudio(data);
+  const html = main(content(rendered, "diff.html"));
+  const entries = [...html.matchAll(/<div class="entry">(.*?)<\/div>/gsu)].map((m) => m[1] ?? "");
+  expect(entries).toEqual([
+    "<p><code>rule.aDrop</code> · keyed · Dropped key text. · Base: <code>spec:probe.keying#rule.aDrop</code> · Now: none</p>",
+    "<p><code>rule.fMiddle</code> · keyed · Middle flow. · Base: none · Now: <code>spec:probe.keying#rule.fMiddle</code></p>",
+    "<p><code>rule.bNew</code> · keyed · Same <code>&lt;script&gt;</code> text. · Base: <code>spec:probe.keying#rule.zOld</code> · Now: <code>spec:probe.keying#rule.bNew</code></p>",
+  ]);
+  expect(main(content(rendered, "specs/probe.keying.html"))).toContain(
+    "Same <code>&lt;script&gt;</code> text.",
+  );
+  expect(html).not.toContain("<script>");
+  expect(JSON.stringify(data.recipes.all.get(35))).toBe(before);
+  expect(renderStudio(data)).toEqual(rendered);
+});
+
+it.each([false, true])(
+  "counts keyed rules apart from changed parts, mixed changes: %s",
+  async (mixed) => {
+    const root = corpus({
+      "probe.sdp.md": carrier(
+        "spec:probe.keying",
+        "\n## Behavior\n- rule: First rule.\n- flow: Last flow.\n\n## Design\n- limit: Original limit.\n",
+      ),
+    });
+    const base = extract({ root }).graph;
+    const path = join(root, "probe.sdp.md");
+    writeFileSync(
+      path,
+      readFileSync(path, "utf8")
+        .replace("rule: First", "rule: [#first] First")
+        .replace("flow: Last", "flow: [#last] Last")
+        .replace("Original limit.", mixed ? "Revised limit." : "Original limit."),
+    );
+    const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+      base: { graph: base, label: "Before keying" },
+      runs: [],
+    });
+    const html = main(content(renderStudio(data), "specs/probe.keying.html"));
+    const note = required(/<p class="change-note">(.*?)<\/p>/su.exec(html)?.[1]);
+    expect(note).toContain("2 rules keyed, wording unchanged");
+    expect(note).toContain('href="../diff.html#spec:probe.keying"');
+    expect(note.includes("<code>design.limit</code>")).toBe(mixed);
+    expect(note).not.toMatch(/<code>rule\.(first|last)<\/code>/u);
+  },
+);
+
+it("marks only members with exclusively keyed changes as keyed only", async () => {
+  const root = corpus({
+    "keyed.sdp.md": carrier("spec:probe.keyed", "\n## Behavior\n- rule: Keep it.\n"),
+    "mixed.sdp.md": carrier(
+      "spec:probe.mixed",
+      "\n## Behavior\n- rule: Keep it.\n- rule: Old wording.\n",
+    ),
+    "p.pack.sdp.md":
+      "---\nid: pack:probe\nspecs: [spec:probe.keyed, spec:probe.mixed]\n---\n# Probe\n",
+  });
+  const base = extract({ root }).graph;
+  for (const name of ["keyed", "mixed"]) {
+    const path = join(root, `${name}.sdp.md`);
+    writeFileSync(
+      path,
+      readFileSync(path, "utf8")
+        .replace("rule: Keep", "rule: [#keep] Keep")
+        .replace("Old wording.", "New wording."),
+    );
+  }
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: null },
+    runs: [],
+  });
+  const html = main(content(renderStudio(data), "packs/probe.html"));
+  const changes = required(/<section id="changed-since-base">(.*?)<\/section>/su.exec(html)?.[1]);
+  expect(changes).toContain(
+    '<li><a href="../specs/probe.keyed.html">spec:probe.keyed</a> · keyed only</li>',
+  );
+  expect(changes).toContain('<li><a href="../specs/probe.mixed.html">spec:probe.mixed</a></li>');
+});
+
+it("renders changed list values as lists instead of raw JSON arrays", async () => {
+  const root = corpus({
+    "probe.sdp.md": carrier("spec:probe.lists", "\n## Behavior\n- rule: Read it.\n").replace(
+      "- outcome: Read the design.",
+      "- outcome: Read the design.\n- risk: First risk.\n- risk: Second risk.",
+    ),
+  });
+  const base = extract({ root }).graph;
+  const path = join(root, "probe.sdp.md");
+  writeFileSync(
+    path,
+    readFileSync(path, "utf8").replace("Second risk.", "Changed risk `<script>`."),
+  );
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: null },
+    runs: [],
+  });
+  const html = main(content(renderStudio(data), "diff.html"));
+  expect(html).toContain(
+    '<ul class="plain-list"><li><pre>First risk.</pre></li><li><pre>Second risk.</pre></li></ul>',
+  );
+  expect(html).toContain("Changed risk `&lt;script&gt;`.");
+  expect(html).not.toContain("&quot;risks&quot;");
+  expect(html).not.toContain("<script>");
+});
+
+it("retains the owning list when readable rule text moves to a flow", async () => {
+  const root = corpus({
+    "probe.sdp.md": carrier("spec:probe.move", "\n## Behavior\n- rule: [#read] Read it.\n"),
+  });
+  const base = extract({ root }).graph;
+  const path = join(root, "probe.sdp.md");
+  writeFileSync(path, readFileSync(path, "utf8").replace("- rule:", "- flow:"));
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    base: { graph: base, label: null },
+    runs: [],
+  });
+  const html = main(content(renderStudio(data), "diff.html"));
+  expect(html).toContain("rule.read</code> · moved");
+  expect(html).toContain('<b>Now</b><p>Read it.</p><p class="entry-line">Flow</p>');
+});

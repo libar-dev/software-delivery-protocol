@@ -1126,3 +1126,26 @@ it("accepts the preview workflow's base and run flags together", async () => {
   );
   expect(JSON.parse(readFileSync(runs, "utf8"))).toEqual(report());
 });
+
+it("formats external run durations to at most two decimals on every page", async () => {
+  const root = fixture();
+  const input = report();
+  const durations = [2.8400000000000034, 0.45999999999997954, 12];
+  input.results.tests.forEach((test, index) => {
+    test.duration = durations[index] ?? 0;
+  });
+  const data = await createStudioData(createReader(extract({ root }).graph), undefined, {
+    runs: [input],
+  });
+  const pages = renderStudio(data);
+  for (const path of ["runs.html", "specs/probe.page.html"]) {
+    const page = pages.find((p) => p.path === path)?.content ?? "";
+    const cells = [...page.matchAll(/<tr data-run-result>(.*?)<\/tr>/gsu)].map(
+      (row) => [...(row[1] ?? "").matchAll(/<td>(.*?)<\/td>/gsu)].at(-1)?.[1],
+    );
+    expect(cells).toEqual(["2.84 ms", "0.46 ms", "12 ms"]);
+  }
+  expect(data.recipes.all.get(45)).toMatchObject({
+    files: [{ results: durations.map((duration) => expect.objectContaining({ duration })) }],
+  });
+});

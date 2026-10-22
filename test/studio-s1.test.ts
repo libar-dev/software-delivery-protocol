@@ -947,7 +947,9 @@ it.each([false, true])(
         ...[17, 20, 24, 31, 33, 43, 44, 46, 51].map((number) => ({ number, params: {} })),
         ...(withBase ? [{ number: 35, params: { base: reader.graph, detail: true } }] : []),
         { number: 29, params: { pack: "pack:probe" } },
-        ...(withBase ? [{ number: 35, params: { base: reader.graph, pack: "pack:probe" } }] : []),
+        ...(withBase
+          ? [{ number: 35, params: { base: reader.graph, pack: "pack:probe", detail: true } }]
+          : []),
         { number: 21, params: { spec: "spec:probe.parent" } },
         { number: 30, params: { specs: ["spec:probe.parent"] } },
         { number: 34, params: { spec: "spec:probe.parent" } },
@@ -1033,4 +1035,58 @@ it("gives unstated context and layer folds addressable text descriptions", () =>
   const html = result.drawings.map((drawing) => renderDiagram(drawing)).join("");
   for (const match of html.matchAll(/aria-describedby="([^"]+)"/g))
     expect(match[1]).not.toMatch(/\s/u);
+});
+
+it("names a single edge relation once in the legend and preserves its text equivalent", () => {
+  const drawing: Diagram = {
+    subject: "probe",
+    caption: "Probe diagram",
+    boxes: [
+      { id: "a", words: "First", target: "#a" },
+      { id: "b", words: "Second", target: "#b" },
+      { id: "c", words: "Third", target: "#c" },
+    ],
+    edges: [
+      { from: "a", to: "b", kind: "uses", count: 2 },
+      { from: "a", to: "c", kind: "uses" },
+    ],
+  };
+  const html = renderDiagram(drawing);
+  expect(html).toContain('<p class="diagram-legend">Arrows: uses.</p>');
+  const edges = groups(html, "edge");
+  expect(edges).toHaveLength(2);
+  expect(edges.every((edge) => !edge.includes("<text"))).toBe(true);
+  expect(html).toContain("<li>a uses b (2 unit edges)</li>");
+  expect(html).toContain("<li>a uses c</li>");
+  expect(renderDiagram(drawing)).toBe(html);
+  const mixed = renderDiagram({
+    ...drawing,
+    edges: [required(drawing.edges[0]), { from: "a", to: "c", kind: "dependsOn" }],
+  });
+  expect(mixed).not.toContain('class="diagram-legend"');
+  expect(groups(mixed, "edge").every((edge) => edge.includes("<text"))).toBe(true);
+  expect(mixed).toContain("dependsOn</text>");
+});
+
+it("names solid and planned uses once without repeating edge labels", () => {
+  const drawing: Diagram = {
+    subject: "probe.planned",
+    caption: "Use diagram",
+    boxes: [
+      { id: "a", words: "First", target: "#a" },
+      { id: "b", words: "Second", target: "#b", planned: true },
+    ],
+    edges: [
+      { from: "a", to: "b", kind: "uses" },
+      { from: "b", to: "a", kind: "plans to use" },
+    ],
+  };
+  const html = renderDiagram(drawing);
+  expect(html).toContain(
+    '<p class="diagram-legend">Arrows: uses. Dashed arrows: plans to use.</p>',
+  );
+  expect(groups(html, "edge").every((edge) => !edge.includes("<text"))).toBe(true);
+  expect(html).toContain('stroke-dasharray="6 4"');
+  expect(html).toContain("<li>b plans to use a</li>");
+  expect(html).toContain("<li>a uses b</li>");
 });

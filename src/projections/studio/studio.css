@@ -128,8 +128,19 @@ code {
   color: var(--text);
 }
 
-.top nav a {
-  margin-right: 0.9rem;
+.top nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+sdp-stamp {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .top form {
@@ -418,6 +429,13 @@ td {
   vertical-align: top;
   padding: 0.35rem 0.5rem;
   border-bottom: 1px solid var(--line);
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+td code,
+th code {
+  overflow-wrap: break-word;
 }
 
 th {
@@ -560,7 +578,6 @@ pre {
 p,
 li,
 dd,
-td,
 .line1 {
   overflow-wrap: anywhere;
 }
@@ -629,7 +646,7 @@ sdp-copy output {
   }
 }
 
-/* Diagrams keep their native size without script, with text available beside every drawing. */
+/* Diagrams fit the column; pan and zoom enlarge the build-rendered view. */
 sdp-diagram {
   display: block;
   min-width: 0;
@@ -652,6 +669,8 @@ sdp-diagram figcaption {
   margin-bottom: 0.75rem;
 }
 sdp-diagram svg {
+  max-width: 100%;
+  height: auto;
   display: block;
   background: var(--surface);
 }
@@ -731,11 +750,19 @@ sdp-compose:empty {
 sdp-maturity-map table {
   min-width: 48rem;
 }
+sdp-maturity-map caption {
+  text-align: start;
+  max-width: calc(100vw - 2.5rem);
+}
 sdp-maturity-map td {
   min-width: 9rem;
   vertical-align: top;
 }
+sdp-maturity-map td:not(:has(sdp-spec-card)) {
+  min-width: 0;
+}
 sdp-maturity-map td > p {
+  margin-block-start: 0;
   color: var(--muted);
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
@@ -818,13 +845,10 @@ sdp-compose button {
 }
 @media (max-width: 719.98px) {
   sdp-diagram svg {
-    width: 100%;
+    max-width: 100%;
     height: auto;
   }
   sdp-maturity-map table {
-    min-width: 0;
-  }
-  sdp-maturity-map td {
     min-width: 0;
   }
   dialog {

@@ -1598,7 +1598,7 @@ export const consumersSpecs = [
         traceGraph:
           "`sdp-trace-graph` with `spec-id`: the Spec's relations one hop each way, drawn in relation bands inside an `sdp-diagram`, then its text equivalent; no behavior of its own.",
         maturityMap:
-          "`sdp-maturity-map` with `pack-id`: the Pack's members placed by stated rung and floor reached, as a table of short cards; no behavior.",
+          "`sdp-maturity-map` with `pack-id`: the Pack's members placed by stated rung and floor reached, as a table of short cards with its axis explanation in the caption; an empty cell shows `—` alone and a filled cell names its count and Specs; no behavior.",
         exampleSpace:
           "`sdp-example-space` with `spec-id`, naming the Spec that owns the example space: the space's slots with their types and the step that declares each, its children's bound points as a table with one row per example and one column per slot, an unbound slot written `unbound`, its expected-outcome oracle binding as present or none, and recipe 44's coverage; its coverage is a report, never a verifier run or a delivery fact; no behavior beyond the composing actions inside it.",
         diagramView:
@@ -1685,7 +1685,7 @@ export const consumersSpecs = [
       },
       design: {
         recipeEvaluations:
-          "a build evaluates each of these once, with no parameter unless one is named: recipes 17, 20, 24, 31, 33, 43, 44, 46 and 51; recipe 29 with `{ pack: id }` for every Pack; recipe 21 with `{ spec: id }` and recipe 30 with `{ specs: [id] }` for every Spec; recipe 34 with `{ spec: id }` for every Spec that is not an example, Specs in no Pack included; given a base graph, recipe 35 with `{ base, detail: true }`, and with `{ base, pack: id }` for every Pack; given run records, recipe 45 with `{ runs }`.",
+          "a build evaluates each of these once, with no parameter unless one is named: recipes 17, 20, 24, 31, 33, 43, 44, 46 and 51; recipe 29 with `{ pack: id }` for every Pack; recipe 21 with `{ spec: id }` and recipe 30 with `{ specs: [id] }` for every Spec; recipe 34 with `{ spec: id }` for every Spec that is not an example, Specs in no Pack included; given a base graph, recipe 35 with `{ base, detail: true }`, and with `{ base, pack: id, detail: true }` for every Pack; given run records, recipe 45 with `{ runs }`.",
         pageRecipes:
           "the index and the glossary render reader values only; the architecture lens renders recipes 17 and 43; the tests lens renders every recipe 34 answer, recipe 44, and recipe 45 given run records; a Spec page renders its recipe 21, 30 and 34 answers, its own space from recipe 44, the recipe 51 rows that cite its entries, the recipe 45 files whose `specs` hold its id, and its own row of recipe 35's whole-corpus answer; a Pack page renders the totals of its recipe 29 answer and, given a base graph, its own recipe 35 answer; the registers render recipes 20, 31, 24 beside recipe 51's rows, and 33; the owner queue renders recipe 46; the diff page renders recipe 35's whole-corpus answer; the runs page renders recipe 45; an export renders the values of the pages it holds.",
       },
@@ -1952,7 +1952,7 @@ export const consumersSpecs = [
       },
       ui: {
         singleColumn:
-          "every layout collapses to one column below 720 CSS pixels of viewport width.",
+          "every layout collapses to one column below 720 CSS pixels of viewport width; at 390 CSS pixels no page exceeds the viewport. The top navigation and stamp line wrap, and a table wider than its column scrolls inside its own container, including maturity maps, run results and coverage tables; queue rows wrap within their column.",
         pinchZoom:
           "on a touch device, every diagram zooms with a pinch, which the diagram element adds.",
         narrowDiagram:
@@ -2859,9 +2859,9 @@ export const consumersSpecs = [
           "The caller always names the base. The recipe reads no record of a design pass and keeps none, and a corpus that notes which commit a pass read keeps that note outside the graph.",
           "Two graphs written by different engine versions are compared on what both carry; the result reports each side's schema version, and a difference is a diagnostic in the result, never a refusal.",
           "It reports the Specs added and removed, and for a Spec present in both graphs the changes to its title, kind, altitude, stated readiness, relations, narrative and each section.",
-          "Inside the Design and UI sections, the open questions and any other section whose entries carry keys, it compares keyed entries by key and reports each as added, removed, changed in value or moved in order.",
-          "An unkeyed entry has no identity across the two graphs, neither its position nor its text, so it is compared as part of its whole section.",
-          "A keyed rule or flow compares with its owning list as part of its value, so a rule becoming a flow is changed; when one graph keeps no order across rules and flows, keyed entries compare by order within each list and a `ruleOrder` diagnostic names the Spec.",
+          "Inside the Design and UI sections, the open questions and other keyed sections apart from rules and flows, it compares keyed entries by key and reports each as added, removed, changed in value or moved in order.",
+          "Rule and flow entries match first by unchanged text, preferring the same key for repeated wording, then by retained key; remaining unkeyed base entries pair in list order, including an entry reworded while adding a key. An unmatched keyed base entry is removed, and an unmatched head entry is added. Other unkeyed entries have no identity across the two graphs and compare as part of their whole section.",
+          "A rule or flow with unchanged text whose key was added, removed or changed is one `keyed` change naming its old and new address, or none; only a text change is `changed`. An unchanged entry moving between rules and flows is `moved`; when one graph keeps no order across rules and flows, keyed entries compare by order within each list and a `ruleOrder` diagnostic names the Spec.",
           "It reports changes to Pack membership and order, and to the code units, verifiers and delivery facts bound to each Spec, kept apart from the authored changes because they derive from anchors.",
           "A comparison states facts about the two graphs and confers nothing. It grants no approval, raises no staleness flag, moves no readiness and never records that a pass happened.",
         ],
@@ -2872,11 +2872,11 @@ export const consumersSpecs = [
         diffShape:
           "`{ base: { schemaVersion, specs }, head: { schemaVersion, specs }, diagnostics, totals, specs: { added: [id], removed: [id], changed }, packs, bindings, leftOut }`, where `totals` counts each list and `diagnostics` lists schema-version differences, parts outside the common schema, a Pack absent from both graphs, and Specs compared without order across rules and flows; `base.specs` and `head.specs` count the Specs of the comparison scope present on each side, the scope being every Spec or, with `pack`, the Pack's members in either graph, while the top-level `specs` object carries the change lists.",
         changedSpecRow:
-          "`{ id, parts: [part] }` in the summary and `{ id, parts: [{ part, change, from, to }] }` with `detail: true`; `change` is `added`, `removed`, `changed` or `moved`, and `from` and `to` carry the values on each side.",
+          "`{ id, parts: [part] }` in the summary and `{ id, parts: [{ part, change, from, to }] }` with `detail: true`; `change` is `added`, `removed`, `changed`, `moved` or `keyed`. For `keyed`, `from` and `to` carry the old and new entry addresses, `null` meaning none; other changes carry the values on each side, a rule or flow value as `{ list, text }`. A text change while adding a key is one `changed` entry.",
         diffParts:
-          "a part is `title`, `specKind`, `altitude`, `statedReadiness`, `narrative`, `relation.<type>:<target>`, a keyed entry as `design.<key>`, `ui.<key>`, `question.<key>`, `rule.<key>` or `term.<term>`, an unkeyed list as `behavior.rules`, `behavior.flows` or `intent.openQuestions`, and any other section as its name.",
+          "a part is `title`, `specKind`, `altitude`, `statedReadiness`, `narrative`, `relation.<type>:<target>`, a keyed entry as `design.<key>`, `ui.<key>`, `question.<key>`, `rule.<key>` or `term.<term>`, an unkeyed rule or flow as `behavior.rules[<index>]` or `behavior.flows[<index>]`, using its head index; a removed unkeyed entry uses its base index with a ` (base)` mark, such as `behavior.rules[1] (base)`, so it cannot share a name with a head entry at that index; an unkeyed question list as `intent.openQuestions`, and any other section as its name.",
         movedEntry:
-          "a keyed entry whose value is unchanged and whose position among the keyed entries of its section changed is `moved`; an entry whose value changed is `changed` whatever its position.",
+          "a keyed entry whose value is unchanged and whose position among the keyed entries of its section changed is `moved`; an entry whose value changed is `changed` whatever its position. For rules and flows, unchanged text with a different key takes `keyed` precedence, then a list change or relative order change among retained entries is `moved`; anonymous entries compare order within their list. Adding or removing a key alone moves no other entry.",
         packRows:
           "`packs` rows are `{ id, change, membersAdded, membersRemoved, reordered }` for each Pack added, removed or changed in membership or order.",
         bindingRows:
@@ -4320,7 +4320,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "After the summary, the maturity map places each resolved member by its stated rung and the floor it reaches: one row per stated rung, idea to ready, and one column per floor, none to ready, each cell listing its members in authored order as short cards linked to their member cards, with its count; the row and column labels say in words where the floor sits above the statement and where the statement sits above the floor.",
+          "After the summary, the maturity map places each resolved member by its stated rung and the floor it reaches: one row per stated rung, idea to ready, and one column per floor, none to ready, each filled cell listing its members in authored order as short cards linked to their member cards, with its count, and an empty cell showing `—` alone; the table caption explains in words where the floor sits above the statement and where the statement sits above the floor.",
         ],
         ruleKeys: {
           maturityMap: "rules[0]",
@@ -4328,7 +4328,7 @@ export const consumersSpecs = [
       },
       ui: {
         maturityMap:
-          "an `sdp-maturity-map` holding a table under a `Maturity map` heading, rows headed `stated idea` to `stated ready`, columns headed `floor none` to `floor ready`, each cell its count and its members as short cards, an empty cell reading None, and a caption saying that a cell right of its row's own rung holds statements the floor already allows.",
+          "an `sdp-maturity-map` holding a table under a `Maturity map` heading, rows headed `stated idea` to `stated ready`, columns headed `floor none` to `floor ready`, each filled cell its count and its members as short cards, an empty cell reading `—` alone, and the axis explanation in the table's caption, never inside a header cell: right of the matching rung the floor is above the statement and already allows it; left of it the statement is above the floor.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -5298,9 +5298,9 @@ export const consumersSpecs = [
           "A drawing still over the bound after these folds, the context overview, one context's diagram or one layer's, writes no SVG; its text equivalent lists every box and edge the drawing would hold and then says the drawing was omitted because it exceeds the bound.",
           "A trace graph over the bound folds its largest relation group first, ties broken by direction and then by relation type, into one box that names the count and the relation and links to the Spec page's relations, until the drawing fits.",
           "A member or realization diagram over the bound writes no SVG; its text equivalent lists every member or unit and every use or realization edge, and then says the drawing was omitted because it exceeds the bound.",
-          "Every reading a fill, outline or line style marks is also in words: bands and columns carry labels, a planned component reads `planned`, a folded box reads `folded`, and an aggregated edge's count is in its text.",
+          "Every reading a fill, outline or line style marks is also in words: bands and columns carry labels, a planned component reads `planned`, a folded box reads `folded`, and an aggregated edge's count is in its text equivalent. A drawing whose edges all have one relation names it once in its legend and draws no edge label; solid `uses` and dashed `plans to use` share the use relation, with the planned wording also in the legend. A drawing with several relations keeps its labelled bands and edge labels.",
           "Each diagram is followed by its text equivalent, which states every box with its words and every edge as a sentence naming its two ends and its kind, and the SVG names it as its description.",
-          "The diagram element adds only pan, zoom and pinch, by rewriting the SVG's view box; it never moves a box or an edge, and without script the drawing shows at its own size inside a box that scrolls.",
+          "The diagram element adds only pan, zoom and pinch, by rewriting the SVG's view box; it never moves a box or an edge. With or without script the SVG is never wider than its container or larger than its own size on first view at every viewport width; pan and zoom enlarge it for reading.",
         ],
         ruleKeys: {
           buildTime: "rules[0]",
@@ -5350,7 +5350,7 @@ export const consumersSpecs = [
         textEquivalent:
           "a `details` element closed by default, summary `The diagram as text`, holding one `li` per box, `<id>: <words>`, and then one `li` per edge, `<from> <kind> <to>`, followed by `(<n> unit edges)` when the edge aggregates more than one.",
         diagramElement:
-          "`sdp-diagram` with `subject`, the Spec, Pack, component or context id the diagram is rooted at, or `architecture`, wrapping one `figure` that holds the caption, the SVG and its text equivalent; on upgrade it adds `Zoom in`, `Zoom out` and `Reset` buttons and handles drag, a wheel turned with Control or Command held, and a two-finger pinch.",
+          "`sdp-diagram` with `subject`, the Spec, Pack, component or context id the diagram is rooted at, or `architecture`, wrapping one `figure` that holds the caption, a legend `Arrows: <relation>.` when all edges share one relation, followed by `Dashed arrows: plans to use.` when that use relation includes planned uses, the SVG and its text equivalent; on upgrade it adds `Zoom in`, `Zoom out` and `Reset` buttons and handles drag, a wheel turned with Control or Command held, and a two-finger pinch.",
         elementIds:
           "a diagram's text equivalent has the id `diagram.<subject>.text` and its arrow has the id `diagram.<subject>.arrow`. A page that draws a second view of one subject inserts that view's name before `text` or `arrow`, so the Spec page's realization drawing uses `diagram.<subject>.realization.text` and `diagram.<subject>.realization.arrow`; its trace graph keeps the unqualified ids. Every id is unique on its page.",
         omittedDrawing:
@@ -5903,9 +5903,9 @@ export const consumersSpecs = [
         rules: [
           "The page set holds `diff.html` only when the build was given a base graph; without one, no page, link or change note names a diff.",
           "The page opens by naming its input: the base graph, its label when the build was given one, its schema version and its Spec count beside the built graph's, and a sentence that the comparison reads the two graphs only.",
-          "The page renders recipe 35's answer with `detail: true` over the whole corpus, in sections in this order: the totals as sentences; the Specs added, linked; the Specs removed, as their ids in text, since no page holds them; the Specs changed, each linked, with each changed part, its change in words, and for a changed value the base value and the built value as text, one above the other; the Packs whose membership or order changed; the bindings changed, kept apart and headed as derived from anchors; and the diagnostics.",
-          "Given a base graph, each changed Spec's page adds a line under its header that names the base input and lists the Spec's changed parts, linked to its row on the diff page, and each added Spec's page says it is new since the base.",
-          "Given a base graph, each Pack page adds a `Changed since the base` section after its maturity map, from recipe 35's answer for that Pack, listing its changed and added members, linked, and its own membership change.",
+          "The page renders recipe 35's answer with `detail: true` over the whole corpus, in sections in this order: the totals as sentences; the Specs added, linked; the Specs removed, as their ids in text, since no page holds them; the Specs changed, each linked, with each changed part, its change in words, and for a changed value the base value and the built value as readable text blocks or lists, one above the other, never a raw JSON array; keyed changes list in the head's rule and flow order, each as one line with the entry's text rendered as on its Spec page beside its old and new address or `none`; the Packs whose membership or order changed; the bindings changed, kept apart and headed as derived from anchors; and the diagnostics.",
+          "Given a base graph, each changed Spec's page adds a line under its header that names the base input, counts keyed parts apart as `<n> rules keyed, wording unchanged` beside any other changed parts it lists, and links to its row on the diff page; each added Spec's page says it is new since the base.",
+          "Given a base graph, each Pack page adds a `Changed since the base` section after its maturity map, from recipe 35's answer for that Pack, listing its changed and added members, linked, and its own membership change; a member whose only changes are keying is marked `keyed only`.",
           "The page and the change notes state differences between two graphs and confer nothing: no approval, staleness or readiness, and no record that a design pass happened.",
         ],
         ruleKeys: {
@@ -5932,11 +5932,11 @@ export const consumersSpecs = [
         baseLine:
           "`Compared with the base graph <label>, schema <version>, <n> Specs; the built graph has schema <version>, <m> Specs.`, the label left out when none was given.",
         changedSpec:
-          "the title linked, the id as code, then one row per part: the part as code, its change in words, and for a changed value two labelled blocks, `Base` and `Now`, holding the values as text; the block's element id is the Spec's id, which the Spec page's change note links to.",
+          "the title linked, the id as code, then one row per part: the part as code, its change in words, `keyed` changes in the head's rule and flow order, each as one line with the entry's text rendered as on its Spec page beside `Base` and `Now` addresses or `none`, and for a changed value two labelled blocks, `Base` and `Now`, holding readable text or lists without a raw JSON array; the block's element id is the Spec's id, which the Spec page's change note links to.",
         bindingRow:
           "the Spec linked, then for implementing units, referencing units, enabled verifiers and delivery facts the ids added and removed, under the heading `Bindings, derived from anchors`.",
         changeNote:
-          "`Changed since the base graph <label>:` and the changed parts as code, linked to the Spec's row on the diff page.",
+          "`Changed since the base graph <label>:` followed by `<n> rules keyed, wording unchanged` when any parts are keyed, using `rule` for one, beside the other changed parts as code, linked to the Spec's row on the diff page.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -6104,7 +6104,7 @@ export const consumersSpecs = [
         runHeader:
           "`Run <n>: external run evidence from <tool> <version>`, `<n>` the input's position counting from 1 and the version left out when the record names none, then a line with the build, branch, commit and times, each labelled, a time written as an ISO 8601 UTC time from the milliseconds the record holds.",
         fileRow:
-          "the file as text with a copy action, the anchors in it as code, the Specs they verify as links, then a table of results with columns name, suite, result and duration.",
+          "the file as text with a copy action, the anchors in it as code, the Specs they verify as links, then a table of results with columns name, suite, result and duration. A duration shows milliseconds with at most two decimals, rounded and without trailing zeroes, as `2.84 ms`, `0.46 ms` or `12 ms`; short headers and one-word cells never break inside a word.",
         unjoinedRow:
           "the test's name, its file path or `no file path`, its result in words, and the reason.",
       },

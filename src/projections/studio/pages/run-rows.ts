@@ -100,7 +100,7 @@ export function runRows(
               r.input === input.index && (inputIndex === undefined || input.index === inputIndex),
           );
           if (!results.length) return "";
-          return `${inputIndex === undefined ? runHeader(input, 4) : ""}<div class="table-scroll" role="region" aria-label="External test file results" tabindex="0"><table><thead><tr><th>Name</th><th>Suite</th><th>Result</th><th>Duration</th></tr></thead><tbody>${results.map((r) => `<tr data-run-result><td>${escape(r.name)}</td><td>${recorded(r.suite)}</td><td>${escape(r.status)}</td><td>${r.duration === null ? "not recorded" : `${String(r.duration)} ms`}</td></tr>`).join("")}</tbody></table></div>`;
+          return `${inputIndex === undefined ? runHeader(input, 4) : ""}<div class="table-scroll" role="region" aria-label="External test file results" tabindex="0"><table><thead><tr><th>Name</th><th>Suite</th><th>Result</th><th>Duration</th></tr></thead><tbody>${results.map((r) => `<tr data-run-result><td>${escape(r.name)}</td><td>${recorded(r.suite)}</td><td>${escape(r.status)}</td><td>${r.duration === null ? "not recorded" : `${String(Number(r.duration.toFixed(2)))} ms`}</td></tr>`).join("")}</tbody></table></div>`;
         })
         .join("");
       return `<section class="run-file">${heading}${sections}</section>`;
