@@ -240,7 +240,7 @@ export const protocolSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:protocol.roadmap-replaces-plans",

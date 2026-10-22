@@ -73,6 +73,11 @@ export const structuralMembershipExceptions = [
  */
 export const acceptedArchitecturalUnits = [
   {
+    unit: "test/recipes.test.ts#capabilityMapRecipeImplementationAnchor",
+    anchorId: "impl:protocol.capability-map-recipe",
+    componentId: "component:protocol.reader",
+  },
+  {
     unit: "src/studio-elements/memo.ts#renderMemo",
     anchorId: "impl:protocol.studio-proposal-memo",
     componentId: "component:protocol.studio-elements",

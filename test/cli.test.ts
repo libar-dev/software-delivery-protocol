@@ -304,7 +304,6 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
       for (const [file, specId] of [
-        ["specs/consumers/capability-map.sdp.md", "spec:consumers.capability-map"],
         ["specs/consumers/design-slice.sdp.md", "spec:consumers.design-slice"],
         ["specs/consumers/roadmap.memo.sdp.md", "spec:consumers.roadmap.memo"],
         ["specs/consumers/roadmap.sdp.md", "spec:consumers.roadmap"],
@@ -359,7 +358,6 @@ describe("sdp cli", () => {
         ["specs/consumers/spec-studio.slice-page.sdp.md", "spec:consumers.spec-studio.slice-page"],
         ["specs/extraction/executable-examples.sdp.md", "spec:extraction.executable-examples"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
-        ["specs/protocol/capability-epics.sdp.md", "spec:protocol.capability-epics"],
         ["specs/protocol/roadmap-replaces-plans.sdp.md", "spec:protocol.roadmap-replaces-plans"],
         ["specs/protocol/role-vocabulary.sdp.md", "spec:protocol.role-vocabulary"],
         [
@@ -370,10 +368,12 @@ describe("sdp cli", () => {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
-      // Re-measured from the refreshed carriers: no prose-mention pair is retained. The owner's
-      // ready statements on plan 47's roadmaps-and-slices Pack add 22 verifier gaps beside the
-      // retained one on the Spec-sections Model.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 23 warnings");
+      for (const specId of ["spec:consumers.capability-map", "spec:protocol.capability-epics"]) {
+        expect(stderr).not.toContain(`honesty/gaps — Spec "${specId}"`);
+      }
+      // Re-measured with the capability map and epic-organization verifiers: no prose-mention
+      // pair is retained, and the remaining ready gaps include the Spec-sections Model.
+      expect(capture.readStdout()).toContain("validate: 0 errors · 21 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

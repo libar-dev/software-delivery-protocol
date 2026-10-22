@@ -21,6 +21,29 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.capability-map-recipe",
+    nodeType: "CodeNode",
+    file: "test/recipes.test.ts",
+    constant: "capabilityMapRecipeImplementationAnchor",
+    site: 'describe("the capability map recipe",',
+    label: "asserts realization of The capability map in docs/agent-surface/recipes.md",
+    role: "projection",
+  },
+  {
+    id: "test:protocol.capability-map",
+    nodeType: "Anchor",
+    file: "test/recipes.test.ts",
+    constant: "capabilityMapRecipeTestAnchor",
+    site: 'describe("the capability map recipe",',
+  },
+  {
+    id: "test:protocol.capability-epics",
+    nodeType: "Anchor",
+    file: "test/recipes.test.ts",
+    constant: "capabilityEpicsTestAnchor",
+    site: 'describe("the Protocol\'s capability epics",',
+  },
+  {
     id: "test:protocol.studio-navigation",
     nodeType: "Anchor",
     file: "test/studio-s3.test.ts",
@@ -4312,6 +4335,10 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.capability-map-recipe", "satisfies", "spec:consumers.capability-map"],
+  ["impl:protocol.capability-map-recipe", "references", "spec:decisions.epics-of-any-kind"],
+  ["test:protocol.capability-map", "verifies", "spec:consumers.capability-map"],
+  ["test:protocol.capability-epics", "verifies", "spec:protocol.capability-epics"],
   ["impl:protocol.studio-pack-page", "satisfies", "spec:consumers.spec-studio.components"],
   ["impl:protocol.studio-diagram-element", "satisfies", "spec:consumers.spec-studio.components"],
   [

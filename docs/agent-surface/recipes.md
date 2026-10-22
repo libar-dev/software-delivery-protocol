@@ -53,6 +53,7 @@
 | 49 | The proposal memo | proposal | Render a proposal as the memo the composing panel hands off |
 | 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
+| 52 | The capability map | epic, detail | Read capability epics, distinct descendants and direct binding evidence |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -5160,5 +5161,198 @@ return {
   entries: rows,
   unresolved,
   findings,
+};
+```
+
+## 52. The capability map
+
+Read every epic and its distinct refinement descendants, or pass `params.epic` to select one
+epic and its descendants. Every kind participates. The default summary (`params.detail` absent
+or false) keeps every total, each epic's title, direct epic parents and rollup, unreached ids,
+cycles and damage. `leftOut` names what `detail: true` adds: node rows, edges, descendant ids
+and unreached roots. A parameter refusal returns `diagnostics` without a map; unknown names
+return `unknownParams` and `accepts`. Inspect `damage` and `cycles` on a returned map.
+The contract is `spec:consumers.capability-map#design.mapRecipe` through its keyed answer entries.
+
+```js
+const accepts = ["epic", "detail"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const detail = params.detail ?? false;
+if (params.detail !== undefined && typeof params.detail !== "boolean") {
+  return { diagnostics: [{ parameter: "detail", problem: "Expected a boolean" }] };
+}
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const byEnds = (a, b) => compare(a.from, b.from) || compare(a.to, b.to);
+const specs = g.specs().sort((a, b) => compare(a.id, b.id));
+const byId = new Map(specs.map((spec) => [spec.id, spec]));
+if (params.epic !== undefined && (typeof params.epic !== "string" || byId.get(params.epic)?.altitude !== "epic")) {
+  return { diagnostics: [{ parameter: "epic", problem: "Expected a resolving epic Spec id" }] };
+}
+const allEdges = graph.edges.filter((edge) => edge.type === "refines" && edge.claim === "declared");
+const edges = allEdges.filter((edge) => byId.has(edge.from) && byId.has(edge.to)).sort(byEnds);
+const parents = new Map(specs.map((spec) => [spec.id, new Set()]));
+const children = new Map(specs.map((spec) => [spec.id, new Set()]));
+for (const edge of edges) {
+  parents.get(edge.from).add(edge.to);
+  children.get(edge.to).add(edge.from);
+}
+for (const adjacency of [parents, children]) {
+  for (const [id, neighbors] of adjacency) adjacency.set(id, [...neighbors].sort(compare));
+}
+const reach = (root) => {
+  const seen = new Set();
+  const todo = [root];
+  while (todo.length > 0) {
+    const id = todo.pop();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    for (const child of children.get(id)) todo.push(child);
+  }
+  return seen;
+};
+const epicIds = specs.filter((spec) => spec.altitude === "epic").map((spec) => spec.id);
+const reaches = new Map(epicIds.map((id) => [id, reach(id)]));
+const selected = params.epic === undefined ? new Set(byId.keys()) : reaches.get(params.epic);
+const nodes = specs.filter((spec) => selected.has(spec.id)).map((spec) => ({
+  id: spec.id,
+  title: spec.title,
+  specKind: spec.specKind,
+  altitude: spec.altitude,
+  statedReadiness: spec.statedReadiness,
+  floorReached: spec.derivedReadiness ?? "none",
+  deliveryFacts: spec.deliveryFacts,
+  questions: (g.specContext(spec.id).sections?.intent?.openQuestions ?? []).map((question, index) => ({
+    index,
+    address: question.key ? `${spec.id}#question.${question.key}` : null,
+    question: question.question,
+    blocking: question.blocking,
+  })),
+  parents: parents.get(spec.id),
+  children: children.get(spec.id),
+  epicIds: epicIds.filter((id) => reaches.get(id).has(spec.id)),
+}));
+const nodeById = new Map(nodes.map((node) => [node.id, node]));
+const count = (ids) => {
+  const zeroes = (keys) => Object.fromEntries(keys.map((key) => [key, 0]));
+  const counts = {
+    specs: ids.length,
+    byStatedReadiness: zeroes(["idea", "scoped", "defined", "ready"]),
+    byFloorReached: zeroes(["none", "idea", "scoped", "defined", "ready"]),
+    byKind: zeroes(["behavior", "workflow", "example", "rule", "constraint", "model", "decision", "contract"]),
+    byAltitude: zeroes(["epic", "feature", "story"]),
+    withImplementationBinding: 0,
+    withVerifierBinding: 0,
+    openQuestions: 0,
+    blockingQuestions: 0,
+  };
+  for (const id of ids) {
+    const node = nodeById.get(id);
+    counts.byStatedReadiness[node.statedReadiness]++;
+    counts.byFloorReached[node.floorReached]++;
+    counts.byKind[node.specKind]++;
+    counts.byAltitude[node.altitude]++;
+    counts.withImplementationBinding += Number(node.deliveryFacts.includes("implemented"));
+    counts.withVerifierBinding += Number(node.deliveryFacts.includes("has-verifier"));
+    counts.openQuestions += node.questions.length;
+    counts.blockingQuestions += node.questions.filter((question) => question.blocking).length;
+  }
+  return counts;
+};
+// Two iterative passes keep cycles finite without using the call stack for long branches.
+const components = (ids) => {
+  const allowed = new Set(ids);
+  const seen = new Set();
+  const finished = [];
+  for (const root of ids) {
+    if (seen.has(root)) continue;
+    seen.add(root);
+    const stack = [{ id: root, next: 0 }];
+    while (stack.length > 0) {
+      const frame = stack[stack.length - 1];
+      const neighbors = children.get(frame.id);
+      if (frame.next === neighbors.length) {
+        finished.push(frame.id);
+        stack.pop();
+        continue;
+      }
+      const child = neighbors[frame.next++];
+      if (allowed.has(child) && !seen.has(child)) {
+        seen.add(child);
+        stack.push({ id: child, next: 0 });
+      }
+    }
+  }
+  seen.clear();
+  const groups = [];
+  for (const root of finished.reverse()) {
+    if (seen.has(root)) continue;
+    const group = [];
+    const todo = [root];
+    seen.add(root);
+    while (todo.length > 0) {
+      const id = todo.pop();
+      group.push(id);
+      for (const parent of parents.get(id)) {
+        if (allowed.has(parent) && !seen.has(parent)) {
+          seen.add(parent);
+          todo.push(parent);
+        }
+      }
+    }
+    groups.push(group.sort(compare));
+  }
+  return groups.sort((a, b) => compare(a[0], b[0]));
+};
+const ids = nodes.map((node) => node.id);
+const unreached = nodes.filter((node) => node.epicIds.length === 0).map((node) => node.id);
+const unreachedSet = new Set(unreached);
+const roots = components(unreached).filter((group) => {
+  const members = new Set(group);
+  return !group.some((id) => parents.get(id).some((parent) => unreachedSet.has(parent) && !members.has(parent)));
+}).map((group) => group[0]).sort(compare);
+const cycles = components(ids).filter((group) => group.length > 1 || children.get(group[0]).includes(group[0])).map((members) => ({ members }));
+const epics = epicIds.filter((id) => selected.has(id)).map((id) => {
+  const descendantIds = [...reaches.get(id)].filter((child) => child !== id && selected.has(child)).sort(compare);
+  return {
+    id,
+    title: byId.get(id).title,
+    parentEpicIds: parents.get(id).filter((parent) => byId.get(parent).altitude === "epic"),
+    descendantIds,
+    rollup: count(descendantIds),
+  };
+});
+const damage = allEdges.filter((edge) => (!byId.has(edge.from) || !byId.has(edge.to)) &&
+  (params.epic === undefined || selected.has(edge.from) || selected.has(edge.to)))
+  .map((edge) => ({ code: "unresolved-refinement", from: edge.from, to: edge.to })).sort(byEnds);
+const input = { epic: params.epic === undefined ? null : params.epic };
+const totals = { ...count(ids), epics: epics.length, reached: ids.length - unreached.length, unreached: unreached.length };
+if (detail) {
+  return {
+    input,
+    totals,
+    nodes,
+    edges: edges.filter((edge) => selected.has(edge.from) && selected.has(edge.to)).map((edge) => ({
+      from: edge.from, to: edge.to, claim: "declared", reason: edge.reason ?? null,
+    })),
+    epics,
+    unreached: { ids: unreached, roots },
+    cycles,
+    damage,
+  };
+}
+return {
+  input,
+  totals,
+  epics: epics.map(({ id, title, parentEpicIds, rollup }) => ({ id, title, parentEpicIds, rollup })),
+  unreached: { ids: unreached },
+  cycles,
+  damage,
+  leftOut: [
+    "nodes: full Spec rows and memberships",
+    "edges: selected refinement edges and reasons",
+    "epics.descendantIds: distinct descendant ids",
+    "unreached.roots: roots for complete refinement text",
+  ],
 };
 ```
