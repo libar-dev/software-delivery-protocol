@@ -76,7 +76,9 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
       "spec:orders.order-model",
       "spec:decisions.order-lifecycle",
     ];
-    const pack = extraction.graph.nodes.find((node) => node.id === "pack:checkout-v1");
+    const pack = extraction.graph.nodes
+      .filter((node) => node.nodeType === "Pack")
+      .find((node) => node.id === "pack:checkout-v1");
     expect(pack?.members).toEqual(members);
     expect(
       createReader(extraction.graph)

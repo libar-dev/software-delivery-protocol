@@ -26,7 +26,10 @@ describe("the shipped diagram catalog", () => {
     const design = context?.sections?.design ?? {};
     const choices = Object.entries(design)
       .filter(([, value]) => /^(Draw|Equivalent|Defer|Refuse)\b/u.test(String(value)))
-      .map(([key, value]) => [key, /^(Draw|Equivalent|Defer|Refuse)\b/u.exec(String(value))?.[1]]);
+      .map(
+        ([key, value]) =>
+          [key, /^(Draw|Equivalent|Defer|Refuse)\b/u.exec(String(value))?.[1]] as const,
+      );
     expect(Object.fromEntries(choices)).toEqual({
       flowchart: "Draw",
       mindmap: "Draw",
