@@ -214,7 +214,7 @@ Made by the executing thread on the owner's delegation; each awaits the owner's 
 | The package smoke test packs a scratch copy of the package: npm 10 runs `prepare` on `npm pack` even with `--ignore-scripts`, which rebuilt `dist/` mid-suite on CI's Node 20 | — |
 | A copied Pack request keeps its action and scope: a member change names the member Specs with the Pack as context, a Pack change names the Pack (Greptile's first thread on PR 35) | `spec:consumers.spec-studio.intent-panel#rule.textApart` |
 | An example space with no enumerable slot reads "not measurable", with its own filter, and never counts as covered (Greptile's second thread) | `spec:consumers.spec-studio.lenses.tests#rule.coverageRows`, `#rule.filters` |
-| The smoke test's installs, the npm 11 reference among them, skip npm's audit request: the registry's audit endpoint stalled two of PR 35's CI runs for seven minutes | — |
+| The smoke test's installs skip npm's audit request, and its npm 11 reference runs in process: npm 11.6.2's own Arborist and npm-packlist, pinned as devDependencies, so the selection test needs no registry. The registry stalled two of PR 35's CI runs for seven minutes | — |
 
 ## Rulings by the coordinating session during the close
 
