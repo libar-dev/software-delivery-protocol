@@ -51,7 +51,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **Scenario** | a low-altitude `example`-kind `Spec` that `refines`/`verifies` a Story | an altitude or a kind |
 | **NFR** | a `constraint` with a measurable `target`; the *flavor* (performance / security / …) lives on the section | a separate kind |
 | **Executable Spec** | an `example` that **has a verifier** (a delivery fact) | a readiness rung |
-| **capability / domain** | a **`Pack` grouping** and/or a designed-for Capability Map projection over epic Specs of every kind and their declared `refines` descendants (epics of any kind, MD-48); Pack membership and refinement remain distinct, and the Capability Map is not yet built (`spec:consumers.capability-map`, `spec:consumers.spec-studio.lenses.packs#rule.packGrouping`) | a kind or an altitude |
+| **capability / domain** | a **`Pack` grouping** and/or a Capability Map projection over epic Specs and their declared `refines` descendants, of every kind; Pack membership and refinement remain distinct (`spec:consumers.capability-map`, `spec:consumers.spec-studio.lenses.packs#rule.packGrouping`) | a kind or an altitude |
 
 ## Sections  (→ `spec:model.spec-sections`)
 
@@ -237,7 +237,7 @@ twelve**: these six plus the six authored relations above (`spec:extraction.deri
 |---|---|---|
 | **relation reason** | the one optional line of prose an authored relation carries saying why it holds, owned by that relation; intent, never a fact, a floor or an edge (`spec:model.relation-reasons`) | "strength" · "aspect" · "rationale" (on an edge) |
 
-## Delivery-process vocabulary  (adopted nouns; any realization is a projection, and none is built — `spec:decisions.adopt-the-nouns`, `spec:consumers.projections-model.roadmap-views`)
+## Delivery-process vocabulary  (adopted nouns; roadmap readings are built, release and baseline views remain deferred — `spec:decisions.adopt-the-nouns`, `spec:consumers.projections-model.roadmap-views`)
 
 **discipline** (a filter over the graph by kind or section, not a phase you pass through) · **phase / iteration /
 milestone** (descriptive vocabulary, optional roadmap projections, never gates) · **release** (a tagged set —

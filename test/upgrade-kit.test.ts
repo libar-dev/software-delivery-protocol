@@ -116,6 +116,8 @@ describe("upgrade kit", () => {
   it("teaches the upgrade steps in the pinned order", () => {
     expect([...guide.matchAll(/^## (.+)$/gmu)].map((match) => match[1])).toEqual([
       "Measure the corpus",
+      "Organize features in epics",
+      "Move planning and review records into the graph",
       "Propose and apply rule keys",
       "Choose capabilities to adopt",
       "Move rules files onto shipped recipes",
@@ -139,6 +141,34 @@ describe("upgrade kit", () => {
     expect(section("Publish the roots")).toContain("pnpm exec sdp generate .");
     expect(section("Pass subjects as data")).toContain("--params @adoption.json");
     expect(section("Pass subjects as data")).toContain("--params KEY=@PATH");
+  });
+  it("teaches epic reparenting and advisory roadmap adoption", () => {
+    const section = (heading: string) =>
+      guide.split(`## ${heading}\n`)[1]?.split(/^## /mu)[0] ?? "";
+    const epics = section("Organize features in epics");
+    for (const clause of [
+      "recipe 52",
+      "damage",
+      "cycles",
+      "preserve its id, kind and intent",
+      "multiple-parent",
+      "recipe 9",
+      "previously ready Spec",
+      "Unreached Specs",
+    ])
+      expect(epics).toContain(clause);
+    const records = section("Move planning and review records into the graph");
+    for (const clause of [
+      "order: priority",
+      "recipe 53",
+      "recipe 55",
+      "decider",
+      "provisional",
+      "links",
+      "recipe 38",
+      "Keep your plan and state documents",
+    ])
+      expect(records).toContain(clause);
   });
   it("runs the guide's rules file on a clean corpus with no address parameters", async () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-guide-rules-"));

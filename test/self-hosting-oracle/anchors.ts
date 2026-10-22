@@ -21,6 +21,23 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.roadmap-practice",
+    nodeType: "CodeNode",
+    label: "realizes the roadmap handbook and its current-record gate",
+    file: "test/check-self-hosting-gates.test.ts",
+    constant: "roadmapPractice",
+    site: 'describe("the self-hosting records gate",',
+    role: "validator",
+  },
+  {
+    id: "test:protocol.roadmap-practice",
+    nodeType: "Anchor",
+    file: "test/check-self-hosting-gates.test.ts",
+    constant: "roadmapPracticeTest",
+    site: 'describe("the self-hosting records gate",',
+  },
+
+  {
     id: "impl:protocol.studio-capabilities-page",
     nodeType: "CodeNode",
     label: "renders epic evidence, refinement and unreached Specs from the capability map",
@@ -4784,6 +4801,9 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.roadmap-practice", "satisfies", "spec:protocol.roadmap-replaces-plans"],
+  ["test:protocol.roadmap-practice", "verifies", "spec:protocol.roadmap-replaces-plans"],
+
   ["impl:protocol.studio-frame", "satisfies", "spec:consumers.spec-studio.capability-map-page"],
   [
     "impl:protocol.studio-index-page",

@@ -124,6 +124,49 @@ it("teaches the optional priority field in the Pack manifest envelope", () => {
   expect(pack).toContain("optional `order`, whose one lawful value is `priority`");
 });
 
+it("teaches design rounds and curates bindings by responsibility", () => {
+  const rounds = flat(skillSection(skillPaths[1], "### Design in rounds"));
+  for (const clause of [
+    "recipe 54",
+    "`idea`",
+    "`scoped`",
+    "`defined`",
+    "`ready`",
+    "only the builder",
+    "second party",
+    "design columns",
+    "No check reads this guidance",
+  ])
+    expect(rounds).toContain(clause);
+  const binding = flat(skillSection(skillPaths[1], "### Curate the anchors"));
+  for (const clause of [
+    "contract or responsibility",
+    "export status or import rank alone",
+    "Mechanical wrappers",
+    "value or type import",
+    "responsibility in its label",
+    "component's reading guidance",
+  ])
+    expect(binding).toContain(clause);
+});
+
+it("routes the next work and reviews through roadmap and proposal recipes", () => {
+  const sessions = flat(readSkill(skillPaths[2]).body);
+  for (const clause of [
+    "roadmap (recipe 53)",
+    "design slice (recipe 54)",
+    "branch-head commit",
+    "preview's merge commit",
+    "proposal memo (recipe 49)",
+    "code or other files",
+    "open question",
+  ])
+    expect(sessions).toContain(clause);
+  expect(sessions).not.toContain("plan pointers");
+  const tasks = skillSection(skillPaths[0], "### Which recipe answers a task");
+  for (const number of [52, 53, 54, 55]) expect(tasks).toContain(`recipe ${String(number)}`);
+});
+
 // A fence inside a numbered step is indented, so fences are matched after trimming.
 function shellFenceLines(body: string): readonly string[] {
   const lines: string[] = [];
@@ -197,8 +240,8 @@ function assertPlanningHomes(authoring: string): void {
     "A ruling that awaits its owner is a `decision` Spec below `ready`, with `decidedBy` from each Spec it shapes.",
     "A statement a test checks lives in the Spec that states it, plus an `example` Spec that `verifies` it.",
     "Derive a count, a register, or a review scope each time you need it:",
-    "Group a body of work in a Pack named for its capability, never its plan number; keep its Specs in reading order. Membership confers no readiness, delivery fact or gate; the Pack remains a review aggregate after the work ends.",
-    "A plan file points to the Pack and carrying Specs for intended truth and derived state. It may keep an advisory execution and recovery record; plan numbering, recorded work order and staleness confer no graph structure or workflow authority.",
+    "Group a body of work in a Pack named for its capability, never a number or a date; keep its Specs in reading order. Membership confers no readiness, delivery fact or gate; the Pack remains a review aggregate after the work ends.",
+    "Hold advisory priority over the next work in a roadmap, a Pack whose manifest states `order: priority`, and read it with recipe 53; its order confers nothing. Keep an arc's execution record in git and its pull request description. A corpus that keeps plan documents of its own lets them point to Packs and carrying Specs; they confer nothing.",
   ])
     expect(placement).toContain(home);
 }
@@ -247,7 +290,7 @@ describe("Protocol skill assets", () => {
     "A statement a test checks",
     "Derive a count",
     "Group a body of work",
-    "A plan file points",
+    "Hold advisory priority",
   ])("rejects missing planning guidance: %s", (opening) => {
     const authoring = readSkill(skillPaths[1]).body;
     const withoutHome = authoring.replace(new RegExp(`^- ${opening}[^]*?(?=^\\n|^- )`, "mu"), "");
