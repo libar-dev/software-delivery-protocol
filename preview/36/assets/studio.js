@@ -1085,13 +1085,15 @@ ${i.text}`}
         this.update();
       };
       reset = () => {
-        for (const select of Array.from(
-          this.querySelectorAll("select[data-filter]")
-        ))
-          select.value = "any";
-        const note = this.querySelector("[data-filter-note]");
-        if (note) note.textContent = "";
-        this.update();
+        queueMicrotask(() => {
+          for (const select of Array.from(
+            this.querySelectorAll("select[data-filter]")
+          ))
+            select.value = "any";
+          const note = this.querySelector("[data-filter-note]");
+          if (note) note.textContent = "";
+          this.update();
+        });
       };
       preventSubmit = (event) => {
         event.preventDefault();
