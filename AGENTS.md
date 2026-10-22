@@ -21,8 +21,9 @@ code behavior into intent.
 > the owner's queue as pages, the design diff, run evidence, the composing panel, previews per
 > pull request), the vault, and the adopter's loop at scale (recipes called from rules files, step
 > keys, term addresses, checked declarations, bundles in parts, the readiness planner, the upgrade
-> kit). The rulings were made on the owner's delegation; the plan lists the decisions only the
-> owner makes.
+> kit). The rulings were made on the owner's delegation and the owner confirmed them; the owner
+> ratified the Studio's two decisions and the vault's (MD-43 to MD-45) and turned on the per-pull-
+> request preview. The plan lists what stays the owner's: the platform's statements and the merges.
 > **plan 45 is EXECUTED**, merged as PR 33. Design at the adopter's
 > scale: the adopter installs from a commit, the design-pass loop fits a large corpus
 > (`declarations: "addresses"`, recipe 41), corpus rules run under `sdp validate --rules` with

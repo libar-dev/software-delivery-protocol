@@ -2,8 +2,8 @@
 
 > **Status:** ✅ EXECUTED on `feature/studio-and-adoption-v0`, from `main` at `5a0b22c`, the merge
 > of PR 33, as PR 35. One branch and one PR. Every lane landed, each reviewed across model families;
-> the rulings were made on the owner's delegation of 2026-10-21 and await the owner's review; the
-> decisions only the owner makes are listed apart. A thin
+> the rulings were made on the owner's delegation of 2026-10-21, and the owner confirmed them on
+> 2026-10-22 and ruled on its own list; what stays the owner's is listed apart. A thin
 > lineage pointer: once the design passes land, readiness, backlog and open questions are read
 > from the graph (recipes 1, 9, 11, 20, 29, 33), never from this file. If this file and the graph
 > disagree, the graph wins and this file is stale.
@@ -129,14 +129,14 @@ on evidence from the platform's design passes.
 
 Wave 1 merged at `1f4d276`. Five Opus 5.5 design passes (S; V; K; R, D, B, Q and U
 together; G), each reviewed by gpt-6-sol, and S and the combined pass also by Kimi K3, and
-answered before the executing thread ruled. Delegated; each awaits the owner's review. The
+answered before the executing thread ruled. Delegated; the owner confirmed each on 2026-10-22. The
 passes' own recommendations stand as their carrying Specs state them; the rows below are the ones
 a reader of the PR most needs.
 
 | Ruling | Carrying Spec |
 | --- | --- |
 | A diagram holds at most 40 boxes and 100 edges; the architecture diagram is a grid of contexts by layers; a drawing still over the bound after every fold shows only its text equivalent | `spec:consumers.spec-studio.diagrams` |
-| The build renders every view and an element only enhances it; this refines the custom-elements decision and awaits the owner's ratification | `spec:decisions.studio-build-renders` |
+| The build renders every view and an element only enhances it; this refines the custom-elements decision, and the owner ratified it (MD-43) | `spec:decisions.studio-build-renders` |
 | Planned components sit in the architecture grid, dashed and labelled `planned`, and are listed again as designed, not built | `spec:consumers.spec-studio.lenses.architecture#rule.plannedApart` |
 | Recipe 17 adds each component's label, file, line, role, layer, context, references and per-pair use counts; every field it returns today keeps its meaning | `spec:consumers.spec-studio.lenses.architecture#design.componentRows` |
 | The build evaluates each shipped recipe a page shows once per build, so a page and an agent read one answer | `spec:consumers.spec-studio.data.recipe-answers` |
@@ -152,7 +152,7 @@ a reader of the PR most needs.
 | The statement queue orders by the four relations the ready floor reads, and a `refines` yields where the other Spec names it back; a cycle settles in one round | `spec:consumers.readiness-planner` |
 | The all-roots verb is `sdp generate`; it synchronizes the vault at its folder or at `--vault DIR` before it publishes any root, and leaves the vault alone under `--check-clean` | `spec:consumers.command-line#design.vaultRoot` |
 | A step key is not an entry address; keys are unique per Spec and shared by a sibling set through its vocabulary | `spec:carrier.step-keys` |
-| The vault's generator owns one folder and a file list of what it wrote, refuses rather than overwrite, and synchronizes instead of rewriting; this awaits the owner's ratification | `spec:decisions.vault-owned-folder` |
+| The vault's generator owns one folder and a file list of what it wrote, refuses rather than overwrite, and synchronizes instead of rewriting; the owner ratified it (MD-45) | `spec:decisions.vault-owned-folder` |
 | The superseded-decision warning is `conformance/superseded-decisions`; a branching chain names every end, and a loop names its members | `spec:validation.superseded-decision-signal` |
 | A dropped TypeScript question list stays a warning, as the plan's provisional answer ruled; the owner may prefer an error | `spec:model.open-question-fields#rule.droppedListWarning` |
 | A design pass that adds promises to a ready, implemented Spec puts them in a defined child, or enriches the Spec in place only when the same branch builds them before it merges | — |
@@ -162,7 +162,8 @@ every non-example Spec the passes designed or matured, among them the plan's eig
 candidates, the Studio's phase-1 Specs, the vault's four, the adopter lanes' new Specs, step keys
 and term addresses. Examples stay `defined` until a build binds them. The three new decisions,
 `spec:decisions.studio-build-renders`, `spec:decisions.studio-diagram-renderer` and
-`spec:decisions.vault-owned-folder`, stay `defined` for the owner to ratify. Each new `ready`
+`spec:decisions.vault-owned-folder`, stayed `defined` for the owner, who ratified all three at the
+close (MD-43 to MD-45). Each new `ready`
 Spec reports an honest verifier gap until wave 2 binds it.
 
 ## Rulings after wave 2 and at close
@@ -178,7 +179,7 @@ each re-reviewed by Opus and fixed again, then a last verified pass. The records
 not rewritten: the wave-2a merges from K to BQ do not typecheck, and four wave-2b merges fail two
 CLI tests the closing commit repaired; bisect from the merges either side of them.
 
-Made by the executing thread on the owner's delegation; each awaits the owner's review.
+Made by the executing thread on the owner's delegation; the owner confirmed each on 2026-10-22.
 
 | Ruling | Carrying entry |
 | --- | --- |
@@ -224,16 +225,25 @@ Made by the executing thread on the owner's delegation; each awaits the owner's 
 
 ## Decisions only the owner makes
 
-These wait for the owner. None blocks the build; each is listed in the PR description.
+The owner ruled on 2026-10-22 through the coordinating session, taking its high-confidence
+opinions as rulings. The owner also confirmed every delegated ruling in the tables above and the
+fifteen glossary rows.
+
+| Decision | Ruling | Where it lands |
+| --- | --- | --- |
+| Ratify the Studio's two decisions and the vault's | Ratified: the build renders Studio views (MD-43), the engine lays out Studio diagrams (MD-44) and the vault owns one folder (MD-45); each states `ready` and has its registry row | This PR |
+| Turn on a public host for Studio previews, on this repository and on libar-platform | GitHub Pages serves the `gh-pages` branch of both; the Protocol's CI now deploys each pull request's preview under `/preview/<number>/` | This PR for the Protocol; the platform's mass update for the platform |
+| What of the earlier system the platform may cite (lineage roots) | For now, its earlier system, `@libar-dev/architect` (Architect); recipe 50 checks those citations against a register of Architect references the platform keeps | The platform's mass update |
+| Whether the Studio replaces the platform's committed Pack page (its decision 58) | It does: people read the per-pull-request Studio preview, and agents read recipes 29 and 36 | The platform's mass update |
+| A first npm release | Deferred until a few things are addressed first | A later PR |
+| A heavy cleanup of superseded material and review reports | Deferred | A later arc |
+
+Still the owner's:
 
 | Decision | Why it is the owner's | What waits on it |
 | --- | --- | --- |
-| Turn on a public host for Studio previews, such as GitHub Pages, on this repository and on libar-platform | Both repositories are public, so previews would be public pages, and enabling a host changes repository settings | Previews at a stable URL; until then the page set is a CI artifact |
-| Whether the Studio replaces the platform's committed Pack page (its decision 58) | It is the platform's decision and its review habit | The platform retiring `scripts/pack-page.mjs` |
-| What of the earlier system the platform may cite (lineage roots) | Content and provenance, not mechanism | What recipe 50 is given to check |
 | The platform's `ready` statements | A rung is a person's statement; the planner only orders them | The platform's build backlog and drift alarm (9 implemented Specs not stated `ready`) |
 | Merging libar-platform#13, then this PR | Merges are the owner's | The mass update starts from both |
-| A first npm release, optional | Publishing a package is public and lasting; installs from a commit work now | Nothing in this PR |
 
 ## Acceptance
 
@@ -304,6 +314,8 @@ results are in `reviews/plan46-acceptance.md`. Re-run them rather than inheritin
 | Freshness that follows bound-file changes | A reader is misled by a run whose commit matches but whose files moved |
 | Coverage of slot combinations | A design pass asks which combinations no example exercises |
 | Exhaustive symbol reach, the gen-1 `.feature` adapter, the reference projection, roadmap views | Their recorded triggers, unchanged |
+| A first npm release | The owner deferred it until a few things are addressed first |
+| A heavy cleanup of superseded material and review reports | The owner deferred it to a later arc |
 
 ## Refused
 
