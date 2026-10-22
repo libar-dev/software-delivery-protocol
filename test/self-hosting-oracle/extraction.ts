@@ -312,7 +312,7 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            then: ['the payload declares the schema version {schemaVersion: "0.11.0"}'],
+            then: ['the payload declares the schema version {schemaVersion: "0.12.0"}'],
           },
         ],
       },
@@ -890,7 +890,7 @@ export const extractionSpecs = [
       behavior: {
         rules: [
           "A Pack node carries `members`, the manifest's `specs` list in authored order, a repeat included where the carrier admits one. The `belongsTo` edges re-express the same list, one edge per entry, so the members of a Pack node and the sources of its `belongsTo` edges are one list read twice and never disagree in a derived graph.",
-          "`members` is always present on a Pack node, and an empty manifest list derives `members: []`. The serialized Pack node writes its fields in the order `id`, `nodeType`, `claim`, `title`, `framing`, `file`, `members`, `modelRefs`, omitting an absent optional field.",
+          "`members` is always present on a Pack node, and an empty manifest list derives `members: []`. The serialized Pack node writes its fields in the order `id`, `nodeType`, `claim`, `title`, `framing`, `file`, `members`, `modelRefs`, `order`, omitting an absent optional field.",
           "Nodes keep their sort by id and edges keep their sort by from, type, and to. Authored member order is content of the Pack node, as authored entry order is content of a Spec's open sections, so two derivations of one commit stay byte-identical and two manifests that list the same members in different orders derive different Pack nodes.",
           "The reader's Pack context lists one member row per entry of `members`, in that order, and its verifier gaps follow the same order. The Design Review's Pack page renders its member table and its verifier gap list in that order.",
           "A repeated member is kept only where its carrier admits it. TypeScript keeps repetitions in `members` and reader rows, and pack-coherence reports the duplicate `belongsTo` edge. Markdown refuses a repeated manifest member with `extract/invalid-frontmatter` and the message `duplicate entry in specs`.",

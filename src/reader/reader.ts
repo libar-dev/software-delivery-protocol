@@ -69,6 +69,7 @@ export interface PackSummary {
   readonly framing?: string;
   readonly file: string;
   readonly modelRefs: readonly string[];
+  readonly order?: "priority";
 }
 
 /** One decoded relation end: the edge, its `claim`, and the other endpoint's display data. */
@@ -687,7 +688,7 @@ function packBoundary(
  * @sdpAnchor impl:protocol.reader
  * @sdpLabel thin typed graph reader construction
  * @sdpReferences spec:consumers.agent-surface.answer-shapes
- * @sdpSatisfies spec:consumers.reader, spec:extraction.entry-locations, spec:validation.next-rung-floor
+ * @sdpSatisfies spec:consumers.reader, spec:extraction.entry-locations, spec:validation.next-rung-floor, spec:extraction.pack-member-order
  * @sdpComponent component:protocol.reader
  * @sdpUses impl:protocol.delivery-facts, impl:protocol.next-rung-floor
  * @sdpRole reader
@@ -868,6 +869,7 @@ export function createReader(graph: GraphSchema, report?: ValidationReport): Rea
     ...(node.framing === undefined ? {} : { framing: node.framing }),
     file: node.file,
     modelRefs: node.modelRefs ?? [],
+    ...(node.order === undefined ? {} : { order: node.order }),
   });
 
   const primitiveNodes = (): readonly PrimitiveNode[] =>

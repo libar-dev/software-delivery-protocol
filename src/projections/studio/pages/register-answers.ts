@@ -170,6 +170,9 @@ export interface Diff {
     readonly membersAdded: readonly string[];
     readonly membersRemoved: readonly string[];
     readonly reordered: boolean;
+    readonly orderChanged: boolean;
+    readonly orderBefore: "reading" | "priority" | null;
+    readonly orderAfter: "reading" | "priority" | null;
   }[];
   readonly bindings?: readonly {
     readonly id: string;

@@ -580,7 +580,7 @@ describe("Studio base comparison", () => {
     expect(diff).toContain("1 Spec added.");
     expect(diff).toContain("1 Spec removed.");
     expect(diff).toContain("1 Spec changed.");
-    expect(diff).toContain("1 Pack with membership or order changes.");
+    expect(diff).toContain("1 Pack with membership, member order or order meaning changes.");
     expect(diff).toContain("1 Spec with binding changes.");
     expect(diff).toContain("&lt;script&gt;before&lt;/script&gt;");
     expect(diff).not.toContain("<script>");
@@ -601,9 +601,9 @@ describe("Studio base comparison", () => {
     expect(main(content(first, "specs/probe.added.html"))).toContain(
       "New since the base graph &lt;first&gt;",
     );
-    expect(pack).toContain("Base input: schema 0.11.0, 2 Specs.");
+    expect(pack).toContain("Base input: schema 0.12.0, 2 Specs.");
     expect(main(content(first, "specs/probe.alpha.html"))).toContain(
-      "Base input: schema 0.11.0, 2 Specs.",
+      "Base input: schema 0.12.0, 2 Specs.",
     );
     expect(content(first, "diff.html")).toContain('href="diff.html" aria-current="page"');
   });

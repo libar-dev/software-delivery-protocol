@@ -279,6 +279,8 @@ export const modelSpecs = [
             "A declared manifest reference that derives a belongsTo edge; a Spec may belong to many Packs.",
           modelRefs:
             "References from a Pack to standalone model Specs that carry shared vocabulary.",
+          "priority order":
+            "The authored member order of a Pack whose manifest states `order: priority`, read as its owner's advisory preference among its members; it confers nothing and sequences nothing.",
           refinement:
             "A truth-bearing parent-child relation, distinct from the cross-cutting Pack aggregate.",
         },

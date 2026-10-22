@@ -21,7 +21,7 @@ import { entryAddressSlotReason } from "./reify.js";
 
 const relationTypes = new Set<string>(SPEC_RELATION_TYPES);
 const specEnvelopeKeys = new Set(["id", "kind", "altitude", "readiness", "relations"]);
-const packEnvelopeKeys = new Set(["id", "specs", "modelRefs"]);
+const packEnvelopeKeys = new Set(["id", "specs", "modelRefs", "order"]);
 const specKinds = new Set<string>(SPEC_KINDS);
 const specAltitudes = new Set<string>(SPEC_ALTITUDES);
 const specReadiness = new Set<string>(SPEC_READINESS);
@@ -232,6 +232,8 @@ export function parseMarkdownFrontmatter(
           "readiness is not a recognized spec readiness",
           extractFindingIds.nonStaticEnvelope,
         );
+      else if (name === "order" && value !== "priority")
+        report(findings, file, line, 'order must be "priority"');
       else data[name] = value;
     }
     for (const required of requiredFields)

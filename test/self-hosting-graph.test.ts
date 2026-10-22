@@ -263,19 +263,20 @@ describe("the self-hosting corpus", () => {
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
     // Re-measured from the refreshed tree: 428 Markdown Specs and four Gherkin Specs,
-    // 432 in the self-hosting Pack; nine Pack manifests and 543 source anchors.
-    // The excluded-root validate run corroborates 984 nodes and 2727 edges; the advisory review's
-    // accepted changes added the latest eight: five refines from the Studio's capability map,
-    // slice and roadmap pages and the legibility and edge-routing contracts to the readings they
-    // serve, and three dependsOn from the roadmap-replaces-plans behavior to the change proposal,
-    // its memo and run evidence.
-    expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 543 });
+    // 432 in the self-hosting Pack; nine Pack manifests and 544 source anchors.
+    // The excluded-root validate run corroborates 985 nodes and 2741 edges. The advisory review's
+    // accepted changes added eight: five refines from the Studio's capability map, slice and
+    // roadmap pages and the legibility and edge-routing contracts to the readings they serve, and
+    // three dependsOn from the roadmap-replaces-plans behavior to the change proposal, its memo and
+    // run evidence. The priority field adds one verifier, its bindings, and the Specs' decision
+    // relations.
+    expect(result.counts).toEqual({ specs: 432, packs: 9, anchors: 544 });
     expect(expectedSpecs).toHaveLength(432);
     expect(expectedPackMembers).toHaveLength(432);
-    expect(expectedAnchors).toHaveLength(543);
-    expect(expectedBindingEdges).toHaveLength(681);
-    expect(result.graph.nodes).toHaveLength(984);
-    expect(result.graph.edges).toHaveLength(2727);
+    expect(expectedAnchors).toHaveLength(544);
+    expect(expectedBindingEdges).toHaveLength(691);
+    expect(result.graph.nodes).toHaveLength(985);
+    expect(result.graph.edges).toHaveLength(2741);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
