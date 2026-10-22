@@ -8346,6 +8346,7 @@ it("pins the adopter roadmap and its forward memo over the worked example", asyn
     toBuild: 0,
     built: 0,
     apart: 0,
+    unresolved: 0,
     questions: 0,
     blockingQuestions: 0,
     withoutDecider: 0,

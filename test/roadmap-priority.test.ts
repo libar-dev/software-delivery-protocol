@@ -50,6 +50,7 @@ const priorityAnchor = specTest({
     ref("spec:extraction.pack-member-order"),
     ref("spec:consumers.design-diff"),
     ref("spec:consumers.spec-studio.diff-page"),
+    ref("spec:consumers.spec-studio.pack-page"),
   ],
 });
 void priorityAnchor;
@@ -138,6 +139,79 @@ describe("roadmap priority manifest", () => {
 });
 
 describe("roadmap priority design diff", () => {
+  it.each([true, false])(
+    "names a removed Pack by its order meaning (priority %s)",
+    async (priority) => {
+      const base = graphOf(priority);
+      const head = { ...base, nodes: [], edges: [] };
+      const data = await createStudioData(createReader(head), undefined, {
+        base: { graph: base, label: null },
+        runs: [],
+      });
+      const html = renderStudio(data).find((page) => page.path === "diff.html")?.content ?? "";
+      expect(html).toContain("removed ·");
+      if (priority) expect(html).toContain("removed as a roadmap");
+      else expect(html).not.toContain("removed as a roadmap");
+    },
+  );
+
+  it("names an added roadmap and preserves manifest order in its member delta", async () => {
+    const source = markdown("order: priority\n").replace(
+      "specs: []",
+      "specs: [spec:probe.z, spec:probe.a]",
+    );
+    const head = extract({ root: corpus(source) }).graph;
+    const base = { ...head, nodes: [], edges: [] };
+    expect((await diff(base, head)).packs?.[0]?.membersAdded).toEqual([
+      "spec:probe.z",
+      "spec:probe.a",
+    ]);
+    const data = await createStudioData(createReader(head), undefined, {
+      base: { graph: base, label: null },
+      runs: [],
+    });
+    for (const path of ["diff.html", "packs/probe.review.html"]) {
+      const html = renderStudio(data).find((page) => page.path === path)?.content ?? "";
+      expect(html).toContain("added as a roadmap");
+      const added = html.split("Members added:")[1]?.split("</p>")[0] ?? "";
+      expect(added.indexOf("spec:probe.z")).toBeLessThan(added.indexOf("spec:probe.a"));
+    }
+  });
+
+  it.each([true, false])(
+    "labels Pack membership by its order meaning (priority %s)",
+    async (priority) => {
+      const data = await createStudioData(createReader(graphOf(priority)));
+      const html = renderStudio(data).find(
+        (page) => page.path === "packs/probe.review.html",
+      )?.content;
+      expect(html).toContain(priority ? "in priority order" : "in authored reading order");
+    },
+  );
+
+  it("states order values when a change is not a known roadmap transition", async () => {
+    const head = graphOf(false);
+    const data = await createStudioData(createReader(head), undefined, {
+      base: { graph: head, label: null },
+      runs: [],
+    });
+    const delta: NonNullable<Diff["packs"]>[number] = {
+      id: "pack:probe.review",
+      change: "changed",
+      membersAdded: [],
+      membersRemoved: [],
+      reordered: false,
+      orderChanged: false,
+      orderBefore: null,
+      orderAfter: "reading",
+    };
+    const all = new Map(data.recipes.all).set(35, { diagnostics: [], packs: [delta] });
+    const html = renderStudio({ ...data, recipes: { ...data.recipes, all } }).find(
+      (page) => page.path === "diff.html",
+    )?.content;
+    expect(html).not.toContain("no longer a roadmap");
+    expect(html).toContain("Order meaning: unknown → reading");
+  });
   it("documents the order comparison fields, default and diagnostic in the recipe contract", () => {
     const catalog = readFileSync(
       new URL("../docs/agent-surface/recipes.md", import.meta.url),

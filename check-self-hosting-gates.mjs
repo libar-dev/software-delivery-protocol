@@ -17,9 +17,9 @@ import { fileURLToPath } from "node:url";
 //      phase-2 disposition.
 //   3. PACKET AGREEMENT — the ledger's fields agree with the owner-packet
 //      dispositions, embedded here as constants read from those packets.
-//   4. CURRENT RECORD — the handbook names the roadmap Pack and recipe, its manifest states
-//      priority order, semantic surfaces carry no plan status, and the documented green-gate
-//      legs agree with package.json.
+//   4. CURRENT RECORD — the handbook names the roadmap Pack and recipe, the graph written by
+//      generate:self-hosting carries it with priority order, semantic surfaces carry no plan
+//      status, and the documented green-gate legs agree with package.json.
 //   5. ADR DISPOSITIONS — both flagged §3 rulings carry explicit three-part-test outcomes:
 //      lean diary entries (the strict consumer-exclusion contract (MD-20); the
 //      envelope-grammar ownership posture (MD-21)) with registry rows, and the plan records
@@ -27,6 +27,7 @@ import { fileURLToPath } from "node:url";
 //   6. PLAN-16 RECONCILIATION — every scheduled-session docket origin (the 17/18/19 rows) is
 //      dispositioned, and plan 16 keeps its ✅ RUN stamp (reconciled, never rewritten).
 //
+// Run after npm run generate:self-hosting; this gate reads the graph that command wrote.
 // Usage: node check-self-hosting-gates.mjs [rootDir]
 //   rootDir — tree holding the surfaces; defaults to this repo root. QA passes temp trees of
 //             mutated copies to prove disagreeing surfaces are named. The temporal dry-run
@@ -42,7 +43,7 @@ const planPath = ["plans", "17-self-hosting-v1.md"].join("/");
 const plan18Path = ["plans", "18-self-hosting-phase-2.md"].join("/");
 const plan16Path = ["plans", "16-carrier-ruling.md"].join("/");
 const agentsPath = "AGENTS.md";
-const roadmapPath = "specs/roadmap.pack.sdp.md";
+const graphPath = "generated/graph.json";
 const decisionsPath = "docs/concept/DECISIONS.md";
 const glossaryPath = "CONTEXT.md";
 const packagePath = "package.json";
@@ -211,13 +212,17 @@ if (ledgerStart === -1) {
 
 expectContains(agentsPath, agents, "pack:roadmap", "the handbook does not name the roadmap Pack");
 expectContains(agentsPath, agents, "recipe 53", "the handbook does not name the roadmap recipe");
-if (!existsSync(join(rootDir, roadmapPath))) {
-  failures.push(`${roadmapPath} — the roadmap Pack's manifest is missing`);
-} else {
-  const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(read(roadmapPath))?.[1] ?? "";
-  if (!/^order: priority[ \t]*$/mu.test(frontmatter)) {
-    failures.push(`${roadmapPath} — the roadmap Pack's manifest does not state order: priority`);
-  }
+try {
+  const graph = JSON.parse(read(graphPath));
+  const roadmap = graph.nodes.find(
+    (node) => node.nodeType === "Pack" && node.id === "pack:roadmap",
+  );
+  if (roadmap === undefined)
+    failures.push(`${graphPath} — the roadmap Pack pack:roadmap is missing`);
+  else if (roadmap.order !== "priority")
+    failures.push(`${graphPath} — the roadmap Pack pack:roadmap does not state order: priority`);
+} catch {
+  failures.push(`${graphPath} — the generated graph is missing or unreadable`);
 }
 
 const checkScript = packageJson?.scripts?.check;
@@ -369,7 +374,7 @@ const report = {
     decisions: decisionsPath,
     glossary: glossaryPath,
     phase2Plan: plan18 === null ? null : plan18Path,
-    roadmap: roadmapPath,
+    graph: graphPath,
     package: packagePath,
   },
   currentRecord: {

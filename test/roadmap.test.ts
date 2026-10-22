@@ -43,6 +43,62 @@ const memoTests = specTest({
 void memoTests;
 
 describe("the roadmap recipes", () => {
+  it("keeps manifest places and reports an unresolved middle member", async () => {
+    const graph = probeGraph({
+      "pack.sdp.md": probePack("probe", ["first", "missing", "last"]),
+      "first.sdp.md": probeSpec("first", "defined", "\n  dependsOn: spec:probe.last"),
+      "missing.sdp.md": probeSpec("missing"),
+      "last.sdp.md": probeSpec("last", "defined"),
+      "part.sdp.md": probeSpec(
+        "part",
+        "defined",
+        "\n  refines: [spec:probe.first, spec:probe.last]",
+      ),
+    });
+    const damaged = {
+      ...graph,
+      nodes: graph.nodes.filter((node) => node.id !== "spec:probe.missing"),
+    };
+    const result = (await roadmap(damaged)).roadmaps[0];
+    expect(result?.unresolved).toEqual([{ place: 2, id: "spec:probe.missing" }]);
+    expect(result?.totals.entries).toBe(3);
+    expect(result?.totals.unresolved).toBe(1);
+    expect(result?.totals.entries).toBe(
+      ["toDesign", "toState", "toBuild", "built", "apart", "unresolved"].reduce(
+        (sum, key) => sum + (result?.totals[key] ?? 0),
+        0,
+      ),
+    );
+    expect((await roadmap(graph)).roadmaps[0]?.totals.unresolved).toBe(0);
+    expect(result?.entries.map(({ place, id }) => ({ place, id }))).toEqual([
+      { place: 1, id: "spec:probe.first" },
+      { place: 3, id: "spec:probe.last" },
+    ]);
+    expect(result?.entries[0]?.restsOn).toContainEqual(
+      expect.objectContaining({ id: "spec:probe.last", onRoadmap: 3 }),
+    );
+    expect(result?.entries[0]?.sharesScopeWith).toEqual([3]);
+    expect(result?.waiting.statements.find((row) => row.id === "spec:probe.part")?.places).toEqual([
+      1, 3,
+    ]);
+    expect((await memo(damaged)).memo).toContain(
+      "### Unresolved members\n\n- Place 2: `spec:probe.missing`",
+    );
+  });
+
+  it("escapes HTML outside code spans in memo titles and framing", async () => {
+    const graph = probeGraph({
+      "pack.sdp.md": probePack("probe", ["root"], "Read & inspect `a < b & c > d`."),
+      "root.sdp.md": probeSpec("root").replace(
+        "# root",
+        "# Epic <details> & > `a < b & c > d` ``a ` < b & > c``",
+      ),
+    });
+    const result = (await memo(graph)).memo ?? "";
+    expect(result).toContain("Epic &lt;details&gt; &amp; &gt; `a < b & c > d` ``a ` < b & > c``");
+    expect(result).toContain("Read &amp; inspect `a < b & c > d`.");
+    expect(result).not.toContain("Epic <details>");
+  });
   it.each(
     workStates.map((state, index) => ({
       state,

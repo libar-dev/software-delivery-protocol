@@ -133,7 +133,8 @@ A corpus may select the rules-capable recipes as rules files under `sdp validate
 becomes a workflow gate.
 
 Findings against Specs travel as one change proposal: use the branch-head commit the reviewer
-read as its base, never a preview's merge commit, check it with recipe 38, and post the
+read as its base; a proposal composed in a preview names the stamp's merge commit. Recipe 38
+always reads the graph of the commit that was read. Check the proposal with recipe 38, and post the
 proposal memo (recipe 49) to the pull request. Read moved, unresolved or incomparable scopes
 again before applying them. Findings against code or other files are review comments on their
 lines; a review proposing no Spec edit has no proposal. An open design finding becomes an open question with
@@ -141,7 +142,7 @@ lines; a review proposing no Spec edit has no proposal. An open design finding b
 The applying commit names the proposal's reason and base. The Protocol keeps its record in git
 and the draft pull request; an adopter chooses its own record convention.
 
-Report a review as a numbered list, most severe first. Each item names one entry address or Spec
+Report a Spec proposal as a numbered list, most severe first. Each item names one entry address or Spec
 section, states the gap in one sentence, and gives the exact text proposed with the address it
 replaces or follows. That is the shape a change proposal's changes take, so the list becomes a
 proposal without rewriting.

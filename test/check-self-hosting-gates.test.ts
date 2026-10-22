@@ -10,6 +10,7 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const guardPath = join(repoRoot, "check-self-hosting-gates.mjs");
 const roots: string[] = [];
 import { codeAnchor, codeAnchorId, ref, specTest, testAnchorId } from "../src/anchors.js";
+import { extract } from "../src/extract/index.js";
 
 const roadmapPath = "specs/roadmap.pack.sdp.md";
 const copiedPaths = [
@@ -36,6 +37,8 @@ function copyRecordTree(): string {
 }
 
 function runGuard(root: string) {
+  mkdirSync(join(root, "generated"), { recursive: true });
+  writeFileSync(join(root, "generated/graph.json"), JSON.stringify(extract({ root }).graph));
   return spawnSync(process.execPath, [guardPath, root], { encoding: "utf8" });
 }
 
@@ -101,11 +104,42 @@ describe("the self-hosting records gate", () => {
     rmSync(join(root, roadmapPath));
     const result = runGuard(root);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain(`${roadmapPath} — the roadmap Pack's manifest is missing`);
+    expect(result.stderr).toContain(
+      "generated/graph.json — the roadmap Pack pack:roadmap is missing",
+    );
+  });
+
+  it.each(["absent", "corrupt"])("names the generated graph when %s", (state) => {
+    const root = copyRecordTree();
+    if (state === "corrupt") {
+      mkdirSync(join(root, "generated"), { recursive: true });
+      writeFileSync(join(root, "generated/graph.json"), "{broken");
+    }
+    const result = spawnSync(process.execPath, [guardPath, root], { encoding: "utf8" });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "generated/graph.json — the generated graph is missing or unreadable",
+    );
+  });
+
+  it("accepts quoted priority with a comment and rejects a renamed roadmap id", () => {
+    const root = copyRecordTree();
+    const path = join(root, roadmapPath);
+    writeFileSync(
+      path,
+      readFileSync(path, "utf8").replace("order: priority", 'order: "priority" # advisory'),
+    );
+    expect(runGuard(root).status).toBe(0);
+    writeFileSync(path, readFileSync(path, "utf8").replace("id: pack:roadmap", "id: pack:renamed"));
+    const result = runGuard(root);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "generated/graph.json — the roadmap Pack pack:roadmap is missing",
+    );
   });
 
   it.each(["", "order: reading", "---\n# Roadmap\norder: priority"])(
-    "requires priority in the manifest frontmatter: %s",
+    "requires a priority roadmap node derived from the manifest: %s",
     (order) => {
       const root = copyRecordTree();
       writeFileSync(
@@ -115,7 +149,9 @@ describe("the self-hosting records gate", () => {
       const result = runGuard(root);
       expect(result.status).toBe(1);
       expect(result.stderr).toContain(
-        `${roadmapPath} — the roadmap Pack's manifest does not state order: priority`,
+        order === ""
+          ? "generated/graph.json — the roadmap Pack pack:roadmap does not state order: priority"
+          : "generated/graph.json — the roadmap Pack pack:roadmap is missing",
       );
     },
   );
@@ -175,7 +211,7 @@ describe("the self-hosting records gate", () => {
     const reviews = bullet("Reviews travel as proposals.");
     for (const clause of [
       "branch-head commit",
-      "preview's merge commit",
+      "a proposal composed in a preview names the preview's merge commit",
       "recipe 38",
       "recipe 49",
       "decider",
@@ -184,8 +220,17 @@ describe("the self-hosting records gate", () => {
       "code defect",
     ])
       expect(reviews).toContain(clause);
+    expect(reviews).not.toContain("never a preview's merge commit");
     const evidence = bullet("Tests are the evidence.");
-    for (const clause of ["removed before merge", "run evidence"])
+    for (const clause of [
+      "removed before merge",
+      "run evidence",
+      "merge commits",
+      "The Protocol merges its pull requests with merge commits",
+      "head ref",
+      "squash or rebase merge",
+      "durable ref",
+    ])
       expect(evidence).toContain(clause);
     const forward = bullet("Plan the next PR.");
     for (const clause of ["recipe 55", "owner's reason"]) expect(forward).toContain(clause);

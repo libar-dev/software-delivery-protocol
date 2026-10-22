@@ -54,9 +54,9 @@ Review the carrier diff, validate, then re-run recipes 7, 11 and 52. Compare eve
 new scope. Unreached Specs are information, not a requirement to invent a parent. A single
 broad epic is lawful; divide it only when the intended outcomes warrant separate identities.
 
-## Move planning and review records into the graph
+## Model upcoming work in the graph; keep review history in git and pull requests
 
-Author your next bodies of work as Specs and group each in a Pack named for its capability. Make one Pack your roadmap by stating `order: priority` in its manifest and listing the next few entries, first entry first; recipe 53 places each by what it needs, and recipe 55 renders the forward section of a pull request description. Turn each open review finding about a Spec into an open question with `decider`, `provisional` and `links`, or into a change proposal checked by recipe 38; a status such as fixed or open is git history and the graph, never a field. Keep your plan and state documents if you want them; they confer nothing, so point them at Packs and recipes instead of copying counts.
+Author your next bodies of work as Specs and group each in a Pack named for its capability. Make one Pack your roadmap by stating `order: priority` in its manifest and listing the next few entries, first entry first; recipe 53 places each by what it needs, and recipe 55 renders the forward section of a pull request description. Turn each open review finding about a Spec into an open question with `decider`, `provisional` and `links`, or into a change proposal checked by recipe 38. Unresolved intended design lives in open questions. Review disposition and acceptance remain in git and the pull request; neither becomes a graph field. Keep your plan and state documents if you want them; they confer nothing, so point them at Packs and recipes instead of copying counts.
 
 The roadmap law is `spec:consumers.roadmap`; the Protocol's own record convention is
 `spec:protocol.roadmap-replaces-plans` and imposes none on an adopter. A defect against settled

@@ -175,7 +175,7 @@ it("routes the next work and reviews through roadmap and proposal recipes", () =
     "roadmap (recipe 53)",
     "design slice (recipe 54)",
     "branch-head commit",
-    "preview's merge commit",
+    "stamp's merge commit",
     "proposal memo (recipe 49)",
     "code or other files",
     "open question",
@@ -185,6 +185,13 @@ it("routes the next work and reviews through roadmap and proposal recipes", () =
   expect(skillSection(skillPaths[2], "### Design").match(/recipe 53/gu)).toHaveLength(1);
   const tasks = skillSection(skillPaths[0], "### Which recipe answers a task");
   for (const number of [52, 53, 54, 55]) expect(tasks).toContain(`recipe ${String(number)}`);
+  expect(sessions).toContain("a proposal composed in a preview names the stamp's merge commit");
+  expect(sessions).toContain("Recipe 38 always reads the graph of the commit that was read");
+  expect(sessions).toContain("Report a Spec proposal as a numbered list");
+  expect(sessions).not.toContain("Report a review as a numbered list");
+  const shape = flat(skillSection(skillPaths[0], "## The shape of the graph"));
+  expect(shape).toContain("optional `order`");
+  expect(shape).toContain("advisory priority");
 });
 
 // A fence inside a numbered step is indented, so fences are matched after trimming.

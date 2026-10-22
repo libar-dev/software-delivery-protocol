@@ -86,7 +86,7 @@ export function packPage(ctx: PageContext, pack: PackContext, totals: PackTotals
       )
       .join(", ");
   const summary = [
-    `${count(totals.members, "member")} in authored reading order; ${count(totals.unresolved, "unresolved member", "unresolved members", false)}.`,
+    `${count(totals.members, "member")} ${pack.order === "priority" ? "in priority order" : "in authored reading order"}; ${count(totals.unresolved, "unresolved member", "unresolved members", false)}.`,
     `${count(totals.heldBelowNextRung, "member")} held below their stated next rung${held.length ? `: ${cards(held, true)}` : ""}.`,
     `${count(totals.waitingForAuthor, "member")} waiting only for their author's statement${waiting.length && waiting.length !== pack.members.length ? `: ${cards(waiting)}` : ""}.`,
     `${count(totals.entries, "design entry", "design entries")} and ${count(totals.declarations, "pinned declaration", "pinned declarations", false)}.`,

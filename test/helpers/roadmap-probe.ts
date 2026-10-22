@@ -109,6 +109,7 @@ export interface Roadmap {
   totals: Record<string, number>;
   entries: EntryRow[];
   apart: { place: number; id: string; need: string }[];
+  unresolved: { place: number; id: string }[];
   waiting: {
     questions: QuestionRow[];
     withoutDecider: QuestionRow[];
