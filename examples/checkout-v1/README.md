@@ -139,6 +139,20 @@ Revert the edit afterwards. The next `build` regenerates `generated/`.
   `honesty/readiness-floor`, citing `kind-evidence-complete`, and contract generation withholds
   that example's step contract.
 
+## Read the next work
+
+The [roadmap Pack](specs/roadmap.pack.sdp.md) states advisory priority with `order: priority`.
+Run the roadmap recipe and its forward memo from the repository root:
+
+```sh
+npm run --silent sdp -- q 'return recipes(53, params)' --root examples/checkout-v1 --params '{"pack":"pack:checkout-roadmap"}' --json
+npm run --silent sdp -- q 'return recipes(55, params)' --root examples/checkout-v1 --params '{"pack":"pack:checkout-roadmap"}' --json
+```
+
+Order placement needs design; the vocabulary waits for a person's readiness statement.
+The memo copies purpose and dependency reach; the owner's reason for priority belongs in the
+pull request author's own words. Membership and priority change no readiness or delivery fact.
+
 ## Where the concepts live
 
 | Concept                                                  | Read                                                                                                                                                                                                                       |

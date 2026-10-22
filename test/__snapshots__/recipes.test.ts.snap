@@ -1,0 +1,212 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`pins the adopter roadmap and its forward memo over the worked example > forward memo 1`] = `
+{
+  "diagnostics": [],
+  "memo": "## The next work, from the roadmap
+
+Roadmap: Checkout roadmap \`pack:checkout-roadmap\`
+
+To state means the floor allows ready and a person still judges the statement. Built means every Spec of the entry's work states ready and has an implementation binding; it reports no passing test and no deployment.
+
+Clarify how a customer reaches order creation, then review the shared order vocabulary. The order is advisory priority; needs come from the graph and confer no permission.
+
+### To design
+
+| Place | Entry | Next | Purpose and reach |
+| --- | --- | --- | --- |
+| 1 | Order placement flow \`spec:orders.order-placement-flow\` | itself \`scoped\` → \`defined\`, held by kind-evidence-complete | Sequence cart submission through validation to a created order. |
+
+### To state
+
+| Place | Entry | Earlier waiting statements | Purpose and reach |
+| --- | --- | --- | --- |
+| 2 | Order-management domain vocabulary \`spec:orders.order-model\` | 1 outside the roadmap | Define the core terms used by the checkout-v1 order-management slice. |
+
+### To build
+
+No entry is ready to build.
+
+### Waiting on the owner
+
+- State \`spec:orders.order-model\`: it states \`defined\` and its floor allows \`ready\`; place 2
+",
+}
+`;
+
+exports[`pins the adopter roadmap and its forward memo over the worked example > roadmap answer 1`] = `
+{
+  "decider": "owner",
+  "roadmaps": [
+    {
+      "apart": [],
+      "entries": [
+        {
+          "altitude": "feature",
+          "blockingQuestions": [],
+          "buildNow": [],
+          "decisions": [],
+          "earlierStatements": [],
+          "floorReached": "scoped",
+          "holdsNextRung": [
+            {
+              "clause": "kind-evidence-complete",
+              "targets": [],
+            },
+          ],
+          "id": "spec:orders.order-placement-flow",
+          "need": "to design",
+          "packs": [
+            "pack:checkout-v1",
+          ],
+          "place": 1,
+          "restedOnBy": [],
+          "restsOn": [
+            {
+              "from": [
+                "spec:orders.order-placement-flow",
+              ],
+              "holdsReady": false,
+              "id": "spec:orders.create-order",
+              "need": "to state",
+              "onRoadmap": null,
+              "statedReadiness": "defined",
+              "via": "dependsOn",
+            },
+            {
+              "from": [
+                "spec:orders.order-placement-flow",
+              ],
+              "holdsReady": false,
+              "id": "spec:orders.order-management",
+              "need": "to state",
+              "onRoadmap": null,
+              "statedReadiness": "defined",
+              "via": "refines",
+            },
+          ],
+          "sharesScopeWith": [],
+          "specKind": "workflow",
+          "statedNextRung": "defined",
+          "statedReadiness": "scoped",
+          "title": "Order placement flow",
+          "work": {
+            "built": 0,
+            "drift": 0,
+            "specs": 1,
+            "toBuild": 0,
+            "toDesign": 1,
+            "toState": 0,
+          },
+          "workRows": [
+            {
+              "drift": false,
+              "floorReached": "scoped",
+              "holdsNextRung": [
+                {
+                  "clause": "kind-evidence-complete",
+                  "targets": [],
+                },
+              ],
+              "id": "spec:orders.order-placement-flow",
+              "need": "to design",
+              "statedNextRung": "defined",
+              "statedReadiness": "scoped",
+            },
+          ],
+        },
+        {
+          "altitude": "story",
+          "blockingQuestions": [],
+          "buildNow": [],
+          "decisions": [],
+          "earlierStatements": [
+            {
+              "id": "spec:orders.order-management",
+              "onRoadmap": null,
+              "where": "outside",
+            },
+          ],
+          "floorReached": "ready",
+          "holdsNextRung": [],
+          "id": "spec:orders.order-model",
+          "need": "to state",
+          "packs": [
+            "pack:checkout-v1",
+          ],
+          "place": 2,
+          "restedOnBy": [],
+          "restsOn": [
+            {
+              "from": [
+                "spec:orders.order-model",
+              ],
+              "holdsReady": false,
+              "id": "spec:orders.order-management",
+              "need": "to state",
+              "onRoadmap": null,
+              "statedReadiness": "defined",
+              "via": "refines",
+            },
+          ],
+          "sharesScopeWith": [],
+          "specKind": "model",
+          "statedNextRung": "ready",
+          "statedReadiness": "defined",
+          "title": "Order-management domain vocabulary",
+          "work": {
+            "built": 0,
+            "drift": 0,
+            "specs": 1,
+            "toBuild": 0,
+            "toDesign": 0,
+            "toState": 1,
+          },
+          "workRows": [
+            {
+              "drift": false,
+              "floorReached": "ready",
+              "holdsNextRung": [],
+              "id": "spec:orders.order-model",
+              "need": "to state",
+              "statedNextRung": "ready",
+              "statedReadiness": "defined",
+            },
+          ],
+        },
+      ],
+      "framing": "Clarify how a customer reaches order creation, then review the shared order vocabulary. The order is advisory priority; needs come from the graph and confer no permission.",
+      "order": "priority",
+      "pack": "pack:checkout-roadmap",
+      "title": "Checkout roadmap",
+      "totals": {
+        "apart": 0,
+        "blockingQuestions": 0,
+        "blockingWithoutDecider": 0,
+        "built": 0,
+        "entries": 2,
+        "questions": 0,
+        "statements": 1,
+        "toBuild": 0,
+        "toDesign": 1,
+        "toState": 1,
+        "withoutDecider": 0,
+      },
+      "waiting": {
+        "questions": [],
+        "statements": [
+          {
+            "floorReached": "ready",
+            "id": "spec:orders.order-model",
+            "places": [
+              2,
+            ],
+            "statedReadiness": "defined",
+          },
+        ],
+        "withoutDecider": [],
+      },
+    },
+  ],
+}
+`;

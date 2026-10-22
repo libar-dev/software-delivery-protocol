@@ -25,7 +25,7 @@ const extraction = extract({ root: exampleRoot });
 describe("checkout-v1 tracer bullet (extractor-fed)", () => {
   it("extracts the example with zero findings", () => {
     expect(extraction.report.findings).toEqual([]);
-    expect(extraction.counts).toEqual({ specs: 11, packs: 1, anchors: 5 });
+    expect(extraction.counts).toEqual({ specs: 11, packs: 2, anchors: 5 });
   });
 
   it("keeps the below-ready unbound verifier as data with no finding", () => {
@@ -76,7 +76,7 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
       "spec:orders.order-model",
       "spec:decisions.order-lifecycle",
     ];
-    const pack = extraction.graph.nodes.find((node) => node.nodeType === "Pack");
+    const pack = extraction.graph.nodes.find((node) => node.id === "pack:checkout-v1");
     expect(pack?.members).toEqual(members);
     expect(
       createReader(extraction.graph)
@@ -110,10 +110,10 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     }
   });
 
-  it("extracts the pack and the five anchors (the anchored layer)", () => {
+  it("extracts both Packs and the five anchors (the anchored layer)", () => {
     expect(
       extraction.graph.nodes.filter((node) => node.nodeType === "Pack").map((n) => n.id),
-    ).toEqual(["pack:checkout-v1"]);
+    ).toEqual(["pack:checkout-v1", "pack:checkout-roadmap"]);
     expect(
       extraction.graph.nodes
         .filter((node) => node.nodeType === "Anchor" || node.nodeType === "CodeNode")

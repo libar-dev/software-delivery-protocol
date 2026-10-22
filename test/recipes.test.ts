@@ -8329,3 +8329,25 @@ it("runs the roadmap and its memo from the catalog over a named Pack", async () 
   expect(rendered.diagnostics).toEqual([]);
   expect(stringAt(rendered, "memo")).toContain("## The next work, from the roadmap\n");
 });
+
+it("pins the adopter roadmap and its forward memo over the worked example", async () => {
+  const example = extract({ root: join(repoRoot, "examples/checkout-v1") });
+  expect(example.report.findings).toEqual([]);
+  const params = { pack: "pack:checkout-roadmap" };
+  const answer = asRecord(await runRecipe(recipeByOrdinal(53), params, example));
+  const roadmaps = asArray(answer.roadmaps);
+  expect(roadmaps).toHaveLength(1);
+  const roadmap = asRecord(roadmaps[0]);
+  expect(roadmap.order).toBe("priority");
+  expect(
+    asArray(roadmap.entries).map((entry) => {
+      const row = asRecord(entry);
+      return [row.id, row.need];
+    }),
+  ).toEqual([
+    ["spec:orders.order-placement-flow", "to design"],
+    ["spec:orders.order-model", "to state"],
+  ]);
+  expect(answer).toMatchSnapshot("roadmap answer");
+  expect(await runRecipe(recipeByOrdinal(55), params, example)).toMatchSnapshot("forward memo");
+});
