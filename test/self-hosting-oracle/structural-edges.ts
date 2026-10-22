@@ -315,7 +315,7 @@ export const acceptedArchitecturalUnits = [
   {
     unit: "src/notation/example-space.ts#decodeExampleSpaces",
     anchorId: "impl:protocol.example-space-decoding",
-    componentId: "component:protocol.notation",
+    componentId: "component:protocol.reader",
   },
   {
     unit: "src/projections/studio/recipes.ts#studioRecipeAnswers",
@@ -995,8 +995,6 @@ export const coarseGrainCoverage = [
 export const expectedUsesEdges = [
   ["component:protocol.import", "component:protocol.notation"],
   ["component:protocol.reader", "component:protocol.notation"],
-  ["component:protocol.notation", "component:protocol.graph"],
-  ["component:protocol.notation", "component:protocol.validate"],
   ["impl:protocol.extract", "impl:protocol.discover-files"],
   ["impl:protocol.extract", "impl:protocol.carrier-reification"],
   ["impl:protocol.extract", "impl:protocol.derive-graph"],
@@ -1028,6 +1026,7 @@ export const expectedUsesEdges = [
   ["component:protocol.cli", "component:protocol.validate"],
   ["component:protocol.codegen", "component:protocol.graph"],
   ["component:protocol.codegen", "component:protocol.notation"],
+  ["component:protocol.codegen", "component:protocol.reader"],
   ["component:protocol.codegen", "component:protocol.validate"],
   ["component:protocol.extract", "component:protocol.graph"],
   ["component:protocol.extract", "component:protocol.model"],

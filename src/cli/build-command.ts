@@ -31,7 +31,7 @@ import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.
  */
 const cliComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.cli"),
-  label: "Protocol CLI seam",
+  label: "entry points, shared build and publication",
   satisfies: ref("spec:extraction.build-pipeline"),
   uses: [
     componentAnchorId("component:protocol.extract"),

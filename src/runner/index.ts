@@ -98,7 +98,7 @@ function substituteParams(skeleton: string, params: ParamShape): string {
  */
 const runnerComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.runner"),
-  label: "Protocol example runner seam",
+  label: "provider-neutral example execution",
   satisfies: ref("spec:extraction.example-runner"),
   uses: [componentAnchorId("component:protocol.notation")],
   layer: "application",

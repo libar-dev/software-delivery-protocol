@@ -37,7 +37,7 @@ export interface RunnableExampleWorld<W, C, O extends RunnableOutcome> {
  */
 const testingComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.testing"),
-  label: "Protocol testing seam",
+  label: "the generated registrar runtime",
   satisfies: ref("spec:extraction.runnable-modules"),
   uses: [
     componentAnchorId("component:protocol.adapters"),

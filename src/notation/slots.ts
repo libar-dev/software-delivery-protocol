@@ -255,17 +255,16 @@ function parseGroup(group: RawGroup): SlotGroup | undefined {
 
 /**
  * Start with parseSlots here for slot groups, declared types and step skeletons.
- * Read example-space.ts for the shared graph-to-vocabulary decoder used by
- * contracts and reader contexts; its graph and finding imports cross this boundary.
+ * Read SlotGroup and SlotDeclaredType here before changing slot interpretation.
+ * Graph-to-vocabulary decoding in example-space.ts belongs to the reader component.
  */
 const notationComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.notation"),
-  label: "Protocol slot notation seam",
+  label: "the leaf step codec",
   satisfies: ref("spec:carrier.slot-notation"),
   layer: "domain",
   context: "protocol",
   role: "codec",
-  uses: [codeAnchorId("component:protocol.graph"), codeAnchorId("component:protocol.validate")],
 });
 const slotNotationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.slot-notation"),

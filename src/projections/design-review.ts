@@ -33,7 +33,7 @@ export interface DesignReviewPage {
  * Read vault/sync.ts separately for manifest guards and publication recovery.
  *
  * @sdpAnchor component:protocol.projections
- * @sdpLabel Protocol projections seam
+ * @sdpLabel read-only output, layout and owned publication
  * @sdpSatisfies spec:consumers.projections-model
  * @sdpUses component:protocol.reader, component:protocol.graph, component:protocol.extract, component:protocol.model, component:protocol.notation, component:protocol.validate
  * @sdpLayer edge

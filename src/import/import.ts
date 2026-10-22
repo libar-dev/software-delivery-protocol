@@ -44,12 +44,12 @@ function importFinding(
  */
 const importComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.import"),
-  label: "Protocol import seam",
+  label: "canonical conversion with a fidelity boundary",
   satisfies: ref("spec:carrier.sdp-import"),
   uses: [
-    codeAnchorId("component:protocol.extract"),
-    codeAnchorId("component:protocol.validate"),
-    codeAnchorId("component:protocol.notation"),
+    componentAnchorId("component:protocol.extract"),
+    componentAnchorId("component:protocol.validate"),
+    componentAnchorId("component:protocol.notation"),
   ],
   layer: "application",
   context: "protocol",

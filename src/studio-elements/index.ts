@@ -23,7 +23,7 @@ import { registerStamp } from "./stamp.js";
  * @sdpLayer edge
  * @sdpContext protocol
  * @sdpRole interaction
- * @sdpLabel optional Studio browser controls
+ * @sdpLabel optional browser behavior and proposal handoff
  */
 registerSearch();
 registerSearchResults();

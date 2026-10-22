@@ -22,7 +22,7 @@ import { codeAnchor } from "../model/code-anchor.js";
  */
 const adaptersComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.adapters"),
-  label: "Protocol adapters: Vitest examples and TypeScript file imports",
+  label: "external runtime and source adapters",
   satisfies: ref("spec:extraction.example-runner"),
   uses: [componentAnchorId("component:protocol.runner")],
   layer: "adapter",

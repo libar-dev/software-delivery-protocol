@@ -26,20 +26,47 @@ function auditTypeCoverage(
   if (coveringSource === undefined) return "covering source does not type-consume unit";
 
   const imported = new Set<ts.Symbol>();
+  const namespaces = new Set<ts.Symbol>();
   for (const statement of coveringSource.statements) {
     if (!ts.isImportDeclaration(statement)) continue;
     const bindings = statement.importClause?.namedBindings;
-    if (bindings === undefined || !ts.isNamedImports(bindings)) continue;
+    if (bindings === undefined) continue;
+    if (ts.isNamespaceImport(bindings)) {
+      const symbol = checker.getSymbolAtLocation(bindings.name);
+      if (symbol !== undefined) namespaces.add(symbol);
+      continue;
+    }
     for (const entry of bindings.elements) {
       const symbol = checker.getSymbolAtLocation(entry.name);
       if (symbol !== undefined && resolve(symbol) === target) imported.add(symbol);
     }
   }
-  const consumed = new Set<ts.Symbol>();
+  // Audit explicit type references, heritage clauses and type queries. Resolve both
+  // ends of qualified names so an unused, shadowed or wrong-source import stays uncovered.
+  const consumes = (name: ts.Node): boolean => {
+    let root = name;
+    const leaf = ts.isQualifiedName(name)
+      ? name.right
+      : ts.isPropertyAccessExpression(name)
+        ? name.name
+        : name;
+    while (ts.isQualifiedName(root) || ts.isPropertyAccessExpression(root)) {
+      root = ts.isQualifiedName(root) ? root.left : root.expression;
+    }
+    const local = checker.getSymbolAtLocation(root);
+    if (local === undefined) return false;
+    if (ts.isIdentifier(name)) return imported.has(local);
+    const member = checker.getSymbolAtLocation(leaf);
+    return namespaces.has(local) && member !== undefined && resolve(member) === target;
+  };
+  const consumed = new Set<ts.Node>();
   const visit = (node: ts.Node): void => {
-    if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) {
-      const symbol = checker.getSymbolAtLocation(node.typeName);
-      if (symbol !== undefined && imported.has(symbol)) consumed.add(symbol);
+    if (
+      (ts.isTypeReferenceNode(node) && consumes(node.typeName)) ||
+      (ts.isExpressionWithTypeArguments(node) && consumes(node.expression)) ||
+      (ts.isTypeQueryNode(node) && consumes(node.exprName))
+    ) {
+      consumed.add(node);
     }
     ts.forEachChild(node, visit);
   };

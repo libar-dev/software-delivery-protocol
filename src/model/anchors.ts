@@ -99,7 +99,7 @@ export function specOracle(anchor: SpecOracleAnchor): SpecOracleAnchor {
  */
 const modelComponentAnchor = createCodeAnchor({
   id: codeAnchorId("component:protocol.model"),
-  label: "Protocol model seam",
+  label: "the authored contracts and stable ids",
   layer: "domain",
   context: "protocol",
   satisfies: ref("spec:model.core-model"),

@@ -632,11 +632,12 @@ function renderRunnableRegistrar(
  */
 const codegenComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.codegen"),
-  label: "Protocol runnable code generation seam",
+  label: "contracts and registrar output",
   satisfies: ref("spec:extraction.runnable-modules"),
   uses: [
     componentAnchorId("component:protocol.graph"),
     componentAnchorId("component:protocol.notation"),
+    componentAnchorId("component:protocol.reader"),
     componentAnchorId("component:protocol.validate"),
   ],
   layer: "application",

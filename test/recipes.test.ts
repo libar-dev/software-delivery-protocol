@@ -1390,7 +1390,6 @@ describe("the agent-surface recipe corpus", () => {
       "component:protocol.cli",
       "component:protocol.codegen",
       "component:protocol.extract",
-      "component:protocol.notation",
       "component:protocol.projections",
       "component:protocol.reader",
       "component:protocol.validate",
@@ -1430,7 +1429,7 @@ describe("the agent-surface recipe corpus", () => {
     expect(asArray(component?.usesOut)).not.toContain("component:protocol.graph");
     expect(asArray(component?.usedBy)).not.toContain("component:protocol.graph");
     expect(component?.fanOut).toBe(2);
-    expect(component?.fanIn).toBe(7);
+    expect(component?.fanIn).toBe(6);
   });
 
   it("preserves an unresolved responsibility without inventing its design", async () => {
@@ -5817,6 +5816,55 @@ describe("design recipes", () => {
         supersededBy: [],
       },
     ]);
+  });
+
+  it("keeps the decoder in reader without adding crossings against the lawful notation alternative", async () => {
+    // spec:protocol.significant-units-review#rule.decoderBoundary
+    const decoder = "impl:protocol.example-space-decoding";
+    expect(
+      derived.graph.edges.filter((edge) => edge.from === decoder && edge.type === "memberOf"),
+    ).toEqual([
+      { from: decoder, to: "component:protocol.reader", type: "memberOf", claim: "anchored" },
+    ]);
+    const fallback = {
+      ...derived,
+      graph: {
+        ...derived.graph,
+        edges: [
+          ...derived.graph.edges
+            .filter(
+              (edge) =>
+                !(
+                  edge.type === "uses" &&
+                  edge.from === "component:protocol.codegen" &&
+                  edge.to === "component:protocol.reader"
+                ),
+            )
+            .map((edge) =>
+              edge.type === "memberOf" && edge.from === decoder
+                ? { ...edge, to: "component:protocol.notation" }
+                : edge,
+            ),
+          {
+            from: "component:protocol.notation",
+            to: "component:protocol.graph",
+            type: "uses" as const,
+            claim: "anchored" as const,
+          },
+          {
+            from: "component:protocol.notation",
+            to: "component:protocol.validate",
+            type: "uses" as const,
+            claim: "anchored" as const,
+          },
+        ],
+      },
+    };
+    // Both alternatives retain the real reader → notation slot-parser import.
+    const moved = asRecord(await runRecipe(recipeByOrdinal(32)));
+    const stayed = asRecord(await runRecipe(recipeByOrdinal(32), undefined, fallback));
+    expect(asRecord(moved.totals).layerCrossings).toBe(asRecord(stayed.totals).layerCrossings);
+    expect(asRecord(moved.totals).contextCrossings).toBe(asRecord(stayed.totals).contextCrossings);
   });
 
   it("reports the corpus's architecture crossings as the raw edges state them", async () => {

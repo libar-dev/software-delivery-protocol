@@ -35,7 +35,7 @@ Authors choose a role by the architectural responsibility a unit owns. The same 
 ## Design
 
 - roleChoice: Use the dominant responsibility of the anchored unit. A catalog of shared shapes is a contract, a table computing a semantic answer is a decider, and a failure-producing check is a validator. File size, caller count and naming style never select a role.
-- componentRole: A component anchor's role names the dominant responsibility of its members as a group, read from the reviewed member roles; a component whose members split evenly states no role.
+- componentRole: A component anchor's role names the dominant architectural responsibility its members serve together, read from their reviewed responsibilities rather than a count of role tokens. Omit the role when no responsibility dominates.
 - presentationWord: Use projection for pure page, fragment and text-equivalent rendering. Use publisher for filesystem publication, codec for representation encoding and interaction for optional DOM behavior; a unit that presents uses projection, never renderer.
 - helperWord: Choose a specific responsibility after reading the code. Graph indexes use index, concept queries use reader, parameter and path encoders use codec, browser controls use interaction and test-runtime integration uses adapter.
 - freeVocabulary: These Model terms explain the engine's role values. Token grammar remains the only Protocol check on role, omission remains lawful, and this Model is not an allowlist.

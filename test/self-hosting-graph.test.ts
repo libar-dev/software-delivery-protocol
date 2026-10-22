@@ -357,7 +357,7 @@ describe("the self-hosting corpus", () => {
     expect(expectedAnchors).toHaveLength(545);
     expect(expectedBindingEdges).toHaveLength(696);
     expect(result.graph.nodes).toHaveLength(986);
-    expect(result.graph.edges).toHaveLength(2746);
+    expect(result.graph.edges).toHaveLength(2745);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -525,7 +525,7 @@ describe("the self-hosting corpus", () => {
 
   it("derives exactly the sparse authored component uses edges", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedUsesEdges).toHaveLength(58);
+    expect(expectedUsesEdges).toHaveLength(57);
     expect(
       result.graph.edges
         .filter((edge) => edge.type === "uses")
@@ -589,9 +589,16 @@ describe("the self-hosting corpus", () => {
   });
 
   it("gives every accepted unit a readable responsibility label", () => {
-    for (const { anchorId } of acceptedArchitecturalUnits) {
+    for (const anchorId of [
+      ...acceptedArchitecturalUnits.map((row) => row.anchorId),
+      ...expectedComponentIds,
+    ]) {
       const node = result.graph.nodes.find((entry) => entry.id === anchorId);
-      expect(node && "label" in node ? node.label?.trim() : undefined, anchorId).toBeTruthy();
+      const label = node && "label" in node ? node.label?.trim() : undefined;
+      expect(label, anchorId).toBeTruthy();
+      if (anchorId.startsWith("component:")) {
+        expect(label, anchorId).not.toMatch(/^Protocol .* seam$/u);
+      }
     }
   });
 

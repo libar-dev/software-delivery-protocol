@@ -191,7 +191,7 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
  */
 const extractComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.extract"),
-  label: "Protocol extraction seam",
+  label: "the carrier and source pipeline",
   satisfies: ref("spec:extraction.derive-graph"),
   uses: [
     componentAnchorId("component:protocol.graph"),

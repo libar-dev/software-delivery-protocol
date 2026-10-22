@@ -33,7 +33,7 @@ export type GraphClaim = (typeof graphClaims)[number];
  */
 const graphComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.graph"),
-  label: "Protocol graph seam",
+  label: "the one graph and its semantic decisions",
   satisfies: ref("spec:extraction.claim-taxonomy"),
   uses: [
     componentAnchorId("component:protocol.model"),

@@ -670,11 +670,12 @@ function packBoundary(
 /**
  * Start with Reader and createReader here for public query contracts and joins.
  * Read the Pack design helpers here for member and boundary assembly, then
- * notation/example-space.ts for example cards and evaluate-body.ts for binding
- * injection and shipped recipe evaluation.
+ * notation/example-space.ts in this component for shared graph-to-vocabulary
+ * decoding and example cards. Its slot parsing comes from notation/slots.ts.
+ * Read evaluate-body.ts for binding injection and shipped recipe evaluation.
  *
  * @sdpAnchor component:protocol.reader
- * @sdpLabel Protocol reader seam
+ * @sdpLabel the typed graph contract and body evaluator
  * @sdpSatisfies spec:consumers.reader
  * @sdpUses component:protocol.graph, component:protocol.validate, component:protocol.model, component:protocol.notation
  * @sdpLayer application

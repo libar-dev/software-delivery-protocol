@@ -71,7 +71,7 @@ const validationFamiliesAnchor = codeAnchor({
  */
 const validateComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.validate"),
-  label: "Protocol validation seam",
+  label: "one finding currency and ordered checks",
   satisfies: ref("spec:validation.two-check-families"),
   uses: [
     componentAnchorId("component:protocol.graph"),

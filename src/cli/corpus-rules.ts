@@ -62,8 +62,9 @@ function copyFinding(value: Record<string, unknown>, rulesFile: string): CorpusF
   };
 }
 
-/** Runs each operator-selected body against independent copies and commits only a lawful answer. */
 /**
+ * Runs each operator-selected body against independent copies and commits only a lawful answer.
+ *
  * @sdpAnchor impl:protocol.corpus-rule-runner
  * @sdpLabel runs selected corpus rules and separates their failures
  * @sdpSatisfies spec:validation.corpus-rules
