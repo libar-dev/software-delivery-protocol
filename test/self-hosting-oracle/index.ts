@@ -50,14 +50,42 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
 );
 
 // No intended prose-mention pair is left without a declared relation. The owner retains the
-// honesty gap on spec:model.spec-sections. The Studio gaps now have genuine bound verifiers.
-export const expectedWarnings = [
-  {
+// honesty gap on spec:model.spec-sections. The owner's ready statements on plan 47's
+// roadmaps-and-slices Pack add one gap for each newly ready non-decision Spec that no verifier
+// binds yet; decisions take no gap. The validator sorts findings by carrier path, so the rows
+// follow the carriers' paths in code-unit order.
+const gap = (subjectId: string) =>
+  ({
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:model.spec-sections",
-  },
+    subjectId,
+  }) as const;
+
+export const expectedWarnings = [
+  gap("spec:consumers.capability-map"),
+  gap("spec:consumers.design-slice"),
+  gap("spec:consumers.roadmap.memo"),
+  gap("spec:consumers.roadmap"),
+  gap("spec:consumers.spec-studio.capability-map-page"),
+  gap("spec:consumers.spec-studio.diagram-kinds.capability-tree"),
+  gap("spec:consumers.spec-studio.diagram-kinds.dependency"),
+  gap("spec:consumers.spec-studio.diagram-kinds.edge-routing"),
+  gap("spec:consumers.spec-studio.diagram-kinds.legibility"),
+  gap("spec:consumers.spec-studio.diagram-kinds.maturity-picture"),
+  gap("spec:consumers.spec-studio.diagram-kinds.mermaid-source"),
+  gap("spec:consumers.spec-studio.diagram-kinds.requirement-trace"),
+  gap("spec:consumers.spec-studio.diagram-kinds.scoped-architecture"),
+  gap("spec:consumers.spec-studio.diagram-kinds"),
+  gap("spec:consumers.spec-studio.lenses.architecture.unit-register"),
+  gap("spec:consumers.spec-studio.roadmap-page"),
+  gap("spec:consumers.spec-studio.slice-page"),
+  gap("spec:extraction.executable-examples"),
+  gap("spec:model.spec-sections"),
+  gap("spec:protocol.capability-epics"),
+  gap("spec:protocol.roadmap-replaces-plans"),
+  gap("spec:protocol.role-vocabulary"),
+  gap("spec:protocol.significant-units-review"),
 ] as const;
 
 export type { ExpectedAnchor } from "./anchors.js";

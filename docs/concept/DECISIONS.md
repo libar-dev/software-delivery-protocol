@@ -54,6 +54,9 @@ positions and are never reused.
 | MD-43 | the build renders Studio views | durable | The build writes each view into markup, and its custom element adds interaction; a host supplies that markup rather than graph data. | [Spec](../../specs/decisions/studio-build-renders.sdp.md) (`spec:decisions.studio-build-renders`) |
 | MD-44 | the engine lays out Studio diagrams | durable | Deterministic build-time layout writes inline SVG with a text equivalent; the element adds pan, zoom and pinch. | [Spec](../../specs/decisions/studio-diagram-renderer.sdp.md) (`spec:decisions.studio-diagram-renderer`) |
 | MD-45 | the vault owns one folder | durable | A guarded file list owns `sdp/`; synchronization preserves unchanged files, keeps a Base a person changed, and refuses other edits or unknown files before writing. | [Spec](../../specs/decisions/vault-owned-folder.sdp.md) (`spec:decisions.vault-owned-folder`) |
+| MD-46 | a roadmap states advisory priority | durable | A Pack whose manifest states `order: priority` holds the corpus's advisory priority as its member order; no relation, date or gate. Narrows MD-33 for this one order and opens the Pack manifest (MD-25) to one optional field. | [Spec](../../specs/decisions/roadmap-priority.sdp.md) (`spec:decisions.roadmap-priority`) |
+| MD-47 | the roadmap over the plans | durable | Forward planning is read from the roadmap; `plans/` is frozen history, and an arc's record lives in its draft pull request. Narrows MD-33. | [Spec](../../specs/decisions/roadmap-over-plans.sdp.md) (`spec:decisions.roadmap-over-plans`) |
+| MD-48 | epics of any kind | durable | Any Spec at epic altitude is an epic and keeps its kind, as MD-4's named coordinates imply. | [Spec](../../specs/decisions/epics-of-any-kind.sdp.md) (`spec:decisions.epics-of-any-kind`) |
 
 ### Decision Specs without a registry code
 

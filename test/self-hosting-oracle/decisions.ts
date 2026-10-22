@@ -1403,7 +1403,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.roadmap-priority",
     specKind: "decision",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     title: "A roadmap states advisory priority in the graph",
     narrative:
       "Dependency order already has a graph home: `dependsOn`, which the statement queue reads to order the statements a person can make. Preference has none: which body of work the owner wants next when nothing forces one before another. It lives in prose, in each pull request's forward section and in the plan files, and the graph reads neither. The roadmap views waited for a named reader; the owner, choosing what the next pull requests take up, is that reader. A Pack already keeps its members in authored order and states no truth of its own, so a Pack whose manifest says its order is a priority holds the preference with one optional field and no new relation.",
@@ -1447,7 +1447,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.roadmap-over-plans",
     specKind: "decision",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     title: "Plan files stop carrying forward planning once the roadmap does",
     narrative:
       "Each arc's intent already lives in its capture Specs and its Pack, its rulings in their carrying Specs, its open items in keyed questions, and its story in its pull request description. A plan file still carries the status line the handbook copies and agents read first, the arc's lanes and waves, copies of its ruling tables, and its acceptance as measured. Once a roadmap holds priority in the graph, the forward role has a graph home; what remains of a plan is history, or a second copy of what the pull request description already holds.",
@@ -1468,10 +1468,11 @@ export const decisionsSpecs = [
           "Keep plan files for forward planning beside the roadmap: priority would live in two places, and the plan's copy would drift.",
           "Keep a thin plan file per arc for its execution record alone, with no status gate: the pull request description already carries the same record by the description standard, so the file would be a second copy that the next session must reconcile.",
           "Record an arc's execution in the graph, as an arc Spec or Pack fields: who ruled what and when is history that git and the description keep, and that a review happened is never a graph fact.",
+          "A gate check that refuses a numbered plan past the last frozen one: refusing a new plan file would police the workflow, not conformance, and the handbook saying the plans are frozen history is enough.",
           "Keep each arc's whole execution record in a committed file under `reviews/` for its life: once the draft pull request exists the file would duplicate the description, so the file holds the record only until the first authorized push and then only the link.",
         ],
         consequences: [
-          "The handbook drops its stack of plan statuses for a short pointer to the roadmap and its recipe. The self-hosting gate's current-record check refuses a numbered plan past the last frozen one, a handbook that does not name the roadmap Pack and recipe, and a roadmap Pack manifest that is missing or does not state priority order; its frozen historical checks, its green-gate legs and its ban on plan status in the registry and the glossary stay.",
+          "The handbook drops its stack of plan statuses for a short pointer to the roadmap and its recipe. The self-hosting gate's current-record check refuses a handbook that does not name the roadmap Pack and recipe, and a roadmap Pack manifest that is missing or does not state priority order; its frozen historical checks, its green-gate legs and its ban on plan status in the registry and the glossary stay.",
           "The graph-first planning Spec's plan-file rule narrows to a plan document a corpus chooses to keep, which points to its Packs and carrying Specs and confers nothing; an adopter keeps whatever planning documents it wants, and a roadmap is open to it as to the Protocol.",
           "The description standard renders its forward section with the roadmap memo; the pull request that completes an entry's selected work removes it from the roadmap in the same change, and entries join or move only on the owner's word.",
           "The commit strategy that authorizes commits on an arc's branch comes from the owner's instruction for the arc, recorded in the arc's record, its record file before the first push and its draft pull request after, where it came from the plan file; uncommitted state that has no clean boundary is accounted for in the same record.",
@@ -1486,37 +1487,28 @@ export const decisionsSpecs = [
     id: "spec:decisions.epics-of-any-kind",
     specKind: "decision",
     altitude: "feature",
-    readiness: "scoped",
+    readiness: "ready",
     title: "Capability epics keep kind independent of altitude",
     narrative: null,
     sections: {
       intent: {
         outcome:
           "Decide whether a capability map admits epics of every kind or only behavior epics.",
-        openQuestions: [
-          {
-            question: "Is a capability epic any Spec at epic altitude, or only a behavior Spec?",
-            blocking: true,
-            key: "epicKinds",
-            decider: "owner",
-            provisional:
-              "Admit every kind, preserving the identity and truth of existing model and rule hubs.",
-          },
-        ],
       },
       decision: {
         context:
-          "The ratified capability glossary limits the map to high-altitude behavior Specs, while kind and altitude are independent descriptors and existing model and rule hubs state capability outcomes.",
+          "The glossary row for capability and domain names a Capability Map over high-altitude behavior Specs, while kind and altitude are independent descriptors on the one primitive, and the hubs that already state the Protocol's capabilities include a domain model, a projection model and the rule that separates the two check families.",
         decision:
-          "Proposed for the owner, admit every Spec at epic altitude and retain its kind; broaden the capability glossary accordingly.",
+          "Any Spec stated at epic altitude is an epic, whatever its kind, and keeps its kind: the capability map reads every epic and its refinement descendants, and the glossary row broadens from high-altitude behavior Specs to epic Specs of every kind.",
         rationale: [
-          "Reusing the intended outcome's owner avoids behavior wrappers that repeat a model or rule solely to enter a view.",
+          "Hard to reverse: corpora organize their capabilities around which Specs may be epics, and the capability map, its page and the upgrade guide read that choice. Surprising without context: the ratified glossary row limited the map to behavior Specs, so a reader needs to know why a model or a rule now heads a capability. A real trade-off: an epic of any kind keeps the Spec that already owns a capability's outcome as its head, as the one-primitive decision's named coordinates already imply, against a map whose roots differ in kind and a glossary row that changes.",
         ],
         alternatives: [
-          "Keep behavior-only capability epics and introduce behavior wrappers over the model and rule hubs, preserving the glossary's current boundary.",
+          "Keep behavior-only capability epics and introduce behavior wrappers over the model and rule hubs: each wrapper would restate an outcome another Spec already owns, a second owner that drifts, only so that a view can read it.",
         ],
         consequences: [
-          "The proposal changes a ratified term and needs the owner's decision before the capability map or the Protocol's epic organization states ready.",
+          "The capability map draws epics of every kind, each labelled with its kind, and a Spec's kind never decides whether it heads a capability.",
+          "The glossary row for capability and domain names a Capability Map over epic Specs of every kind and their refinement descendants.",
         ],
       },
     },

@@ -2,7 +2,7 @@
 id: spec:protocol.roadmap-replaces-plans
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:protocol.self-hosting
   dependsOn:

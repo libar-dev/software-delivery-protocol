@@ -304,13 +304,76 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
       for (const [file, specId] of [
+        ["specs/consumers/capability-map.sdp.md", "spec:consumers.capability-map"],
+        ["specs/consumers/design-slice.sdp.md", "spec:consumers.design-slice"],
+        ["specs/consumers/roadmap.memo.sdp.md", "spec:consumers.roadmap.memo"],
+        ["specs/consumers/roadmap.sdp.md", "spec:consumers.roadmap"],
+        [
+          "specs/consumers/spec-studio.capability-map-page.sdp.md",
+          "spec:consumers.spec-studio.capability-map-page",
+        ],
+        [
+          "specs/consumers/spec-studio.diagram-kinds.capability-tree.sdp.md",
+          "spec:consumers.spec-studio.diagram-kinds.capability-tree",
+        ],
+        [
+          "specs/consumers/spec-studio.diagram-kinds.dependency.sdp.md",
+          "spec:consumers.spec-studio.diagram-kinds.dependency",
+        ],
+        [
+          "specs/consumers/spec-studio.diagram-kinds.edge-routing.sdp.md",
+          "spec:consumers.spec-studio.diagram-kinds.edge-routing",
+        ],
+        [
+          "specs/consumers/spec-studio.diagram-kinds.legibility.sdp.md",
+          "spec:consumers.spec-studio.diagram-kinds.legibility",
+        ],
+        [
+          "specs/consumers/spec-studio.diagram-kinds.maturity-picture.sdp.md",
+          "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+        ],
+        [
+          "specs/consumers/spec-studio.diagram-kinds.mermaid-source.sdp.md",
+          "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+        ],
+        [
+          "specs/consumers/spec-studio.diagram-kinds.requirement-trace.sdp.md",
+          "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+        ],
+        [
+          "specs/consumers/spec-studio.diagram-kinds.scoped-architecture.sdp.md",
+          "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+        ],
+        [
+          "specs/consumers/spec-studio.diagram-kinds.sdp.md",
+          "spec:consumers.spec-studio.diagram-kinds",
+        ],
+        [
+          "specs/consumers/spec-studio.lenses.architecture.unit-register.sdp.md",
+          "spec:consumers.spec-studio.lenses.architecture.unit-register",
+        ],
+        [
+          "specs/consumers/spec-studio.roadmap-page.sdp.md",
+          "spec:consumers.spec-studio.roadmap-page",
+        ],
+        ["specs/consumers/spec-studio.slice-page.sdp.md", "spec:consumers.spec-studio.slice-page"],
+        ["specs/extraction/executable-examples.sdp.md", "spec:extraction.executable-examples"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
+        ["specs/protocol/capability-epics.sdp.md", "spec:protocol.capability-epics"],
+        ["specs/protocol/roadmap-replaces-plans.sdp.md", "spec:protocol.roadmap-replaces-plans"],
+        ["specs/protocol/role-vocabulary.sdp.md", "spec:protocol.role-vocabulary"],
+        [
+          "specs/protocol/significant-units-review.sdp.md",
+          "spec:protocol.significant-units-review",
+        ],
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
-      // Re-measured from the refreshed carriers: no prose-mention pair is retained.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 1 warnings");
+      // Re-measured from the refreshed carriers: no prose-mention pair is retained. The owner's
+      // ready statements on plan 47's roadmaps-and-slices Pack add 22 verifier gaps beside the
+      // retained one on the Spec-sections Model.
+      expect(capture.readStdout()).toContain("validate: 0 errors · 23 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

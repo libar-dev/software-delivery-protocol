@@ -2,7 +2,7 @@
 id: spec:protocol.role-vocabulary
 kind: model
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:protocol.structural-self-binding

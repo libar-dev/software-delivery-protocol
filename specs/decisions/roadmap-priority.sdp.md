@@ -2,7 +2,7 @@
 id: spec:decisions.roadmap-priority
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines:
     - target: spec:decisions.planning-truths-placement

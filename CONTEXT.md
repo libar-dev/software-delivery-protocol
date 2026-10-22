@@ -51,7 +51,7 @@ The familiar delivery nouns are **named coordinates on the one primitive, never 
 | **Scenario** | a low-altitude `example`-kind `Spec` that `refines`/`verifies` a Story | an altitude or a kind |
 | **NFR** | a `constraint` with a measurable `target`; the *flavor* (performance / security / …) lives on the section | a separate kind |
 | **Executable Spec** | an `example` that **has a verifier** (a delivery fact) | a readiness rung |
-| **capability / domain** | a **`Pack` grouping** and/or a designed-for Capability Map projection over high-altitude `behavior` Specs; no Capability Map is built, and the Studio groups Specs by Pack and draws no capability tree (`spec:consumers.spec-studio.lenses.packs#rule.packGrouping`) | a kind or an altitude |
+| **capability / domain** | a **`Pack` grouping** and/or a designed-for Capability Map projection over epic Specs of every kind and their declared `refines` descendants (epics of any kind, MD-48); Pack membership and refinement remain distinct, and the Capability Map is not yet built (`spec:consumers.capability-map`, `spec:consumers.spec-studio.lenses.packs#rule.packGrouping`) | a kind or an altitude |
 
 ## Sections  (→ `spec:model.spec-sections`)
 
@@ -178,6 +178,8 @@ validated," never "provably correct."**
 | **change proposal** | the addressed JSON hand-off of scoped changes against a named base commit, checked before an agent applies ordinary source edits (`spec:consumers.intent-composition.proposal`) | "patch" · "approval" |
 | **proposal memo** | the Markdown rendering of a change proposal a person reviews, including its exact JSON document, shared by recipe 49 and the composing panel (`spec:consumers.intent-composition.proposal.memo`) | "review verdict" |
 | **statement queue** | the ordered answer of waiting readiness statements and a selected decider's questions, with the Specs they rest on first; it states no rung (`spec:consumers.readiness-planner`) | "promotion queue" · "approval gate" |
+| **roadmap** | a Pack whose manifest states `order: priority`: its members' authored order is the corpus's advisory priority, first entry first, and what each entry needs is read from the graph each time; never a schedule, a date or a gate (a roadmap states advisory priority, MD-46; `spec:consumers.roadmap`) | "plan" · "schedule" · "backlog" (the build and design backlogs are recipes) |
+| **need** (of a roadmap entry) | what a roadmap entry needs next, read from its refinement subtree each time: to design, to state (only a person's `ready` statement stands before it), to build, or built; never authored (`spec:consumers.roadmap#rule.entryNeed`) | "lane" (a pull request's work streams) · "step" (an example's steps) · "status" · "stage" |
 | **upgrade kit** | the recipes and guide that measure capability adoption and propose rule keys for an agent's edit, without editing carriers or stating readiness (`spec:consumers.upgrade-kit`) | "migration tool" · "codemod" |
 | **capability adoption** | the per-corpus, Pack and Spec counts of places a Protocol capability is used and could apply, with its carrying Spec; a report without a score or quota (`spec:consumers.upgrade-kit.capability-adoption`) | "adoption score" · "coverage target" |
 | **stamp** | the publishing metadata in `stamp.json` beside a Studio page set, written after the build with its engine, corpus commit, UTC publishing time and optional source template; never graph data (`spec:consumers.spec-studio.sharing`) | "build attestation" · "delivery fact" |
@@ -243,9 +245,10 @@ a git-tag projection) · **baseline** (a named approved snapshot; the **signed g
 artifact** — approval remains outside the model, never an authored primitive).
 
 **Guidance-only labels:** `delivery session` and `work shape` describe an agent interaction and
-its advisory entry in `sdp-sessions`; `design pass`, `design diff`, `design backlog` and
-`curation report` name a design activity or a recipe's answer, and their carrying
-Specs supply their meaning. None of them names a Protocol primitive, descriptor, relation,
+its advisory entry in `sdp-sessions`; `design pass`, `design diff`, `design backlog`, `design slice`
+and `curation report` name a design activity or a recipe's answer, and their carrying
+Specs supply their meaning. A design slice is the design slice recipe's reading of a set of Specs
+as one design, composed on each invocation (`spec:consumers.design-slice`). None of them names a Protocol primitive, descriptor, relation,
 delivery fact, workflow state, or graph state.
 
 ## A worked dialogue  (the language in use)
@@ -296,7 +299,7 @@ Its owned-folder decision, the vault owns one folder (MD-45), is ratified.
   `question field` · `rule key` · `step key` · `contract key` · `term key` · `term address` · `entry citation` · `marker` (the bracket prefix) · `distillation boundary` ·
   `change proposal` · `proposal memo` · `statement queue` · `upgrade kit` · `capability adoption` ·
   `stamp` · `run evidence` · `Pack export` · `text equivalent` · `vault` ·
-  `corpus rule` · `census` · `curated graph` · `relation reason` — carried by the named Specs
+  `corpus rule` · `census` · `curated graph` · `relation reason` · `roadmap` · `need` — carried by the named Specs
   cited in their glossary rows; mention and entry address follow the checked-mentions decision.
 - **Descriptor values locked:** `kind` ∈ {`behavior`,`workflow`,`example`,`rule`,`constraint`,`model`,
   `decision`,`contract`} · `altitude` ∈ {`epic`,`feature`,`story`} · `readiness` ∈

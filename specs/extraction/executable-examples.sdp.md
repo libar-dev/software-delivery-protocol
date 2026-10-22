@@ -2,7 +2,7 @@
 id: spec:extraction.executable-examples
 kind: behavior
 altitude: epic
-readiness: defined
+readiness: ready
 relations:
   dependsOn:
     target: spec:extraction.derive-graph

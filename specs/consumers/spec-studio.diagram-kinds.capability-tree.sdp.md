@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.diagram-kinds.capability-tree
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.diagram-kinds
   dependsOn: spec:consumers.capability-map

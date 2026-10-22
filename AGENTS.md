@@ -16,11 +16,11 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 47 is DRAFTED** on `feature/roadmap-and-slices-v0`: roadmaps, capability maps and design
-> slices, a thin pointer to `pack:roadmaps-and-slices-v1`. Epics and the capability map, a roadmap
-> with advisory priority read from the graph, more diagram kinds and a curated annotation review,
-> a Pack read as one design slice, and the roadmap replacing the numbered plans. Design first;
-> the build waits for the owner's go, and the priority and plan-retirement decisions are the owner's.
+> **plan 47 is EXECUTING** on `feature/roadmap-and-slices-v0`, as draft PR 36: roadmaps,
+> capability maps and design slices, a thin pointer to `pack:roadmaps-and-slices-v1`. Epics and
+> the capability map, a roadmap whose Pack order is advisory priority (MD-46), more diagram kinds
+> and a curated annotation review, a Pack read as one design slice, and the roadmap replacing the
+> numbered plans (MD-47). The owner ruled the design and gave the build go.
 > **plan 46 is EXECUTED**, as PR 35 on `feature/studio-and-adoption-v0`. Designs people can read,
 > and an adopter at full speed: the Studio's phase 1 (diagrams, every Spec-page panel, the registers and
 > the owner's queue as pages, the design diff, run evidence, the composing panel, previews per

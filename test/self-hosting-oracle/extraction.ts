@@ -326,7 +326,7 @@ export const extractionSpecs = [
     id: "spec:extraction.executable-examples",
     specKind: "behavior",
     altitude: "epic",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/extraction/executable-examples.sdp.md",
     title: "Bound examples execute their authored steps",
     narrative:

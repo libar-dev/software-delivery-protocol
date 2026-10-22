@@ -2,7 +2,7 @@
 id: spec:consumers.design-slice
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:consumers.pack-design

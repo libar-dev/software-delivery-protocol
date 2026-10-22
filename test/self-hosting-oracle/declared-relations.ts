@@ -4223,6 +4223,12 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.capability-map",
     "settles which Specs the capability map reads as epics",
   ],
+  [
+    "spec:decisions.epics-of-any-kind",
+    "dependsOn",
+    "spec:decisions.one-primitive",
+    "kind and altitude are independent named coordinates on the one primitive",
+  ],
   ["spec:protocol.capability-epics", "refines", "spec:protocol.self-hosting"],
   ["spec:protocol.capability-epics", "decidedBy", "spec:decisions.epics-of-any-kind"],
   [

@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.capability-map-page
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:consumers.spec-studio.lenses

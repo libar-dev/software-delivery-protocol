@@ -1,8 +1,8 @@
 # Plan 47. Roadmaps, capability maps and design slices
 
-> **Status:** DRAFTED on `feature/roadmap-and-slices-v0`, from `main` at `da4b141`, the merge of
-> PR 35. The design wave is done and reviewed; the build waits for the owner's go. A thin
-> pointer: the arc's intent is `pack:roadmaps-and-slices-v1`
+> **Status:** EXECUTING on `feature/roadmap-and-slices-v0`, from `main` at `da4b141`, the merge of
+> PR 35, as draft PR 36. The design wave is done and reviewed; the owner ruled its decisions and
+> gave the build go on 2026-10-22. A thin pointer: the arc's intent is `pack:roadmaps-and-slices-v1`
 > (`specs/roadmaps-and-slices.pack.sdp.md`), and readiness, backlog and open questions are read
 > from the graph (recipes 1, 9, 11, 20, 29, 33), never from this file. If this file and the graph
 > disagree, the graph wins.
@@ -84,23 +84,35 @@ The executing thread's, and each lane's, after review; each awaits the owner's r
 | The design slice owns depth and rests-on; drawings consume its answer; a relation that orders nothing is drawn apart | `spec:consumers.design-slice#rule.restsOn`, `spec:consumers.spec-studio.diagram-kinds.dependency` |
 | An example folds into its parent only when nothing is lost, and folding lends the parent nothing | `spec:consumers.design-slice#rule.examplesFold` |
 | A planned component is a design row of its own, never merged with the anchored component | `spec:consumers.design-slice#rule.componentDesigns` |
-| A roadmap entry's scope is its refinement subtree; its step is the first open one among its work, and each part that holds it is named | `spec:consumers.roadmap#rule.entryLane`, `#rule.workRows` |
+| A roadmap entry's scope is its refinement subtree; its step is the first open one among its work, and each part that holds it is named | `spec:consumers.roadmap#rule.entryNeed`, `#rule.workRows` |
 | Waiting statements keep the statement queue's order across the whole roadmap | `spec:consumers.roadmap#rule.waiting` |
 | One living roadmap; an entry joins on the owner's word and leaves by a manifest edit | `spec:protocol.roadmap-replaces-plans#rule.oneRoadmap` |
 | The epic-kind decision lives in the decisions family, `spec:decisions.epics-of-any-kind` | the executing thread, at integration |
 
-## Owner's decisions
+## Owner's rulings
 
-| Decision | Recommendation | Carrying Spec |
-| --- | --- | --- |
-| Where priority lives | An optional Pack manifest field, `order: priority`, whose member order is advisory priority; no relation, no date, no gate (confidence 4 of 5) | `spec:decisions.roadmap-priority` |
-| Retiring `plans/` | Freeze `plans/` at plan 47; the handbook names `pack:roadmap` and recipe 53; the gate checks the roadmap Pack instead of a current plan; an arc's record is `reviews/<pack>-record.md` until its first push, then its draft PR (4 of 5; the plan-number ceiling check 3 of 5) | `spec:decisions.roadmap-over-plans` |
-| Epics of any kind | Any Spec at epic altitude is an epic, keeping its kind; broaden the glossary row (high) | `spec:decisions.epics-of-any-kind` |
-| The engine's accepted set | Accept the annotation review's change table: 14 additions, 11 merges, 1 drop, role fixes, 3 component uses; the decoder moves to the reader component (high; the decoder medium) | `spec:protocol.significant-units-review` |
-| Words | roadmap; the roadmap entry's step (lane collides with a PR's lanes; recommend "need"); "to state"; "design slice" as a guidance-only label | `CONTEXT.md` |
-| Release and baseline views | Stay deferred; trigger: the first published release | `spec:consumers.projections-model.roadmap-views` |
+The owner ruled the checkpoint's decisions on 2026-10-22, taking the coordinating session's
+high-confidence opinions as rulings, left the nine epic boundaries as designed, and delegated the
+`ready` statements at the floor recipe 9 reports. Two advisors (Opus 5.5 and GPT-6-Astra, at
+extra-high effort) review the remaining items; the executing thread rules on those after reading
+both.
 
-## Proposed build waves, after the owner's go
+| Ruling | Carrying Spec |
+| --- | --- |
+| Ratified: an optional Pack manifest field `order: priority` makes member order an advisory priority; no relation, no date, no gate; it refines the planning truths decision (MD-46) | `spec:decisions.roadmap-priority` |
+| Ratified: `plans/` freezes at plan 47; the handbook names `pack:roadmap` and recipe 53, and the gate checks the roadmap Pack instead of a current plan; no check refuses a new plan file, which would police the workflow, not conformance (MD-47) | `spec:decisions.roadmap-over-plans` |
+| Ratified: any Spec at epic altitude is an epic and keeps its kind, as the one-primitive decision's named coordinates imply; the glossary row broadens (MD-48) | `spec:decisions.epics-of-any-kind` |
+| Accepted: the annotation review's change table; the contract decoder joins the reader component only if wave 1 shows, with recipe 32 and the self-binding tests, that it adds no layer crossing, otherwise it stays and the reason is recorded | `spec:protocol.significant-units-review#rule.acceptedChanges`, `#rule.decoderBoundary` |
+| Words: "roadmap"; "need" for what a roadmap entry needs next ("step" collides with example steps, "lane" with a pull request's lanes); "to state"; "design slice" a guidance-only label | `CONTEXT.md`, `spec:consumers.roadmap#rule.entryNeed` |
+| Release and baseline views stay deferred; trigger: the first published release | `spec:consumers.projections-model.roadmap-views` |
+| `ready` stated on the arc's 22 Specs whose floor allowed it | the Specs, recipe 29 |
+
+The owner also asked, directly in the executing thread, that this arc set the precedent for
+retiring `reviews/` as well as `plans/`, with canonical SDP-native examples of the alternatives,
+leaving the removal to a dedicated cleanup PR. Where an arc's record lives before its first push
+is put back to the owner, since `reviews/` retires too.
+
+## Build waves
 
 1. **Foundation**, in parallel: the `order: priority` field and the design diff's order change;
    the diagram core (labels, routing, Mermaid source, the copy element's `for`); the accepted

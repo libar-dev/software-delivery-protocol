@@ -68,7 +68,7 @@ export const protocolSpecs = [
     id: "spec:protocol.significant-units-review",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/protocol/significant-units-review.sdp.md",
     title: "The engine's accepted set covers its significant abstractions and only those",
     narrative:
@@ -77,26 +77,6 @@ export const protocolSpecs = [
       intent: {
         outcome:
           "Keep the accepted set focused on the engine's significant contracts, decisions and stages, with meaningful roles and architectural uses, and exclude units anchored only for coverage.",
-        openQuestions: [
-          {
-            question:
-              "Which proposed anchor and dependency changes does the owner accept after reading the annotation review?",
-            blocking: false,
-            key: "acceptedRoster",
-            decider: "owner",
-            provisional:
-              "The annotation review proposes the changes; the existing oracle roster remains the accepted declaration until the owner reviews its replacement.",
-          },
-          {
-            question:
-              "Declaring the example-space decoder's real imports within notation makes graph, notation and validate a uses cycle. Should the decoder join the reader component, leaving notation a leaf codec?",
-            blocking: false,
-            key: "notationBoundary",
-            decider: "owner",
-            provisional:
-              "Assign the existing example-space-decoding identity to reader without moving its source file, declare reader to notation and codegen to reader, and declare neither notation to graph nor notation to validate. The annotation review carries this membership proposal pending acceptance; uses cycles remain lawful data.",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -104,6 +84,8 @@ export const protocolSpecs = [
           "Leave forwarding barrels, empty element registrations, mechanical wrappers, formatting helpers and generated files unanchored unless they own an independent contract or architectural responsibility. A coverage target, test expectation, file count or desired impact answer never establishes significance.",
           "Declare a component uses for a value or type import the importing file itself makes from another component's file. An import made only to author anchors, and a pair the imports adapter reports only through a re-export the importer does not use, confer no edge. Before calling a declared edge stale, inspect input omissions and every file the comparison leaves unassigned. Import evidence proposes an edit and never authors an edge.",
           "The self-hosting suite pins the reviewed component identities, unit ownership, roles, uses and deliberate membership exceptions independently of extraction. It compares the graph with those declarations and rejects unrostered membership. It never derives its expected roster from paths, exports, imports or the graph under test.",
+          "The accepted set is the annotation review's change table as the owner accepted it: its additions, merges, drop, role changes and component uses, each realization claim it names kept.",
+          "The example-space decoder joins the reader component, leaving notation a leaf codec, only when the architecture crossings recipe and the self-binding tests show that the move adds no layer crossing; otherwise it stays in notation, its real imports are declared, and the uses cycle they form stays lawful data.",
           "Read role meanings from the engine's role-vocabulary Model when reviewing its anchors. The vocabulary guides authors and reviewers; the Protocol never validates membership in it.",
         ],
         ruleKeys: {
@@ -111,7 +93,9 @@ export const protocolSpecs = [
           curatedBoundary: "rules[1]",
           dependencyEvidence: "rules[2]",
           rosterOracle: "rules[3]",
-          roleMeaning: "rules[4]",
+          acceptedChanges: "rules[4]",
+          decoderBoundary: "rules[5]",
+          roleMeaning: "rules[6]",
         },
       },
       design: {
@@ -133,7 +117,7 @@ export const protocolSpecs = [
     id: "spec:protocol.role-vocabulary",
     specKind: "model",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/protocol/role-vocabulary.sdp.md",
     title: "The engine's architectural roles each name one pattern",
     narrative:
@@ -211,7 +195,7 @@ export const protocolSpecs = [
     id: "spec:protocol.capability-epics",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/protocol/capability-epics.sdp.md",
     title: "The Protocol organizes its own features in capability epics",
     narrative:
@@ -262,7 +246,7 @@ export const protocolSpecs = [
     id: "spec:protocol.roadmap-replaces-plans",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/protocol/roadmap-replaces-plans.sdp.md",
     title: "The Protocol reads its next work from its roadmap, and its plan files are history",
     narrative:

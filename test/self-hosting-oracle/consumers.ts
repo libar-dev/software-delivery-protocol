@@ -5644,7 +5644,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.lenses.architecture.unit-register",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The architecture page lists each component's significant units by role",
     narrative:
       "A contributor about to change the engine needs the curated register of its significant units: the ports, contracts, pipeline stages and catalogs each component owns, and the designs each unit realizes or answers to. The graph already records them on the anchors. This panel reads them there, grouped by component and role, and shows what no anchor states rather than guessing it.",
@@ -6500,7 +6500,7 @@ export const consumersSpecs = [
     id: "spec:consumers.capability-map",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     title: "The capability map reads every epic and its refinement descendants",
     narrative:
       "The map answers what a corpus intends to do before a reader chooses a Pack. Refinement can skip an altitude, repeat an altitude, or give a Spec several parents. The map keeps that structure. An epic's descendants are a set of Specs, not a measure of completion.",
@@ -6576,7 +6576,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.capability-map-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The capability map page makes refinement readable by epic",
     narrative: null,
     sections: {
@@ -6639,7 +6639,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     title: "The Studio chooses diagram kinds from graph values",
     narrative:
       "Dependency chains across a Pack, capability refinement, the components a design touches, and differences between stated readiness and the floor need different pictures. A diagram kind earns its place through the question it answers and the graph values that answer it. Mermaid supplies a useful catalog of visual forms, not the Studio's layout runtime or an instruction to draw every form.",
@@ -6743,7 +6743,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds.legibility",
     specKind: "contract",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A diagram preserves readable labels before zoom",
     narrative: null,
     sections: {
@@ -6783,7 +6783,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds.edge-routing",
     specKind: "contract",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "Edges route around boxes with deterministic orthogonal paths",
     narrative: null,
     sections: {
@@ -6828,7 +6828,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A diagram offers Mermaid source as copyable text",
     narrative:
       "Mermaid source is a second serialization of the drawing's supplied values. It changes neither the static SVG renderer nor the separately shipped Mermaid root, so it requires no decision refining either ruling. A future Mermaid runtime, layout library or change to that root would need its own decision.",
@@ -6875,7 +6875,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds.dependency",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A dependency drawing shows the declared footing of a Spec set",
     narrative: null,
     sections: {
@@ -6921,7 +6921,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds.capability-tree",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A refinement drawing follows the capability map",
     narrative: null,
     sections: {
@@ -6961,7 +6961,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A Spec set draws the architecture it touches",
     narrative: null,
     sections: {
@@ -7003,7 +7003,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The maturity map is drawn as a grid of counts",
     narrative: null,
     sections: {
@@ -7043,7 +7043,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A requirement drawing separates intent from realization and verification",
     narrative: null,
     sections: {
@@ -7085,7 +7085,7 @@ export const consumersSpecs = [
     id: "spec:consumers.design-slice",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     title:
       "A slice reads a Pack as one design, with the architecture it touches and what each member needs next",
     narrative:
@@ -7216,7 +7216,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.slice-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A slice page shows a Pack's design as one whole",
     narrative:
       "The Pack page reads a Pack card by card, in the order its author wrote. A reviewer judging the design needs the other reading first: which members the rest stand on, what the design will touch in the code, and what decisions and questions bound it. The slice page gives that reading on a page of its own beside the Pack page, one link apart. It keeps the Pack page whole, because a Pack of a hundred members already makes a long page of cards, and the two readings answer different questions in different orders: the author's narrative there, the members others rest on first here.",
@@ -7318,7 +7318,7 @@ export const consumersSpecs = [
     id: "spec:consumers.roadmap",
     specKind: "behavior",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     title: "A roadmap orders the next bodies of work, and the graph says what each still needs",
     narrative:
       "The Protocol's planning reads the graph: the build backlog lists ready work no code realizes, the design backlog lists defined work, and the statement queue orders what a person can state. None of them says which capability comes first. A roadmap is that one authored choice, the order of the next few bodies of work. Everything else about an entry, whether it still needs design, waits only for a person's statement, is ready to build, or is built, is read from the graph each time, so a roadmap never goes stale in what it says about state. It goes stale only in its order, which its owner edits.\n\nAn entry stands for its whole refinement subtree: an epic for its features and stories, a feature for its stories. The reading counts the subtree's work by what each part needs, so a large entry shows how much of it is designed and built, and the parts that could be built now.",
@@ -7335,13 +7335,13 @@ export const consumersSpecs = [
         rules: [
           "A roadmap's entries are its Pack's members in authored order, each numbered by its place from 1; an entry may be an epic, a feature or a story, and its place states its owner's preference and nothing else.",
           "An entry's scope is the entry and every Spec that reaches it through one or more `refines` edges, each counted once whichever parent it reaches through; its work is the Specs of its scope whose kind is neither `example` nor `decision`, the build backlog's exclusions.",
-          "Each Spec in a scope falls in a lane read from the graph: to design when it states a rung below `ready` and its floor does not reach `ready`; to state when it states a rung below `ready` and its floor reaches `ready`, so only a person's statement stands before it; to build when it states `ready`, is neither an example nor a decision, and is not `implemented`; built when it states `ready` and is `implemented`; settled when it is an example or a decision that states `ready`.",
-          "A Spec of an entry's work that is `implemented` while it states below `ready` keeps its lane and counts as drift, as the drift alarm reads it.",
-          "An entry is in the first of to design, to state and to build that any Spec of its work falls in, and built when every Spec of its work is built; an entry reads built only when every Spec of its work states `ready` and is `implemented`.",
-          "An entry that is itself an example or a decision, whose scope holds no work, takes no lane: it is listed apart with its place and its own lane, and it is read through the entries it verifies or shapes.",
-          "Each entry shows its stated rung, the rung its floor reaches, its stated next rung with the floor clauses that hold it, its work counted by lane with the parts to build now, every blocking open question in its scope, and every decision below `ready` that its scope holds or names by `decidedBy`, with that decision's blocking questions, keyed or not.",
-          "Each entry lists every Spec of its work once, with its lane, its stated rung, the rung its floor reaches, its stated next rung with the floor clauses and the dependency targets that hold it, and whether it is drift; the parts in the entry's lane are the ones that set it, so a descendant that holds an entry back is named with what holds it, and the entry's own readiness stays labelled apart.",
-          "An entry rests on each resolving Spec outside its scope that any Spec of its scope names by `dependsOn`, `constrainedBy` or `refines`, while that Spec is to design, to state or to build, so a descendant's second parent outside the entry counts as the entry's own parent does; shaping decisions stay in the decision rows. Each row names the relation, the Specs of the scope that name it, the Spec's lane and stated rung, whether it holds a `ready` statement in the scope because it states below `defined`, and the place of the first entry whose scope holds it, or none when it lies outside the roadmap.",
+          "Each Spec in a scope has a need read from the graph: to design when it states a rung below `ready` and its floor does not reach `ready`; to state when it states a rung below `ready` and its floor reaches `ready`, so only a person's statement stands before it; to build when it states `ready`, is neither an example nor a decision, and is not `implemented`; built when it states `ready` and is `implemented`; settled when it is an example or a decision that states `ready`.",
+          "A Spec of an entry's work that is `implemented` while it states below `ready` keeps its need and counts as drift, as the drift alarm reads it.",
+          "An entry needs the first of to design, to state and to build that any Spec of its work needs, and is built when every Spec of its work is built; an entry reads built only when every Spec of its work states `ready` and is `implemented`.",
+          "An entry that is itself an example or a decision, whose scope holds no work, takes no need: it is listed apart with its place and its own need, and it is read through the entries it verifies or shapes.",
+          "Each entry shows its stated rung, the rung its floor reaches, its stated next rung with the floor clauses that hold it, its work counted by need with the parts to build now, every blocking open question in its scope, and every decision below `ready` that its scope holds or names by `decidedBy`, with that decision's blocking questions, keyed or not.",
+          "Each entry lists every Spec of its work once, with its need, its stated rung, the rung its floor reaches, its stated next rung with the floor clauses and the dependency targets that hold it, and whether it is drift; the parts with the entry's need are the ones that set it, so a descendant that holds an entry back is named with what holds it, and the entry's own readiness stays labelled apart.",
+          "An entry rests on each resolving Spec outside its scope that any Spec of its scope names by `dependsOn`, `constrainedBy` or `refines`, while that Spec is to design, to state or to build, so a descendant's second parent outside the entry counts as the entry's own parent does; shaping decisions stay in the decision rows. Each row names the relation, the Specs of the scope that name it, the Spec's need and stated rung, whether it holds a `ready` statement in the scope because it states below `defined`, and the place of the first entry whose scope holds it, or none when it lies outside the roadmap.",
           "An entry is rested on by each Spec outside its scope, to design, to state or to build, that names a Spec of its scope by `dependsOn`, `constrainedBy` or `decidedBy`, so a reader sees what waits on it.",
           "Apart from the entries, the reading lists what waits on the person the caller names, the owner by default: each open question whose `decider` names that person, on a Spec of any entry's scope or on a decision a scope names by `decidedBy`; and each such Spec or decision whose floor reaches a rung above the rung it states, a statement only a person makes, which for a decision is its ratification. Each row carries the places of the entries it touches. Questions follow their first place; statements keep their relative order in the statement queue across the whole roadmap, so a Spec others rest on comes first whatever its place, and their places never reorder them.",
           "The open questions over the same Specs that name no `decider` are listed apart and counted, blocking and not, so a question nobody is named to settle never reads as an empty workload; the reading never infers a decider from a question's prose.",
@@ -7354,11 +7354,11 @@ export const consumersSpecs = [
         ruleKeys: {
           entries: "rules[0]",
           scope: "rules[1]",
-          specLane: "rules[2]",
+          specNeed: "rules[2]",
           drift: "rules[3]",
-          entryLane: "rules[4]",
+          entryNeed: "rules[4]",
           apart: "rules[5]",
-          needs: "rules[6]",
+          entryShows: "rules[6]",
           workRows: "rules[7]",
           restsOn: "rules[8]",
           restedOnBy: "rules[9]",
@@ -7378,9 +7378,9 @@ export const consumersSpecs = [
           ],
           when: ["the roadmap recipe reads the probe roadmap"],
           then: [
-            'the entry reads in the lane {lane:"to design"|"to state"|"to build"|"built"}',
+            'the entry\'s need reads {need:"to design"|"to state"|"to build"|"built"}',
             "the entry counts {drift:number} parts as drift",
-            "the entry names {part:string} among the parts in its lane, held by {clause:string}",
+            "the entry names {part:string} among the parts with its need, held by {clause:string}",
             "the entry rests on {target:string} through {origin:string}",
             "the waiting statements list {earlier:string} before {later:string}",
           ],
@@ -7390,13 +7390,13 @@ export const consumersSpecs = [
         roadmapRecipe:
           'recipe 53, the roadmap, takes `params.pack`, one Pack id, and `params.decider`, a token on the `decider` field\'s grammar, `"owner"` by default; without `pack` it reads every Pack whose manifest states `order: priority`, in id order; a `pack` that names no Pack, or a `decider` off the grammar, returns `{ diagnostics: [{ parameter, problem }] }` and no roadmaps.',
         roadmapAnswer:
-          '`{ decider, roadmaps }`, one roadmap per Pack read: `{ pack, title, framing, order, totals, entries, apart, waiting }`, where `order` is `"priority"` or `"reading"` and `totals` is `{ entries, toDesign, toState, toBuild, built, apart, questions, blockingQuestions, withoutDecider, blockingWithoutDecider, statements }`, the entries in each lane and the rows waiting.',
-        laneValues:
-          'an entry\'s `lane` is `"to design"`, `"to state"`, `"to build"` or `"built"`; a Spec\'s lane is one of those or `"settled"`.',
+          '`{ decider, roadmaps }`, one roadmap per Pack read: `{ pack, title, framing, order, totals, entries, apart, waiting }`, where `order` is `"priority"` or `"reading"` and `totals` is `{ entries, toDesign, toState, toBuild, built, apart, questions, blockingQuestions, withoutDecider, blockingWithoutDecider, statements }`, the entries with each need and the rows waiting.',
+        needValues:
+          'an entry\'s `need` is `"to design"`, `"to state"`, `"to build"` or `"built"`; a Spec\'s need is one of those or `"settled"`.',
         entryRow:
-          "`{ place, id, title, specKind, altitude, lane, statedReadiness, floorReached, statedNextRung, holdsNextRung, work, workRows, buildNow, blockingQuestions, decisions, restsOn, restedOnBy, earlierStatements, packs, sharesScopeWith }` in place order, where `statedNextRung` is null at `ready`, `holdsNextRung` lists the holding rows that keep the floor from the stated next rung, `work` is `{ specs, toDesign, toState, toBuild, built, drift }` counted over the entry's work, `buildNow` lists the ids of its work to build, `packs` lists the entry's Packs other than the roadmap, and `sharesScopeWith` lists places.",
+          "`{ place, id, title, specKind, altitude, need, statedReadiness, floorReached, statedNextRung, holdsNextRung, work, workRows, buildNow, blockingQuestions, decisions, restsOn, restedOnBy, earlierStatements, packs, sharesScopeWith }` in place order, where `statedNextRung` is null at `ready`, `holdsNextRung` lists the holding rows that keep the floor from the stated next rung, `work` is `{ specs, toDesign, toState, toBuild, built, drift }` counted over the entry's work, `buildNow` lists the ids of its work to build, `packs` lists the entry's Packs other than the roadmap, and `sharesScopeWith` lists places.",
         workRow:
-          "`workRows` lists every Spec counted in `work` once, in Spec-id order, as `{ id, lane, statedReadiness, floorReached, statedNextRung, holdsNextRung, drift }`, with `statedNextRung` and `holdsNextRung` read as on the entry row and `drift` a boolean; the rows whose `lane` equals the entry's are the ones that set it.",
+          "`workRows` lists every Spec counted in `work` once, in Spec-id order, as `{ id, need, statedReadiness, floorReached, statedNextRung, holdsNextRung, drift }`, with `statedNextRung` and `holdsNextRung` read as on the entry row and `drift` a boolean; the rows whose `need` equals the entry's are the ones that set it.",
         holdsRow:
           "a holding row is `{ clause, targets }`, `clause` the id of a floor clause that fails at the stated next rung, in the floor evaluator's order, and `targets` the ids that the typed-dependency clause names, in its order, empty for any other clause.",
         questionRow:
@@ -7404,12 +7404,12 @@ export const consumersSpecs = [
         decisionRow:
           "`{ id, title, statedReadiness, blockingQuestions }` for each decision below `ready` the entry's scope holds or names by `decidedBy`, sorted by id, `blockingQuestions` listing a question row for each of its blocking questions, keyed or not.",
         restsOnRow:
-          '`{ id, via, from, lane, statedReadiness, holdsReady, onRoadmap }`, where `via` is `"dependsOn"`, `"constrainedBy"` or `"refines"`, `from` lists in id order the Specs of the scope that name it by that relation, `holdsReady` is true when the Spec states below `defined`, and `onRoadmap` is the place of the first entry whose scope holds it or null; rows sort by id, then `via`.',
+          '`{ id, via, from, need, statedReadiness, holdsReady, onRoadmap }`, where `via` is `"dependsOn"`, `"constrainedBy"` or `"refines"`, `from` lists in id order the Specs of the scope that name it by that relation, `holdsReady` is true when the Spec states below `defined`, and `onRoadmap` is the place of the first entry whose scope holds it or null; rows sort by id, then `via`.',
         restedOnByRow:
-          "`{ id, via, lane, onRoadmap }`, where `via` is the relation it names the scope by; rows sort by id, then `via`.",
+          "`{ id, via, need, onRoadmap }`, where `via` is the relation it names the scope by; rows sort by id, then `via`.",
         earlierRow:
           '`earlierStatements` lists `{ id, where, onRoadmap }` in the statement queue\'s order, where `where` is `"entry"` for a Spec of the entry\'s scope or one of its shaping decisions, `"roadmap"` for a waiting statement another entry touches through its scope or its shaping decisions, and `"outside"` otherwise, and `onRoadmap` is the first place of the entries that statement touches, null unless `where` is `"roadmap"`.',
-        apartRow: "`{ place, id, specKind, statedReadiness, lane }` in place order.",
+        apartRow: "`{ place, id, specKind, statedReadiness, need }` in place order.",
         waitingRows:
           "`waiting` is `{ questions, withoutDecider, statements }`: a question in either list is a question row with `places`; a statement is `{ id, statedReadiness, floorReached, places }`. Questions sort by their first place, then blocking ones first, then by Spec id and authored position. Statements keep their relative order in the statement queue, recipe 46, across the whole roadmap; their `places` name the entries they touch and never reorder them.",
       },
@@ -7421,7 +7421,7 @@ export const consumersSpecs = [
     id: "spec:consumers.spec-studio.roadmap-page",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "The roadmap page shows the upcoming work in priority order, split by what it needs",
     narrative:
       "The owner reads a roadmap to choose what the next pull requests take up, and a reviewer reads it to see where an arc stands. The page shows each roadmap at a glance as a board, its entries in the column of what each needs next, and then each entry with what holds it. It ends with the forward section a pull request description carries, ready to copy. The page orders by the owner's places and links; it states nothing.",
@@ -7437,15 +7437,15 @@ export const consumersSpecs = [
         rules: [
           "The page set holds `roadmap.html`, which renders recipe 53 over every Pack whose manifest states `order: priority`, one section per roadmap in id order, each ending with recipe 55's memo for that Pack.",
           "With no such Pack, the page says the corpus states no roadmap and that a Pack becomes one when its manifest states `order: priority`.",
-          "Each roadmap's section opens with its title linked to its Pack page, its framing, and sentences the build counts from the answer: the entries in each lane and listed apart, said to be in priority order only when the answer's `order` is `priority` and in authored reading order otherwise; the questions waiting on the owner, blocking and not, and those that name no decider; and the statements waiting, with a link to the owner queue.",
-          "A board follows: four columns, to design, to state, to build and built, each headed by its lane and its count and listing its entries in place order, each as its place and its title linked to the entry's row below; an empty column reads `none`.",
-          "Four lists follow in the same order, each keeping the roadmap's order and numbering each entry by its place, so a gap in the numbers shows an entry in another lane; an empty list says no entry is in that lane.",
-          "Each entry shows its place and title, its kind and altitude, its stated rung and the rung its floor reaches, and its work by lane with any drift; opened, it shows its Spec linked, its stated next rung with the clauses that hold it or `nothing blocks`, the parts in its lane, each linked with its rungs and what holds its next rung, its own labelled `itself`, with its other parts folded under one line that counts them, the parts to build now linked, its blocking questions linked to their Spec pages, its decisions below `ready` with their blocking questions, what it rests on with the parts that reach it, what waits on it, for an entry to state the waiting statements the statement queue puts before its own, its other Packs and the entries it shares Specs with.",
-          "Among what an entry rests on, the Specs to design, the Specs on the roadmap and the Specs that hold a `ready` statement show first, each with its relation, its lane and its place on the roadmap or `outside the roadmap`; the rest fold under one line that counts them.",
+          "Each roadmap's section opens with its title linked to its Pack page, its framing, and sentences the build counts from the answer: the entries with each need and those listed apart, said to be in priority order only when the answer's `order` is `priority` and in authored reading order otherwise; the questions waiting on the owner, blocking and not, and those that name no decider; and the statements waiting, with a link to the owner queue.",
+          "A board follows: four columns, to design, to state, to build and built, each headed by its need and its count and listing its entries in place order, each as its place and its title linked to the entry's row below; an empty column reads `none`.",
+          "Four lists follow in the same order, each keeping the roadmap's order and numbering each entry by its place, so a gap in the numbers shows an entry with another need; an empty list says no entry has that need.",
+          "Each entry shows its place and title, its kind and altitude, its stated rung and the rung its floor reaches, and its work by need with any drift; opened, it shows its Spec linked, its stated next rung with the clauses that hold it or `nothing blocks`, the parts with its need, each linked with its rungs and what holds its next rung, its own labelled `itself`, with its other parts folded under one line that counts them, the parts to build now linked, its blocking questions linked to their Spec pages, its decisions below `ready` with their blocking questions, what it rests on with the parts that reach it, what waits on it, for an entry to state the waiting statements the statement queue puts before its own, its other Packs and the entries it shares Specs with.",
+          "Among what an entry rests on, the Specs to design, the Specs on the roadmap and the Specs that hold a `ready` statement show first, each with its relation, its need and its place on the roadmap or `outside the roadmap`; the rest fold under one line that counts them.",
           "After the lists, the page lists what waits on the owner, recipe 53's `waiting`: each question with its blocking flag, its address linked to the question on its Spec page with a copy action, its text and its provisional reading when present, and each waiting statement with its stated rung and the rung its floor allows, in the order the answer gives, each row linking the entries it touches. The questions that name no decider follow under the sentence `These questions have no named decider.`, apart from the owner's.",
-          "The entries listed apart follow the lists, each with its place, kind, stated rung and lane.",
+          "The entries listed apart follow the lists, each with its place, kind, stated rung and need.",
           "Each roadmap ends with a disclosure holding recipe 55's memo as preformatted text with a copy action, so a description's author pastes the forward section the graph holds.",
-          "A filter narrows the lists by lane; without script every row shows.",
+          "A filter narrows the lists by need; without script every row shows.",
           "The page orders by the roadmap's places and links: it states no rung, approves nothing, and never presents a place as a date, a deadline or permission to start.",
         ],
         ruleKeys: {
@@ -7453,13 +7453,13 @@ export const consumersSpecs = [
           noRoadmap: "rules[1]",
           roadmapSummary: "rules[2]",
           board: "rules[3]",
-          laneLists: "rules[4]",
+          needLists: "rules[4]",
           entryRow: "rules[5]",
           restsOnShown: "rules[6]",
           waitingList: "rules[7]",
           apartList: "rules[8]",
           forwardSection: "rules[9]",
-          laneFilter: "rules[10]",
+          needFilter: "rules[10]",
           statesNothing: "rules[11]",
         },
       },
@@ -7469,9 +7469,9 @@ export const consumersSpecs = [
         entryRow:
           "a disclosure whose summary reads `<place>. <title>` on its first line and, on its second, the kind and altitude, the stated rung as a badge, `floor <rung>`, and the work as `<n> Specs:` followed by the nonzero counts of `to design`, `to state`, `to build` and `built`, then `<d> drift` when present; its element id is `roadmap-<name>-entry-<place>`, `<name>` the name the page set gives the roadmap's Pack page, and every link to an entry, from the board, a rests-on row, the waiting list or a shared-Specs line, uses the owning roadmap's prefix, so two roadmaps on the page never share an id.",
         entryFields:
-          "labelled lines Id, Next, Parts, Build now, Blocked by, Decided by, Rests on, Waited on by, Earlier statements, Also in and Shares Specs with, an empty line left out; Parts appears when the entry has more than one part or a part other than itself sets its lane.",
+          "labelled lines Id, Next, Parts, Build now, Blocked by, Decided by, Rests on, Waited on by, Earlier statements, Also in and Shares Specs with, an empty line left out; Parts appears when the entry has more than one part or a part other than itself sets its need.",
         restsOnItem:
-          "the Spec linked, its relation in words, followed by `from` and the parts that reach it when any part other than the entry itself does, its lane, `holds ready` when it states below `defined`, and `entry <place>` linked to that row or `outside the roadmap`.",
+          "the Spec linked, its relation in words, followed by `from` and the parts that reach it when any part other than the entry itself does, its need, `holds ready` when it states below `defined`, and `entry <place>` linked to that row or `outside the roadmap`.",
         memoDisclosure:
           "a disclosure whose summary reads `The forward section, as Markdown`, holding a copy action and the memo in a `pre` element.",
       },
@@ -7483,7 +7483,7 @@ export const consumersSpecs = [
     id: "spec:consumers.roadmap.memo",
     specKind: "behavior",
     altitude: "story",
-    readiness: "defined",
+    readiness: "ready",
     title: "A roadmap renders as the forward section of a pull request description",
     narrative:
       "A pull request description ends with a forward section: the next work in priority order, what waits on the owner, and what is deferred until its trigger. Written by hand, it drifts from the Specs it names and is rewritten each time. The roadmap memo renders it from the roadmap reading at the head of the branch, so the forward section a description carries is the roadmap the graph holds. The memo states what the graph holds and nothing more: why an entry comes now is read from the entry's own intent and from what waits on it, and the re-entry condition of the next pull request and the durable refused list stay the description author's words around it.",
@@ -7498,9 +7498,9 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "Recipe 55 renders one roadmap's reading, recipe 53's answer for that Pack, as one Markdown memo a pull request description carries as its forward section; the roadmap page shows the same bytes.",
-          "The memo holds, in order: the roadmap's title and framing; the entries to design, to state and to build, each lane in priority order with every entry's place; what waits on the owner; the questions that name no decider; the entries built and still listed; and the deferred open questions with their triggers. The to design and to build sections always appear and say when they hold no entry; every other section is left out when it holds no row.",
+          "The memo holds, in order: the roadmap's title and framing; the entries to design, to state and to build, each need in priority order with every entry's place; what waits on the owner; the questions that name no decider; the entries built and still listed; and the deferred open questions with their triggers. The to design and to build sections always appear and say when they hold no entry; every other section is left out when it holds no row.",
           "An entry's why now is read, never authored: its intent's problem, or its outcome when it states no problem, then how many Specs outside its scope wait on it and how many of its parts are ready to build now. The memo adds no status, date, estimate or assignment to a pull request.",
-          "An entry to design names the parts that set its lane, its own first, each with its stated next rung and the clauses and dependency targets that hold it, then its blocking questions and its decisions below `ready`; an entry to state names the waiting statements the statement queue puts before its own, inside the entry, elsewhere on the roadmap and outside it, as advice on the order of statements and never as a readiness requirement; an entry to build names each Spec it rests on that is not built.",
+          "An entry to design names the parts that set its need, its own first, each with its stated next rung and the clauses and dependency targets that hold it, then its blocking questions and its decisions below `ready`; an entry to state names the waiting statements the statement queue puts before its own, inside the entry, elsewhere on the roadmap and outside it, as advice on the order of statements and never as a readiness requirement; an entry to build names each Spec it rests on that is not built.",
           "The memo carries no re-entry condition and no refused list; the description's author writes those around it.",
           "A memo of a Pack whose order is reading order says so under the framing, so no description presents it as a priority.",
           "One graph and one set of parameters render one memo, byte for byte.",
@@ -7521,11 +7521,11 @@ export const consumersSpecs = [
         memoHead:
           "the memo opens with the line `## The next work, from the roadmap`, a blank line, the line `Roadmap: ` followed by the Pack's title and its id as a code span, a blank line, each paragraph of the framing as authored followed by a blank line, and for a reading-order Pack the line `This Pack's order is reading order, not a stated priority.` and a blank line.",
         memoDesign:
-          "the section `### To design` holds a table with the columns `Place`, `Entry`, `Next` and `Why now`; `Next` reads, for at most three of the work rows in the entry's lane, the entry's own first and the rest in Spec-id order, the row's id as a code span or `itself` for the entry's own, its stated rung and stated next rung as code spans joined by ` → `, then `held by` and each clause id followed by its targets as code spans in parentheses, or `nothing holds it`; then `and <n> more parts to design` when rows are left out; then `blocked by` and each blocking question's address as a code span, or its Spec id when unkeyed; then `decided by` and each decision below `ready` as a code span with its stated rung; the parts joined by `; `.",
+          "the section `### To design` holds a table with the columns `Place`, `Entry`, `Next` and `Why now`; `Next` reads, for at most three of the work rows with the entry's need, the entry's own first and the rest in Spec-id order, the row's id as a code span or `itself` for the entry's own, its stated rung and stated next rung as code spans joined by ` → `, then `held by` and each clause id followed by its targets as code spans in parentheses, or `nothing holds it`; then `and <n> more parts to design` when rows are left out; then `blocked by` and each blocking question's address as a code span, or its Spec id when unkeyed; then `decided by` and each decision below `ready` as a code span with its stated rung; the parts joined by `; `.",
         memoState:
           "the section `### To state` holds a table with the columns `Place`, `Entry`, `Earlier waiting statements` and `Why now`; the third column reads `No preceding waiting statement in the statement queue.` when the entry's `earlierStatements` is empty, and otherwise `in this entry` followed by those inside it as code spans, `on the roadmap` followed by those at another entry as code spans each with `(place <n>)`, and `<n> outside the roadmap`, each part present only when it holds a row and the parts joined by `; `.",
         memoBuild:
-          "the section `### To build` holds a table with the columns `Place`, `Entry`, `Why now` and `Rests on`; `Rests on` lists each Spec the entry rests on as a code span with its lane, or reads `nothing unbuilt`.",
+          "the section `### To build` holds a table with the columns `Place`, `Entry`, `Why now` and `Rests on`; `Rests on` lists each Spec the entry rests on as a code span with its need, or reads `nothing unbuilt`.",
         memoEntry:
           "an `Entry` cell is the entry's title followed by its id as a code span; the `Why now` cell is the intent line, ending with a full stop when it ends with none, then `Waited on by <n>.` when Specs wait on it and `<n> of its parts ready to build now.` for an entry not to build that has such parts.",
         memoWaiting:

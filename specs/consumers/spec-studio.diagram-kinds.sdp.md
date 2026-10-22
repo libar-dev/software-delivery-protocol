@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.diagram-kinds
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.diagrams
   decidedBy:

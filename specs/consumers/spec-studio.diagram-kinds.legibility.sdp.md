@@ -2,7 +2,7 @@
 id: spec:consumers.spec-studio.diagram-kinds.legibility
 kind: contract
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.spec-studio.diagrams
   dependsOn: spec:consumers.spec-studio.responsive

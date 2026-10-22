@@ -2,7 +2,7 @@
 id: spec:protocol.capability-epics
 kind: behavior
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines: spec:protocol.self-hosting
   decidedBy: spec:decisions.epics-of-any-kind

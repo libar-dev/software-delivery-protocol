@@ -2,7 +2,7 @@
 id: spec:decisions.roadmap-over-plans
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:decisions.planning-truths-placement
@@ -27,8 +27,9 @@ Each arc's intent already lives in its capture Specs and its Pack, its rulings i
 - alternative: Keep plan files for forward planning beside the roadmap: priority would live in two places, and the plan's copy would drift.
 - alternative: Keep a thin plan file per arc for its execution record alone, with no status gate: the pull request description already carries the same record by the description standard, so the file would be a second copy that the next session must reconcile.
 - alternative: Record an arc's execution in the graph, as an arc Spec or Pack fields: who ruled what and when is history that git and the description keep, and that a review happened is never a graph fact.
+- alternative: A gate check that refuses a numbered plan past the last frozen one: refusing a new plan file would police the workflow, not conformance, and the handbook saying the plans are frozen history is enough.
 - alternative: Keep each arc's whole execution record in a committed file under `reviews/` for its life: once the draft pull request exists the file would duplicate the description, so the file holds the record only until the first authorized push and then only the link.
-- consequence: The handbook drops its stack of plan statuses for a short pointer to the roadmap and its recipe. The self-hosting gate's current-record check refuses a numbered plan past the last frozen one, a handbook that does not name the roadmap Pack and recipe, and a roadmap Pack manifest that is missing or does not state priority order; its frozen historical checks, its green-gate legs and its ban on plan status in the registry and the glossary stay.
+- consequence: The handbook drops its stack of plan statuses for a short pointer to the roadmap and its recipe. The self-hosting gate's current-record check refuses a handbook that does not name the roadmap Pack and recipe, and a roadmap Pack manifest that is missing or does not state priority order; its frozen historical checks, its green-gate legs and its ban on plan status in the registry and the glossary stay.
 - consequence: The graph-first planning Spec's plan-file rule narrows to a plan document a corpus chooses to keep, which points to its Packs and carrying Specs and confers nothing; an adopter keeps whatever planning documents it wants, and a roadmap is open to it as to the Protocol.
 - consequence: The description standard renders its forward section with the roadmap memo; the pull request that completes an entry's selected work removes it from the roadmap in the same change, and entries join or move only on the owner's word.
 - consequence: The commit strategy that authorizes commits on an arc's branch comes from the owner's instruction for the arc, recorded in the arc's record, its record file before the first push and its draft pull request after, where it came from the plan file; uncommitted state that has no clean boundary is accounted for in the same record.
