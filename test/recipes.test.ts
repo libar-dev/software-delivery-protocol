@@ -4549,6 +4549,7 @@ describe("recipe parameters and the shipped recipe files", () => {
           !(recipe.ordinal === 41 && name !== "prefixes") &&
           !(recipe.ordinal === 42 && name !== "severity") &&
           !(recipe.ordinal === 51 && name !== "severity") &&
+          !(recipe.ordinal === 52 && name === "epic") &&
           !(recipe.ordinal === 50 && ["register", "pattern"].includes(name));
         expect({
           recipe: recipe.ordinal,
@@ -7541,3 +7542,712 @@ it.each(["rule", "flow"])(
     }
   },
 );
+
+function capabilitySpec(
+  name: string,
+  altitude: "epic" | "feature" | "story" = "feature",
+  kind: ProbeSpecKind = "behavior",
+  sections?: ProbeSections,
+): Extract<GraphNode, { nodeType: "Primitive" }> {
+  return {
+    id: `spec:probe.${name}`,
+    nodeType: "Primitive",
+    claim: "declared",
+    specKind: kind,
+    readiness: "idea",
+    altitude,
+    title: name,
+    file: `specs/${name}.sdp.md`,
+    sections: sections ?? { intent: { outcome: "Probe." } },
+  };
+}
+
+function refinement(child: string, parent: string, reason?: string): GraphEdge {
+  return {
+    ...probeEdge(`spec:probe.${child}`, "refines", `spec:probe.${parent}`),
+    ...(reason === undefined ? {} : { reason }),
+  };
+}
+
+async function capabilityMap(
+  nodes: readonly GraphNode[],
+  edges: readonly GraphEdge[] = [],
+  params: Readonly<Record<string, unknown>> = { detail: true },
+): Promise<Record<string, unknown>> {
+  const extraction = syntheticExtraction(nodes, edges);
+  return asRecord(
+    await compileBody(recipeByOrdinal(52).body)(
+      createReader(extraction.graph),
+      extraction.graph,
+      extraction.report,
+      params,
+    ),
+  );
+}
+
+function mapRows(answer: Record<string, unknown>, key: string): Record<string, unknown>[] {
+  return asArray(answer[key]).map(asRecord);
+}
+
+function mapRow(answer: Record<string, unknown>, key: string, id: string): Record<string, unknown> {
+  const row = mapRows(answer, key).find((row) => row.id === id);
+  if (row === undefined) throw new Error(`missing ${key} row ${id}`);
+  return row;
+}
+
+const capabilityMapRecipeImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.capability-map-recipe"),
+  label: "asserts realization of The capability map in docs/agent-surface/recipes.md",
+  satisfies: ref("spec:consumers.capability-map"),
+  references: [ref("spec:decisions.epics-of-any-kind")],
+});
+void capabilityMapRecipeImplementationAnchor;
+const capabilityMapRecipeTestAnchor = specTest({
+  id: testAnchorId("test:protocol.capability-map"),
+  verifies: ref("spec:consumers.capability-map"),
+});
+void capabilityMapRecipeTestAnchor;
+
+describe("the capability map recipe", () => {
+  const diamondNodes = [
+    capabilitySpec("epic", "epic"),
+    capabilitySpec("left"),
+    capabilitySpec("right"),
+    capabilitySpec("child", "story"),
+  ];
+  const diamondEdges = [
+    refinement("left", "epic", "narrows the capability"),
+    refinement("right", "epic"),
+    refinement("child", "left"),
+    refinement("child", "right"),
+  ];
+
+  it("retains every diamond edge and intermediate node while counting each descendant once", async () => {
+    const answer = await capabilityMap(diamondNodes, diamondEdges);
+    expect(mapRows(answer, "nodes").map((row) => row.id)).toEqual([
+      "spec:probe.child",
+      "spec:probe.epic",
+      "spec:probe.left",
+      "spec:probe.right",
+    ]);
+    expect(mapRow(answer, "nodes", "spec:probe.child").parents).toEqual([
+      "spec:probe.left",
+      "spec:probe.right",
+    ]);
+    expect(answer.edges).toEqual([
+      { from: "spec:probe.child", to: "spec:probe.left", claim: "declared", reason: null },
+      { from: "spec:probe.child", to: "spec:probe.right", claim: "declared", reason: null },
+      {
+        from: "spec:probe.left",
+        to: "spec:probe.epic",
+        claim: "declared",
+        reason: "narrows the capability",
+      },
+      { from: "spec:probe.right", to: "spec:probe.epic", claim: "declared", reason: null },
+    ]);
+    const epic = mapRow(answer, "epics", "spec:probe.epic");
+    expect(epic.descendantIds).toEqual(["spec:probe.child", "spec:probe.left", "spec:probe.right"]);
+    expect(epic.rollup).toMatchObject({ specs: 3, byAltitude: { epic: 0, feature: 2, story: 1 } });
+    expect(answer.totals).toMatchObject({ specs: 4, reached: 4, unreached: 0 });
+  });
+
+  it.each([{}, { epic: "spec:probe.epic" }])(
+    "returns summary/full parity with explicit omissions for scope %j",
+    async (scope) => {
+      const nodes = [...diamondNodes, capabilitySpec("unreached")];
+      const edges = [...diamondEdges, refinement("left", "missing"), refinement("child", "child")];
+      const full = await capabilityMap(nodes, edges, { ...scope, detail: true });
+      const summary = await capabilityMap(nodes, edges, scope);
+      expect(summary).toEqual(await capabilityMap(nodes, edges, { ...scope, detail: false }));
+      const { nodes: omittedNodes, edges: omittedEdges, epics, unreached, ...kept } = full;
+      expect(omittedNodes).toBeDefined();
+      expect(omittedEdges).toBeDefined();
+      expect(full).not.toHaveProperty("leftOut");
+      expect(summary).toEqual({
+        ...kept,
+        epics: asArray(epics).map((row) => {
+          const { descendantIds, ...summaryEpic } = asRecord(row);
+          expect(descendantIds).toBeDefined();
+          return summaryEpic;
+        }),
+        unreached: { ids: asRecord(unreached).ids },
+        leftOut: [
+          "nodes: full Spec rows and memberships",
+          "edges: selected refinement edges and reasons",
+          "epics.descendantIds: distinct descendant ids",
+          "unreached.roots: roots of the unreached refinement subgraph",
+        ],
+      });
+    },
+  );
+
+  it("normalizes prose and unflagged questions while preserving authored indices", async () => {
+    const answer = await capabilityMap([
+      capabilitySpec("questions", "feature", "behavior", {
+        intent: {
+          outcome: "Read lawful question forms.",
+          openQuestions: [
+            "A plain string question?",
+            { question: "No flag?" },
+            "",
+            { key: "keyed", question: "A keyed question?", blocking: true },
+          ],
+        },
+      }),
+    ]);
+    expect(mapRow(answer, "nodes", "spec:probe.questions").questions).toEqual([
+      { index: 0, address: null, question: "A plain string question?", blocking: false },
+      { index: 1, address: null, question: "No flag?", blocking: false },
+      {
+        index: 3,
+        address: "spec:probe.questions#question.keyed",
+        question: "A keyed question?",
+        blocking: true,
+      },
+    ]);
+    expect(answer.totals).toMatchObject({ openQuestions: 3, blockingQuestions: 1 });
+  });
+
+  it("retains null titles in serialized node and epic rows when a title degrades", async () => {
+    const { title: omittedTitle, ...epic } = capabilitySpec("untitled", "epic");
+    expect(omittedTitle).toBeDefined();
+    const full = JSON.parse(JSON.stringify(await capabilityMap([epic]))) as Record<string, unknown>;
+    const summary = JSON.parse(JSON.stringify(await capabilityMap([epic], [], {}))) as Record<
+      string,
+      unknown
+    >;
+    expect(mapRow(full, "nodes", epic.id)).toHaveProperty("title", null);
+    expect(mapRow(full, "epics", epic.id)).toHaveProperty("title", null);
+    expect(mapRow(summary, "epics", epic.id)).toHaveProperty("title", null);
+  });
+
+  it("reports a self-refining epic as a cycle without making it its own parent epic", async () => {
+    const answer = await capabilityMap(
+      [capabilitySpec("epic", "epic")],
+      [refinement("epic", "epic")],
+    );
+    expect(mapRow(answer, "epics", "spec:probe.epic").parentEpicIds).toEqual([]);
+    expect(mapRow(answer, "nodes", "spec:probe.epic").parents).toEqual(["spec:probe.epic"]);
+    expect(answer.cycles).toEqual([{ members: ["spec:probe.epic"] }]);
+  });
+
+  it("uses the outside unreached parent as root rather than its child cycle group", async () => {
+    const answer = await capabilityMap(
+      [capabilitySpec("p"), capabilitySpec("a"), capabilitySpec("b")],
+      [refinement("a", "p"), refinement("a", "b"), refinement("b", "a")],
+    );
+    expect(answer.unreached).toEqual({
+      ids: ["spec:probe.a", "spec:probe.b", "spec:probe.p"],
+      roots: ["spec:probe.p"],
+    });
+    expect(answer.cycles).toEqual([{ members: ["spec:probe.a", "spec:probe.b"] }]);
+  });
+
+  it.each([
+    "behavior",
+    "workflow",
+    "example",
+    "rule",
+    "constraint",
+    "model",
+    "decision",
+    "contract",
+  ] as const)("selects an epic of kind %s without changing its kind", async (kind) => {
+    const answer = await capabilityMap([capabilitySpec("epic", "epic", kind)], [], {
+      epic: "spec:probe.epic",
+      detail: true,
+    });
+    expect(answer.input).toEqual({ epic: "spec:probe.epic" });
+    expect(mapRow(answer, "nodes", "spec:probe.epic")).toMatchObject({
+      specKind: kind,
+      epicIds: ["spec:probe.epic"],
+    });
+    expect(answer.totals).toMatchObject({ specs: 1, epics: 1, reached: 1 });
+    expect(mapRow(answer, "epics", "spec:probe.epic").rollup).toMatchObject({ specs: 0 });
+  });
+
+  it("reads node evidence and ordered questions directly, including examples and decisions as parents", async () => {
+    const example = capabilitySpec("example", "story", "example", {
+      intent: {
+        outcome: "Probe questions.",
+        openQuestions: [
+          { key: "first", question: "What is missing?", blocking: true },
+          { question: "What else?", blocking: false },
+        ],
+      },
+    });
+    const nodes = [
+      capabilitySpec("epic", "epic"),
+      example,
+      capabilitySpec("decision", "story", "decision"),
+      capabilitySpec("underExample"),
+      capabilitySpec("underDecision"),
+      {
+        id: "test:probe.bound",
+        nodeType: "Anchor" as const,
+        claim: "anchored" as const,
+        file: "test.ts",
+        line: 1,
+      },
+      probeUnit("impl:probe.bound", 2),
+    ];
+    const edges = [
+      refinement("example", "epic"),
+      refinement("decision", "epic"),
+      refinement("underExample", "example"),
+      refinement("underDecision", "decision"),
+      probeEdge("test:probe.bound", "verifies", "spec:probe.example", "anchored"),
+      probeEdge("impl:probe.bound", "satisfies", "spec:probe.decision", "anchored"),
+    ];
+    const answer = await capabilityMap(nodes, edges);
+    expect(mapRow(answer, "nodes", "spec:probe.example")).toMatchObject({
+      statedReadiness: "idea",
+      floorReached: "idea",
+      deliveryFacts: ["has-verifier"],
+      children: ["spec:probe.underExample"],
+      questions: [
+        {
+          index: 0,
+          address: "spec:probe.example#question.first",
+          question: "What is missing?",
+          blocking: true,
+        },
+        { index: 1, address: null, question: "What else?", blocking: false },
+      ],
+    });
+    expect(mapRow(answer, "nodes", "spec:probe.epic").deliveryFacts).toEqual([]);
+    expect(mapRow(answer, "epics", "spec:probe.epic").rollup).toEqual({
+      specs: 4,
+      byStatedReadiness: { idea: 4, scoped: 0, defined: 0, ready: 0 },
+      byFloorReached: { none: 0, idea: 4, scoped: 0, defined: 0, ready: 0 },
+      byKind: {
+        behavior: 2,
+        workflow: 0,
+        example: 1,
+        rule: 0,
+        constraint: 0,
+        model: 0,
+        decision: 1,
+        contract: 0,
+      },
+      byAltitude: { epic: 0, feature: 2, story: 2 },
+      withImplementationBinding: 1,
+      withVerifierBinding: 1,
+      openQuestions: 2,
+      blockingQuestions: 1,
+    });
+  });
+
+  it("represents a missing floor as none and keeps the epic's evidence outside its rollup", async () => {
+    const answer = await capabilityMap(
+      [
+        capabilitySpec("epic", "epic", "behavior", {}),
+        { ...capabilitySpec("empty", "story"), title: "" },
+        probeUnit("impl:probe.epic", 1),
+      ],
+      [
+        refinement("empty", "epic"),
+        probeEdge("impl:probe.epic", "satisfies", "spec:probe.epic", "anchored"),
+      ],
+    );
+    expect(mapRow(answer, "nodes", "spec:probe.empty").floorReached).toBe("none");
+    expect(answer.totals).toMatchObject({
+      withImplementationBinding: 1,
+      byFloorReached: { none: 2 },
+    });
+    expect(mapRow(answer, "epics", "spec:probe.epic").rollup).toMatchObject({
+      specs: 1,
+      withImplementationBinding: 0,
+    });
+  });
+
+  it("counts stated rungs separately from reached floors without lending a bound example's facts to its epic", async () => {
+    const complete = { intent: { outcome: "Probe." }, behavior: { rules: ["A rule."] } };
+    const nodes = [
+      { ...capabilitySpec("epic", "epic", "behavior", complete), readiness: "ready" as const },
+      {
+        ...capabilitySpec("decision", "story", "decision", {
+          intent: { outcome: "Settle the probe." },
+          decision: { context: "A choice.", decision: "Choose the intended outcome." },
+        }),
+        readiness: "ready" as const,
+      },
+      {
+        ...capabilitySpec("example", "story", "example", {
+          intent: { outcome: "Exercise the probe." },
+          behavior: {
+            examples: [{ given: ["A probe."], when: ["It runs."], then: ["It answers."] }],
+          },
+        }),
+        readiness: "ready" as const,
+      },
+      capabilitySpec("idea"),
+      {
+        ...capabilitySpec("scoped", "feature", "behavior", {
+          ...complete,
+          intent: {
+            outcome: "Probe.",
+            openQuestions: [{ question: "Which answer?", blocking: true }],
+          },
+        }),
+        readiness: "scoped" as const,
+      },
+      {
+        ...capabilitySpec("defined", "feature", "behavior", complete),
+        readiness: "defined" as const,
+      },
+      {
+        id: "test:probe.example",
+        nodeType: "Anchor" as const,
+        claim: "anchored" as const,
+        file: "test.ts",
+        line: 1,
+      },
+    ];
+    const edges = ["decision", "example", "idea", "scoped", "defined"].map((id) =>
+      refinement(id, "epic"),
+    );
+    const answer = await capabilityMap(nodes, [
+      ...edges,
+      probeEdge("spec:probe.epic", "dependsOn", "spec:probe.decision"),
+      probeEdge("spec:probe.defined", "dependsOn", "spec:probe.idea"),
+      probeEdge("test:probe.example", "verifies", "spec:probe.example", "anchored"),
+    ]);
+    expect(mapRow(answer, "nodes", "spec:probe.epic")).toMatchObject({
+      floorReached: "ready",
+      deliveryFacts: [],
+    });
+    expect(mapRow(answer, "nodes", "spec:probe.decision")).toMatchObject({
+      statedReadiness: "ready",
+      floorReached: "ready",
+    });
+    expect(mapRow(answer, "epics", "spec:probe.epic").rollup).toMatchObject({
+      specs: 5,
+      byStatedReadiness: { idea: 1, scoped: 1, defined: 1, ready: 2 },
+      byFloorReached: { none: 0, idea: 1, scoped: 1, defined: 1, ready: 2 },
+      withImplementationBinding: 0,
+      withVerifierBinding: 1,
+      openQuestions: 1,
+      blockingQuestions: 1,
+    });
+    expect(mapRow(answer, "nodes", "spec:probe.example").deliveryFacts).toEqual(["has-verifier"]);
+  });
+
+  it("keeps nested and overlapping memberships and outside parents when selecting one epic", async () => {
+    const nodes = [
+      capabilitySpec("outer", "epic"),
+      capabilitySpec("nested", "epic", "model"),
+      capabilitySpec("other", "epic"),
+      capabilitySpec("child"),
+      capabilitySpec("outside"),
+    ];
+    const edges = [
+      refinement("nested", "outer"),
+      refinement("child", "nested"),
+      refinement("child", "other"),
+      refinement("child", "outside"),
+    ];
+    const full = await capabilityMap(nodes, edges);
+    const selected = await capabilityMap(nodes, edges, { epic: "spec:probe.nested", detail: true });
+    expect(mapRows(selected, "nodes").map((row) => row.id)).toEqual([
+      "spec:probe.child",
+      "spec:probe.nested",
+    ]);
+    expect(mapRow(selected, "nodes", "spec:probe.child")).toEqual(
+      mapRow(full, "nodes", "spec:probe.child"),
+    );
+    expect(mapRow(selected, "nodes", "spec:probe.child").epicIds).toEqual([
+      "spec:probe.nested",
+      "spec:probe.other",
+      "spec:probe.outer",
+    ]);
+    expect(mapRow(selected, "epics", "spec:probe.nested")).toEqual(
+      mapRow(full, "epics", "spec:probe.nested"),
+    );
+    expect(mapRow(selected, "epics", "spec:probe.nested").parentEpicIds).toEqual([
+      "spec:probe.outer",
+    ]);
+    expect(mapRow(full, "epics", "spec:probe.outer").descendantIds).toEqual([
+      "spec:probe.child",
+      "spec:probe.nested",
+    ]);
+    expect(selected.totals).toMatchObject({ specs: 2, epics: 1, reached: 2, unreached: 0 });
+    expect(selected.unreached).toEqual({ ids: [], roots: [] });
+    expect(full.unreached).toEqual({ ids: ["spec:probe.outside"], roots: ["spec:probe.outside"] });
+    expect(mapRows(full, "edges")).toContainEqual({
+      from: "spec:probe.child",
+      to: "spec:probe.outside",
+      claim: "declared",
+      reason: null,
+    });
+    const outer = await capabilityMap(nodes, edges, { epic: "spec:probe.outer", detail: true });
+    expect(mapRow(outer, "epics", "spec:probe.nested")).toEqual(
+      mapRow(full, "epics", "spec:probe.nested"),
+    );
+  });
+
+  it("traverses only declared refinement and never infers ancestry from other graph structure", async () => {
+    const nodes = [
+      capabilitySpec("epic", "epic"),
+      capabilitySpec("child"),
+      capabilitySpec("inferred"),
+      capabilitySpec("dependent"),
+      {
+        id: "pack:probe.map",
+        nodeType: "Pack" as const,
+        claim: "declared" as const,
+        file: "map.pack.sdp.md",
+        members: ["spec:probe.epic", "spec:probe.dependent"],
+      },
+    ];
+    const answer = await capabilityMap(nodes, [
+      refinement("child", "epic"),
+      { ...refinement("inferred", "epic"), claim: "inferred" },
+      probeEdge("spec:probe.dependent", "dependsOn", "spec:probe.epic"),
+      probeEdge("spec:probe.dependent", "belongsTo", "pack:probe.map"),
+    ]);
+    expect(answer.totals).toMatchObject({ specs: 4, reached: 2, unreached: 2 });
+    expect(mapRows(answer, "edges")).toHaveLength(1);
+    expect(answer.unreached).toEqual({
+      ids: ["spec:probe.dependent", "spec:probe.inferred"],
+      roots: ["spec:probe.dependent", "spec:probe.inferred"],
+    });
+  });
+
+  it("reports cycles, self-links and unresolved or non-Spec endpoints separately from parameter failures", async () => {
+    const nodes = [
+      capabilitySpec("a"),
+      capabilitySpec("b"),
+      capabilitySpec("c"),
+      capabilitySpec("self"),
+      probeUnit("impl:probe.non-spec", 1),
+    ];
+    const edges = [
+      refinement("a", "b"),
+      refinement("b", "a"),
+      refinement("c", "a"),
+      refinement("self", "self"),
+      refinement("c", "missing"),
+      refinement("missing", "b"),
+      probeEdge("spec:probe.a", "refines", "impl:probe.non-spec"),
+      probeEdge("impl:probe.non-spec", "refines", "spec:probe.b"),
+    ];
+    const answer = await capabilityMap(nodes, edges);
+    expect(answer.totals).toMatchObject({ specs: 4, epics: 0, reached: 0, unreached: 4 });
+    expect(answer.cycles).toEqual([
+      { members: ["spec:probe.a", "spec:probe.b"] },
+      { members: ["spec:probe.self"] },
+    ]);
+    expect(answer.unreached).toEqual({
+      ids: ["spec:probe.a", "spec:probe.b", "spec:probe.c", "spec:probe.self"],
+      roots: ["spec:probe.a", "spec:probe.self"],
+    });
+    expect(answer.damage).toEqual([
+      { code: "unresolved-refinement", from: "impl:probe.non-spec", to: "spec:probe.b" },
+      { code: "unresolved-refinement", from: "spec:probe.a", to: "impl:probe.non-spec" },
+      { code: "unresolved-refinement", from: "spec:probe.c", to: "spec:probe.missing" },
+      { code: "unresolved-refinement", from: "spec:probe.missing", to: "spec:probe.b" },
+    ]);
+    expect(answer).not.toHaveProperty("diagnostics");
+  });
+
+  it("limits damage to edges touching a selected epic scope and terminates reached cycles", async () => {
+    const answer = await capabilityMap(
+      [capabilitySpec("epic", "epic"), capabilitySpec("child"), capabilitySpec("outside")],
+      [
+        refinement("child", "epic"),
+        refinement("epic", "child"),
+        refinement("child", "missing"),
+        refinement("absent", "epic"),
+        refinement("outside", "otherMissing"),
+      ],
+      { epic: "spec:probe.epic", detail: true },
+    );
+    expect(answer.totals).toMatchObject({ specs: 2, reached: 2 });
+    expect(answer.cycles).toEqual([{ members: ["spec:probe.child", "spec:probe.epic"] }]);
+    expect(mapRow(answer, "epics", "spec:probe.epic").descendantIds).toEqual(["spec:probe.child"]);
+    expect(answer.damage).toEqual([
+      { code: "unresolved-refinement", from: "spec:probe.absent", to: "spec:probe.epic" },
+      { code: "unresolved-refinement", from: "spec:probe.child", to: "spec:probe.missing" },
+    ]);
+  });
+
+  it("keeps overlapping unreached root scopes unique and exposes an empty corpus", async () => {
+    const answer = await capabilityMap(
+      [capabilitySpec("a"), capabilitySpec("b"), capabilitySpec("shared")],
+      [refinement("shared", "a"), refinement("shared", "b")],
+    );
+    expect(answer.unreached).toEqual({
+      ids: ["spec:probe.a", "spec:probe.b", "spec:probe.shared"],
+      roots: ["spec:probe.a", "spec:probe.b"],
+    });
+    const empty = await capabilityMap([]);
+    expect(empty).toMatchObject({
+      input: { epic: null },
+      nodes: [],
+      edges: [],
+      epics: [],
+      cycles: [],
+      damage: [],
+      unreached: { ids: [], roots: [] },
+      totals: { specs: 0, epics: 0, reached: 0, unreached: 0 },
+    });
+    expect(asRecord(asRecord(empty.totals).byKind)).toEqual({
+      behavior: 0,
+      workflow: 0,
+      example: 0,
+      rule: 0,
+      constraint: 0,
+      model: 0,
+      decision: 0,
+      contract: 0,
+    });
+  });
+
+  it.each([
+    { params: { epic: null }, problems: [["epic", "Expected a Spec id string"]] },
+    { params: { epic: 1 }, problems: [["epic", "Expected a Spec id string"]] },
+    { params: { epic: [] }, problems: [["epic", "Expected a Spec id string"]] },
+    {
+      params: { epic: "spec:probe.absent" },
+      problems: [["epic", "No resolving Spec for spec:probe.absent"]],
+    },
+    {
+      params: { epic: "spec:probe.plain" },
+      problems: [["epic", "spec:probe.plain is a feature Spec, not an epic"]],
+    },
+    {
+      params: { epic: "impl:probe.non-spec" },
+      problems: [["epic", "No resolving Spec for impl:probe.non-spec"]],
+    },
+    { params: { detail: "true" }, problems: [["detail", "Expected a boolean"]] },
+    { params: { detail: 1 }, problems: [["detail", "Expected a boolean"]] },
+    { params: { detail: null }, problems: [["detail", "Expected a boolean"]] },
+    {
+      params: { epic: 1, detail: "x" },
+      problems: [
+        ["detail", "Expected a boolean"],
+        ["epic", "Expected a Spec id string"],
+      ],
+    },
+  ])("refuses invalid parameters without a map: $params", async ({ params, problems }) => {
+    const answer = await capabilityMap(
+      [capabilitySpec("plain"), probeUnit("impl:probe.non-spec", 1)],
+      [],
+      params,
+    );
+    expect(answer).toEqual({
+      diagnostics: problems.map(([parameter, problem]) => ({ parameter, problem })),
+    });
+  });
+
+  it("checks unknown names before known values", async () => {
+    expect(await capabilityMap([], [], { unknown: true, epic: 1 })).toEqual({
+      unknownParams: ["unknown"],
+      accepts: ["epic", "detail"],
+    });
+  });
+
+  it("answers deterministically in code-unit id order even when graph arrays are reversed", async () => {
+    const nodes = [
+      ...diamondNodes,
+      capabilitySpec("Zebra"),
+      capabilitySpec("apple"),
+      capabilitySpec("Banana"),
+    ];
+    const edges = [...diamondEdges, refinement("apple", "Zebra"), refinement("Zebra", "apple")];
+    const answer = await capabilityMap(nodes, edges);
+    expect(await capabilityMap([...nodes].reverse(), [...edges].reverse())).toEqual(answer);
+    expect(await capabilityMap(nodes, edges)).toEqual(answer);
+    expect(mapRows(answer, "nodes").map((row) => row.id)).toEqual(
+      nodes.map((node) => node.id).sort(),
+    );
+  });
+});
+
+const capabilityEpicsTestAnchor = specTest({
+  id: testAnchorId("test:protocol.capability-epics"),
+  verifies: ref("spec:protocol.capability-epics"),
+});
+void capabilityEpicsTestAnchor;
+
+describe("the Protocol's capability epics", () => {
+  it("reaches every Spec from the intended epic owners while preserving kinds and overlapping refinement", async () => {
+    const answer = asRecord(await runRecipe(recipeByOrdinal(52), { detail: true }));
+    const epics = mapRows(answer, "epics");
+    expect(epics.map((row) => row.id)).toEqual([
+      "spec:carrier.markdown-authoring",
+      "spec:consumers.agent-surface",
+      "spec:consumers.authoring-on-ramp",
+      "spec:consumers.projections-model",
+      "spec:extraction.derive-graph",
+      "spec:extraction.executable-examples",
+      "spec:model.core-model",
+      "spec:protocol.self-hosting",
+      "spec:validation.two-check-families",
+    ]);
+    expect(answer.unreached).toEqual({ ids: [], roots: [] });
+    expect(answer.totals).toMatchObject({
+      specs: reader.specs().length,
+      reached: reader.specs().length,
+      unreached: 0,
+    });
+    expect(mapRow(answer, "nodes", "spec:model.core-model").specKind).toBe("model");
+    expect(mapRow(answer, "nodes", "spec:consumers.projections-model").specKind).toBe("model");
+    expect(mapRow(answer, "nodes", "spec:validation.two-check-families").specKind).toBe("rule");
+    for (const epic of epics) {
+      expect(mapRow(answer, "nodes", String(epic.id)).statedReadiness, String(epic.id)).toBe(
+        "ready",
+      );
+    }
+    expect(mapRow(answer, "epics", "spec:consumers.agent-surface").parentEpicIds).toEqual([
+      "spec:consumers.projections-model",
+    ]);
+    expect(mapRow(answer, "nodes", "spec:extraction.executable-contracts").parents).toEqual([
+      "spec:extraction.build-pipeline",
+      "spec:extraction.executable-examples",
+    ]);
+    for (const id of ["spec:extraction.example-runner", "spec:extraction.executable-contracts"]) {
+      expect(mapRow(answer, "nodes", id).epicIds).toContain("spec:extraction.executable-examples");
+    }
+    for (const id of [
+      "spec:protocol.capability-epics",
+      "spec:protocol.structural-self-binding",
+      "spec:protocol.roadmap-replaces-plans",
+    ]) {
+      expect(mapRow(answer, "nodes", id).epicIds).toContain("spec:protocol.self-hosting");
+    }
+    for (const id of [
+      "spec:model.core-model",
+      "spec:extraction.derive-graph",
+      "spec:validation.two-check-families",
+      "spec:consumers.projections-model",
+    ]) {
+      expect(mapRow(answer, "nodes", id).epicIds).not.toContain("spec:protocol.self-hosting");
+    }
+    expect(answer.cycles).toEqual([]);
+    expect(answer.damage).toEqual([]);
+  });
+
+  it.each([
+    ["spec:extraction.build-pipeline", "spec:extraction.derive-graph"],
+    ["spec:validation.corpus-rules", "spec:consumers.agent-surface"],
+    ["spec:validation.architecture-constraints", "spec:validation.corpus-rules"],
+    ["spec:validation.external-registers", "spec:validation.corpus-rules"],
+  ])("keeps refinement and dependency from %s to %s", (from, to) => {
+    for (const type of ["refines", "dependsOn"]) {
+      expect(derived.graph.edges).toContainEqual(
+        expect.objectContaining({ from, to, type, claim: "declared" }),
+      );
+    }
+  });
+
+  it("keeps every ready statement at the ready floor and leaves the drift alarm empty", async () => {
+    const ready = reader.specs().filter((spec) => spec.statedReadiness === "ready");
+    expect(ready.length).toBeGreaterThan(0);
+    expect(
+      ready.filter((spec) => spec.derivedReadiness !== "ready").map((spec) => spec.id),
+    ).toEqual([]);
+    expect(await runRecipe(recipeByOrdinal(2))).toMatchObject({ alarms: [] });
+  });
+});

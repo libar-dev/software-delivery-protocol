@@ -63,7 +63,6 @@ const gap = (subjectId: string) =>
   }) as const;
 
 export const expectedWarnings = [
-  gap("spec:consumers.capability-map"),
   gap("spec:consumers.design-slice"),
   gap("spec:consumers.roadmap.memo"),
   gap("spec:consumers.roadmap"),
@@ -79,7 +78,6 @@ export const expectedWarnings = [
   gap("spec:consumers.spec-studio.slice-page"),
   gap("spec:extraction.executable-examples"),
   gap("spec:model.spec-sections"),
-  gap("spec:protocol.capability-epics"),
   gap("spec:protocol.roadmap-replaces-plans"),
   gap("spec:protocol.role-vocabulary"),
 ] as const;

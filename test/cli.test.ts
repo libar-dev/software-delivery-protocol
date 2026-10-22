@@ -304,7 +304,6 @@ describe("sdp cli", () => {
       expect(exitCode).toBe(0);
       const stderr = capture.readStderr();
       for (const [file, specId] of [
-        ["specs/consumers/capability-map.sdp.md", "spec:consumers.capability-map"],
         ["specs/consumers/design-slice.sdp.md", "spec:consumers.design-slice"],
         ["specs/consumers/roadmap.memo.sdp.md", "spec:consumers.roadmap.memo"],
         ["specs/consumers/roadmap.sdp.md", "spec:consumers.roadmap"],
@@ -347,17 +346,22 @@ describe("sdp cli", () => {
         ["specs/consumers/spec-studio.slice-page.sdp.md", "spec:consumers.spec-studio.slice-page"],
         ["specs/extraction/executable-examples.sdp.md", "spec:extraction.executable-examples"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
-        ["specs/protocol/capability-epics.sdp.md", "spec:protocol.capability-epics"],
         ["specs/protocol/roadmap-replaces-plans.sdp.md", "spec:protocol.roadmap-replaces-plans"],
         ["specs/protocol/role-vocabulary.sdp.md", "spec:protocol.role-vocabulary"],
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
+      for (const specId of [
+        "spec:protocol.significant-units-review",
+        "spec:consumers.capability-map",
+        "spec:protocol.capability-epics",
+      ]) {
+        expect(stderr).not.toContain(`honesty/gaps — Spec "${specId}"`);
+      }
       // Re-measured from the refreshed carriers: no prose-mention pair is retained, and the
       // verifier gaps listed above are the whole warning set.
-      expect(stderr).not.toContain('Spec "spec:protocol.significant-units-review"');
-      expect(capture.readStdout()).toContain("validate: 0 errors · 19 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 17 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

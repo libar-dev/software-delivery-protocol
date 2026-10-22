@@ -97,6 +97,7 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Propose rule keys for review                                   | the rule-key proposal (recipe 48), then the proposal check (recipe 38)                                     |
 | Check prose tokens against an outside register                 | external registers (recipe 50)                                                                             |
 | Find source and test lines citing an entry                     | entry citations (recipe 51)                                                                                |
+| Read epic scopes and direct binding evidence                   | the capability map (recipe 52)                                                                             |
 
 Choose a recipe from the task sheet, then read its numbered catalog entry for parameters,
 defaults, diagnostics and answer fields. Run the shipped body unchanged, or call

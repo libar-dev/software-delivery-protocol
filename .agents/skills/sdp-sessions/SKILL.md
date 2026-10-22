@@ -62,6 +62,9 @@ addresses.
 
 ### Design
 
+Read the capability map (recipe 52) to choose an epic's refinement scope and inspect its direct
+binding evidence; check `damage`, `cycles` and summary omissions before interpreting the answer.
+
 Use promotion preflight (recipe 9) on the target; the planning slice (recipe 19), dependency
 footing (recipe 21) and dependency cycles (recipe 26) for what it rests on; and readiness
 divergence (recipe 7) across the corpus. Resolve the target's blocking open questions and review
