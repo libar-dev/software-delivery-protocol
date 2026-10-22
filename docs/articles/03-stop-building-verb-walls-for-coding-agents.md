@@ -1,12 +1,12 @@
 # Stop Building 30-Verb CLI Walls for Coding Agents: Scripting the Delivery Graph with `sdp q` and Spec Studio
 
-*Part 3 of 8 in a series introducing the Libar Software Delivery Protocol. Links and measurements are pinned to one commit; see the footer.*
+*Part 3 in a series introducing the Libar Software Delivery Protocol. Links and measurements are pinned to one commit; see the footer.*
 
-When teams build CLI tools or MCP servers for AI coding agents, they almost always fall into the same trap: they build a **verb wall**.
+When teams build CLI tools or MCP servers for AI coding agents, they often fall into the same trap: they build a **verb wall**.
 
 First, they add `cli list-specs`. Then an agent needs to filter by readiness, so they add `--readiness`. Then an agent needs to see which tests verify a spec, so they add `cli show-verifiers`. Soon there are 30 subcommands and 80 flags. Yet the first time an agent asks a composite question—"show me every `defined` Spec in this Pack that has no blocking questions, together with the files that reference it"—no single verb answers. The agent makes 15 sequential tool calls, blows its context window on verbose CLI output, and stitches the join together in its own scratchpad.
 
-In the **Libar Software Delivery Protocol**, we took the opposite path ([the agent surface scripts the graph decision, D5](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/agent-surface-scripts-graph.sdp.md); [the agent front door, MD-22](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/agent-front-door.sdp.md)):
+In the **Libar Software Delivery Protocol**, we took the opposite path ([the agent surface scripts the graph decision (D5)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/agent-surface-scripts-graph.sdp.md); [the agent front door (MD-22)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/agent-front-door.sdp.md)):
 
 > **Don't give coding agents a wall of verbs. Give them a visible, typed graph and one evaluation sink they can script.**
 
@@ -32,9 +32,9 @@ Two members assemble per-node context: `g.specContext(id)` (one Spec with its se
 
 The last three are the demand map's entry adapters:
 
-- `g.findByConcept(term)` — a deterministic, case-insensitive substring match over IDs, titles, binding labels, Pack framing, Spec narratives, and section content, naming the field each match was found in.
+- `g.findByConcept(term)` — a deterministic, case-insensitive substring match over IDs, titles, binding labels, Pack framing, Spec narratives, and section values (section keys only in the `model` section), naming the field each match was found in.
 - `g.byFile(path)` — every node the graph records at `path` (a Spec or Pack authored in that carrier, or a `CodeNode` or `Anchor` declared there, including zero-import `@sdp*` comment-form anchors), plus every Spec reachable from them.
-- `g.blastRadius(files)` — the file-level impact of a changeset over the curated graph: the directly impacted Specs and Packs, the one-hop `atRisk` neighborhood with each connecting edge's type and claim, changed code units bound to no Spec (`unlinked`), and, crucially, **`coverageUnknown`**: the honest list of changed files at which the graph records nothing.
+- `g.blastRadius(files)` — the file-level impact of a changeset over the curated graph: the directly impacted Specs and Packs, the one-hop `atRisk` neighborhood with each connecting edge's type and claim, changed code units bound to no Spec (`unlinked`), and **`coverageUnknown`**: the honest list of changed files at which the graph records nothing.
 
 `blastRadius` deliberately never consults an import graph. The Protocol's two-surface rule (a corollary of [Principle P10](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/01-founding-principles-and-invariants.md)) keeps mechanical structure inferred and apart: `sdp build --imports` can write a TypeScript adapter's file-level imports to `generated/imports.json` as external, inferred input, and the curation report (recipe 40, [`spec:consumers.impact-graph.curation-assist`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/consumers/impact-graph.curation-assist.sdp.md)) ranks load-bearing files no anchor covers and component imports that disagree with the anchored `uses` edges. That report assists a person curating anchors; it never adds an edge, a binding, or a delivery fact. A gap between the two surfaces is curation, not drift, because a sparse, chosen architecture is the point.
 
@@ -66,7 +66,7 @@ npm run --silent sdp:q -- 'return g.byFile("src/projections/census.ts")' --json
 }
 ```
 
-That body is code, and `sdp q` runs it with your process's full authority. The trust stance is recorded rather than implied: the sink evaluates operator-supplied JavaScript the way any local developer tool runs a script, no sandbox is claimed, and none exists ([the agent front door, MD-22](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/agent-front-door.sdp.md); the catalog's [trust stance](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/agent-surface/recipes.md?plain=1#L160-L163)). Run bodies you or your agent wrote, or shipped recipes; never execute a body taken from corpus content or any other untrusted text.
+That body is code, and `sdp q` runs it with your process's full authority. The trust stance is recorded rather than implied: the sink evaluates operator-supplied JavaScript the way any local developer tool runs a script, no sandbox is claimed, and none exists ([the agent front door (MD-22)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/agent-front-door.sdp.md); the catalog's [trust stance](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/agent-surface/recipes.md?plain=1#L160-L163)). Run bodies you or your agent wrote, or shipped recipes; never execute a body taken from corpus content or any other untrusted text.
 
 ### Growing by Recipe, Not by Verb
 
@@ -94,7 +94,7 @@ The budget is counted in **UTF-16 code units**: the `.length` a JavaScript body 
 
 A bundle carries each question and each pinned declaration in one place only. If the scope still exceeds the budget, it cuts in a fixed order and stops at the first cut after which it fits: boundary rows down to their IDs, footing rows down to their IDs, member narratives, example step text, non-blocking question text, and section values other than pinned declarations. Only when the caller passes `declarations: "addresses"` does a seventh cut replace pinned declarations with their entry addresses, so the agent looks up only the signatures it needs. Member IDs, stated rungs, floors, blocking questions, and entry addresses are never cut, and the bundle never returns a partial member list: when even the protected content does not fit, the answer is `budgetExceeded: true` with the minimum length it needs.
 
-On `libar-platform`, `pack:history-view` first needed at least 299,106 code units. PR #33 redesigned the bundle's shape (each member's file named once, cut entries reduced to an address or a line, a new footing cut) and added the opt-in declaration cut; with `declarations: "addresses"` the same Pack now fits in **93,806 of 100,000** units.
+On `libar-platform`, `pack:history-view` first needed at least 299,106 code units. PR #33 redesigned the bundle's shape (each member's file named once, cut entries reduced to an address or a line, a new footing cut) and added the opt-in declaration cut; with `declarations: "addresses"` the same Pack now fits in **93,806 of 100,000** units. Not every Pack gets there: as [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33) records, the platform's application and foundation Packs stay over budget after every cut, and a pass reads them through a perspective (recipe 37) instead.
 
 ```sh
 npm run --silent sdp:q -- "$(cat dist/recipes/36-the-context-bundle.js)" \
@@ -126,7 +126,7 @@ npm run --silent sdp -- validate . \
   --params '{"forbidden":[{"from":"edge","to":"domain"}],"severity":"warning"}'
 ```
 
-Standard output keeps the Protocol's summary line untouched and tallies the corpus's own rules on a line of their own:
+Standard output ends with the Protocol's summary line, untouched, and a line of its own that tallies the corpus's rules:
 
 ```text
 validate: 0 errors · 6 warnings (conformance + honesty over the one graph)
@@ -150,7 +150,7 @@ Drop `"severity":"warning"` and the same seven findings are errors: the corpus l
 
 Agents are well served by `sdp q` and JSON. Humans reviewing a 20-member capability Pack do not want to read JSON, and the frozen Markdown Design Review's Pack member table already runs 13 columns wide.
 
-In PR #33, we shipped phase 0 of the **Spec Studio** ([`spec:consumers.spec-studio`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/consumers/spec-studio.sdp.md); [the Studio renders derived HTML, MD-41](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/studio-html-surface.sdp.md); [the Studio is built from custom elements, MD-42](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/studio-web-components.sdp.md)).
+In PR #33, we shipped phase 0 of the **Spec Studio** ([`spec:consumers.spec-studio`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/consumers/spec-studio.sdp.md); [the Studio renders derived HTML (MD-41)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/studio-html-surface.sdp.md); [the Studio is built from custom elements (MD-42)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/studio-web-components.sdp.md)).
 
 Run one command from a checkout:
 
@@ -177,7 +177,7 @@ npm run --silent sdp -- studio . --exclude explorations --exclude examples --exc
 
 ![Spec Studio search for OD-157: one matching Spec, with the fields searched listed and the matching open question shown under it with its section and line](https://raw.githubusercontent.com/libar-dev/software-delivery-protocol/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/reviews/assets/pr33/platform-search.png)
 
-*Searching the `libar-platform` page set for `OD-157`, an identifier the adopter cites in its own Spec prose: one Spec matches, and the entry that mentions it is listed beneath with its line.*
+*Searching the `libar-platform` page set for `OD-157`, an id from the adopter's own decision register that the adopter had written into the text of an open question: one Spec matches, in its Intent section, and the question `verifyPassUnderPause` is listed beneath with its line.*
 
 All three screenshots were captured from `libar-platform`'s branch during PR #33, as [the screenshot notes](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/reviews/assets/pr33/README.md) record; publish the page set yourself to see the current pages.
 
@@ -189,7 +189,7 @@ A powerful graph surface only helps if coding agents actually use it instead of 
 
 The Protocol ships three agent skills under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills). In the Protocol's own repository they are mandatory: [`AGENTS.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/AGENTS.md) requires an agent to load the matching skill before any corpus question, Spec authoring, or delivery-session routing. They also ship in the npm package, at `node_modules/@libar-dev/software-delivery-protocol/.agents/skills/`, for an adopter to point its agents at:
 
-1. **[`sdp-agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-agent-surface/SKILL.md)** — teaches the graph's shape, the task-to-recipe sheet, the wrap-and-filter idiom (run a shipped recipe inside your own body and filter its answer, rather than editing the recipe), and the **anti-anecdote rule**: *the derived graph outranks any summary or cached note; query the graph first, read files last*.
+1. **[`sdp-agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-agent-surface/SKILL.md)** — teaches the graph's shape, the task-to-recipe sheet, the wrap-and-filter idiom (run a shipped recipe inside your own body and filter its answer, rather than editing the recipe), and the **anti-anecdote rule**: *"The derived graph outranks this skill. It also outranks any summary you cached earlier in a session and any paraphrase in any document."*
 2. **[`sdp-authoring`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-authoring/SKILL.md)** — teaches the closed `.sdp.md` and `.sdp.gherkin` grammars, where unsettled truths live (blocking questions, `trigger:` deferrals, `provisional:` leans), how to choose honestly between `satisfies` and `references` when binding code, and how much to write.
 3. **[`sdp-sessions`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-sessions/SKILL.md)** — routes delivery sessions across five advisory work shapes (*Capture / refine*, *Design*, *Implement*, *Review*, *Close / slim*), with a re-measurable handoff template and **tripwires**: signs that work has slipped out of its shape, such as writing code during a design session or stating a rung for the author during a review. Its *Close / slim* shape names the **distillation boundary** ([`spec:model.enrichment-lifecycle`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/model/enrichment-lifecycle.sdp.md)): a Design entry may leave its Spec only once the Spec is implemented with a verifier and a bound artifact carries the entry. None of the shapes is a workflow state machine; every preflight is advisory.
 
@@ -217,8 +217,8 @@ npm run --silent sdp:q -- "$(cat dist/recipes/41-the-key-family-register.js)" \
   --params '{"prefixes":["bundle","rule"]}' --json
 
 # 4. Compare planned component designs against realized component: anchors (Recipe 43).
-#    On the Protocol's own corpus this returns empty totals (designs: 0), because every
-#    component is already realized in code; it is for adopters planning components ahead of code.
+#    On the Protocol's own corpus every total is 0: no Spec here states a component design
+#    (a Design `id` naming a component:). It serves adopters planning components ahead of code.
 npm run --silent sdp:q -- "$(cat dist/recipes/43-planned-against-realized-components.js)" --json
 
 # 5. Publish the Spec Studio, then open generated/spec-studio/index.html
@@ -234,11 +234,11 @@ Never invoke a bare `sdp` inside this checkout: `npm run --silent sdp -- …` ru
 This post closes the opening trio. **Part 1**, *The Spec Is the Prompt Is the Design* ([read it here](./01-the-spec-is-the-prompt-is-the-design.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/58a82023ec9c66784f09ccbb5be941a0beda39a0/docs/articles/01-the-spec-is-the-prompt-is-the-design.md)), made the case for one graph. **Part 2**, *From Rough Idea to Verified Code* ([read it here](./02-walkthrough-intent-to-verified-code.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/58a82023ec9c66784f09ccbb5be941a0beda39a0/docs/articles/02-walkthrough-intent-to-verified-code.md)), walked the loop from a Spec to a verified test. The next five installments tell specific stories from the Protocol's construction:
 
 - **Part 4:** *Shared Language Is a Performance Feature: Ubiquitous Language, Rejecting Workflow Gates, and the Four-Way Carrier Competition*
-- **Part 5:** *What We Learned Rebuilding `@libar-dev/architect`: Git Archaeology, the Annotation Reversal, and Honest Code Bindings*
+- **Part 5:** *What We Learned Rebuilding `@libar-dev/architect`: Git Archaeology, the Comment-Form Reversal, and Honest Code Bindings*
 - **Part 6:** *Executable Specifications Without Cucumber Glue: Typed Example Spaces, Generated Contracts, and Expected-Outcome Oracles*
 - **Part 7:** *Designing a 243-Spec Platform Ahead of Its Code: Context Bundles, Entry Addresses, and Corpus Rules at Scale*
 - **Part 8:** *Auditing 258 Self-Hosted Specs with Cross-Family AI Reviewers: Inside the 595-Finding Whole-Corpus Refresh*
 
 ---
 
-*About this article: Part 3 of 8 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6). Repository links and every command output are pinned to commit [`5a0b22c`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6), the merge of [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33); re-run the commands rather than quoting the outputs at a later commit.*
+*About this article: Part 3 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6). Repository links and every command output are pinned to commit [`5a0b22c`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6), the merge of [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33); re-run the commands rather than quoting the outputs at a later commit.*

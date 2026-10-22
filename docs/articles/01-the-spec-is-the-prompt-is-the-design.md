@@ -1,10 +1,10 @@
 # The Spec Is the Prompt Is the Design: Why AI-Native Software Delivery Needs One Graph, Not Another Ticket Tracker
 
-*Part 1 of 8 in a series introducing the Libar Software Delivery Protocol. Links and measurements are pinned to one commit; see the footer.*
+*Part 1 in a series introducing the Libar Software Delivery Protocol. Links and measurements are pinned to one commit; see the footer.*
 
 Every software team knows the decay curve of documentation.
 
-At the start of a project, intent is sharp. You write an architecture doc, sketch a few sequence diagrams, record a couple of ADRs, file tickets in your issue tracker, and write tests in your repo. Six weeks later, a customer edge case forces a design change during a pull request. The code changes. The test changes. The architecture doc, the ADR, and the ticket do not. Within a quarter, your documentation is a museum of what you *meant* to build three sprints ago.
+At the start of a project, intent is sharp. You write an architecture doc, sketch a few sequence diagrams, record a couple of architecture decision records (ADRs), file tickets in your issue tracker, and write tests in your repo. Six weeks later, a customer edge case forces a design change during a pull request. The code changes. The test changes. The architecture doc, the ADR, and the ticket do not. Within a quarter, your documentation is a museum of what you *meant* to build three sprints ago.
 
 Now drop AI coding agents into that repository.
 
@@ -22,7 +22,7 @@ This article takes those four clauses in turn, then measures the Protocol agains
 
 ## 1. A Second Take, Front-Loaded with First Principles
 
-The Protocol is not our first attempt at this problem. Its predecessor, [`@libar-dev/architect`](https://github.com/libar-dev/architect), ran in production; its own self-hosted graph held 349 patterns (227 from TypeScript, 122 from Gherkin), as the [annotation scout report in `docs/lineage/`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/lineage) measured. It proved three things that worked: keeping annotations in source beside the code, deriving a single immutable graph as the read model for both documentation and agents, and giving agents a scriptable graph handle instead of raw files.
+The Protocol is not our first attempt at this problem. Its predecessor, [`@libar-dev/architect`](https://github.com/libar-dev/architect), ran in production and taught us where the problem bites. At the commit we later audited, its own repository's graph held 349 patterns (227 from TypeScript, 122 from Gherkin), as the lineage scout report in [`docs/lineage/`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/lineage) measured ([PR #28](https://github.com/libar-dev/software-delivery-protocol/pull/28) carried it). It proved three things that worked: keeping design metadata in source, beside the code, deriving a single immutable graph as the read model for both documentation and agents, and giving agents a scriptable graph handle instead of raw files.
 
 It also taught us what fails in production:
 
@@ -30,13 +30,13 @@ It also taught us what fails in production:
 - **Process state-machine gates.** Encoding ticket statuses (`candidate → roadmap → active → completed`) inside source files turns your compiler into a workflow bureaucracy.
 - **Hand-authored delivery status.** If a human or an agent types `status: completed` into a spec file, that string will eventually lie.
 
-We built the Libar Software Delivery Protocol ([PR #1](https://github.com/libar-dev/software-delivery-protocol/pull/1)) as a clean-sheet second generation—zero backward compatibility, zero old sins carried over—around **three meta-levels** ([the executable meta-model decision, MD-1](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/executable-meta-model.sdp.md)):
+We designed the Libar Software Delivery Protocol as a clean-sheet second generation (its concept foundation landed in [PR #1](https://github.com/libar-dev/software-delivery-protocol/pull/1), the engine in [PR #2](https://github.com/libar-dev/software-delivery-protocol/pull/2))—zero backward compatibility, zero old sins carried over—around **three meta-levels** ([the executable meta-model decision, MD-1](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/executable-meta-model.sdp.md)):
 
 | Meta-level | What lives here | Role |
 |---|---|---|
 | **1. The Protocol** | The `Spec` primitive, descriptors, relations, and validators *as typed code* | Defines the conformance contract |
 | **2. The Authored Model** | A project's `Spec`s, `Pack`s, and source `anchor`s committed in the repo | Conforms to the contract (checked in CI, never workflow-gated) |
-| **3. Derived Facts** | Machine truth (delivery facts such as `implemented` and `has-verifier`) and projections | Computed from the graph, **never authored by hand** |
+| **3. Derived Facts** | Machine truth (delivery facts such as `implemented` and `has-verifier`) | Computed from the graph, **never authored by hand** |
 
 And we bound the entire system with **two permanent honesty guardrails** ([`00-vision-scope-and-mvp-boundary.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/00-vision-scope-and-mvp-boundary.md)):
 
@@ -223,7 +223,7 @@ Every route to hand-authoring a delivery fact is refused, each with its own find
 
 Look at the two payoff queries that fall out of keeping those coordinates separate. Each is a filter over the reader's `g.specs()`; the shipped recipes, runnable `sdp q` bodies cataloged in [`docs/agent-surface/recipes.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/agent-surface/recipes.md) and each executed as written by the test suite, wrap these expressions with counts and audit rows.
 
-1. **The operational build backlog (recipe 1):** Specs whose design is settled, whose typed dependencies are at least `defined`, and whose author has stated `ready`, waiting to be built. Ready `example` and `decision` Specs are excluded and counted, because examples carry verification evidence and decision records are ratified rather than built (the example realization posture, MD-24, and the decision readiness posture, MD-26).
+1. **The operational build backlog (recipe 1):** Specs whose author has stated `ready` and that no code anchor yet realizes, waiting to be built. The readiness floor already admits `ready` only once every typed dependency states at least `defined`, so the recipe does not filter on dependencies itself. Ready `example` and `decision` Specs are excluded and counted, because examples carry verification evidence and decision records are ratified rather than built (the example realization posture, MD-24, and the decision readiness posture, MD-26).
 
    ```js
    g.specs().filter((s) =>
@@ -266,7 +266,7 @@ And when an adopting team has project-specific architectural rules—for instanc
 
 ## 6. Self-Hosting by the Numbers
 
-The Protocol does not have a separate PRD. It **self-hosts** ([`spec:protocol.self-hosting`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/protocol/self-hosting.sdp.md)): every rule of its model, extractor, validators, projections, and agent surface is authored in its own `.sdp.md` and `.sdp.gherkin` carriers under [`specs/`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs), bound to its own TypeScript engine under [`src/`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/src) and test suite under [`test/`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/test), and certified on every commit by `npm run check`.
+The Protocol does not have a separate PRD. It **self-hosts** ([`spec:protocol.self-hosting`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/protocol/self-hosting.sdp.md)): every rule of its model, extractor, validators, projections, and agent surface is authored in its own `.sdp.md` and `.sdp.gherkin` carriers under [`specs/`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs), bound to its own TypeScript engine under [`src/`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/src) and test suite under [`test/`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/test), and checked by `npm run check` in CI on every push and pull request.
 
 At commit [`5a0b22c`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6) (re-run the queries below rather than quoting these numbers across commits), the Protocol's own self-hosting graph measures:
 
@@ -279,21 +279,21 @@ At commit [`5a0b22c`](https://github.com/libar-dev/software-delivery-protocol/tr
 | **Derived graph size** | **621 nodes · 1,624 edges** | `1,063 declared` edges · `561 anchored` edges · `1,774` entry and relation source locations (schema `0.10.0`) |
 | **Derived delivery facts** | **94 `implemented` · 205 `has-verifier`** | Operational build backlog (recipe 1): **0** · Drift alarm (recipe 2): **0** · Design backlog (recipe 33): **17** |
 
-Re-derive the breakdowns with:
+Re-derive the table (except the three recipe counts, which are recipes 1, 2, and 33) with:
 
 ```sh
-npm run --silent sdp:q -- 'const tally = (xs, f) => xs.reduce((a, x) => ((a[f(x)] = (a[f(x)] || 0) + 1), a), {}); return { kinds: tally(g.specs(), (s) => s.specKind), readiness: tally(g.specs(), (s) => s.statedReadiness), nodeTypes: tally(graph.nodes, (n) => n.nodeType), bindingNamespaces: tally(graph.nodes.filter((n) => n.nodeType === "CodeNode" || n.nodeType === "Anchor"), (n) => n.id.split(":")[0]), edgeClaims: tally(graph.edges, (e) => e.claim), locations: graph.locations.length }' --json
+npm run --silent sdp:q -- 'const tally = (xs, f) => xs.reduce((a, x) => ((a[f(x)] = (a[f(x)] || 0) + 1), a), {}); return { kinds: tally(g.specs(), (s) => s.specKind), readiness: tally(g.specs(), (s) => s.statedReadiness), nodeTypes: tally(graph.nodes, (n) => n.nodeType), bindingNamespaces: tally(graph.nodes.filter((n) => n.nodeType === "CodeNode" || n.nodeType === "Anchor"), (n) => n.id.split(":")[0]), edgeClaims: tally(graph.edges, (e) => e.claim), locations: graph.locations.length, schema: graph.schemaVersion, packs: graph.nodes.filter((n) => n.nodeType === "Pack").map((p) => [p.id, p.members.length]), layers: tally(graph.nodes.filter((n) => n.id.startsWith("component:")), (n) => n.layer), implemented: g.specs().filter((s) => s.deliveryFacts.includes("implemented")).length, hasVerifier: g.specs().filter((s) => s.deliveryFacts.includes("has-verifier")).length }' --json
 ```
 
 The self-hosting `validate` run prints `0 errors · 6 warnings`, and all six are intentional, pinned by the self-hosting oracle: five `conformance/prose-mentions` warnings, where one Spec names another (three times in an open question's `links:` field, twice in rule text) without a declared relation between them, and one `honesty/gaps` warning on `spec:model.spec-sections`, an owner-ratified `ready` Spec with no resolving verifier.
 
-Meanwhile, the first adopter, [`libar-platform`](https://github.com/libar-dev/libar-platform) (a separate repository in the `libar-dev` organization), models a Convex transactional domain platform as **243 Specs across six Packs**, most of it designed ahead of its code. It runs design passes whose reading is composed within a 100,000-UTF-16-unit context bundle, checks its own architecture and policy rules through `sdp validate --rules`, and publishes 251 static **Spec Studio** pages. The Protocol work that made that possible is [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33); the adopter's side is [`libar-platform#13`](https://github.com/libar-dev/libar-platform/pull/13).
+Meanwhile, the first adopter, [`libar-platform`](https://github.com/libar-dev/libar-platform) (a separate repository in the `libar-dev` organization), models a Convex transactional domain platform as **243 Specs across six Packs**, most of it designed ahead of its code. It runs design passes whose reading is composed within a 100,000-UTF-16-unit context bundle, checks its own architecture and policy rules through `sdp validate --rules`, and publishes 251 static **Spec Studio** pages. Those adopter figures were measured at the adopter's own pin and recorded in [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33), the Protocol work that made them possible; the adopter's side is [`libar-platform#13`](https://github.com/libar-dev/libar-platform/pull/13).
 
 The Spec Studio renders the same graph for people. Here is the Protocol's own `pack:corpus-checks-v1`, the Pack that carries corpus rules:
 
 ![The Spec Studio Pack page for pack:corpus-checks-v1: a plain-language summary, the Pack's framing, and one collapsed card per member](https://raw.githubusercontent.com/libar-dev/software-delivery-protocol/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/reviews/assets/pr33/protocol-pack.png)
 
-*The Pack page for `pack:corpus-checks-v1`, published by `sdp studio` and opened from `file://` with no network. It leads with a summary the graph computes, then the Pack's framing, then one card per member with its rung, floor, questions, and bindings. Captured for [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33).*
+*The Pack page for `pack:corpus-checks-v1`, published by `sdp studio` and opened from `file://` with no network. It leads with a summary the graph computes, then the Pack's framing, then one card per member with its rung, floor, questions, and bindings. Captured at commit `30f196a` for [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33), so its counts can differ slightly from the table above.*
 
 ---
 
@@ -317,7 +317,7 @@ And where it stands today:
 
 ## 8. Try It Yourself in 60 Seconds
 
-Clone the repository at the commit these numbers were measured at, and query the self-hosting graph through `sdp q`—the evaluation sink that derives the graph in memory and runs any async JavaScript body you give it:
+With Node 20 or later, clone the repository at the commit these numbers were measured at, and query the self-hosting graph through `sdp q`—the evaluation sink that derives the graph in process and runs any async JavaScript body you give it:
 
 ```sh
 git clone https://github.com/libar-dev/software-delivery-protocol.git
@@ -346,4 +346,4 @@ In **Part 2: From Rough Idea to Verified Code** ([read it here](./02-walkthrough
 
 ---
 
-*About this article: Part 1 of 8 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6). Repository links and every measurement are pinned to commit [`5a0b22c`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6), the merge of [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33); re-run the commands rather than quoting the numbers at a later commit.*
+*About this article: Part 1 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6). Repository links and every measurement are pinned to commit [`5a0b22c`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6), the merge of [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33); re-run the commands rather than quoting the numbers at a later commit.*
