@@ -1,8 +1,8 @@
 # From Rough Idea to Verified Code: A Hands-On Tour of the Libar Software Delivery Protocol
 
-> *Series: Introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6) (Part 2 of 8) · All links and measurements pinned to commit [`5a0b22c`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6) ([PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33)).*
+*Part 2 of 8 in a series introducing the Libar Software Delivery Protocol. Links and measurements are pinned to one commit; see the footer.*
 
-In [Part 1](./01-the-spec-is-the-prompt-is-the-design.md), we introduced the core thesis of the **Libar Software Delivery Protocol**: model the delivery lifecycle as instances of one enrichable primitive (`Spec`), bind code and tests with source `anchor`s, derive **one regenerable graph**, and check **conformance and honesty** in CI.
+In Part 1 ([read it here](./01-the-spec-is-the-prompt-is-the-design.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/ARTICLES_COMMIT/docs/articles/01-the-spec-is-the-prompt-is-the-design.md)), we introduced the core thesis of the **Libar Software Delivery Protocol**: model the delivery lifecycle as instances of one enrichable primitive (`Spec`), bind code and tests with source `anchor`s, derive **one regenerable graph**, and check **conformance and honesty** in CI.
 
 That sounds clean in principle. What does it actually look like in a text editor and a terminal?
 
@@ -10,41 +10,82 @@ In this post, we will trace a single bounded context—**Order Management** ([`e
 
 ---
 
+## 0. Setup
+
+Every command in this tour runs from a checkout of the repository at the commit the outputs were measured at:
+
+```sh
+git clone https://github.com/libar-dev/software-delivery-protocol.git
+cd software-delivery-protocol
+git checkout 5a0b22c2d9ead98c900b60ed6209342fce2cbef6
+npm ci   # the prepare script builds dist/
+```
+
+We run the CLI as `npm run --silent sdp -- <verb> …`, never as a bare `sdp`. Inside its own checkout the package is not linked into `node_modules/.bin`, so a bare `sdp` resolves to nothing, or, on macOS, to Apple's unrelated `/usr/bin/sdp`. (In an adopter repository that installs the package, `npx sdp` or `pnpm exec sdp` works.) `examples/checkout-v1` is its own extraction root, so the commands below pass it as the root and need none of the three fixture `--exclude` flags the repository root uses.
+
+---
+
 ## 1. The Worked Example: 11 Specs, 1 Pack, 5 Anchors
 
-The repository ships a complete, self-contained bounded context under [`examples/checkout-v1`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/README.md). It models Order Management (`pack:checkout-v1`) using all eight `Spec` kinds (`behavior`, `workflow`, `example`, `rule`, `constraint`, `model`, `decision`, `contract`) and all four readiness rungs (`idea`, `scoped`, `defined`, `ready`):
+The repository ships a complete, self-contained bounded context under [`examples/checkout-v1`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/README.md). It models Order Management (`pack:checkout-v1`) using all eight `Spec` kinds (`behavior`, `workflow`, `example`, `rule`, `constraint`, `model`, `decision`, `contract`) and all four readiness rungs (`idea`, `scoped`, `defined`, `ready`). Each carrier's `kind · altitude · stated readiness`:
 
 ```text
 examples/checkout-v1/
   specs/
     checkout.pack.sdp.md                        # Pack manifest (pack:checkout-v1)
-    orders/order-management.sdp.md              # behavior · epic · scoped
-    orders/order-placement-flow.sdp.md          # workflow · feature · scoped
-    orders/create-order.sdp.md                  # behavior · feature · defined (owns example space)
-    orders/create-order-valid-cart.sdp.md       # example  · story   · ready   (enabled verifier)
-    orders/create-order-invalid-cart.sdp.md     # example  · story   · defined (declared only)
-    orders/create-order-api-contract.sdp.md     # contract · story   · idea    (blocking question)
-    orders/order-total-rule.sdp.md              # rule     · story   · ready
-    orders/order-inventory-rule.sdp.md          # rule     · story   · ready
-    orders/order-latency-constraint.sdp.md      # constraint · feature · defined
-    orders/order-model.sdp.md                   # model    · feature · defined
-    decisions/order-lifecycle.sdp.md            # decision · feature · defined
+    orders/order-management.sdp.md              # behavior   · epic    · defined
+    orders/order-placement-flow.sdp.md          # workflow   · feature · scoped
+    orders/create-order.sdp.md                  # behavior   · feature · defined (owns the example space)
+    orders/create-order-valid-cart.sdp.md       # example    · story   · ready   (enabled verifier)
+    orders/create-order-invalid-cart.sdp.md     # example    · story   · defined (declared only)
+    orders/create-order-api-contract.sdp.md     # contract   · story   · idea    (blocking question)
+    orders/order-total-rule.sdp.md              # rule       · story   · defined
+    orders/order-inventory-rule.sdp.md          # rule       · story   · defined
+    orders/order-latency-constraint.sdp.md      # constraint · story   · defined
+    orders/order-model.sdp.md                   # model      · story   · defined
+    decisions/order-lifecycle.sdp.md            # decision   · feature · defined
   src/orders/
     create-order.use-case.ts                    # impl:orders.create-order-use-case + impl:orders.order-total
     create-order.route.ts                       # api:orders.post
   test/orders/
     create-order.valid-cart.test.ts             # test:orders.create-order.valid-cart
     create-order.oracle.ts                      # oracle:orders.create-order
-    orders.create-order.valid-cart.test.generated.ts  # committed adopted registrar (MD-31)
+    orders.create-order.valid-cart.test.generated.ts  # committed adopted registrar
 ```
 
-When you run `sdp build examples/checkout-v1`, the extractor parses the `.sdp.md` carriers and the TypeScript anchors and prints:
+Build the example's graph:
+
+```sh
+npm run --silent sdp -- build examples/checkout-v1
+```
 
 ```text
 11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
 ```
 
-Let's inspect the pieces that produce those 17 nodes and 32 edges.
+### Your first graph question: the drift alarm
+
+Before opening a single file, ask the graph which Specs have code ahead of their design. That is recipe 2, the drift alarm (`implemented ∧ ¬ready`):
+
+```sh
+npm run --silent sdp -- q "$(cat dist/recipes/02-the-drift-alarm.js)" --root examples/checkout-v1 --json
+```
+
+```json
+{
+  "total": 2,
+  "alarms": [
+    { "id": "spec:orders.create-order", "statedReadiness": "defined", "floorReached": "ready", "firstUnmetClause": null, "implementationBindings": 2 },
+    { "id": "spec:orders.order-total-rule", "statedReadiness": "defined", "floorReached": "ready", "firstUnmetClause": null, "implementationBindings": 1 }
+  ]
+}
+```
+
+Both Specs carry `implemented`, because code anchors bind to them through `satisfies`, while their authors state only `defined`. Their structural floor already reaches `ready` (`firstUnmetClause: null`), so nothing structural stands in the way. Yet `npm run --silent sdp -- validate examples/checkout-v1` reports `0 errors · 0 warnings`.
+
+That is the point. The drift alarm is a graph query, not a CI failure. The [worked dialogue in `CONTEXT.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/CONTEXT.md) already speaks this way: asked "Anything dishonest in the pack?", its agent reports a drift alarm on an order rule—"an anchor binds code to it, but the design isn't mature"—as a fact to act on, not a broken build. Reaching `ready` takes the floor cleared **plus a human's `declared` statement**. Here the floor is cleared, so each Spec waits only on a person who reads it in a Design Review and states `ready`. That a review happened is never recorded in the graph or checked; doing so would turn the Protocol into a workflow gate.
+
+Now let's inspect the pieces that produce those 17 nodes and 32 edges.
 
 ---
 
@@ -52,7 +93,7 @@ Let's inspect the pieces that produce those 17 nodes and 32 edges.
 
 Open [`examples/checkout-v1/specs/orders/create-order.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/specs/orders/create-order.sdp.md):
 
-```markdown
+````markdown
 ---
 id: spec:orders.create-order
 kind: behavior
@@ -82,19 +123,19 @@ Then an order is created with total {total:number}
 And the order contains the original cart lines
 And order creation is rejected because {reason:"empty cart"|"out of stock"}
 ```
-```
+````
 
 Notice three things about this carrier:
 
-1. **The YAML frontmatter is the closed `envelope` ([`spec:carrier.envelope-contract`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/carrier/envelope-contract.sdp.md)).** It carries `id`, `kind`, `altitude`, `readiness`, and `relations`. Nothing else is permitted in frontmatter—every derived property (`implemented`, `hasVerifier`, `claim`) is refused if authored by hand.
-2. **Sections carry content; relations carry links ([content-only sections, MD-10](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/content-only-sections.sdp.md)).** `create-order` links to its parent (`refines: spec:orders.order-management`), its latency NFR (`constrainedBy: spec:orders.order-latency-constraint`), and the shaping ADR (`decidedBy: spec:decisions.order-lifecycle`) in `relations`, never buried inside bullet text.
+1. **The YAML frontmatter is the closed `envelope` ([`spec:carrier.envelope-contract`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/carrier/envelope-contract.sdp.md)).** It carries `id`, `kind`, `altitude`, `readiness`, and `relations`; the H1 supplies the title. Nothing else is permitted in frontmatter: a derived key such as `implemented` or `deliveryFacts` is refused at extraction (`extract/reserved-property`), and a derived edge such as `satisfies` under `relations` is refused as well (`extract/invalid-frontmatter`).
+2. **Sections carry content; relations carry links ([content-only sections, MD-10](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/content-only-sections.sdp.md)).** `create-order` links to its parent (`refines: spec:orders.order-management`), its latency NFR (`constrainedBy: spec:orders.order-latency-constraint`), and the shaping decision record (`decidedBy: spec:decisions.order-lifecycle`) in `relations`, never buried inside bullet text.
 3. **The `gwt-vocabulary` fence defines a typed `example space` ([`spec:carrier.slot-notation`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/carrier/slot-notation.sdp.md)).** Each `{slot:type}` placeholder—`{n:number}`, `{availability:"in stock"|"out of stock"}`, `{reason:"empty cart"|"out of stock"}`—declares the shared parameter vocabulary that child examples will bind.
 
 ### Binding a Point in the Space
 
-Now look at the child example [`examples/checkout-v1/specs/orders/create-order-valid-cart.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/specs/orders/create-order-valid-cart.sdp.md):
+Now look at the child example [`examples/checkout-v1/specs/orders/create-order-valid-cart.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/specs/orders/create-order-valid-cart.sdp.md). In an `example` Spec, one `gwt` fence closes the `## Intent` section and binds the point:
 
-```markdown
+````markdown
 ---
 id: spec:orders.create-order.valid-cart
 kind: example
@@ -124,11 +165,11 @@ And the order contains the original cart lines
 
 - The order result contains a stable id.
 - The returned total matches the authored total — the spec's value, never the test's.
-```
+````
 
 Under [the point-per-example law (MD-17)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/point-per-example.sdp.md), each `example` Spec binds one concrete point in its parent's example space (`n: 2, q: 1, price: 50, availability: "in stock" → total: 100`). Under the **concreteness law** ([`spec:validation.kind-evidence`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/validation/kind-evidence.sdp.md)), if any slot used in a step is left unbound (for instance, `{n}` instead of `{n: 2}`), the example is capped below `defined` and `sdp build` withholds its step contract.
 
-> **Prefer Gherkin for behavior and example Specs?** Under [the Gherkin carrier option (MD-27)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/gherkin-carrier-option.sdp.md) and [the `.sdp.gherkin` extension law (MD-28)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/sdp-gherkin-extension.sdp.md), any `behavior` or `example` Spec ID can instead use a graph-aware `.sdp.gherkin` file as its one canonical surface, producing the exact same graph nodes and generated contracts.
+> **Prefer Gherkin for behavior and example Specs?** Under [the Gherkin carrier option (MD-27)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/gherkin-carrier-option.sdp.md) and [the `.sdp.gherkin` extension (MD-28)](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/sdp-gherkin-extension.sdp.md), any `behavior` or `example` Spec ID can instead use a graph-aware `.sdp.gherkin` file as its one canonical surface. For the content both carriers can express, it produces the exact same graph nodes and generated contracts. The Gherkin carrier has no form for open questions, their fields, or relation reasons, so a Spec that needs one stays in Markdown ([`spec:carrier.gherkin-authoring`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/carrier/gherkin-authoring.sdp.md)). The Protocol's own reader Spec, [`spec:consumers.reader`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/consumers/reader.sdp.gherkin), is authored this way.
 
 ---
 
@@ -136,10 +177,12 @@ Under [the point-per-example law (MD-17)](https://github.com/libar-dev/software-
 
 How does source code connect to `spec:orders.create-order`? Through an in-code **anchor** ([`spec:model.anchors`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/model/anchors.sdp.md)).
 
-An anchor is a human-authored binding assertion in a `.ts` or `.tsx` file. It never carries Spec prose, readiness, or status. It can be written in **two representations** that feed the exact same closed envelope:
+An anchor is a human-authored binding assertion in a `.ts` or `.tsx` file. It never carries Spec prose, readiness, or status. It can be written in **two representations** that feed the exact same closed envelope.
+
+Both rest on **Principle P6, identity is the universal join key** ([founding principles](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/01-founding-principles-and-invariants.md)). Specs and code link by string IDs such as `"spec:orders.create-order"`, never by TypeScript imports between code and Specs. That is why a refactor that moves or renames files never breaks the trace, why the generated contracts never import product code, and why the comment form below needs no import at all.
 
 ### Representation A: The Constant Form
-When your code may import `@libar-dev/software-delivery-protocol` (or its zero-dependency subpath `@libar-dev/software-delivery-protocol/anchors` for browser and edge runtimes), you write a top-level constant, as in [`examples/checkout-v1/src/orders/create-order.use-case.ts`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/src/orders/create-order.use-case.ts):
+When your code may import `@libar-dev/software-delivery-protocol` (or its zero-dependency subpath `@libar-dev/software-delivery-protocol/anchors`), you write a top-level constant, as in [`examples/checkout-v1/src/orders/create-order.use-case.ts`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/src/orders/create-order.use-case.ts):
 
 ```ts
 import { codeAnchor, codeAnchorId, ref } from "@libar-dev/software-delivery-protocol";
@@ -173,12 +216,12 @@ You can write a top-level `/** … */` comment using reserved camelCase `@sdp*` 
  */
 ```
 
-Look closely at the distinction between `@sdpSatisfies` and `@sdpReferences` ([MD-37](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/anchor-binding-grain.sdp.md)):
+Look closely at the distinction between `@sdpSatisfies` and `@sdpReferences` (the binding-grain ruling, [MD-37](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/anchor-binding-grain.sdp.md)):
 
 - **`@sdpSatisfies` (`satisfies`):** This unit (together with any sibling units satisfying the same Spec) **realizes** the Spec's promises. It confers the `implemented` delivery fact on `spec:consumers.census-page`.
 - **`@sdpReferences` (`references`):** This unit **answers to** a design or decision (`spec:decisions.architectural-annotation`) without claiming to realize it—or realizes only part of a Spec whose remaining promises are not yet built. It puts a `references` edge in the graph so `blastRadius` and impact queries traverse it, **without conferring `implemented` and without tripping the drift alarm**.
 
-If you write a stub or follow an ADR, you use `references`. You never have to lie with `satisfies` just to get traceability.
+If you write a stub or follow a decision record, you use `references`. You never have to lie with `satisfies` just to get traceability.
 
 ---
 
@@ -186,10 +229,10 @@ If you write a stub or follow an ADR, you use `references`. You never have to li
 
 How do we verify `spec:orders.create-order.valid-cart` so that if someone changes `{total: 100}` to `{total: 120}` in the Markdown Spec, the test suite fails immediately—without brittle Cucumber regexes?
 
-When `sdp build examples/checkout-v1` runs, it emits **derived TypeScript contracts** under `generated/contracts/` and a **registrar** beside the test ([`spec:extraction.executable-contracts`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/extraction/executable-contracts.sdp.md), [`spec:extraction.runnable-modules`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/extraction/runnable-modules.sdp.md)):
+When `npm run --silent sdp -- build examples/checkout-v1` runs, it emits **derived TypeScript contracts** under `generated/contracts/` (one step contract per example and one space contract for the parent) and a **registrar** beside the test ([`spec:extraction.executable-contracts`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/extraction/executable-contracts.sdp.md), [`spec:extraction.runnable-modules`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/extraction/runnable-modules.sdp.md)). Because the authored test imports that registrar, it is committed and byte-checked rather than ignored ([the adopted-registrars ruling, MD-31](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/adopted-registrars-committed.sdp.md)).
 
 1. **The Space Contract (`orders.create-order.space.ts`):** Exports `CreateOrderConditions` (`{ n: number; q: number; price: number; availability: "in stock" | "out of stock" }`), every child's bound point, and the `CreateOrderOutcome` discriminated union derived from the parent's `Then` steps.
-2. **The Expected-Outcome Oracle ([`test/orders/create-order.oracle.ts`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/test/orders/create-order.oracle.ts)):** Models the expected outcome across the entire example space, bound by `specOracle`:
+2. **The Expected-Outcome Oracle ([`test/orders/create-order.oracle.ts`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/test/orders/create-order.oracle.ts)):** Models the expected outcome across the entire example space, bound by `specOracle`. Where the Spec states no outcome, it returns `unspecified` rather than guessing:
 
 ```ts
 export const createOrderOracle = specOracle({
@@ -223,7 +266,7 @@ export function expected(conditions: Partial<CreateOrderConditions>): CreateOrde
 }
 ```
 
-3. **The Bound Test ([`test/orders/create-order.valid-cart.test.ts`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/test/orders/create-order.valid-cart.test.ts)):** Anchors `test:orders.create-order.valid-cart` and activates the generated registrar with `createWorld`, `invoke`, `observe`, `expected`, and `assertions`:
+3. **The Bound Test ([`test/orders/create-order.valid-cart.test.ts`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/test/orders/create-order.valid-cart.test.ts)):** Anchors `test:orders.create-order.valid-cart` and activates the generated registrar:
 
 ```ts
 export const createOrderValidCartTest = specTest({
@@ -235,6 +278,14 @@ export const createOrderValidCartTest = specTest({
 registerValidCart({ createWorld, invoke, observe, expected, assertions });
 ```
 
+The registrar takes five adapter functions, all defined in that test file except `expected`:
+
+- `createWorld(point)` builds a fresh world from the generated point, the Spec's own bound values.
+- `invoke(world)` runs the system under test, here `createOrderFromCart`.
+- `observe(world)` reads what the system did, typed as a `CreateOrderOutcome`.
+- `expected(point)` is the oracle above.
+- `assertions(world)` adds checks the outcome union does not carry, such as the stable order id.
+
 The generated registrar compares three things at runtime:
 - **The Spec's authored outcome** (`{ total: 100 }` from the `.sdp.md` file),
 - **The Oracle's expected outcome** (`2 * 1 * 50 = 100` from `expected(point)`), and
@@ -242,30 +293,53 @@ The generated registrar compares three things at runtime:
 
 If the Markdown Spec, the oracle, or the implementation drifts from either of the other two, the test fails and names the exact step that diverged.
 
-Meanwhile, `spec:orders.create-order.invalid-cart` is authored at `defined` and declares `verifies: spec:orders.create-order`, but has no `specTest` anchor yet. When you run Recipe 10 (declared versus enabled verifiers) against `examples/checkout-v1`:
+Meanwhile, `spec:orders.create-order.invalid-cart` is authored at `defined` and declares `verifies: spec:orders.create-order`, but has no `specTest` anchor yet. Run recipe 10 (declared versus enabled verifiers) against the example:
 
 ```sh
-node dist/cli/sdp.js q "$(cat dist/recipes/10-declared-versus-enabled-verifiers.js)" --root examples/checkout-v1 --json
+npm run --silent sdp -- q "$(cat dist/recipes/10-declared-versus-enabled-verifiers.js)" --root examples/checkout-v1 --json
 ```
 
-The graph reports both `valid-cart` and `invalid-cart` under `declaredExampleVerifiers`, but only `valid-cart` as `enabled: true`. Because `invalid-cart` states `defined` (not `ready`), it sits quietly as honest incomplete trace data without a false warning ([the unbound-example posture, `spec:validation.unbound-example-posture`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/validation/unbound-example-posture.sdp.md)).
+```json
+{
+  "total": 2,
+  "withDeclaredOnly": 1,
+  "rows": [
+    {
+      "id": "spec:orders.create-order",
+      "declared": ["spec:orders.create-order.invalid-cart", "spec:orders.create-order.valid-cart"],
+      "enabled": ["spec:orders.create-order.valid-cart"]
+    },
+    {
+      "id": "spec:orders.create-order.valid-cart",
+      "declared": [],
+      "enabled": ["test:orders.create-order.valid-cart"]
+    }
+  ]
+}
+```
+
+The `spec:orders.create-order` row lists both examples under `declared` and only `valid-cart` under `enabled`, and the top-level `withDeclaredOnly: 1` counts the one Spec with a declared verifier that is not enabled. Because `invalid-cart` states `defined` (not `ready`), it sits quietly as honest incomplete trace data without a false warning ([the unbound-example posture, `spec:validation.unbound-example-posture`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/validation/unbound-example-posture.sdp.md)). An unbound example that states `ready` would draw a `conformance/verifies-linkage` warning.
 
 ---
 
-## 5. Break It on Purpose: Watching the Honesty Checks Fire
+## 5. Break It on Purpose: Watching Extraction, Conformance, Honesty, and Contract Checks Fire
 
-The fastest way to appreciate the validators is to trip them in `examples/checkout-v1` (revert each edit when done):
+The fastest way to appreciate the checks is to trip them in `examples/checkout-v1`. Run each experiment from the repository root, then revert the edit (`git checkout -- examples/checkout-v1`) and rerun `npm run generate:example` to restore the generated files. All paths below are under `examples/checkout-v1/specs/orders/`.
 
-| Experiment | What you edit | What happens when you run `sdp validate` or `vitest` |
-|---|---|---|
-| **1. Misspell a section heading** | In `order-total-rule.sdp.md`, change `## Rule` to `## Rul` | Exits `1` with `extract/unrecognized-heading` and suggests `Did you mean "## Rule"?` |
-| **2. Dangle a relation target** | In `create-order.sdp.md`, change `refines: spec:orders.order-management` to `spec:orders.order-managment` | Exits `1` with `conformance/referential-integrity` and suggests `spec:orders.order-management` (edit distance $\le 2$) |
-| **3. State readiness you haven't earned** | In `create-order.sdp.md` (stated `defined`), add `### Open questions` with `- [blocking] Wait?` | Exits `1` with `honesty/readiness-floor`, naming unmet clause `no-blocking-open-questions` |
-| **4. Leave a parameter slot unbound** | In `create-order-valid-cart.sdp.md`, change `{n: 2}` to `{n}` | Exits `1` with `honesty/readiness-floor` (`kind-evidence-complete`) and withholds the step contract |
-| **5. Drift a Spec value from code** | In `create-order-valid-cart.sdp.md`, change `{total: 100}` to `{total: 120}`, rebuild, and run `npx vitest --run examples/checkout-v1/test` | The bound test fails immediately because the generated contract supplies the Spec's `{total: 120}` against the oracle and implementation's `100` |
+| Experiment | What you edit | Run | What happens |
+|---|---|---|---|
+| **1. Misspell a section heading** (extraction) | In `order-total-rule.sdp.md`, change `## Rule` to `## Rul` | `npm run --silent sdp -- validate examples/checkout-v1` | Exits `1` with `extract/unrecognized-heading` (`heading "Rul" is not recognized; did you mean "Rule"?`), plus two `extract/invalid-markdown-structure` errors (`Intent entries require a field name`), because the rule bullets beneath the unrecognized heading now fall under `## Intent` |
+| **2. Dangle a relation target** (conformance) | In `create-order.sdp.md`, change `refines: spec:orders.order-management` to `refines: spec:orders.order-managment` | `npm run --silent sdp -- validate examples/checkout-v1` | Exits `1` with `conformance/referential-integrity` (`points to missing target "spec:orders.order-managment". Did you mean "spec:orders.order-management"?`); the suggestion is the unique nearest ID within edit distance ≤ 2 |
+| **3. State readiness you haven't earned** (honesty) | In `create-order.sdp.md` (stated `defined`), add `### Open questions` with `- [blocking] Wait?` at the end of `## Intent`, before `## Example space` | `npm run --silent sdp -- validate examples/checkout-v1` | Exits `1` with `honesty/readiness-floor`, naming the unmet clause `no-blocking-open-questions` |
+| **4. Leave a parameter slot unbound** (honesty) | In `create-order-valid-cart.sdp.md`, change `{n: 2}` to `{n}` | `npm run --silent sdp -- validate examples/checkout-v1` | Exits `1` with `honesty/readiness-floor`, naming the unmet clause `kind-evidence-complete`, and writes two contract modules instead of three: the example's step contract is withheld |
+| **5. Drift a Spec value from code** (contract) | In `create-order-valid-cart.sdp.md`, change `{total: 100}` to `{total: 120}` | `npm run generate:example && npx vitest --run examples/checkout-v1/test` | The bound test fails at `Then an order is created with total 120` with `Spec Then parameters do not match the oracle payload` and `$.total: expected 120, actual 100`: the regenerated contract supplies the Spec's value, and the oracle and implementation still say `100` |
 
 ---
 
 ## Up Next in the Series
 
-We have seen how Specs and anchors enter the repo and how the extractor and validators keep them honest. In **[Part 3: Stop Building 30-Verb CLI Walls for Coding Agents](./03-stop-building-verb-walls-for-coding-agents.md)**, we look at what happens *downstream* of the graph: how AI coding agents script `sdp q` across 43 runnable recipes, how design passes fit 240-Spec corpora into context bundles, and how humans review the same graph in the static HTML **Spec Studio**.
+We have seen how Specs and anchors enter the repo and how the extractor and validators keep them honest. In **Part 3: Stop Building 30-Verb CLI Walls for Coding Agents** ([read it here](./03-stop-building-verb-walls-for-coding-agents.md), or [on GitHub](https://github.com/libar-dev/software-delivery-protocol/blob/ARTICLES_COMMIT/docs/articles/03-stop-building-verb-walls-for-coding-agents.md)), we look at what happens *downstream* of the graph: how AI coding agents script `sdp q` across 43 runnable recipes, how design passes fit a 243-Spec adopter corpus into context bundles, and how humans review the same graph in the static HTML **Spec Studio**.
+
+---
+
+*About this article: Part 2 of 8 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6). Repository links and every command output are pinned to commit [`5a0b22c`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6), the merge of [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33); re-run the commands rather than quoting the outputs at a later commit.*
