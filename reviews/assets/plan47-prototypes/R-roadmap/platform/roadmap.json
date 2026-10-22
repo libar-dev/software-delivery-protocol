@@ -1,0 +1,1003 @@
+{
+  "decider": "owner",
+  "roadmaps": [
+    {
+      "pack": "pack:roadmap",
+      "title": "The next units",
+      "framing": "A trial roadmap written from the next units of the design roadmap file, round 5, in its order. The history view's build comes first: its projection waits only for the owner's statement, and its paused rebuild also waits for one open decision. Baselines and migration come next, then the restore procedure and its drill. The adopter-facing cut has no Spec yet, so it joins once captured. The order is a preference; what each entry still needs is read from the graph.",
+      "order": "reading",
+      "totals": {
+        "entries": 4,
+        "toDesign": 0,
+        "toState": 4,
+        "toBuild": 0,
+        "built": 0,
+        "apart": 0,
+        "questions": 0,
+        "blockingQuestions": 0,
+        "statements": 22
+      },
+      "entries": [
+        {
+          "place": 1,
+          "id": "spec:application.history-projection",
+          "title": "History projection",
+          "specKind": "contract",
+          "altitude": "story",
+          "lane": "to state",
+          "statedReadiness": "defined",
+          "floorReached": "ready",
+          "statedNextRung": "ready",
+          "holdsNextRung": [],
+          "work": {
+            "specs": 1,
+            "toDesign": 0,
+            "toState": 1,
+            "toBuild": 0,
+            "built": 0,
+            "drift": 0
+          },
+          "buildNow": [],
+          "blockingQuestions": [],
+          "decisions": [
+            {
+              "id": "spec:decisions.d02-context-owns-state-and-journal",
+              "title": "Each bounded context owns its state and its journal",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d04-four-outcomes",
+              "title": "Four outcomes, not a boolean",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d05-rebuildable-history-with-baselines",
+              "title": "Rebuildable history by default, with baseline events",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d08-read-models-in-command",
+              "title": "Read models update inside the command",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d09-rebuild-online-by-default",
+              "title": "Rebuild online by default, pause writes only for history-dependent views",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d18-everything-else-waits-for-trigger",
+              "title": "Everything else waits for its trigger",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d19-operations-travel-with-capability",
+              "title": "Operations travel with the capability",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            }
+          ],
+          "restsOn": [
+            {
+              "id": "spec:application.projection-contract",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.read-models",
+              "via": "refines",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:context.event-envelope",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": 3
+            },
+            {
+              "id": "spec:facts.f01-serializable-mutations-under-occ",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f13-transactions-have-limits",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law06-technical-failure-never-a-rejection",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law10-replay-never-runs-commands-or-effects",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            }
+          ],
+          "restedOnBy": [
+            {
+              "id": "spec:application.first-experiment",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.history-rebuild",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": 2
+            },
+            {
+              "id": "spec:application.orders-inventory-example",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.rebuild",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:command.command-declaration",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:command.command-pipeline",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            }
+          ],
+          "packs": [
+            "pack:application",
+            "pack:history-view"
+          ],
+          "sharesScopeWith": []
+        },
+        {
+          "place": 2,
+          "id": "spec:application.history-rebuild",
+          "title": "Rebuild of a history view under a write pause",
+          "specKind": "workflow",
+          "altitude": "feature",
+          "lane": "to state",
+          "statedReadiness": "defined",
+          "floorReached": "ready",
+          "statedNextRung": "ready",
+          "holdsNextRung": [],
+          "work": {
+            "specs": 1,
+            "toDesign": 0,
+            "toState": 1,
+            "toBuild": 0,
+            "built": 0,
+            "drift": 0
+          },
+          "buildNow": [],
+          "blockingQuestions": [],
+          "decisions": [
+            {
+              "id": "spec:decisions.d04-four-outcomes",
+              "title": "Four outcomes, not a boolean",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d09-rebuild-online-by-default",
+              "title": "Rebuild online by default, pause writes only for history-dependent views",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d19-operations-travel-with-capability",
+              "title": "Operations travel with the capability",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            }
+          ],
+          "restsOn": [
+            {
+              "id": "spec:application.generation-registry",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.history-projection",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": 1
+            },
+            {
+              "id": "spec:application.read-models",
+              "via": "refines",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.rebuild",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.write-pause",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:context.event-envelope",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": 3
+            },
+            {
+              "id": "spec:context.queries",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f01-serializable-mutations-under-occ",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f13-transactions-have-limits",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f19-nested-calls-share-time-budgets",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law11-tenant-scope-named",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            }
+          ],
+          "restedOnBy": [
+            {
+              "id": "spec:application.first-experiment",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.restore",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": 4
+            }
+          ],
+          "packs": [
+            "pack:application",
+            "pack:history-view"
+          ],
+          "sharesScopeWith": []
+        },
+        {
+          "place": 3,
+          "id": "spec:context.journal",
+          "title": "The journal",
+          "specKind": "behavior",
+          "altitude": "feature",
+          "lane": "to state",
+          "statedReadiness": "defined",
+          "floorReached": "ready",
+          "statedNextRung": "ready",
+          "holdsNextRung": [],
+          "work": {
+            "specs": 2,
+            "toDesign": 0,
+            "toState": 2,
+            "toBuild": 0,
+            "built": 0,
+            "drift": 1
+          },
+          "buildNow": [],
+          "blockingQuestions": [],
+          "decisions": [
+            {
+              "id": "spec:decisions.d02-context-owns-state-and-journal",
+              "title": "Each bounded context owns its state and its journal",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d05-rebuildable-history-with-baselines",
+              "title": "Rebuildable history by default, with baseline events",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:kernel.state-document-mapping",
+              "title": "One document per stream, with a derived mapping above the budget",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            }
+          ],
+          "restsOn": [
+            {
+              "id": "spec:application.write-pause",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:command.actor-and-scope",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:constraints.events-stay-small",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:context.context-component",
+              "via": "refines",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:context.tables",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f01-serializable-mutations-under-occ",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f02-component-calls-commit-with-caller",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f08-scheduling-commits-with-mutation",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f13-transactions-have-limits",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f18-commit-timestamps",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law02-state-and-events-commit-together",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law03-events-only-source-of-state",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law06-technical-failure-never-a-rejection",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law10-replay-never-runs-commands-or-effects",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law11-tenant-scope-named",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            }
+          ],
+          "restedOnBy": [
+            {
+              "id": "spec:application.first-experiment",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.history-projection",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": 1
+            },
+            {
+              "id": "spec:application.history-rebuild",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": 2
+            },
+            {
+              "id": "spec:application.restore",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": 4
+            },
+            {
+              "id": "spec:command.command-pipeline",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:context.context-component",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:context.persistence-adapter",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:context.queries",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:context.tables",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:obligations.fan-out-and-chains",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:operations.baseline-operations",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            }
+          ],
+          "packs": [
+            "pack:history-view",
+            "pack:kernel-and-context"
+          ],
+          "sharesScopeWith": []
+        },
+        {
+          "place": 4,
+          "id": "spec:application.restore",
+          "title": "Restore",
+          "specKind": "workflow",
+          "altitude": "story",
+          "lane": "to state",
+          "statedReadiness": "defined",
+          "floorReached": "ready",
+          "statedNextRung": "ready",
+          "holdsNextRung": [],
+          "work": {
+            "specs": 1,
+            "toDesign": 0,
+            "toState": 1,
+            "toBuild": 0,
+            "built": 0,
+            "drift": 0
+          },
+          "buildNow": [],
+          "blockingQuestions": [],
+          "decisions": [
+            {
+              "id": "spec:decisions.d03-events-only-source-of-next-state",
+              "title": "Events are the only source of the next state",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d05-rebuildable-history-with-baselines",
+              "title": "Rebuildable history by default, with baseline events",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d06-idempotency-client-and-receipts",
+              "title": "Convex covers UI retries, receipts cover the rest",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d08-read-models-in-command",
+              "title": "Read models update inside the command",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            },
+            {
+              "id": "spec:decisions.d19-operations-travel-with-capability",
+              "title": "Operations travel with the capability",
+              "statedReadiness": "defined",
+              "blockingQuestions": []
+            }
+          ],
+          "restsOn": [
+            {
+              "id": "spec:application.generation-registry",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.history-rebuild",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": 2
+            },
+            {
+              "id": "spec:application.parent-use-cases",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.projection-contract",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.rebuild",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:application.write-pause",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:command.actor-and-scope",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:constraints.bulk-operations-bounded",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:context.event-envelope",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": 3
+            },
+            {
+              "id": "spec:context.journal",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": 3
+            },
+            {
+              "id": "spec:context.queries",
+              "via": "dependsOn",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f08-scheduling-commits-with-mutation",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f12-backups-exclude-pending-scheduled-functions",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:facts.f13-transactions-have-limits",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law03-events-only-source-of-state",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law08-durable-capability-ships-operations",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law10-replay-never-runs-commands-or-effects",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:laws.law11-tenant-scope-named",
+              "via": "constrainedBy",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:operations.baseline-operations",
+              "via": "refines",
+              "lane": "to state",
+              "statedReadiness": "defined",
+              "holdsReady": false,
+              "onRoadmap": null
+            }
+          ],
+          "restedOnBy": [
+            {
+              "id": "spec:application.first-experiment",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            },
+            {
+              "id": "spec:obligations.retention-and-restore",
+              "via": "dependsOn",
+              "lane": "to state",
+              "onRoadmap": null
+            }
+          ],
+          "packs": [
+            "pack:application"
+          ],
+          "sharesScopeWith": []
+        }
+      ],
+      "apart": [],
+      "waiting": {
+        "questions": [],
+        "statements": [
+          {
+            "id": "spec:decisions.d04-four-outcomes",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              1,
+              2
+            ]
+          },
+          {
+            "id": "spec:decisions.d02-context-owns-state-and-journal",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              1,
+              3
+            ]
+          },
+          {
+            "id": "spec:decisions.d08-read-models-in-command",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": "spec:decisions.d05-rebuildable-history-with-baselines",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              1,
+              3,
+              4
+            ]
+          },
+          {
+            "id": "spec:decisions.d09-rebuild-online-by-default",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              1,
+              2
+            ]
+          },
+          {
+            "id": "spec:decisions.d19-operations-travel-with-capability",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              1,
+              2,
+              4
+            ]
+          },
+          {
+            "id": "spec:decisions.d18-everything-else-waits-for-trigger",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              1
+            ]
+          },
+          {
+            "id": "spec:application.history-projection",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              1
+            ]
+          },
+          {
+            "id": "spec:application.history-rebuild",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              2
+            ]
+          },
+          {
+            "id": "spec:application.history-rebuild.write-pause-rebuild-abort",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              2
+            ]
+          },
+          {
+            "id": "spec:application.history-rebuild.write-pause-rebuild-installation",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              2
+            ]
+          },
+          {
+            "id": "spec:application.history-rebuild.write-pause-rebuild-interrupt",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              2
+            ]
+          },
+          {
+            "id": "spec:application.history-rebuild.write-pause-rebuild-source-order-mismatch",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              2
+            ]
+          },
+          {
+            "id": "spec:application.history-rebuild.write-pause-rebuild-version-change",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              2
+            ]
+          },
+          {
+            "id": "spec:kernel.state-document-mapping",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              3
+            ]
+          },
+          {
+            "id": "spec:context.event-envelope",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              3
+            ]
+          },
+          {
+            "id": "spec:context.journal",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              3
+            ]
+          },
+          {
+            "id": "spec:context.journal.rebuild-from-baseline",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              3
+            ]
+          },
+          {
+            "id": "spec:decisions.d06-idempotency-client-and-receipts",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
+          {
+            "id": "spec:decisions.d03-events-only-source-of-next-state",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
+          {
+            "id": "spec:application.restore",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          },
+          {
+            "id": "spec:application.restore.restore-representative-dataset",
+            "statedReadiness": "defined",
+            "floorReached": "ready",
+            "places": [
+              4
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
