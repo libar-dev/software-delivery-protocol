@@ -34,9 +34,29 @@ export function mermaidSource(d: Diagram): string {
     return lines.join("\n");
   }
   return [
-    d.mermaidKind ?? "flowchart TB",
+    d.mermaidKind === "dependencies"
+      ? "flowchart BT"
+      : d.mermaidKind === "block"
+        ? "block-beta\n  columns 1"
+        : (d.mermaidKind ?? "flowchart TB"),
+    ...(d.mermaidKind === "dependencies"
+      ? [...new Set(displayed.map((b) => b.band))].flatMap((band, i) => [
+          `  subgraph depth${String(i)}["${mermaidText(band ?? "Units")}"]`,
+          ...displayed
+            .filter((b) => b.band === band)
+            .map(
+              (b) =>
+                `    ${aliases.get(b.id) ?? ""}["${mermaidText(b.hideIdentity ? b.words : `${b.words} · ${b.identity ?? b.id}`)}"]`,
+            ),
+          "  end",
+        ])
+      : []),
     ...displayed.flatMap((b) => [
-      `  ${aliases.get(b.id) ?? ""}["${mermaidText(`${b.words} · ${b.identity ?? b.id}`)}"]`,
+      ...(d.mermaidKind === "dependencies"
+        ? []
+        : [
+            `  ${aliases.get(b.id) ?? ""}["${mermaidText(b.hideIdentity ? b.words : `${b.words} · ${b.identity ?? b.id}`)}"]`,
+          ]),
       ...(b.folded
         ? [`  %% folded ${mermaidText(b.id)}: ${(b.foldedIds ?? []).map(mermaidText).join(", ")}`]
         : []),
@@ -45,7 +65,8 @@ export function mermaidSource(d: Diagram): string {
         : []),
     ]),
     ...d.edges.flatMap((e) => [
-      `  ${aliases.get(e.from) ?? ""} -->|"${mermaidText(edgeWords(e))}"| ${aliases.get(e.to) ?? ""}`,
+      ...(d.mermaidKind === "block" ? [`  %% ${mermaidText(edgeWords(e))}`] : []),
+      `  ${aliases.get(e.from) ?? ""} ${e.kind === "plans to use" || e.orders === false ? "-.->" : "-->"}${d.mermaidKind === "block" ? "" : `|"${mermaidText(edgeWords(e))}"|`} ${aliases.get(e.to) ?? ""}`,
       ...(e.count === undefined
         ? []
         : [`  %% count: ${String(e.count)}; ${mermaidText(e.from)} to ${mermaidText(e.to)}`]),

@@ -120,6 +120,7 @@ describe("Studio publication", () => {
       "queue.html",
       "roadmap.html",
       "search.html",
+      "slices/probe.html",
       "specs/probe.member.html",
       "tests.html",
     ]);

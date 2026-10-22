@@ -30,6 +30,7 @@ export function packExport(
   pack: PackContext,
   pages: readonly StudioPage[],
   stylesheet: string,
+  linkedPages: readonly StudioPage[] = pages,
 ): StudioPage {
   const packPath = pagePath(pack.id) ?? "";
   const contents = [
@@ -130,7 +131,7 @@ export function packExport(
             decode(href),
             `https://studio.invalid/${content.path}`,
           ).pathname.slice(1);
-          const graphId = pages
+          const graphId = linkedPages
             .find((p) => p.path === path)
             ?.content.match(/<div class="ids"><span><code>([^<]*)<\/code>/u)?.[1];
           return `<code>${escape(graphId ? decode(graphId) : dest.text)}</code>`;
@@ -177,5 +178,5 @@ export function exportPages(
             return { path, content: specPage({ data: graphOnly, path }, spec) };
           }),
         ];
-  return data.packs.map(({ context }) => packExport(context, sources, stylesheet));
+  return data.packs.map(({ context }) => packExport(context, sources, stylesheet, pages));
 }

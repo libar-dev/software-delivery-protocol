@@ -11,6 +11,8 @@ import { evidencePage } from "./evidence-page.js";
 import type { StudioData } from "../data.js";
 import { pagePath } from "../paths.js";
 import { indexPage } from "./index-page.js";
+import type { SliceAnswer } from "../slice-answer.js";
+import { slicePage, slicePath } from "./slice-page.js";
 import { packPage } from "./pack-page.js";
 import { specPage } from "./spec-page.js";
 import { searchPage } from "./search-page.js";
@@ -55,6 +57,13 @@ export function renderStudio(data: StudioData, stylesheet: string): readonly Stu
       const path = pagePath(context.id);
       if (path === null) throw new Error(`Pack has no Studio path: ${context.id}`);
       return { path, content: packPage({ data, path }, context, totals) };
+    }),
+    ...data.packs.map(({ context }) => {
+      const path = slicePath(context.id);
+      return {
+        path,
+        content: slicePage({ data, path }, data.recipes.slices.get(context.id) as SliceAnswer),
+      };
     }),
     ...data.specs.map((spec) => {
       const path = pagePath(spec.id);

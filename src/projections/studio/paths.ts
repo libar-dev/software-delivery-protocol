@@ -14,3 +14,9 @@ export function pagePath(id: string): string | null {
     .replace(/[A-Z]/gu, (letter) => `_${letter.toLowerCase()}`);
   return `${namespace}/${name}.html`;
 }
+
+export function slicePath(id: string): string {
+  const path = pagePath(id);
+  if (path === null || !id.startsWith("pack:")) throw new Error(`Slice has no Pack path: ${id}`);
+  return path.replace(/^packs\//u, "slices/");
+}

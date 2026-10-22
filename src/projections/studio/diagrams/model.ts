@@ -11,6 +11,8 @@ export interface DiagramBox {
   readonly identity?: string;
   readonly parent?: string;
   readonly title?: string;
+  readonly elementId?: string;
+  readonly hideIdentity?: boolean;
   readonly detail?: string;
   readonly foldedIds?: readonly string[];
   readonly cycleIds?: readonly string[];
@@ -27,8 +29,10 @@ export interface DiagramEdge {
   readonly to: string;
   readonly kind: string;
   readonly count?: number;
+  readonly countLabel?: string;
   readonly claim?: string;
   readonly reason?: string;
+  readonly orders?: boolean;
 }
 export interface DiagramInput {
   readonly boxes: readonly DiagramBox[];
@@ -39,11 +43,15 @@ export interface Diagram extends DiagramInput {
   readonly caption: string;
   readonly grid?: boolean;
   readonly boxOrder?: "supplied";
-  readonly mermaidKind?: "mindmap" | "flowchart BT";
+  readonly preserveOrder?: boolean;
+  readonly mermaidKind?: "mindmap" | "flowchart BT" | "dependencies" | "block";
   readonly mermaidExplanation?: string;
   readonly mermaidNotes?: readonly string[];
   readonly legend?: string;
   readonly textEquivalent?: string;
+  readonly textRows?: readonly string[];
+  readonly note?: string;
+  readonly occurrenceKey?: string;
   readonly sectionId?: string | null;
 }
 export const layers = ["edge", "application", "domain", "adapter", "infrastructure", "not stated"];
@@ -61,7 +69,7 @@ export function aggregate(
     const from = ids.get(e.from),
       to = ids.get(e.to);
     if (from === undefined || to === undefined || from === to) continue;
-    const key = JSON.stringify([from, to, e.kind, e.claim]);
+    const key = JSON.stringify([from, to, e.kind, e.claim, e.orders]);
     const previous = pairs.get(key);
     const reason = previous && previous.reason !== e.reason ? undefined : e.reason;
     pairs.set(key, {
@@ -70,6 +78,8 @@ export function aggregate(
       kind: e.kind,
       ...(e.claim === undefined ? {} : { claim: e.claim }),
       ...(reason === undefined ? {} : { reason }),
+      ...(e.orders === undefined ? {} : { orders: e.orders }),
+      ...(e.countLabel === undefined ? {} : { countLabel: e.countLabel }),
       count: (pairs.get(key)?.count ?? 0) + (e.count ?? 1),
     });
   }

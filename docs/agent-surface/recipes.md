@@ -5588,10 +5588,14 @@ A refused input returns `{ diagnostics }` without a slice:
 The answer is `{ scope, totals, members, structure, boundary, architecture, decisions, questions }`.
 Members stay in scope order, with their depth, next-rung holds and design columns. Structure
 lists typed relations with their ordering mark and reasons, and cycles with a closed path.
+`structure.unresolved` lists unresolved outgoing typed targets apart from the resolved boundary,
+with their relation type and optional reason, and no invented title or rung.
 Boundary rows extend Pack design with floors and held members, marking excluded Pack members
-with `inPack`. Architecture keeps touched anchored components, member component designs,
+with `inPack`; a full row's `via` includes `reasons: [{ member, reason }]` only for relations that
+state a reason. Architecture keeps touched anchored components, member component designs,
 anchored component pairs with unit edges, planned uses, one-step outside components, and
-unplaced units apart. Decisions include member decisions and those members name; questions
+unplaced units apart. A member's bound unit whose component membership does not resolve stays
+unplaced and touches no invented component. Decisions include member decisions and those members name; questions
 include members', decisions', and blocking questions of outside Specs holding a member.
 Totals count these readings without a score, finding, schedule or gate. The law and complete
 row shapes are `spec:consumers.design-slice`.
@@ -5644,6 +5648,11 @@ const position = new Map(ids.map((id, index) => [id, index]));
 const context = new Map(ids.map((id) => [id, g.specContext(id)]));
 const rungs = ["idea", "scoped", "defined", "ready"];
 const typed = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
+
+// Keep the unresolvable outgoing ends apart from the resolved boundary.
+const unresolvedEdges = ids.flatMap((id) => context.get(id).relationsOut
+  .filter((end) => end.claim === "declared" && typed.includes(end.type) && !end.resolved)
+  .map((end) => ({ from: id, to: end.otherId, type: end.type, ...(end.reason === undefined ? {} : { reason: end.reason }) })));
 
 // Structure inside the slice: the four typed relations between members.
 const edgeKeys = new Set();
@@ -5756,9 +5765,9 @@ const ruleCounts = new Map(ids.map((id) => {
   return [id, { total: (behavior?.rules?.length ?? 0) + (behavior?.flows?.length ?? 0), keyed: Object.keys(behavior?.ruleKeys ?? {}).length }];
 }));
 const architectureMap = await recipes(17);
-const componentRow = new Map(architectureMap.components.map((row) => [row.id, row]));
+const componentRow = new Map(architectureMap.components.filter((row) => row.declared).map((row) => [row.id, row]));
 const unitComponent = new Map();
-for (const row of architectureMap.components) for (const member of row.members) unitComponent.set(member.id, row.id);
+for (const row of componentRow.values()) for (const member of row.members) unitComponent.set(member.id, row.id);
 const componentOfUnit = (unitId) => (componentRow.has(unitId) ? unitId : unitComponent.get(unitId));
 const comparison = await recipes(43);
 const decisionRegister = await recipes(31);
@@ -5843,7 +5852,10 @@ const boundaryRows = (direction) => [...directions[direction]].sort(([a], [b]) =
     floorReached: other.derivedReadiness ?? "none",
     implemented: other.deliveryFacts.includes("implemented"),
     via: [...byType].sort(([a], [b]) => relationOrder.indexOf(a) - relationOrder.indexOf(b))
-      .map(([type, list]) => ({ type, members: [...list].sort((a, b) => position.get(a) - position.get(b)) })),
+      .map(([type, list]) => { const reasons = list.flatMap((member) => {
+        const ends = direction === "restsOn" ? context.get(member).relationsOut : context.get(member).relationsIn;
+        return ends.filter((end) => end.claim === "declared" && end.type === type && end.otherId === otherId && end.reason !== undefined).map((end) => ({ member, reason: end.reason }));
+      }); return { type, members: [...list].sort((a, b) => position.get(a) - position.get(b)), ...(reasons.length ? { reasons } : {}) }; }),
     holds: direction === "restsOn" ? holdsTarget(otherId) : [],
     ...(packMembers.has(otherId) ? { inPack: true } : {}),
   };
@@ -6054,7 +6066,7 @@ const answer = {
     blockingQuestions: questions.filter((row) => row.blocking).length,
   },
   members,
-  structure: { edges, cycles },
+  structure: { edges, cycles, unresolved: unresolvedEdges },
   boundary,
   architecture: { components, designs, uses, plannedUses, outside, unplaced },
   decisions,
@@ -6072,7 +6084,7 @@ const memberSummary = (row) => selected.has(row.id) ? row : {
 return {
   ...answer,
   members: members.map(memberSummary),
-  structure: { edges: edges.map(({ from, to, type, orders }) => ({ from, to, type, orders })), cycles },
+  structure: { edges: edges.map(({ from, to, type, orders }) => ({ from, to, type, orders })), cycles, unresolved: unresolvedEdges.map(({ from, to, type }) => ({ from, to, type })) },
   boundary: Object.fromEntries(Object.entries(boundary).map(([direction, rows]) => [direction, rows.map((row) => ({ id: row.id, statedReadiness: row.statedReadiness, holds: row.holds, ...(row.inPack ? { inPack: true } : {}) }))])),
   architecture: {
     components: components.map((row) => ({ id: row.id, layer: row.layer, context: row.context,

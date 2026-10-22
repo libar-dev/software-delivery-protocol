@@ -18,7 +18,7 @@ export interface Routed {
   readonly height: number;
 }
 export const edgeWords = (e: DiagramEdge): string =>
-  `${e.kind}${e.claim ? ` · ${e.claim}` : ""}${(e.count ?? 1) > 1 ? ` (${String(e.count)} unit edges)` : ""}${e.reason ? ` — ${e.reason}` : ""}`;
+  `${e.kind}${e.orders === false ? " (orders nothing)" : ""}${e.claim ? ` · ${e.claim}` : ""}${(e.count ?? 1) > 1 ? ` (${String(e.count)} ${e.countLabel ?? "unit edges"})` : ""}${e.reason ? ` — ${e.reason}` : ""}`;
 export const edgeOrder = (a: DiagramEdge, b: DiagramEdge): number =>
   compare(a.from, b.from) ||
   compare(a.to, b.to) ||
