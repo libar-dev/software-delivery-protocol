@@ -50,7 +50,7 @@ const testingComponentAnchor = codeAnchor({
 const exampleTestingHelpersAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-testing-helpers"),
   label: "adapter-lifecycle and oracle-comparison helpers for bound examples",
-  satisfies: ref("spec:extraction.runnable-modules"),
+  satisfies: [ref("spec:extraction.runnable-modules"), ref("spec:extraction.executable-examples")],
   component: componentAnchorId("component:protocol.testing"),
   role: "adapter",
 });

@@ -124,7 +124,7 @@ function renderMemberRow(member: PackMemberSummary, number: number, page: string
  *
  * @sdpAnchor impl:protocol.pack-design-page
  * @sdpLabel renders the Pack page from the Pack design
- * @sdpSatisfies spec:consumers.design-review.pack-design-page
+ * @sdpSatisfies spec:consumers.design-review.pack-design-page, spec:extraction.pack-member-order
  * @sdpReferences spec:decisions.pack-design-page
  * @sdpComponent component:protocol.projections
  * @sdpRole projection

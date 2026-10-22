@@ -33,7 +33,7 @@ const reservedEnvelopeKeys = new Set([
 /**
  * @sdpAnchor impl:protocol.markdown-yaml-policy
  * @sdpLabel bounded YAML scalars and relation-target forms
- * @sdpSatisfies spec:carrier.envelope-contract, spec:carrier.markdown-pack-authoring
+ * @sdpSatisfies spec:carrier.envelope-contract, spec:carrier.markdown-pack-authoring, spec:extraction.pack-member-order
  * @sdpComponent component:protocol.extract
  * @sdpRole codec
  */

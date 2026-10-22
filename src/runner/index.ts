@@ -108,7 +108,11 @@ const runnerComponentAnchor = codeAnchor({
 const exampleRunnerAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner"),
   label: "plans and executes a bound example against the caller's world",
-  satisfies: [ref("spec:extraction.example-runner"), ref("spec:carrier.step-keys")],
+  satisfies: [
+    ref("spec:extraction.example-runner"),
+    ref("spec:carrier.step-keys"),
+    ref("spec:extraction.executable-examples"),
+  ],
   component: componentAnchorId("component:protocol.runner"),
   role: "service",
 });

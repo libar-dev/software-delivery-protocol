@@ -1102,7 +1102,7 @@ function checkPackModelRefs(pack: PackNode, index: GraphIndex, findings: Finding
 const packCoherenceAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.pack-coherence"),
   label: "checks Pack membership agreement and uniqueness and model-reference kinds",
-  satisfies: ref("spec:validation.pack-coherence"),
+  satisfies: [ref("spec:validation.pack-coherence"), ref("spec:extraction.pack-member-order")],
   component: componentAnchorId("component:protocol.validate"),
   role: "validator",
 });

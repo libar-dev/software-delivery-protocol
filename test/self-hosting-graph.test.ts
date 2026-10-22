@@ -140,6 +140,13 @@ const selfHostingImplementationAnchor = codeAnchor({
 });
 void selfHostingImplementationAnchor;
 
+const roleVocabularyImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.role-vocabulary"),
+  label: "asserts realization of the role vocabulary in the engine anchors' pinned roles",
+  satisfies: ref("spec:protocol.role-vocabulary"),
+});
+void roleVocabularyImplementationAnchor;
+
 // Given: the repository root with evidence and the worked example excluded from the authored model.
 // The corpus walk is this suite's one expensive step, so it runs exactly once and every assertion
 // below reads the same derived graph: splitting the oracle by law never multiplies extraction.
@@ -351,13 +358,13 @@ describe("the self-hosting corpus", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 455, packs: 9, anchors: 585 });
+    expect(result.counts).toEqual({ specs: 455, packs: 9, anchors: 587 });
     expect(expectedSpecs).toHaveLength(455);
     expect(expectedPackMembers).toHaveLength(455);
-    expect(expectedAnchors).toHaveLength(585);
-    expect(expectedBindingEdges).toHaveLength(755);
-    expect(result.graph.nodes).toHaveLength(1049);
-    expect(result.graph.edges).toHaveLength(2911);
+    expect(expectedAnchors).toHaveLength(587);
+    expect(expectedBindingEdges).toHaveLength(766);
+    expect(result.graph.nodes).toHaveLength(1051);
+    expect(result.graph.edges).toHaveLength(2922);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {

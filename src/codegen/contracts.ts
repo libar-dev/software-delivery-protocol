@@ -647,14 +647,18 @@ const codegenComponentAnchor = codeAnchor({
 const executableContractsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.executable-contracts"),
   label: "derives step and example-space contracts from the graph",
-  satisfies: [ref("spec:extraction.executable-contracts"), ref("spec:carrier.step-keys")],
+  satisfies: [
+    ref("spec:extraction.executable-contracts"),
+    ref("spec:carrier.step-keys"),
+    ref("spec:extraction.executable-examples"),
+  ],
   component: componentAnchorId("component:protocol.codegen"),
   role: "projection",
 });
 const runnableModulesAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.runnable-modules"),
   label: "derives and publishes runnable registrar modules from the graph",
-  satisfies: ref("spec:extraction.runnable-modules"),
+  satisfies: [ref("spec:extraction.runnable-modules"), ref("spec:extraction.executable-examples")],
   component: componentAnchorId("component:protocol.codegen"),
   role: "projection",
 });

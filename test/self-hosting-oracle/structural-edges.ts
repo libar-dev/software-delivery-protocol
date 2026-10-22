@@ -41,6 +41,8 @@ export const structuralMembershipExceptions = [
   "impl:protocol.validator-probe-table",
   "impl:protocol.entry-citation-recipe",
   "impl:protocol.capability-map-recipe",
+  "impl:protocol.capability-epics",
+  "impl:protocol.role-vocabulary",
   "impl:protocol.external-registers-recipe",
   "impl:protocol.example-space-coverage-recipe",
   "impl:protocol.architecture-walk-recipe",

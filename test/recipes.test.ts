@@ -7604,6 +7604,7 @@ const capabilityMapRecipeImplementationAnchor = codeAnchor({
   label: "asserts realization of The capability map in docs/agent-surface/recipes.md",
   satisfies: ref("spec:consumers.capability-map"),
   references: [ref("spec:decisions.epics-of-any-kind")],
+  role: "projection",
 });
 void capabilityMapRecipeImplementationAnchor;
 const capabilityMapRecipeTestAnchor = specTest({
@@ -8169,6 +8170,12 @@ describe("the capability map recipe", () => {
   });
 });
 
+const capabilityEpicsImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.capability-epics"),
+  label: "asserts realization of the capability epics in the shipped corpus's refinement",
+  satisfies: ref("spec:protocol.capability-epics"),
+});
+void capabilityEpicsImplementationAnchor;
 const capabilityEpicsTestAnchor = specTest({
   id: testAnchorId("test:protocol.capability-epics"),
   verifies: ref("spec:protocol.capability-epics"),

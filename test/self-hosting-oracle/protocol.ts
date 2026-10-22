@@ -189,7 +189,7 @@ export const protocolSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented"],
   },
   {
     id: "spec:protocol.capability-epics",
@@ -240,7 +240,7 @@ export const protocolSpecs = [
         ],
       },
     },
-    deliveryFacts: ["has-verifier"],
+    deliveryFacts: ["implemented", "has-verifier"],
   },
   {
     id: "spec:protocol.roadmap-replaces-plans",

@@ -361,7 +361,7 @@ export const extractionSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented"],
   },
   {
     id: "spec:extraction.executable-contracts",

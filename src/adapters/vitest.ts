@@ -32,7 +32,7 @@ const adaptersComponentAnchor = codeAnchor({
 const exampleRunnerAdapterAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner-adapter"),
   label: "registers one test per example and owns the fresh world lifecycle",
-  satisfies: ref("spec:extraction.example-runner"),
+  satisfies: [ref("spec:extraction.example-runner"), ref("spec:extraction.executable-examples")],
   component: componentAnchorId("component:protocol.adapters"),
   uses: [codeAnchorId("impl:protocol.example-runner")],
   role: "adapter",
