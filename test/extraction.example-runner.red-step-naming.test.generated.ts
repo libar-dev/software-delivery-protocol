@@ -41,6 +41,7 @@ export function registerRedStepNaming<World>(
     "the run {outcome}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the run {outcome}",
         text: "the run {outcome}",
         params,
       });
@@ -48,6 +49,7 @@ export function registerRedStepNaming<World>(
     "the failure names the step in the Spec's own words as {failureLabel}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the failure names the step in the Spec's own words as {failureLabel}",
         text: "the failure names the step in the Spec's own words as {failureLabel}",
         params,
       });
@@ -55,6 +57,7 @@ export function registerRedStepNaming<World>(
     "the failure preserves the original detail {detail}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the failure preserves the original detail {detail}",
         text: "the failure preserves the original detail {detail}",
         params,
       });

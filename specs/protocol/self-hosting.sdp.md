@@ -2,7 +2,7 @@
 id: spec:protocol.self-hosting
 kind: behavior
 altitude: epic
-readiness: defined
+readiness: ready
 relations:
   dependsOn:
     - target: spec:carrier.markdown-authoring

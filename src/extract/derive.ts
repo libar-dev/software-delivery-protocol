@@ -78,7 +78,7 @@ function pickSections(data: Record<string, unknown>): SpecSections | undefined {
 const entryLocationsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.entry-locations"),
   label: "builds the carrier entry location table",
-  satisfies: ref("spec:extraction.entry-locations"),
+  satisfies: [ref("spec:extraction.entry-locations"), ref("spec:model.term-addresses")],
   component: componentAnchorId("component:protocol.extract"),
   role: "extractor",
 });
@@ -87,33 +87,43 @@ void entryLocationsAnchor;
 function deriveEntryLocations(specs: readonly ReifiedSpec[]): readonly EntryLocation[] {
   return specs
     .flatMap((spec) =>
-      (spec.entryLines ?? []).map(({ entry, line }) => {
-        const index = /^question\[(\d+)\]$/u.exec(entry)?.[1];
-        const intent = spec.data.intent;
-        const questions =
-          typeof intent === "object" && intent !== null && "openQuestions" in intent
-            ? intent.openQuestions
-            : undefined;
-        const question: unknown =
-          index !== undefined && Array.isArray(questions) ? questions[Number(index)] : undefined;
-        let key =
-          typeof question === "object" && question !== null && "key" in question
-            ? question.key
-            : undefined;
-        const behavior = spec.data.behavior as { ruleKeys?: Record<string, string> } | undefined;
-        const ruleEntry = entry.replace(/^rule\[/u, "rules[").replace(/^flow\[/u, "flows[");
-        if (/^(rule|flow)\[/u.test(entry))
-          key = Object.entries(behavior?.ruleKeys ?? {}).find(
-            ([, path]) => path === ruleEntry,
-          )?.[0];
-        return {
-          spec: spec.id,
-          file: spec.file,
-          entry,
-          ...(typeof key === "string" ? { key } : {}),
-          line,
-        };
-      }),
+      (spec.entryLines ?? [])
+        .filter((row) => !row.entry.startsWith("behavior.example"))
+        .map(({ entry, line }) => {
+          const index = /^question\[(\d+)\]$/u.exec(entry)?.[1];
+          const intent = spec.data.intent;
+          const questions =
+            typeof intent === "object" && intent !== null && "openQuestions" in intent
+              ? intent.openQuestions
+              : undefined;
+          const question: unknown =
+            index !== undefined && Array.isArray(questions) ? questions[Number(index)] : undefined;
+          let key =
+            typeof question === "object" && question !== null && "key" in question
+              ? question.key
+              : undefined;
+          const behavior = spec.data.behavior as { ruleKeys?: Record<string, string> } | undefined;
+          const ruleEntry = entry.replace(/^rule\[/u, "rules[").replace(/^flow\[/u, "flows[");
+          if (/^(rule|flow)\[/u.test(entry))
+            key = Object.entries(behavior?.ruleKeys ?? {}).find(
+              ([, path]) => path === ruleEntry,
+            )?.[0];
+          const termIndex = /^term\[(\d+)\]$/u.exec(entry)?.[1];
+          const model = spec.data.model as
+            | { terms?: Record<string, string>; termKeys?: Record<string, string> }
+            | undefined;
+          if (termIndex !== undefined) {
+            const term = Object.keys(model?.terms ?? {})[Number(termIndex)];
+            key = Object.entries(model?.termKeys ?? {}).find(([, value]) => value === term)?.[0];
+          }
+          return {
+            spec: spec.id,
+            file: spec.file,
+            entry,
+            ...(typeof key === "string" ? { key } : {}),
+            line,
+          };
+        }),
     )
     .sort((left, right) => {
       if (left.spec !== right.spec) return left.spec < right.spec ? -1 : 1;

@@ -1,0 +1,108 @@
+from html.parser import HTMLParser
+from pathlib import Path
+import json,re,hashlib,collections
+class Node:
+    def __init__(self,tag='',attrs=()):self.tag=tag;self.attrs=dict(attrs);self.children=[]
+    def nodes(self):
+        yield self
+        for child in self.children:
+            if isinstance(child,Node):yield from child.nodes()
+    def text(self):return ' '.join(child.text() if isinstance(child,Node) else child for child in self.children)
+    def byid(self,key):return next((n for n in self.nodes() if n.attrs.get('id')==key),None)
+    def hasclass(self,key):return key in self.attrs.get('class','').split()
+class Parser(HTMLParser):
+    def __init__(self,html):
+        super().__init__(convert_charrefs=True);self.root=Node();self.stack=[self.root];self.feed(html)
+    def handle_starttag(self,tag,attrs):
+        node=Node(tag,attrs);self.stack[-1].children.append(node)
+        if tag not in {'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'}:self.stack.append(node)
+    def handle_startendtag(self,tag,attrs):self.stack[-1].children.append(Node(tag,attrs))
+    def handle_endtag(self,tag):
+        for index in range(len(self.stack)-1,0,-1):
+            if self.stack[index].tag==tag:self.stack=self.stack[:index];break
+    def handle_data(self,data):self.stack[-1].children.append(data)
+root=Path('generated/spec-studio')
+pages={p.relative_to(root).as_posix():Parser(p.read_text()).root for p in root.rglob('*.html')}
+graph=json.loads(Path('generated/graph.json').read_text())
+semantic=json.loads(Path('/tmp/plan46/accept/evidence/semantic.json').read_text())
+result={}
+architecture=pages['architecture.html'];drawing=next(n for n in architecture.nodes() if n.tag=='sdp-diagram' and n.attrs.get('subject')=='architecture')
+planned=[n for n in drawing.nodes() if n.attrs.get('data-planned')=='true']
+result['architecture']={'drawing':'architecture.html sdp-diagram[subject=architecture]',
+ 'plannedBoxes':[n.attrs for n in planned],'plannedDashed':any(n.attrs.get('stroke-dasharray') for p in planned for n in p.nodes()),'plannedLabel':'component:platform.history-view' in drawing.text(),
+ 'gridLabels':{s:s in drawing.text() for s in ['platform','orders','inventory','orders-inventory','application','domain','adapter','infrastructure']},
+ 'plannedTable':'Designed, not built' in architecture.text() and 'component:platform.history-view' in architecture.text()}
+packs=[(path,page) for path,page in pages.items() if path.startswith('packs/')]
+result['maturityMaps']={path:any('Maturity map' in n.text() for n in page.nodes() if n.tag=='h2') and any(n.tag=='table' for n in page.nodes()) for path,page in packs}
+ruleRows=0;unkeyed=[];missing=[];unkeyedOwners=0;unkeyedEntries=0
+for spec in [n for n in graph['nodes'] if n['nodeType']=='Primitive']:
+    path='specs/'+spec['id'][5:]+'.html';page=pages[path]
+    keys=spec.get('sections',{}).get('behavior',{}).get('ruleKeys',{})
+    behavior=spec.get('sections',{}).get('behavior',{})
+    count=len(behavior.get('rules',[]))+len(behavior.get('flows',[]))
+    if count:
+        unkeyedCount=count-len(keys);unkeyedEntries+=unkeyedCount;unkeyedOwners+=1
+        label=f'{unkeyedCount} unkeyed '+('rule.' if unkeyedCount==1 else 'rules.')
+        if label not in page.text():unkeyed.append([spec['id'],label])
+    for key in keys:
+        row=page.byid('rule.'+key)
+        if row is None or not any(n.hasclass('rule-coverage') for n in row.nodes()):missing.append(spec['id']+'#rule.'+key)
+        else:ruleRows+=1
+result['ruleCoverage']={'keyedRows':ruleRows,'unkeyedEntries':unkeyedEntries,'owners':unkeyedOwners,'missingUnkeyedSummaries':unkeyed,'missing':missing,'specPages':sum(p.startswith('specs/') for p in pages)}
+grids=[]
+for space in semantic['coverage']['spaces']:
+    path='specs/'+space['spec'][5:]+'.html';panel=pages[path].byid('panel.verification')
+    grids.append({'page':path,'coverageHeading':'Coverage' in panel.text(),'tables':sum(n.tag=='table' for n in panel.nodes())})
+result['coverageGrids']=grids
+cited=0;testLines=0;absent=[];example=None
+for entry in semantic['citations']['entries']:
+    if not entry['pinned']:continue
+    spec,address=entry['address'].split('#');page=pages['specs/'+spec[5:]+'.html'];node=page.byid(address)
+    if node is None:absent.append(entry['address']);continue
+    for site in entry['citedBy']:
+        label=site['file']+':'+str(site['line'])
+        if label not in node.text():absent.append([entry['address'],label])
+        else:cited+=1
+        if site['testAnchors']:
+            testLines+=1
+            assert 'Test line' in node.text()
+            if entry['address']=='spec:application.history-projection#design.typeHistoryEvent':example={'address':entry['address'],**site}
+result['citations']={'pinnedEntries':sum(e['pinned'] for e in semantic['citations']['entries']),'citingLines':cited,'testLines':testLines,'missing':absent,'representative':example}
+queue=pages['queue.html'];waiting=semantic['queue']['statements']
+ids=[n.attrs['id'] for n in queue.nodes() if n.attrs.get('id','').startswith('spec:')]
+result['queue']={'recipe':semantic['queue']['totals'],'pageStatementIds':len(ids),'sameOrder':ids==[s['id'] for s in waiting]}
+positions={s['id']:s['round'] for s in waiting}
+result['queue']['dependencyOrder']=all(positions.get(dep,0)<=s['round'] for s in waiting for dep in s['restsOn'])
+result['diff']={'totals':semantic['diff']['totals'],'baseLabel':'Before the history-view rule-key proposal' in pages['diff.html'].text(),
+ 'changedIds':[n.attrs['id'] for n in pages['diff.html'].nodes() if n.hasclass('spec-row')]}
+result['runs']={'externalLabel':'External run evidence' in pages['runs.html'].text(),'counts':'11 passed, 0 failed' in pages['runs.html'].text()}
+remote=[];missingAssets=[];exportAssets=[];http=collections.Counter();httpSamples=set()
+for path,page in pages.items():
+    for node in page.nodes():
+        for attr,value in node.attrs.items():
+            if value and 'http' in value:http[(node.tag,attr)]+=1;httpSamples.add(value)
+        resourceAttrs = (['src'] if node.tag in {'script','img','iframe','source','video','audio','embed','input','track'} else [])
+        resourceAttrs += ['poster'] if node.tag=='video' else []
+        resourceAttrs += ['data'] if node.tag=='object' else []
+        resourceAttrs += ['action'] if node.tag=='form' else []
+        resourceAttrs += ['href'] if node.tag=='link' else []
+        for attr in resourceAttrs:
+            value=node.attrs.get(attr)
+            if not value:continue
+            if re.match(r'^(https?:)?//',value):remote.append([path,node.tag,attr,value])
+            elif not value.startswith(('data:','#','javascript:')):
+                if path.startswith('exports/'):exportAssets.append([path,node.tag,attr,value])
+                if not (root/Path(path).parent/value.split('#')[0]).exists():missingAssets.append([path,value])
+result['network']={'htmlPages':len(pages),'automaticRemoteReferences':remote,'missingLocalAssets':missingAssets,
+ 'httpAttributeCounts':{str(k):v for k,v in http.items()},'httpAttributeSamples':sorted(httpSamples)[:12]}
+result['export']={'path':'exports/history-view.html','externalAssetDependencies':[e for e in exportAssets if e[0]=='exports/history-view.html'],
+ 'embeddedStyles':sum(n.tag=='style' for n in pages['exports/history-view.html'].nodes()),
+ 'embeddedScripts':sum(n.tag=='script' and not n.attrs.get('src') for n in pages['exports/history-view.html'].nodes()),'browserOpening':'blocked by browser URL policy; unverified'}
+files=[p for p in root.rglob('*') if p.is_file()]
+result['pageSet']={'files':len(files),'bytes':sum(p.stat().st_size for p in files),'html':len(pages)}
+Path('/tmp/plan46/accept/evidence/page-checks.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps(result,indent=2))
+assert not missing and not unkeyed and not absent and not remote and not missingAssets
+assert all(result['maturityMaps'].values()) and all(g['coverageHeading'] for g in grids)
+assert result['queue']['sameOrder'] and result['queue']['dependencyOrder']
+assert result['architecture']['plannedDashed']

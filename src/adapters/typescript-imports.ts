@@ -7,7 +7,7 @@ import type { SourceFile } from "ts-morph";
 /**
  * @sdpAnchor impl:protocol.typescript-imports
  * @sdpLabel TypeScript file imports and barrel reach for external curation input
- * @sdpSatisfies spec:consumers.impact-graph.curation-assist
+ * @sdpSatisfies spec:consumers.impact-graph.curation-assist, spec:consumers.impact-graph
  * @sdpComponent component:protocol.adapters
  * @sdpRole adapter
  */

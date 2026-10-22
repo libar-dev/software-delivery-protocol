@@ -37,6 +37,7 @@ export function registerDuplicateSurfaceRefused<World>(
     "extraction reports {findingCount} findings": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "extraction reports {findingCount} findings",
         text: "extraction reports {findingCount} findings",
         params,
       });
@@ -44,6 +45,7 @@ export function registerDuplicateSurfaceRefused<World>(
     "the report contains finding {findingId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report contains finding {findingId}",
         text: "the report contains finding {findingId}",
         params,
       });
@@ -51,6 +53,7 @@ export function registerDuplicateSurfaceRefused<World>(
     "the graph omits the Spec {absentId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph omits the Spec {absentId}",
         text: "the graph omits the Spec {absentId}",
         params,
       });
@@ -58,6 +61,7 @@ export function registerDuplicateSurfaceRefused<World>(
     "no graph edge names the absent Spec {absentId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "no graph edge names the absent Spec {absentId}",
         text: "no graph edge names the absent Spec {absentId}",
         params,
       });
@@ -65,6 +69,7 @@ export function registerDuplicateSurfaceRefused<World>(
     "the graph contains the Spec {specId} with kind {specKind}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph contains the Spec {specId} with kind {specKind}",
         text: "the graph contains the Spec {specId} with kind {specKind}",
         params,
       });

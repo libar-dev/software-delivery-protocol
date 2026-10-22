@@ -6,6 +6,9 @@ specs:
   - spec:validation.corpus-rules.warning-finding-informs
   - spec:validation.corpus-rules.malformed-finding-fails
   - spec:validation.corpus-rules.copies-contain-changes
+  - spec:validation.corpus-rules.rules-edit-starts-a-cycle
+  - spec:validation.corpus-rules.params-edit-starts-a-cycle
+  - spec:validation.corpus-rules.unreadable-params-fail-one-file
   - spec:validation.architecture-constraints
   - spec:validation.architecture-constraints.forbidden-layer-pair
   - spec:validation.architecture-constraints.isolated-context-as-rule

@@ -48,6 +48,7 @@ export function registerDishonestDivergence<World>(
     "the spec page renders the floor reached {floorReached}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the spec page renders the floor reached {floorReached}",
         text: "the spec page renders the floor reached {floorReached}",
         params,
       });
@@ -55,6 +56,7 @@ export function registerDishonestDivergence<World>(
     "the divergence banner is raised: {bannerRaised}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the divergence banner is raised: {bannerRaised}",
         text: "the divergence banner is raised: {bannerRaised}",
         params,
       });
@@ -62,6 +64,7 @@ export function registerDishonestDivergence<World>(
     "the banner names the first unmet clause {clauseId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the banner names the first unmet clause {clauseId}",
         text: "the banner names the first unmet clause {clauseId}",
         params,
       });

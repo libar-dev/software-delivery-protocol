@@ -1,0 +1,19 @@
+{
+  "root": "/tmp/plan46-v-fix-platform-czb_mbkn",
+  "vault": "/tmp/plan46-v-fix-platform-czb_mbkn/generated/obsidian-vault",
+  "filesUnderSdp": 439,
+  "notes": 431,
+  "bases": 7,
+  "links": 5438,
+  "unresolvedLinks": 0,
+  "initialSeconds": 2.749,
+  "refusedSeconds": 0.505,
+  "repairedSeconds": 1.382,
+  "generatedEditRefused": true,
+  "intentBeforeSha256": "4b1d9b1249092b43a762635114695c97e5cd683aca97a719d678cdda04b038a7",
+  "intentAfterSha256": "4b1d9b1249092b43a762635114695c97e5cd683aca97a719d678cdda04b038a7",
+  "summaries": [
+    "Wrote /tmp/plan46-v-fix-platform-czb_mbkn/generated/obsidian-vault/sdp (438 files: 438 written, 0 unchanged, 0 removed)",
+    "Wrote /tmp/plan46-v-fix-platform-czb_mbkn/generated/obsidian-vault/sdp (438 files: 0 written, 438 unchanged, 0 removed)"
+  ]
+}

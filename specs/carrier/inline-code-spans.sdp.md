@@ -8,25 +8,22 @@ relations:
 ---
 # Inline code is content, never markup
 
+CommonMark lets a code span cross a line ending inside a paragraph, lets a backslash escape a backtick, and lets an HTML tag that opens before a backtick pair win over the span. The Protocol reads all three cases the other way. A span is a pair of equal backtick runs on one line, and nothing else changes that, so an author or an agent can tell by eye what a span shields, every location reads a span the same way, and a carrier that validates today stays valid. The cost is that a CommonMark renderer may show these rare constructs differently from how the Protocol reads them.
+
 ## Intent
 - problem: Authors need to write type parameters inside code spans without the raw-HTML guard forcing a private bracket notation that cannot be pasted into source.
 - outcome: Let a code span carry any literal text, angle brackets included, while raw HTML outside code spans stays refused.
 
-### Open questions
-- [non-blocking #spanAcrossLines] CommonMark lets a code span cross a line ending inside a paragraph, so a renderer and the Protocol can disagree about which text is inside a span. Should the owner keep the line-scoped rule or match spans across a paragraph?
-  - decider: owner
-  - provisional: the line-scoped reading stands
-- [non-blocking #commonMarkCases] A backslash-escaped backtick still opens a span, and a tag that starts before a backtick pair loses to the span. CommonMark decides both cases the other way. Should the owner keep these readings or follow CommonMark in these two cases?
-  - decider: owner
-
 ## Rule
-- A code span is literal content. The raw-HTML refusal never reads inside one, whether the span sits in a Spec's narrative, a section description, a list entry, or a Pack's framing prose.
-- A code span opens at a backtick run and closes at the next run of the same length on that same line. Both runs must sit on one line. An unmatched run is ordinary text and shields nothing.
-- Raw HTML outside a code span is refused as `extract/invalid-markdown-structure` with the message `raw HTML is unsupported`.
-- The graph stores the line as authored, backticks included. Each projection renders it through the encoding its own Spec requires for that field.
+- [#literalSpan] A code span is literal content. The raw-HTML refusal never reads inside one, whether the span sits in a Spec's narrative, a section description, a list entry, or a Pack's framing prose.
+- [#lineScoped] A code span opens at a backtick run and closes at the next run of the same length on that same line. Both runs must sit on one line, even inside a paragraph whose next line holds the closing run. An unmatched run is ordinary text and shields nothing.
+- [#noEscape] A backslash does not escape a backtick: every backtick run counts when spans are matched, so a backtick written after a backslash still opens or closes a span.
+- [#spanBeforeTag] Spans are matched before the raw-HTML test reads what is left of the line, so a tag that opens before a span and closes inside it is no tag, while a tag that opens before a span and closes after it is still refused.
+- [#rawHtmlRefused] Raw HTML outside a code span is refused as `extract/invalid-markdown-structure` with the message `raw HTML is unsupported`.
+- [#storedAsAuthored] The graph stores the line as authored, backticks included. Each projection renders it through the encoding its own Spec requires for that field.
 
 ## Example space
-The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter.
+The matrix uses matched and unmatched backtick runs of one, two, and three backticks, multiple spans, literal tags and comment delimiters inside spans, exposed HTML before and after spans, closing tags, declarations, processing instructions, and ordinary angle-bracket comparisons. It includes ``Use <T title=`value>.``, ``Use </T`>.``, and ``Use <img alt="`">.`` as refused tag bodies with an unmatched backtick, and ``Use <!-`x`-> here.`` as accepted text whose matched span separates the comment delimiter. It also includes ``Use \`<b>\` here.``, whose backslashes escape nothing, and ``Use <a title="`">x` here.``, whose tag closes inside a matched span, as accepted text.
 
 Paragraph probes run in narrative, section-description and Pack-framing locations; the list-entry location uses only the single-line matrix. The paragraph probes split a single-backtick pair across two lines. One puts ``Use `Promise<T>.`` on the first line and ``Close here`.`` on the second; another puts ``Open here `.`` first and ``Use Promise<T>`.`` second. Neither pair shields HTML. A third puts ``Open here `.`` first and ``Use `Promise<T>`.`` second, so the pair on the second line shields that line despite the unmatched run on the first.
 

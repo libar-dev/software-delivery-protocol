@@ -48,6 +48,7 @@ export function registerHonestHeadroom<World>(
     "the spec page renders the floor reached {floorReached}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the spec page renders the floor reached {floorReached}",
         text: "the spec page renders the floor reached {floorReached}",
         params,
       });
@@ -55,6 +56,7 @@ export function registerHonestHeadroom<World>(
     "the divergence banner is raised: {bannerRaised}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the divergence banner is raised: {bannerRaised}",
         text: "the divergence banner is raised: {bannerRaised}",
         params,
       });

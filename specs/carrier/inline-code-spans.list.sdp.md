@@ -5,7 +5,7 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:carrier.inline-code-spans
-  verifies: spec:carrier.inline-code-spans
+  verifies: { target: spec:carrier.inline-code-spans, exercises: [literalSpan, lineScoped, noEscape, spanBeforeTag, rawHtmlRefused] }
 ---
 # Code spans in list entries are literal
 
@@ -15,5 +15,5 @@ relations:
 ```gwt
 Given the code-span matrix in {location: "list"}
 When the extractor reifies the probes
-Then matched spans preserve {accepted: 12} carriers and exposed HTML refuses {refused: 18} carriers
+Then matched spans preserve {accepted: 14} carriers and exposed HTML refuses {refused: 18} carriers
 ```

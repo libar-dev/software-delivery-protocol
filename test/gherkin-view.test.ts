@@ -70,6 +70,7 @@ function specContext(overrides: Partial<SpecContext> = {}): SpecContext {
     references: [],
     verifiers: [],
     entryLocations: [],
+    entryCitations: [],
     findings: [],
     ...overrides,
   };
@@ -89,6 +90,7 @@ function readerStub(contexts: readonly SpecContext[], findings: readonly Finding
     findByConcept: unavailable,
     byFile: unavailable,
     blastRadius: unavailable,
+    resolveEntryAddress: unavailable,
     packContext: unavailable,
   };
 }

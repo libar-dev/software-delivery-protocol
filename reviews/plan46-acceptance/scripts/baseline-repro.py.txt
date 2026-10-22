@@ -1,0 +1,16 @@
+from pathlib import Path
+import subprocess,json
+paths=['design/specs/kernel/domain-kernel.sdp.md','design/specs/kernel/domain-kernel.evaluate-twice.sdp.md','design/specs/kernel/domain-kernel.incremental-then-rebuild.sdp.md','tests/pure/domain-kernel.evaluate-twice.test.ts']
+saved={p:Path(p).read_bytes() for p in paths}
+commands=[['npx','sdp','build'],['npx','vitest','run','--project','pure','tests/pure/domain-kernel.evaluate-twice.test.ts']]
+result=[]
+try:
+    for p in paths:Path(p).write_bytes(subprocess.check_output(['git','show','HEAD:'+p]))
+    for command in commands:
+        run=subprocess.run(command,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        result.append({'command':command,'exit':run.returncode,'output':run.stdout})
+finally:
+    for p,value in saved.items():Path(p).write_bytes(value)
+Path('/tmp/plan46/accept/evidence/baseline-adapter-repro.json').write_text(json.dumps(result,indent=2)+'\n')
+print(result[-1]['output']);print('Restored all four measurement files.')
+assert result[0]['exit']==0 and result[1]['exit']==1 and 'reading \'config\'' in result[1]['output']

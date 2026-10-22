@@ -1,0 +1,26 @@
+from pathlib import Path
+Path('scripts/acceptance-ctrf.ts').write_text('''import {writeFileSync,mkdirSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+export default class AcceptanceCtrfReporter {
+  tests:any[]=[];start=0;
+  onTestRunStart(){this.start=Date.now();}
+  onTestCaseResult(test:any){
+    const result=test.result();
+    this.tests.push({name:test.fullName,filePath:test.module.relativeModuleId,
+      status:result.state==='passed'?'passed':result.state==='failed'?'failed':'skipped',
+      duration:test.diagnostic()?.duration??0});
+  }
+  onTestRunEnd(){
+    const count=(status:string)=>this.tests.filter(t=>t.status===status).length;
+    const report={reportFormat:'CTRF',specVersion:'0.0.0',results:{
+      tool:{name:'vitest',version:'5.0.3'},
+      environment:{commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
+        buildName:'plan46 copy acceptance; pure project; modified copy'},
+      summary:{tests:this.tests.length,passed:count('passed'),failed:count('failed'),
+        skipped:count('skipped'),pending:0,other:0,start:this.start,stop:Date.now()},tests:this.tests}};
+    mkdirSync('evidence',{recursive:true});
+    writeFileSync('evidence/plan46-ctrf.json',JSON.stringify(report,null,2)+'\\n');
+  }
+}
+''')
+print('Wrote a Vitest reporter producing CTRF from actual TestCase results.')

@@ -21,7 +21,7 @@ export interface CensusPage {
 /**
  * @sdpAnchor impl:protocol.census-page
  * @sdpLabel renders the derived census and runtime taxonomy projection
- * @sdpSatisfies spec:consumers.census-page
+ * @sdpSatisfies spec:consumers.census-page, spec:model.structural-patterns
  * @sdpComponent component:protocol.projections
  * @sdpReferences spec:decisions.architectural-annotation
  * @sdpRole projection

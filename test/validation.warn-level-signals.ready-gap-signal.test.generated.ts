@@ -40,6 +40,7 @@ export function registerReadyGapSignal<World>(
     "the report names {findingId} at severity {severity}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report names {findingId} at severity {severity}",
         text: "the report names {findingId} at severity {severity}",
         params,
       });
@@ -47,6 +48,7 @@ export function registerReadyGapSignal<World>(
     "the report holds {errorCount} errors": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report holds {errorCount} errors",
         text: "the report holds {errorCount} errors",
         params,
       });

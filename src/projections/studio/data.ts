@@ -1,6 +1,10 @@
+import type { StudioInputs } from "./inputs.js";
+import { studioRecipeAnswers } from "./recipes.js";
+import type { StudioRecipeAnswers } from "./recipes.js";
 import type { GraphNodeType } from "../../graph/schema.js";
 import type { PackContext, Reader, SpecContext } from "../../reader/reader.js";
-import type { Finding } from "../../validate/contracts.js";
+import { graphReportId } from "../../validate/validators.js";
+import type { Finding, ValidationReport } from "../../validate/contracts.js";
 import { pagePath } from "./paths.js";
 
 export interface PackTotals {
@@ -66,49 +70,13 @@ export interface SearchIndex {
 }
 
 export interface StudioData {
+  readonly recipes: StudioRecipeAnswers;
+  readonly inputs: StudioInputs;
   readonly specs: readonly SpecContext[];
   readonly packs: readonly { readonly context: PackContext; readonly totals: PackTotals }[];
   readonly findings: readonly Finding[];
   readonly rail: RailValues;
   readonly search: SearchIndex;
-}
-
-/**
- * @sdpAnchor impl:protocol.studio-data
- * @sdpLabel assembles reader contexts, Pack totals, rails and search records for static pages
- * @sdpSatisfies spec:consumers.spec-studio.data
- * @sdpComponent component:protocol.projections
- * @sdpRole projection
- */
-export function packTotals(pack: PackContext): PackTotals {
-  const resolved = pack.members.filter((member) => member.resolved);
-  return {
-    members: pack.members.length,
-    unresolved: pack.members.length - resolved.length,
-    heldBelowNextRung: resolved.filter((member) => (member.statedNextRungFailures?.length ?? 0) > 0)
-      .length,
-    waitingForAuthor: resolved.filter(
-      (member) =>
-        member.statedNextRung !== undefined && member.statedNextRungFailures?.length === 0,
-    ).length,
-    entries: resolved.reduce((sum, member) => sum + (member.design?.entries ?? 0), 0),
-    declarations: resolved.reduce((sum, member) => sum + (member.design?.declarations ?? 0), 0),
-    openQuestions: resolved.reduce(
-      (sum, member) => sum + (member.design?.openQuestions.length ?? 0),
-      0,
-    ),
-    blockingQuestions: resolved.reduce(
-      (sum, member) => sum + (member.design?.blockingQuestions ?? 0),
-      0,
-    ),
-    withImplementations: resolved.filter((member) => (member.implementations?.length ?? 0) > 0)
-      .length,
-    withReferences: resolved.filter((member) => (member.references?.length ?? 0) > 0).length,
-    restsOn: pack.boundary.restsOn.length,
-    restedOnBy: pack.boundary.restedOnBy.length,
-    verifiedBy: pack.boundary.verifiedBy.length,
-    supersededBy: pack.boundary.supersededBy.length,
-  };
 }
 
 export function railValues(reader: Reader): RailValues {
@@ -146,7 +114,13 @@ function searchEntries(context: SpecContext): readonly SearchEntry[] {
   const ruleKeys = context.sections?.behavior?.ruleKeys ?? {};
   const ruleKeyOf = (entry: string | null): string | null =>
     Object.keys(ruleKeys).find((key) => ruleKeys[key] === entry) ?? null;
+  const terms = context.sections?.model?.terms ?? {};
+  const termKeys = context.sections?.model?.termKeys ?? {};
   const addressOf = (section: string, entry: string | null): string | null => {
+    if (section === "model") {
+      const key = Object.keys(termKeys).find((key) => `terms.${termKeys[key] ?? ""}` === entry);
+      return key === undefined ? null : `${context.id}#term.${key}`;
+    }
     if (section === "behavior" || section === "intent") {
       const key = section === "behavior" ? ruleKeyOf(entry) : questionKeyOf(entry);
       return key === null
@@ -167,14 +141,18 @@ function searchEntries(context: SpecContext): readonly SearchEntry[] {
         entry ?? "",
       );
     const rule = /^(rules|flows)\[(\d+)\]$/u.exec(entry ?? "");
+    const termIndex =
+      section === "model" ? Object.keys(terms).findIndex((term) => `terms.${term}` === entry) : -1;
     const located =
-      section === "intent" && question?.[1] !== undefined
-        ? `question[${question[1]}]${question[2] !== undefined && question[2] !== "question" ? `.${question[2]}` : ""}`
-        : section === "behavior" && rule !== null
-          ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2] ?? ""}]`
-          : (section === "design" || section === "ui") && topKey !== null
-            ? `${section}.${topKey}`
-            : null;
+      termIndex >= 0
+        ? `term[${String(termIndex)}]`
+        : section === "intent" && question?.[1] !== undefined
+          ? `question[${question[1]}]${question[2] !== undefined && question[2] !== "question" ? `.${question[2]}` : ""}`
+          : section === "behavior" && rule !== null
+            ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2] ?? ""}]`
+            : (section === "design" || section === "ui") && topKey !== null
+              ? `${section}.${topKey}`
+              : null;
     return located === null ? null : (lines.get(located) ?? null);
   };
   const walk = (
@@ -204,7 +182,13 @@ function searchEntries(context: SpecContext): readonly SearchEntry[] {
         section === "design" || section === "ui" || (section === "model" && entry === "terms");
       for (const [name, item] of Object.entries(value)) {
         const path = entry === null ? name : `${entry}.${name}`;
-        if (section === "behavior" && entry === null && name === "ruleKeys") continue;
+        if (
+          section === "behavior" &&
+          entry === null &&
+          (name === "ruleKeys" || name === "stepKeys")
+        )
+          continue;
+        if (section === "model" && entry === null && name === "termKeys") continue;
         if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(path)) continue;
         walk(
           section,
@@ -291,13 +275,45 @@ function specContext(reader: Reader, id: string): SpecContext {
   return context;
 }
 
-export function createStudioData(reader: Reader): StudioData {
+/**
+ * @sdpAnchor impl:protocol.studio-data
+ * @sdpLabel assembles reader contexts, Pack totals, rails and search records for static pages
+ * @sdpSatisfies spec:consumers.spec-studio.data, spec:consumers.spec-studio
+ * @sdpComponent component:protocol.projections
+ * @sdpRole projection
+ */
+export async function createStudioData(
+  source: Reader,
+  report: ValidationReport = { validatorId: graphReportId, findings: source.findings() },
+  inputs: StudioInputs = { runs: [] },
+): Promise<StudioData> {
+  // Studio owns these values for one build and shares their joins across shipped recipes.
+  const specRows = source.specs(),
+    packRows = source.packs();
+  const specContexts = new Map<string, SpecContext | undefined>();
+  const packContexts = new Map<string, PackContext | undefined>();
+  const reader: Reader = {
+    ...source,
+    specs: () => specRows,
+    packs: () => packRows,
+    specContext: (id) => {
+      if (!specContexts.has(id)) specContexts.set(id, source.specContext(id));
+      return specContexts.get(id);
+    },
+    packContext: (id) => {
+      if (!packContexts.has(id)) packContexts.set(id, source.packContext(id));
+      return packContexts.get(id);
+    },
+  };
+  const recipes = await studioRecipeAnswers(reader, report, inputs);
   return {
+    recipes,
+    inputs,
     specs: reader.specs().map((spec) => specContext(reader, spec.id)),
     packs: reader.packs().map((pack) => {
       const context = reader.packContext(pack.id);
       if (context === undefined) throw new Error(`Studio cannot resolve Pack ${pack.id}`);
-      return { context, totals: packTotals(context) };
+      return { context, totals: (recipes.packs.get(pack.id) as { totals: PackTotals }).totals };
     }),
     findings: reader.findings(),
     rail: railValues(reader),

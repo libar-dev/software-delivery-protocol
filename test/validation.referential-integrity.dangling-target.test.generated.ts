@@ -48,6 +48,7 @@ export function registerDanglingTarget<World>(
     "the report names {findingId} at severity {severity}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the report names {findingId} at severity {severity}",
         text: "the report names {findingId} at severity {severity}",
         params,
       });
@@ -55,6 +56,7 @@ export function registerDanglingTarget<World>(
     "the finding offers the nearest-id suggestion: {suggested}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the finding offers the nearest-id suggestion: {suggested}",
         text: "the finding offers the nearest-id suggestion: {suggested}",
         params,
       });

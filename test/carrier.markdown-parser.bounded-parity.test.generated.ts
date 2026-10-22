@@ -37,6 +37,7 @@ export function registerBoundedParity<World>(
     "both carriers report the finding class {findingId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "both carriers report the finding class {findingId}",
         text: "both carriers report the finding class {findingId}",
         params,
       });
@@ -45,6 +46,7 @@ export function registerBoundedParity<World>(
       (execution, params) => {
         compareContractOutcome(execution, {
           kind: "then",
+          key: "the TypeScript carrier reports severity {typeScriptSeverity} and extracts {typeScriptSpecs} specs",
           text: "the TypeScript carrier reports severity {typeScriptSeverity} and extracts {typeScriptSpecs} specs",
           params,
         });
@@ -55,6 +57,7 @@ export function registerBoundedParity<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the Markdown carrier reports severity {markdownSeverity} and extracts {markdownSpecs} specs",
         text: "the Markdown carrier reports severity {markdownSeverity} and extracts {markdownSpecs} specs",
         params,
       });

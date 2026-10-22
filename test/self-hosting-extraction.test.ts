@@ -649,11 +649,21 @@ function cartContract(occurrences: number): CartContract {
   const steps: CartContract["steps"][number][] = [];
 
   for (let occurrence = 0; occurrence < occurrences; occurrence += 1) {
-    steps.push({ kind: "given", text: "a cart with {n} line items", params: { n: 2 } });
+    steps.push({
+      kind: "given",
+      key: "a cart with {n} line items",
+      text: "a cart with {n} line items",
+      params: { n: 2 },
+    });
   }
 
-  steps.push({ kind: "when", text: "the cart is submitted", params: {} });
-  steps.push({ kind: "then", text: "an order is created", params: {} });
+  steps.push({
+    kind: "when",
+    key: "the cart is submitted",
+    text: "the cart is submitted",
+    params: {},
+  });
+  steps.push({ kind: "then", key: "an order is created", text: "an order is created", params: {} });
 
   return { spec: "spec:probe.cart", title: "A probe cart example", steps };
 }

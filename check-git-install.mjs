@@ -86,6 +86,7 @@ try {
       consumer,
     );
     const installed = join(consumer, "node_modules", ...packageName.split("/"));
+    assert.ok(!existsSync(join(consumer, "node_modules", "vitest")));
     const cli = join(consumer, "node_modules", ".bin", "sdp");
     const version = run(cli, ["--version"], consumer).trim();
     assert.ok(version.includes(commit), `${version} does not name ${commit}`);

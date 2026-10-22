@@ -49,6 +49,7 @@ export function registerTableCellLocation<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the findings row carrying the file {file} and the line {line} renders {locationRow}",
         text: "the findings row carrying the file {file} and the line {line} renders {locationRow}",
         params,
       });
@@ -56,6 +57,7 @@ export function registerTableCellLocation<World>(
     "the same row carrying the file alone renders {fileOnlyRow}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the same row carrying the file alone renders {fileOnlyRow}",
         text: "the same row carrying the file alone renders {fileOnlyRow}",
         params,
       });
@@ -63,6 +65,7 @@ export function registerTableCellLocation<World>(
     "the same row carrying neither renders {absentRow}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the same row carrying neither renders {absentRow}",
         text: "the same row carrying neither renders {absentRow}",
         params,
       });

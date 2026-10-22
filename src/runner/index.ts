@@ -24,10 +24,11 @@ export type StepKind = "given" | "when" | "then";
 export type ParamValue = string | number | boolean;
 export type ParamShape = Record<string, ParamValue>;
 
-export interface ContractStep<S extends string, P extends ParamShape> {
+export interface ContractStep<K extends string, P extends ParamShape> {
   readonly kind: StepKind;
-  /** The step's skeleton — slot groups normalized to `{name}` — the binding key. */
-  readonly text: S;
+  /** The contract key names the handler; the skeleton text renders the step. */
+  readonly key: K;
+  readonly text: string;
   /** The example's authored bound point for this step — values come from the spec, never the test. */
   readonly params: P;
 }
@@ -50,8 +51,9 @@ export type StepBindings<W, S extends string, PM extends Record<S, ParamShape>> 
 };
 
 export interface PlannedStep<W> {
+  readonly key: string;
   readonly kind: StepKind;
-  /** The skeleton text — the binding key, for machines. */
+  /** The current skeleton text, for rendering. */
   readonly text: string;
   /** The natural reading — bound values inlined — for humans (the one renderer). */
   readonly label: string;
@@ -100,7 +102,7 @@ const runnerComponentAnchor = codeAnchor({
 const exampleRunnerAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner"),
   label: "plans and executes a bound example against the caller's world",
-  satisfies: ref("spec:extraction.example-runner"),
+  satisfies: [ref("spec:extraction.example-runner"), ref("spec:carrier.step-keys")],
   component: componentAnchorId("component:protocol.runner"),
   role: "service",
 });
@@ -110,8 +112,8 @@ void exampleRunnerAnchor;
 
 /**
  * The framework-neutral core: pairs each contract step with its bound handler, in contract order.
- * Duplicate step text within an example dedupes to one handler by construction — the bindings
- * object holds exactly one entry per step text ("same words, same meaning"), and every occurrence
+ * Duplicate step keys within an example dedupe to one handler by construction — the bindings
+ * object holds exactly one entry per contract key ("same words, same meaning"), and every occurrence
  * in the scenario runs that one handler with its own authored params.
  */
 export function planExample<W, S extends string, PM extends Record<S, ParamShape>>(
@@ -123,9 +125,10 @@ export function planExample<W, S extends string, PM extends Record<S, ParamShape
     title: contract.title,
     steps: contract.steps.map((step) => ({
       kind: step.kind,
+      key: step.key,
       text: step.text,
       label: renderContractStep(step),
-      run: (world: W) => bindings[step.text](world, step.params),
+      run: (world: W) => bindings[step.key](world, step.params),
     })),
   };
 }

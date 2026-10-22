@@ -7,7 +7,7 @@ relations:
   refines: spec:carrier.markdown-body-grammar
   verifies:
     target: spec:carrier.markdown-body-grammar
-    exercises: [constraintFields]
+    exercises: [constraintFields, constraintEntryCount]
 ---
 # A repeated single-valued field is refused
 

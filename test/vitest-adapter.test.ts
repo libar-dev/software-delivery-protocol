@@ -27,7 +27,7 @@ vi.mock("vitest", async (importOriginal) => ({
 const contract: ExampleContract<"a step", Record<"a step", Record<string, never>>> = {
   spec: "spec:probe.cleanup",
   title: "A world is cleaned up",
-  steps: [{ kind: "when", text: "a step", params: {} }],
+  steps: [{ kind: "when", key: "a step", text: "a step", params: {} }],
 };
 
 async function runRegistered(): Promise<void> {

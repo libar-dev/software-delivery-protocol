@@ -40,6 +40,7 @@ export function registerSplitReport<World>(
     "the aggregate report states no family of its own": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the aggregate report states no family of its own",
         text: "the aggregate report states no family of its own",
         params,
       });
@@ -50,6 +51,7 @@ export function registerSplitReport<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the conformance family reports {conformanceId} at severity {conformanceSeverity}",
         text: "the conformance family reports {conformanceId} at severity {conformanceSeverity}",
         params,
       });
@@ -57,6 +59,7 @@ export function registerSplitReport<World>(
     "the honesty family reports {honestyId} at severity {honestySeverity}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the honesty family reports {honestyId} at severity {honestySeverity}",
         text: "the honesty family reports {honestyId} at severity {honestySeverity}",
         params,
       });

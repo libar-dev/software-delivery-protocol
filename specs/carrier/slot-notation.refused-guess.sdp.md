@@ -5,7 +5,7 @@ altitude: story
 readiness: ready
 relations:
   refines: spec:carrier.slot-notation
-  verifies: spec:carrier.slot-notation
+  verifies: { target: spec:carrier.slot-notation, exercises: [slotName, unusableSlot, localDegradation] }
 ---
 # A stray brace stays prose while an unusable group stays a named slot
 

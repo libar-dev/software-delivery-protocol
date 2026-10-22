@@ -40,6 +40,7 @@ export function registerDualCarrier<World>(
     "both sites report {findingId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "both sites report {findingId}",
         text: "both sites report {findingId}",
         params,
       });
@@ -47,6 +48,7 @@ export function registerDualCarrier<World>(
     "no graph node is emitted for {specId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "no graph node is emitted for {specId}",
         text: "no graph node is emitted for {specId}",
         params,
       });

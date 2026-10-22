@@ -2,7 +2,7 @@
 id: spec:consumers.intent-composition
 kind: behavior
 altitude: story
-readiness: defined
+readiness: ready
 relations:
   refines: spec:consumers.edit-model
 ---

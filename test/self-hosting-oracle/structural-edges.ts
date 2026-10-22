@@ -21,10 +21,24 @@ export const expectedComponentIds = [
   "component:protocol.validate",
 ] as const;
 
-// These impl anchors deliberately have no component. The skill/document realization anchors live
+// These impl anchors deliberately have no component. Skill, document and test-helper anchors live
 // outside the engine source seams and therefore have no truthful owner among the accepted
 // component set.
 export const structuralMembershipExceptions = [
+  "impl:protocol.proposal-memo-recipe",
+  "impl:protocol.run-evidence-recipe",
+  "impl:protocol.studio-preview-workflow",
+  "impl:protocol.upgrade-guide",
+  "impl:protocol.capability-adoption-recipe",
+  "impl:protocol.rule-key-proposal-recipe",
+  "impl:protocol.graph-first-planning",
+  "impl:protocol.self-hosting",
+  "impl:protocol.structural-self-binding",
+  "impl:protocol.validator-self-testing",
+  "impl:protocol.validator-probe-table",
+  "impl:protocol.entry-citation-recipe",
+  "impl:protocol.external-registers-recipe",
+  "impl:protocol.example-space-coverage-recipe",
   "impl:protocol.architecture-walk-recipe",
   "impl:protocol.planned-components-recipe",
   "impl:protocol.authoring-on-ramp",
@@ -43,20 +57,236 @@ export const structuralMembershipExceptions = [
   "impl:protocol.answer-shape-recipes",
   "impl:protocol.authoring-grammar-recipes",
   "impl:protocol.reading-on-ramp",
+  "impl:protocol.studio-on-ramp",
+  "impl:protocol.vault-on-ramp",
   "impl:protocol.design-diff-recipe",
   "impl:protocol.perspective-filter-recipe",
   "impl:protocol.context-bundle-recipe",
+  "impl:protocol.statement-queue-recipe",
   "impl:protocol.proposal-schema-and-recipe",
 ] as const;
 
+/**
+ * @sdpAnchor impl:protocol.structural-self-binding
+ * @sdpLabel realizes the declared significant-unit set and its structural self-binding
+ * @sdpSatisfies spec:protocol.structural-self-binding, spec:model.structural-patterns
+ */
 export const acceptedArchitecturalUnits = [
+  {
+    unit: "src/studio-elements/memo.ts#renderMemo",
+    anchorId: "impl:protocol.studio-proposal-memo",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/intent-panel.ts#IntentPanel",
+    anchorId: "impl:protocol.studio-intent-panel",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/intent-panel-element.ts#registerIntentPanel",
+    anchorId: "impl:protocol.studio-intent-panel-element",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/compose.ts#registerCompose",
+    anchorId: "impl:protocol.studio-compose",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/studio-elements/scenario-editor.ts#registerScenarioEditor",
+    anchorId: "impl:protocol.studio-scenario-editor",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/projections/studio/pages/export-page.ts#packExport",
+    anchorId: "impl:protocol.studio-pack-export",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/cli/studio-command.ts#runStudioWatch",
+    anchorId: "impl:protocol.studio-watch",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/projections/studio/pages/spec-verification.ts#verificationPanel",
+    anchorId: "impl:protocol.studio-verification-panels",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/spec-structure.ts#designView",
+    anchorId: "impl:protocol.studio-spec-structure",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/maturity-map.ts#maturityMap",
+    anchorId: "impl:protocol.studio-maturity-map",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/studio-elements/views.ts#registerViews",
+    anchorId: "impl:protocol.studio-view-elements",
+    componentId: "component:protocol.studio-elements",
+  },
+
+  {
+    unit: "src/projections/studio/pages/registers-page.ts#questionsPage",
+    anchorId: "impl:protocol.studio-registers",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/queue-page.ts#queuePage",
+    anchorId: "impl:protocol.studio-owner-queue",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/diff-page.ts#diffPage",
+    anchorId: "impl:protocol.studio-diff",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/glossary-page.ts#glossaryPage",
+    anchorId: "impl:protocol.studio-glossary",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/cli/studio-inputs.ts#readStudioBase",
+    anchorId: "impl:protocol.studio-base-input",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/stamp-command.ts#runStamp",
+    anchorId: "impl:protocol.stamp-command",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/projections/studio/pages/run-rows.ts#runRows",
+    anchorId: "impl:protocol.studio-run-rows",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/runs-page.ts#runsPage",
+    anchorId: "impl:protocol.studio-runs-page",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/vault/sync.ts#inspectVault",
+    anchorId: "impl:protocol.vault-sync",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/vault/notes.ts#renderVault",
+    anchorId: "impl:protocol.vault-notes",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/vault/bases.ts#renderBase",
+    anchorId: "impl:protocol.vault-bases",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/vault/text.ts#createText",
+    anchorId: "impl:protocol.vault-text",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/vault/sections.ts#renderSections",
+    anchorId: "impl:protocol.vault-sections",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/cli/vault-command.ts#runVault",
+    anchorId: "impl:protocol.vault-command",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/cli/vault-command.ts#runVaultWatch",
+    anchorId: "impl:protocol.vault-watch",
+    componentId: "component:protocol.cli",
+  },
+
+  {
+    unit: "src/validate/validators.ts#checkSupersededDecisions",
+    anchorId: "impl:protocol.superseded-decision-signal",
+    componentId: "component:protocol.validate",
+  },
+  {
+    unit: "src/reader/evaluate-body.ts#evaluateBody",
+    anchorId: "api:protocol.evaluate-body",
+    componentId: "component:protocol.reader",
+  },
+  {
+    unit: "src/graph/entry-address.ts#resolveEntryAddress",
+    anchorId: "impl:protocol.entry-address-resolution",
+    componentId: "component:protocol.graph",
+  },
+  {
+    unit: "src/extract/entry-citations.ts#scanEntryCitations",
+    anchorId: "impl:protocol.entry-citation-scan",
+    componentId: "component:protocol.extract",
+  },
+  {
+    unit: "src/reader/entry-citations.ts#entryCitationsBySpec",
+    anchorId: "impl:protocol.entry-citation-reader",
+    componentId: "component:protocol.reader",
+  },
+
+  {
+    unit: "src/cli/generate-command.ts#runGenerate",
+    anchorId: "impl:protocol.generate-command",
+    componentId: "component:protocol.cli",
+  },
+  {
+    unit: "src/projections/studio/diagrams/architecture.ts#architectureDiagrams",
+    anchorId: "impl:protocol.studio-architecture-diagrams",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/bands.ts#traceDiagram",
+    anchorId: "impl:protocol.studio-relation-diagrams",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/notation/example-space.ts#decodeExampleSpaces",
+    anchorId: "impl:protocol.example-space-decoding",
+    componentId: "component:protocol.notation",
+  },
+  {
+    unit: "src/projections/studio/recipes.ts#studioRecipeAnswers",
+    anchorId: "impl:protocol.studio-recipes",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/svg.ts#renderDiagram",
+    anchorId: "impl:protocol.studio-diagrams",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/studio-elements/diagram.ts#registerDiagram",
+    anchorId: "impl:protocol.studio-diagram-element",
+    componentId: "component:protocol.studio-elements",
+  },
+  {
+    unit: "src/projections/studio/pages/architecture-page.ts#architecturePage",
+    anchorId: "impl:protocol.studio-architecture-lens",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/tests-page.ts#testsPage",
+    anchorId: "impl:protocol.studio-tests-lens",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/evidence-page.ts#evidencePage",
+    anchorId: "impl:protocol.studio-evidence-lens",
+    componentId: "component:protocol.projections",
+  },
   {
     unit: "src/cli/validate-view-command.ts#runValidateRules",
     anchorId: "impl:protocol.corpus-rules",
     componentId: "component:protocol.cli",
   },
   {
-    unit: "src/projections/studio/data.ts#packTotals",
+    unit: "src/projections/studio/data.ts#createStudioData",
     anchorId: "impl:protocol.studio-data",
     componentId: "component:protocol.projections",
   },
@@ -636,9 +866,14 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.cli",
   },
   {
-    unit: "src/cli/q-command.ts#runQuery",
+    unit: "src/reader/evaluate-body.ts#compileBody",
     anchorId: "impl:protocol.query-answer-shapes",
-    componentId: "component:protocol.cli",
+    componentId: "component:protocol.reader",
+  },
+  {
+    unit: "src/extract/key-markers.ts#normalizeKeyedContent",
+    anchorId: "impl:protocol.key-markers",
+    componentId: "component:protocol.extract",
   },
   {
     unit: "src/extract/authoring-normalization.ts#normalizeAuthoring",
@@ -661,7 +896,7 @@ export const acceptedArchitecturalUnits = [
     componentId: "component:protocol.validate",
   },
   {
-    unit: "src/cli/sdp.ts#SDP_HELP_TEXT",
+    unit: "src/cli/help.ts#SDP_HELP_TEXT",
     anchorId: "impl:protocol.adopter-help",
     componentId: "component:protocol.cli",
   },
@@ -684,7 +919,7 @@ export const acceptedArchitecturalUnits = [
 
 // re-measured under plan 41
 export const expectedMemberOfEdges = acceptedArchitecturalUnits
-  .map((row) => [row.anchorId, row.componentId])
+  .map((row) => [row.anchorId, row.componentId] as const)
   .filter(
     ([anchorId, componentId], position, rows) =>
       rows.findIndex(([anchor, component]) => anchor === anchorId && component === componentId) ===
@@ -753,6 +988,12 @@ export const coarseGrainCoverage = [
 // confer no edge. The convention is stated in spec:protocol.structural-self-binding.
 // re-measured under plan 41
 export const expectedUsesEdges = [
+  ["impl:protocol.stamp-command", "impl:protocol.schema-version"],
+  ["impl:protocol.vault-command", "component:protocol.projections"],
+  ["impl:protocol.vault-notes", "impl:protocol.reader"],
+
+  ["impl:protocol.studio-recipes", "impl:protocol.reader"],
+  ["impl:protocol.studio-recipes", "api:protocol.evaluate-body"],
   ["component:protocol.studio-elements", "component:protocol.reader"],
   ["component:protocol.studio-elements", "component:protocol.projections"],
   ["impl:protocol.example-runner-adapter", "impl:protocol.example-runner"],

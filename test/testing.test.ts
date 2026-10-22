@@ -24,6 +24,7 @@ type Outcome =
 
 const thenStep: ContractStep<"an order totals {total}", { readonly total: number }> = {
   kind: "then",
+  key: "an order totals {total}",
   text: "an order totals {total}",
   params: { total: 100 },
 };
@@ -109,7 +110,7 @@ describe("generated registrar testing runtime", () => {
     const run = execution(() => ({ kind: "rejected because {reason}", reason: "empty" }));
 
     await expect(completeRunnableExample(run)).rejects.toThrow(
-      'scenario spec:orders.example: oracle selected "rejected because {reason}"; available Then skeletons: "an order totals {total}"',
+      'scenario spec:orders.example: oracle selected "rejected because {reason}"; available Then steps: "an order totals {total}"',
     );
   });
 

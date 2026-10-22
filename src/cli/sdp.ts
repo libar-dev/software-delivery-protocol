@@ -3,6 +3,11 @@
 import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import { SDP_HELP_TEXT, NEW_SPEC_HELP_TEXT, verbHelpText } from "./help.js";
+import { runVault, runVaultWatch } from "./vault-command.js";
+import type { VaultHooks } from "./vault-command.js";
+import { runGenerate } from "./generate-command.js";
+import type { GenerateHooks } from "./generate-command.js";
 import { parseBuildArgs } from "./build-args.js";
 import { BUILD_INFO_FILE, UNKNOWN_COMMIT, parseBuildCommit } from "./build-info.js";
 import { runBuild } from "./build-command.js";
@@ -12,142 +17,34 @@ import { runGherkinView } from "./gherkin-command.js";
 import type { GherkinViewHooks } from "./gherkin-command.js";
 import { parseImportArgs, runImport } from "./import-command.js";
 import type { ImportHooks } from "./import-command.js";
-import { NEW_SPEC_HELP_TEXT, parseNewSpecArgs, runNewSpec } from "./new-spec-command.js";
+import { parseNewSpecArgs, runNewSpec } from "./new-spec-command.js";
 import { runMermaid } from "./mermaid-command.js";
 import type { MermaidHooks } from "./mermaid-command.js";
 import { defaultCliOutput, errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
 import { parseQueryArgs, runQuery } from "./q-command.js";
 import type { QueryHooks } from "./q-command.js";
-import { runStudio } from "./studio-command.js";
+import { runStamp } from "./stamp-command.js";
+import { runStudio, runStudioWatch } from "./studio-command.js";
 import type { StudioHooks } from "./studio-command.js";
 import { runValidateWatch } from "./validate-watch.js";
 import type { ValidateWatchHooks } from "./validate-watch.js";
 import { runValidate, runValidateRules, runView } from "./validate-view-command.js";
 
-/**
- * @sdpAnchor impl:protocol.adopter-help
- * @sdpLabel SDP_HELP_TEXT indexes the shipped skills, recipe catalog, schema, walkthrough, glossary and specs/ by package-relative path
- * @sdpSatisfies spec:consumers.adopter-on-ramp
- * @sdpComponent component:protocol.cli
- * @sdpRole service
- */
-export const SDP_HELP_TEXT = `sdp — Libar Software Delivery Protocol
-Usage:
-  sdp --help
-  sdp --version
-  sdp build [root] [--exclude PATH]... [--check-clean] [--imports PATH]
-  sdp validate [root] [--exclude PATH]... [--check-clean | --watch] [--rules PATH [--params FORM]...]...
-  sdp view [root] [--exclude PATH]... [--check-clean]
-  sdp census [root] [--exclude PATH]... [--check-clean]
-  sdp mermaid [root] [--exclude PATH]... [--check-clean]
-  sdp gherkin [root] [--exclude PATH]... [--check-clean]
-  sdp studio [root] [--exclude PATH]... [--check-clean]
-  sdp import <path...> [--dry-run]
-  sdp new spec PATH --id ID --kind KIND --altitude ALT --title TITLE --outcome OUTCOME
-  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH | --params KEY=@PATH]... [--json]
-
-Options:
-  --version  Print one line, sdp <package version> (<commit>), and exit 0. The commit is the full
-             hash the build recorded beside the compiled CLI, or unknown; the CLI never runs git,
-             and neither value enters the graph or any projection.
-
-Commands:
-  build      Extract every *.sdp.ts, *.sdp.md, and *.sdp.gherkin under root (default: cwd), plus
-             the anchors, in the constant form or comment form, in the other *.ts/*.tsx
-             source files, into <root>/generated/graph.json — then derive the
-             executable contracts (per-example step contracts + per-parent space contracts)
-             into <root>/generated/contracts/. Exits 1 and writes nothing on
-             any hard error — the emitted artifacts are all-or-nothing. --check-clean
-             additionally runs a second independent extraction + generation and fails on any
-             byte divergence (the determinism self-check). Repeat --exclude PATH to omit exact
-             root-relative POSIX path prefixes from both extraction surfaces. --imports PATH
-             reads a TypeScript adapter configuration and writes generated/imports.json as
-             external inferred input for curation, apart from the curated graph.
-  validate   build, then run the conformance + honesty checks over the one graph (one
-             validation path). A check error exits 1; warnings inform and do not fail the run.
-             graph.json is still written when the checks fail — the graph is the faithful
-             projection; check errors describe the repo's conformance, not the artifact.
-             --watch re-runs the same validate path on carrier create/change/delete/rename
-             and stays alive after findings; operator stop (SIGINT) exits 0. --watch cannot
-             be combined with --check-clean. --rules PATH runs an operator-selected JavaScript
-             async body with g, graph, report and params after the Protocol checks. Repeat --rules;
-             each --params belongs to the preceding file, with the q grammar: JSON, @PATH or
-             KEY=@PATH. Each file receives its own copies. Corpus findings print separately;
-             any corpus error or failed file exits 1. --watch rereads rules on each carrier cycle;
-             editing a rules file alone starts no cycle. --rules combines with --check-clean.
-  view       validate, then generate the Design Review — the contextual read-only human view —
-             into <root>/generated/design-review/ (rewritten wholesale). Findings remain data;
-             exit code follows validate. --check-clean independently re-renders.
-  census     validate, then generate the taxonomy census into <root>/generated/census/ as a
-             separate wholesale tmp-to-rename projection. --check-clean independently re-renders
-             and refuses when the published page differs from the current projection.
-  mermaid    validate, then generate Mermaid diagrams into <root>/generated/mermaid/ as a
-             separate wholesale tmp-to-rename projection. --check-clean independently re-renders
-             and refuses when the published bytes differ from the current projection.
-  gherkin    validate, then generate a Gherkin-shaped READ projection of every Spec into
-             <root>/generated/gherkin/ as a separate wholesale tmp-to-rename projection. The
-             pages are disposable and never use .sdp.gherkin. --check-clean independently
-             re-renders and refuses when the published bytes differ from the current projection.
-  studio     validate, then publish static Studio pages into <root>/generated/spec-studio/.
-             Findings remain visible; exit code follows validate. --check-clean independently
-             re-renders and refuses missing or drifted output. Pages open through file://.
-  import     Convert one or more *.sdp.ts files or recursively scanned roots to write-beside
-             *.sdp.md documents. The TypeScript source is never deleted. --dry-run writes
-             each would-be document to stdout, headed by its target path, without writing.
-             Existing Markdown siblings and non-emitting carrier refusals are rendered as
-             findings and never throw or overwrite. Exits 0 only when every requested source
-             emits (or would emit); any finding error or operational failure exits 1. Publication
-             creates atomic hard links; the target filesystem must support them (FAT/exFAT and
-             some network mounts do not).
-  new spec   Scaffold an honest idea-rung Markdown Spec at a cwd-relative .sdp.md PATH. Always
-             emits readiness: idea and relations: {}; never overwrites; never invents typed
-             content. constraint emits envelope, title, and Intent only, with no twin section.
-  q          The agent front door: derive the graph under --root (default: cwd) in process, then
-             evaluate the supplied body and print what it returns. The body is the single
-             positional argument, or stdin when stdin is not a terminal; with neither, q refuses
-             with a usage note and exits 1 rather than waiting. It is a plain JavaScript async function
-             body — no import/export, no TypeScript-only syntax — and \`return\` is the output
-             contract. Four bindings are injected: \`g\`, the reader over the derived graph (the
-             same createReader the package exports); \`graph\`, the raw graph schema object;
-             \`report\`, the validation report, so findings are queryable data rather than a
-             gate — checks never gate the read path; and \`params\`, the JSON object --params
-             supplies, or {} without it. Repeat --params with JSON objects, @PATH for a file
-             holding one, or KEY=@PATH for any JSON value under a lower-camel key. Objects merge
-             at the top level; a repeated key, invalid JSON or an unreadable file refuses before
-             the body runs. A recipe reads its parameter from \`params\` and falls back to the
-             catalog's sample. The graph is derived on every invocation, so a
-             just-authored Spec is queryable immediately and no committed artifact answers in the
-             graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);
-             --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
-             graph that fails to derive.
-
-Agent skills and reference:
-  Shipped in the package. Paths are relative to the package directory PKG, which is
-  node_modules/@libar-dev/software-delivery-protocol in an adopter and the repository root in a
-  source checkout.
-  .agents/skills/sdp-agent-surface/SKILL.md   the skill for reading the graph through q
-  .agents/skills/sdp-authoring/SKILL.md       the skill for authoring Specs, Packs, and anchors
-  .agents/skills/sdp-sessions/SKILL.md        the skill for routing a delivery session
-  docs/agent-surface/recipes.md               the recipe catalog: runnable q bodies
-  dist/recipes/NN-slug.js                     each catalog body as a file, run as shipped with
-                                              sdp q "$(cat PKG/dist/recipes/NN-slug.js)"
-  schemas/sdp-proposal-1.schema.json          the JSON Schema for a change proposal
-  docs/agent-surface/architecture.md          the architecture walkthrough
-  CONTEXT.md                                  the Protocol's glossary, which the skills and
-                                              recipes use
-  specs/                                      the Protocol's own Specs and Packs, which the skills
-                                              and recipes cite by id
-  Read a cited Protocol Spec: sdp q 'return g.specContext("spec:model.anchors")' --root PKG/specs
-  That graph holds intent only. The package ships no source anchors, so its delivery facts are
-  empty and its gap and verifier-linkage warnings are not evidence about what the Protocol has
-  realized.`;
+export { SDP_HELP_TEXT } from "./help.js";
 
 /** Reads one file the package ships, by URL; `sdp --version` reads through it. */
 export type EngineFileReader = (url: URL) => string;
 
 interface CliHooks
-  extends CensusHooks, MermaidHooks, GherkinViewHooks, ValidateWatchHooks, StudioHooks {
+  extends
+    CensusHooks,
+    MermaidHooks,
+    GherkinViewHooks,
+    ValidateWatchHooks,
+    StudioHooks,
+    GenerateHooks,
+    VaultHooks {
   readonly import?: ImportHooks;
   readonly query?: QueryHooks;
   readonly readEngineFile?: EngineFileReader;
@@ -197,7 +94,7 @@ export function readEngineProvenance(read: EngineFileReader = readShippedFile): 
 /**
  * @sdpAnchor impl:protocol.agent-surface-cli
  * @sdpLabel CLI verb dispatcher and agent-surface front of the package CLI
- * @sdpSatisfies spec:consumers.agent-surface
+ * @sdpSatisfies spec:consumers.agent-surface, spec:consumers.command-line
  * @sdpComponent component:protocol.cli
  * @sdpRole service
  */
@@ -228,6 +125,19 @@ export function runSdpCli(
     return 0;
   }
 
+  if (rest.includes("--help")) {
+    const help = verbHelpText(command);
+    if (help !== undefined) {
+      writeStdout(output, `${help}\n`);
+      return 0;
+    }
+  }
+
+  if (command === "stamp") {
+    const { version, commit } = readEngineProvenance(hooks.readEngineFile);
+    return runStamp(rest, output, `sdp ${version} (${commit})`);
+  }
+
   if (command === "--version") {
     const { version, commit } = readEngineProvenance(hooks.readEngineFile);
 
@@ -243,6 +153,8 @@ export function runSdpCli(
     command !== "mermaid" &&
     command !== "gherkin" &&
     command !== "studio" &&
+    command !== "generate" &&
+    command !== "vault" &&
     command !== "import" &&
     command !== "new" &&
     command !== "q"
@@ -259,11 +171,6 @@ export function runSdpCli(
 
   if (command === "new") {
     const [noun, ...newRest] = rest;
-
-    if (noun === "--help") {
-      writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
-      return 0;
-    }
 
     if (noun === undefined) {
       writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
@@ -282,17 +189,16 @@ export function runSdpCli(
       return 1;
     }
 
-    if (newRest.includes("--help")) {
-      writeStdout(output, `${NEW_SPEC_HELP_TEXT}\n`);
-      return 0;
-    }
-
     const parsed = parseNewSpecArgs(newRest, output);
 
     return parsed === undefined ? 1 : runNewSpec(parsed, output);
   }
 
   if (command === "q") {
+    if (rest.includes("--help")) {
+      writeStdout(output, `${SDP_HELP_TEXT}\n`);
+      return 0;
+    }
     const parsed = parseQueryArgs(rest, output);
 
     return parsed === undefined ? 1 : runQuery(parsed, output, hooks.query);
@@ -303,6 +209,11 @@ export function runSdpCli(
   if (parsed === undefined) {
     return 1;
   }
+
+  if (command === "vault")
+    return parsed.watch ? runVaultWatch(parsed, output, hooks) : runVault(parsed, output, hooks);
+
+  if (command === "generate") return runGenerate(parsed, output, hooks);
 
   if (command === "build") {
     return runBuild(parsed, output, "build", hooks).exitCode;
@@ -325,7 +236,7 @@ export function runSdpCli(
   }
 
   if (command === "studio") {
-    return runStudio(parsed, output, hooks);
+    return parsed.watch ? runStudioWatch(parsed, output, hooks) : runStudio(parsed, output, hooks);
   }
 
   return command === "mermaid"
@@ -339,7 +250,7 @@ export function isCliEntrypoint(executedPath: string | undefined, moduleUrl: str
   }
 
   try {
-    return realpathSync(executedPath) === realpathSync(fileURLToPath(moduleUrl));
+    return realpathSync.native(executedPath) === realpathSync.native(fileURLToPath(moduleUrl));
   } catch {
     return false;
   }

@@ -11,9 +11,9 @@ const ENTRY_ADDRESS_NAMESPACE = "spec";
 const ENTRY_ADDRESS_KEY_PATTERN = /^[a-z][A-Za-z0-9]*$/u;
 
 /**
- * The sections an entry address may name: `design`, `ui`, `question`, or `rule`.
+ * The sections an entry address may name: `design`, `ui`, `question`, `rule`, or `term`.
  */
-export const ENTRY_ADDRESS_SECTIONS = ["design", "ui", "question", "rule"] as const;
+export const ENTRY_ADDRESS_SECTIONS = ["design", "ui", "question", "rule", "term"] as const;
 export type EntryAddressSection = (typeof ENTRY_ADDRESS_SECTIONS)[number];
 
 function isEntryAddressSection(value: string | undefined): value is EntryAddressSection {
@@ -88,7 +88,7 @@ function validateEntryAddress(value: string, namespace: string, subpath: string)
   if (!isEntryAddressSection(section)) {
     failId(
       value,
-      "entry address must be <section>.<key> with section design, ui, question, or rule",
+      "entry address must be <section>.<key> with section design, ui, question, rule, or term",
     );
   }
 
@@ -173,7 +173,11 @@ export function parseId(value: string): IdParts {
 const stableIdsAnchor = codeAnchor({
   id: "impl:protocol.stable-ids" as CodeAnchorId,
   label: "stable ID grammar parser",
-  satisfies: ["spec:model.stable-ids", "spec:model.open-question-keys"] as SpecId[],
+  satisfies: [
+    "spec:model.stable-ids",
+    "spec:model.open-question-keys",
+    "spec:model.term-addresses",
+  ] as SpecId[],
   component: createComponentAnchorId("component:protocol.model"),
   role: "codec",
 });

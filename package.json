@@ -15,11 +15,14 @@
     "CONTEXT.md",
     "docs/concept/DECISIONS.md",
     "docs/agent-surface/recipes.md",
+    "docs/agent-surface/upgrade-guide.md",
     "schemas/sdp-proposal-1.schema.json",
     "docs/agent-surface/architecture.md",
     ".agents/skills/sdp-agent-surface/SKILL.md",
     ".agents/skills/sdp-authoring/SKILL.md",
-    ".agents/skills/sdp-sessions/SKILL.md"
+    ".agents/skills/sdp-sessions/SKILL.md",
+    ".agents/skills/sdp-studio/SKILL.md",
+    ".agents/skills/sdp-vault/SKILL.md"
   ],
   "bin": {
     "sdp": "./dist/cli/sdp.js"
@@ -78,23 +81,19 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@npmcli/arborist": "9.1.6",
     "@types/node": "^20.0.0",
     "ajv": "^6.15.0",
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
+    "npm-packlist": "10.0.2",
+    "postcss": "8.5.24",
     "prettier": "^3.0.0",
+    "tinyglobby": "^0.2.17",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.0.0",
     "vitest": "^4.1.10"
-  },
-  "peerDependencies": {
-    "vitest": ">=2"
-  },
-  "peerDependenciesMeta": {
-    "vitest": {
-      "optional": true
-    }
   },
   "dependencies": {
     "@cucumber/gherkin": "42.0.1",

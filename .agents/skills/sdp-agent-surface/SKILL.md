@@ -11,13 +11,242 @@ is `spec:consumers.agent-surface`, shaped by the agent front door decision,
 `spec:decisions.agent-front-door` (MD-22): the package exports the reader, and the CLI carries one
 evaluation sink. There is no verb wall — you script the graph.
 
+## Bootstrap discipline
+
+For any corpus question, **query the graph before reading spec files**.
+
+In an adopter, use the repository's package runner or its documented wrapper script. Select that
+repository's root and repeat only the exclusions its corpus needs:
+
+```sh
+pnpm exec sdp q 'return g.specs().length' --root PATH --exclude PATH
+pnpm exec sdp q 'return g.specContext("spec:example.id")' --root PATH --exclude PATH --json
+```
+
+`PATH` is a placeholder, not a universal exclusion.
+
+When working in the **Protocol source checkout itself**, use its repository script, which supplies
+the exact three fixture exclusions:
+
+```sh
+pnpm --silent sdp:q 'return g.specs().length'
+pnpm --silent sdp:q 'return g.specContext("spec:consumers.reader")' --json
+```
+
+Those exclusions are required only for the Protocol source tree: it carries deliberate
+duplicate-id and carrier-parity fixtures. They are the same list `npm run generate:self-hosting`
+passes. Run `npm run build` first if `dist/` is absent. Do not use `pnpm exec` in this source
+checkout: `exec` resolves dependency binaries, while this package does not link itself into its
+own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated binary. Do not invoke a
+global `sdp` either.
+
+The catalog of ready-made bodies is `docs/agent-surface/recipes.md` in the Protocol repository
+and `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an
+adopter. Each recipe opens under a numbered heading that names it. Every body there runs verbatim
+and a test proves it.
+
+A recipe that takes a subject (a Spec id, a Pack id, changed files, addresses, a term) reads it
+from `params.<name>`, and the catalog names the parameter. Pass it as JSON data with `--params`,
+never by editing the body; `--params @PATH` reads the JSON from a file. The build also ships each
+body as `dist/recipes/<NN>-<slug>.js`, so run it as shipped:
+
+```sh
+pnpm --silent sdp:q "$(cat dist/recipes/03-what-does-this-spec-guarantee-and-who-verifies-it.js)" --params '{"spec":"spec:consumers.reader"}' --json
+pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/recipes/04-what-breaks-if-i-change-these-files.js)" --params @changed-files.json --json
+```
+
+## Answer a task with a recipe
+
+### Which recipe answers a task
+
+| The task                                                       | Run                                                                                                        |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Pick work to build                                             | the build backlog (recipe 1); the design backlog (recipe 33) for designed, unbuilt Specs                   |
+| Find code ahead of intent                                      | the drift alarm (recipe 2)                                                                                 |
+| Read what a Spec guarantees and who verifies it                | Spec guarantees (recipe 3)                                                                                 |
+| Review a changeset                                             | changed-file impact (recipe 4), then the mention audit (recipe 22) over its scope                          |
+| Locate a term or a concept                                     | concept search (recipe 6); entry search (recipe 23) for the entry and its line                             |
+| Check a Spec's stated next rung before a readiness edit        | promotion preflight (recipe 9); the lower ladder (recipe 11) across the corpus                             |
+| Compare stated readiness with the floor                        | readiness divergence (recipe 7)                                                                            |
+| Read warnings, gaps and verifier health                        | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
+| Review a Pack                                                  | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
+| List open questions                                            | the open-question register (recipe 20)                                                                     |
+| See what a Spec rests on                                       | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
+| Change a Spec others rest on                                   | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
+| Check addresses written outside the Specs                      | address resolution (recipe 25)                                                                             |
+| List the signatures two parties share                          | pinned declarations (recipe 24)                                                                            |
+| Read a component and its reach                                 | component membership (recipe 12), uses fan-in and fan-out (recipe 13), structural neighborhood (recipe 14) |
+| Measure structural and projection coverage                     | census structural coverage (recipe 15), the projection-coverage upper bound (recipe 16)                    |
+| Read the architecture                                          | the architecture map (recipe 17), architecture crossings (recipe 32)                                       |
+| Check a corpus's architecture rules                            | the architecture walk (recipe 42)                                                                          |
+| Compare planned components with their realization              | planned against realized components (recipe 43)                                                            |
+| Weigh the decisions that shape it                              | the decision map (recipe 18), the decision register (recipe 31)                                            |
+| Reuse an architecture value                                    | roles, layers and contexts (recipe 28)                                                                     |
+| Find keyed rules no example exercises                          | rule coverage (recipe 34)                                                                                  |
+| Find example-space values no example binds                     | example-space coverage (recipe 44)                                                                         |
+| Read external CI results beside verifier bindings              | run evidence (recipe 45)                                                                                   |
+| See what changed since a design pass                           | the design diff (recipe 35)                                                                                |
+| Compose a design pass's reading                                | the context bundle (recipe 36), the perspective filter (recipe 37)                                         |
+| Apply a change proposal                                        | the proposal check (recipe 38)                                                                             |
+| Render a change proposal as the memo a person reviews          | the proposal memo (recipe 49)                                                                              |
+| Slim a Spec its bound code now carries                         | slimming candidates (recipe 39)                                                                            |
+| Find files and components the anchors miss                     | the curation report (recipe 40)                                                                            |
+| List a family of keyed values (limits, error messages, tables) | the key-family register (recipe 41)                                                                        |
+| Order waiting readiness statements and owner questions         | the statement queue (recipe 46)                                                                            |
+| Measure capabilities in use and where they could apply         | capability adoption (recipe 47)                                                                            |
+| Propose rule keys for review                                   | the rule-key proposal (recipe 48), then the proposal check (recipe 38)                                     |
+| Check prose tokens against an outside register                 | external registers (recipe 50)                                                                             |
+| Find source and test lines citing an entry                     | entry citations (recipe 51)                                                                                |
+
+Choose a recipe from the task sheet, then read its numbered catalog entry for parameters,
+defaults, diagnostics and answer fields. Run the shipped body unchanged, or call
+`recipes(number, parameters)` to compose its answer. The catalog owns recipe contracts; carrying
+Specs own law. Inspect diagnostic and omission fields before interpreting an empty result.
+
+Reach for the files only when you need the authored prose itself — the exact words to edit.
+
+### Read a large scope in parts
+
+The context bundle (recipe 36) reads a Pack or a list of Specs within a budget. Request `part: 1`
+with an explicit scope. Check `diagnostics` and `budgetExceeded` before using `part.of`. On
+success, request every part from 1 through `part.of` with the same scope, budget and declaration
+mode, and check that their members cover the requested scope. A refused bundle carries
+`budgetExceeded: true`, `part.of: null` and `oversized`, and no members: inspect `oversized`,
+raise the budget or explicitly choose a smaller scope, and request it again. A refusal is not a
+partial bundle.
+
+### Entry addresses
+
+An entry address names one keyed entry of a Spec: `spec:<id>#design.<key>` or
+`spec:<id>#ui.<key>` a Design or UI entry, `spec:<id>#question.<key>` the open question whose
+marker carries the key, `spec:<id>#rule.<key>` the rule or flow entry whose `[#key]` marker
+carries it, and `spec:<id>#term.<key>` a keyed Model term. The address rules are carried by
+`spec:decisions.checked-mentions` and `spec:model.term-addresses`. Step keys name generated
+contract steps and have no address; `spec:carrier.step-keys` carries them.
+
+- An unresolved entry address mentioned in Spec prose is a Protocol prose-mentions error.
+- An address written outside the Specs, in a register, a test or a page, is checked by address
+  resolution (recipe 25), one row per address.
+- An entry address cited in source is recorded only when the source file carries a recognized
+  anchor. Entry citations (recipe 51) lists those citations. Unresolved source citations become
+  corpus findings only when recipe 51 is selected through `validate --rules`; ordinary validation
+  does not report them. A non-empty `testAnchors` list identifies a citing file whose test anchor
+  verifies the cited Spec directly or through an example. It records no assertion result.
+- Entry search (recipe 23) returns an address for an addressable Design or UI entry, a keyed open
+  question, a keyed rule or flow, or a keyed Model term. Other entries, including `description`
+  in Design or UI and off-grammar keys such as `"01"`, return `address: null`.
+
+### Rules files and upgrades
+
+Address resolution, dependency cycles, the architecture walk, external registers and entry
+citations (recipes 25, 26, 42, 50 and 51) answer `{ findings }` and run unchanged as rules files
+under `sdp validate --rules`. Their findings are corpus findings, never Protocol validators. Follow
+`sdp-authoring`'s "Write and run corpus rules" for invocation and parameters.
+
+For a corpus upgrade, follow the shipped upgrade guide: `docs/agent-surface/upgrade-guide.md` in
+the Protocol checkout, or
+`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/upgrade-guide.md` in an
+adopter, with `sdp-authoring`'s "Upgrade a corpus".
+
+## The contract
+
+The sink's contract is `spec:consumers.agent-surface.evaluation-sink`: how the body arrives, how
+the answer prints, and which failures refuse.
+
+`sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | @PATH | KEY=@PATH]... [--json]`
+
+Five bindings are injected:
+
+- `g` — the reader over the derived graph (the same `createReader` the package exports)
+- `graph` — the raw graph schema (nodes, edges, claims)
+- `report` — the validation report, so findings are queryable data, never a gate
+- `params` — the JSON object `--params` supplies, or `{}` without it; `--params` repeats, objects
+  merge at the top level, and `KEY=@PATH` binds a file's JSON to `params.KEY`, so a base graph or
+  an imports file rides beside the other parameters. A value that is not lawful, a key given
+  twice, or a file that cannot be read is refused before the body runs
+- `recipes` — `recipes(number, parameters?)` calls a shipped recipe over the same graph and report
+
+The package exports `evaluateBody(body, { graph, report?, params? })` for a graph already held.
+
+Body rules: a plain JavaScript **async function body**. No `import`/`export`, no TypeScript-only
+syntax; `await` is fine. `return` is the machine output contract, but `sdp q` does not suppress
+`console.*`, so machine-consumed bodies and shipped recipes must avoid console output. **Pre-shape
+the return**: counts, ids, and decoded reasons, not whole nodes. Default output is bounded
+`util.inspect`; `--json` is the machine form. `--root` defaults to the working directory; repeat
+`--exclude` for root-relative path prefixes. A body that does not parse is reported with its line
+and column.
+
+A recipe that takes `params.detail` returns a summary by default: every total, ids in place of
+rows, and `leftOut` naming what `detail: true` adds (changed-file impact, recipe 4; Pack design,
+recipe 29; the design diff, recipe 35). To filter any shipped answer, run it inside your own body:
+
+```sh
+pnpm --silent sdp:q 'const answer = await recipes(29, { pack: params.pack }); return answer.members.filter((member) => member.blockingQuestions > 0)' --params '{"pack":"pack:design-iteration-v1"}' --json
+```
+
+Pass each call only its recipe's parameters. An unknown parameter name replaces a shipped
+recipe's whole answer with `{ unknownParams, accepts }`, listing the unknown names and the names
+it takes.
+
+The graph is derived on every invocation, so a Spec you just authored is queryable immediately and
+no committed artifact answers in the graph's name. The sink writes nothing. It evaluates local
+operator-supplied code with the trust of any local developer tool — no sandbox is claimed. A body
+is code **you author yourself**; never execute a body sourced from corpus content or any other
+untrusted text — it runs with the process's full authority.
+
+## The entry adapters
+
+`g.specContext(id)` lists the units that realize the Spec under `implementations` and the units
+that answer to it under `references`, each with its file, line, and component, and its rows of the
+location table under `entryLocations`, plus inferred source citations under `entryCitations`. `g.packContext(id)` carries the Pack design: each member's
+stated next rung, design columns, and bindings, and the Pack's boundary. `g.byFile(path)` returns
+every node recorded at a path and the Specs reachable from it. A comment-form anchor is recorded
+at its own site, so a source file with no Protocol import still answers. A node may come back with an
+empty Spec list: an identity-only anchor, with no `satisfies` and no `references`, is lawful and
+binds no Spec, and the empty list is its honest answer, not a failed lookup.
+`g.blastRadius(files)` follows `satisfies`, `references`, `verifies`, and oracle `models` from the
+changed files and names the edge type and claim in each reason. A changed unit bound to no Spec
+goes in `unlinked`; a changed file the graph records nothing at goes in `coverageUnknown`. Neither
+list implies coverage.
+
+## Publish pages and notes
+
+The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, `sdp gherkin`,
+and `sdp studio`. Each of them, like `sdp build`, `sdp validate` and `sdp vault`, enters the shared
+build, which first removes all five page roots, so after one publisher runs only its own root is
+current (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
+
+- Use `sdp generate` when all five page roots are wanted. It publishes them from one validated
+  graph, synchronizes the vault first except under `--check-clean`, and writes the Studio without
+  optional inputs: it takes neither `--base` nor `--runs`.
+- Use `sdp studio` for a page set with `--base PATH`, `--base-label TEXT`, or repeatable
+  `--runs PATH`; that run invalidates the other four page roots. Keep supplied inputs outside the
+  paths the build writes or removes, `generated/` included
+  (`spec:consumers.spec-studio.data.inputs`). `sdp studio --watch` rebuilds after carrier edits;
+  source and input edits start no cycle (`spec:consumers.spec-studio.publisher.watch`).
+- After the final Studio build, run `sdp stamp` with the corpus commit, then upload the stamped
+  page set. A later build removes the stamp
+  (`spec:consumers.spec-studio.sharing#rule.stampLifetime`). Follow `sdp-studio` for previews,
+  page reading, exports and composing-panel hand-offs.
+- For linked notes, use `sdp-vault`. Open the directory `sdp vault --out DIR` names as the vault;
+  the command owns its `sdp/` folder. Keep personal notes outside that folder, conventionally
+  under `intent/`. `sdp vault` enters the shared build and invalidates the five page roots; use
+  `sdp generate --vault DIR` when those roots must also be published.
+
+In this source checkout, `npm run generate:self-hosting` and `npm run check:self-hosting` preserve
+and publish all five roots together. In check mode a prior tree must exist for each root; Design
+Review checks repeat-render determinism, while census, Mermaid, Gherkin and Studio also compare
+the prior tree's bytes with the current render.
+
 ## The shape of the graph
 
-The graph is flat: one array of nodes, one array of edges, nothing nested. Hierarchy is edges, so
-every question is a filter or a join, never a tree walk. Beside them, `graph.locations` is the
-location table: the source line of every keyed Design and UI entry, every rule and flow entry,
-every open question and each of its fields, and every authored relation target. Nodes carry no
-lines, and a location is never an identity or a binding target. Four node types exist:
+The graph's topology is flat: nodes and edges are separate arrays, and relations express
+hierarchy, so every question is a filter or a join, never a tree walk. Section content may contain
+nested values. `graph.locations` records authored entry locations: the source line of every keyed
+Design and UI entry, every rule and flow entry, every Model term, every open question and each of
+its fields, and every authored relation target. Primitive and Pack nodes carry no source lines;
+Anchor and CodeNode nodes carry their binding file and line. A location is never an identity or a
+binding target. Four node types exist:
 
 - `Primitive` — one authored Spec, positioned by `specKind` × `altitude` × `readiness`, carrying
   its title, narrative, reified section content, and the derived `deliveryFacts`. Use case, NFR,
@@ -70,227 +299,6 @@ independent coordinates, and the standing queries (build backlog, drift alarm, r
 divergence) are intersections of them. Runtime liveness would be `observed`, a designed-and-deferred
 fact the graph does not derive today.
 
-## Bootstrap discipline
-
-For any corpus question, **query the graph before reading spec files**.
-
-In an adopter, use the repository's package runner or its documented wrapper script. Select that
-repository's root and repeat only the exclusions its corpus needs:
-
-```sh
-pnpm exec sdp q 'return g.specs().length' --root PATH --exclude PATH
-pnpm exec sdp q 'return g.specContext("spec:example.id")' --root PATH --exclude PATH --json
-```
-
-`PATH` is a placeholder, not a universal exclusion.
-
-When working in the **Protocol source checkout itself**, use its repository script, which supplies
-the exact three fixture exclusions:
-
-```sh
-pnpm --silent sdp:q 'return g.specs().length'
-pnpm --silent sdp:q 'return g.specContext("spec:consumers.reader")' --json
-```
-
-Those exclusions are required only for the Protocol source tree: it carries deliberate
-duplicate-id and carrier-parity fixtures. They are the same list `npm run generate:self-hosting`
-passes. Run `npm run build` first if `dist/` is absent. Do not use `pnpm exec` in this source
-checkout: `exec` resolves dependency binaries, while this package does not link itself into its
-own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated binary. Do not invoke a
-global `sdp` either.
-
-The public projection publishers are `sdp view`, `sdp census`, `sdp mermaid`, `sdp gherkin`,
-and `sdp studio`.
-Each of them, like `sdp build` and `sdp validate`, first removes all five projection roots, so
-after one publisher runs only its own root is current
-(`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
-In this source checkout, `npm run generate:self-hosting` and `npm run check:self-hosting` preserve
-and publish all five roots together. In check mode a prior tree must exist for each root; Design
-Review checks repeat-render determinism, while census, Mermaid, Gherkin and Studio also compare
-the prior tree's bytes with the current render.
-
-The catalog of ready-made bodies is `docs/agent-surface/recipes.md` in the Protocol repository
-and `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an
-adopter. Each recipe opens under a numbered heading that names it. Every body there runs verbatim
-and a test proves it. Start from a recipe; adapt it in place.
-
-A recipe that takes a subject (a Spec id, a Pack id, changed files, addresses, a term) reads it
-from `params.<name>`, and the catalog names the parameter. Pass it as JSON data with `--params`,
-never by editing the body; `--params @PATH` reads the JSON from a file. The build also ships each
-body as `dist/recipes/<NN>-<slug>.js`, so run it as shipped:
-
-```sh
-pnpm --silent sdp:q "$(cat dist/recipes/03-what-does-this-spec-guarantee-and-who-verifies-it.js)" --params '{"spec":"spec:consumers.reader"}' --json
-pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/recipes/04-what-breaks-if-i-change-these-files.js)" --params @changed-files.json --json
-```
-
-### Which recipe answers a task
-
-| The task                                                       | Run                                                                                                        |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Pick work to build                                             | the build backlog (recipe 1); the design backlog (recipe 33) for designed, unbuilt Specs                   |
-| Find code ahead of intent                                      | the drift alarm (recipe 2)                                                                                 |
-| Read what a Spec guarantees and who verifies it                | Spec guarantees (recipe 3)                                                                                 |
-| Review a changeset                                             | changed-file impact (recipe 4), then the mention audit (recipe 22) over its scope                          |
-| Locate a term or a concept                                     | concept search (recipe 6); entry search (recipe 23) for the entry and its line                             |
-| Check a Spec's stated next rung before a readiness edit        | promotion preflight (recipe 9); the lower ladder (recipe 11) across the corpus                             |
-| Compare stated readiness with the floor                        | readiness divergence (recipe 7)                                                                            |
-| Read warnings, gaps and verifier health                        | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
-| Review a Pack                                                  | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
-| List open questions                                            | the open-question register (recipe 20)                                                                     |
-| See what a Spec rests on                                       | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
-| Change a Spec others rest on                                   | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
-| Check addresses written outside the Specs                      | address resolution (recipe 25)                                                                             |
-| List the signatures two parties share                          | pinned declarations (recipe 24)                                                                            |
-| Read a component and its reach                                 | component membership (recipe 12), uses fan-in and fan-out (recipe 13), structural neighborhood (recipe 14) |
-| Measure structural and projection coverage                     | census structural coverage (recipe 15), the projection-coverage upper bound (recipe 16)                    |
-| Read the architecture                                          | the architecture map (recipe 17), architecture crossings (recipe 32)                                       |
-| Check a corpus's architecture rules                            | the architecture walk (recipe 42)                                                                          |
-| Compare planned components with their realization              | planned against realized components (recipe 43)                                                            |
-| Weigh the decisions that shape it                              | the decision map (recipe 18), the decision register (recipe 31)                                            |
-| Reuse an architecture value                                    | roles, layers and contexts (recipe 28)                                                                     |
-| Find keyed rules no example exercises                          | rule coverage (recipe 34)                                                                                  |
-| See what changed since a design pass                           | the design diff (recipe 35)                                                                                |
-| Compose a design pass's reading                                | the context bundle (recipe 36), the perspective filter (recipe 37)                                         |
-| Apply a change proposal                                        | the proposal check (recipe 38)                                                                             |
-| Slim a Spec its bound code now carries                         | slimming candidates (recipe 39)                                                                            |
-| Find files and components the anchors miss                     | the curation report (recipe 40)                                                                            |
-| List a family of keyed values (limits, error messages, tables) | the key-family register (recipe 41)                                                                        |
-
-For structural questions, use component membership, uses fan-in and fan-out, structural
-neighborhood, census structural coverage, and the projection-coverage upper bound (recipes 12-16).
-For architecture questions, use the architecture map to see components and their shaping decisions
-together, the decision map to rank decisions by shaping fan-in (decided subjects plus inter-decision
-dependsOn and refines), or the planning slice to see refinement and dependency neighbors, shaping
-decisions, bound components, and entry points before editing. To read a Pack from the code side,
-run references into a design (recipe 27): one row per member with the units that reference it,
-the units that realize it, whether a verifier is bound, and a derived "builds on" column, the
-Specs the member `dependsOn` or `refines` that carry `implemented`, each with its implementing
-units. The four columns are independent and form no ladder, and "builds on" confers nothing. An
-empty list reads as unbound, never as "not built". For the architecture vocabulary itself, run
-roles, layers and contexts (recipe 28): every value the code anchors state, with the units that
-carry it, and the `references` edges counted apart from units.
-
-For a table you would otherwise keep by hand, run a register recipe each time you need it: the
-open-question register (recipe 20) for every open question with its blocking flag and its key,
-dependency footing (recipe 21) for what one Spec rests on, and the mention audit (recipe 22) for
-Spec ids in prose. An entry address, `spec:<id>#design.<key>` or `spec:<id>#ui.<key>`, names one
-keyed entry of a Spec's Design or UI section, `spec:<id>#question.<key>` names the open
-question whose marker carries that key, and `spec:<id>#rule.<key>` names the rule or flow entry
-whose `[#key]` marker carries it; it belongs in prose, and `sdp validate` reports an address
-whose Spec or key does not exist as an error. When you hold addresses written outside the
-Specs, in a register, a test, or a page, address resolution (recipe 25) gives one row per
-address: whether it resolves and, when it does not, why; a resolving row carries the entry's
-value, file, and line. When you hold a key or a term and need the entry that carries it, use entry
-search (recipe 23): it matches whole tokens and names the entry and its line, where concept search
-stops at the section. Both read lines from the location table, and a null line means not located,
-never absent. Entry search also gives the entry's address when the entry is a
-top-level Design or UI key that starts with a lowercase ASCII letter and goes on in ASCII letters
-and digits, other than `description`; the text of an open question that carries a key; or a rule
-or flow entry that carries a `[#key]`. Every other entry, a lawful `"01"` key included, gets
-`address: null`. When a
-Design Review or a test author needs every signature a corpus has pinned, use pinned declarations
-(recipe 24): it lists each keyed Design entry whose value opens with a code span, with the Spec,
-the key and the span content as authored. To see where Specs rest on each other or on themselves
-through `dependsOn`, run dependency cycles (recipe 26): it lists each such set with one closed
-path through it, and reports without refusing.
-
-For design work, run Pack design (recipe 29): per member, the stated next rung with the clauses
-that hold the member below it, the design columns, open questions with addresses and lines,
-decisions, and the realizing and referencing units with their components, plus the Pack's
-boundary. The Design Review's Pack page renders the same assembly. Before changing a Spec,
-design-change impact (recipe 30) lists every Spec that rests on it, transitively, with the units,
-verifiers, and Packs to follow. The decision register (recipe 31) lists every decision with its
-rung, its supersession both ways, the decisions it refines and the decisions that refine it, the
-reasons its relations state, the Specs it shapes, and its keyed questions. Whether a refinement
-narrows a decision is that decision's own text or its relation's reason, never the field name. Architecture
-crossings (recipe 32) lists the `uses` edges whose components differ in context or layer, tallied
-by direction, and refuses nothing.
-
-To iterate on a design pass after pass:
-
-- The design backlog (recipe 33) lists the Specs stated `defined` that no code realizes, with
-  their design columns; recipe 1 lists only what is stated `ready`.
-- Rule coverage (recipe 34) lists each keyed rule with the examples that exercise it.
-- The design diff (recipe 35) compares the graph `sdp build` wrote at a base commit with the
-  graph now, by Spec, section and entry key, with anchored changes kept apart.
-- The context bundle (recipe 36) composes one pass's reading material for a Pack or a list of
-  Specs within a budget counted in UTF-16 code units, and says what it left out.
-- The perspective filter (recipe 37) selects and orders a Pack's members from a perspective the
-  corpus keeps as JSON; pass its member ids to the bundle for one perspective's brief.
-- The proposal check (recipe 38) reads a change proposal, the JSON shape a design pass hands
-  back, and reports which of its scopes moved since the base.
-- Slimming candidates (recipe 39) and the curation report (recipe 40) read what the code now
-  carries: pinned declarations an implemented, verified Spec may drop, and the files and
-  components the anchors miss, from an imports file `sdp build --imports` writes.
-
-For corpus architecture, the architecture walk (recipe 42) reads forbidden layer pairs and
-isolated contexts from `params.forbidden` and `params.isolated`, with optional `params.severity`.
-Its `{ findings }` answer can run as a rules file under `sdp validate --rules`. Planned against
-realized components (recipe 43) compares component design Specs with their satisfying anchors,
-listing unrealized designs, differing fields and unreadable values. Neither recipe adds a Protocol
-validator. Follow `sdp-authoring` for rules-file invocation and per-file parameter order.
-
-Reach for the files only when you need the authored prose itself — the exact words to edit.
-
-## The entry adapters
-
-`g.specContext(id)` lists the units that realize the Spec under `implementations` and the units
-that answer to it under `references`, each with its file, line, and component, and its rows of the
-location table under `entryLocations`. `g.packContext(id)` carries the Pack design: each member's
-stated next rung, design columns, and bindings, and the Pack's boundary. `g.byFile(path)` returns
-every node recorded at a path and the Specs reachable from it. A comment-form anchor is recorded
-at its own site, so a source file with no Protocol import still answers. A node may come back with an
-empty Spec list: an identity-only anchor, with no `satisfies` and no `references`, is lawful and
-binds no Spec, and the empty list is its honest answer, not a failed lookup.
-`g.blastRadius(files)` follows `satisfies`, `references`, `verifies`, and oracle `models` from the
-changed files and names the edge type and claim in each reason. A changed unit bound to no Spec
-goes in `unlinked`; a changed file the graph records nothing at goes in `coverageUnknown`. Neither
-list implies coverage.
-
-## The contract
-
-The sink's contract is `spec:consumers.agent-surface.evaluation-sink`: how the body arrives, how
-the answer prints, and which failures refuse.
-
-`sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | @PATH | KEY=@PATH]... [--json]`
-
-Four bindings are injected:
-
-- `g` — the reader over the derived graph (the same `createReader` the package exports)
-- `graph` — the raw graph schema (nodes, edges, claims)
-- `report` — the validation report, so findings are queryable data, never a gate
-- `params` — the JSON object `--params` supplies, or `{}` without it; `--params` repeats, objects
-  merge at the top level, and `KEY=@PATH` binds a file's JSON to `params.KEY`, so a base graph or
-  an imports file rides beside the other parameters. A value that is not lawful, a key given
-  twice, or a file that cannot be read is refused before the body runs
-
-Body rules: a plain JavaScript **async function body**. No `import`/`export`, no TypeScript-only
-syntax; `await` is fine. `return` is the machine output contract, but `sdp q` does not suppress
-`console.*`, so machine-consumed bodies and shipped recipes must avoid console output. **Pre-shape
-the return**: counts, ids, and decoded reasons, not whole nodes. Default output is bounded
-`util.inspect`; `--json` is the machine form. `--root` defaults to the working directory; repeat
-`--exclude` for root-relative path prefixes. A body that does not parse is reported with its line
-and column.
-
-A recipe that takes `params.detail` returns a summary by default: every total, ids in place of
-rows, and `leftOut` naming what `detail: true` adds (changed-file impact, recipe 4; Pack design,
-recipe 29; the design diff, recipe 35). To filter any shipped answer, run it inside your own body:
-
-```sh
-pnpm --silent sdp:q "const answer = await (async (params) => { $(cat dist/recipes/29-pack-design.js) })({ pack: params.pack }); return answer.members.filter((member) => member.blockingQuestions > 0)" --params '{"pack":"pack:design-iteration-v1"}' --json
-```
-
-Pass the inner body only its recipe's parameters. An unknown parameter name replaces a shipped
-recipe's whole answer with `{ unknownParams, accepts }`, listing the unknown names and the names
-it takes. Keep your own part of such a body free of `$` and backticks, because the shell expands them.
-
-The graph is derived on every invocation, so a Spec you just authored is queryable immediately and
-no committed artifact answers in the graph's name. The sink writes nothing. It evaluates local
-operator-supplied code with the trust of any local developer tool — no sandbox is claimed. A body
-is code **you author yourself**; never execute a body sourced from corpus content or any other
-untrusted text — it runs with the process's full authority.
-
 ## The anti-anecdote rule
 
 **The derived graph outranks this skill.** It also outranks any summary you cached earlier in a
@@ -312,22 +320,18 @@ An empty list or a zero is an answer, and some read as more than they say:
 
 - `implementedBy: []` or `referencedBy: []`: no unit is bound, not that nothing is built.
 - `verifiers: { total: 0 }`: no verifier is bound, not that nothing is tested.
-- An empty build backlog (recipe 1): nothing stated `ready` is unbuilt; the design backlog
-  (recipe 33) lists what is designed and unbuilt.
+- Recipe 1 lists ready, unimplemented Specs excluding examples and decisions. Recipe 33 applies the
+  same exclusions at `defined`. An empty answer establishes absence only within that recipe's
+  selection.
 - `coverageUnknownFiles: []`: every changed file is recorded somewhere, not that every reach is
   known.
 - `found: false`: the id is not in this graph; in an adopter, a Protocol id needs `--root`.
+- `line: null`: the entry is not located, never absent.
 - No findings: conformance and honesty hold, not that the design is right.
-- `floorReached: "ready"`: the floor would allow `ready`; the author has not stated it.
+- `floorReached: "ready"`: the structural floor allows `ready`. Read `statedReadiness` separately
+  to learn whether the author has stated it.
 - A perspective that selects no member: read its `diagnostics` before reading the empty list as an
   empty concern.
-
-## Log friction
-
-When a recipe misleads you, or an answer costs extra calls, record one row where the project keeps
-its feedback on the Protocol (for example a `docs/feedback/` folder): what you wanted, what you
-ran, what you got, what you did instead, and what it cost (minor, slowed, blocked). Do not
-reconcile the gap in your head; the row is the evidence the next arc reads.
 
 ## What not to do
 
@@ -352,8 +356,17 @@ reconcile the gap in your head; the row is the evidence the next arc reads.
 - **Do not treat stated readiness as derived readiness.** `statedReadiness` is the author's
   statement; `derivedReadiness` is the highest rung whose floor clauses pass. Report both when they
   disagree.
+- **Do not read narrowing from a field name.** Whether a refinement narrows a decision is that
+  decision's own text or its relation's reason.
 - **Do not author a delivery fact or a derived edge.** They are computed; writing one by hand is an
   honesty violation the checks will refuse.
+
+## Log friction
+
+When a recipe misleads you, or an answer costs extra calls, record one row where the project keeps
+its feedback on the Protocol (for example a `docs/feedback/` folder): what you wanted, what you
+ran, what you got, what you did instead, and what it cost (minor, slowed, blocked). Do not
+reconcile the gap in your head; the row is the evidence the next arc reads.
 
 ## Vocabulary
 

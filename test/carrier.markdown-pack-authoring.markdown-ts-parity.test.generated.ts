@@ -45,6 +45,7 @@ export function registerMarkdownTsParity<World>(
     "the graph holds the pack {packId} whose membership names {memberId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph holds the pack {packId} whose membership names {memberId}",
         text: "the graph holds the pack {packId} whose membership names {memberId}",
         params,
       });
@@ -53,6 +54,7 @@ export function registerMarkdownTsParity<World>(
       (execution, params) => {
         compareContractOutcome(execution, {
           kind: "then",
+          key: "the Markdown and TypeScript Pack nodes are equal apart from carrier file paths, and their membership edges are equal: {equal}",
           text: "the Markdown and TypeScript Pack nodes are equal apart from carrier file paths, and their membership edges are equal: {equal}",
           params,
         });

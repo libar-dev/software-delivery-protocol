@@ -16,7 +16,15 @@ authoritative for what the Protocol claims; **`src/` and tests** are authoritati
 current realization. A disagreement is **drift to resolve**, never permission to silently promote
 code behavior into intent.
 
-> **plan 45 is EXECUTED** on `feature/design-at-scale-v0`, as PR 33. Design at the adopter's
+> **plan 46 is EXECUTED**, as PR 35 on `feature/studio-and-adoption-v0`. Designs people can read,
+> and an adopter at full speed: the Studio's phase 1 (diagrams, every Spec-page panel, the registers and
+> the owner's queue as pages, the design diff, run evidence, the composing panel, previews per
+> pull request), the vault, and the adopter's loop at scale (recipes called from rules files, step
+> keys, term addresses, checked declarations, bundles in parts, the readiness planner, the upgrade
+> kit). The rulings were made on the owner's delegation and the owner confirmed them; the owner
+> ratified the Studio's two decisions and the vault's (MD-43 to MD-45) and turned on the per-pull-
+> request preview. The plan lists what stays the owner's: the platform's statements and the merges.
+> **plan 45 is EXECUTED**, merged as PR 33. Design at the adopter's
 > scale: the adopter installs from a commit, the design-pass loop fits a large corpus
 > (`declarations: "addresses"`, recipe 41), corpus rules run under `sdp validate --rules` with
 > recipes 42 and 43, and the Spec Studio's phase 0 publishes static pages (`sdp studio`; plan 42
@@ -119,12 +127,12 @@ Progressive disclosure — start at the top, follow the pointers down.
 | Look here | What you get | Read |
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in the Specs under `specs/` and in the surviving concept docs | **first, always** |
-| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the catalog of runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
+| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — five repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), `sdp-studio` (publishing, sharing and reading the Studio), `sdp-vault` (keeping the Obsidian vault), also exposed to Claude through the `.claude/skills` symlink; plus the catalog of runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, delivery-session routing, Studio publishing or reading, or vault work; see "Query the graph first" |
 | `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus Pack manifests for self-hosting and grouped design work); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, the consumer pointers and discipline mapping (06), and the MVP acceptance of record (07); the core model, the one graph, validation & honesty and the consumer law dissolved into the `model.*`, `extraction.*`, `validation.*` and `consumers.*` Spec families; the historical MVP slice record lives in the slice-5 plan under `plans/` and in `examples/checkout-v1`, while forward roadmap intent lives in capture Specs — locate any of them with concept search (recipe 6) | to know *how* it is designed |
 | `docs/concept/DECISIONS.md` | **the lean decision registry** — ratified names, one-line glosses, carrying Specs, and the D1–D6 lookup; historical rationale lives in git, plans, and the Specs themselves | when resolving a decision name or following its canonical pointer |
-| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review, census, Mermaid, Gherkin and Studio) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `studio` · `import` · `new spec` · `q`) · `import` (carrier conversion and import analysis) · `testing` (the registrar runtime exported through `./testing`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
+| `src/` | **the engine** — `model` (Spec/descriptors/pack/anchors) · `extract` · `graph` · `validate` · `reader` (agent surface) · `projections` (Design Review, census, Mermaid, Gherkin and Studio) · `cli` (`sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `studio` · `vault` · `stamp` · `generate` · `import` · `new spec` · `q`) · `import` (carrier conversion and import analysis) · `testing` (the registrar runtime exported through `./testing`) · `runner` / `codegen` / `notation` / `adapters` | when implementing or verifying **current engine** behavior |
 | `examples/checkout-v1` | **the worked MVP example** (Markdown carriers; originally the TS DSL tracer bullet) — specs, anchors, untracked `generated/` (regenerated in-pipeline); walkthrough in its README | when proving the loop end-to-end |
 | `explorations/` | **evidence only** (carrier exhibits, executable-example findings) — mapping evidence for design; **never promote spike code into product** | when judging design evidence; not a source tree to ship |
 | `docs/lineage/` | restored historical design documents — the v0 concept set, verbatim with lineage headers; evidence for design reviews, never intended truth | when a review needs superseded design on the table rather than in git history |
@@ -144,13 +152,15 @@ Key decisions (names first): the executable meta-model (MD-1); one primitive nam
 **The skills are mandatory on-ramps; the graph is the sole read model.** Before any corpus
 question, load `.agents/skills/sdp-agent-surface/SKILL.md`. Before authoring or editing a carrier,
 load `.agents/skills/sdp-authoring/SKILL.md`. Before routing delivery work, load
-`.agents/skills/sdp-sessions/SKILL.md`. The skills teach the workflow; the graph answers the
+`.agents/skills/sdp-sessions/SKILL.md`. Before publishing or reading the Studio, or keeping the
+vault, load `sdp-studio` or `sdp-vault`. The skills teach the workflow; the graph answers the
 questions.
 
 `sdp q` is the agent front door (MD-22): it derives the graph in process and evaluates a plain
-JavaScript async-function body you supply, with four bindings injected — `g` (the reader),
-`graph` (the raw schema), `report` (the validation report), and `params` (the JSON a caller passes
-with `--params`, `{}` without it). `return` is the output contract; add `--json` for
+JavaScript async-function body you supply, with five bindings injected — `g` (the reader),
+`graph` (the raw schema), `report` (the validation report), `params` (the JSON a caller passes
+with `--params`, `{}` without it), and `recipes(number, parameters?)` (a shipped body over the same
+graph). `return` is the output contract; add `--json` for
 machine-readable output. For any corpus question — what a Spec guarantees, what is
 ready but unimplemented, what a change touches, where a concept lives — script the graph instead
 of reading `.sdp.md` files by hand:
@@ -163,18 +173,24 @@ pnpm --silent sdp:q 'return g.specs().filter((s) => s.statedReadiness === "ready
 pnpm --silent sdp:q "$(cat dist/recipes/06-where-is-this-concept.js)" --params '{"term":"readiness floor"}'
 ```
 
-The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · studio · import · new spec · q`.
+The full CLI surface is `sdp build · validate · view · census · mermaid · gherkin · studio · vault · stamp · generate · import · new spec · q`.
 `sdp validate --watch` re-runs that same validate path on carrier create, change, delete, or rename
-and stays alive after findings; operator stop exits 0. `--watch` is validate-only and cannot combine
+and stays alive after findings; operator stop exits 0. `validate --watch` cannot combine
 with `--check-clean`. `sdp validate --rules PATH [--params FORM]...` runs an operator-selected corpus
 rule, with each `--params` after its own `--rules`, corpus findings and failed files reported apart
 from Protocol findings, and rules reread on each watch cycle. The five projection publishers remain
-independent public verbs; repository
+independent public verbs; `sdp generate` publishes all five roots from one validated graph, synchronizing the vault first and leaving it alone under `--check-clean`. Repository
 generation/check scripts certify all five roots through the private projection-suite driver. The
+Studio also takes `--base PATH` with optional `--base-label TEXT`, repeatable `--runs PATH` for
+CTRF evidence, and `--watch` for carrier changes, with no server; source and input edits start no
+Studio cycle. Keep a base graph outside `generated/`. `sdp stamp` writes publishing metadata after
+the build. `sdp vault --out DIR` synchronizes linked notes in its owned `sdp/` folder, and its
+`--watch` follows carriers and source anchors. The vault stays outside the five rewritten roots.
+The upgrade guide is `docs/agent-surface/upgrade-guide.md`. The
 runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
-`sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
-on-ramps. In this checkout, always go through
+`sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing, `sdp-studio`
+for the Studio, `sdp-vault` for the vault) are the on-ramps. In this checkout, always go through
 `pnpm --silent sdp:q '<body>'` — `pnpm exec` cannot resolve the package's own bin.
 
 ## The build path

@@ -49,6 +49,18 @@ specs:
   - spec:carrier.slot-notation
   - spec:carrier.slot-notation.typed-declaration
   - spec:carrier.slot-notation.refused-guess
+  - spec:carrier.slot-notation.one-literal-binding
+  - spec:carrier.step-keys
+  - spec:carrier.step-keys.reworded-keyed-step-stays-bound
+  - spec:carrier.step-keys.reworded-unkeyed-step-breaks
+  - spec:carrier.step-keys.gherkin-keyed-step-stays-bound
+  - spec:carrier.step-keys.renamed-key-breaks
+  - spec:carrier.step-keys.repeated-key-refused
+  - spec:carrier.step-keys.two-keys-on-one-step-refused
+  - spec:carrier.step-keys.malformed-marker-refused
+  - spec:carrier.step-keys.conflicting-example-key-withheld
+  - spec:carrier.step-keys.key-equal-to-a-skeleton-withheld
+  - spec:carrier.step-keys.typescript-keyed-step-imports-keyed
   - spec:model.core-model
   - spec:model.enrichment-lifecycle
   - spec:model.spec-sections
@@ -72,9 +84,15 @@ specs:
   - spec:model.planned-architecture.differing-layer-and-uses
   - spec:model.planned-architecture.matching-design
   - spec:model.open-question-fields
+  - spec:model.open-question-fields.dropped-list-warns
   - spec:model.rule-keys
   - spec:model.relation-reasons
   - spec:model.term-addresses
+  - spec:model.term-addresses.keyed-term-resolves
+  - spec:model.term-addresses.unknown-term-key-refused
+  - spec:model.term-addresses.repeated-term-key-refused
+  - spec:model.term-addresses.malformed-term-marker-refused
+  - spec:model.term-addresses.typescript-term-imports-keyed
   - spec:extraction.derive-graph
   - spec:extraction.delivery-facts
   - spec:extraction.determinism
@@ -100,6 +118,11 @@ specs:
   - spec:extraction.pack-member-order
   - spec:extraction.pack-member-order.manifest-order-kept
   - spec:extraction.entry-locations
+  - spec:extraction.entry-citations
+  - spec:extraction.entry-citations.code-comment-cites-declaration
+  - spec:extraction.entry-citations.test-title-cites-declaration
+  - spec:extraction.entry-citations.unanchored-file-unread
+  - spec:extraction.entry-citations.unresolved-citation
   - spec:validation.readiness-floor
   - spec:validation.readiness-floor.unrelated-scoped-spec
   - spec:validation.readiness-floor.blocking-open-question
@@ -141,14 +164,30 @@ specs:
   - spec:validation.kind-evidence.constraints-alone
   - spec:validation.kind-evidence.untargeted-constraint
   - spec:validation.kind-evidence.empty-promoted-child
+  - spec:validation.kind-evidence.second-entry-untargeted
   - spec:validation.diagnostic-rendering
   - spec:validation.diagnostic-rendering.composed-location
   - spec:validation.diagnostic-rendering.table-cell-location
   - spec:validation.validator-self-testing
+  - spec:validation.validator-self-testing.shipped-checks-paired
+  - spec:validation.validator-self-testing.silent-check-named
+  - spec:validation.validator-self-testing.overeager-check-named
+  - spec:validation.validator-self-testing.unpaired-check-named
+  - spec:validation.validator-self-testing.duplicate-pair-named
+  - spec:validation.validator-self-testing.unregistered-id-named
   - spec:validation.next-rung-floor
   - spec:validation.next-rung-floor.typed-dependency-targets
   - spec:validation.next-rung-floor.blocking-question
   - spec:validation.superseded-decision-signal
+  - spec:validation.superseded-decision-signal.replaced-ruling-warns
+  - spec:validation.superseded-decision-signal.chain-end-named
+  - spec:validation.superseded-decision-signal.branch-names-every-end
+  - spec:validation.superseded-decision-signal.closed-chain-named
+  - spec:validation.superseded-decision-signal.dependency-unread
+  - spec:validation.superseded-decision-signal.superseded-subject-silent
+  - spec:validation.superseded-decision-signal.replacement-below-ready-named
+  - spec:validation.superseded-decision-signal.live-replacement-warns
+  - spec:validation.superseded-decision-signal.end-and-loop-named
   - spec:validation.architecture-constraints
   - spec:validation.architecture-constraints.forbidden-layer-pair
   - spec:validation.architecture-constraints.isolated-context-as-rule
@@ -157,7 +196,13 @@ specs:
   - spec:validation.corpus-rules.copies-contain-changes
   - spec:validation.corpus-rules.error-finding-fails
   - spec:validation.corpus-rules.malformed-finding-fails
+  - spec:validation.corpus-rules.params-edit-starts-a-cycle
+  - spec:validation.corpus-rules.rules-edit-starts-a-cycle
+  - spec:validation.corpus-rules.unreadable-params-fail-one-file
   - spec:validation.corpus-rules.warning-finding-informs
+  - spec:validation.external-registers
+  - spec:validation.external-registers.unknown-and-retired
+  - spec:validation.external-registers.uncited-on-request
   - spec:consumers.projections-model
   - spec:consumers.projections-model.roadmap-views
   - spec:consumers.impact-graph
@@ -168,6 +213,9 @@ specs:
   - spec:consumers.agent-surface.demand-map-entries
   - spec:consumers.agent-surface.answer-shapes
   - spec:consumers.agent-surface.evaluation-sink
+  - spec:consumers.agent-surface.evaluation-sink.recipe-call
+  - spec:consumers.agent-surface.evaluation-sink.unknown-recipe
+  - spec:consumers.agent-surface.evaluation-sink.exported-evaluator
   - spec:consumers.design-review
   - spec:consumers.design-review.pure-projection
   - spec:consumers.census-page
@@ -199,6 +247,9 @@ specs:
   - spec:consumers.wholesale-view-rewrite.failed-run-view-removed
   - spec:consumers.wholesale-view-rewrite.build-invalidates-view
   - spec:consumers.agent-surface.address-and-cycle-recipes
+  - spec:consumers.agent-surface.address-and-cycle-recipes.cycle-fails-a-rules-run
+  - spec:consumers.agent-surface.address-and-cycle-recipes.unresolved-address-fails-a-rules-run
+  - spec:consumers.agent-surface.address-and-cycle-recipes.chain-reports-nothing
   - spec:consumers.spec-studio
   - spec:consumers.spec-studio.index-page
   - spec:consumers.spec-studio.pack-page
@@ -215,6 +266,41 @@ specs:
   - spec:consumers.spec-studio.components
   - spec:consumers.spec-studio.responsive
   - spec:consumers.spec-studio.sharing
+  - spec:consumers.spec-studio.sharing.stamp-written-apart
+  - spec:consumers.spec-studio.data.recipe-answers
+  - spec:consumers.spec-studio.data.inputs
+  - spec:consumers.spec-studio.data.inputs.graph-only
+  - spec:consumers.spec-studio.data.inputs.both-given
+  - spec:consumers.spec-studio.publisher.watch
+  - spec:consumers.spec-studio.publisher.watch.matches-plain-run
+  - spec:consumers.spec-studio.navigation
+  - spec:consumers.spec-studio.lenses.packs
+  - spec:consumers.spec-studio.lenses.architecture
+  - spec:consumers.spec-studio.lenses.architecture.planned-apart
+  - spec:consumers.spec-studio.lenses.tests
+  - spec:consumers.spec-studio.lenses.tests.coverage-row
+  - spec:consumers.spec-studio.lenses.evidence
+  - spec:consumers.spec-studio.pack-page.maturity-map
+  - spec:consumers.spec-studio.spec-page.cited-declaration
+  - spec:consumers.spec-studio.verification-panels.rule-coverage
+  - spec:consumers.spec-studio.registers
+  - spec:consumers.spec-studio.registers.blocking-first
+  - spec:consumers.spec-studio.owner-queue
+  - spec:consumers.spec-studio.owner-queue.dependency-first
+  - spec:consumers.spec-studio.diff-page
+  - spec:consumers.spec-studio.diff-page.changed-entry
+  - spec:consumers.spec-studio.runs-page
+  - spec:consumers.spec-studio.runs-page.external-evidence
+  - spec:consumers.spec-studio.glossary-page
+  - spec:consumers.spec-studio.glossary-page.same-word-twice
+  - spec:consumers.spec-studio.intent-panel.refresh-keeps-intents
+  - spec:consumers.spec-studio.diagrams
+  - spec:consumers.spec-studio.diagrams.within-bound
+  - spec:consumers.spec-studio.diagrams.folds-by-context
+  - spec:consumers.spec-studio.diagrams.folds-by-layer
+  - spec:consumers.spec-studio.export
+  - spec:consumers.spec-studio.export.self-contained
+  - spec:consumers.studio-on-ramp
   - spec:consumers.pack-design
   - spec:consumers.design-review.pack-design-page
   - spec:consumers.agent-surface.recipe-parameters
@@ -222,18 +308,58 @@ specs:
   - spec:consumers.engine-provenance
   - spec:consumers.validate-watch
   - spec:consumers.agent-surface.example-space-coverage
+  - spec:consumers.agent-surface.example-space-coverage.uncovered-literal
+  - spec:consumers.agent-surface.example-space-coverage.number-not-enumerable
   - spec:consumers.review-perspectives
   - spec:consumers.context-bundle
+  - spec:consumers.context-bundle.parts-cover-the-pack
+  - spec:consumers.context-bundle.oversized-member-named
   - spec:consumers.design-diff
   - spec:consumers.intent-composition.proposal
+  - spec:consumers.intent-composition.proposal.memo
+  - spec:consumers.intent-composition.proposal.memo.shared
   - spec:consumers.reference-projection
   - spec:consumers.structural-mermaid
   - spec:consumers.obsidian-vault
+  - spec:consumers.obsidian-vault.fresh-vault
+  - spec:consumers.obsidian-vault.person-notes-survive
+  - spec:consumers.obsidian-vault.unknown-note-refused
+  - spec:consumers.obsidian-vault.changed-note-refused
+  - spec:consumers.obsidian-vault.hidden-file-refused
+  - spec:consumers.obsidian-vault.vault-in-build-path-refused
+  - spec:consumers.obsidian-vault.interrupted-run-recovered
+  - spec:consumers.obsidian-vault.failed-extraction-keeps-notes
+  - spec:consumers.obsidian-vault.failed-extraction-recovered
   - spec:consumers.obsidian-vault.notes
+  - spec:consumers.obsidian-vault.notes.entry-address-link
+  - spec:consumers.obsidian-vault.notes.unresolved-mention-stays
+  - spec:consumers.obsidian-vault.notes.term-address-link
+  - spec:consumers.obsidian-vault.notes.case-collision-refused
   - spec:consumers.obsidian-vault.bases
+  - spec:consumers.obsidian-vault.bases.views-match-sources
   - spec:consumers.obsidian-vault.iteration
+  - spec:consumers.obsidian-vault.iteration.watch-rewrites-changed-notes
+  - spec:consumers.obsidian-vault.iteration.watch-source-anchor
+  - spec:consumers.vault-on-ramp
+  - spec:consumers.readiness-planner
+  - spec:consumers.readiness-planner.dependency-order
+  - spec:consumers.readiness-planner.decision-first
+  - spec:consumers.readiness-planner.cycle-shares-a-round
+  - spec:consumers.readiness-planner.owner-question-holds
+  - spec:consumers.upgrade-kit
+  - spec:consumers.upgrade-kit.capability-adoption
+  - spec:consumers.upgrade-kit.capability-adoption.counts-a-corpus
+  - spec:consumers.upgrade-kit.rule-key-proposal
+  - spec:consumers.upgrade-kit.rule-key-proposal.proposal-applies-clean
+  - spec:consumers.upgrade-kit.rule-key-proposal.collision-and-unkeyable
+  - spec:consumers.command-line
+  - spec:consumers.command-line.generate-check-failure
+  - spec:consumers.command-line.generate-writes-every-root
+  - spec:consumers.command-line.verb-help-touches-nothing
   - spec:observation.runtime-overlay
   - spec:observation.run-evidence
+  - spec:observation.run-evidence.absolute-path-joins
+  - spec:observation.run-evidence.unanchored-file-unjoined
   - spec:protocol.self-hosting
   - spec:protocol.structural-self-binding
   - spec:decisions.plain-language-references
@@ -273,10 +399,13 @@ specs:
   - spec:decisions.question-key-rendering
   - spec:decisions.studio-html-surface
   - spec:decisions.studio-web-components
+  - spec:decisions.studio-build-renders
+  - spec:decisions.studio-diagram-renderer
   - spec:decisions.anchor-comment-form
   - spec:decisions.anchor-binding-grain
   - spec:decisions.architectural-annotation
   - spec:decisions.pack-design-page
+  - spec:decisions.vault-owned-folder
 modelRefs:
   - spec:model.core-model
 ---

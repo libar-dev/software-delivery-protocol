@@ -208,10 +208,10 @@ describe("iteration loop: design diff", () => {
             to: { list: "rules", text: "Edited first rule." },
           },
           {
-            part: "behavior.rules",
+            part: "behavior.rules[1]",
             change: "changed",
-            from: ["First rule.", "An unkeyed rule."],
-            to: ["Edited first rule.", "An edited unkeyed rule."],
+            from: { list: "rules", text: "An unkeyed rule." },
+            to: { list: "rules", text: "An edited unkeyed rule." },
           },
         ]),
       );
@@ -459,7 +459,7 @@ describe("iteration loop: design diff", () => {
       const diff = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
       expect(diff.specs.changed.find((row) => row.id === "spec:probe.a")?.parts).toContainEqual({
         part: "rule.first",
-        change: "changed",
+        change: "moved",
         from: { list: "rules", text: "First rule." },
         to: { list: "flows", text: "First rule." },
       });
@@ -673,10 +673,7 @@ describe("iteration loop: design diff", () => {
         later.specs.changed
           .find((row) => row.id === "spec:probe.a")
           ?.parts.map((row) => [row.part, row.change]),
-      ).toEqual([
-        ["behavior.rules", "changed"],
-        ["rule.first", "changed"],
-      ]);
+      ).toEqual([["rule.first", "changed"]]);
       const recheck = await runRecipe<ProposalCheck>(38, { base, proposal }, changed);
       expect(recheck.changes[0]?.scope.map((row) => row.moved)).toEqual([true, false, true]);
     });
@@ -709,7 +706,7 @@ describe("iteration loop: design diff", () => {
           "- rule: [#first] First rule.",
           "- rule: [#first] First rule.\n- rule: [#added] Added rule.",
         ),
-      ).toEqual({ "behavior.rules": "changed", "rule.added": "added" });
+      ).toEqual({ "rule.added": "added" });
       // A rule removed while two flows swap still shows both flows moved.
       expect(
         await partsOf(
@@ -717,7 +714,6 @@ describe("iteration loop: design diff", () => {
           "- flow: [#second] Second flow.\n- flow: [#last] Last flow.",
         ),
       ).toEqual({
-        "behavior.rules": "changed",
         "rule.first": "removed",
         "rule.last": "moved",
         "rule.second": "moved",
@@ -1098,6 +1094,56 @@ function asSection(value: unknown): Record<string, unknown> {
 }
 
 describe("iteration loop: context bundle", () => {
+  it("keeps term addresses, term lines and key maps through the section cut", async () => {
+    await withCorpus(async (root) => {
+      edit(
+        root,
+        "model.sdp.md",
+        "Narrative for model.",
+        "Read spec:probe.model#term.durableIdentity and spec:probe.a#rule.first. " +
+          "Narrative detail ".repeat(100),
+      );
+      edit(
+        root,
+        "model.sdp.md",
+        "An order.",
+        "[#durableIdentity] " + "Definition detail ".repeat(100),
+      );
+      edit(root, "model.sdp.md", "A line.", "Unkeyed definition ".repeat(100));
+      edit(
+        root,
+        "a.sdp.md",
+        "\n\n## Design",
+        "\n\n## Example space\n```gwt-vocabulary\nGiven [#initialState] initial state\nWhen run\nThen done\n```\n\n## Design",
+      );
+      const derived = extract({ root });
+      const specs = ["spec:probe.model", "spec:probe.a"];
+      const minimum = await runRecipe<BudgetExceeded>(36, { specs, budget: 1 }, derived);
+      const bundle = await runRecipe<Bundle>(
+        36,
+        { specs, budget: minimum.protectedLength + 20 },
+        derived,
+      );
+      expect(bundle.leftOut).toHaveLength(6);
+      const model = bundle.members[0];
+      expect(model?.narrative).toBe(
+        "spec:probe.model#term.durableIdentity spec:probe.a#rule.first",
+      );
+      const unkeyedLine = derived.graph.locations?.find(
+        (row) => row.spec === "spec:probe.model" && row.entry === "term[1]",
+      )?.line;
+      expect(unkeyedLine).toBeTypeOf("number");
+      expect(model?.sections.model).toEqual({
+        terms: { Order: "spec:probe.model#term.durableIdentity", Line: { line: unkeyedLine } },
+        termKeys: { durableIdentity: "Order" },
+      });
+      expect(asSection(bundle.members[1]?.sections.behavior).stepKeys).toEqual({
+        initialState: "initial state",
+      });
+      expect(bundle.used).toBeLessThanOrEqual(bundle.budget);
+    });
+  });
+
   it("keeps questions and declarations in one place and member-example steps only in their member row", async () => {
     await withCorpus(async (root) => {
       prepareBundleCorpus(root);
@@ -1506,6 +1552,70 @@ const proposalSchema: unknown = JSON.parse(
 const acceptsSchema = new Ajv().compile(proposalSchema);
 
 describe("iteration loop: proposal schema and check", () => {
+  it("accepts term scopes and detects changed definitions through their authored keys", async () => {
+    await withCorpus(async (root) => {
+      edit(root, "model.sdp.md", "An order.", "[#durableIdentity] An order.");
+      edit(root, "model.sdp.md", "A line.", "[#description] A line.");
+      const base = extract({ root });
+      const proposal = {
+        ...sampleProposal,
+        changes: [
+          {
+            scope: ["spec:probe.model#term.durableIdentity"],
+            replaces: "spec:probe.model#term.durableIdentity",
+            request: "Reword the definition.",
+          },
+          {
+            scope: ["spec:probe.model"],
+            follows: "spec:probe.model#term.description",
+            request: "Add another term.",
+          },
+          { scope: ["spec:probe.model#term.missing"], request: "Inspect a missing key." },
+        ],
+      };
+      expect(acceptsSchema(proposal)).toBe(true);
+      const unchanged = await runRecipe<ProposalCheck>(38, { proposal, base: base.graph }, base);
+      expect(unchanged.schemaProblems).toEqual([]);
+      expect(unchanged.changes[0]?.scope).toEqual([
+        {
+          ref: "spec:probe.model#term.durableIdentity",
+          resolvesAtHead: true,
+          resolvesAtBase: true,
+          moved: false,
+        },
+      ]);
+      expect(unchanged.changes[1]?.scope[1]).toMatchObject({
+        resolvesAtHead: true,
+        resolvesAtBase: true,
+        moved: false,
+      });
+      expect(unchanged.totals.unresolved).toBe(1);
+      edit(root, "model.sdp.md", "An order.", "A revised order.");
+      const changed = await runRecipe<ProposalCheck>(
+        38,
+        { proposal, base: base.graph },
+        extract({ root }),
+      );
+      expect(changed.changes[0]?.scope[0]).toMatchObject({
+        resolvesAtHead: true,
+        resolvesAtBase: true,
+        moved: true,
+      });
+      expect(changed.changes[1]?.scope[1]?.moved).toBe(false);
+      edit(root, "model.sdp.md", "[#durableIdentity] ", "");
+      const removed = await runRecipe<ProposalCheck>(
+        38,
+        { proposal, base: base.graph },
+        extract({ root }),
+      );
+      expect(removed.changes[0]?.scope[0]).toMatchObject({
+        resolvesAtHead: false,
+        resolvesAtBase: true,
+        moved: true,
+      });
+    });
+  });
+
   it("holds the schema and recipe to the same accepted and refused documents", async () => {
     await withCorpus(async (_root, derived) => {
       const accepted = [
@@ -1995,7 +2105,7 @@ describe("iteration loop: example enablement", () => {
 });
 
 describe("iteration loop: anonymous collection order", () => {
-  it("compares whole mixed collections when an unkeyed entry moves around a keyed entry", async () => {
+  it("compares rule order by text and other anonymous collections as a whole", async () => {
     await withCorpus(async (root) => {
       edit(
         root,
@@ -2024,7 +2134,7 @@ describe("iteration loop: anonymous collection order", () => {
           parts: row.parts.map((part) => part.part),
         })),
       ).toEqual([
-        { id: "spec:probe.a", parts: ["behavior.rules"] },
+        { id: "spec:probe.a", parts: ["behavior.rules[0]"] },
         { id: "spec:probe.b", parts: ["intent.openQuestions"] },
       ]);
       const check = await runRecipe<ProposalCheck>(

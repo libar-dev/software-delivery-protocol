@@ -74,6 +74,7 @@ function readerStub(options: {
     byFile: unavailable,
     blastRadius: unavailable,
     specContext: unavailable,
+    resolveEntryAddress: unavailable,
     packContext: unavailable,
   };
 }

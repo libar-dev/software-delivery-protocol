@@ -51,6 +51,7 @@ export function registerMissingSpaceRefused<World>(
     ) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "oracle linkage reports {findingCount} findings and resolving presence {oraclePresent}",
         text: "oracle linkage reports {findingCount} findings and resolving presence {oraclePresent}",
         params,
       });

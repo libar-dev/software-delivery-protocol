@@ -147,7 +147,7 @@ export const validationSpecs = [
         exampleSpace: {
           given: [
             'the graph holds a {kind:"behavior"|"constraint"} spec {specId:string} stating readiness {readiness:"scoped"|"defined"}',
-            'its only evidence is {evidence:"a constraints entry carrying a target"|"a constraints entry with no target"|"an empty promoted rule child"}',
+            'its only evidence is {evidence:"a constraints entry carrying a target"|"a constraints entry with no target"|"a targeted constraints entry and an untargeted second entry"|"an empty promoted rule child"}',
           ],
           when: ["the graph is validated"],
           then: [
@@ -211,6 +211,38 @@ export const validationSpecs = [
             given: [
               'the graph holds a {kind: "constraint"} spec {specId: "spec:probe.untargeted-constraint"} stating readiness {readiness: "defined"}',
               'its only evidence is {evidence: "a constraints entry with no target"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              'the report names {findingId: "honesty/readiness-floor"} at severity {severity: "error"}',
+              'the finding names the unmet floor clause {clauseId: "kind-evidence-complete"}',
+              "the report holds {errorCount: 1} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.kind-evidence.second-entry-untargeted",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/kind-evidence.second-entry-untargeted.sdp.md",
+    title: "A constraint whose second entry has no target is not complete",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the constraint row where a Spec carries two entries and only the first carries a target, so the evidence clauses read every entry.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the graph holds a {kind: "constraint"} spec {specId: "spec:probe.second-entry-untargeted"} stating readiness {readiness: "defined"}',
+              'its only evidence is {evidence: "a targeted constraints entry and an untargeted second entry"}',
             ],
             when: ["the graph is validated"],
             then: [
@@ -1143,37 +1175,251 @@ export const validationSpecs = [
     id: "spec:validation.validator-self-testing",
     specKind: "rule",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/validation/validator-self-testing.sdp.md",
     title: "Every validator ships evidence in both directions",
     narrative:
-      "A validator that stops firing reports nothing, and an empty report looks like a clean graph unless a test asserts the refusal. A validator that refuses every input is just as useless. Refusing and accepting inputs, one probe world per direction, tell the two failures apart, so the check families are themselves checked. No validator checks this discipline, because the Protocol's checks concern conformance and honesty, never the delivery process.",
+      "A validator that stops firing reports nothing, and an empty report looks like a clean graph unless a test asserts the refusal. A validator that refuses every input is just as useless. Refusing and accepting inputs, one probe world per direction, tell the two failures apart, so the check families are themselves checked. No validator checks this discipline, because the Protocol's checks concern conformance and honesty, never the delivery process.\n\nAn audit keeps the discipline whole. Scattered tests can cover every check today and miss the next one, so the audit holds one probe pair per finding id in one table and fails when the table and the engine's registries disagree. Extraction refusals count: they carry the conformance family, refuse carriers in the same validation run, and go silent in the same way. The accepting probe is a near miss rather than an empty input, because an empty input passes a validator that refuses too much.",
     sections: {
       intent: {
         outcome: "Keep a validator that has silently stopped firing from reading as a clean build.",
-        openQuestions: [
-          {
-            question:
-              "Does every shipped validator, and every extraction refusal if those count as validators, carry both a refusing and an accepting test, and which suite binds this Spec as its verifier?",
-            blocking: false,
-            key: "evidenceAudit",
-            decider: "owner",
-            provisional:
-              "enumerate graphValidatorIds against accepting and refusing tests, then bind the suite",
-          },
-        ],
       },
       behavior: {
         rules: [
-          "Each validator ships evidence in both directions: at least one input it must refuse and at least one it must accept.",
-          "The discipline is evidence over the two check families, never a check of its own; no validator checks whether another validator carries tests.",
+          "Each validator ships evidence in both directions: at least one input it must report and at least one near miss it must leave unreported.",
+          "The discipline is evidence over the two check families, never a check of its own; no validator checks whether another validator carries tests, and no report, graph fact or delivery fact records the audit.",
+          "The audit covers every finding id a validation run can report: each graph validator's and each extraction finding's, the Markdown and Gherkin carriers' included. Contract generation and import report outside a validation run and stay outside the audit.",
+          "The audit holds one probe pair per finding id: a refusing probe the id must report, and an accepting probe, a near miss that differs from the refusing probe only in the construct the check reads, that the id must leave unreported.",
+          "The audit's table and the engine's registries agree exactly: a registered id without a pair, an id paired twice, a pair for an id no registry lists, a finding id written in the engine's source outside every registry, and a finding id a probe run reports outside every registry each fail the audit.",
+          "The audit reads the engine's source as code, so a comment never counts and every quote form does, and it fails on a finding id it cannot read whole, such as an id prefix joined to a value at run time.",
+          "The audit runs every probe through the entry a validation run uses, graph validation for a graph probe and extraction for a carrier probe, and fails for each id its refusing probe does not report and each id its accepting probe reports; it reads the finding id alone, never the message.",
+          "The audit is a test in the repository's own suite, so the gate runs it on every change. It fails by naming each id at fault, writes no tracked file and no durable result, and may create and remove a temporary extraction root for a carrier probe.",
         ],
         ruleKeys: {
           bothDirections: "rules[0]",
+          neverAValidator: "rules[1]",
+          auditScope: "rules[2]",
+          probePairs: "rules[3]",
+          closedTable: "rules[4]",
+          sourceReadWhole: "rules[5]",
+          silentAndOvereager: "rules[6]",
+          auditInGate: "rules[7]",
         },
+        exampleSpace: {
+          given: [
+            'the audit reads {table:"the shipped probe table"|"the shipped table without one pair"|"the shipped table with one pair twice"}',
+            'the check {findingId:string} behaves {behavior:"as shipped"|"silently"|"overeagerly"}',
+            "the engine source also writes {extraSourceId:string}",
+          ],
+          when: ["the audit runs"],
+          then: [
+            'the audit {verdict:"passes"|"fails"}',
+            'the audit names {named:string} as {list:"none"|"unpaired"|"duplicatePairs"|"unregistered"|"silent"|"overeager"}',
+          ],
+        },
+        description:
+          "The world runs the audit function on the shipped probe table, on that table without the pair for the named check, or on that table with the named check's pair written twice, over the shipped registries and the scanned source. A check that behaves silently has its findings removed from every probe's run; one that behaves overeagerly has a finding added to every probe's run. A source that also writes an id adds it to the scanned source ids, and `nothing` adds none. The named ids are joined by a comma and a space, or `nothing` when the audit names none.",
+      },
+      design: {
+        registries:
+          "`graphValidatorIds` and `extractFindingIds`; the Markdown extractor's `extract/invalid-markdown-structure`, `extract/unrecognized-heading` and `extract/invalid-frontmatter` join `extractFindingIds`, so one registry lists every extraction finding id.",
+        probeEntry:
+          "`{ id: string; refusing: Probe; accepting: Probe }`, with `type Probe = { graph: GraphSchema } | { carriers: Readonly<Record<string, string>> }`, a graph for a graph validator and root-relative carrier files for an extraction finding.",
+        auditFunction:
+          "`auditValidatorEvidence(table: readonly ProbeEntry[], run: (probe: Probe) => readonly Finding[], registered: readonly string[], source: SourceScan): AuditAnswer`, where `run` is graph validation or extraction as the probe needs, so a world can wrap it to silence one id or report it everywhere; every finding id any probe run reports outside `registered` is `unregistered`.",
+        auditAnswer:
+          "`{ unpaired: string[]; duplicatePairs: string[]; strayPairs: string[]; unregistered: string[]; unresolved: string[]; silent: string[]; overeager: string[] }`, each sorted in code-unit order and each id listed once; the audit passes when all seven are empty and otherwise fails with the non-empty lists in its message.",
+        sourceScan:
+          "`scanFindingIds(srcRoot: string): SourceScan`, with `type SourceScan = { ids: string[]; unresolved: string[] }`, reads every `.ts` file under `src/` with the TypeScript scanner, so comments are skipped. A string literal or a template literal without substitutions whose whole text matches `^(conformance|honesty|extract)/[a-z][a-z-]*$` is an id, and one outside every registry is `unregistered`. A literal whose text matches `^(conformance|honesty|extract)/[a-z-]*$` but is no whole id, or a template literal whose text before its first substitution matches it, is `unresolved`, named `<file>:<line>`. The gate suite scans the real source tree.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.validator-self-testing.shipped-checks-paired",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/validator-self-testing.shipped-checks-paired.sdp.md",
+    title: "Every shipped check reports its refusing probe and leaves its near miss alone",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the audit over the shipped registries, probe table and source.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the audit reads {table: "the shipped probe table"}',
+              'the check {findingId: "conformance/orphans"} behaves {behavior: "as shipped"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
+            ],
+            when: ["the audit runs"],
+            then: [
+              'the audit {verdict: "passes"}',
+              'the audit names {named: "nothing"} as {list: "none"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.validator-self-testing.silent-check-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/validator-self-testing.silent-check-named.sdp.md",
+    title: "A check that stops reporting is named silent",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the audit on a check whose findings no longer reach any run.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the audit reads {table: "the shipped probe table"}',
+              'the check {findingId: "conformance/orphans"} behaves {behavior: "silently"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
+            ],
+            when: ["the audit runs"],
+            then: [
+              'the audit {verdict: "fails"}',
+              'the audit names {named: "conformance/orphans"} as {list: "silent"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.validator-self-testing.duplicate-pair-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/validator-self-testing.duplicate-pair-named.sdp.md",
+    title: "A check paired twice is named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the audit on a table that holds one check's probe pair twice.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the audit reads {table: "the shipped table with one pair twice"}',
+              'the check {findingId: "conformance/orphans"} behaves {behavior: "as shipped"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
+            ],
+            when: ["the audit runs"],
+            then: [
+              'the audit {verdict: "fails"}',
+              'the audit names {named: "conformance/orphans"} as {list: "duplicatePairs"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.validator-self-testing.overeager-check-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/validator-self-testing.overeager-check-named.sdp.md",
+    title: "A check that reports its near miss is named overeager",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the audit on a check that reports every probe it runs over.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the audit reads {table: "the shipped probe table"}',
+              'the check {findingId: "conformance/orphans"} behaves {behavior: "overeagerly"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
+            ],
+            when: ["the audit runs"],
+            then: [
+              'the audit {verdict: "fails"}',
+              'the audit names {named: "conformance/orphans"} as {list: "overeager"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.validator-self-testing.unpaired-check-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/validator-self-testing.unpaired-check-named.sdp.md",
+    title: "A registered check without a probe pair is named unpaired",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the audit on a table that has lost one check's probe pair.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the audit reads {table: "the shipped table without one pair"}',
+              'the check {findingId: "conformance/orphans"} behaves {behavior: "as shipped"}',
+              'the engine source also writes {extraSourceId: "nothing"}',
+            ],
+            when: ["the audit runs"],
+            then: [
+              'the audit {verdict: "fails"}',
+              'the audit names {named: "conformance/orphans"} as {list: "unpaired"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.validator-self-testing.unregistered-id-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/validator-self-testing.unregistered-id-named.sdp.md",
+    title: "A finding id the source writes outside every registry is named",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the audit on a source that writes a finding id no registry lists.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'the audit reads {table: "the shipped probe table"}',
+              'the check {findingId: "conformance/orphans"} behaves {behavior: "as shipped"}',
+              'the engine source also writes {extraSourceId: "conformance/unlisted-check"}',
+            ],
+            when: ["the audit runs"],
+            then: [
+              'the audit {verdict: "fails"}',
+              'the audit names {named: "conformance/unlisted-check"} as {list: "unregistered"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.typed-dependency-floor",
@@ -1269,10 +1515,10 @@ export const validationSpecs = [
           "An open question's links entry is checked whole as a Spec id or entry address, under `spec:model.open-question-fields`, at path `intent.openQuestions[<i>].links[<j>]`. It uses the same malformed-token error; an otherwise parsed id outside the Spec namespace has reason `expected spec namespace`.",
           'A token that fails `parseId` is an error with the message `Mention "<token>" in "<spec>" at <path> is not a Spec id or entry address: <reason>`, where `<reason>` is the grammar\'s refusal text with its `Invalid ID "<token>": ` prefix stripped.',
           'A token whose Spec part names no Primitive node is an error with the message `Mention in "<spec>" at <path> points to missing target "<token>".`, followed by the referential-integrity nearest-id suggestion when one is unique.',
-          'A token whose Spec exists and whose entry address names no key of that `design` or `ui` section, names `description` there, names a question key no open question of that Spec carries, or names a rule key that Spec\'s `behavior.ruleKeys` does not carry, is an error with the message `Mention in "<spec>" at <path> points to missing entry "<section>.<key>" of "<target>".`',
+          'A token whose Spec exists and whose entry address names no key of that `design` or `ui` section, names `description` there, names a question key no open question of that Spec carries, names a rule key that Spec\'s `behavior.ruleKeys` does not carry, or names a term key that Spec\'s `model.termKeys` does not carry, is an error with the message `Mention in "<spec>" at <path> points to missing entry "<section>.<key>" of "<target>".`',
           "Errors are reported once per scanning Spec, text path, and distinct token; `subjectId` is the scanning Spec, `relatedId` the token as written, `path` the text path, and `file` the Spec's carrier. The path is `narrative` or the section path in the mention audit's form, such as `intent.openQuestions[0].question`, `behavior.rules[2]`, `design.step2`, or `model.terms.<term>`.",
           'A target Spec that exists and shares no declared `refines`, `dependsOn`, `constrainedBy`, `decidedBy`, `verifies`, or `supersedes` edge with the scanning Spec, in either direction, is one warning per scanning Spec and target Spec pair, counting every location where any token names that Spec or one of its entries. The message is `Mention of "<target>" in "<spec>" at <n> locations, first at <path>, with no declared relation between them; informative only. Declare the relation that fits, or leave the mention as prose and let the warning stand when none does.` with `<n>` the count of distinct paths, written `1 location` when it is one, and `<path>` the first in scan order; `subjectId` is the scanning Spec, `relatedId` the target Spec id, `path` that first path, and `file` the Spec\'s carrier. An address on the scanning Spec\'s own id is checked for its entry and never warned.',
-          "A mention error or pair warning carries `line` when the location table records the corresponding text path; `behavior.rules[<i>]` uses `rule[<i>]`, `behavior.flows[<i>]` uses `flow[<i>]`, an open question's text uses `question[<i>]`, and a question field uses `question[<i>].<field>`, with each question link using the `links` row. Entries of Rule, Workflow and Contract use the same behavior paths as entries of Behavior. An unrecorded line is omitted.",
+          "A mention error or pair warning carries `line` when the location table records the corresponding text path; `behavior.rules[<i>]` uses `rule[<i>]`, `behavior.flows[<i>]` uses `flow[<i>]`, an open question's text uses `question[<i>]`, a question field uses `question[<i>].<field>`, with each question link using the `links` row, and a Model term's definition, at `model.terms.<term>`, uses `term[<i>]`. Entries of Rule, Workflow and Contract use the same behavior paths as entries of Behavior. An unrecorded line is omitted.",
           "The warning is honest when it stands: the six relations are typed, a mention that none of them describes is lawful prose, and no author declares a relation to silence the report. Warnings never fail `sdp validate`; the mention audit recipe reports every location of every pair as data and stays the way to list them at once.",
         ],
       },
@@ -1617,54 +1863,385 @@ export const validationSpecs = [
     id: "spec:validation.superseded-decision-signal",
     specKind: "rule",
     altitude: "story",
-    readiness: "scoped",
+    readiness: "ready",
     file: "specs/validation/superseded-decision-signal.sdp.md",
     title: "A Spec shaped by a superseded decision warns",
     narrative:
-      "The original design checked lifecycle integrity. It flagged a superseded Spec that live Specs still depend on, and a deprecated decision still named by `decidedBy` (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.3.4). A corpus may keep a replaced decision whose text still explains something a reader needs. Its `supersedes` edge and a shaped Spec's `decidedBy` edge then make a stale shaping relation visible in the graph, but no check reads the two together.",
+      "The original design checked lifecycle integrity. It flagged a superseded Spec that live Specs still depend on, and a deprecated decision still named by `decidedBy` (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.3.4). A corpus may keep a replaced decision whose text still explains something a reader needs. Its `supersedes` edge and a shaped Spec's `decidedBy` edge then make a stale shaping relation visible in the graph, and this signal reads the two together.\n\nOnly `decidedBy` says that a ruling shapes a Spec now. A `refines` between decisions narrows a ruling for one case and stays true after the ruling it narrows is replaced, and a `dependsOn` that names a decision is not how a corpus says a ruling shapes it, so reading either would warn about relations that are not stale. When a replacement is itself replaced, the author needs the record at the end of the chain, so the warning names that record and leaves the steps between to the decision register.",
     sections: {
       intent: {
         problem:
           "A Spec can stay shaped by a decision that a later decision replaced, and nothing tells its author that the ruling it rests on has moved.",
         outcome:
           "Surface a live Spec that is still shaped by a decision another decision has superseded, as an informative warning.",
-        openQuestions: [
-          {
-            question:
-              "Does a corpus keep a replaced decision whose text a reader still needs beside its `supersedes` edge?",
-            blocking: true,
-            key: "keptRecord",
-            decider: "owner",
-            trigger: "a corpus keeps a replaced decision record whose text a reader still needs",
-          },
-          {
-            question:
-              "Does the signal read only `decidedBy`, or also a `refines` or `dependsOn` that names a superseded decision?",
-            blocking: false,
-            key: "signalReach",
-            decider: "owner",
-            provisional: "the signal reads `decidedBy` only",
-          },
-          {
-            question:
-              "When a superseding decision is itself superseded, does the warning name the decision at the end of the chain?",
-            blocking: false,
-            key: "supersededChain",
-            decider: "owner",
-          },
-        ],
       },
       behavior: {
         rules: [
-          "The signal reads `supersedes` edges between decisions kept in the graph and never reads a `refines` between decisions; a deleted decision is handled by referential integrity.",
-          "A Spec that names a decision through `decidedBy`, where another decision `supersedes` that decision, carries one warning for each such pair, naming the superseded decision and every decision that supersedes it.",
-          "The warning is informative and never fails validation, as the orphan and gap signals never do, and its severity is fixed by the Protocol.",
+          "The signal reads two kinds of authored edge and nothing else: `decidedBy` from a Spec to a decision, and `supersedes` between decisions. A `refines`, `dependsOn` or `constrainedBy` that names a superseded decision is never read, and neither is a `refines` between decisions.",
+          "A corpus may keep a replaced decision while its text explains something a reader still needs; keeping it is lawful, and a deleted decision leaves a dangling `decidedBy` that referential integrity reports and this signal does not read.",
+          "A live Spec that names through `decidedBy` a decision another decision supersedes carries one warning for that pair, with the shaped Spec as its subject and the superseded decision as its related Spec; a Spec shaped by two superseded decisions carries two warnings.",
+          "The warning names the decision at the end of each replacement chain: from the superseded decision the walk follows `supersedes` to the decisions that replace it, and on from each of those, and a decision it reaches that no decision supersedes is an end. Where the chain branches, the warning names every end.",
+          "The walk visits each decision once. A loop is a set of decisions the walk reaches, the superseded decision included, that supersede one another in a cycle, or one decision that supersedes itself. When the walk reaches a loop, the warning says the chain of replacements closes on itself and names each decision in a loop it reaches, and no other decision it passes through; when it also reaches an end, it names the ends as well. A loop is never an error and is never followed twice.",
+          "The signal reads every `supersedes` edge whatever rung either decision states, so a replacement still below `ready` is named as it stands and its rung is read where the reader looks it up.",
+          "A Spec that a resolving `supersedes` edge targets is not live and carries no warning for the decisions it names. A decision that supersedes another stays live until it is itself superseded, so its own `decidedBy` relations warn as any live Spec's do, even when the walk from the decision it names reaches it.",
+          "The warning never fails validation, as the orphan and gap signals never do; the Protocol fixes its severity and no setting changes it.",
           "The `supersedes` edge itself is never warned, and a superseded decision is never warned for being superseded.",
-          "The signal reads the authored edges of the one graph and nothing else; it judges no content and never asks whether the newer ruling fits the Spec.",
+          "The signal judges no content: it never asks whether the newer ruling fits the shaped Spec, and moving the `decidedBy` to the end of the chain, or deleting the replaced record, is the author's edit.",
+        ],
+        ruleKeys: {
+          readsDecidedBy: "rules[0]",
+          keptRecordLawful: "rules[1]",
+          onePerPair: "rules[2]",
+          chainEnd: "rules[3]",
+          closedChain: "rules[4]",
+          anyRung: "rules[5]",
+          liveSubjectsOnly: "rules[6]",
+          informative: "rules[7]",
+          noSupersedesWarning: "rules[8]",
+          noContentJudgment: "rules[9]",
+        },
+        exampleSpace: {
+          given: [
+            'a {subject:"live Spec"|"superseded decision"|"replacing decision"} names the probe decision through {relation:"decidedBy"|"dependsOn"}',
+            'the probe decision is replaced by {replacement:"no decision"|"one decision"|"a chain of two decisions"|"two decisions at once"|"a chain that closes on itself"|"an end and a loop at once"}',
+            'every replacing decision states {replacementRung:"idea"|"ready"}',
+          ],
+          when: ["the graph is validated"],
+          then: [
+            "the report holds {warnings:number} superseded-decision warnings",
+            "the warnings name {named:string}",
+            "the warning is {validatorId:string} in the {family:string} family at severity {severity:string}",
+            "the warning has the subject {subjectId:string} and the related Spec {relatedId:string}",
+            "the warning sits at {path:string} in {file:string} on line {line:number}",
+            'the warning message follows {template:"message"|"closedChainMessage"|"mixedChainMessage"}',
+            "the report holds {errorCount:number} errors",
+          ],
+        },
+        description:
+          "Each world builds its graph in memory, and every probe Spec carries its kind's evidence, so only the signal moves the findings. Each probe's full id joins the `probe` family and its name, as `probe.decision-a` does. A live subject is the behavior Spec `shaped` in the file `shaped.sdp.md`, whose location table records its `decidedBy` row on line 7. A superseded subject is the decision `decision-s`, which `decision-b` supersedes, and a replacing subject is `decision-b` itself. The subject names the probe decision `decision-a`, and the replacing decisions are `decision-b`, `decision-c` and `decision-d`, which state the rung the point binds. One replacement is `decision-b` superseding `decision-a`; a chain of two adds `decision-c` superseding `decision-b`; two at once are `decision-b` and `decision-c` each superseding `decision-a`; a closed chain is `decision-b` superseding `decision-a` and `decision-a` superseding `decision-b`; an end and a loop at once are `decision-b` and `decision-c` each superseding `decision-a`, with `decision-c` and `decision-d` superseding each other. The named decisions are the ends and loop members the warnings name, full ids joined by a comma and a space in code-unit order, or `nothing` when no warning names any. The field and message steps read the one warning the point reports, and the message step fills the Design entry it names with that warning's ids.",
+      },
+      design: {
+        validatorId:
+          "`conformance/superseded-decisions`, registered as `supersededDecisions` in `graphValidatorIds`; a new id, never a reused one.",
+        family:
+          "`conformance`: the signal reads whether a Spec's authored relations still reach a current ruling, as the orphan signal reads whether any relation reaches a Spec.",
+        severity: "`warning`, fixed by the Protocol.",
+        warningFields:
+          "`subjectId` is the shaped Spec, `relatedId` the superseded decision it names, `path` is `relation.decidedBy.<relatedId>`, the location table's entry for that relation, `file` is the shaped Spec's file, and `line` is that row's line, present only when the carrier recorded one.",
+        message:
+          '`Spec "<subjectId>" is decided by "<relatedId>", which a later decision supersedes; the chain of replacements ends at "<end>" (informative, never a gate).`, with `ends at "<end>", "<end>"` when the chain branches.',
+        closedChainMessage:
+          '`Spec "<subjectId>" is decided by "<relatedId>", whose chain of replacements closes on itself through "<loop-id>", "<loop-id>" (informative, never a gate).`, used when the walk reaches no end, naming each decision in a loop it reaches.',
+        mixedChainMessage:
+          '`Spec "<subjectId>" is decided by "<relatedId>", whose chain of replacements ends at "<end>" and also closes on itself through "<loop-id>", "<loop-id>" (informative, never a gate).`, used when the walk reaches both, with every end and every loop member listed as the other two messages list them.',
+        chainWalk:
+          "read the resolving, declared `supersedes` edges whose source and target are both decision Specs, and index each by its target; from the superseded decision, visit each decision reachable along those edges from target to source once; an end is a reached decision other than the start that no such edge targets; a loop member is a reached decision, the start included, in a strongly connected component of two or more decisions or with an edge to itself; ends and loop members are collected apart.",
+        idOrder:
+          "the ids a message lists sort in code-unit order, and the findings sort as every report's findings do.",
+        skippedPairs:
+          "no warning for a `decidedBy` whose target does not resolve, is not a decision, or is targeted by no `supersedes` edge the walk reads, and none for a subject a resolving `supersedes` edge targets; a subject the walk reaches is still checked.",
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.replaced-ruling-warns",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/superseded-decision-signal.replaced-ruling-warns.sdp.md",
+    title: "A Spec shaped by a replaced decision warns once and fails nothing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the signal on a live Spec whose decision one later decision supersedes.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-b"}',
+              'the warning is {validatorId: "conformance/superseded-decisions"} in the {family: "conformance"} family at severity {severity: "warning"}',
+              'the warning has the subject {subjectId: "spec:probe.shaped"} and the related Spec {relatedId: "spec:probe.decision-a"}',
+              'the warning sits at {path: "relation.decidedBy.spec:probe.decision-a"} in {file: "shaped.sdp.md"} on line {line: 7}',
+              'the warning message follows {template: "message"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.chain-end-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/superseded-decision-signal.chain-end-named.sdp.md",
+    title: "The warning names the decision at the end of a chain of replacements",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the chain walk where the replacing decision is itself replaced.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "a chain of two decisions"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-c"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.branch-names-every-end",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/superseded-decision-signal.branch-names-every-end.sdp.md",
+    title: "A replacement chain that branches names every end",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the chain walk where two decisions replace one.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "two decisions at once"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-b, spec:probe.decision-c"}',
+              'the warning message follows {template: "message"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.closed-chain-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/superseded-decision-signal.closed-chain-named.sdp.md",
+    title: "A chain of replacements that closes on itself is named and fails nothing",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the chain walk where two decisions supersede each other.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "a chain that closes on itself"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-a, spec:probe.decision-b"}',
+              'the warning message follows {template: "closedChainMessage"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.end-and-loop-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/superseded-decision-signal.end-and-loop-named.sdp.md",
+    title: "A chain of replacements that reaches an end and a loop names both",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the chain walk where one branch ends and the other closes on itself.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "an end and a loop at once"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-b, spec:probe.decision-c, spec:probe.decision-d"}',
+              'the warning message follows {template: "mixedChainMessage"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.live-replacement-warns",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/superseded-decision-signal.live-replacement-warns.sdp.md",
+    title: "A decision still decided by the record it replaces warns",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the live-subject rule on a replacing decision that names the decision it supersedes through decidedBy.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "replacing decision"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-b"}',
+              'the warning has the subject {subjectId: "spec:probe.decision-b"} and the related Spec {relatedId: "spec:probe.decision-a"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.dependency-unread",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/superseded-decision-signal.dependency-unread.sdp.md",
+    title: "A dependency on a replaced decision raises no warning",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the signal's reach on a Spec that names a superseded decision only through dependsOn.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "live Spec"} names the probe decision through {relation: "dependsOn"}',
+              'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 0} superseded-decision warnings",
+              'the warnings name {named: "nothing"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.superseded-subject-silent",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/superseded-decision-signal.superseded-subject-silent.sdp.md",
+    title: "A superseded decision is not warned for the decision it names",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Execute the live-subject rule on a decision that is itself superseded.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "superseded decision"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "ready"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 0} superseded-decision warnings",
+              'the warnings name {named: "nothing"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.superseded-decision-signal.replacement-below-ready-named",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/superseded-decision-signal.replacement-below-ready-named.sdp.md",
+    title: "A replacement still below ready is named as it stands",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the signal where the decision that supersedes the shaping decision states `idea`.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a {subject: "live Spec"} names the probe decision through {relation: "decidedBy"}',
+              'the probe decision is replaced by {replacement: "one decision"}',
+              'every replacing decision states {replacementRung: "idea"}',
+            ],
+            when: ["the graph is validated"],
+            then: [
+              "the report holds {warnings: 1} superseded-decision warnings",
+              'the warnings name {named: "spec:probe.decision-b"}',
+              "the report holds {errorCount: 0} errors",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
   {
     id: "spec:validation.architecture-constraints",
@@ -1738,7 +2315,7 @@ export const validationSpecs = [
     file: "specs/validation/corpus-rules.sdp.md",
     title: "Corpus-authored rules run on the one validation path",
     narrative:
-      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate runs `sdp validate` and parses its summary line, then checks its own context isolation, entry addresses, dependency cycles, question keys, prose mentions, cited laws and Pack pages. It also parses carrier frontmatter to read kind, readiness and relations, a second read model that a graph-based corpus-rule runner would remove.\n\nA rules file holds the body `sdp q` evaluates, so a rule tried through `sdp q` runs unchanged under `sdp validate`, and a catalog recipe whose answer carries findings, such as the architecture walk, is a rules file as shipped. The runner reads only the answer's findings, so the recipe keeps the rest of its answer for a reader. Corpus findings print after the Protocol's and are tallied on a line of their own, so a gate that reads the Protocol's summary line reads it unchanged; any error, the Protocol's or the corpus's, exits 1, and the two lines say which. Each rules file receives its own copy of what it reads, so a careless rule cannot change another rule's input and the order of the files changes only the order of the output. Its parameters are its own too: a catalog recipe answers a parameter name it does not take with that name and no findings, so parameters shared by every file would fail the walk on the names another file reads.",
+      "The original design let a team add its own rules beside the built-in validators, each with an id, a severity and the whole graph query API, run in the same pass and reported in the same output (`docs/lineage/v0-design/06-extraction-and-validation.md` §6.5). The Protocol has two check families, conformance and honesty, and every validator belongs to one of them. The architectural annotation decision sends a corpus's own rules to the corpus's own gate.\n\nThe first adopter's gate runs `sdp validate` and parses its summary line, then checks its own context isolation, entry addresses, dependency cycles, question keys, prose mentions, cited laws and Pack pages. It also parses carrier frontmatter to read kind, readiness and relations, a second read model that a graph-based corpus-rule runner would remove.\n\nA rules file holds the body `sdp q` evaluates, so a rule tried through `sdp q` runs unchanged under `sdp validate`, and a catalog recipe whose answer carries findings, such as the architecture walk, is a rules file as shipped. A rules file that needs a shipped recipe's answer calls it through `recipes` and keeps no copy of its code. The runner reads only the answer's findings, so the recipe keeps the rest of its answer for a reader. Corpus findings print after the Protocol's and are tallied on a line of their own, so a gate that reads the Protocol's summary line reads it unchanged; any error, the Protocol's or the corpus's, exits 1, and the two lines say which. Each rules file receives its own copy of what it reads, so a careless rule cannot change another rule's input and the order of the files changes only the order of the output. Its parameters are its own too: a catalog recipe answers a parameter name it does not take with that name and no findings, so parameters shared by every file would fail the walk on the names another file reads.",
     sections: {
       intent: {
         problem:
@@ -1748,8 +2325,8 @@ export const validationSpecs = [
       },
       behavior: {
         rules: [
-          "A corpus rule is a graph body the corpus authors, given `g`, `graph`, `report` and `params` as a recipe body is, and returning findings that each carry a rule id, a subject, a message and a severity.",
-          "A corpus rule reads the one derived graph, the Protocol's report and the `params` the operator supplies for its file, and no carrier, source file or network; that is the rule author's obligation, because the runner evaluates the body with the trust `sdp q` asks and claims no sandbox.",
+          "A corpus rule is a graph body the corpus authors, given `g`, `graph`, `report`, `params` and `recipes` as a recipe body is, and returning findings that each carry a rule id, a subject, a message and a severity.",
+          "A corpus rule reads the one derived graph, the Protocol's report and the `params` the operator supplies for its file, directly or through the shipped recipes it calls, and no carrier, source file or network; that is the rule author's obligation, because the runner evaluates the body with the trust `sdp q` asks and claims no sandbox.",
           "Validation runs corpus rules only from a file the operator names with `sdp validate --rules PATH`, which may repeat, and never from a file it finds in the corpus or in a configuration; it asks the trust `sdp q` already asks, to run code the operator chose.",
           "Rules files run one at a time in the order named, each to completion, after the Protocol's validators; every file receives the same Protocol report and none sees another file's findings, so the order changes only the order of the output.",
           "Each rules file receives its own copy of the graph and the report, made after the graph is written, and its own `params`, so a body that changes what it receives changes no node, edge, delivery fact or Protocol finding, and nothing another rules file receives.",
@@ -1760,13 +2337,15 @@ export const validationSpecs = [
           "A corpus finding carries severity `error` or `warning`. When the operator names `--rules`, an `error` corpus finding makes `sdp validate` exit nonzero and a `warning` stays informative; without `--rules` no corpus rule runs and only the Protocol's validators set the exit code.",
           "A corpus finding moves no readiness floor and reaches no other surface: not the report `sdp q` hands a body, not the reader, not the written graph, and not the Design Review or another projection.",
           "A rules file that cannot be read or does not parse, a body that throws, or an answer that is not an object with a `findings` array of well-formed findings is a rule execution failure; `sdp validate` reports it in the corpus section and exits nonzero, so a broken rule never passes as a clean run. A failed file reports none of its findings, and the other files still run.",
-          "`sdp validate --watch` with `--rules` reads and runs every named rules file afresh in each cycle, after the Protocol's validators; an edit to a rules file alone starts no cycle, because the watcher watches carriers.",
+          "`sdp validate --watch` with `--rules` reads and runs every named rules file afresh in each cycle, after the Protocol's validators, and a create, change, delete or rename of a named rules file starts a cycle as a carrier edit does, wherever the file lives, under a directory discovery skips such as `node_modules` included.",
+          "Under `--watch`, each cycle after the first reads again every file a `--params @PATH` or `KEY=@PATH` after a `--rules` names, and an edit to such a file starts a cycle, wherever the file lives; a file that cannot be read or parsed then fails only the rules file it belongs to, for that cycle, while the first cycle's read refuses the command as `paramsFlag` states.",
+          "Address resolution (recipe 25) and dependency cycles (recipe 26) answer with `findings` beside the rest of their answers, as the architecture walk (recipe 42), external registers (recipe 50) and entry citations (recipe 51) do, so a corpus names any of those shipped files as a rules file, or calls it through `recipes` from a rules file of its own.",
           "When the graph does not derive, no rules file runs, and the corpus summary line says so.",
         ],
         exampleSpace: {
           given: [
             "a probe corpus the Protocol's validators find clean",
-            'a first rules file that {first:"returns one error finding"|"returns one warning finding"|"returns a finding with no subject"|"empties the graph it receives"}',
+            'a first rules file that {first:"returns one error finding"|"returns one warning finding"|"returns a finding with no subject"|"empties the graph it receives"|"is rewritten to return one error finding after the first cycle under --watch"|"reads a parameter file that gains a key after the first cycle under --watch"|"reads a parameter file that stops being JSON after the first cycle under --watch"}',
             "a second rules file that returns one warning when the graph it receives holds no node",
           ],
           when: [
@@ -1776,6 +2355,8 @@ export const validationSpecs = [
             "the command exits {exitCode:number}",
             "the Protocol summary line reads {protocolSummary:string}",
             "the corpus summary line reads {corpusSummary:string}",
+            "the second cycle's corpus summary line reads {corpusSummary:string}",
+            "the watcher is still running after the second cycle: {running:boolean}",
           ],
         },
         ruleKeys: {
@@ -1787,6 +2368,8 @@ export const validationSpecs = [
           neverMovesFloor: "rules[10]",
           brokenRuleFails: "rules[11]",
           watchReruns: "rules[12]",
+          watchedParams: "rules[13]",
+          recipesAsRules: "rules[14]",
         },
       },
       design: {
@@ -1795,7 +2378,7 @@ export const validationSpecs = [
         paramsFlag:
           "`--params` on `validate` takes the three forms of `sdp q --params` with the same refusals, before the graph derives; each `--params` belongs to the nearest `--rules` before it in the argument list, whatever other options stand between them; one file's parameters merge as `sdp q` merges them, a key given twice for one file is refused, two files may each take the same key, and a file with no `--params` after it receives `{}`.",
         rulesFile:
-          "a rules file is UTF-8 text holding one plain JavaScript async function body, the form `sdp q` evaluates, with the bindings `g`, `graph`, `report` and `params`; the runner reads the text and never imports it as a module, so no file extension is required and a catalog recipe file under `dist/recipes/` is a lawful rules file.",
+          "a rules file is UTF-8 text holding one plain JavaScript async function body, the form `sdp q` evaluates, with the bindings `g`, `graph`, `report`, `params` and `recipes`; the runner reads the text and never imports it as a module, so no file extension is required and a catalog recipe file under `dist/recipes/` is a lawful rules file.",
         ruleAnswer:
           "`{ findings: [] }`: the body returns an object whose `findings` is an array, possibly empty; the runner reads `findings` and nothing else, so the answer's other keys stay the body's own data and are never printed.",
         ruleFinding:
@@ -1811,7 +2394,7 @@ export const validationSpecs = [
         exitCodes:
           "with `--rules`, `sdp validate` exits 1 when a Protocol finding is an error, a corpus finding is an error, a rules file fails or the graph does not derive, and 0 otherwise; the two summary lines say which.",
         failureReasons:
-          "`<reason>` is `cannot be read (<cause>)`, `does not parse at line <L>, column <C>: <cause>`, `threw: <message on one line>`, `returned no findings array`, followed by `; diagnostics: <the answer's diagnostics as JSON>` when the answer carries `diagnostics` or by `; unknownParams: <as JSON>; accepts: <as JSON>` when it carries `unknownParams`, or `finding <N> has no lawful <field>`, with N counted from 1.",
+          "`<reason>` is `cannot be read (<cause>)`, `does not parse at line <L>, column <C>: <cause>`, `threw: <message on one line>`, `returned no findings array`, followed by `; diagnostics: <the answer's diagnostics as JSON>` when the answer carries `diagnostics` or by `; unknownParams: <as JSON>; accepts: <as JSON>` when it carries `unknownParams`, `finding <N> has no lawful <field>`, with N counted from 1, or, under `--watch` after the first cycle, `its parameters cannot be read (<cause>)` when a parameter file named after its `--rules` cannot be read or parsed.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -1921,6 +2504,116 @@ export const validationSpecs = [
               "the command exits {exitCode: 1}",
               'the Protocol summary line reads {protocolSummary: "validate: 0 errors · 0 warnings (conformance + honesty over the one graph)"}',
               'the corpus summary line reads {corpusSummary: "corpus rules: 0 errors · 0 warnings · 1 of 1 files failed (the corpus\'s own rules)"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.corpus-rules.params-edit-starts-a-cycle",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/corpus-rules.params-edit-starts-a-cycle.sdp.md",
+    title: "Editing a parameter file starts a cycle that reads the new parameters",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the watched-parameters rule on a parameter file, outside the probe root, that gains a key after the first cycle.",
+        assumptions: [
+          'The world writes the probe corpus of the error example, a parameter file outside the probe root holding `{ "one": 1 }`, a first rules file whose body returns one warning finding for each key of its `params`, named by `--rules` and followed by `--params @PATH` naming that file, and the second rules file of the copy example. It starts the watcher as the rules-edit example does and, after the first cycle, writes `{ "one": 1, "two": 2 }` to the parameter file, then reads the second cycle\'s corpus summary line and stops the watcher.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "reads a parameter file that gains a key after the first cycle under --watch"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the second cycle's corpus summary line reads {corpusSummary: \"corpus rules: 0 errors · 2 warnings · 0 of 2 files failed (the corpus's own rules)\"}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.corpus-rules.rules-edit-starts-a-cycle",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/corpus-rules.rules-edit-starts-a-cycle.sdp.md",
+    title: "Rewriting a rules file under node_modules starts a cycle that runs the new body",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the watch rule on a rules file that lives under a directory discovery skips and is rewritten after the first cycle.",
+        assumptions: [
+          "The world writes the probe corpus of the error example, a first rules file under the probe root's `node_modules/probe/` whose body returns one warning finding, and the second rules file of the copy example. It starts `sdp validate --watch` on the probe root with the two files named by `--rules` in that order, waits for the first cycle, rewrites the first file to return one error finding in place of the warning, waits for the second cycle, reads its corpus summary line and stops the watcher.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "is rewritten to return one error finding after the first cycle under --watch"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the second cycle's corpus summary line reads {corpusSummary: \"corpus rules: 1 errors · 0 warnings · 0 of 2 files failed (the corpus's own rules)\"}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.corpus-rules.unreadable-params-fail-one-file",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/corpus-rules.unreadable-params-fail-one-file.sdp.md",
+    title:
+      "A parameter file that stops being JSON fails only its own rules file, and the watcher runs on",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the watched-parameters rule on a parameter file that holds text that is not JSON after the first cycle.",
+        assumptions: [
+          "The world writes the probe corpus, parameter file and rules files of the parameter-edit example and starts the watcher as that example does. After the first cycle it writes text that is not JSON to the parameter file, waits for the second cycle, reads its corpus summary line and, on standard error, the line `corpus rules <path> failed: its parameters cannot be read (<cause>)` for the first file, then checks that the process is still running before it stops the watcher.",
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              "a probe corpus the Protocol's validators find clean",
+              'a first rules file that {first: "reads a parameter file that stops being JSON after the first cycle under --watch"}',
+              "a second rules file that returns one warning when the graph it receives holds no node",
+            ],
+            when: [
+              "the probe corpus is validated with the rules files named by --rules in that order",
+            ],
+            then: [
+              "the second cycle's corpus summary line reads {corpusSummary: \"corpus rules: 0 errors · 0 warnings · 1 of 2 files failed (the corpus's own rules)\"}",
+              "the watcher is still running after the second cycle: {running: true}",
             ],
           },
         ],
@@ -2065,6 +2758,151 @@ export const validationSpecs = [
               'the walk reports {findings: 0} findings with the rule ids {ruleIds: ""}',
               "the walk lists {unclassified: 1} unclassified edges",
               "the command exits {exitCode: 0}",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.external-registers",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/external-registers.sdp.md",
+    title: "A corpus checks the register tokens its prose cites",
+    narrative:
+      "A corpus written against an earlier design cites that design's numbered things by token: its decisions, laws, scenarios, and the extensions the corpus itself adds. The first adopter keeps such a register as a table in its design README and checks the tokens its Specs cite against it with a script that reads the carriers a second way (`libar-platform/design/tools/check.py`). A register is the corpus's own data and never the Protocol's. A token stays prose: the carrier gains no grammar for it and the graph mints no node for it. Recipe 50 reads the tokens the Specs already hold as text, finds them by a pattern the corpus gives, checks them against a register file the corpus passes, and answers with findings, so the check runs as a rules file on the one validation path. Which registers a corpus may cite, and so which files it passes, is its owner's ruling.",
+    sections: {
+      intent: {
+        problem:
+          "A corpus that cites the tokens of an outside register checks them with a script that reads its carriers a second way, or does not check them at all.",
+        outcome:
+          "Check the tokens a corpus cites from an outside register against a register file it supplies, as a rules file, with no new grammar and no graph node.",
+      },
+      behavior: {
+        rules: [
+          "A register token stays prose: the carrier gains no grammar for it, the graph holds no node or edge for it, and no Protocol validator reads it.",
+          "External registers, recipe 50, takes the register as data, a file the corpus passes with `--params register=@PATH`, and the pattern that finds the register's tokens in text, and reads the graph and nothing else.",
+          "It reads every string entry search walks in each Spec, the narrative and every section value with the keys an author coins, open questions and their fields and example steps included, plus each Spec's title and the reason of each relation it declares; it reads no id, fixed field name, Pack manifest, file or source.",
+          "Each match of the pattern in one of those strings cites the matched text as a token, at that Spec and entry.",
+          "A cited token the register does not list is an `unknown-token` finding, once per citing Spec and token.",
+          "A cited token the register retires is a `retired-token` finding, once per citing Spec and token.",
+          "When the caller passes `uncited: true`, each token the register holds that no Spec cites is an `uncited-token` finding; a retired token is never one.",
+          "The answer carries its findings, so the shipped file runs unchanged as a rules file at the severity the corpus passes; a corpus that checks several registers calls the recipe once per register through `recipes` from a rules file of its own, because one rules file is named once.",
+          "The recipe reports and refuses nothing, and states no register: what an outside design may be cited for stays the corpus's own text.",
+        ],
+        exampleSpace: {
+          given: [
+            "a probe corpus whose Spec cites the tokens {cited:string}",
+            "a register file that holds {held:string} and retires {retired:string}",
+          ],
+          when: [
+            "the shipped external-registers file runs as a rules file with the pattern for E-numbers and uncited {uncited:boolean}",
+          ],
+          then: [
+            "the command exits {exitCode:number}",
+            "the corpus findings carry the rule ids {ruleIds:string}",
+          ],
+        },
+        ruleKeys: {
+          tokensStayProse: "rules[0]",
+          registerAsData: "rules[1]",
+          textRead: "rules[2]",
+          citation: "rules[3]",
+          unknownToken: "rules[4]",
+          retiredToken: "rules[5]",
+          uncitedToken: "rules[6]",
+          asRulesFile: "rules[7]",
+        },
+      },
+      design: {
+        registerFile:
+          '`{ "tokens": [token] }`, where each token is a non-empty string the register holds, or `{ "token": "<string>", "retired": <boolean> }`, retired when `retired` is true and held otherwise; other keys of the file and of a token object are the corpus\'s own and ignored, so a register may carry its own columns.',
+        registerParams:
+          'recipe 50 takes `params.register`, the register file\'s object, `params.pattern`, `params.severity`, `"error"` by default or `"warning"`, and `params.uncited`, `false` by default; `register` and `pattern` have no sample, and a missing or malformed parameter returns `{ diagnostics: [{ parameter, problem }] }` and no findings, which fails the file as a rules file.',
+        patternParam:
+          "`params.pattern` is the source of a JavaScript regular expression compiled with the flags `gu`, whose whole match is the token; a pattern that does not compile, that matches the empty string, or that fails to match each of the register's tokens whole is a diagnostic, as is a token the register lists twice.",
+        registerAnswer:
+          "`{ input: { pattern, severity, uncited }, totals: { specs, citations, tokens, unknown, retired, uncited }, tokens, findings }`, where `specs` counts the Specs read, `citations` the matches, `tokens` the distinct cited tokens, and the last three the findings of each rule id.",
+        tokenRow:
+          "`{ token, held, retired, citations, specs }` for each distinct cited token in code-unit order, where `specs` lists the citing Specs by id and an unknown token has `held` and `retired` false.",
+        tokenFinding:
+          "`{ validatorId, subjectId, relatedId, severity, message, file, path, line }` for `unknown-token` and `retired-token`, where `subjectId` is the citing Spec, `relatedId` the token, `file` the Spec's carrier, `path` the first citing text, in the order the title, the narrative and sections as entry search walks them, then relation reasons as authored, written `title`, a text path in the form the prose-mention check writes, such as `narrative`, `behavior.rules[2]` or `design.<key>`, or `relation.<type>.<target>`, and `line` that text's recorded line, left out when not located; findings sort by Spec id, then token.",
+        tokenMessages:
+          "`<spec> cites <token>, which the register does not list` for `unknown-token`, `<spec> cites <token>, which the register retires` for `retired-token`, and `<token> is held by the register and no Spec cites it` for `uncited-token`.",
+        uncitedFinding:
+          '`{ validatorId: "uncited-token", subjectId, severity, message }`, where `subjectId` is the token; these findings follow the others, in the register\'s order.',
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:validation.external-registers.unknown-and-retired",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/external-registers.unknown-and-retired.sdp.md",
+    title: "A cited token the register lacks or retires fails a rules run",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the register check as a rules file over a Spec that cites one held, one retired and one unlisted token.",
+        assumptions: [
+          'The world writes a probe corpus of two story-altitude behavior Specs stating `idea`, each with an Intent outcome, the second declaring `refines` on the first, so the Protocol\'s validators report no finding; the first Spec\'s outcome names the cited tokens in prose. It writes the register file `{ "tokens": ["E-1", "E-2", { "token": "E-7", "retired": true }] }` and runs `sdp validate` on the probe root with `dist/recipes/50-external-registers.js` named by `--rules`, followed by `--params register=@` that file and `--params` holding the pattern `\\bE-\\d+\\b` and `uncited`. The rule ids are the corpus findings\' rule ids in printed order, joined by a comma and a space.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec cites the tokens {cited: "E-1 E-7 E-9"}',
+              'a register file that holds {held: "E-1 E-2"} and retires {retired: "E-7"}',
+            ],
+            when: [
+              "the shipped external-registers file runs as a rules file with the pattern for E-numbers and uncited {uncited: false}",
+            ],
+            then: [
+              "the command exits {exitCode: 1}",
+              'the corpus findings carry the rule ids {ruleIds: "retired-token, unknown-token"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:validation.external-registers.uncited-on-request",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/validation/external-registers.uncited-on-request.sdp.md",
+    title: "A held token no Spec cites fails a rules run only when the caller asks",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Execute the uncited check as a rules file over a Spec that cites one of two held tokens.",
+        assumptions: [
+          'The world writes the probe corpus of the unknown-and-retired example, its first Spec citing only the held token named below, and the register file `{ "tokens": ["E-1", "E-2"] }`, and runs the shipped file as that example does, with `uncited` true.',
+        ],
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe corpus whose Spec cites the tokens {cited: "E-1"}',
+              'a register file that holds {held: "E-1 E-2"} and retires {retired: ""}',
+            ],
+            when: [
+              "the shipped external-registers file runs as a rules file with the pattern for E-numbers and uncited {uncited: true}",
+            ],
+            then: [
+              "the command exits {exitCode: 1}",
+              'the corpus findings carry the rule ids {ruleIds: "uncited-token"}',
             ],
           },
         ],

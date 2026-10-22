@@ -26,8 +26,8 @@
 | 22 | Mention audit | scope, intended | Audit prose mentions |
 | 23 | Entry search | term | Find entries by term |
 | 24 | Pinned declarations | none | List pinned declarations |
-| 25 | Address resolution | addresses | Resolve entry addresses |
-| 26 | Dependency cycles | none | Find dependency cycles |
+| 25 | Address resolution | addresses, severity | Resolve entry addresses |
+| 26 | Dependency cycles | severity | Find dependency cycles |
 | 27 | References into a design | pack | Read code references into a Pack |
 | 28 | Roles, layers and contexts | none | List architecture vocabulary |
 | 29 | Pack design | pack, detail | Review Pack design |
@@ -37,7 +37,7 @@
 | 33 | The design backlog | none | Pick defined design work |
 | 34 | Rule coverage | spec or pack | Find keyed rules no example exercises |
 | 35 | The design diff | base, pack, detail | Compare design at entry grain |
-| 36 | The context bundle | pack or specs, members, budget, declarations | Compose one pass within a budget |
+| 36 | The context bundle | pack or specs, members, budget, declarations, part | Compose one pass within a budget |
 | 37 | The perspective filter | pack, perspective | Select and order Pack members |
 | 38 | The proposal check | proposal, base | Resolve proposal scopes and compare intent |
 | 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
@@ -45,6 +45,14 @@
 | 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
 | 42 | The architecture walk | forbidden, isolated, severity | Check anchored architecture rules |
 | 43 | Planned against realized components | none | Compare component designs with anchors |
+| 44 | Example-space coverage | spec or pack | Report covered and uncovered slot values from decoded example spaces |
+| 45 | Run evidence | runs, commit, spec | Join external CTRF results at test-file grain |
+| 46 | The statement queue | decider | Order waiting readiness statements and questions |
+| 47 | Capability adoption | detail, perspectives | Measure capability use and possible places |
+| 48 | The rule-key proposal | commit, pack or specs | Propose keys for unkeyed rules and flows |
+| 49 | The proposal memo | proposal | Render a proposal as the memo the composing panel hands off |
+| 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
+| 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -66,6 +74,8 @@ binary.
 
 The same CLI publishes five independent read roots with `view`, `census`, `mermaid`, `gherkin`, and `studio`.
 Each publisher's build removes all five projection roots first.
+`sdp generate` publishes all five from one validated graph, synchronizing the vault first;
+`--check-clean` checks the five roots and leaves the vault alone.
 The repository's generate/check scripts preserve and publish all five roots together. They save
 the prior trees before the individual publishers run, preserve each result across the next build's
 invalidation, and restore all five results at the end. In check mode a prior tree must exist for
@@ -122,19 +132,17 @@ pnpm --silent sdp:q "$(cat dist/recipes/25-address-resolution.js)" --params @add
 This catalog stays the one owner of the bodies. The files are derived from it, and the recipe
 check holds each one byte for byte to its body here.
 
-To filter a shipped answer, wrap its body in an async arrow function and return the part you need.
-Give the inner body only its own parameters, so an outer caller's parameters do not become unknown
-names in the recipe:
+To filter a shipped answer, call it through `recipes` with only its own parameters:
 
 ```sh
-pnpm --silent sdp:q "$(printf '%s\n' 'const answer = await (async (params) => {'; cat dist/recipes/33-the-design-backlog.js; printf '%s\n' '})({});' 'return answer.rows.filter((row) => row.specKind === "behavior");')" --json
+pnpm --silent sdp:q 'const answer = await recipes(33); return answer.rows.filter((row) => row.specKind === "behavior")' --json
 ```
 
-The caller's part must hold no shell expansion. Single-quote it as above so the shell inserts only
-the shipped body, while the sink evaluates the whole body once.
+The caller and recipe share one graph and validation report. Each call takes its own parameters.
+The caller's part must hold no shell expansion. Single-quote it as above.
 
 **The contract, in one place.** The front door derives the graph in process and evaluates the body
-you supply; `return` is the output contract. Four bindings are injected:
+you supply; `return` is the output contract. Five bindings are injected:
 
 | Binding | What it is |
 |---|---|
@@ -142,6 +150,10 @@ you supply; `return` is the output contract. Four bindings are injected:
 | `graph` | the raw graph schema object (nodes, edges, claims) |
 | `report` | the validation report, so findings are queryable data and never a gate |
 | `params` | the JSON object `--params` supplies, or `{}` without it; input to the body, never a verb |
+| `recipes` | `recipes(number, parameters?)` runs a shipped body over the same graph and report |
+
+The package also exports `evaluateBody(body, { graph, report?, params? })` to run a body without
+deriving the graph again.
 
 **Body rules.** A body is a plain JavaScript async function body — no `import`/`export`, no
 TypeScript-only syntax. It may `await`. Default output is bounded `util.inspect`; `--json` prints
@@ -927,10 +939,13 @@ refusal or inclusion can therefore make rendered output smaller than these count
 *When you need this: you want every declared component with its members, uses neighbors,
 satisfied Specs, and shaping decisions in one map.*
 
+Takes no parameters. Returns `{ components, subjects, usesEdges, unresolvedUses }`.
+
 ```js
 const accepts = [];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const nodes = graph.nodes;
 const edges = graph.edges;
 const codeNodesById = new Map(
@@ -958,6 +973,7 @@ const ownerOf = (id) => componentIds.has(id) ? id : ownerByMember.get(id);
 const usesOutByComponent = new Map();
 const usedByByComponent = new Map();
 const unresolvedUses = [];
+const pairCounts = new Map();
 
 for (const edge of edges.filter((edge) => edge.type === "uses")) {
   const from = ownerOf(edge.from);
@@ -968,6 +984,8 @@ for (const edge of edges.filter((edge) => edge.type === "uses")) {
   }
   // Local collaborations remain in usesEdges; component fan counts measure boundary crossings.
   if (from === to) continue;
+  const pair = `${from}\u0000${to}`;
+  pairCounts.set(pair, (pairCounts.get(pair) ?? 0) + 1);
   const outgoing = usesOutByComponent.get(from) ?? new Set();
   outgoing.add(to);
   usesOutByComponent.set(from, outgoing);
@@ -1007,11 +1025,21 @@ const components = [...componentIds].sort().map((id) => {
   return {
     id,
     declared: codeNodesById.has(id),
+    label: codeNodesById.get(id)?.label ?? null,
+    file: codeNodesById.get(id)?.file ?? null,
+    line: codeNodesById.get(id)?.line ?? null,
+    role: codeNodesById.get(id)?.role ?? null,
+    layer: codeNodesById.get(id)?.layer ?? null,
+    context: codeNodesById.get(id)?.context ?? null,
+    referencedSpecs: [...new Set(edges.filter(edge => edge.type === "references" && anchors.has(edge.from)).map(edge => edge.to))].sort(),
+    usesCounts: usesOut.map(component => ({ component, edges: pairCounts.get(`${id}\u0000${component}`) ?? 0 })),
+    usedByCounts: usedBy.map(component => ({ component, edges: pairCounts.get(`${component}\u0000${id}`) ?? 0 })),
     members: memberIds.map((memberId) => {
       const member = codeNodesById.get(memberId);
       return {
         id: memberId,
         label: member?.label ?? null,
+        role: member?.role ?? null,
         file: member?.file ?? null,
         line: member?.line ?? null,
       };
@@ -1025,7 +1053,7 @@ const components = [...componentIds].sort().map((id) => {
       .filter((edge) => edge.type === "satisfies" && anchors.has(edge.from))
       .map((edge) => ({ from: edge.from, to: edge.to, claim: edge.claim })),
     shapingDecisions: [...decisionSubjects]
-      .sort(([left], [right]) => left.localeCompare(right))
+      .sort(([left], [right]) => compare(left, right))
       .map(([decisionId, subjects]) => ({
         id: decisionId,
         subjects: [...new Set(subjects)].sort(),
@@ -1039,9 +1067,9 @@ const usesEdges = edges
   .filter((edge) => edge.type === "uses")
   .map((edge) => ({ from: edge.from, to: edge.to, claim: edge.claim }))
   .sort((left, right) =>
-    left.from.localeCompare(right.from) ||
-    left.to.localeCompare(right.to) ||
-    left.claim.localeCompare(right.claim),
+    compare(left.from, right.from) ||
+    compare(left.to, right.to) ||
+    compare(left.claim, right.claim),
   );
 const subjectIds = [...new Set(components.flatMap((component) => component.satisfiedSpecs))].sort();
 const subjects = subjectIds.map((id) => {
@@ -1059,6 +1087,11 @@ const subjects = subjectIds.map((id) => {
 
 return { components, subjects, usesEdges, unresolvedUses };
 ```
+
+Each component row includes its recorded `label`, `file`, `line`, `role`, `layer` and `context`,
+each null when unstated. `referencedSpecs` lists the Specs it and its members reference.
+`usesCounts` and `usedByCounts` give the unit-edge count for each other component in id order,
+while every member row also carries its recorded `role`, or null.
 
 Membership, uses, and satisfies remain the derived structural edges; shaping decisions are the
 `decidedBy` targets of Specs those members realize. Fan counts are graph-side composition, not a
@@ -1481,6 +1514,7 @@ The parameter is `params.spec`, the Spec you are weighing; an unknown id returns
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const id = params.spec ?? "spec:extraction.derive-graph";
 const context = g.specContext(id);
 
@@ -1508,7 +1542,7 @@ const footing = context.relationsOut
   })
   .sort(
     (left, right) =>
-      types.indexOf(left.type) - types.indexOf(right.type) || left.id.localeCompare(right.id),
+      types.indexOf(left.type) - types.indexOf(right.type) || compare(left.id, right.id),
   );
 const count = (key, value) => footing.filter((row) => row[key] === value).length;
 
@@ -1571,7 +1605,7 @@ const escapePattern = /\\([!-/:-@[-`{-~])/gu;
 const idPattern =
   /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"\u0027()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 const mentionPattern =
-  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*))?$/u;
+  /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*))?$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const declared = new Map();
 
@@ -1619,6 +1653,12 @@ for (const spec of g.specs()) {
   collect(context.narrative, "narrative");
 
   for (const [section, content] of Object.entries(context.sections ?? {})) {
+    if (section === "model" && typeof content === "object" && content !== null && !Array.isArray(content)) {
+      for (const [key, value] of Object.entries(content)) {
+        if (key !== "termKeys") collect(value, section, key);
+      }
+      continue;
+    }
     if (section !== "behavior" || typeof content !== "object" || content === null) {
       collect(content, section);
       continue;
@@ -1627,7 +1667,7 @@ for (const spec of g.specs()) {
     // The two fences are skipped by position, never by key name alone: `behavior.exampleSpace`
     // is the gwt-vocabulary fence, and an object entry of `behavior.examples` is a gwt fence.
     for (const [key, entry] of Object.entries(content)) {
-      if (key === "exampleSpace") continue;
+      if (key === "exampleSpace" || key === "stepKeys") continue;
       if (key === "examples" && Array.isArray(entry)) {
         entry.forEach((example, index) => {
           if (typeof example !== "object" || example === null || Array.isArray(example))
@@ -1666,7 +1706,9 @@ for (const spec of g.specs()) {
               questions.some((entry) => typeof entry === "object" && entry !== null && entry.key === key)
             : section === "rule"
               ? Object.hasOwn(sections.behavior?.ruleKeys ?? {}, key)
-              : key !== "description" && Object.hasOwn(sections[section] ?? {}, key);
+              : section === "term"
+                ? Object.hasOwn(sections.model?.termKeys ?? {}, key)
+                : key !== "description" && Object.hasOwn(sections[section] ?? {}, key);
         if (!holds) record(unresolvedPairs, spec.id, token, at, "entry");
       }
       if (to !== spec.id) record(pairs, spec.id, to, at);
@@ -1729,12 +1771,12 @@ inside `entry`, and counts token occurrences in `totals.occurrences`.
 `unresolved` groups by mentioning Spec and token, with `reason: "malformed"` for a refused id or
 address, `"spec"` for an absent Spec, and `"entry"` for an absent own section key, `description`
 in Design or UI, a question key no open question of the Spec carries, or a rule key no rule or
-flow carries.
+flow carries, or a term key no Model term carries.
 An entry address is `spec:<id>#design.<key>` or `spec:<id>#ui.<key>`, with a key matching
 `^[a-z][A-Za-z0-9]*$`. It resolves against the named Spec's own section keys. An entry address may
 also be `spec:<id>#question.<key>`, which resolves when one of the named Spec's open questions
 carries that key in its marker, or `spec:<id>#rule.<key>`, which resolves when the Spec's
-`behavior.ruleKeys` carries that key; there `description` is an ordinary key.
+`behavior.ruleKeys` carries that key; there `description` is an ordinary key. A `spec:<id>#term.<key>` address resolves when `model.termKeys` carries its key.
 
 `unbacked` and `reverseOnly` group valid mentions by mentioning Spec and target Spec, combining
 Spec-level mentions and addresses, including missing entries. Self-addresses never enter these
@@ -1800,7 +1842,14 @@ for (const spec of g.specs()) {
   };
   const ruleKeys = context.sections?.behavior?.ruleKeys ?? {};
   const ruleKeyOf = (entry) => Object.keys(ruleKeys).find((key) => ruleKeys[key] === entry) ?? null;
+  const termKeys = context.sections?.model?.termKeys ?? {};
+  const terms = context.sections?.model?.terms ?? {};
+  const termKeyOf = (entry) => Object.keys(termKeys).find((key) => `terms.${termKeys[key]}` === entry) ?? null;
   const addressOf = (section, entry) => {
+    if (section === "model") {
+      const key = termKeyOf(entry);
+      return key === null ? null : `${spec.id}#term.${key}`;
+    }
     if (section === "behavior") {
       const key = ruleKeyOf(entry);
       return key === null ? null : `${spec.id}#rule.${key}`;
@@ -1823,7 +1872,8 @@ for (const spec of g.specs()) {
     const question = /^openQuestions\[(\d+)\](?:\.(question|decider|links|provisional|trigger)(?:\[\d+\])?)?$/u.exec(entry ?? "");
     const index = question?.[1];
     const rule = /^(rules|flows)\[(\d+)\]$/u.exec(entry ?? "");
-    const located =
+    const termIndex = section === "model" ? Object.keys(terms).findIndex((term) => `terms.${term}` === entry) : -1;
+    const located = termIndex >= 0 ? `term[${termIndex}]` :
       section === "intent" && index !== undefined
         ? `question[${index}]${question[2] && question[2] !== "question" ? "." + question[2] : ""}`
         : section === "behavior" && rule !== null
@@ -1844,7 +1894,7 @@ for (const spec of g.specs()) {
   });
   const visit = (section, entry, key, text, topKey) => {
     const matchedIn = [
-      ...(key !== null && hits(key) ? ["key"] : []),
+      ...(key !== null && (hits(key) || (section === "model" && hits(termKeyOf(entry) ?? ""))) ? ["key"] : []),
       ...(hits(text) ? ["text"] : []),
     ];
     if (matchedIn.length > 0) matches.push(row(section, entry, matchedIn, text, topKey));
@@ -1871,7 +1921,8 @@ for (const spec of g.specs()) {
         section === "design" || section === "ui" || (section === "model" && entry === "terms");
       for (const [name, item] of Object.entries(value)) {
         const path = entry === null ? name : `${entry}.${name}`;
-        if (section === "behavior" && entry === null && name === "ruleKeys") continue;
+        if (section === "behavior" && entry === null && (name === "ruleKeys" || name === "stepKeys")) continue;
+        if (section === "model" && entry === null && name === "termKeys") continue;
         if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(path)) continue;
         walk(
           section,
@@ -1929,6 +1980,8 @@ marker carries a key, at `openQuestions[<n>].question`, has address `spec:<id>#q
 and that key matches as the row's key; the key is not a row of its own. A keyed rule or flow at
 `rules[<n>]` or `flows[<n>]` under Behavior has address `spec:<id>#rule.<key>`. `description` in
 Design or UI, off-grammar keys, other nested paths, and every other entry have `address: null`.
+A keyed Model term has address `spec:<id>#term.<key>` through `model.termKeys`; its key matches
+as a row key, and every Model term takes its line from its `term[<i>]` location row.
 Each row also carries `line`, the line in the Spec's carrier where the entry starts, from the
 location table the Spec context carries. The table locates a top-level Design or UI key other than
 `description` and the text of an open question, at `openQuestions[<n>].question` or, for a question
@@ -1991,19 +2044,26 @@ or a page, and want to know which still resolve.*
 
 The parameter is `params.addresses`, the list of addresses you hold; an empty list returns no
 rows. A long list belongs in a file passed as `--params @PATH`.
+`params.severity` is `"error"` by default or `"warning"`; another value returns diagnostics.
+Returns `{ totals, rows, findings }`; every unresolved row yields an `unresolved-address`
+finding. The shipped body also runs unchanged under `sdp validate --rules`.
 
 ```js
-const accepts = ["addresses"];
+const accepts = ["addresses", "severity"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const severity = Object.hasOwn(params, "severity") ? params.severity : "error";
+if (severity !== "error" && severity !== "warning") {
+  return { diagnostics: [{ parameter: "severity", problem: "Expected error or warning." }] };
+}
 const addresses = params.addresses ?? [
   "spec:consumers.design-review#ui.packPage",
   "spec:consumers.design-review#ui.memberTable",
   "spec:consumers.absent#design.anyKey",
   "spec:consumers.design-review",
 ];
-const expected = "spec:<id>#<section>.<key>, section design, ui, question, or rule; key lower-camel ASCII";
-const pattern = /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*)$/u;
+const expected = "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII";
+const pattern = /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*)$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const rows = addresses.map((address) => {
   const parsed = typeof address === "string" ? pattern.exec(address) : null;
@@ -2015,11 +2075,12 @@ const rows = addresses.map((address) => {
   const context = g.specContext(id);
   const sections = context.sections ?? {};
   const entries = section === "question" ? sections.intent?.openQuestions
-    : section === "rule" ? sections.behavior?.ruleKeys : sections[section];
+    : section === "rule" ? sections.behavior?.ruleKeys
+    : section === "term" ? sections.model?.termKeys : sections[section];
   if (entries === undefined || entries === null || typeof entries !== "object") return miss("section", {available: []});
   const available = (section === "question"
     ? entries.flatMap((entry) => typeof entry?.key === "string" ? [entry.key] : [])
-    : Object.keys(entries).filter((name) => section === "rule" || name !== "description")).sort();
+    : Object.keys(entries).filter((name) => section === "rule" || section === "term" || name !== "description")).sort();
   if (!available.includes(key)) return miss("entry", {available});
   let entry;
   let value;
@@ -2032,6 +2093,10 @@ const rows = addresses.map((address) => {
     const match = /^(rules|flows)\[(\d+)\]$/u.exec(path);
     value = sections.behavior[match[1]][Number(match[2])];
     entry = `${match[1] === "rules" ? "rule" : "flow"}[${match[2]}]`;
+  } else if (section === "term") {
+    const term = entries[key];
+    entry = `term[${Object.keys(sections.model?.terms ?? {}).indexOf(term)}]`;
+    value = sections.model?.terms?.[term];
   } else {
     entry = `${section}.${key}`;
     value = entries[key];
@@ -2045,6 +2110,15 @@ return {
   totals: {addresses: rows.length, resolved: rows.filter((row) => row.resolves).length,
     malformed: count("malformed"), spec: count("spec"), section: count("section"), entry: count("entry")},
   rows,
+  findings: rows.filter(row => !row.resolves).map(row => {
+    const subjectId = typeof row.address === "string" && /\S/u.test(row.address) ? row.address : JSON.stringify(row.address);
+    const why = row.reason === "malformed" ? "not an entry address"
+      : row.reason === "spec" ? `no Spec ${row.id}`
+      : row.reason === "section" ? `${row.id} has no ${row.section} entries`
+      : `${row.id} has no ${row.section} entry ${row.key}`;
+    return { validatorId: "unresolved-address", subjectId, severity,
+      message: `${subjectId} does not resolve: ${why}` };
+  }),
 };
 ```
 
@@ -2056,7 +2130,8 @@ a section or entry miss lists the available keys in code-unit order.
 
 Design and UI addresses resolve to their own keys other than `description`. A question address
 resolves to a question's text. A rule address reads `behavior.ruleKeys` and resolves to its
-rule or flow text, whatever the primary behavior owner. These are the rules the mention
+rule or flow text, whatever the primary behavior owner. A term address reads `model.termKeys`
+and resolves to the term's definition at its `term[<i>]` location. These are the rules the mention
 validator applies, carried by `spec:decisions.checked-mentions` and
 `spec:consumers.agent-surface.address-and-cycle-recipes`. Recipe 22 audits addresses inside
 Specs, and this recipe resolves ones written anywhere else.
@@ -2066,10 +2141,18 @@ Specs, and this recipe resolves ones written anywhere else.
 *When you need this: you want every place where Specs rest on each other, or on themselves,
 through `dependsOn`.*
 
+`params.severity` is `"error"` by default or `"warning"`. Returns
+`{ totals, cycles, findings }`, with a `dependency-cycle` finding per cycle, or `{ diagnostics }`
+for another severity. The shipped body also runs unchanged under `sdp validate --rules`.
+
 ```js
-const accepts = [];
+const accepts = ["severity"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const severity = Object.hasOwn(params, "severity") ? params.severity : "error";
+if (severity !== "error" && severity !== "warning") {
+  return { diagnostics: [{ parameter: "severity", problem: "Expected error or warning." }] };
+}
 const ids = g.specs().map((spec) => spec.id);
 const known = new Set(ids);
 const targets = new Map(ids.map((id) => [id, []]));
@@ -2160,10 +2243,18 @@ return {
     specsInCycles: cycles.reduce((sum, entry) => sum + entry.members.length, 0),
   },
   cycles,
+  findings: cycles.map(({ members, cycle }) => {
+    const subjectId = members[0];
+    const context = g.specContext(subjectId);
+    const location = context.entryLocations.find(row => row.entry === `relation.dependsOn.${cycle[1]}`);
+    return { validatorId: "dependency-cycle", subjectId, severity,
+      message: `${subjectId} rests on itself through dependsOn: ${cycle.join(" -> ")}`,
+      file: context.file, ...(location === undefined ? {} : { line: location.line }) };
+  }),
 };
 ```
 
-The body takes no parameter and reads the whole graph. The walk keeps its own frame stack, so a
+The body reads the whole graph. The walk keeps its own frame stack, so a
 dependency chain of any length runs without recursing. Each entry of `cycles` is a set of two or
 more Specs in which each Spec reaches every other through declared `dependsOn` edges, or one Spec
 that declares `dependsOn` on itself and belongs to no such set. A Spec that reaches a set without
@@ -2176,6 +2267,8 @@ rest only on themselves, and `totals.specsInCycles` every member of either. The 
 never refuses: a cycle is data about the authored dependencies, and the readiness floor reads each
 `dependsOn` target's stated rung without walking a chain. The law is
 `spec:consumers.agent-surface.address-and-cycle-recipes`.
+
+A cycle is reported by the recipe; the corpus chooses whether its findings fail a rules run.
 
 ## 27. References into a design
 
@@ -3009,23 +3102,9 @@ const partsOf = (node, value) => {
       if (unkeyed.length) put("intent.openQuestions", openQuestions.map((question) => question && typeof question === "object"
         ? Object.fromEntries(Object.entries(question).filter(([key]) => !unsupported.has(key))) : question));
     } else if (section === "behavior") {
-      const { behavior, crossListOrder } = behaviorOf(content);
+      const { behavior } = behaviorOf(content);
       const { rules, flows, ruleKeys, ...rest } = behavior;
       if (Object.keys(rest).length) put(section, rest);
-      const keys = unsupported.has("ruleKeys") ? {} : ruleKeys ?? {};
-      if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
-      const entries = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
-      const positions = new Map(Object.keys(keys).map((key, position) => [key, position]));
-      for (const [list, items] of [["rules", rules], ["flows", flows]]) {
-        const unkeyed = [];
-        let listPosition = 0;
-        (items ?? []).forEach((entry, index) => {
-          const key = entries.get(`${list}[${index}]`);
-          if (key === undefined) unkeyed.push(entry);
-          else parts.set(`rule.${key}`, { value: { list, text: entry }, position: positions.get(key), listPosition: listPosition++ });
-        });
-        if (unkeyed.length) put(`behavior.${list}`, items);
-      }
     } else if (section === "model") {
       const { terms, ...rest } = content;
       if (Object.keys(rest).length) put(section, rest);
@@ -3034,6 +3113,54 @@ const partsOf = (node, value) => {
   }
   return parts;
 };
+const rulesOf = (node) => {
+  const { behavior, crossListOrder } = behaviorOf(node.sections?.behavior ?? {});
+  const keys = unsupported.has("ruleKeys") ? {} : behavior.ruleKeys ?? {};
+  const paths = new Map(Object.entries(keys).map(([key, path]) => [path, key]));
+  if (!crossListOrder && Object.keys(keys).length) unordered.add(node.id);
+  return ["rules", "flows"].flatMap((list) => (behavior[list] ?? []).map((text, index) => {
+    const key = paths.get(`${list}[${index}]`) ?? null;
+    return { list, text, key, index, position: key === null ? index : Object.keys(keys).indexOf(key) };
+  }));
+};
+const ruleChanges = (id, a, b) => {
+  const usedA = new Set(), usedB = new Set(), pairs = [];
+  const match = (accept) => {
+    a.forEach((from, i) => {
+      if (usedA.has(i)) return;
+      const j = b.findIndex((to, j) => !usedB.has(j) && accept(from, to));
+      if (j < 0) return;
+      usedA.add(i); usedB.add(j); pairs.push([from, b[j]]);
+    });
+  };
+  // Text survives keying and reordering. Prefer the same key for repeated wording.
+  match((from, to) => from.text === to.text && from.key === to.key);
+  match((from, to) => from.text === to.text && from.list === to.list);
+  match((from, to) => from.text === to.text);
+  match((from, to) => from.key !== null && from.key === to.key);
+  // An unmatched keyed address is removed. Unkeyed entries can be reworded while keying.
+  match((from, to) => from.key === null && from.list === to.list);
+  a.forEach((from, i) => { if (!usedA.has(i)) pairs.push([from, null]); });
+  b.forEach((to, i) => { if (!usedB.has(i)) pairs.push([null, to]); });
+  const address = (entry) => entry?.key ? `${id}#rule.${entry.key}` : null;
+  const value = (entry) => entry === null ? null : { list: entry.list, text: entry.text };
+  return pairs.flatMap(([from, to]) => {
+    const entry = to ?? from, key = to?.key ?? from?.key ?? null;
+    const part = key === null ? `behavior.${entry.list}[${entry.index}]${to === null ? " (base)" : ""}` : `rule.${key}`;
+    const peers = pairs.filter(([a, b]) => a !== null && b !== null && a.list === b.list &&
+      (from?.key === null ? a.list === from.list : a.key !== null && a.key === b.key && (!unordered.has(id) || a.list === from?.list)));
+    const position = (entry, side) => peers.filter((pair) => {
+      const other = pair[side];
+      return (entry.key === null || unordered.has(id) ? other.index < entry.index : other.position < entry.position);
+    }).length;
+    const change = from === null ? "added" : to === null ? "removed"
+      : from.text !== to.text ? "changed" : from.key !== to.key ? "keyed"
+      : from.list !== to.list || position(from, 0) !== position(to, 1) ? "moved" : null;
+    return change === null ? [] : [{ part, change,
+      from: change === "keyed" ? address(from) : value(from),
+      to: change === "keyed" ? address(to) : value(to) }];
+  });
+};
 const ids = [...new Set([...before.keys(), ...after.keys()])].filter((id) => allowed === null || allowed.has(id)).sort();
 const added = ids.filter((id) => !before.has(id));
 const removed = ids.filter((id) => !after.has(id));
@@ -3041,17 +3168,16 @@ const changed = [];
 for (const id of ids) {
   if (!before.has(id) || !after.has(id)) continue;
   const a = partsOf(before.get(id), base), b = partsOf(after.get(id), graph);
-  // Without order across rules and flows on one side, keyed entries compare by order within each list.
-  const order = unordered.has(id) ? "listPosition" : "position";
+  const parts = ruleChanges(id, rulesOf(before.get(id)), rulesOf(after.get(id)));
   if (unordered.has(id)) diagnostics.push({ part: "ruleOrder", id, problem: "One graph keeps no order across rules and flows; keyed entries compare within each list." });
-  const parts = [];
   for (const part of [...new Set([...a.keys(), ...b.keys()])].sort()) {
     const from = a.get(part), to = b.get(part);
-    const position = (entry) => part.startsWith("rule.") ? entry[order] : entry.position;
+    const position = (entry) => entry.position;
     const change = !from ? "added" : !to ? "removed" : !same(from.value, to.value) ? "changed"
       : position(from) !== position(to) ? "moved" : null;
     if (change !== null) parts.push({ part, change, from: from?.value ?? null, to: to?.value ?? null });
   }
+  parts.sort((a, b) => a.part < b.part ? -1 : a.part > b.part ? 1 : 0);
   if (parts.length) changed.push({ id, parts: detail === true ? parts : parts.map((entry) => entry.part) });
 }
 const delta = (a, b) => ({ added: [...new Set(b)].filter((id) => !a.includes(id)).sort(), removed: [...new Set(a)].filter((id) => !b.includes(id)).sort() });
@@ -3087,12 +3213,28 @@ return { base: { schemaVersion: base.schemaVersion, specs: ids.filter((id) => be
 ```
 
 `specs` reports declared intent. A part is an envelope field, narrative, section, relation target,
-or keyed Design, UI, question, rule or model term. A list with an unkeyed entry also compares as a whole, including its keyed entries, so an
-anonymous entry moving around a keyed one remains visible. A keyed entry
-with unchanged value and a different position among its section's keyed entries is `moved`.
-Keyed rule values include their owning list, `rules` or `flows`, so a rule becoming a flow changes
-its value at the same address. Changed values take precedence over order. Line changes and object property serialization order
+or keyed Design, UI, question, rule or model term. Rule and flow entries match first by exact
+text, preferring the same key for repeated wording, then by retained key. Remaining
+unkeyed base entries pair in list order, so adding a key while rewording reports one `changed`
+entry. An unmatched keyed base entry is `removed`; an unmatched head entry is `added`.
+Unchanged text with an added, removed or renamed key reports one `keyed` entry. Its `from` and
+`to` are the old and new addresses, with `null` meaning none. A text edit is `changed`; an
+unchanged entry that changes position or moves between rules and flows is `moved`. Other
+unkeyed collections compare as a whole. An unkeyed rule or flow uses its head index in its part
+name; a removed entry uses its base index with a ` (base)` mark, such as
+`behavior.rules[1] (base)`, so its name differs from a head entry at that position.
+Line changes and object property serialization order
 alone do not change intent.
+
+For a probe whose two rules were keyed and whose second rule was also reworded, the detailed
+`specs.changed` answer is:
+
+```json
+[{ "id": "spec:probe.keying", "parts": [
+  { "part": "rule.first", "change": "keyed", "from": null, "to": "spec:probe.keying#rule.first" },
+  { "part": "rule.second", "change": "changed", "from": { "list": "rules", "text": "Second rule." }, "to": { "list": "rules", "text": "Revised second rule." } }
+] }]
+```
 
 `packs` reports membership additions, removals and relative order changes among retained members.
 `bindings` keeps anchor-derived changes apart, with added and removed ids for realizing units,
@@ -3117,10 +3259,11 @@ Supply exactly one scope: `params.pack`, a Pack id, or `params.specs`, an ordere
 returns. The Pack's framing and full boundary stay visible. `params.budget` defaults to 100,000
 UTF-16 code units and accepts a non-negative integer, including zero. `params.declarations` defaults
 to `"whole"`; `"addresses"` allows the final cut to reduce pinned declarations to entry addresses.
-Any other value returns diagnostics. There is no sample scope.
+Any other value returns diagnostics. `params.part`, a positive integer, requests one part of the
+whole scope. There is no sample scope.
 
 ```js
-const accepts = ["pack", "specs", "members", "budget", "declarations"];
+const accepts = ["pack", "specs", "members", "budget", "declarations", "part"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 const packId = params.pack;
@@ -3128,12 +3271,14 @@ const specIds = params.specs;
 const subset = params.members;
 const budget = params.budget ?? 100000;
 const declarationMode = params.declarations ?? "whole";
+const requestedPart = params.part;
 const diagnostics = [];
 const bad = (scope, problem) => diagnostics.push({ scope, problem });
 const strings = (value) => Array.isArray(value) && value.every((item) => typeof item === "string");
 if ((packId !== undefined) === (specIds !== undefined)) bad("scope", "Supply exactly one of pack or specs.");
 if (!Number.isInteger(budget) || budget < 0) bad("budget", "Expected a non-negative integer in UTF-16 code units.");
 if (params.declarations === null || (declarationMode !== "whole" && declarationMode !== "addresses")) bad("declarations", "Expected \"whole\" or \"addresses\".");
+if (requestedPart !== undefined && (!Number.isInteger(requestedPart) || requestedPart <= 0)) bad("part", "Expected a positive integer.");
 let pack = null, ids = [];
 if (packId !== undefined) {
   pack = typeof packId === "string" ? g.packContext(packId) : undefined;
@@ -3222,13 +3367,13 @@ const members = ids.map((id) => {
 });
 const answer = { scope, budget, declarations: declarationMode, used: 0, tokenEstimate: { value: 0, method: "UTF-16 code units divided by four, an estimate" }, leftOut: [],
   pack: pack ? { id: packId, title: pack.title ?? null, framing: pack.framing ?? null } : null, members, boundary };
-const measure = () => {
+const measure = (value = answer) => {
   for (;;) {
-    const length = JSON.stringify(answer).length;
+    const length = JSON.stringify(value).length;
     const estimate = Math.ceil(length / 4);
-    if (answer.used === length && answer.tokenEstimate.value === estimate) return length;
-    answer.used = length;
-    answer.tokenEstimate.value = estimate;
+    if (value.used === length && value.tokenEstimate.value === estimate) return length;
+    value.used = length;
+    value.tokenEstimate.value = estimate;
   }
 };
 // The enclosing member names the Spec and file; the entry position names its path.
@@ -3236,7 +3381,8 @@ const location = (id, path) => {
   const context = g.specContext(id);
   const question = /^intent\.openQuestions\[(\d+)\]/u.exec(path);
   const rule = /^behavior\.(rules|flows)\[(\d+)\]/u.exec(path);
-  const entry = question ? `question[${question[1]}]` : rule ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]` : path;
+  const term = path.startsWith("model.terms.") ? Object.keys(context.sections?.model?.terms ?? {}).indexOf(path.slice("model.terms.".length)) : -1;
+  const entry = question ? `question[${question[1]}]` : rule ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]` : term >= 0 ? `term[${term}]` : path;
   const at = context.entryLocations.find((row) => row.entry === entry);
   return { line: at?.line ?? null };
 };
@@ -3244,7 +3390,7 @@ const isPointer = (entry) => entry && typeof entry === "object" && !Array.isArra
   (entry.line === null || typeof entry.line === "number") &&
   Object.keys(entry).length === 1 && Object.hasOwn(entry, "line");
 const address = (id, section, key) => key !== "description" && /^[a-z][A-Za-z0-9]*$/u.test(key) ? `${id}#${section}.${key}` : null;
-const addressesIn = (value) => [...new Set((JSON.stringify(value) ?? "").match(/spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule)\.[a-z][A-Za-z0-9]*(?![A-Za-z0-9_#-]|\.[A-Za-z0-9])/gu) ?? [])];
+const addressesIn = (value) => [...new Set((JSON.stringify(value) ?? "").match(/spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(?:design|ui|question|rule|term)\.[a-z][A-Za-z0-9]*(?![A-Za-z0-9_#-]|\.[A-Za-z0-9])/gu) ?? [])];
 const reference = (id, path, value, own = null) => {
   const addresses = [...new Set([...(own === null ? [] : [own]), ...addressesIn(value)])];
   if (own !== null) return addresses.length === 1 ? own : addresses;
@@ -3298,7 +3444,12 @@ const cuts = [
           const key = Object.keys(member.sections.behavior.ruleKeys ?? {}).find((key) => member.sections.behavior.ruleKeys[key] === `${rule[1]}[${rule[2]}]`);
           return reference(member.id, path, value, key === undefined ? null : `${member.id}#rule.${key}`);
         }
-        if (path === "behavior.ruleKeys") return value;
+        if (path === "behavior.ruleKeys" || path === "behavior.stepKeys" || path === "model.termKeys") return value;
+        if (path.startsWith("model.terms.")) {
+          const term = path.slice("model.terms.".length);
+          const key = Object.keys(member.sections.model.termKeys ?? {}).find((key) => member.sections.model.termKeys[key] === term);
+          return reference(member.id, path, value, key === undefined ? null : `${member.id}#term.${key}`);
+        }
         if (isPointer(value)) return value;
         if (Array.isArray(value) && value.some(isPointer) && value.every((entry) => isPointer(entry) ||
           typeof entry === "string" && addressesIn(entry).includes(entry))) return value;
@@ -3319,6 +3470,48 @@ if (declarationMode === "addresses") cuts.push(() => {
   }
   answer.leftOut.push("Pinned declaration text; entry addresses kept.");
 });
+if (requestedPart !== undefined) {
+  // Item zero is the boundary, even when it is empty. Later items are whole members.
+  const itemCount = members.length + 1;
+  const partOf = (start, end, index, of) => {
+    const value = { scope, budget, declarations: declarationMode, part: { index, of }, used: 0,
+      tokenEstimate: { ...answer.tokenEstimate }, leftOut: [...answer.leftOut], pack: answer.pack,
+      members: members.slice(Math.max(0, start - 1), end - 1), boundary: start === 0 ? answer.boundary : null };
+    measure(value);
+    return value;
+  };
+  const split = () => {
+    let of = 1;
+    for (;;) {
+      const parts = [];
+      let start = 0;
+      for (let end = 1; end <= itemCount; end += 1) {
+        const candidate = partOf(start, end, parts.length + 1, of);
+        if (candidate.used > budget && end > start + 1) {
+          parts.push(partOf(start, end - 1, parts.length + 1, of));
+          start = end - 1;
+        }
+      }
+      parts.push(partOf(start, itemCount, parts.length + 1, of));
+      // More parts can widen `of`, which can move the next boundary. Measure again until stable.
+      if (parts.length === of) return parts;
+      of = parts.length;
+    }
+  };
+  let parts;
+  for (let stage = 0; stage <= cuts.length; stage += 1) {
+    if (stage > 0) cuts[stage - 1]();
+    parts = split();
+    if (parts.every((part) => part.used <= budget)) {
+      if (requestedPart > parts.length) return { diagnostics: [{ scope: "part", problem: `The bundle has ${parts.length} parts.` }] };
+      return parts[requestedPart - 1];
+    }
+  }
+  const header = partOf(1, 1, 1, 1);
+  const oversized = header.used > budget ? [{ item: "header", length: header.used }] : parts.filter((part) => part.used > budget).map((part) => ({
+    item: part.boundary !== null ? "boundary" : part.members[0].id, length: part.used }));
+  return { scope, budget, declarations: declarationMode, part: { index: requestedPart, of: null }, budgetExceeded: true, oversized, leftOut: answer.leftOut };
+}
 if (measure() <= budget) return answer;
 for (const cut of cuts) { cut(); if (measure() <= budget) return answer; }
 return { scope, budget, declarations: declarationMode, budgetExceeded: true, protectedLength: answer.used, leftOut: answer.leftOut };
@@ -3349,7 +3542,18 @@ unlocated.
 itself, `scope`, `budget`, `tokenEstimate` and `leftOut`. The estimate divides code units by four,
 rounded up. A successful bundle always fits the requested budget. A budget-exceeded result carries
 only the scope, budget, declaration mode, protected length and omission list, and the CLI exits 0. Invalid or unknown
-scopes return diagnostics without a bundle. The law is `spec:consumers.context-bundle`.
+scopes return diagnostics without a bundle.
+
+With `part`, the recipe tries no cuts first and partitions the boundary followed by the members,
+taking the longest run that fits each part. It measures every part whole, including its final
+`part: { index, of }`. Only part 1 carries the boundary; later parts carry `boundary: null`.
+Each part repeats the scope, budget, declaration mode, cuts and Pack framing. The recipe advances
+one cut at a time only if some item still cannot fit alone. If no permitted stage fits, the answer
+names `"header"` as the one `oversized` item if the repeated fields alone exceed the budget,
+measured as a part with `part: { index: 1, of: 1 }`, no members and a null boundary. Otherwise it
+names every oversized item with the length of its whole single-item part. Either answer carries
+no members or boundary. A part above the final count returns a diagnostic. The law is
+`spec:consumers.context-bundle`.
 
 ## 37. The perspective filter
 
@@ -3515,7 +3719,7 @@ const schemaProblems = [];
 const problem = (path, message) => schemaProblems.push({ path, problem: message });
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const specId = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?![\s\S])/u;
-const entryAddress = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(design|ui|question|rule)\.([a-z][A-Za-z0-9]*)(?![\s\S])/u;
+const entryAddress = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*)(?![\s\S])/u;
 const scopeRef = (value) => typeof value === "string" && (specId.test(value) || entryAddress.test(value));
 const closed = (value, path, allowed, required) => {
   if (!object(value)) { problem(path, "Expected an object."); return false; }
@@ -3690,6 +3894,7 @@ const resolves = (nodes, ref) => {
   const [section, key] = suffix.split(".");
   if (section === "question") return (node.sections?.intent?.openQuestions ?? []).some((question) => question?.key === key);
   if (section === "rule") return Object.hasOwn(behaviorOf(node.sections?.behavior ?? {}).behavior.ruleKeys ?? {}, key);
+  if (section === "term") return Object.hasOwn(node.sections?.model?.termKeys ?? {}, key);
   return key !== "description" && Object.hasOwn(node.sections?.[section] ?? {}, key);
 };
 const changes = proposal.changes.map((change, index) => {
@@ -3703,8 +3908,15 @@ const changes = proposal.changes.map((change, index) => {
       ? ["decider", "links", "provisional", "trigger"].filter((part) => unsupported.has(part)) : [];
     if (missing.length) return { ...resolution, comparable: false, reason: `Outside the common schema: ${missing.join(", ")}.` };
     const parts = changedParts(id);
+    const termValue = (nodes) => {
+      const model = nodes.get(id)?.sections?.model;
+      const key = suffix.slice("term.".length);
+      const term = model?.termKeys?.[key];
+      return term === undefined ? undefined : model.terms?.[term];
+    };
     const moved = before.has(id) !== after.has(id) || (suffix === undefined
-      ? parts.changed.size > 0 || parts.ordered.size > 0 : parts.changed.has(suffix));
+      ? parts.changed.size > 0 || parts.ordered.size > 0 : suffix.startsWith("term.")
+      ? !same(termValue(before), termValue(after)) : parts.changed.has(suffix));
     if (!moved && suffix === undefined && !parts.crossListOrder) {
       return { ...resolution, comparable: false, reason: "One graph keeps no order across rules and flows." };
     }
@@ -3723,8 +3935,9 @@ return { schemaProblems, base: proposal.base, diagnostics, totals: { changes: ch
 `schemaProblems` names each malformed field by its JSON path. A malformed document produces no
 change rows. The check resolves the deduplicated union of each change's scope, replaced or followed
 entry, and relation source. Each scope row reports resolution at both commits and whether its value
-was added, removed or changed under recipe 35's comparison. An order-only entry move keeps its
-value unchanged; a whole-Spec scope includes order changes. `relationTarget` reports resolution at
+was added, removed or changed. The check compares keyed entries by key. A keyed rule or flow has
+`{ list, text }` as its value; a rule or flow list containing an unkeyed entry also compares as a
+whole. An order-only entry move keeps its value unchanged; a whole-Spec scope includes order changes. `relationTarget` reports resolution at
 the head for a declared relation, and is null otherwise. `totals.moved` and `totals.unresolved`
 count changes, so one moved entry leaves other changes independently visible. Unknown references
 remain explicit rows. A scope outside the common schema carries `comparable: false` and a
@@ -4156,3 +4369,796 @@ return { totals: { designs: designs.length, realized: realizedCount, matching, u
 An anchor without an anchored `satisfies` edge stays unrealized. `differing` counts rows; `matching`
 counts realized designs with neither differences nor unreadable fields. The law is
 `spec:model.planned-architecture`.
+
+## 44. Example-space coverage
+
+Report each slot value and the examples that bind it, with uncovered literals and unbound
+children kept visible. Pass `params.spec` or `params.pack`, or neither for every space.
+Coverage is per value and confers nothing. Only closed quoted-literal unions are enumerable.
+Returns `{ scope, totals, spaces }`, with each space's eligible examples and slots, each slot's
+value rows and unbound examples, and totals for spaces, slots, enumerable slots, declared values
+and uncovered values. An absent subject, both scopes or a Spec without a space returns
+`{ diagnostics }`. The law is `spec:consumers.agent-surface.example-space-coverage`.
+
+```js
+const accepts = ["spec", "pack"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const diagnostics = [];
+if (params.spec !== undefined && params.pack !== undefined) diagnostics.push({ parameter: "scope", problem: "pass at most one of spec and pack" });
+const spec = params.spec === undefined ? undefined : g.specContext(params.spec);
+const pack = params.pack === undefined ? undefined : g.packContext(params.pack);
+if (params.spec !== undefined && (spec === undefined || spec.exampleSpace === undefined)) diagnostics.push({ parameter: "spec", problem: spec === undefined ? "Spec not found" : "Spec owns no example space" });
+if (params.pack !== undefined && pack === undefined) diagnostics.push({ parameter: "pack", problem: "Pack not found" });
+if (diagnostics.length) return { diagnostics };
+const ids = params.spec !== undefined ? [params.spec] : params.pack !== undefined ? pack.members.map(m => m.id) : g.specs().map(s => s.id);
+const spaces = [...new Set(ids)].sort().flatMap(id => {
+  const space = g.specContext(id)?.exampleSpace;
+  if (space === undefined) return [];
+  const examples = space.points.map(p => p.example);
+  return [{ spec: id, examples, slots: space.slots.map(slot => {
+    const enumerable = slot.type === "enum";
+    const values = enumerable ? slot.values : [...new Set(space.points.flatMap(p => p.values[slot.name] === undefined ? [] : [p.values[slot.name]]))];
+    return { name: slot.name, type: slot.type, step: slot.step, enumerable, values: values.map(value => ({ value, examples: space.points.filter(p => p.values[slot.name] === value).map(p => p.example) })), unbound: space.points.filter(p => p.values[slot.name] === undefined).map(p => p.example) };
+  }) }];
+});
+const slots = spaces.flatMap(space => space.slots);
+const enumerable = slots.filter(slot => slot.enumerable);
+return { scope: params.spec ?? params.pack ?? "all", totals: { spaces: spaces.length, slots: slots.length, enumerable: enumerable.length, values: enumerable.reduce((n, slot) => n + slot.values.length, 0), uncovered: enumerable.reduce((n, slot) => n + slot.values.filter(v => v.examples.length === 0).length, 0) }, spaces };
+```
+
+## 45. Run evidence
+
+Read external CTRF reports beside the graph, joined at test-file grain. Pass one report or a list
+as `params.runs`; optional `params.spec` selects files verifying that Spec directly or through an
+enabled example. `params.commit` compares recorded commits without judging freshness. Missing or
+unreadable reports return diagnostics; records without a matching anchor remain in `unjoined`.
+No result changes a binding or a delivery fact.
+
+```js
+const accepts = ["runs", "commit", "spec"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value) ? value : {};
+const string = (value) => typeof value === "string" ? value : null;
+const number = (value) => typeof value === "number" && Number.isFinite(value) ? value : null;
+const normalize = (value) => value.replaceAll("\\", "/").replace(/^(\.\/)+/u, "");
+const diagnostics = [];
+if (params.runs === undefined) return { diagnostics: [{ input: null, problem: "params.runs is required." }] };
+const reports = Array.isArray(params.runs) ? params.runs : [params.runs];
+const inputs = [], unjoined = [], files = new Map();
+const testAnchors = graph.nodes.filter(n => n.nodeType === "Anchor" && n.id.startsWith("test:"));
+const anchored = new Map();
+for (const anchor of testAnchors) {
+  const direct = graph.edges.filter(e => e.from === anchor.id && e.type === "verifies" && g.specContext(e.to)).map(e => e.to);
+  const verifies = [...new Set(direct.flatMap(id => [id, ...graph.edges.filter(e => e.from === id && e.type === "verifies" && g.specContext(id)?.specKind === "example" && g.specContext(e.to)).map(e => e.to)]))].sort();
+  const file = normalize(anchor.file);
+  const row = anchored.get(file) ?? { file, anchors: [], specs: [] };
+  row.anchors.push({ id: anchor.id, verifies });
+  row.specs = [...new Set([...row.specs, ...verifies])].sort();
+  anchored.set(file, row);
+}
+const candidates = [...anchored.keys()].sort((a,b) => b.length-a.length || (a < b ? -1 : a > b ? 1 : 0));
+let tests = 0, joined = 0;
+for (const [index, raw] of reports.entries()) {
+  const report = object(raw), results = object(report.results);
+  let problem = null;
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) problem = "Run input is not an object.";
+  else if (report.reportFormat !== "CTRF") problem = "Run input requires reportFormat: CTRF.";
+  else if (typeof report.specVersion !== "string") problem = "Run input requires specVersion.";
+  else if (!Array.isArray(results.tests)) problem = "Run input requires a results.tests list.";
+  if (problem !== null) { diagnostics.push({ input: index, problem }); continue; }
+  const tool = object(results.tool), summary = object(results.summary), environment = object(results.environment);
+  const commit = string(environment.commit);
+  const build = [environment.buildName, environment.buildNumber].filter(v => typeof v === "string" || typeof v === "number").join(" ") || null;
+  inputs.push({ index, tool: string(tool.name), toolVersion: string(tool.version), specVersion: report.specVersion, commit, branch: string(environment.branchName), build, start: number(summary.start), stop: number(summary.stop), summary: Object.fromEntries(["tests","passed","failed","skipped","pending","other"].map(key => [key, number(summary[key]) ?? 0])), sameCommit: typeof params.commit === "string" && commit !== null ? params.commit === commit : null });
+  for (const rawTest of results.tests) {
+    const test = object(rawTest), name = string(test.name) ?? "not recorded", status = string(test.status) ?? "other";
+    const filePath = string(test.filePath);
+    const normalized = normalize(filePath ?? "");
+    const match = candidates.find(file => normalized === file || normalized.endsWith("/" + file));
+    tests++;
+    if (match === undefined) { unjoined.push({ input: index, name, filePath: filePath || null, status, reason: filePath ? "noTestAnchor" : "noFilePath" }); continue; }
+    joined++;
+    const source = anchored.get(match);
+    if (typeof params.spec === "string" && !source.specs.includes(params.spec)) continue;
+    const row = files.get(match) ?? { ...source, anchors: [...source.anchors].sort((a,b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0), results: [] };
+    row.results.push({ input: index, name, suite: Array.isArray(test.suite) ? test.suite.filter(v => typeof v === "string").join(" > ") || null : string(test.suite), status, duration: number(test.duration) });
+    files.set(match, row);
+  }
+}
+if (inputs.length === 0) return { diagnostics: diagnostics.length ? diagnostics : [{ input: null, problem: "params.runs holds no readable report." }] };
+const rows = [...files.values()].sort((a,b) => a.file < b.file ? -1 : a.file > b.file ? 1 : 0);
+return { inputs, diagnostics, totals: { inputs: inputs.length, tests, joined, unjoined: unjoined.length, files: rows.length, specs: new Set(rows.flatMap(row => row.specs)).size }, files: rows, unjoined };
+```
+
+`inputs` preserves report order and records tool, version, build, branch, commit, times, summary
+and optional commit comparison. `files` lists matching files in path order with their anchors,
+verified Specs and result rows in report order. `totals` counts readable reports and their tests;
+`diagnostics` and `unjoined` keep their input positions. With a Spec filter, test totals still
+count every readable report's tests; file and Spec totals describe the selected files.
+
+## 46. The statement queue
+
+*When you need this: a corpus has more waiting readiness statements than a person can review in
+one sitting, and you need the Specs they rest on first.*
+
+`params.decider` selects the questions to list, `"owner"` by default. It takes one lowercase token,
+such as `"team-lead"`. The queue reads stated readiness and the reader's computed floor; it makes
+no readiness edit and reports no finding.
+
+```js
+const accepts = ["decider"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const decider = params.decider ?? "owner";
+if (params.decider === null || typeof decider !== "string" || !/^[a-z][a-z0-9-]*$/u.test(decider)) return { diagnostics: [{ parameter: "decider", problem: "Expected a lowercase token." }] };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const rungs = ["idea", "scoped", "defined", "ready"];
+const contexts = new Map(g.specs().map((spec) => [spec.id, g.specContext(spec.id)]));
+const ids = [...contexts.values()].filter((spec) => rungs.indexOf(spec.derivedReadiness) > rungs.indexOf(spec.statedReadiness)).map((spec) => spec.id).sort(compare);
+const waiting = new Set(ids);
+const types = ["dependsOn", "constrainedBy", "decidedBy", "refines"];
+const targets = new Map(ids.map((id) => [id, []]));
+for (const id of ids) {
+  const context = contexts.get(id);
+  const restsOn = context.relationsOut.filter((end) => end.claim === "declared" && types.includes(end.type) && end.otherId !== id && waiting.has(end.otherId) &&
+    !(end.type === "refines" && contexts.get(end.otherId).relationsOut.some((back) => back.claim === "declared" && back.otherId === id && types.slice(0, 3).includes(back.type))));
+  targets.set(id, [...new Set(restsOn.map((end) => end.otherId))].sort(compare));
+}
+
+// An explicit frame stack also serves corpora whose dependency chains exceed the call stack.
+const order = new Map(), low = new Map(), stack = [], onStack = new Set(), sets = [];
+const visit = (id) => { order.set(id, order.size); low.set(id, order.get(id)); stack.push(id); onStack.add(id); };
+for (const root of ids) {
+  if (order.has(root)) continue;
+  visit(root);
+  const frames = [{ id: root, at: 0 }];
+  while (frames.length) {
+    const frame = frames[frames.length - 1];
+    const list = targets.get(frame.id);
+    if (frame.at < list.length) {
+      const next = list[frame.at++];
+      if (!order.has(next)) { visit(next); frames.push({ id: next, at: 0 }); }
+      else if (onStack.has(next)) low.set(frame.id, Math.min(low.get(frame.id), order.get(next)));
+      continue;
+    }
+    frames.pop();
+    if (low.get(frame.id) === order.get(frame.id)) {
+      const members = [];
+      let member;
+      do { member = stack.pop(); onStack.delete(member); members.push(member); } while (member !== frame.id);
+      sets.push(members.sort(compare));
+    }
+    const parent = frames[frames.length - 1];
+    if (parent !== undefined) low.set(parent.id, Math.min(low.get(parent.id), low.get(frame.id)));
+  }
+}
+const groupOf = new Map(sets.flatMap((members, group) => members.map((id) => [id, group])));
+const dependencies = sets.map((members, group) => new Set(members.flatMap((id) => targets.get(id).map((target) => groupOf.get(target))).filter((target) => target !== group)));
+const dependents = sets.map(() => []);
+for (const [group, links] of dependencies.entries()) for (const target of links) dependents[target].push(group);
+const remaining = dependencies.map((links) => links.size);
+const rounds = sets.map(() => 1);
+const pending = remaining.flatMap((count, group) => count === 0 ? [group] : []);
+for (let at = 0; at < pending.length; at += 1) {
+  const group = pending[at];
+  for (const dependent of dependents[group]) {
+    rounds[dependent] = Math.max(rounds[dependent], rounds[group] + 1);
+    if (--remaining[dependent] === 0) pending.push(dependent);
+  }
+}
+const cycleThrough = (members) => {
+  const inside = new Set(members), start = members[0], parent = new Map(), queue = [start];
+  const seen = new Set([start]);
+  for (let at = 0; at < queue.length; at += 1) {
+    const current = queue[at];
+    for (const next of targets.get(current)) {
+      if (!inside.has(next)) continue;
+      if (next === start) {
+        const path = [start];
+        for (let step = current; step !== start; step = parent.get(step)) path.splice(1, 0, step);
+        return [...path, start];
+      }
+      if (!seen.has(next)) { seen.add(next); parent.set(next, current); queue.push(next); }
+    }
+  }
+  return [];
+};
+const cycles = sets.filter((members) => members.length > 1).sort((a, b) => compare(a[0], b[0])).map((members) => ({ members, cycle: cycleThrough(members) }));
+const statements = ids.map((id) => {
+  const spec = contexts.get(id);
+  return { round: rounds[groupOf.get(id)], id, title: spec.title ?? null, specKind: spec.specKind,
+    packs: [...spec.packs].sort(compare), statedReadiness: spec.statedReadiness,
+    floorReached: spec.derivedReadiness, restsOn: targets.get(id) };
+}).sort((a, b) => a.round - b.round || compare(a.id, b.id)).map((row, index) => ({ place: index + 1, ...row }));
+const allQuestions = [...contexts.values()].flatMap((spec) => spec.designColumns.openQuestions.map((question) => ({ spec, question })));
+const questions = allQuestions.filter(({ question }) => question.decider === decider).map(({ spec, question }) => {
+  const dependentIds = rungs.indexOf(spec.statedReadiness) < rungs.indexOf("defined")
+    ? [...new Set(spec.relationsIn.filter((end) => end.claim === "declared" && types.includes(end.type) && end.otherId !== spec.id && contexts.has(end.otherId)).map((end) => end.otherId))].sort(compare) : [];
+  return { address: question.key === undefined ? null : `${spec.id}#question.${question.key}`, spec: spec.id,
+    index: question.index, question: question.question, blocking: question.blocking, decider,
+    holds: question.blocking ? [spec.id, ...dependentIds] : [] };
+}).sort((a, b) => Number(b.blocking) - Number(a.blocking) || b.holds.length - a.holds.length || compare(a.spec, b.spec) || a.index - b.index);
+const withoutDecider = allQuestions.filter(({ question }) => question.decider === undefined);
+return { decider, totals: { waiting: statements.length, firstRound: statements.filter((row) => row.round === 1).length,
+  rounds: rounds.reduce((highest, round) => Math.max(highest, round), 0), cycles: cycles.length,
+  questions: questions.length, blockingQuestions: questions.filter((row) => row.blocking).length,
+  withoutDecider: withoutDecider.length, blockingWithoutDecider: withoutDecider.filter(({ question }) => question.blocking).length },
+  statements, cycles, questions };
+```
+
+The answer is `{ decider, totals, statements, cycles, questions }`; an invalid decider returns
+`{ diagnostics }`. `statements` lists every Spec whose floor reaches above its stated rung, ordered by round and id.
+`restsOn` names only other waiting Specs, through the four typed relations. A `refines` yields to
+a reverse `dependsOn`, `constrainedBy` or `decidedBy`; self links order nothing. A cycle's members
+share the round after their latest outside dependency and appear together in `cycles`, with one
+shortest closed path from the first member.
+
+`questions` lists the selected decider's questions, blocking first, then by how many Specs each
+holds, Spec id and authored position. Blocking questions hold their own Spec and, while it states
+below `defined`, its direct typed dependents. `totals.withoutDecider` and
+`totals.blockingWithoutDecider` count questions that name nobody, so an empty owner list does not
+hide them. The law is `spec:consumers.readiness-planner`.
+
+## 47. Capability adoption
+
+Use this to measure a corpus before choosing which capabilities to adopt. Counts describe places
+a capability could apply. They give no score and produce no findings.
+The law is `spec:consumers.upgrade-kit.capability-adoption`.
+
+`params.detail` defaults to `false`; pass `true` for every Spec row or a list of Spec ids for a
+selection. `params.perspectives` is the list of perspective objects kept outside the graph.
+Without it, perspectives read `null`, since the graph cannot count those files.
+Returns `{ totals, capabilities, packs, specs, leftOut }`: corpus totals, each capability's
+`inUse`, `applicable` and `carriedBy`, Pack counts, and the requested Spec detail. Invalid input
+returns `{ diagnostics }`.
+
+```js
+const accepts = ["detail", "perspectives"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const detail = params.detail ?? false;
+const perspectives = params.perspectives;
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const specs = graph.nodes.filter((node) => node.nodeType === "Primitive").sort((a, b) => compare(a.id, b.id));
+const byId = new Map(specs.map((spec) => [spec.id, spec]));
+const diagnostics = [];
+if (params.detail === null || !(typeof detail === "boolean" || Array.isArray(detail) && detail.every((id) => typeof id === "string" && byId.has(id)))) diagnostics.push({ parameter: "detail", problem: "Expected a boolean or a list of resolving Spec ids." });
+if (perspectives !== undefined && !(Array.isArray(perspectives) && perspectives.every((item) => item !== null && typeof item === "object" && !Array.isArray(item)))) diagnostics.push({ parameter: "perspectives", problem: "Expected a list of perspective objects." });
+if (diagnostics.length) return { diagnostics };
+const laws = [
+  ["ruleKeys", "spec:model.rule-keys"],
+  ["questionKeys", "spec:model.open-question-keys"],
+  ["questionFields", "spec:model.open-question-fields"],
+  ["relationReasons", "spec:model.relation-reasons"],
+  ["exercises", "spec:model.rule-keys"],
+  ["pinnedDeclarations", "spec:extraction.contract-declarations"],
+  ["componentDesigns", "spec:model.planned-architecture"],
+  ["stepKeys", "spec:carrier.step-keys"],
+  ["termKeys", "spec:model.term-addresses"],
+  ["entryCitations", "spec:extraction.entry-citations"],
+  ["perspectives", "spec:consumers.review-perspectives"],
+];
+const authored = new Set(["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"]);
+const relations = new Map(specs.map((spec) => [spec.id, []]));
+for (const edge of graph.edges) if (edge.claim === "declared" && authored.has(edge.type)) relations.get(edge.from)?.push(edge);
+const span = /^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u;
+const machineValue = (value) => typeof value === "string" ? (span.exec(value)?.[2] ?? value).trim() : "";
+const componentId = /^component:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*$/u;
+const designs = new Map(specs.map((spec) => [spec.id, machineValue(spec.sections?.design?.id)]).filter(([, id]) => componentId.test(id)));
+const designed = new Set(designs.values());
+const components = new Set(graph.nodes.filter((node) => node.nodeType === "CodeNode" && node.claim === "anchored" && node.id.startsWith("component:")).map((node) => node.id));
+const realized = new Map(specs.map((spec) => [spec.id, new Set()]));
+for (const edge of graph.edges) if (edge.claim === "anchored" && edge.type === "satisfies" && components.has(edge.from)) realized.get(edge.to)?.add(edge.from);
+const cited = new Set((graph.citations ?? []).map((row) => row.address));
+const count = (inUse, applicable) => ({ inUse, applicable });
+const skeleton = (text) => text.replace(/\{(?:[^{}"]|"[^"]*")*\}/gu, (group) => {
+  const name = group.slice(1, -1).split(":")[0].trim();
+  return /^[A-Za-z_][A-Za-z0-9_]*$/u.test(name) ? `{${name}}` : group;
+});
+const stepTexts = (item) => item !== null && typeof item === "object" ? ["given", "when", "then"].flatMap((phase) => item[phase] ?? []) : [];
+const perSpec = new Map(specs.map((spec) => {
+  const sections = spec.sections ?? {}, behavior = sections.behavior ?? {};
+  const questions = sections.intent?.openQuestions ?? [];
+  const edges = relations.get(spec.id);
+  const verifies = spec.specKind === "example" ? edges.filter((edge) => edge.type === "verifies") : [];
+  const entries = Object.entries(sections.design ?? {}).filter(([key]) => key !== "description");
+  const pinned = entries.filter(([, value]) => typeof value === "string" && span.test(value));
+  const steps = new Set([behavior.exampleSpace, ...(behavior.examples ?? [])].flatMap(stepTexts).map(skeleton));
+  const keyedSteps = new Set(Object.values(behavior.stepKeys ?? {}));
+  if (spec.specKind === "example") for (const edge of edges.filter((edge) => edge.type === "verifies" || edge.type === "refines")) {
+    const parent = byId.get(edge.to)?.sections?.behavior;
+    const vocabulary = new Set(stepTexts(parent?.exampleSpace).map(skeleton));
+    for (const step of Object.values(parent?.stepKeys ?? {})) if (vocabulary.has(step)) keyedSteps.add(step);
+  }
+  return [spec.id, {
+    ruleKeys: count(Object.keys(behavior.ruleKeys ?? {}).length, (behavior.rules?.length ?? 0) + (behavior.flows?.length ?? 0)),
+    questionKeys: count(questions.filter((question) => question?.key !== undefined).length, questions.length),
+    questionFields: count(questions.filter((question) => ["decider", "links", "provisional", "trigger"].some((field) => question?.[field] !== undefined)).length, questions.length),
+    relationReasons: count(edges.filter((edge) => edge.reason !== undefined).length, edges.length),
+    exercises: count(verifies.filter((edge) => edge.exercises !== undefined).length, verifies.length),
+    pinnedDeclarations: count(pinned.length, entries.length),
+    stepKeys: count([...steps].filter((step) => keyedSteps.has(step)).length, steps.size),
+    termKeys: count(Object.keys(sections.model?.termKeys ?? {}).length, Object.keys(sections.model?.terms ?? {}).length),
+    entryCitations: count(pinned.filter(([key]) => cited.has(`${spec.id}#design.${key}`)).length, pinned.length),
+  }];
+}));
+const componentCount = (ids, corpus = false) => {
+  const possible = new Set(corpus ? [...components, ...designed] : []);
+  for (const id of ids) {
+    if (designs.has(id)) possible.add(designs.get(id));
+    for (const component of realized.get(id) ?? []) possible.add(component);
+  }
+  return count([...possible].filter((id) => designed.has(id)).length, possible.size);
+};
+const aggregate = (ids, corpus = false) => Object.fromEntries(laws.filter(([name]) => name !== "perspectives").map(([name]) => [name, name === "componentDesigns" ? componentCount(ids, corpus) : count(ids.reduce((sum, id) => sum + perSpec.get(id)[name].inUse, 0), ids.reduce((sum, id) => sum + perSpec.get(id)[name].applicable, 0))]));
+const ids = specs.map((spec) => spec.id);
+const corpus = aggregate(ids, true);
+const packs = graph.nodes.filter((node) => node.nodeType === "Pack").sort((a, b) => compare(a.id, b.id)).map((pack) => {
+  const members = [...new Set(pack.members.filter((id) => byId.has(id)))];
+  return { id: pack.id, members: members.length, capabilities: aggregate(members) };
+});
+const selected = new Set(detail === true ? ids : Array.isArray(detail) ? detail : []);
+return {
+  totals: { specs: specs.length, packs: packs.length, examples: specs.filter((spec) => spec.specKind === "example").length, decisions: specs.filter((spec) => spec.specKind === "decision").length, componentUnits: components.size, statedReady: specs.filter((spec) => spec.readiness === "ready").length, floorReady: g.specs().filter((spec) => spec.derivedReadiness === "ready").length },
+  capabilities: laws.map(([capability, carriedBy]) => ({ capability, ...(capability === "perspectives" ? count(perspectives === undefined ? null : perspectives.length, null) : corpus[capability]), carriedBy })),
+  packs,
+  specs: ids.filter((id) => selected.has(id)).map((id) => {
+    const counts = aggregate([id]);
+    return { id, packs: packs.filter((pack) => graph.nodes.find((node) => node.id === pack.id).members.includes(id)).map((pack) => pack.id), inUse: Object.fromEntries(Object.entries(counts).filter(([, row]) => row.inUse > 0).map(([name, row]) => [name, row.inUse])), couldApply: Object.fromEntries(Object.entries(counts).filter(([, row]) => row.applicable > row.inUse).map(([name, row]) => [name, row.applicable - row.inUse])) };
+  }),
+  leftOut: selected.size < specs.length ? ["Spec rows; pass detail: true or a list of Spec ids."] : [],
+};
+```
+
+## 48. The rule-key proposal
+
+Use this to propose rule keys for review. It preserves every entry's text and writes no carrier.
+The law is `spec:consumers.upgrade-kit.rule-key-proposal`.
+
+`params.commit` is required and names the commit whose graph you read. Limit the proposal with
+`params.pack` or `params.specs`, a list of Spec ids, or omit both for the corpus. Check the returned
+proposal with recipe 38 against that commit's graph before an agent applies it.
+Returns `{ scope, totals: { specs, entries, keyed, proposed, unkeyable }, proposal, unkeyable }`.
+The proposal is null when no entry needs a key. Unkeyable rows keep the entry, file, line and
+reason; invalid input returns `{ diagnostics }` without a proposal.
+
+```js
+const accepts = ["commit", "pack", "specs"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const commit = params.commit;
+const pack = params.pack;
+const requested = params.specs;
+const diagnostics = [];
+const bad = (parameter, problem) => diagnostics.push({ parameter, problem });
+const byId = new Map(graph.nodes.filter((node) => node.nodeType === "Primitive").map((node) => [node.id, node]));
+const packNode = graph.nodes.find((node) => node.nodeType === "Pack" && node.id === pack);
+if (typeof commit !== "string" || commit.trim().length === 0) bad("commit", "Supply the commit whose graph is being read.");
+if (pack !== undefined && requested !== undefined) bad("scope", "Supply pack or specs, not both.");
+if (pack !== undefined && !packNode) bad("pack", "Expected a resolving Pack id.");
+if (requested !== undefined && !(Array.isArray(requested) && requested.every((id) => typeof id === "string" && byId.has(id)))) bad("specs", "Expected a list of resolving Spec ids.");
+if (diagnostics.length) return { diagnostics };
+const ids = [...new Set(packNode ? packNode.members.filter((id) => byId.has(id)) : requested !== undefined ? requested : [...byId.keys()].sort())];
+const scope = packNode ? { pack } : requested !== undefined ? { specs: ids } : { corpus: true };
+const label = packNode ? pack : requested !== undefined ? ids.join(", ") : "the corpus";
+const stop = new Set("a an the and or but nor so then than if when while where of to in on at by for with from into onto as per via over under about is are was were be been being do does did has have had can could may might must shall should will would it its this that these those there their they them which who whom whose what each every any also only own".split(" "));
+const coin = (text) => {
+  const words = text.normalize("NFD").replace(/\p{M}/gu, "").replace(/^(?:\[[^\]]*\]\s*)+/u, "").replace(/[\u0027’]s\b/gu, "").replace(/[\u0027’]/gu, "").replace(/([a-z0-9])([A-Z])/gu, "$1 $2").toLowerCase().split(/[^a-z0-9]+/u).filter(Boolean);
+  const kept = words.filter((word) => !stop.has(word));
+  const candidates = kept.length ? kept : words;
+  while (candidates.length && !/^[a-z]/u.test(candidates[0])) candidates.shift();
+  return [...new Set(candidates)].slice(0, 3).map((word, index) => index ? word[0].toUpperCase() + word.slice(1) : word).join("");
+};
+const locations = new Map((graph.locations ?? []).map((row) => [`${row.spec}:${row.entry}`, row]));
+const changes = [], unkeyable = [];
+let entries = 0, keyed = 0;
+for (const id of ids) {
+  const spec = byId.get(id), behavior = spec.sections?.behavior ?? {};
+  const used = new Set(Object.keys(behavior.ruleKeys ?? {}));
+  const addressed = new Set(Object.values(behavior.ruleKeys ?? {}));
+  for (const [list, entryName] of [["rules", "rule"], ["flows", "flow"]]) {
+    for (const [index, text] of (behavior[list] ?? []).entries()) {
+      entries++;
+      if (addressed.has(`${list}[${index}]`)) { keyed++; continue; }
+      const entry = `${entryName}[${index}]`;
+      const line = locations.get(`${id}:${entry}`)?.line ?? null;
+      const stem = coin(text);
+      if (!stem) { unkeyable.push({ spec: id, entry, file: spec.file, line, reason: "no word to coin a key from" }); continue; }
+      let key = stem, suffix = 2;
+      while (used.has(key)) key = `${stem}${suffix++}`;
+      used.add(key);
+      changes.push({ scope: [id], request: `Add the key marker [#${key}] and one space at the start of the text of ${entry} of ${id}, at ${spec.file}${line === null ? "" : ` line ${line}`}, after its rule: or flow: label where it has one.`, text: `[#${key}] ${text}`, reason: `Gives the entry the address ${id}#rule.${key}.` });
+    }
+  }
+}
+return { scope, totals: { specs: ids.length, entries, keyed, proposed: changes.length, unkeyable: unkeyable.length }, proposal: changes.length ? { schema: "sdp-proposal/1", base: commit, reason: `Key every rule and flow entry in ${label} so a review, a register row or an example can cite it.`, changes } : null, unkeyable };
+```
+
+## 49. The proposal memo
+
+*When you need this:* Render a change proposal as the memo a person reviews and hands to an agent.
+
+The law is `spec:consumers.intent-composition.proposal.memo`. Pass `params.proposal`, the change-proposal document. This recipe reads no graph value and writes nothing. A malformed document returns the same schema problems as recipe 38; a valid one returns the Markdown memo the Studio panel hands off.
+The answer is `{ schemaProblems, memo }`, with `memo: null` when the document is malformed.
+
+```js
+const accepts = ["proposal"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const specId = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?![\s\S])/u;
+const entryAddress = /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*)(?![\s\S])/u;
+const scopeRef = (value) => typeof value === "string" && (specId.test(value) || entryAddress.test(value));
+function proposalProblems(proposal) {
+    const problems = [];
+    const problem = (path, message) => {
+        problems.push({ path, problem: message });
+    };
+    const closed = (value, path, allowed, required) => {
+        if (value === null || typeof value !== "object" || Array.isArray(value)) {
+            problem(path, "Expected an object.");
+            return false;
+        }
+        for (const key of Object.keys(value))
+            if (!allowed.includes(key))
+                problem(`${path}.${key}`, "Unknown field.");
+        for (const key of required)
+            if (!Object.hasOwn(value, key))
+                problem(`${path}.${key}`, "Required field.");
+        return true;
+    };
+    const text = (value, path, nonempty = false) => {
+        if (typeof value !== "string" || (nonempty && value.length === 0))
+            problem(path, nonempty ? "Expected a non-empty string." : "Expected a string.");
+    };
+    const reason = (value, path) => {
+        text(value, path, true);
+        if (typeof value === "string" && /[\r\n\u0085\u2028\u2029]/u.test(value))
+            problem(path, "Expected one line.");
+    };
+    const authoredTypes = [
+        "refines",
+        "dependsOn",
+        "constrainedBy",
+        "decidedBy",
+        "verifies",
+        "supersedes",
+    ];
+    if (closed(proposal, "$", ["schema", "base", "reason", "changes"], ["schema", "base", "reason", "changes"])) {
+        if (proposal.schema !== "sdp-proposal/1")
+            problem("$.schema", "Expected sdp-proposal/1.");
+        text(proposal.base, "$.base", true);
+        reason(proposal.reason, "$.reason");
+        if (!Array.isArray(proposal.changes) || !proposal.changes.length)
+            problem("$.changes", "Expected a non-empty list.");
+        else
+            proposal.changes.forEach((change, index) => {
+                const path = `$.changes[${String(index)}]`;
+                if (!closed(change, path, ["scope", "request", "text", "replaces", "follows", "relation", "reason"], ["scope", "request"]))
+                    return;
+                if (!Array.isArray(change.scope) || !change.scope.length)
+                    problem(`${path}.scope`, "Expected a non-empty list.");
+                else
+                    change.scope.forEach((ref, index) => {
+                        if (!scopeRef(ref))
+                            problem(`${path}.scope[${String(index)}]`, "Expected a Spec id or entry address.");
+                    });
+                text(change.request, `${path}.request`, true);
+                if (Object.hasOwn(change, "text"))
+                    text(change.text, `${path}.text`);
+                if (Object.hasOwn(change, "reason"))
+                    reason(change.reason, `${path}.reason`);
+                for (const key of ["replaces", "follows"])
+                    if (Object.hasOwn(change, key) &&
+                        (typeof change[key] !== "string" || !entryAddress.test(change[key])))
+                        problem(`${path}.${key}`, "Expected an entry address.");
+                if (Object.hasOwn(change, "replaces") && Object.hasOwn(change, "follows"))
+                    problem(path, "replaces and follows are exclusive.");
+                if (Object.hasOwn(change, "relation") &&
+                    closed(change.relation, `${path}.relation`, ["action", "from", "type", "target"], ["action", "from", "type", "target"])) {
+                    const relation = change.relation;
+                    if (relation.action !== "declare" && relation.action !== "remove")
+                        problem(`${path}.relation.action`, "Expected declare or remove.");
+                    if (typeof relation.type !== "string" || !authoredTypes.includes(relation.type))
+                        problem(`${path}.relation.type`, "Expected an authored relation type.");
+                    for (const key of ["from", "target"])
+                        if (typeof relation[key] !== "string" || !specId.test(relation[key]))
+                            problem(`${path}.relation.${key}`, "Expected a Spec id.");
+                }
+            });
+    }
+    return problems;
+}
+
+const longestRun = (value) => Math.max(0, ...Array.from(value.matchAll(/`+/gu), (m) => m[0].length));
+function span(value) {
+    const ticks = "`".repeat(longestRun(value) + 1);
+    const pad = value.startsWith("`") || value.endsWith("`") ? " " : "";
+    return `${ticks}${pad}${value}${pad}${ticks}`;
+}
+function fenced(value, language = "") {
+    const ticks = "`".repeat(Math.max(3, longestRun(value) + 1));
+    return `${ticks}${language}\n${value}\n${ticks}\n`;
+}
+function renderMemo(proposal) {
+    let memo = `# Change proposal\n\nBase: ${span(proposal.base)}\nReason: ${span(proposal.reason)}\n\n`;
+    proposal.changes.forEach((change, index) => {
+        memo += `## Change ${String(index + 1)}\n\nScope: ${change.scope.map(span).join(", ")}\nRequest:\n\n${fenced(change.request, "text")}`;
+        if (change.replaces !== undefined)
+            memo += `Replaces: ${span(change.replaces)}\n`;
+        if (change.follows !== undefined)
+            memo += `Follows: ${span(change.follows)}\n`;
+        if (change.relation) {
+            const r = change.relation;
+            memo += `Relation: ${r.action} ${span(r.from)} ${r.type} ${span(r.target)}\n`;
+        }
+        if (change.reason !== undefined)
+            memo += `Reason: ${span(change.reason)}\n`;
+        if (change.text !== undefined)
+            memo += `\n${fenced(change.text)}`;
+        memo += "\n";
+    });
+    return `${memo}## The proposal\n\n${fenced(JSON.stringify(proposal, null, 2), "json")}`;
+}
+
+const schemaProblems = proposalProblems(params.proposal);
+return { schemaProblems, memo: schemaProblems.length ? null : renderMemo(params.proposal) };
+```
+
+## 50. External registers
+
+*When you need this:* Check the outside register tokens a corpus cites, or find held tokens no Spec cites.
+
+Check a corpus's prose tokens against its own JSON register. Pass the file as
+`--params register=@PATH`, bound to `params.register`, and a JavaScript regular-expression source as `params.pattern`.
+The register has a `tokens` array of strings or `{ token, retired }` objects; other columns are
+ignored. There is no sample register or pattern. Invalid input returns `diagnostics` without
+`findings`, so it fails as a rules file. `params.severity` defaults to `error`; `params.uncited` set to true also
+reports held tokens no Spec cites. The answer includes input, totals, cited token rows and
+findings. Titles, narrative, section text, authored keys and relation reasons are read from the
+graph. No Pack, id or source file is scanned.
+
+The shipped file runs unchanged with `sdp validate --rules`. To check several registers, a rules
+file calls recipe 50 once per register through `recipes(50, parameters)` and combines the findings.
+The corpus's owner decides which registers it may cite.
+
+```js
+const accepts = ["register", "pattern", "severity", "uncited"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const diagnostics = [];
+const diagnose = (parameter, problem) => diagnostics.push({ parameter, problem });
+const record = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+const register = params.register;
+const severity = params.severity ?? "error";
+const uncited = params.uncited ?? false;
+if (params.severity === null || (severity !== "error" && severity !== "warning")) diagnose("severity", "expected error or warning");
+if (params.uncited === null || typeof uncited !== "boolean") diagnose("uncited", "expected a boolean");
+const held = new Map();
+if (!record(register) || !Array.isArray(register.tokens)) {
+  diagnose("register", "expected an object with a tokens array");
+} else {
+  for (const [index, item] of register.tokens.entries()) {
+    const token = typeof item === "string" ? item : record(item) ? item.token : undefined;
+    if (typeof token !== "string" || token.trim() === "" ||
+        (typeof item !== "string" && item.retired !== undefined && typeof item.retired !== "boolean")) {
+      diagnose("register", `tokens[${index}] must be a non-empty string or a token with an optional retired boolean`);
+      continue;
+    }
+    if (held.has(token)) diagnose("register", `token ${token} is listed twice`);
+    held.set(token, typeof item !== "string" && item.retired === true);
+  }
+}
+let pattern;
+if (typeof params.pattern !== "string") {
+  diagnose("pattern", "expected a regular-expression source string");
+} else {
+  try {
+    pattern = new RegExp(params.pattern, "gu");
+    if ([..."".matchAll(pattern)].some((match) => match[0] === ""))
+      diagnose("pattern", "must not match the empty string");
+    for (const token of held.keys()) {
+      const matches = [...token.matchAll(pattern)];
+      if (matches.length !== 1 || matches[0][0] !== token)
+        diagnose("pattern", `must match register token ${token} whole`);
+    }
+  } catch (error) {
+    diagnose("pattern", `cannot compile: ${error.message}`);
+  }
+}
+if (diagnostics.length > 0) return { diagnostics };
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const cited = new Map();
+const findings = [];
+let citations = 0;
+const specs = g.specs();
+for (const spec of specs) {
+  const context = g.specContext(spec.id);
+  if (context === undefined) continue;
+  const lines = new Map(context.entryLocations.map((row) => [row.entry, row.line]));
+  const texts = [];
+  const add = (path, text, located) => {
+    if (typeof text === "string") texts.push({ path, text, line: lines.get(located) });
+  };
+  const questionKey = (entry) => {
+    const index = /^openQuestions\[(\d+)\]\.question$/u.exec(entry ?? "")?.[1];
+    return index === undefined ? undefined : context.sections?.intent?.openQuestions?.[Number(index)]?.key;
+  };
+  const ruleKeys = context.sections?.behavior?.ruleKeys ?? {};
+  const walk = (section, value, entry, topKey) => {
+    const path = entry === null ? section : `${section}.${entry}`;
+    const question = /^openQuestions\[(\d+)\](?:\.(question|decider|links|provisional|trigger)(?:\[\d+\])?)?$/u.exec(entry ?? "");
+    const rule = /^(rules|flows)\[(\d+)\]$/u.exec(entry ?? "");
+    const located = section === "intent" && question !== null
+      ? `question[${question[1]}]${question[2] && question[2] !== "question" ? "." + question[2] : ""}`
+      : section === "behavior" && rule !== null
+        ? `${rule[1] === "rules" ? "rule" : "flow"}[${rule[2]}]`
+        : section === "design" || section === "ui"
+          ? entry === topKey ? path : undefined : path;
+    if (typeof value === "string") {
+      const key = section === "behavior" ? Object.keys(ruleKeys).find((key) => ruleKeys[key] === entry)
+        : section === "intent" ? questionKey(entry) : undefined;
+      add(path, key, located);
+      add(path, value, located);
+    } else if (Array.isArray(value)) {
+      value.forEach((item, index) => walk(section, item, `${entry ?? ""}[${index}]`, topKey));
+    } else if (record(value)) {
+      const coined = section === "design" || section === "ui" || (section === "model" && entry === "terms");
+      for (const [key, item] of Object.entries(value)) {
+        const next = entry === null ? key : `${entry}.${key}`;
+        if (section === "behavior" && entry === null && key === "ruleKeys") continue;
+        if (section === "intent" && /^openQuestions\[\d+\]\.key$/u.test(next)) continue;
+        const nextTop = entry === null ? key : topKey;
+        if (coined && !(entry === null && key === "description"))
+          add(`${section}.${next}`, key, (section === "design" || section === "ui") && entry !== null ? undefined : `${section}.${next}`);
+        walk(section, item, next, nextTop);
+      }
+    }
+  };
+  add("title", context.title, "title");
+  add("narrative", context.narrative, "narrative");
+  for (const [section, value] of Object.entries(context.sections ?? {})) walk(section, value, null, null);
+  for (const relation of context.relationsOut.filter((row) => row.claim === "declared").sort((a, b) =>
+    (lines.get(`relation.${a.type}.${a.otherId}`) ?? Infinity) - (lines.get(`relation.${b.type}.${b.otherId}`) ?? Infinity))) {
+    const path = `relation.${relation.type}.${relation.otherId}`;
+    add(path, relation.reason, path);
+  }
+  const first = new Map();
+  for (const text of texts) {
+    for (const match of text.text.matchAll(pattern)) {
+      const token = match[0];
+      if (token === "") { diagnose("pattern", "must not match the empty string"); return { diagnostics }; }
+      citations += 1;
+      const row = cited.get(token) ?? { token, held: held.get(token) === false, retired: held.get(token) === true, citations: 0, specs: new Set() };
+      row.citations += 1;
+      row.specs.add(spec.id);
+      cited.set(token, row);
+      if (!first.has(token)) first.set(token, text);
+    }
+  }
+  for (const [token, text] of first) {
+    if (held.has(token) && !held.get(token)) continue;
+    const retired = held.get(token) === true;
+    findings.push({
+      validatorId: retired ? "retired-token" : "unknown-token",
+      subjectId: spec.id,
+      relatedId: token,
+      severity,
+      message: `${spec.id} cites ${token}, which the register ${retired ? "retires" : "does not list"}`,
+      file: spec.file,
+      path: text.path,
+      ...(text.line === undefined ? {} : { line: text.line }),
+    });
+  }
+}
+if (diagnostics.length > 0) return { diagnostics };
+findings.sort((a, b) => compare(a.subjectId, b.subjectId) || compare(a.relatedId, b.relatedId));
+if (uncited) for (const [token, retired] of held) {
+  if (!retired && !cited.has(token)) findings.push({
+    validatorId: "uncited-token", subjectId: token, severity,
+    message: `${token} is held by the register and no Spec cites it`,
+  });
+}
+return {
+  input: { pattern: params.pattern, severity, uncited },
+  totals: {
+    specs: specs.length, citations, tokens: cited.size,
+    unknown: findings.filter((row) => row.validatorId === "unknown-token").length,
+    retired: findings.filter((row) => row.validatorId === "retired-token").length,
+    uncited: findings.filter((row) => row.validatorId === "uncited-token").length,
+  },
+  tokens: [...cited.values()].sort((a, b) => compare(a.token, b.token)).map((row) => ({ ...row, specs: [...row.specs].sort(compare) })),
+  findings,
+};
+```
+
+## 51. Entry citations
+
+Use this to find anchored source lines that cite a pinned declaration or another entry, and to
+report citations that no longer resolve. Pass at most one of `params.pack` and `params.specs`;
+without either, the scope is the corpus. `params.severity` is `error` by default or `warning`.
+Only a non-empty `testAnchors` identifies a test line. A citation records no test verdict.
+Returns `{ scope, totals, entries, unresolved, findings }`. Totals count citations, cited entries,
+pinned declarations, cited declarations and unresolved citations. Entry rows keep their address,
+Spec, pinned flag, carrier line and `citedBy` source lines with anchor and test-anchor ids;
+unresolved rows keep the citing file, line and resolution reason. Each yields an
+`unresolved-citation` finding. Invalid input returns `{ diagnostics }` without findings.
+The law is `spec:extraction.entry-citations`.
+
+```js
+const accepts = ["pack", "specs", "severity"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const diagnostics = [];
+const severity = params.severity === undefined ? "error" : params.severity;
+if (severity !== "error" && severity !== "warning") diagnostics.push({ parameter: "severity", problem: "Expected error or warning." });
+const all = g.specs().map((spec) => spec.id);
+const known = new Set(all);
+const hasPack = params.pack !== undefined;
+const hasSpecs = params.specs !== undefined;
+if (hasPack && hasSpecs) diagnostics.push({ parameter: "scope", problem: "Expected at most one of pack or specs." });
+let ids = all;
+if (hasPack) {
+  const pack = typeof params.pack === "string" ? g.packContext(params.pack) : undefined;
+  if (pack === undefined) diagnostics.push({ parameter: "pack", problem: "Expected a Pack id that resolves." });
+  else ids = pack.members.map((member) => member.id);
+}
+if (hasSpecs) {
+  if (!Array.isArray(params.specs) || params.specs.some((id) => !known.has(id))) diagnostics.push({ parameter: "specs", problem: "Expected a list of Spec ids that resolve." });
+  else ids = params.specs;
+}
+if (ids.some((id) => !known.has(id))) diagnostics.push({ parameter: "scope", problem: "Every member must name a Spec that resolves." });
+if (diagnostics.length > 0) return { diagnostics };
+const scope = hasPack ? { pack: params.pack } : hasSpecs ? { specs: params.specs } : { corpus: true };
+const selected = new Set(ids);
+const entries = new Map();
+const citations = [];
+for (const id of [...selected].sort()) {
+  const context = g.specContext(id);
+  for (const [key, value] of Object.entries(context.sections?.design ?? {})) {
+    if (key === "description" || typeof value !== "string" || !/^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.test(value)) continue;
+    const address = `${id}#design.${key}`;
+    entries.set(address, { address, spec: id, pinned: true, line: context.entryLocations.find((row) => row.entry === `design.${key}`)?.line ?? null, citedBy: [] });
+  }
+  for (const citation of context.entryCitations) {
+    citations.push(citation);
+    if (!citation.resolves) continue;
+    let entry = entries.get(citation.address);
+    if (entry === undefined) {
+      entry = { address: citation.address, spec: id, pinned: false, line: context.entryLocations.find((row) => row.entry === citation.entry)?.line ?? null, citedBy: [] };
+      entries.set(citation.address, entry);
+    }
+    entry.citedBy.push({ file: citation.file, line: citation.line, anchors: citation.anchors, testAnchors: citation.testAnchors });
+  }
+}
+// Missing Specs have no Spec context; the reader resolves their addresses with the shared grammar.
+const unresolved = citations.filter((row) => !row.resolves).map(({ address, reason, file, line }) => ({ address, reason, file, line }));
+if (!hasPack && !hasSpecs) {
+  for (const row of graph.citations ?? []) {
+    const id = row.address.split("#")[0];
+    if (known.has(id)) continue;
+    const { reason } = g.resolveEntryAddress(row.address);
+    unresolved.push({ ...row, reason });
+  }
+}
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+unresolved.sort((a, b) => compare(a.file, b.file) || a.line - b.line || compare(a.address, b.address));
+const rows = [...entries.values()].sort((a, b) => compare(a.address, b.address));
+for (const row of rows) row.citedBy.sort((a, b) => compare(a.file, b.file) || a.line - b.line);
+const findings = unresolved.map((row) => {
+  const [id, suffix = ""] = row.address.split("#");
+  const dot = suffix.indexOf(".");
+  const section = suffix.slice(0, dot);
+  const key = suffix.slice(dot + 1);
+  const why = row.reason === "malformed" ? "not an entry address" : row.reason === "spec" ? `no Spec ${id}` : row.reason === "section" ? `${id} has no ${section} entries` : `${id} has no ${section} entry ${key}`;
+  return { validatorId: "unresolved-citation", subjectId: row.address, severity, message: `${row.address} cited at ${row.file}:${row.line} does not resolve: ${why}`, file: row.file, line: row.line };
+});
+return {
+  scope,
+  totals: { citations: citations.length, citedEntries: rows.filter((row) => row.citedBy.length > 0).length, declarations: rows.filter((row) => row.pinned).length, citedDeclarations: rows.filter((row) => row.pinned && row.citedBy.length > 0).length, unresolved: unresolved.length },
+  entries: rows,
+  unresolved,
+  findings,
+};
+```

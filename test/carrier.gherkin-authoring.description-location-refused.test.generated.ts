@@ -37,6 +37,7 @@ export function registerDescriptionLocationRefused<World>(
     "extraction reports {findingCount} findings": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "extraction reports {findingCount} findings",
         text: "extraction reports {findingCount} findings",
         params,
       });
@@ -44,6 +45,7 @@ export function registerDescriptionLocationRefused<World>(
     "the first finding is {findingId} at line {line}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the first finding is {findingId} at line {line}",
         text: "the first finding is {findingId} at line {line}",
         params,
       });
@@ -51,6 +53,7 @@ export function registerDescriptionLocationRefused<World>(
     "the graph omits the Spec {absentId}": (execution, params) => {
       compareContractOutcome(execution, {
         kind: "then",
+        key: "the graph omits the Spec {absentId}",
         text: "the graph omits the Spec {absentId}",
         params,
       });
