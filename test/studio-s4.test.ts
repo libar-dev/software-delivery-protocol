@@ -1026,6 +1026,52 @@ it.each(["gh-pages", "main", "disabled"])(
   },
 );
 
+it.each([
+  ["building,built", 0, "Pages published"],
+  ["building,errored", 1, "Pages failed to build"],
+  ["building", 1, "did not publish"],
+] as const)(
+  "deploy succeeds only once Pages publishes the pushed commit: %s",
+  (statuses, status, message) => {
+    const deploy = required(workflow("studio-preview").jobs.deploy);
+    const write = stepNamed(deploy, "Write the preview to the enabled Pages branch");
+    const wait = stepNamed(deploy, "Wait for Pages to publish the preview");
+    expect(write.id).toBe("write");
+    expect(write.run).toContain('echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"');
+    expect(required(deploy.steps).indexOf(wait)).toBe(required(deploy.steps).indexOf(write) + 1);
+    expect(wait.if).toBe("steps.write.outputs.commit != ''");
+    expect(wait.env?.COMMIT).toBe("${{ steps.write.outputs.commit }}");
+    const root = fixture(),
+      bin = join(root, "bin"),
+      count = join(root, "count");
+    mkdirSync(bin);
+    writeFileSync(
+      join(bin, "gh"),
+      '#!/bin/bash\nprintf "%s\\n" "$*" >> "$API_ARGS"\nn=$(($(cat "$COUNT" 2>/dev/null || echo 0) + 1)); echo "$n" > "$COUNT"\nIFS=, read -ra all <<< "$STATUSES"\ni=$(( n <= ${#all[@]} ? n - 1 : ${#all[@]} - 1 ))\nprintf "%s\\n" "${all[$i]}"\n',
+    );
+    chmodSync(join(bin, "gh"), 0o755);
+    const result = spawnSync("bash", ["-e", "-o", "pipefail", "-c", required(wait.run)], {
+      env: {
+        ...process.env,
+        PATH: `${bin}:${process.env.PATH ?? ""}`,
+        GITHUB_REPOSITORY: "owner/repo",
+        COMMIT: "abc123",
+        WAIT_SECONDS: "1",
+        POLL_SECONDS: "0.05",
+        STATUSES: statuses,
+        COUNT: count,
+        API_ARGS: join(root, "args"),
+      },
+      encoding: "utf8",
+    });
+    expect(result.status, result.stderr).toBe(status);
+    expect(result.stdout).toContain(message);
+    const args = readFileSync(join(root, "args"), "utf8");
+    expect(args).toContain("repos/owner/repo/pages/builds");
+    expect(args).toContain("abc123");
+  },
+);
+
 it("preview still stamps and uploads rendered pages when evidence is absent and validation fails", () => {
   const build = stepNamed(
     workflow("studio-preview").jobs.build,

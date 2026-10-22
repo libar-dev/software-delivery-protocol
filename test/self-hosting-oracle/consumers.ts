@@ -2034,6 +2034,7 @@ export const consumersSpecs = [
           "Publishing a preview and writing its stamp are a step the adopter's CI runs, never the Studio's build; the shell reads the stamp as `spec:consumers.spec-studio.shell#rule.stamp` states.",
           "The package's repository ships a reusable GitHub Actions workflow that, on a pull request, installs the caller's dependencies, runs `sdp studio` with the caller's root, exclusions and inputs, runs `sdp stamp` with the checked-out merge commit and the repository's source template, and uploads the page set as a CI artifact; it opens no pull request, writes no comment and holds no credential beyond the run's own token.",
           "The workflow deploys the stamped page set under `/preview/<pr-number>/` only when the caller asks for it and the repository serves a host from the branch the workflow writes to; a pull request from a fork never deploys.",
+          "A deploy that pushes a preview succeeds only once the host has built the commit it pushed; a host build that errors, or does not finish within the wait, fails the job, so a green deploy means the preview is live.",
           "Every recorded file and line a page shows as text carries its file and line as data on its element, and when a loaded stamp names a source template the stamp element links each to the template with the file and line filled in; without such a stamp, or through `file://`, each stays text.",
         ],
         ruleKeys: {
@@ -2043,7 +2044,8 @@ export const consumersSpecs = [
           publishingStep: "rules[4]",
           previewWorkflow: "rules[5]",
           previewDeploy: "rules[6]",
-          sourceLinks: "rules[7]",
+          previewPublished: "rules[7]",
+          sourceLinks: "rules[8]",
         },
         exampleSpace: {
           given: ["a page set the studio command wrote at an extraction root"],

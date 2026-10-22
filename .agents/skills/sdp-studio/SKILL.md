@@ -111,6 +111,10 @@ available on the runner, and `pnpm exec sdp`.
   branch, and only when Pages serves that branch; a pull request from a fork never deploys
   (`spec:consumers.spec-studio.sharing#rule.previewDeploy`). The permissions above are the ones its
   deploy job asks for.
+- The deploy job then waits for Pages to build the commit it pushed, and fails when that build
+  errors or does not finish within ten minutes
+  (`spec:consumers.spec-studio.sharing#rule.previewPublished`). On an errored build, re-run the
+  repository's `pages-build-deployment` run; a first deployment can wait on an older one.
 
 ## Read the pages by task
 

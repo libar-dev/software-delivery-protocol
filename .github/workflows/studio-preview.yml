@@ -146,6 +146,7 @@ jobs:
           name: spec-studio-pr-${{ github.event.pull_request.number }}
           path: ${{ runner.temp }}/studio-preview
       - name: Write the preview to the enabled Pages branch
+        id: write
         if: steps.pages.outputs.enabled == 'true'
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -168,4 +169,25 @@ jobs:
           if ! git diff --cached --quiet; then
             git commit -m "Studio preview for PR $PR_NUMBER"
             git push origin HEAD:gh-pages
+            echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           fi
+      - name: Wait for Pages to publish the preview
+        if: steps.write.outputs.commit != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT: ${{ steps.write.outputs.commit }}
+          WAIT_SECONDS: "600"
+          POLL_SECONDS: "10"
+        run: |
+          # The push starts a Pages build; the preview is live only once Pages builds this commit.
+          deadline=$((SECONDS + WAIT_SECONDS))
+          while (( SECONDS < deadline )); do
+            status=$(gh api "repos/$GITHUB_REPOSITORY/pages/builds" --jq "map(select(.commit == \"$COMMIT\")) | .[0].status // \"\"" || true)
+            case "$status" in
+              built) echo "Pages published $COMMIT."; exit 0 ;;
+              errored) echo "::error::Pages failed to build $COMMIT; re-run the repository's pages-build-deployment run."; exit 1 ;;
+            esac
+            sleep "$POLL_SECONDS"
+          done
+          echo "::error::Pages did not publish $COMMIT within $WAIT_SECONDS seconds."
+          exit 1
