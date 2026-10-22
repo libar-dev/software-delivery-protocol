@@ -1,44 +1,53 @@
 [
   {
     "key": "dependency",
-    "boxes": 8,
-    "edges": 34,
+    "boxes": 24,
+    "edges": 97,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": [
-      "fold:Dependency depth 0",
-      "fold:Dependency depth 1",
-      "fold:Dependency depth 4",
-      "fold:Dependency depth 2",
-      "fold:Dependency depth 3",
-      "fold:Dependency depth 5",
-      "fold:Outside this scope"
+      "boundary-constrainedBy",
+      "boundary-decidedBy",
+      "boundary-dependsOn",
+      "boundary-refines",
+      "fold:Depth 6",
+      "fold:Depth 8",
+      "fold:Depth 9",
+      "fold:Depth 1"
     ]
   },
   {
     "key": "capability",
-    "boxes": 32,
-    "edges": 32,
+    "boxes": 11,
+    "edges": 9,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": [
-      "fold:branch:spec:consumers.projections-model",
-      "fold:branch:spec:validation.two-check-families",
-      "fold:branch:spec:model.core-model",
-      "fold:branch:spec:extraction.derive-graph",
-      "fold:branch:spec:validation.readiness-floor"
+      "branch-5",
+      "branch-6",
+      "branch-7",
+      "branch-8",
+      "unreached-group"
     ]
   },
   {
     "key": "scoped-architecture",
-    "boxes": 13,
-    "edges": 25,
+    "boxes": 11,
+    "edges": 33,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": []
   },
   {
     "key": "requirement",
     "boxes": 14,
-    "edges": 16,
+    "edges": 19,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": []
   },
   {
@@ -46,6 +55,8 @@
     "boxes": 14,
     "edges": 38,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": []
   },
   {
@@ -53,58 +64,51 @@
     "boxes": 24,
     "edges": 36,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": []
   },
   {
     "key": "dependency",
-    "boxes": 7,
-    "edges": 34,
+    "boxes": 18,
+    "edges": 82,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": [
-      "fold:Dependency depth 0",
-      "fold:Dependency depth 2",
-      "fold:Dependency depth 3",
-      "fold:Dependency depth 4",
-      "fold:Dependency depth 1",
-      "fold:Outside this scope"
+      "boundary-constrainedBy",
+      "boundary-decidedBy",
+      "boundary-dependsOn",
+      "boundary-refines"
     ]
   },
   {
     "key": "capability",
-    "boxes": 32,
-    "edges": 42,
+    "boxes": 17,
+    "edges": 16,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": [
-      "fold:branch:spec:facts.fact-ledger",
-      "fold:branch:spec:application.first-experiment",
-      "fold:branch:spec:application.read-models",
-      "fold:branch:spec:obligations.obligation-module",
-      "fold:branch:spec:command.command-pipeline",
-      "fold:branch:spec:context.context-component",
-      "fold:branch:spec:advanced.trigger-table",
-      "fold:branch:spec:platform.acceptance-contract",
-      "fold:branch:spec:agents.agent-runs",
-      "fold:branch:spec:command.tenancy-and-authority",
-      "fold:branch:spec:operations.baseline-operations",
-      "fold:branch:spec:kernel.domain-kernel",
-      "fold:branch:spec:processes.workflow-processes",
-      "fold:branch:spec:application.parent-use-cases",
-      "fold:branch:spec:command.command-declaration",
-      "fold:remaining:spec:platform.transactional-domain-platform"
+      "branch-0"
     ]
   },
   {
     "key": "scoped-architecture",
-    "boxes": 12,
-    "edges": 35,
+    "boxes": 9,
+    "edges": 22,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": []
   },
   {
     "key": "requirement",
-    "boxes": 20,
-    "edges": 24,
+    "boxes": 33,
+    "edges": 52,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": []
   },
   {
@@ -112,6 +116,8 @@
     "boxes": 12,
     "edges": 36,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": []
   },
   {
@@ -119,13 +125,28 @@
     "boxes": 25,
     "edges": 38,
     "rejected": 0,
-    "folded": []
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": [
+      "fold:Outgoing dependsOn"
+    ]
   },
   {
     "key": "planned-probe",
     "boxes": 3,
     "edges": 3,
     "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
+    "folded": []
+  },
+  {
+    "key": "source-probe",
+    "boxes": 2,
+    "edges": 1,
+    "rejected": 0,
+    "routeFailures": 0,
+    "labelFailures": 0,
     "folded": []
   }
 ]

@@ -2,14 +2,16 @@
   {
     "pageUrl": "file:///private/tmp/plan47-wt/G/reviews/assets/plan47-prototypes/G-diagrams/protocol-before-trace.html",
     "viewport": 1280,
+    "pageWidth": 1280,
+    "railWidth": 288,
     "subject": "spec:carrier.gherkin-authoring",
     "viewBoxWidth": 1686,
-    "figureWidth": 928,
-    "svgWidth": 926,
-    "scale": 0.5492289442467378,
+    "figureWidth": 900.40625,
+    "svgWidth": 898.40625,
+    "scale": 0.5328625444839857,
     "font": 12,
-    "effectiveFont": 6.59,
-    "scrollWidth": 926,
-    "viewportWidth": 926
+    "effectiveFont": 6.39,
+    "scrollWidth": 898,
+    "viewportWidth": 898
   }
 ]

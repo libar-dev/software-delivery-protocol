@@ -2,6 +2,8 @@
   {
     "pageUrl": "file:///private/tmp/plan47-wt/G/reviews/assets/plan47-prototypes/G-diagrams/protocol-before-architecture.html",
     "viewport": 1440,
+    "pageWidth": 1440,
+    "railWidth": 288,
     "subject": "architecture",
     "viewBoxWidth": 1413,
     "figureWidth": 960,

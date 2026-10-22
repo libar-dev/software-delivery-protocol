@@ -1,17 +1,31 @@
-// Check the evidence artifact, not product behavior.
+// Independent checks of committed evidence, including the defects raised by review.
 import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-const dir=path.dirname(fileURLToPath(import.meta.url));
-const rows=[];
-for(const f of readdirSync(dir).filter(f=>f.includes('-after-')&&f.endsWith('.html')||f==='synthetic-plans.html')){
-const html=readFileSync(path.join(dir,f),'utf8');const boxes=[...html.matchAll(/<g class="node(?: planned)?" data-id="([^"]+)">[\s\S]*?<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)].map(m=>({id:m[1],x:+m[2],y:+m[3],w:+m[4],h:+m[5]}));
-let routes=0;const collisions=[];
-for(const m of html.matchAll(/<g class="edge" data-from="([^"]+)" data-to="([^"]+)"[^>]*><path d="([^"]+)"/g)){
-routes++;const points=[...m[3].matchAll(/[ML]([\d.]+) ([\d.]+)/g)].map(p=>[+p[1],+p[2]]);
-for(let i=1;i<points.length;i++)for(const box of boxes){const a=points[i-1],b=points[i];const vertical=a[0]===b[0];const hit=vertical?a[0]>box.x&&a[0]<box.x+box.w&&Math.max(Math.min(a[1],b[1]),box.y)<Math.min(Math.max(a[1],b[1]),box.y+box.h):a[1]>box.y&&a[1]<box.y+box.h&&Math.max(Math.min(a[0],b[0]),box.x)<Math.min(Math.max(a[0],b[0]),box.x+box.w);if(hit)collisions.push({from:m[1],to:m[2],box:box.id,segment:i})}
+import {shared,segmentHits} from './router-probe.mjs';
+import assert from 'node:assert/strict';
+import {escapeLabel} from './source-escape-probe.mjs';
+assert.equal(escapeLabel('The Studio\'s `labels` keep "quotes" # < >\nnext'), 'The Studio\'s `labels` keep #quot;quotes#quot; #35; #lt; #gt; next');
+assert.equal(escapeLabel('first\r\nsecond'), 'first second');
+const dir=path.dirname(fileURLToPath(import.meta.url)),rows=[];
+const overlaps=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+for(const file of readdirSync(dir).filter(f=>f.includes('-after-')&&f.endsWith('.html')||f.startsWith('synthetic-')&&f.endsWith('.html'))){
+ const html=readFileSync(path.join(dir,file),'utf8');
+ const boxes=[...html.matchAll(/<g class="node(?: planned)?" data-id="([^"]+)">[\s\S]*?<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)].map(m=>({id:m[1],x:+m[2],y:+m[3],w:+m[4],h:+m[5]}));
+ const labels=[...html.matchAll(/<g class="edge-label"><rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)].map(m=>({x:+m[1],y:+m[2],w:+m[3],h:+m[4]}));
+ const bands=[...html.matchAll(/<text class="lane-label" x="([\d.]+)" y="([\d.]+)">([^<]+)<\/text>/g)].map(m=>({x:+m[1]-4,y:+m[2]-16,w:m[3].length*8+8,h:24}));
+ const paths=[...html.matchAll(/<g class="edge" data-from="([^"]+)" data-to="([^"]+)"[^>]*><path d="([^"]+)"/g)].map(m=>({from:m[1],to:m[2],points:[...m[3].matchAll(/[ML]([\d.]+) ([\d.]+)/g)].map(p=>[+p[1],+p[2]])}));
+ const segments=paths.flatMap((p,index)=>p.points.slice(1).map((b,j)=>({a:p.points[j],b,index})));
+ const nodeCollisions=segments.filter(s=>boxes.some(b=>segmentHits(s.a,s.b,b))).length;
+ let sharedSegments=0;for(let i=0;i<segments.length;i++)for(let j=0;j<i;j++)if(segments[i].index!==segments[j].index&&shared(segments[i].a,segments[i].b,segments[j].a,segments[j].b))sharedSegments++;
+ let labelOverlap=0;for(let i=0;i<labels.length;i++){if([...boxes,...bands].some(b=>overlaps(labels[i],b)))labelOverlap++;for(let j=0;j<i;j++)if(overlaps(labels[i],labels[j]))labelOverlap++;}
+ const routeLabelCollisions=segments.filter(s=>[...labels,...bands].some(r=>segmentHits(s.a,s.b,r))).length;
+ const ports=paths.flatMap(p=>[p.points[0].join(','),p.points.at(-1).join(',')]),duplicatePorts=ports.length-new Set(ports).size;
+ const ids=[...html.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]),duplicateIds=ids.length-new Set(ids).size;
+ const foldedIds=[...html.matchAll(/class="identity"[^>]*>([\s\S]*?)<\/text>/g)].filter(m=>m[1].includes('fold:')).length;
+ const sourceProblems=[...html.matchAll(/<textarea([^>]*)>/g)].filter(m=>{const id=m[1].match(/id="([^"]+)"/)?.[1];return !id||!html.includes('<label for="'+id+'">')||!html.includes('<sdp-copy for="'+id+'">')}).length;
+ const row={file,sourceProblems,boxes:boxes.length,routes:paths.length,nodeCollisions,sharedSegments,labelOverlap,routeLabelCollisions,duplicatePorts,duplicateIds,foldedIds,omitted:html.includes('Shown as text:')};rows.push(row);
 }
-const ids=[...html.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]);const duplicates=[...new Set(ids.filter((id,i)=>ids.indexOf(id)!==i))];
-rows.push({file:f,boxes:boxes.length,routes,collisions,duplicateIds:duplicates});
-}
-writeFileSync(path.join(dir,'audit-results.json'),JSON.stringify(rows,null,2)+'\n');console.log(JSON.stringify({drawings:rows.length,routes:rows.reduce((n,r)=>n+r.routes,0),collisions:rows.reduce((n,r)=>n+r.collisions.length,0),duplicateIds:rows.reduce((n,r)=>n+r.duplicateIds.length,0)}));if(rows.some(r=>r.collisions.length||r.duplicateIds.length))process.exitCode=1;
+writeFileSync(path.join(dir,'audit-results.json'),JSON.stringify(rows,null,2)+'\n');
+const failures=rows.filter(r=>r.nodeCollisions||r.sharedSegments||r.labelOverlap||r.routeLabelCollisions||r.duplicatePorts||r.duplicateIds||r.foldedIds||r.sourceProblems||r.omitted);
+console.log(JSON.stringify({drawings:rows.length,routes:rows.reduce((n,r)=>n+r.routes,0),failures},null,2));if(failures.length)process.exitCode=1;

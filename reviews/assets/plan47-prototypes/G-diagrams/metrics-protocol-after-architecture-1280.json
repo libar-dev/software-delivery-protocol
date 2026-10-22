@@ -2,14 +2,16 @@
   {
     "pageUrl": "file:///private/tmp/plan47-wt/G/reviews/assets/plan47-prototypes/G-diagrams/protocol-after-architecture.html",
     "viewport": 1280,
+    "pageWidth": 1265,
+    "railWidth": 288,
     "subject": "architecture",
-    "viewBoxWidth": 1160,
-    "figureWidth": 1233,
-    "svgWidth": 1160,
+    "viewBoxWidth": 880,
+    "figureWidth": 913,
+    "svgWidth": 880,
     "scale": 1,
     "font": 14,
     "effectiveFont": 14,
-    "scrollWidth": 1231,
-    "viewportWidth": 1231
+    "scrollWidth": 911,
+    "viewportWidth": 911
   }
 ]

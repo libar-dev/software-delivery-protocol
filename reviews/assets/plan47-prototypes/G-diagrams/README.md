@@ -1,91 +1,91 @@
-# Diagram design evidence
+# Diagram review evidence
 
-The lane's design reads Protocol commit `44e62ef` and libar-platform commit `b038bd4`.
-These are throwaway layouts, not product implementation or bindings. The design commit is the
-commit containing this directory; find it with `git log -1 --format=%H -- reviews/assets/plan47-prototypes/G-diagrams`.
+This revision answers the review of `1d7b3c9`. It reads the Protocol at `44e62ef` and
+libar-platform at `b038bd4`, both read only. These are throwaway layouts, never product code or
+bindings. Find the answer commit with:
 
-`protocol-after.html` and `platform-after.html` collect the proposed views. Individual
-`<corpus>-after-<view>.html` files make screenshot review easier. Both corpora are drawn from
-captured graph values, with the existing epic, not proposed epic assignments from another lane.
+```sh
+git log -1 --format=%H -- reviews/assets/plan47-prototypes/G-diagrams/README.md
+```
+
 The Protocol scope is `pack:spec-studio-v1`; the platform scope is `pack:history-view`.
+`protocol-after.html` and `platform-after.html` collect the views. Standalone pages use
+`<corpus>-after-<view>.html`, with views `dependency`, `capability`, `scoped-architecture`,
+`maturity`, `requirement`, `architecture` and `trace`. Before pages and screenshots preserve the
+base architecture, widest trace and maturity map. Every page retains the Studio rail and column
+on desktop. Trace and requirement pages also reproduce the Spec panel's border and padding. `studio.css` is copied from the Studio; `prototype.css` adds only the proposed rules.
 
-The views are dependency depth, capability refinement, scoped architecture, maturity, and
-requirement traceability. Architecture and trace pages also isolate the legibility change.
-`<corpus>-before-{architecture,trace,maturity}.html` preserve the existing panel markup in a
-Studio-width shell. The trace subjects are `spec:carrier.gherkin-authoring` and
-`spec:application.first-experiment`, tied for the widest primary trace SVGs in their corpora.
-The baseline panels retain the base's four-diagram renderer and maturity cards. No new corpus
-binding changes these selected panels. `studio.css` copies the base Studio's rules;
-`prototype.css` supplies the experimental rules. No remote resource is needed to open a page.
+`protocol-input.json` and `platform-input.json` preserve the original reduced graph values.
+`refresh-answers.mjs` additionally queries the base corpora using local copies of E's map probe
+and S's slice probe. The layout reads their saved answers, not carrier files. Those copied probes
+are evidence, not shipped recipes. S's probe still returns optional outside uses pairs; the
+refresh script selects only pairs whose ends occur in its touched-component answer, matching
+S's current `componentUse` contract. The full architecture comparison keeps the original
+corpus-wide uses separately.
 
-The prototype snapshots are reduced reader output, never a second authored source. Protocol's
-base floors were computed with the package's exported evaluateBody over the graph captured by
-sdp q at the base. The platform floors were queried directly. There are no planned-component declarations in either
-base. `synthetic-plans.html` is labelled synthetic and demonstrates planned versus anchored boxes,
-planned versus anchored uses, and a backward edge. It asserts nothing about either corpus.
+The Protocol base query runs its own built engine so relative builder imports remain trusted.
+The engine source is the same baseline; pointing G's engine at another Protocol checkout would
+lose those bindings. The platform query uses G's engine, as the lane brief requires.
 
 ## Reproduce
 
-From `/tmp/plan47-wt/G`, with its built `dist/`:
+From `/tmp/plan47-wt/G`, with the built engines and the read-only base checkout available:
 
 ```sh
-# Re-render the captured base inputs, byte for byte.
-node /tmp/plan47-wt/G/reviews/assets/plan47-prototypes/G-diagrams/prototype.mjs --snapshots
-
-# Re-query the current worktree and the editable platform copy instead.
-# This replaces snapshots and captures current baseline panels. Publish each Studio first.
-node /tmp/plan47-wt/G/reviews/assets/plan47-prototypes/G-diagrams/prototype.mjs
-
-# Static SVG routes must cross no box interior; HTML ids must be unique in each standalone page.
-node /tmp/plan47-wt/G/reviews/assets/plan47-prototypes/G-diagrams/audit.mjs
-
-# Google Chrome headless, both desktop widths, with exact CSS viewports.
-node /tmp/plan47-wt/G/reviews/assets/plan47-prototypes/G-diagrams/capture-all.mjs
+node reviews/assets/plan47-prototypes/G-diagrams/refresh-answers.mjs
+node reviews/assets/plan47-prototypes/G-diagrams/prototype.mjs --snapshots
+node reviews/assets/plan47-prototypes/G-diagrams/audit.mjs
+node reviews/assets/plan47-prototypes/G-diagrams/capture-all.mjs
 ```
 
-The generator calls `node <worktree>/dist/cli/sdp.js q --root <root> '<body>' --json`, adding
-Protocol's three fixture exclusions. It reads the graph and reader-derived floors, not carriers,
-paths or imports. For a fresh baseline at the original commit, publish the Studio and run the
-same body from a separate checkout of that commit, preserving the three exclusions.
+`--snapshots` preserves the base inputs and baseline panels. Running without it replaces the
+original graph snapshots from the current worktree and platform copy, so it is not the command
+for repeating this base comparison. The saved answers permit rendering without either base
+checkout.
 
-`capture.mjs` is the supplied capture utility copied beside its caller, with an isolated browser profile and an operating-system-assigned debugging port to prevent concurrent captures from sharing a browser. Screenshots are
-`<corpus>-<before|after>-<view>-<1280|1440>.png`. All new views have both widths on both corpora;
-architecture, trace and maturity also have before images. The synthetic probe has one desktop
-image. `measure.mjs` reads SVG, figure and viewport geometry without inferring font size from a
-screenshot. `metrics-*.json` names the saved prototype geometry. `baseline-live-*.json` measures
-the actual generated Studio pages, including Spec-panel padding. Scroll a live trace into view
-before measuring to avoid Chrome's deferred offscreen details layout:
+Screenshots are `<corpus>-after-<view>-<1280|1440|390>.png`. All seven views have all three widths
+on both corpora. Before images retain both desktop widths. `measure.mjs` writes SVG size,
+container size, effective font size, page width and rail width to `metrics-*.json`.
+`baseline-live-*.json` retains the measurements of the actual generated base pages, including
+Spec-panel padding. The widest trace subjects remain `spec:carrier.gherkin-authoring` and
+`spec:application.first-experiment`.
 
-```sh
-node /tmp/plan47-wt/G/reviews/assets/plan47-prototypes/G-diagrams/measure.mjs \
-  file:///tmp/plan47-wt/G/generated/spec-studio/specs/carrier.gherkin-authoring.html \
-  /tmp/trace-geometry.json 1440 sdp-diagram sdp-trace-graph
-```
+The label box budget is 880 logical pixels. Trace SVGs and the Protocol architecture fit that
+budget; routing gutters widen the Protocol dependency drawing, and the platform architecture
+keeps its context columns with local scrolling. Desktop titles start at 14 screen pixels and
+ids at 12. Below 720 CSS pixels, the existing responsive promise scales the same drawing to the
+screen. No clipboard or viewport script is supplied by these evidence pages.
 
-`routing-results.json` records folds and route failures. `audit-results.json` checks every routed
-segment against every node rectangle in the standalone proposed views. Zero collisions verifies
-this evidence set only. Routes can still cross one another or share a free gutter. The product
-contract reserves label rectangles, provides explicit bounds and fallback, and needs its own tests.
-The prototype uses keyed edge legends to keep dense arrow labels out of boxes. Preferred Mermaid
-source and flowchart fallbacks are selectable text; clipboard enhancement, parser integration,
-print, export and the complete production fold policy remain build work.
+## What changed after review
 
-A repeated render of the captured inputs produced identical bytes for the generated HTML, CSS
-and routing answer. Screenshots are visual evidence, not a byte-determinism assertion.
+- Dependency depth and relation selection come from S's answer, starting at 1. Examples stay in
+  parent counts and the text equivalent. Boundary groups fold before member bands; holding
+  targets and targets below defined remain individual boxes. Every original row remains in text.
+- Capability children stay in parent groups. Repeated visits retain their refinement arrow and
+  link to the first occurrence. Unreached identities remain in the text equivalent.
+- The maturity map uses faint empty cells and exact counts with member marks in populated cells.
+  Only populated cells need member-list disclosures.
+- Routes reserve distinct ports and 8-pixel lanes. Labels reserve rectangles; homogeneous uses
+  and refinement drawings name the relation once in their legend and carry no edge keys.
+- Displayed ids mark elision and never attach a namespace to a shortened suffix. Component
+  member counts follow the id.
+- Sources use the diagram's own id qualification and the existing `sdp-copy` markup. The exact
+  escaping probe preserves apostrophes and backticks and encodes quotes, hashes and angle signs.
 
-## Catalog sources
+`router-probe.mjs` contains the experimental search and bounded retries. Its weights, grid and
+retry choices are deliberately absent from the Spec. `audit.mjs` checks all standalone drawings
+for node and band-label collisions, shared collinear segments, duplicate ports, overlapping edge
+labels, routes through labels, duplicate HTML ids and invented folded-id labels. It also checks
+the escaping regression. `routing-results.json` names folds and routing failures;
+`audit-results.json` records each artifact's checks. The audit fails if any intended drawing is
+omitted, so an all-text fallback cannot hide a failed prototype.
 
-The catalog was checked against Mermaid `12.2.0` on 2026-10-22. Its navigation alone misses
-agent flow and the railroad variants, so the tagged registration source was also read.
+Neither real base has planned component declarations. `synthetic-plans.html` and its desktop
+screenshot show the labelled planned/anchored distinction and backward routes. The two real
+requirement pages use a flowchart fallback and name the unsupported relation that requires it.
+`synthetic-requirement.html` and its screenshot exercise the supported `requirementDiagram`
+serialization and punctuation. Synthetic ids assert no fact about either corpus.
 
-- [Mermaid's current syntax navigation](https://mermaid.js.org/intro/)
-- [Mermaid 12.2.0 release](https://github.com/mermaid-js/mermaid/releases/tag/mermaid@12.2.0)
-- [Tagged diagram registration](https://github.com/mermaid-js/mermaid/blob/mermaid@12.2.0/packages/mermaid/src/diagram-api/diagram-orchestration.ts)
-- [Requirement syntax](https://mermaid.js.org/syntax/requirementDiagram.html)
-- [Tagged requirement grammar, whose fields are optional](https://github.com/mermaid-js/mermaid/blob/mermaid@12.2.0/packages/mermaid/src/diagrams/requirement/parser/requirementDiagram.jison)
-- [Block syntax](https://mermaid.js.org/syntax/block.html)
-- [Mindmap syntax](https://mermaid.js.org/syntax/mindmap.html)
-- [TreeView syntax](https://mermaid.js.org/syntax/treeView.html)
-
-The Protocol's decision to keep or refuse a type is design judgment about its graph, not a claim
-that Mermaid itself forbids that use.
+These checks establish the properties of these artifacts. Production parser checks, clipboard
+success/failure, pinch/reset, print, export, fonts and adversarial routing limits remain build
+verification. The engine, tests, ready Specs, Pack manifests and glossary were not edited.

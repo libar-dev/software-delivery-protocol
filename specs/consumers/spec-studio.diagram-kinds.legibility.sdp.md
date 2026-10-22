@@ -4,8 +4,8 @@ kind: contract
 altitude: story
 readiness: defined
 relations:
-  refines: spec:consumers.spec-studio.diagram-kinds
-  dependsOn: spec:consumers.spec-studio.diagrams
+  refines: spec:consumers.spec-studio.diagrams
+  dependsOn: spec:consumers.spec-studio.responsive
 ---
 # A diagram preserves readable labels before zoom
 
@@ -13,15 +13,13 @@ relations:
 - outcome: Read a drawing's labels on first view while allowing a wide graph to scroll inside its figure.
 
 ## Contract
-- [#firstView] On screen, the figure spans the page's available content width and its SVG starts at the smaller of natural size and the container-fit scale, clamped to a minimum scale of one. Overflow scrolls inside the figure, never the page. A visible sentence explains horizontal scrolling whenever the SVG is wider than its viewport.
-- [#titleFirst] A box starts with its title or recorded label at fourteen pixels, then a shortened id at twelve pixels, with full identity in its link title and complete text equivalent. Shortening changes no identity, target or element id; collisions extend the displayed suffix until it is unique within the figure.
-- [#cellWrap] Layout uses a fixed logical width budget, never browser or font measurement, and wraps each cell's boxes within that budget. When context columns together exceed it, retain labelled columns and scroll; never squeeze each context into illegible cells.
-- [#controls] Pan, zoom, pinch and reset change only the viewport. Reset restores natural-size first view and initial scroll position. Without script, scrolling, links, source and the complete text remain usable. Print and a self-contained export expose the complete text even when a drawing must fit paper width.
+- [#firstView] At 720 CSS pixels of viewport width and wider, a diagram's SVG starts at its natural size inside its figure's scroll region and is never shrunk to fit. Overflow scrolls inside the figure, never the page. The build writes `Scroll horizontally to read the whole drawing.` above every drawing wider than the width budget. Below that viewport width the responsive contract's narrow drawing applies.
+- [#titleFirst] A box starts with its title or recorded label at fourteen pixels, then a shortened id at twelve pixels, with full identity in its link title and text equivalent. Shortening changes no identity, target or element id; collisions extend the displayed suffix until it is unique within the figure. The box's remaining words, such as a component's member count, follow the id.
 
 ## Design
-- widthBudget: `1120` logical pixels for a band or grid, `280` for one context cell and `24` pixels between boxes; a one-context grid can use the full band budget. The budget is deterministic input to layout, not a media-query-dependent graph calculation.
+- widthBudget: `880` logical pixels for a band or grid, band labels included, which stay above their band; `264` for one context cell and `24` between boxes. A drawing wider than `880` scrolls inside its figure. Layout reads no browser or font measurement.
 - labelMetrics: Title lines hold at most `28` characters at fourteen pixels with an eight-pixel character advance; ids hold at most `30` characters at twelve pixels with an eight-pixel advance. Wrap at spaces or id punctuation, then by code point, with whole-pixel coordinates and height calculated from all lines.
-- minimumScale: `1` on first screen view. Reducing width by wrapping and shorter ids comes before local scrolling; zooming out remains an explicit reader choice. Titles therefore start at fourteen screen pixels and ids at twelve.
-- shortId: Keep the namespace and the shortest trailing dotted segments that distinguish ids within this figure; keep additional segments on collisions. Full ids remain available in the text and source. An id without enough delimiters stays whole and wraps.
-- viewport: `.diagram-scroll` is a keyboard-focusable named region with overflow auto, max-width one hundred percent, an SVG at natural width and height, and no max-width fit on screen. A figure-wide caption and legend remain outside its scroll area. A note reads `Scroll horizontally to read the whole drawing.` when width exceeds the fixed figure budget; CSS also leaves the scroll region discoverable when a narrower viewport causes overflow.
-- elementIds: Keep each kind's text and arrow ids; the viewport uses `diagram.<subject>.<view>.viewport` and its visible instruction uses `.scroll-help`, both named through accessible attributes.
+- minimumScale: `1` on first desktop view at viewport widths of at least `720` CSS pixels; below that width the responsive contract fits the same drawing to the screen. Zooming out on desktop remains an explicit reader choice.
+- shortId: Drop the namespace and the leading dotted segments every id in the figure shares, and mark the elision with a leading `…`, so a label may show `…markdown-authoring`; keep more segments on collisions. A displayed id never carries a namespace unless it is shown in full. Full ids remain in the link title, the text equivalent and the source.
+- viewport: `.diagram-scroll` is a keyboard-focusable named region with overflow auto and max-width one hundred percent. At desktop widths its SVG has natural width and height with no max-width fit; below `720` CSS pixels the SVG fits the region. The caption and legend stay outside. The build emits the scroll instruction only when SVG width exceeds the fixed width budget; CSS leaves the region discoverable on narrower columns.
+- elementIds: Keep each kind's text and arrow ids; the viewport uses `diagram.<subject>[.<view>].viewport` and its visible instruction uses `.scroll-help`, inserting the view name exactly where the diagram's own ids do.
