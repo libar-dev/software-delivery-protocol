@@ -83,22 +83,26 @@ export function requirementView(ctx: PageContext, spec: SpecContext): string {
               ...(unit?.line === undefined ? {} : { line: unit.line }),
             },
           }),
-      band: intended.has(id)
-        ? "Intended Specs"
-        : isExample
-          ? "Declared verifying examples"
-          : s || id.startsWith("spec:")
-            ? "Intended Specs"
-            : id.startsWith("impl:") || id.startsWith("api:") || id.startsWith("component:")
-              ? "Satisfying or referencing units"
-              : "Test or oracle bindings",
+      band:
+        !selected.has(id) && (s || id.startsWith("spec:"))
+          ? "Outside the selected set"
+          : isExample
+            ? "Declared verifying examples"
+            : intended.has(id)
+              ? "Intended Specs"
+              : id.startsWith("impl:") || id.startsWith("api:") || id.startsWith("component:")
+                ? "Satisfying or referencing units"
+                : "Test or oracle bindings",
     };
   });
   const empty = [
-    "Intended Specs",
-    "Declared verifying examples",
-    "Satisfying or referencing units",
-    "Test or oracle bindings",
-  ].filter((band) => !boxes.some((b) => b.band === band));
-  return `<h3>Requirement drawing</h3>${empty.length ? list(empty.map((band) => `${band}: no ${band === "Declared verifying examples" ? "declared verifying example" : "recorded binding"}.`)) : ""}${renderDiagram(requirementDiagram({ subject: spec.id, boxes, edges }), `${spec.id}.requirement`)}${edges.length ? "" : `<p>${code(spec.id)} has no requirement edges recorded.</p>`}`;
+    ...(examples.size === 0 ? ["Declared verifying examples: no declared verifying example."] : []),
+    ...(!edges.some((e) => e.claim === "anchored" && ["satisfies", "references"].includes(e.kind))
+      ? ["Satisfying or referencing units: no recorded binding."]
+      : []),
+    ...(!edges.some((e) => e.claim === "anchored" && ["verifies", "models"].includes(e.kind))
+      ? ["Test or oracle bindings: no recorded binding."]
+      : []),
+  ];
+  return `<h3>Requirement drawing</h3>${empty.length ? list(empty) : ""}${renderDiagram(requirementDiagram({ subject: spec.id, boxes, edges }), `${spec.id}.requirement`)}${edges.length ? "" : `<p>${code(spec.id)} has no requirement edges recorded.</p>`}`;
 }

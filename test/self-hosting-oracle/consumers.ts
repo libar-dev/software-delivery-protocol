@@ -5422,6 +5422,8 @@ export const consumersSpecs = [
           "`880` logical pixels for a band or grid, band labels included above their band; `264` per context cell when several contexts share a grid, the full band budget when only one context is shown, and `24` between boxes. Routing gutters may widen the SVG to preserve distinct lanes. A drawing wider than `880` scrolls inside its figure and receives the build-written instruction `Scroll horizontally to read the whole drawing.`",
         bound:
           "`40` boxes and `100` edges per diagram, counting every box a drawing holds, folded and planned boxes included, and every edge it draws.",
+        density:
+          "The build may trigger the existing folds before the hard bound when incident-edge density or estimated height would make the picture unreadable. Such a fold keeps the same scope, claims and complete text equivalent.",
         labelMetrics:
           "A title or recorded label leads at fourteen pixels, followed by the displayed id at twelve pixels and remaining words such as a component's member count. Title lines hold at most `28` characters and id lines `30`, with an eight-pixel character advance. Wrap at spaces or id punctuation, then by code point, and calculate box height from every line.",
         cellWrap:
@@ -6872,7 +6874,7 @@ export const consumersSpecs = [
         sourceElement:
           "The disclosure's copy button is the page elements' `sdp-copy`, given a `for` attribute that names the source text area so a long source is not repeated in an attribute; no new element is added, and `sdp-diagram` still adds only pan, zoom and pinch.",
         sourceEscaping:
-          'Inside a quoted label, `"`, `#`, `%`, `<` and `>` become Mermaid entity codes (`#quot;`, `#35;`, `#37;`, `#lt;`, `#gt;`), a line break becomes a space, and every other character is kept.',
+          'Inside a quoted label, `"`, `#`, `%`, `<` and `>` become Mermaid entity codes (`#quot;`, `#35;`, `#37;`, `#lt;`, `#gt;`); a backtick becomes `#96;`, a line break becomes a space, and every other character is kept.',
         sourceIds:
           "Stable safe aliases assigned in displayed box order, with full graph ids in quoted labels or escaped comments. Aliases are local serialization names, never graph identities. No click directive or initialization directive is emitted.",
         elementIds:
@@ -6918,7 +6920,7 @@ export const consumersSpecs = [
         bands:
           "Label bands `Depth <n>` from the deepest at the top down to depth 1, then `Outside this scope` at the bottom, so a member sits above what it rests on and boundary edges stay short. Within a band keep supplied order. Depths are structural, never phases, dates or priority.",
         edgeWords:
-          "Show refines, dependsOn, constrainedBy and decidedBy beside their arrow or as a keyed legend where several kinds occur, and in the text equivalent with claim and optional reason. Mixed relations cannot become an unlabeled dependency arrow.",
+          "Show refines, dependsOn, constrainedBy and decidedBy beside their arrow or as a keyed legend where several kinds occur, and in the text equivalent with claim and optional reason. Mixed relations cannot become an unlabeled dependency arrow. Arrows with the same ends, claim and ordering may combine into one arrow naming every relation; the text equivalent retains each original relation and reason.",
         textEquivalent:
           "List every scoped and boundary Spec with its full id and title, then every original edge and every cycle's members; folding removes no text row.",
         elementIds:
@@ -7072,7 +7074,7 @@ export const consumersSpecs = [
         rules: [
           "For the Spec page's selected set, draw declared refines, declared and anchored verifies, and anchored satisfies edges incident on the set, plus anchored verifies on its declared verifying examples. Draw code references and oracle models only as their own named kinds, never as realization or successful verification.",
           "Every box and edge names its claim. A declared verifying example with no resolving test says `no test binding`; an anchored verifier says `binding present`, never passed. Missing satisfies says `no satisfying binding`, never unimplemented by inference through a child. Examples and decision records, which code never satisfies, carry no satisfying-binding label.",
-          "Above the shared bound, fold the largest group by edge kind, direction and claim, ties in that lexical order, until it fits. Keep every original edge and box in the text equivalent. If the fold still cannot fit, omit the drawing and open its text.",
+          "Combine arrows with the same ends, direction and claim into one labelled arrow naming every relation. Fold verifying examples together with their exclusive test bindings beyond a small readable count, naming both claims and counts. Above the shared bound or readable density, fold the largest remaining group by edge kind, direction and claim, ties in that lexical order, until it fits. A fold names its relation and claim and hides its internal identity. Keep every original edge and box in the text equivalent. If the fold still cannot fit, omit the drawing and open its text.",
         ],
         ruleKeys: {
           exactEdges: "rules[0]",
@@ -7084,7 +7086,7 @@ export const consumersSpecs = [
         placement:
           "On a Spec page the requirement drawing replaces the realization drawing under its heading; its set is the Spec, the Specs that refine it, and the examples that verify any of them.",
         bands:
-          "Place intended Specs, declared verifying examples, satisfying or referencing units, and test or oracle bindings in labelled bands. A node reached in several bands has one placement at its first band and keeps every edge. Empty bands state which binding or intent is absent.",
+          "Place selected non-example Specs, declared verifying examples, satisfying or referencing units, and test or oracle bindings in labelled bands. An example in the selected set always sits in the examples band, including when it also refines a selected Spec. Place Specs outside the selected set in a separate labelled band. Each node has one placement and keeps every edge. Derive each absence statement from the selected examples and recorded edge kinds, never from which bands contain boxes.",
         wordsBesideStyle:
           "Box subtitles say `declared Spec`, `anchored code`, `anchored test binding` or `anchored oracle binding`; edge labels carry both the exact relation and claim. Verification modes, risk levels and assertion results are not invented.",
         textEquivalent:

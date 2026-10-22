@@ -1,4 +1,4 @@
-import { aggregate, compare, withinBound } from "./model.js";
+import { aggregate, compare, needsFold, combinePairs } from "./model.js";
 import type { Diagram, DiagramBox, DiagramInput } from "./model.js";
 import { mermaidSource, mermaidText } from "./mermaid.js";
 const bandOrder = [
@@ -6,6 +6,7 @@ const bandOrder = [
   "Declared verifying examples",
   "Satisfying or referencing units",
   "Test or oracle bindings",
+  "Outside the selected set",
 ];
 /**
  * @sdpAnchor impl:protocol.studio-requirement-diagram
@@ -26,12 +27,52 @@ export function requirementDiagram(input: DiagramInput & { subject: string }): D
     sectionId: null,
     caption: `Requirement drawing for ${input.subject}`,
     textEquivalent: input,
+    edges: combinePairs(input.edges),
   };
   const ids = new Map(input.boxes.map((b) => [b.id, b.id]));
+  const examples = input.boxes.filter(
+    (b) => b.id !== input.subject && b.band === "Declared verifying examples",
+  );
+  if (examples.length > 4) {
+    const exampleIds = new Set(examples.map((b) => b.id));
+    const tests = input.boxes.filter(
+      (b) =>
+        b.band === "Test or oracle bindings" &&
+        input.edges.some(
+          (e) =>
+            e.from === b.id &&
+            exampleIds.has(e.to) &&
+            e.kind === "verifies" &&
+            e.claim === "anchored",
+        ) &&
+        input.edges.every((e) => e.from !== b.id || exampleIds.has(e.to)),
+    );
+    const members = [...examples, ...tests];
+    const id = `diagram.${input.subject}.requirement.fold.verifies.incoming.declared`;
+    for (const b of members) ids.set(b.id, id);
+    drawing = {
+      ...drawing,
+      boxes: order([
+        ...drawing.boxes.filter((b) => ids.get(b.id) === b.id),
+        {
+          id,
+          title: `${String(examples.length)} verifying examples · declared`,
+          words: `${String(examples.length)} verifying examples · declared; ${String(tests.length)} test bindings · anchored, folded`,
+          detail: `${String(tests.length)} test bindings · anchored · folded`,
+          hideIdentity: true,
+          folded: true,
+          foldedIds: members.map((b) => b.id),
+          target: `#diagram.${input.subject}.requirement.text`,
+          band: "Declared verifying examples",
+        },
+      ]),
+      edges: combinePairs(aggregate(input.edges, ids)),
+    };
+  }
   const protectedIds = new Set([input.subject]);
   // A peripheral box has one fold group, even when several bindings reach it.
   const groups = new Map<string, DiagramBox[]>();
-  for (const box of input.boxes.filter((b) => !protectedIds.has(b.id))) {
+  for (const box of input.boxes.filter((b) => !protectedIds.has(b.id) && ids.get(b.id) === b.id)) {
     const edge = input.edges
       .filter((e) => e.from === box.id || e.to === box.id)
       .sort((a, b) =>
@@ -48,7 +89,8 @@ export function requirementDiagram(input: DiagramInput & { subject: string }): D
   for (const [key, members] of [...groups].sort(
     ([a, aa], [b, bb]) => bb.length - aa.length || compare(a, b),
   )) {
-    if (withinBound(drawing)) break;
+    if (!needsFold(drawing)) break;
+    if (members.length < 2) continue;
     const id = `diagram.${input.subject}.requirement.fold.${key}`;
     for (const b of members) ids.set(b.id, id);
     drawing = {
@@ -57,15 +99,16 @@ export function requirementDiagram(input: DiagramInput & { subject: string }): D
         ...drawing.boxes.filter((b) => !members.some((m) => m.id === b.id)),
         {
           id,
-          title: `${String(members.length)} bindings`,
-          words: `${String(members.length)} ${key}, folded`,
+          title: `${String(members.length)} ${key.startsWith("refines.") && key.endsWith(".declared") ? "refining Specs" : key.split(".").slice(0, 2).join(" ")} · ${key.split(".").at(-1) ?? ""}`,
+          hideIdentity: true,
+          words: `${String(members.length)} ${key.split(".").join(" · ")}, folded`,
           target: `#diagram.${input.subject}.requirement.text`,
           folded: true,
           foldedIds: members.map((m) => m.id),
           band: members[0]?.band ?? bandOrder[3],
         },
       ]),
-      edges: aggregate(input.edges, ids),
+      edges: combinePairs(aggregate(input.edges, ids)),
     };
   }
   const unsupported = [

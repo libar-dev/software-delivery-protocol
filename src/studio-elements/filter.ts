@@ -80,7 +80,8 @@ export function registerFilter(): void {
       this.update();
     };
 
-    private readonly reset = (): void => {
+    private readonly reset = (event: Event): void => {
+      event.preventDefault();
       for (const select of Array.from(
         this.querySelectorAll<HTMLSelectElement>("select[data-filter]"),
       ))

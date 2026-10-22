@@ -20,6 +20,7 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
     : selectedSpec
       ? ctx.data.rail.packs.filter((pack) => selectedSpec.packs.includes(pack.id))
       : ctx.data.rail.packs;
+  const specIds = new Set(ctx.data.specs.map((spec) => spec.id));
   const packRail = packs
     .map(
       (pack) =>
@@ -28,7 +29,7 @@ export function frame(ctx: PageContext, title: string, body: string, selected?: 
             ? `<ol>${pack.members
                 .map((member) => {
                   const path = pagePath(member.id);
-                  const resolved = ctx.data.specs.some((s) => s.id === member.id);
+                  const resolved = specIds.has(member.id);
                   const label = codeSpans(member.title ?? member.id);
                   return `<li>${isPack ? `<a href="#${escape(member.id)}">${label}</a>` : path !== null && resolved ? `<a href="${escape(relative(ctx, path))}"${member.id === selected ? ' aria-current="page"' : ""}>${label}</a>` : label}</li>`;
                 })

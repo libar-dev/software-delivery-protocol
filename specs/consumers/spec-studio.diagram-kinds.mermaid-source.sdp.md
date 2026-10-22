@@ -27,7 +27,7 @@ Mermaid source is a second serialization of the drawing's supplied values. It ch
 ## Design
 - disclosure: Summary `Mermaid source`, a paragraph `Copyable source; the Studio draws static SVG.`, a syntax label and optional fallback explanation, then a labelled read-only textarea and the script-added copy button.
 - sourceElement: The disclosure's copy button is the page elements' `sdp-copy`, given a `for` attribute that names the source text area so a long source is not repeated in an attribute; no new element is added, and `sdp-diagram` still adds only pan, zoom and pinch.
-- sourceEscaping: Inside a quoted label, `"`, `#`, `%`, `<` and `>` become Mermaid entity codes (`#quot;`, `#35;`, `#37;`, `#lt;`, `#gt;`), a line break becomes a space, and every other character is kept.
+- sourceEscaping: Inside a quoted label, `"`, `#`, `%`, `<` and `>` become Mermaid entity codes (`#quot;`, `#35;`, `#37;`, `#lt;`, `#gt;`); a backtick becomes `#96;`, a line break becomes a space, and every other character is kept.
 - sourceIds: Stable safe aliases assigned in displayed box order, with full graph ids in quoted labels or escaped comments. Aliases are local serialization names, never graph identities. No click directive or initialization directive is emitted.
 - elementIds: Use `diagram.<subject>[.<view>].source` and `.source-text`, inserting the view name exactly where the diagram's own ids do, so a trace graph's source is `diagram.<subject>.source`.
 - export: The self-contained Pack export retains source as selectable text and omits the copy script; print expands the text equivalent and may leave source closed unless the reader opened it.

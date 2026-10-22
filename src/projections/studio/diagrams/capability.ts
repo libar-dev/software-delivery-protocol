@@ -1,5 +1,6 @@
+import { plainTitle } from "../pages/code-spans.js";
 import type { Diagram, DiagramBox, DiagramEdge } from "./model.js";
-import { withinBound, compare } from "./model.js";
+import { needsFold, compare } from "./model.js";
 import { escape, code } from "../pages/html.js";
 
 export interface CapabilityNode {
@@ -149,8 +150,8 @@ export function capabilityDiagrams(
     boxes.push({
       id,
       identity: v.node.id,
-      words: `${v.node.title ?? v.node.id} · ${v.node.altitude}${cycle ? ` · cycle · ${String(cycle.length)} unique Specs` : ""}${v.repeat ? " · repeat" : ""}`,
-      title: v.node.title ?? v.node.id,
+      words: `${plainTitle(v.node.title ?? v.node.id)} · ${v.node.altitude}${cycle ? ` · cycle · ${String(cycle.length)} unique Specs` : ""}${v.repeat ? " · repeat" : ""}`,
+      title: plainTitle(v.node.title ?? v.node.id),
       detail: `${v.node.altitude}${cycle ? ` · cycle · ${String(cycle.length)} unique Specs` : ""}${v.repeat ? " · repeat" : ""}`,
       target: v.repeat
         ? `#${encodeURIComponent(firstId ?? capabilityBranchId(subject, v.node.id))}`
@@ -212,7 +213,7 @@ export function capabilityDiagrams(
       return true;
     });
   };
-  while (!withinBound({ boxes, edges })) {
+  while (needsFold({ boxes, edges })) {
     const branches = boxes
       .filter((b) => b.parent && !b.folded)
       .map((parent) => ({ parent, removed: descendants(parent) }))

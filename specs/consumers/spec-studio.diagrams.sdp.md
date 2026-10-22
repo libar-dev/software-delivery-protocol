@@ -40,6 +40,7 @@ Every Studio diagram is laid out in the engine when the page set is built, so a 
 
 ## Design
 - bound: `40` boxes and `100` edges per diagram, counting every box a drawing holds, folded and planned boxes included, and every edge it draws.
+- density: The build may trigger the existing folds before the hard bound when incident-edge density or estimated height would make the picture unreadable. Such a fold keeps the same scope, claims and complete text equivalent.
 - labelMetrics: A title or recorded label leads at fourteen pixels, followed by the displayed id at twelve pixels and remaining words such as a component's member count. Title lines hold at most `28` characters and id lines `30`, with an eight-pixel character advance. Wrap at spaces or id punctuation, then by code point, and calculate box height from every line.
 - cellWrap: Wrap a cell's boxes within the fixed logical width budget instead of a fixed box count; retain context columns with local scrolling when they exceed it. Layout reads no browser or font measurement.
 - widthBudget: `880` logical pixels for a band or grid, band labels included above their band; `264` per context cell when several contexts share a grid, the full band budget when only one context is shown, and `24` between boxes. Routing gutters may widen the SVG to preserve distinct lanes. A drawing wider than `880` scrolls inside its figure and receives the build-written instruction `Scroll horizontally to read the whole drawing.`

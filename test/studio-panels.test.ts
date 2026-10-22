@@ -244,9 +244,31 @@ describe("requirement drawing", () => {
     expect(drawing).toContain("requirementDiagram");
     expect(drawing).not.toMatch(/passed|verifyMethod|risk:/u);
     expect(drawing.match(/data-id="spec:example"/gu)).toHaveLength(1);
-    expect(drawing.indexOf('data-id="spec:example"')).toBeLessThan(
+    expect(drawing.indexOf('data-id="spec:example"')).toBeGreaterThan(
       drawing.indexOf('data-label="Declared verifying examples"'),
     );
+  });
+  it("keeps a refining verifier in the examples band and outside Specs apart", async () => {
+    const page = find(
+      await pages({
+        "s.sdp.md": carrier("sample", "{refines: spec:parent}"),
+        "p.sdp.md": carrier("parent"),
+        "e.sdp.md": carrier(
+          "example",
+          "{refines: spec:sample, verifies: spec:sample}",
+          "idea",
+          "example",
+        ),
+      }),
+      "specs/sample.html",
+    );
+    const drawing =
+      page.split("<h3>Requirement drawing</h3>")[1]?.split("<h3>Decisions</h3>")[0] ?? "";
+    expect(drawing).not.toContain("no declared verifying example");
+    expect(drawing).toMatch(
+      /data-label="Declared verifying examples"[\s\S]*?data-id="spec:example"/u,
+    );
+    expect(drawing).toMatch(/data-label="Outside the selected set"[\s\S]*?data-id="spec:parent"/u);
   });
   it("offers requirement syntax for the supported exact relation subset", async () => {
     const page = find(
@@ -428,6 +450,7 @@ it.each([
   });
   expect(drawing.boxes.filter((b) => b.folded).map((b) => b.id)).toEqual([
     `diagram.spec:sample.requirement.fold.${first.join(".")}`,
+    `diagram.spec:sample.requirement.fold.${second.join(".")}`,
   ]);
   expect(drawing.textEquivalent?.boxes).toHaveLength(41);
   expect(drawing.textEquivalent?.edges).toHaveLength(40);

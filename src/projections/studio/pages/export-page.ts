@@ -19,6 +19,19 @@ function decode(value: string): string {
 }
 const mainContent = (html: string): string =>
   /<main id="main">([\s\S]*)<\/main>/u.exec(html)?.[1] ?? "";
+function pageIdentities(pages: readonly StudioPage[]): ReadonlyMap<string, string | undefined> {
+  return new Map(
+    pages
+      .map(
+        (page) =>
+          [
+            page.path,
+            /<div class="ids"><span><code>([^<]*)<\/code>/u.exec(page.content)?.[1],
+          ] as const,
+      )
+      .reverse(),
+  );
+}
 /**
  * @sdpAnchor impl:protocol.studio-pack-export
  * @sdpLabel copies rendered canvas content into one inline-styled document with prefixed element references
@@ -31,18 +44,20 @@ export function packExport(
   pages: readonly StudioPage[],
   stylesheet: string,
   linkedPages: readonly StudioPage[] = pages,
+  linkedIdentities = pageIdentities(linkedPages),
 ): StudioPage {
+  const byPath = new Map(pages.map((page) => [page.path, page] as const).reverse());
   const packPath = pagePath(pack.id) ?? "";
   const contents = [
     {
       path: packPath,
       prefix: "pack/",
-      html: pages.find((p) => p.path === packPath)?.content ?? "",
+      html: byPath.get(packPath)?.content ?? "",
       id: pack.id,
     },
     ...pack.members.flatMap((member) => {
       const path = pagePath(member.id);
-      const page = pages.find((p) => p.path === path);
+      const page = path === null ? undefined : byPath.get(path);
       return page
         ? [{ path: page.path, prefix: `${member.id}/`, html: page.content, id: member.id }]
         : [];
@@ -131,9 +146,7 @@ export function packExport(
             decode(href),
             `https://studio.invalid/${content.path}`,
           ).pathname.slice(1);
-          const graphId = linkedPages
-            .find((p) => p.path === path)
-            ?.content.match(/<div class="ids"><span><code>([^<]*)<\/code>/u)?.[1];
+          const graphId = linkedIdentities.get(path);
           return `<code>${escape(graphId ? decode(graphId) : dest.text)}</code>`;
         },
       );
@@ -178,5 +191,8 @@ export function exportPages(
             return { path, content: specPage({ data: graphOnly, path }, spec) };
           }),
         ];
-  return data.packs.map(({ context }) => packExport(context, sources, stylesheet, pages));
+  const identities = pageIdentities(pages);
+  return data.packs.map(({ context }) =>
+    packExport(context, sources, stylesheet, pages, identities),
+  );
 }

@@ -49,6 +49,7 @@ export async function studioRecipeAnswers(
     reader,
     graph: reader.graph,
     report,
+    memoizeParameterlessRecipes: true,
   });
   if (typeof value !== "function") throw new Error("The body evaluator returned no recipe caller.");
   const evaluate = value as RecipeCaller;

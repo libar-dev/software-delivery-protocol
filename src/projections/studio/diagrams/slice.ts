@@ -1,6 +1,7 @@
+import { plainTitle } from "../pages/code-spans.js";
 import type { SliceAnswer, SliceArchitecture } from "../slice-answer.js";
 import type { Diagram, DiagramBox, DiagramEdge } from "./model.js";
-import { aggregate, withinBound } from "./model.js";
+import { aggregate, combinePairs, needsFold } from "./model.js";
 import { architectureDiagrams } from "./architecture.js";
 type Target = (id: string) => string;
 const rung = (row: { statedReadiness: string | null; floorReached: string | null }) =>
@@ -25,8 +26,8 @@ export function dependencyDiagram(
       .filter((m) => m.depth === depth)
       .map((m) => ({
         id: m.id,
-        title: m.title ?? m.id,
-        words: `${m.title ?? m.id}, ${rung(m)}, ${String(m.exampleMembers.length)} example members folded in`,
+        title: plainTitle(m.title ?? m.id),
+        words: `${plainTitle(m.title ?? m.id)}, ${rung(m)}, ${String(m.exampleMembers.length)} example members folded in`,
         detail: `${rung(m)}; ${String(m.exampleMembers.length)} example members folded in`,
         target: target(m.id),
         band: `Depth ${String(depth)}`,
@@ -52,8 +53,8 @@ export function dependencyDiagram(
     if (keep) {
       boxes.push({
         id: row.id,
-        title: row.title ?? row.id,
-        words: `${row.title ?? row.id}, ${rung(row)}; holds ${String(row.holds.length)} members`,
+        title: plainTitle(row.title ?? row.id),
+        words: `${plainTitle(row.title ?? row.id)}, ${rung(row)}; holds ${String(row.holds.length)} members`,
         detail: rung(row),
         target: target(row.id),
         band: "Outside this scope",
@@ -125,14 +126,14 @@ export function dependencyDiagram(
     preserveOrder: true,
     mermaidKind: "dependencies",
     boxes,
-    edges: aggregate(edges, mapping),
+    edges: combinePairs(aggregate(edges, mapping)),
   };
   for (const depth of [...depths].sort(
     (a, b) =>
       shown.filter((m) => m.depth === b).length - shown.filter((m) => m.depth === a).length ||
       a - b,
   )) {
-    if (withinBound(drawing)) break;
+    if (!needsFold(drawing)) break;
     const members = shown.filter((m) => m.depth === depth),
       id = `diagram.${diagramId}.fold.${String(depth)}`;
     for (const m of members) mapping.set(m.id, id);
@@ -149,7 +150,7 @@ export function dependencyDiagram(
       hideIdentity: true,
       foldedIds: members.map((m) => m.id),
     });
-    drawing = { ...drawing, boxes: remaining, edges: aggregate(edges, mapping) };
+    drawing = { ...drawing, boxes: remaining, edges: combinePairs(aggregate(edges, mapping)) };
   }
   return {
     ...drawing,
@@ -157,10 +158,10 @@ export function dependencyDiagram(
     textRows: [
       ...answer.members.map(
         (m) =>
-          `${m.id}: ${m.title ?? m.id}, depth ${String(m.depth)}, ${rung(m)}${m.exampleOf ? `; example folded into ${m.exampleOf}` : ""}`,
+          `${m.id}: ${plainTitle(m.title ?? m.id)}, depth ${String(m.depth)}, ${rung(m)}${m.exampleOf ? `; example folded into ${m.exampleOf}` : ""}`,
       ),
       ...answer.boundary.restsOn.map(
-        (m) => `Outside this scope: ${m.id}: ${m.title ?? m.id}, ${rung(m)}`,
+        (m) => `Outside this scope: ${m.id}: ${plainTitle(m.title ?? m.id)}, ${rung(m)}`,
       ),
       ...answer.structure.edges.map(
         (e) =>

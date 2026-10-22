@@ -1,4 +1,4 @@
-import { aggregate, compare, withinBound } from "./model.js";
+import { aggregate, compare, needsFold, withinBound } from "./model.js";
 import type { Diagram, DiagramBox, DiagramInput } from "./model.js";
 const relations = ["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"];
 const relationIndex = (kind: string): number => {
@@ -39,7 +39,7 @@ export function traceDiagram(input: Rooted): Diagram {
     ([a, aa], [b, bb]) => bb.length - aa.length || groupOrder(a) - groupOrder(b) || compare(a, b),
   );
   for (const [band, members] of sorted) {
-    if (withinBound(drawing)) break;
+    if (!needsFold(drawing)) break;
     const id = `${input.subject}.fold.${band.replaceAll(" ", ".")}`;
     for (const member of members) ids.set(member.id, id);
     drawing = {

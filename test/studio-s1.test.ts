@@ -249,7 +249,9 @@ describe("Studio diagrams", () => {
     );
     const edges = boxes.map((box) => ({ from: subject.id, to: box.id, kind: box.words }));
     const trace = traceDiagram({ subject: subject.id, boxes: [subject, ...boxes], edges });
-    expect(trace.boxes.filter((b) => b.folded).map((b) => b.band)).toEqual(["Outgoing refines"]);
+    expect(trace.boxes.filter((b) => b.folded).map((b) => b.band)).toEqual(
+      kinds.map((kind) => `Outgoing ${kind}`),
+    );
     const bands = groups(renderDiagram(trace), "band").map(
       (g) => /data-label="([^"]+)"/u.exec(g)?.[1],
     );

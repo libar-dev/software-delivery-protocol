@@ -1,3 +1,4 @@
+import { text } from "./text.js";
 import type { PageContext } from "./html.js";
 import { code, count, escape, link, present } from "./html.js";
 import { frame } from "./frame.js";
@@ -17,7 +18,7 @@ function evidence(ctx: PageContext, node: CapabilityNode): string {
     .map((q) => {
       const path = specPath(node.id);
       const fragment = q.address?.split("#")[1] ?? "section.intent";
-      return `<li><a href="${escape(path)}#${escape(fragment)}">${q.blocking ? "blocking" : "non-blocking"}: ${escape(q.question)}</a></li>`;
+      return `<li><a href="${escape(path)}#${escape(fragment)}">${q.blocking ? "blocking" : "non-blocking"}</a>: ${text(ctx, q.question)}</li>`;
     })
     .join("");
   return `${link(ctx, node.id, node.title ?? node.id, codeSpans(node.title ?? node.id))} · ${code(node.id)} · ${escape(node.specKind)} · ${escape(node.altitude)} · stated ${escape(node.statedReadiness)} · floor ${escape(node.floorReached)} · implementation binding ${present(node.deliveryFacts.includes("implemented"))} · verifier binding ${present(node.deliveryFacts.includes("has-verifier"))} · ${count(node.questions.length, "open question")} · ${count(node.questions.filter((q) => q.blocking).length, "blocking question")}${questions ? `<ul class="questions">${questions}</ul>` : ""}`;

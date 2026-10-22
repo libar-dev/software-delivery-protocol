@@ -89,8 +89,12 @@ export function renderDiagram(d: Diagram, diagramId = d.subject): string {
     boxes: d.boxes.map((b) => ({ ...b, words: words(b) })),
     edges: [...d.edges].sort(edgeOrder),
   };
-  const l = fits ? layoutDiagram(normalized) : null,
+  let l = fits ? layoutDiagram(normalized) : null,
     routed = l ? routeDiagram(l, normalized.edges) : null;
+  if (l && !routed) {
+    l = layoutDiagram(normalized, false);
+    routed = routeDiagram(l, normalized.edges);
+  }
   const equivalent = d.textEquivalent ?? normalized;
   const edgeLabels = new Map(equivalent.boxes.map((b) => [b.id, b.edgeLabel ?? b.id]));
   const text =

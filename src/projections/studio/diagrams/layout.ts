@@ -1,5 +1,5 @@
 import { compare, contextOf, layerOf, layers, needsEdgeLabels } from "./model.js";
-import type { Diagram, DiagramBox } from "./model.js";
+import type { Diagram, DiagramBox, DiagramEdge } from "./model.js";
 
 export const widthBudget = 880;
 export interface Rectangle {
@@ -19,6 +19,7 @@ export interface Layout {
   readonly labels: (Rectangle & { kind: "lane" | "band"; label: string; lines: string[] })[];
   readonly width: number;
   readonly height: number;
+  readonly packedLanes?: boolean;
 }
 export const snap = (n: number): number => Math.ceil(n / 8) * 8;
 export function labelLines(text: string, limit = 30): string[] {
@@ -55,6 +56,73 @@ export function shortIds(ids: readonly string[]): Map<string, string> {
 }
 export const foldedBand = (b: DiagramBox): boolean =>
   b.folded === true && (b.band === "Other contexts" || b.band === "Other layers");
+interface LaneEnd {
+  readonly id: string;
+  readonly side: "top" | "bottom";
+  readonly port: number;
+  readonly offset: number;
+  readonly size: number;
+}
+// Share a horizontal lane only when the endpoint spans are disjoint, including label room.
+export function edgeLanes(
+  boxes: readonly Positioned[],
+  edges: readonly DiagramEdge[],
+  packed = true,
+) {
+  const byId = new Map(boxes.map((b) => [b.box.id, b]));
+  const ports = new Map<string, number>();
+  const lanes = new Map<string, { start: number; end: number; offset: number; size: number }[]>();
+  const labelled = needsEdgeLabels(edges);
+  return [...edges]
+    .sort(
+      (a, b) =>
+        compare(a.from, b.from) ||
+        compare(a.to, b.to) ||
+        compare(a.kind, b.kind) ||
+        compare(a.claim ?? "", b.claim ?? "") ||
+        compare(a.reason ?? "", b.reason ?? ""),
+    )
+    .map((edge) => {
+      const from = byId.get(edge.from),
+        to = byId.get(edge.to);
+      if (!from || !to) return { edge, a: null, b: null };
+      const endpoint = (box: Positioned, side: "top" | "bottom", label: boolean): LaneEnd => {
+        const key = `${box.box.id}/${side}`,
+          port = ports.get(key) ?? 0;
+        ports.set(key, port + 1);
+        const laneKey = `${String(box.y)}/${side}`;
+        const spans = lanes.get(laneKey) ?? [];
+        const dense =
+          !packed ||
+          edges.length > 28 ||
+          boxes.some((b) => b.box.context !== undefined || b.box.layer !== undefined);
+        const start = dense ? 0 : Math.min(from.x, to.x),
+          end = dense
+            ? Number.MAX_SAFE_INTEGER
+            : Math.max(from.x + from.width, to.x + to.width) + (label ? 200 : 24);
+        const size = label ? 48 : 8;
+        let offset = 0;
+        while (
+          spans.some(
+            (s) =>
+              start < s.end + 16 &&
+              end + 16 > s.start &&
+              offset < s.offset + s.size &&
+              offset + size > s.offset,
+          )
+        )
+          offset += 8;
+        spans.push({ start, end, offset, size });
+        lanes.set(laneKey, spans);
+        return { id: box.box.id, side, port, offset, size };
+      };
+      return {
+        edge,
+        a: endpoint(from, to.y > from.y ? "bottom" : "top", labelled),
+        b: endpoint(to, from.y >= to.y ? "bottom" : "top", false),
+      };
+    });
+}
 /**
  * @sdpAnchor impl:protocol.studio-diagram-layout
  * @sdpLabel title-first box placement, wrapping and band sizing for desktop and phone
@@ -62,7 +130,7 @@ export const foldedBand = (b: DiagramBox): boolean =>
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
-export function layoutDiagram(d: Diagram): Layout {
+export function layoutDiagram(d: Diagram, packedLanes = true): Layout {
   const short = shortIds(d.boxes.map((b) => b.identity ?? b.id));
   const boxes: Positioned[] = [],
     labels: Layout["labels"] = [];
@@ -164,7 +232,7 @@ export function layoutDiagram(d: Diagram): Layout {
       y = place(items, margin, snap(y + h + 80), widthBudget - 48) + 64;
       maxX = Math.max(maxX, ...boxes.map((b) => b.x + b.width));
     }
-  const labelled = needsEdgeLabels(d.edges);
+  const reservations = edgeLanes(boxes, d.edges, packedLanes);
   const events = [...new Set([...boxes.map((b) => b.y), ...labels.map((l) => l.y)])].sort(
     (a, b) => a - b,
   );
@@ -179,31 +247,24 @@ export function layoutDiagram(d: Diagram): Layout {
       cursor += snap(Math.max(...ls.map((l) => l.height)) + 24);
     }
     if (bs.length) {
-      const ids = new Set(bs.map((b) => b.box.id));
-      const above = d.edges.reduce((n, e) => {
-        const from = boxes.find((b) => b.box.id === e.from),
-          to = boxes.find((b) => b.box.id === e.to);
-        return (
-          n +
-          (ids.has(e.from) && (!to || (from && to.y <= from.y)) ? (labelled ? 48 : 8) : 0) +
-          (ids.has(e.to) && (!from || (to && from.y < to.y)) ? 8 : 0)
-        );
-      }, 0);
-      const below = d.edges.reduce((n, e) => {
-        const from = boxes.find((b) => b.box.id === e.from),
-          to = boxes.find((b) => b.box.id === e.to);
-        return (
-          n +
-          (ids.has(e.from) && to && from && to.y > from.y ? (labelled ? 48 : 8) : 0) +
-          (ids.has(e.to) && from && to && from.y >= to.y ? 8 : 0)
-        );
-      }, 0);
+      const ends = reservations
+        .flatMap((r) => [r.a, r.b])
+        .filter((e) => e !== null && bs.some((b) => b.box.id === e.id));
+      const above = Math.max(
+        0,
+        ...ends.filter((e) => e?.side === "top").map((e) => (e?.offset ?? 0) + (e?.size ?? 0)),
+      );
+      const below = Math.max(
+        0,
+        ...ends.filter((e) => e?.side === "bottom").map((e) => (e?.offset ?? 0) + (e?.size ?? 0)),
+      );
       cursor += above + 48;
       movedBoxes.push(...bs.map((b) => ({ ...b, y: cursor })));
       cursor += Math.max(...bs.map((b) => b.height)) + below + 48;
     }
   }
   return {
+    packedLanes,
     boxes: movedBoxes,
     labels: movedLabels,
     width: snap(Math.max(240, maxX + margin, ...labels.map((l) => l.x + l.width + 24))),
