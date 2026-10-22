@@ -4314,7 +4314,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     file: "test/roadmap.test.ts",
     constant: "roadmapImplementation",
     site: 'describe("the roadmap recipes",',
-    label: "realizes the roadmap catalog body through probe corpora",
+    label: "realizes the roadmap in the shipped recipe catalog",
     role: "projection",
   },
   {
@@ -4323,7 +4323,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     file: "test/roadmap.test.ts",
     constant: "memoImplementation",
     site: 'describe("the roadmap recipes",',
-    label: "realizes the roadmap memo catalog body through byte assertions",
+    label: "realizes the roadmap memo in the shipped recipe catalog",
     role: "projection",
   },
   {

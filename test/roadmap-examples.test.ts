@@ -1,4 +1,4 @@
-import { expect } from "vitest";
+import { expect, it } from "vitest";
 import {
   oracleAnchorId,
   ref,
@@ -36,9 +36,17 @@ const PART = "the entry names {part} among the parts with its need, held by {cla
 const OUTSIDE = "the entry rests on {target} through {origin}";
 const ORDER = "the waiting statements list {earlier} before {later}";
 
+function isStatementOrder(point: Partial<RoadmapConditions>): boolean {
+  return (
+    point.work === "spec:probe.dependent" &&
+    point.state === "has one part below ready whose floor reaches ready"
+  );
+}
+
 function expected(point: Partial<RoadmapConditions>): RoadmapOutcome {
-  if (point.work === "spec:probe.dependent")
+  if (isStatementOrder(point))
     return { kind: ORDER, earlier: "spec:probe.base", later: "spec:probe.dependent" };
+  if (point.work === "spec:probe.dependent") return unspecified;
   switch (point.state) {
     case "is ready and implemented throughout":
       return { kind: NEED, need: "built" };
@@ -68,16 +76,18 @@ interface World {
   answer?: Roadmap;
 }
 function createWorld(point: Partial<RoadmapConditions>): World {
+  if (point.work === "spec:probe.dependent" && !isStatementOrder(point)) {
+    throw new Error("The statement-order work requires its waiting state.");
+  }
   return {
     point,
-    graph:
-      point.work === "spec:probe.dependent"
-        ? probeGraph({
-            "pack.sdp.md": probePack("probe", ["dependent", "base"]),
-            "dependent.sdp.md": probeSpec("dependent", "defined", "\n  dependsOn: spec:probe.base"),
-            "base.sdp.md": probeSpec("base", "defined"),
-          })
-        : workGraph(point.state ?? ""),
+    graph: isStatementOrder(point)
+      ? probeGraph({
+          "pack.sdp.md": probePack("probe", ["dependent", "base"]),
+          "dependent.sdp.md": probeSpec("dependent", "defined", "\n  dependsOn: spec:probe.base"),
+          "base.sdp.md": probeSpec("base", "defined"),
+        })
+      : workGraph(point.state ?? ""),
   };
 }
 async function invoke(world: World): Promise<void> {
@@ -86,7 +96,7 @@ async function invoke(world: World): Promise<void> {
 function observe(world: World): RoadmapOutcome {
   const entry = world.answer?.entries[0];
   if (entry === undefined) return unspecified;
-  if (world.point.work === "spec:probe.dependent") {
+  if (isStatementOrder(world.point)) {
     const statements = world.answer?.waiting.statements ?? [];
     return { kind: ORDER, earlier: statements[0]?.id ?? "", later: statements[1]?.id ?? "" };
   }
@@ -121,7 +131,10 @@ function observe(world: World): RoadmapOutcome {
 function assertions(world: World): void {
   expect(world.answer?.pack).toBe("pack:probe");
   expect(world.answer?.order).toBe("priority");
-  if (world.point.work === "spec:probe.dependent") {
+  expect(world.answer?.entries[0]?.workRows.map((row) => row.id)).toEqual(
+    world.point.work?.split(", ").sort(),
+  );
+  if (isStatementOrder(world.point)) {
     expect(world.answer?.entries[0]?.earlierStatements).toEqual([
       { id: "spec:probe.base", where: "roadmap", onRoadmap: 2 },
     ]);
@@ -130,6 +143,26 @@ function assertions(world: World): void {
     expect(world.answer?.entries[0]?.workRows).toHaveLength(2);
   }
 }
+
+it("rejects a statement-order point with a different bound state", () => {
+  const point = {
+    work: "spec:probe.dependent",
+    state: "is ready and implemented throughout",
+  } as const;
+  expect(expected(point)).toEqual(unspecified);
+  expect(() => createWorld(point)).toThrow("The statement-order work requires its waiting state.");
+});
+
+it("checks the bound work against the observed scope", async () => {
+  const world = createWorld({
+    work: "spec:probe.wrong",
+    state: "is ready and implemented throughout",
+  });
+  await invoke(world);
+  expect(() => {
+    assertions(world);
+  }).toThrow();
+});
 
 const builtWorkAnchor = specTest({
   id: testAnchorId("test:protocol.roadmap.built-work"),

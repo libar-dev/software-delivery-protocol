@@ -5167,7 +5167,17 @@ return {
 
 ## 53. The roadmap
 
-Read every Pack stating `order: priority`, in Pack-id order, or the Pack named by `params.pack`. `params.decider` defaults to `owner`. The answer keeps member places, derives each entry's need over its refinement subtree, and follows the statement queue for waiting statements. Invalid Pack ids and decider tokens return diagnostics without roadmaps. An explicitly selected ordinary Pack reads as reading order.
+Read every Pack stating `order: priority`, in Pack-id order, or the Pack named by `params.pack`.
+`params.decider` defaults to `owner`. The answer keeps member places, derives each entry's need
+over its refinement subtree, and follows the statement queue for waiting statements. Invalid
+Pack ids and decider tokens return diagnostics without roadmaps. An explicitly selected ordinary
+Pack reads as reading order.
+
+The answer is `{ decider, roadmaps }`. Each roadmap is
+`{ pack, title, framing, order, totals, entries, apart, waiting }`: `entries` carries the work,
+dependencies and earlier statements at each place; `apart` carries entries with no work;
+`waiting` carries questions, questions without a decider and readiness statements. The row and
+total fields are defined by `spec:consumers.roadmap#design.roadmapAnswer` and its following entries.
 
 ```js
 const accepts = ["pack", "decider"];
@@ -5329,7 +5339,15 @@ return { decider, roadmaps };
 
 ## 55. The roadmap memo
 
-Render the roadmap selected by `params.pack` and `params.decider` as one Markdown string in `{ diagnostics: [], memo }`. Without a Pack, exactly one priority Pack must exist; diagnostics return `memo: null`. The roadmap and open-question register supply the reading. Purpose and reach describes intent and structural reach; the author supplies the reason for an entry's place around the memo.
+Render the roadmap selected by `params.pack` and `params.decider` as a Markdown forward section.
+Without a Pack, exactly one priority Pack must exist. The roadmap and open-question register
+supply the reading. Purpose and reach describes intent and structural reach; the author supplies
+the reason for an entry's place around the memo.
+
+The answer is `{ diagnostics: [], memo }`, with `memo` one Markdown string. A missing or ambiguous
+Pack selection or an invalid decider returns `{ diagnostics: [{ parameter, problem }], memo: null }`.
+The answer and section formats are defined by `spec:consumers.roadmap.memo#design.memoRecipe`
+and its following entries.
 
 ```js
 const accepts = ["pack", "decider"];
@@ -5362,7 +5380,7 @@ const contexts = new Map(roadmap.entries.map((entry) => [entry.id, g.specContext
 const purposeAndReach = (entry) => {
   const intent = contexts.get(entry.id).sections?.intent ?? {};
   const line = (intent.problem ?? intent.outcome ?? "").trim();
-  const own = line === "" || /[.!?]$/u.test(line) ? line : `${line}.`;
+  const own = line === "" || line.endsWith(".") ? line : `${line}.`;
   const derived = [];
   const waitingSpecs = new Set(entry.restedOnBy.map((row) => row.id)).size;
   if (waitingSpecs > 0) derived.push(`Waited on by ${waitingSpecs}.`);
@@ -5409,8 +5427,8 @@ if (need("to state").length > 0) {
     if (inside.length > 0) parts.push(`in this entry ${inside.map((row) => span(row.id)).join(", ")}`);
     if (onRoadmap.length > 0) parts.push(`on the roadmap ${onRoadmap.map((row) => `${span(row.id)} (place ${row.onRoadmap})`).join(", ")}`);
     if (outside.length > 0) parts.push(`${outside.length} outside the roadmap`);
-    const text = parts.length === 0 ? "No preceding waiting statement in the statement queue." : parts.join("; ");
-    push(`| ${entry.place} | ${cell(entryCell(entry))} | ${cell(text)} | ${cell(purposeAndReach(entry))} |`);
+    const earlier = parts.length === 0 ? "No preceding waiting statement in the statement queue." : parts.join("; ");
+    push(`| ${entry.place} | ${cell(entryCell(entry))} | ${cell(earlier)} | ${cell(purposeAndReach(entry))} |`);
   }
   push("");
 }
@@ -5419,7 +5437,7 @@ if (need("to build").length === 0) push("No entry is ready to build.", "");
 else {
   push("| Place | Entry | Purpose and reach | Rests on |", "| --- | --- | --- | --- |");
   for (const entry of need("to build")) {
-    const rests = entry.restsOn.map((row) => `${span(row.id)} (${row.need})`);
+    const rests = [...new Map(entry.restsOn.map((row) => [row.id, row])).values()].map((row) => `${span(row.id)} (${row.need})`);
     push(`| ${entry.place} | ${cell(entryCell(entry))} | ${cell(purposeAndReach(entry))} | ${cell(rests.length === 0 ? "nothing unbuilt" : rests.join(", "))} |`);
   }
   push("");
@@ -5442,7 +5460,7 @@ if (roadmap.waiting.withoutDecider.length > 0) {
 const built = need("built");
 if (built.length > 0) {
   push("### Built and still on the roadmap", "");
-  for (const entry of built) push(`- ${entry.place}. ${entryCell(entry)}`);
+  for (const entry of built) push(`- Place ${entry.place}: ${entryCell(entry)}`);
   push("");
 }
 const deferrals = register.specs.flatMap((spec) => spec.questions.filter((question) => question.deferral).map((question) => ({ spec: spec.id, question })));

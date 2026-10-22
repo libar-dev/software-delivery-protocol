@@ -19,14 +19,14 @@ import {
 
 const roadmapImplementation = codeAnchor({
   id: codeAnchorId("impl:protocol.roadmap-recipe"),
-  label: "realizes the roadmap catalog body through probe corpora",
+  label: "realizes the roadmap in the shipped recipe catalog",
   satisfies: ref("spec:consumers.roadmap"),
   role: "projection",
 });
 void roadmapImplementation;
 const memoImplementation = codeAnchor({
   id: codeAnchorId("impl:protocol.roadmap-memo-recipe"),
-  label: "realizes the roadmap memo catalog body through byte assertions",
+  label: "realizes the roadmap memo in the shipped recipe catalog",
   satisfies: ref("spec:consumers.roadmap.memo"),
   role: "projection",
 });
@@ -118,6 +118,156 @@ describe("the roadmap recipes", () => {
         ]);
     }
   });
+
+  it("renders each unbuilt dependency once when two relations reach it", async () => {
+    const graph = probeGraph({
+      "pack.sdp.md": probePack("probe", ["root"]),
+      "root.sdp.md": probeSpec("root", "ready", "\n  dependsOn: spec:probe.o"),
+      "part.sdp.md": probeSpec("part", "ready", "\n  refines: [spec:probe.root, spec:probe.o]"),
+      "o.sdp.md": probeSpec("o"),
+    });
+    expect((await roadmap(graph)).roadmaps[0]?.entries[0]?.restsOn.map((row) => row.via)).toEqual([
+      "dependsOn",
+      "refines",
+    ]);
+    expect((await memo(graph)).memo).toContain(
+      "| 1 | root `spec:probe.root` | Read the probe. | `spec:probe.o` (to build) |\n",
+    );
+  });
+
+  it("lists sorted incoming relations, Pack memberships and dependency places", async () => {
+    const graph = probeGraph({
+      "pack.sdp.md": probePack("probe", ["root", "z", "a", "part"]),
+      "z-pack.sdp.md": probePack("z", ["root"]),
+      "a-pack.sdp.md": probePack("a", ["root"]),
+      "root.sdp.md": probeSpec("root"),
+      "part.sdp.md": probeSpec("part", "ready", "\n  refines: spec:probe.root"),
+      "a.sdp.md": probeSpec(
+        "a",
+        "ready",
+        "\n  dependsOn: [spec:probe.root, spec:probe.part]\n  constrainedBy: spec:probe.root",
+      ),
+      "z.sdp.md": probeSpec("z", "ready", "\n  decidedBy: spec:probe.root"),
+      "outside.sdp.md": probeSpec("outside", "ready", "\n  dependsOn: spec:probe.part"),
+    });
+    const entries = (await roadmap(graph, { pack: "pack:probe" })).roadmaps[0]?.entries;
+    expect(entries?.[0]?.packs).toEqual(["pack:a", "pack:z"]);
+    expect(entries?.[0]?.restedOnBy).toEqual([
+      { id: "spec:probe.a", via: "constrainedBy", need: "to build", onRoadmap: 3 },
+      { id: "spec:probe.a", via: "dependsOn", need: "to build", onRoadmap: 3 },
+      { id: "spec:probe.outside", via: "dependsOn", need: "to build", onRoadmap: null },
+      { id: "spec:probe.z", via: "decidedBy", need: "to build", onRoadmap: 2 },
+    ]);
+    expect(entries?.[2]?.restsOn).toEqual([
+      {
+        id: "spec:probe.part",
+        via: "dependsOn",
+        from: ["spec:probe.a"],
+        need: "to build",
+        statedReadiness: "ready",
+        holdsReady: false,
+        onRoadmap: 1,
+      },
+      {
+        id: "spec:probe.root",
+        via: "constrainedBy",
+        from: ["spec:probe.a"],
+        need: "to build",
+        statedReadiness: "ready",
+        holdsReady: false,
+        onRoadmap: 1,
+      },
+      {
+        id: "spec:probe.root",
+        via: "dependsOn",
+        from: ["spec:probe.a"],
+        need: "to build",
+        statedReadiness: "ready",
+        holdsReady: false,
+        onRoadmap: 1,
+      },
+    ]);
+  });
+
+  it("includes keyed and unkeyed blocking questions on shaping decisions", async () => {
+    const graph = probeGraph({
+      "pack.sdp.md": probePack("probe", ["root"]),
+      "root.sdp.md": probeSpec("root", "defined", "\n  decidedBy: spec:probe.choice"),
+      "choice.sdp.md": probeSpec(
+        "choice",
+        "scoped",
+        "\n  refines: spec:probe.foundation-rule",
+        "## Decision\n- context: Choose a shape.\n- decision: Keep it.",
+        "decision",
+      ).replace(
+        "\n\n## Decision",
+        "\n\n### Open questions\n- [blocking #shape] Which shape?\n  - decider: owner\n  - provisional: Keep it simple.\n- [non-blocking #note] A note.\n- [blocking] Which boundary?\n\n## Decision",
+      ),
+    });
+    expect((await roadmap(graph)).roadmaps[0]?.entries[0]?.decisions).toEqual([
+      {
+        id: "spec:probe.choice",
+        title: "choice",
+        statedReadiness: "scoped",
+        blockingQuestions: [
+          {
+            address: "spec:probe.choice#question.shape",
+            spec: "spec:probe.choice",
+            index: 0,
+            question: "Which shape?",
+            blocking: true,
+            decider: "owner",
+            provisional: "Keep it simple.",
+          },
+          {
+            address: null,
+            spec: "spec:probe.choice",
+            index: 2,
+            question: "Which boundary?",
+            blocking: true,
+            decider: null,
+            provisional: null,
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("finds earlier statements through a shaping decision's own waiting statement", async () => {
+    const graph = probeGraph({
+      "pack.sdp.md": probePack("probe", ["root", "base"]),
+      "root.sdp.md": probeSpec("root", "ready", "\n  decidedBy: spec:probe.choice"),
+      "choice.sdp.md": probeSpec(
+        "choice",
+        "defined",
+        "\n  refines: spec:probe.foundation-rule\n  dependsOn: spec:probe.base",
+        "## Decision\n- context: Choose a shape.\n- decision: Keep it.",
+        "decision",
+      ),
+      "base.sdp.md": probeSpec("base", "defined"),
+    });
+    const result = (await roadmap(graph)).roadmaps[0];
+    expect(result?.waiting.statements.map((row) => row.id)).toEqual([
+      "spec:probe.base",
+      "spec:probe.choice",
+    ]);
+    expect(result?.entries[0]?.earlierStatements).toEqual([
+      { id: "spec:probe.base", where: "roadmap", onRoadmap: 2 },
+    ]);
+  });
+
+  it.each(["A purpose?", "A purpose!", "A purpose", "A purpose."])(
+    "ends the intent line with a full stop: %s",
+    async (purpose) => {
+      const graph = probeGraph({
+        "pack.sdp.md": probePack("probe", ["root"]),
+        "root.sdp.md": probeSpec("root").replace("Read the probe.", purpose),
+      });
+      expect((await memo(graph)).memo).toContain(
+        `| ${purpose.endsWith(".") ? purpose : `${purpose}.`} | nothing unbuilt |`,
+      );
+    },
+  );
 
   it("keeps queue order across places, including earlier statements inside, elsewhere and outside", async () => {
     const graph = probeGraph({
@@ -288,12 +438,12 @@ describe("the roadmap recipes", () => {
     ).toContain("This Pack's order is reading order, not a stated priority.");
   });
 
-  it("renders design holds, build dependencies, built entries and global deferrals in section order", async () => {
+  it("pins every populated memo section byte for byte", async () => {
     const graph = probeGraph({
-      "pack.sdp.md": probePack("probe", ["root", "build", "built", "state"]),
+      "pack.sdp.md": probePack("probe", ["root", "build", "built", "state", "dependent", "base"]),
       "root.sdp.md": probeSpec("root", "scoped", "\n  decidedBy: spec:probe.choice").replace(
         "\n\n## Behavior",
-        "\n\n### Open questions\n- [blocking #root] Settle the root.\n  - decider: owner\n\n## Behavior",
+        "\n\n### Open questions\n- [blocking #root] Settle the root.\n  - decider: owner\n- [non-blocking] An unassigned note.\n\n## Behavior",
       ),
       "choice.sdp.md": probeSpec(
         "choice",
@@ -313,29 +463,106 @@ describe("the roadmap recipes", () => {
       "built.sdp.md": probeSpec("built"),
       "built.ts": implementation("built"),
       "state.sdp.md": probeSpec("state", "defined"),
+      "dependent.sdp.md": probeSpec(
+        "dependent",
+        "defined",
+        "\n  dependsOn: [spec:probe.base, spec:probe.outside]",
+      ),
+      "dependent-part.sdp.md": probeSpec(
+        "dependent.part",
+        "defined",
+        "\n  refines: spec:probe.dependent\n  dependsOn: spec:probe.base",
+      ),
+      "base.sdp.md": probeSpec("base", "defined"),
+      "outside.sdp.md": probeSpec("outside", "defined"),
       "deferred.sdp.md": probeSpec("deferred", "scoped").replace(
         "\n\n## Behavior",
         "\n\n### Open questions\n- [blocking #later] A deferred | choice.\n  - trigger: A reader asks.\n\n## Behavior",
       ),
     });
-    const text = (await memo(graph)).memo ?? "";
-    expect(text).toContain(
-      "itself `scoped` → `defined`, held by no-blocking-open-questions; `spec:probe.a` `scoped` → `defined`, held by kind-evidence-present, kind-evidence-complete; `spec:probe.b` `scoped` → `defined`, held by kind-evidence-present, kind-evidence-complete; and 2 more parts to design; blocked by `spec:probe.root#question.root`; decided by `spec:probe.choice` (scoped)",
-    );
-    expect(text).toContain("`spec:probe.external` (to build)");
-    expect(text).toContain("### Built and still on the roadmap\n\n- 3. built `spec:probe.built`");
-    expect(text).toContain(
-      "### Deferred, with their triggers\n\n- `spec:probe.deferred#question.later`: A deferred | choice. Trigger: A reader asks.",
-    );
-    const sections = text.match(/^### .+$/gmu);
-    expect(sections).toEqual([
+    const expected = [
+      "## The next work, from the roadmap",
+      "",
+      "Roadmap: probe `pack:probe`",
+      "",
+      "To state means the floor allows ready and a person still judges the statement. Built means every Spec of the entry's work states ready and has an implementation binding; it reports no passing test and no deployment.",
+      "",
       "### To design",
+      "",
+      "| Place | Entry | Next | Purpose and reach |",
+      "| --- | --- | --- | --- |",
+      "| 1 | root `spec:probe.root` | itself `scoped` → `defined`, held by no-blocking-open-questions; `spec:probe.a` `scoped` → `defined`, held by kind-evidence-present, kind-evidence-complete; `spec:probe.b` `scoped` → `defined`, held by kind-evidence-present, kind-evidence-complete; and 2 more parts to design; blocked by `spec:probe.root#question.root`; decided by `spec:probe.choice` (scoped) | Read the probe. |",
+      "",
       "### To state",
+      "",
+      "| Place | Entry | Earlier waiting statements | Purpose and reach |",
+      "| --- | --- | --- | --- |",
+      "| 4 | state `spec:probe.state` | No preceding waiting statement in the statement queue. | Read the probe. |",
+      "| 5 | dependent `spec:probe.dependent` | in this entry `spec:probe.dependent`; on the roadmap `spec:probe.base` (place 6); 1 outside the roadmap | Read the probe. |",
+      "| 6 | base `spec:probe.base` | No preceding waiting statement in the statement queue. | Read the probe. Waited on by 2. |",
+      "",
       "### To build",
+      "",
+      "| Place | Entry | Purpose and reach | Rests on |",
+      "| --- | --- | --- | --- |",
+      "| 2 | build `spec:probe.build` | Read the probe. | `spec:probe.external` (to build) |",
+      "",
       "### Waiting on the owner",
+      "",
+      "- `spec:probe.root#question.root` (blocking), place 1: Settle the root.",
+      "- State `spec:probe.base`: it states `defined` and its floor allows `ready`; place 6",
+      "- State `spec:probe.state`: it states `defined` and its floor allows `ready`; place 4",
+      "- State `spec:probe.dependent`: it states `defined` and its floor allows `ready`; place 5",
+      "- State `spec:probe.dependent.part`: it states `defined` and its floor allows `ready`; place 5",
+      "",
+      "### Questions without a decider",
+      "",
+      "These questions have no named decider.",
+      "",
+      "- `spec:probe.root` question 2, place 1",
+      "",
       "### Built and still on the roadmap",
+      "",
+      "- Place 3: built `spec:probe.built`",
+      "",
       "### Deferred, with their triggers",
-    ]);
+      "",
+      "- `spec:probe.deferred#question.later`: A deferred | choice. Trigger: A reader asks.",
+      "",
+    ].join("\n");
+    expect(await memo(graph)).toEqual({ diagnostics: [], memo: expected });
+    expect(
+      await memo({
+        ...graph,
+        nodes: [...graph.nodes].reverse(),
+        edges: [...graph.edges].reverse(),
+      }),
+    ).toEqual({ diagnostics: [], memo: expected });
+  });
+
+  it("pins empty design and build sections byte for byte", async () => {
+    const graph = probeGraph({
+      "pack.sdp.md": probePack("probe", []).replace("specs:\n", "specs: []\n"),
+    });
+    expect(await memo(graph)).toEqual({
+      diagnostics: [],
+      memo: [
+        "## The next work, from the roadmap",
+        "",
+        "Roadmap: probe `pack:probe`",
+        "",
+        "To state means the floor allows ready and a person still judges the statement. Built means every Spec of the entry's work states ready and has an implementation binding; it reports no passing test and no deployment.",
+        "",
+        "### To design",
+        "",
+        "No entry needs design.",
+        "",
+        "### To build",
+        "",
+        "No entry is ready to build.",
+        "",
+      ].join("\n"),
+    });
   });
 
   it("reads purpose from intent and counts distinct waiting Specs and buildable parts", async () => {
