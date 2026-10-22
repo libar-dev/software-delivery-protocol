@@ -1,4 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { readdirSync, statSync } from "node:fs";
 import {
   copyFile,
@@ -133,6 +134,22 @@ const typeOnlyRootExports = [
   "GherkinRefusedKind",
 ] as const;
 
+// npm 11.6.2 selects a directory's files with exactly these two packages, pinned to the versions it
+// bundles: pacote loads the actual tree with Arborist and hands it to npm-packlist. Calling them in
+// process makes the reference need no registry and run no lifecycle script.
+const requireCommonJs = createRequire(import.meta.url);
+const Arborist = requireCommonJs("@npmcli/arborist") as new (options: { path: string }) => {
+  loadActual(): Promise<unknown>;
+};
+const packlist = requireCommonJs("npm-packlist") as (
+  tree: unknown,
+  options: { path: string },
+) => Promise<string[]>;
+
+async function npm11Selection(path: string): Promise<string[]> {
+  return packlist(await new Arborist({ path }).loadActual(), { path });
+}
+
 function run(command: string, args: readonly string[], cwd: string): string {
   return execFileSync(command, args, { cwd, encoding: "utf8" });
 }
@@ -262,32 +279,13 @@ describe("published package surface", () => {
     const destination = await mkdtemp(join(tmpdir(), "sdp-pack-selection-"));
     try {
       const before = distFiles();
-      // Pin the reference implementation: only npm 11 honors --ignore-scripts for prepare.
-      // npx installs it through a reify that posts to the registry's audit endpoint, which
-      // stalled CI for seven minutes; the reference needs no audit.
-      const [expected] = JSON.parse(
-        run(
-          "npx",
-          [
-            "-y",
-            "--no-audit",
-            "--no-fund",
-            "-p",
-            "npm@11.6.2",
-            "-c",
-            "npm pack --dry-run --json --ignore-scripts",
-          ],
-          repositoryRoot,
-        ),
-      ) as [PackedPackage];
+      const expected = await npm11Selection(repositoryRoot);
       const packed = await packBuiltPackage(destination);
       expect(distFiles()).toEqual(before);
-      expect(packed.files.map((file) => file.path).sort()).toEqual(
-        expected.files.map((file) => file.path).sort(),
-      );
+      expect(packed.files.map((file) => file.path).sort()).toEqual([...expected].sort());
       const tarball = join(destination, packed.filename);
       const paths = run("tar", ["-tzf", tarball], destination).trim().split("\n");
-      expect(paths.sort()).toEqual(expected.files.map((file) => `package/${file.path}`).sort());
+      expect(paths.sort()).toEqual(expected.map((path) => `package/${path}`).sort());
       const unpacked = join(destination, "unpacked");
       await mkdir(unpacked);
       run("tar", ["-xzf", tarball, "-C", unpacked], destination);
@@ -298,7 +296,7 @@ describe("published package surface", () => {
       expect(JSON.parse(await readFile(join(unpacked, "package/package.json"), "utf8"))).toEqual(
         manifest,
       );
-      for (const { path } of expected.files) {
+      for (const path of expected) {
         if (path === "package.json") continue;
         expect(await readFile(join(unpacked, "package", path)), path).toEqual(
           await readFile(join(repositoryRoot, path)),
