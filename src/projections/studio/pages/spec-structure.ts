@@ -1,19 +1,10 @@
+import { requirementView } from "./requirement-view.js";
 import type { SpecContext } from "../../../reader/reader.js";
 import type { Architecture } from "./architecture-page.js";
-import { realizationDiagram, renderDiagram, traceDiagram } from "../diagrams/index.js";
-import type { DiagramBox, DiagramEdge } from "../diagrams/index.js";
+import { renderDiagram, traceDiagram } from "../diagrams/index.js";
+import type { DiagramBox } from "../diagrams/index.js";
 import type { PageContext } from "./html.js";
-import {
-  code,
-  sourceCode,
-  copy,
-  escape,
-  link,
-  list,
-  location,
-  relative,
-  componentLink,
-} from "./html.js";
+import { code, sourceCode, copy, escape, link, list, location, componentLink } from "./html.js";
 import { plainTitle } from "./code-spans.js";
 import { codeSpans, prose } from "./text.js";
 
@@ -53,45 +44,12 @@ function structure(ctx: PageContext, spec: SpecContext) {
 /**
  * @sdpAnchor impl:protocol.studio-spec-structure
  * @sdpSatisfies spec:consumers.spec-studio.spec-page, spec:consumers.spec-studio.components
- * @sdpLabel renders realization and trace diagrams and the recorded structural neighborhood
+ * @sdpLabel renders requirement and trace diagrams and the recorded structural neighborhood
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
  */
 export function designView(ctx: PageContext, spec: SpecContext): string {
-  const { units, own, components, uses } = structure(ctx, spec);
-  const selected = new Set([...own, ...components.map((e) => e.to), ...uses.map((e) => e.to)]);
-  const boxes: DiagramBox[] = [...selected].sort(compare).map((id) => {
-    const unit = units.get(id);
-    return {
-      id,
-      title: unit ? plainTitle(unit.label ?? id) : "unresolved",
-      detail: unit ? location(unit.file ?? undefined, unit.line ?? undefined) : "",
-      words: unit
-        ? `${plainTitle(unit.label ?? "")} ${location(unit.file ?? undefined, unit.line ?? undefined)}`.trim()
-        : "unresolved",
-      target:
-        id.startsWith("component:") && units.has(id)
-          ? `${relative(ctx, "architecture.html")}#${id}`
-          : "#panel.runtime",
-      band: own.has(id)
-        ? "Satisfying units"
-        : components.some((e) => e.to === id)
-          ? "Components"
-          : "Uses",
-    };
-  });
-  const edges: DiagramEdge[] = [...components, ...uses].map((e) => ({
-    from: e.from,
-    to: e.to,
-    kind: e.type,
-    claim: "anchored",
-  }));
-  const drawing = boxes.length
-    ? renderDiagram(
-        realizationDiagram({ subject: spec.id, sectionId: null, boxes, edges }),
-        `${spec.id}.realization`,
-      )
-    : "<p>No implementation binding recorded.</p>";
+  const drawing = requirementView(ctx, spec);
   const decisions = spec.relationsOut.filter((r) => r.type === "decidedBy");
   return `${drawing}<h3>Decisions</h3>${
     decisions.length

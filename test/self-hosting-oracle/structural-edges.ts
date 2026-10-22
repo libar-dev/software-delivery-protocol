@@ -108,6 +108,21 @@ export const acceptedArchitecturalUnits = [
     anchorId: "impl:protocol.studio-slice-page",
     componentId: "component:protocol.projections",
   },
+  {
+    unit: "src/projections/studio/pages/architecture-register.ts#unitRegister",
+    anchorId: "impl:protocol.studio-unit-register",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/requirement.ts#requirementDiagram",
+    anchorId: "impl:protocol.studio-requirement-diagram",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/requirement-view.ts#requirementView",
+    anchorId: "impl:protocol.studio-requirement-view",
+    componentId: "component:protocol.projections",
+  },
 
   {
     unit: "src/projections/studio/pages/roadmap-page.ts#roadmapPage",

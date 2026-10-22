@@ -113,6 +113,38 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   },
 
   {
+    id: "test:protocol.studio-architecture-maturity-requirement",
+    nodeType: "Anchor",
+    file: "test/studio-panels.test.ts",
+    constant: "panels",
+    site: 'describe("architecture tables and register",',
+  },
+  {
+    id: "impl:protocol.studio-requirement-view",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/requirement-view.ts",
+    site: "export function requirementView(",
+    label: "selects Spec refiners, verifying examples and their recorded bindings",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-requirement-diagram",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/diagrams/requirement.ts",
+    site: "export function requirementDiagram(",
+    label:
+      "folds requirement bindings by relation direction and claim and serializes exact relations",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-unit-register",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/architecture-register.ts",
+    site: "export function unitRegister(",
+    label: "renders component source bindings and role-grouped recorded units",
+    role: "projection",
+  },
+  {
     id: "test:protocol.roadmap-priority",
     nodeType: "Anchor",
     label: "checks Pack priority extraction, comparison and Studio change notes",
@@ -572,7 +604,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     nodeType: "CodeNode",
     file: "src/projections/studio/pages/spec-structure.ts",
     site: "export function designView(",
-    label: "renders realization and trace diagrams and the recorded structural neighborhood",
+    label: "renders requirement and trace diagrams and the recorded structural neighborhood",
     role: "projection",
   },
   {
@@ -1760,7 +1792,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     nodeType: "CodeNode",
     file: "src/projections/studio/diagrams/bands.ts",
     site: "export function traceDiagram(",
-    label: "relation, member and realization bands and bounded relation folds",
+    label: "relation and member bands and bounded relation folds",
     role: "projection",
   },
   {
@@ -4810,6 +4842,61 @@ export const expectedBindingEdges = [
   ],
 
   [
+    "test:protocol.studio-architecture-maturity-requirement",
+    "verifies",
+    "spec:consumers.spec-studio.lenses.architecture",
+  ],
+  [
+    "test:protocol.studio-architecture-maturity-requirement",
+    "verifies",
+    "spec:consumers.spec-studio.lenses.architecture.unit-register",
+  ],
+  [
+    "test:protocol.studio-architecture-maturity-requirement",
+    "verifies",
+    "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+  ],
+  [
+    "test:protocol.studio-architecture-maturity-requirement",
+    "verifies",
+    "spec:consumers.spec-studio.pack-page.maturity-map",
+  ],
+  [
+    "test:protocol.studio-architecture-maturity-requirement",
+    "verifies",
+    "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+  ],
+  [
+    "test:protocol.studio-architecture-maturity-requirement",
+    "verifies",
+    "spec:consumers.spec-studio.spec-page",
+  ],
+  [
+    "impl:protocol.studio-maturity-map",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+  ],
+
+  [
+    "impl:protocol.studio-requirement-view",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+  ],
+  ["impl:protocol.studio-requirement-view", "satisfies", "spec:consumers.spec-studio.spec-page"],
+
+  [
+    "impl:protocol.studio-requirement-diagram",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+  ],
+
+  [
+    "impl:protocol.studio-unit-register",
+    "satisfies",
+    "spec:consumers.spec-studio.lenses.architecture.unit-register",
+  ],
+
+  [
     "impl:protocol.studio-diagram-layout",
     "satisfies",
     "spec:consumers.spec-studio.diagram-kinds.legibility",
@@ -6654,6 +6741,9 @@ export const expectedCommentAnchorIds = [
   "impl:protocol.studio-slice-dependencies",
   "impl:protocol.studio-slice-architecture",
   "impl:protocol.studio-slice-page",
+  "impl:protocol.studio-requirement-view",
+  "impl:protocol.studio-requirement-diagram",
+  "impl:protocol.studio-unit-register",
   "impl:protocol.studio-diagram-layout",
   "impl:protocol.studio-diagram-routing",
   "impl:protocol.studio-diagram-source",

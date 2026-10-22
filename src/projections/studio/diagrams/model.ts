@@ -10,6 +10,7 @@ export interface DiagramBox {
   readonly words: string;
   readonly identity?: string;
   readonly parent?: string;
+  readonly source?: { readonly file?: string; readonly line?: number };
   readonly title?: string;
   readonly elementId?: string;
   readonly hideIdentity?: boolean;
@@ -48,10 +49,12 @@ export interface Diagram extends DiagramInput {
   readonly mermaidExplanation?: string;
   readonly mermaidNotes?: readonly string[];
   readonly legend?: string;
-  readonly textEquivalent?: string;
+  readonly textEquivalentHtml?: string;
+  readonly textEquivalent?: DiagramInput;
   readonly textRows?: readonly string[];
   readonly note?: string;
   readonly occurrenceKey?: string;
+  readonly source?: { readonly text: string; readonly explanation: string };
   readonly sectionId?: string | null;
 }
 export const layers = ["edge", "application", "domain", "adapter", "infrastructure", "not stated"];

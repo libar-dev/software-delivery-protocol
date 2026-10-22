@@ -1,7 +1,7 @@
 import type { StudioInputs } from "./inputs.js";
 import { studioRecipeAnswers } from "./recipes.js";
 import type { StudioRecipeAnswers } from "./recipes.js";
-import type { GraphNodeType } from "../../graph/schema.js";
+import type { CodeNode, GraphNodeType } from "../../graph/schema.js";
 import type { PackContext, Reader, SpecContext } from "../../reader/reader.js";
 import { graphReportId } from "../../validate/validators.js";
 import type { Finding, ValidationReport } from "../../validate/contracts.js";
@@ -77,6 +77,7 @@ export interface StudioData {
   readonly findings: readonly Finding[];
   readonly rail: RailValues;
   readonly search: SearchIndex;
+  readonly codeUnits: readonly CodeNode[];
 }
 
 export function railValues(reader: Reader): RailValues {
@@ -318,5 +319,6 @@ export async function createStudioData(
     findings: reader.findings(),
     rail: railValues(reader),
     search: searchIndex(reader),
+    codeUnits: reader.graph.nodes.filter((node): node is CodeNode => node.nodeType === "CodeNode"),
   };
 }

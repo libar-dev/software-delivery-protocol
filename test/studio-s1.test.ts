@@ -45,7 +45,6 @@ import {
   renderDiagram,
   traceDiagram,
   memberDiagram,
-  realizationDiagram,
 } from "../src/projections/studio/diagrams/index.js";
 import { createStudioData } from "../src/projections/studio/data.js";
 import { renderStudio } from "./helpers/studio-render.js";
@@ -256,7 +255,7 @@ describe("Studio diagrams", () => {
     );
     expect(bands).toEqual([...kinds.map((kind) => `Outgoing ${kind}`), "Subject"]);
   });
-  it("folds trace relation groups and leaves member and realization overflow as text", () => {
+  it("folds trace relation groups and leaves member overflow as text", () => {
     const boxes = architectureInput(50, 1, 1).boxes;
     const relations = boxes
       .slice(1)
@@ -267,9 +266,6 @@ describe("Studio diagrams", () => {
     expect(renderDiagram(memberDiagram({ subject: "members", boxes, edges: [] }))).not.toContain(
       "<svg",
     );
-    expect(
-      renderDiagram(realizationDiagram({ subject: "realization", boxes, edges: [] })),
-    ).not.toContain("<svg");
   });
 });
 const empty: GraphSchema = { schemaVersion, nodes: [], edges: [] };
@@ -1087,16 +1083,6 @@ it("keeps label lines bounded and orders member depths numerically with outside 
     ...Array.from({ length: 12 }, (_, i) => `Member depth ${String(i)}`),
     "Outside component",
   ]);
-  const realization = realizationDiagram({
-    subject: "spec:probe",
-    boxes: [
-      { id: "impl:a", words: "Unit", target: "#unit", band: "Satisfying units" },
-      { id: "component:a", words: "Owner", target: "#owner", band: "Components" },
-      { id: "component:b", words: "Used", target: "#used", band: "Uses" },
-    ].reverse(),
-    edges: [],
-  });
-  expect(realization.boxes.map((b) => b.band)).toEqual(["Satisfying units", "Components", "Uses"]);
 });
 it("labels planned uses, reports unreadable designs and keeps unknown structure visible", async () => {
   const reader = fixture({

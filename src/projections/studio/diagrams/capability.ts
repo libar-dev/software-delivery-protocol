@@ -301,7 +301,7 @@ export function capabilityDiagrams(
         .map((e) => `${e.from} refines ${e.to} · ${e.claim}${e.reason ? ` — ${e.reason}` : ""}`),
       legend:
         "Arrows: refines (declared). Later visits repeat a Spec and link to its first occurrence.",
-      textEquivalent: complete,
+      textEquivalentHtml: complete,
     },
   ];
 }

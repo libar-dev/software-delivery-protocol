@@ -305,20 +305,8 @@ describe("sdp cli", () => {
       const stderr = capture.readStderr();
       for (const [file, specId] of [
         [
-          "specs/consumers/spec-studio.diagram-kinds.maturity-picture.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
-        ],
-        [
-          "specs/consumers/spec-studio.diagram-kinds.requirement-trace.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
-        ],
-        [
           "specs/consumers/spec-studio.diagram-kinds.sdp.md",
           "spec:consumers.spec-studio.diagram-kinds",
-        ],
-        [
-          "specs/consumers/spec-studio.lenses.architecture.unit-register.sdp.md",
-          "spec:consumers.spec-studio.lenses.architecture.unit-register",
         ],
         ["specs/extraction/executable-examples.sdp.md", "spec:extraction.executable-examples"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
@@ -334,6 +322,9 @@ describe("sdp cli", () => {
         "spec:consumers.spec-studio.slice-page",
         "spec:consumers.spec-studio.diagram-kinds.dependency",
         "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+        "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
+        "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
+        "spec:consumers.spec-studio.lenses.architecture.unit-register",
         "spec:protocol.significant-units-review",
         "spec:consumers.capability-map",
         "spec:protocol.capability-epics",
@@ -346,7 +337,7 @@ describe("sdp cli", () => {
       }
       // Re-measured from the refreshed carriers: no prose-mention pair is retained, and the
       // verifier gaps listed above are the whole warning set.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 8 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 5 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

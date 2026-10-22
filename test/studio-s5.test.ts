@@ -1429,16 +1429,20 @@ it("hides phone scroll advice and closed source in print while keeping opened so
   const values: Record<string, Record<string, string>> = {};
   css.walkRules((rule) => {
     if (rule.parent?.type !== "atrule") return;
-    rule.walkDecls((decl) => {
-      (values[`${rule.parent?.type === "atrule" ? rule.parent.params : ""}/${rule.selector}`] ??=
-        {})[decl.prop] = decl.value;
-    });
+    for (const selector of rule.selectors)
+      rule.walkDecls((decl) => {
+        (values[`${rule.parent?.type === "atrule" ? rule.parent.params : ""}/${selector}`] ??= {})[
+          decl.prop
+        ] = decl.value;
+      });
   });
   expect(values["(max-width: 719.98px)/.scroll-help"]).toMatchObject({ display: "none" });
-  expect(values['print/sdp-diagram details[id$=".source"]:not([open])']).toMatchObject({
-    display: "none",
-  });
-  expect(values['print/sdp-diagram details[id$=".source"][open] textarea']).toMatchObject({
-    display: "block",
-  });
+  for (const element of ["sdp-diagram", "sdp-maturity-map"]) {
+    expect(values[`print/${element} details[id$=".source"]:not([open])`]).toMatchObject({
+      display: "none",
+    });
+    expect(values[`print/${element} details[id$=".source"][open] textarea`]).toMatchObject({
+      display: "block",
+    });
+  }
 });
