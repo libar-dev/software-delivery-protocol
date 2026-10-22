@@ -72,8 +72,10 @@ the carrying Specs. The open-question register (recipe 20) lists the neighbors' 
 statement queue (recipe 46) orders waiting readiness statements and the selected decider's
 questions; it states no rung. A clear floor is evidence, not an automatic `ready` statement.
 Pinned declarations (recipe 24) and the key-family register (recipe 41) list the shapes a builder
-and a test author share. For a Pack, read Pack design (recipe 29). Before changing a Spec others
-rest on, run design-change impact (recipe 30). Follow `sdp-authoring` for capability-based Pack
+and a test author share. For a Pack, read Pack design (recipe 29) member by member and the design
+slice (recipe 54) as one whole: how the members rest on each other, the architecture they touch,
+and the decisions and questions in scope. Before changing a Spec others rest on, run
+design-change impact (recipe 30). Follow `sdp-authoring` for capability-based Pack
 names and plan pointers.
 
 A design pass over a Pack runs in a loop:

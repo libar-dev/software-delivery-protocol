@@ -25,6 +25,7 @@ export const expectedComponentIds = [
 // outside the engine source seams and therefore have no truthful owner among the accepted
 // component set.
 export const structuralMembershipExceptions = [
+  "impl:protocol.design-slice-recipe",
   "impl:protocol.proposal-memo-recipe",
   "impl:protocol.run-evidence-recipe",
   "impl:protocol.studio-preview-workflow",

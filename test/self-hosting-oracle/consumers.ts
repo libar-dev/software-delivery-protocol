@@ -22,7 +22,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "Changed-file impact, Pack design and design diff, recipes 4, 29 and 35, accept `detail: true` and default to summaries preserving every total and explicitly naming omitted detail.",
+          "Changed-file impact, Pack design, design diff and the design slice, recipes 4, 29, 35 and 54, accept `detail: true` and default to summaries preserving every total and explicitly naming omitted detail.",
           "The guarantees recipe (recipe 3) returns each section's entries as the Spec states them and the binding fields the Spec context carries, not only the names of the sections.",
           "The orphans and gaps recipe (recipe 8) reports each kind the verifier-gap signal exempts and how many ready Specs it exempts, as the build backlog reports its exclusions.",
           "A design-backlog recipe lists the Specs stated `defined` that no code realizes, with their design columns, excluding examples and decisions as the build backlog does.",
@@ -31,7 +31,7 @@ export const consumersSpecs = [
       },
       design: {
         detailParameter:
-          "recipes 4, 29 and 35 read `params.detail`, absent or `false` for the summary and `true` for every row in full; recipe 29's `detail` may also be a list of member ids, which returns full rows for those members and summary rows for the rest of the Pack, and an id that is not a member is a diagnostic in the result. A summary keeps `totals` as the full answer counts them and adds `leftOut`, one line for each kind of detail it omits.",
+          "recipes 4, 29, 35 and 54 read `params.detail`, absent or `false` for the summary and `true` for every row in full; recipe 29's and recipe 54's `detail` may also be a list of member ids, which returns full rows for those members and summary rows for the rest of the Pack, and an id that is not a member is a diagnostic in the result. A summary keeps `totals` as the full answer counts them and adds `leftOut`, one line for each kind of detail it omits.",
         impactSummary:
           "`{ changedFiles, totals, impactedSpecs: [id], impactedPacks: [id], atRisk: { incomingSpecs: [id], outgoingSpecs: [id], other: [id] }, coverageUnknownFiles, unlinkedUnits: [id], leftOut }` is recipe 4's summary. Incoming and outgoing name the connecting edge's direction relative to the impacted node and assert no dependency, since the edge may be any type; a Spec reached both ways is listed in both, and `other` holds the at-risk nodes that are not Specs.",
         impactDetail:
@@ -7171,7 +7171,7 @@ export const consumersSpecs = [
             "the slice reports {cycles:number} cycles and {exampleMembers:number} folded example members",
             "the touched components are {components:string}, {throughRestsOn:number} of them reached through what the slice rests on",
             'the member design reads {realized:"realized"|"unrealized"} with {differing:number} differing and {unreadable:number} unreadable rows',
-            "the outside components are {outside:string}",
+            "the outside components are {outsideComponents:string}",
             "the outside Spec holds {held:string}",
           ],
         },
@@ -7215,7 +7215,7 @@ export const consumersSpecs = [
           "`{ address, spec, origin, index, question, blocking, deferral, decider, links, provisional, trigger, holds }` with the open-question register's fields, where `origin` is `member`, `decision` or `restsOn`, `index` the question's authored position from 0, `address` null without a key, and `holds` the members whose stated next rung its Spec holds when the question blocks, its own Spec first when that Spec is a member held by the floor's blocking-question clause, empty for a non-blocking question; rows sort blocking first, then by how many members they hold, then by Spec id and position; a summary keeps a non-blocking question as `{ address, spec, index }`.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/design-slice.sdp.md",
   },
   {
@@ -7665,5 +7665,419 @@ export const consumersSpecs = [
     },
     deliveryFacts: [],
     file: "specs/consumers/spec-studio.register-input.sdp.md",
+  },
+  {
+    id: "spec:consumers.design-slice.chain",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.chain.sdp.md",
+    title: "Members rest on a chain",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "Members rest on a chain.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "rest on each other in a chain"}',
+              'one member depends on an outside Spec {outside: "that no code satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, matching every declared value"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              'the members read in depth order {order: "spec:probe.base, spec:probe.design, spec:probe.top"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.decision-backlink",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.decision-backlink.sdp.md",
+    title: "A shaping decision comes before its member",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "A shaping decision comes before its member.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "include a decision that refines the member it shapes"}',
+              'one member depends on an outside Spec {outside: "that no code satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, matching every declared value"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              'the members read in depth order {order: "spec:probe.base, spec:probe.design, spec:probe.top"}',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.dependency-cycle",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.dependency-cycle.sdp.md",
+    title: "A cycle shares a depth",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "A cycle shares a depth.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "include two members that depend on each other"}',
+              'one member depends on an outside Spec {outside: "that no code satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, matching every declared value"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              "the slice reports {cycles: 1} cycles and {exampleMembers: 0} folded example members",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.folded-example",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.folded-example.sdp.md",
+    title: "An example folds without lending its readiness",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "An example folds without lending its readiness.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "include an example that refines a member"}',
+              'one member depends on an outside Spec {outside: "that no code satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, matching every declared value"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              "the slice reports {cycles: 0} cycles and {exampleMembers: 1} folded example members",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.independent-example",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.independent-example.sdp.md",
+    title: "An example with its own dependency stays unfolded",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "An example with its own dependency stays unfolded.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "include an example that refines a member and depends on an outside Spec"}',
+              'one member depends on an outside Spec {outside: "that no code satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, matching every declared value"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              "the slice reports {cycles: 0} cycles and {exampleMembers: 0} folded example members",
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.component-absent",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.component-absent.sdp.md",
+    title: "An unanchored component design stays visible",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "An unanchored component design stays visible.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "rest on each other in a chain"}',
+              'one member depends on an outside Spec {outside: "that a component\'s unit satisfies"}',
+              'one member is a component design whose component {anchor: "no anchor holds"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              'the member design reads {realized: "unrealized"} with {differing: 0} differing and {unreadable: 0} unreadable rows',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.component-unrelated",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.component-unrelated.sdp.md",
+    title: "An anchor alone does not realize a component design",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "An anchor alone does not realize a component design.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "rest on each other in a chain"}',
+              'one member depends on an outside Spec {outside: "that a component\'s unit satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor holds without satisfying the design"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              'the member design reads {realized: "unrealized"} with {differing: 0} differing and {unreadable: 0} unreadable rows',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.component-matching",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.component-matching.sdp.md",
+    title: "A realized component matches its declared values",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "A realized component matches its declared values.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "rest on each other in a chain"}',
+              'one member depends on an outside Spec {outside: "that a component\'s unit satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, matching every declared value"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              'the member design reads {realized: "realized"} with {differing: 0} differing and {unreadable: 0} unreadable rows',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.component-differing",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.component-differing.sdp.md",
+    title: "A realized component keeps its differing layer and uses apart",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "A realized component keeps its differing layer and uses apart.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "rest on each other in a chain"}',
+              'one member depends on an outside Spec {outside: "that a component\'s unit satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, with a differing layer and uses"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              'the member design reads {realized: "realized"} with {differing: 2} differing and {unreadable: 0} unreadable rows',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.component-unreadable",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.component-unreadable.sdp.md",
+    title: "An unreadable declared layer stays visible",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "An unreadable declared layer stays visible.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "rest on each other in a chain"}',
+              'one member depends on an outside Spec {outside: "that a component\'s unit satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, with an unreadable layer"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              'the member design reads {realized: "realized"} with {differing: 0} differing and {unreadable: 1} unreadable rows',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.outside-satisfied",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.outside-satisfied.sdp.md",
+    title: "A prerequisite reaches its satisfying component",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "A prerequisite reaches its satisfying component.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "include a decision that refines the member it shapes"}',
+              'one member depends on an outside Spec {outside: "that a component\'s unit satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor holds without satisfying the design"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              'the touched components are {components: "component:probe.dependency, component:probe.designed"}, {throughRestsOn: 1} of them reached through what the slice rests on',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.outside-unbound",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.outside-unbound.sdp.md",
+    title: "An unbound prerequisite invents no component",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "An unbound prerequisite invents no component.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "include a decision that refines the member it shapes"}',
+              'one member depends on an outside Spec {outside: "that no code satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor holds without satisfying the design"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: [
+              'the touched components are {components: "component:probe.designed"}, {throughRestsOn: 0} of them reached through what the slice rests on',
+            ],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.outside-holding",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.outside-holding.sdp.md",
+    title: "An outside prerequisite names the member it holds",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome: "An outside prerequisite names the member it holds.",
+      },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "include a decision that refines the member it shapes"}',
+              'one member depends on an outside Spec {outside: "stated below defined"}',
+              'one member is a component design whose component {anchor: "an anchor holds without satisfying the design"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: ['the outside Spec holds {held: "spec:probe.base"}'],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.outside-components",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.outside-components.sdp.md",
+    title: "Outside components stop at the touched components' neighbors",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Outside components stop at the touched components' neighbors." },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "include a decision that refines the member it shapes"}',
+              'one member depends on an outside Spec {outside: "that a component\'s unit satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, matching every declared value"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: ['the outside components are {outsideComponents: "component:probe.neighbor"}'],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
   },
 ] as const;

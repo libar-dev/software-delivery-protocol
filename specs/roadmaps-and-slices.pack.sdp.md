@@ -19,6 +19,20 @@ specs:
   - spec:consumers.spec-studio.diagram-kinds.maturity-picture
   - spec:consumers.spec-studio.diagram-kinds.requirement-trace
   - spec:consumers.design-slice
+  - spec:consumers.design-slice.outside-components
+  - spec:consumers.design-slice.chain
+  - spec:consumers.design-slice.decision-backlink
+  - spec:consumers.design-slice.dependency-cycle
+  - spec:consumers.design-slice.folded-example
+  - spec:consumers.design-slice.independent-example
+  - spec:consumers.design-slice.component-absent
+  - spec:consumers.design-slice.component-unrelated
+  - spec:consumers.design-slice.component-matching
+  - spec:consumers.design-slice.component-differing
+  - spec:consumers.design-slice.component-unreadable
+  - spec:consumers.design-slice.outside-satisfied
+  - spec:consumers.design-slice.outside-unbound
+  - spec:consumers.design-slice.outside-holding
   - spec:consumers.spec-studio.slice-page
   - spec:decisions.roadmap-priority
   - spec:consumers.roadmap

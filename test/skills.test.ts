@@ -61,6 +61,15 @@ const skillPaths = [
 ] as const;
 const studioSkillPath = ".agents/skills/sdp-studio/SKILL.md";
 const vaultSkillPath = ".agents/skills/sdp-vault/SKILL.md";
+
+it("discovers the design slice's summary and detail parameter", () => {
+  const { body } = readSkill(".agents/skills/sdp-agent-surface/SKILL.md");
+  const detail = body.slice(
+    body.indexOf("A recipe that takes `params.detail`"),
+    body.indexOf("To filter any shipped answer"),
+  );
+  expect(detail).toContain("the design slice, recipe 54");
+});
 /** Every shipped skill; the generic checks run over all of them. */
 const allSkillPaths = [...skillPaths, studioSkillPath, vaultSkillPath] as const;
 

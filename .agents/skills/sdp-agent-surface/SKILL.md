@@ -70,6 +70,7 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Compare stated readiness with the floor                        | readiness divergence (recipe 7)                                                                            |
 | Read warnings, gaps and verifier health                        | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
 | Review a Pack                                                  | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
+| Read a Pack or a set of Specs as one design                    | the design slice (recipe 54)                                                                               |
 | List open questions                                            | the open-question register (recipe 20)                                                                     |
 | See what a Spec rests on                                       | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
 | Change a Spec others rest on                                   | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
@@ -179,7 +180,8 @@ and column.
 
 A recipe that takes `params.detail` returns a summary by default: every total, ids in place of
 rows, and `leftOut` naming what `detail: true` adds (changed-file impact, recipe 4; Pack design,
-recipe 29; the design diff, recipe 35). To filter any shipped answer, run it inside your own body:
+recipe 29; the design diff, recipe 35; the design slice, recipe 54).
+To filter any shipped answer, run it inside your own body:
 
 ```sh
 pnpm --silent sdp:q 'const answer = await recipes(29, { pack: params.pack }); return answer.members.filter((member) => member.blockingQuestions > 0)' --params '{"pack":"pack:design-iteration-v1"}' --json
