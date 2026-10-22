@@ -1000,6 +1000,7 @@ it("copies distinct actions and recorded scopes for both Pack choices without a 
   expect(copies[0]).not.toBe(copies[1]);
   expect(copies[0]).toContain("Action: change-entry");
   expect(copies[0]).toContain("Scope: spec:probe.s1, spec:probe.s2");
+  expect(copies[0]).toContain("Pack: pack:probe");
   expect(copies[1]).toContain("Action: change-pack");
   expect(copies[1]).toContain("Scope: pack:probe");
   for (const text of copies) expect(text).toContain("Clarify this design");
