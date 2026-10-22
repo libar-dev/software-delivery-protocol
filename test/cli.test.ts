@@ -362,18 +362,12 @@ describe("sdp cli", () => {
         ["specs/protocol/capability-epics.sdp.md", "spec:protocol.capability-epics"],
         ["specs/protocol/roadmap-replaces-plans.sdp.md", "spec:protocol.roadmap-replaces-plans"],
         ["specs/protocol/role-vocabulary.sdp.md", "spec:protocol.role-vocabulary"],
-        [
-          "specs/protocol/significant-units-review.sdp.md",
-          "spec:protocol.significant-units-review",
-        ],
       ] as const) {
         expect(stderr).toContain(`${file} — [warning] honesty/gaps — Spec "${specId}"`);
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
-      // Re-measured from the refreshed carriers: no prose-mention pair is retained. The owner's
-      // ready statements on plan 47's roadmaps-and-slices Pack add 22 verifier gaps beside the
-      // retained one on the Spec-sections Model.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 23 warnings");
+      expect(stderr).not.toContain('Spec "spec:protocol.significant-units-review"');
+      expect(capture.readStdout()).toContain("validate: 0 errors · 22 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

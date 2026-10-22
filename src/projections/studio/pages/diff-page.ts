@@ -88,6 +88,7 @@ function partValues(part: NonNullable<Diff["specs"]>["changed"][number]["parts"]
  * @sdpSatisfies spec:consumers.spec-studio.diff-page
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders declared design changes and binding changes separately
  */
 export function diffPage(ctx: PageContext): string {
   const diff = answer(ctx, 35),

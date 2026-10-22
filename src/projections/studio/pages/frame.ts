@@ -9,6 +9,7 @@ import { codeSpans, plainTitle } from "./code-spans.js";
  * @sdpSatisfies spec:consumers.spec-studio.shell, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.intent-panel, spec:consumers.spec-studio, spec:consumers.spec-studio.lenses, spec:consumers.spec-studio.navigation
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders Studio navigation, page rails and composing controls
  */
 export function frame(ctx: PageContext, title: string, body: string, selected?: string): string {
   const prefix = relative(ctx, "index.html").replace(/index\.html$/u, "");

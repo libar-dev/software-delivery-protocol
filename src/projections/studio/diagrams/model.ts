@@ -1,3 +1,10 @@
+/**
+ * @sdpAnchor impl:protocol.studio-diagram-model
+ * @sdpLabel shared diagram boxes, edges and drawing bounds
+ * @sdpSatisfies spec:consumers.spec-studio.diagrams
+ * @sdpComponent component:protocol.projections
+ * @sdpRole contract
+ */
 export interface DiagramBox {
   readonly id: string;
   readonly words: string;

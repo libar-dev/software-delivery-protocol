@@ -14,6 +14,13 @@ import { packPage } from "./pack-page.js";
 import { specPage } from "./spec-page.js";
 import { searchPage } from "./search-page.js";
 
+/**
+ * @sdpAnchor impl:protocol.studio-page-catalog
+ * @sdpLabel selects Studio pages, optional inputs and Pack exports
+ * @sdpSatisfies spec:consumers.spec-studio.publisher
+ * @sdpComponent component:protocol.projections
+ * @sdpRole projection
+ */
 export interface StudioPage {
   readonly path: string;
   readonly content: string;

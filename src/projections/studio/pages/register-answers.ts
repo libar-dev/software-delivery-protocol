@@ -1,6 +1,13 @@
 import type { PageContext } from "./html.js";
 
 // The shipped bodies own these answers. Pages select and format fields, without recomputing them.
+/**
+ * @sdpAnchor impl:protocol.studio-register-contracts
+ * @sdpLabel shared recipe answer shapes for Studio registers
+ * @sdpReferences spec:consumers.spec-studio.data.recipe-answers
+ * @sdpComponent component:protocol.projections
+ * @sdpRole contract
+ */
 interface RegisterAnswers {
   20: Questions;
   24: Declarations;

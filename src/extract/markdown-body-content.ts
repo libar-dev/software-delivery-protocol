@@ -4,6 +4,13 @@ import { parseSlots } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, markdownFinding } from "./markdown-support.js";
 
+/**
+ * @sdpAnchor impl:protocol.markdown-content
+ * @sdpLabel decodes located Markdown entries and typed fences
+ * @sdpSatisfies spec:carrier.markdown-body-grammar
+ * @sdpComponent component:protocol.extract
+ * @sdpRole codec
+ */
 export interface MarkdownLine {
   readonly text: string;
   readonly line: number;

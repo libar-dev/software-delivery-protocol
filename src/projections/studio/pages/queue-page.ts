@@ -11,6 +11,7 @@ import { SPEC_READINESS } from "../../../model/descriptors.js";
  * @sdpSatisfies spec:consumers.spec-studio.owner-queue
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders waiting readiness statements and decider questions
  */
 export function queuePage(ctx: PageContext): string {
   const q = answer(ctx, 46),

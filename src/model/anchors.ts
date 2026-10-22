@@ -92,12 +92,18 @@ export function specOracle(anchor: SpecOracleAnchor): SpecOracleAnchor {
   };
 }
 
+/**
+ * Start with spec.ts for the envelope and sections.ts for typed content owners.
+ * Read anchors.ts for both binding forms and ids.ts for accepted id text.
+ * Shape changes here must agree with carrier normalization and consumer contracts.
+ */
 const modelComponentAnchor = createCodeAnchor({
   id: codeAnchorId("component:protocol.model"),
-  label: "Protocol model seam",
+  label: "the authored contracts and stable ids",
   layer: "domain",
   context: "protocol",
   satisfies: ref("spec:model.core-model"),
+  role: "contract",
 });
 const anchorModelAnchor = createCodeAnchor({
   id: codeAnchorId("impl:protocol.anchor-model"),

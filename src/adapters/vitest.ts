@@ -15,13 +15,19 @@ import { codeAnchor } from "../model/code-anchor.js";
  * framework-free. This subpath needs Vitest 2 or later installed beside the package; the runner
  * core and other entry points do not load it.
  */
+/**
+ * Start with bindExample here for Vitest registration and fresh-world isolation.
+ * Read typescript-imports.ts for selected roots and barrel reach in the external
+ * curation input; that inferred input does not author structural bindings.
+ */
 const adaptersComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.adapters"),
-  label: "Protocol adapters: Vitest examples and TypeScript file imports",
+  label: "external runtime and source adapters",
   satisfies: ref("spec:extraction.example-runner"),
   uses: [componentAnchorId("component:protocol.runner")],
   layer: "adapter",
   context: "protocol",
+  role: "adapter",
 });
 const exampleRunnerAdapterAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner-adapter"),

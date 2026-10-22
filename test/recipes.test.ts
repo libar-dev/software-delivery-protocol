@@ -1151,9 +1151,10 @@ describe("the agent-surface recipe corpus", () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(13)));
     const rows = asArray(result.components).map(asRecord);
     const owners = new Map<string, string>(expectedMemberOfEdges);
-    const expectedUses = expectedUsesEdges
-      .map(([from, to]) => ({ from: owners.get(from) ?? from, to: owners.get(to) ?? to }))
-      .filter((edge) => edge.from !== edge.to);
+    const expectedUses = expectedUsesEdges.map(([from, to]) => ({
+      from: owners.get(from) ?? from,
+      to: owners.get(to) ?? to,
+    }));
 
     expect(rows.map((row) => stringAt(row, "id")).sort()).toEqual([...expectedComponentIds].sort());
 
@@ -1498,13 +1499,13 @@ describe("the agent-surface recipe corpus", () => {
     });
   });
 
-  // Given: a clone of the live ExtractionResult with impl:protocol.agent-surface removed
+  // Given: a clone of the live ExtractionResult with impl:protocol.reader removed
   // and its memberOf edge retained — invalid, but still a graph validateGraph can report.
   // When: catalog recipe 17 runs through real runSdpCli on that override.
   // Then: validateGraph reports conformance/referential-integrity, the sink exits 0, and
   // the unresolved member row keeps null label/file/line under component:protocol.reader.
   it("preserves an unresolved architecture-map member when memberOf outlives the node", async () => {
-    const missingMemberId = "impl:protocol.agent-surface";
+    const missingMemberId = "impl:protocol.reader";
     const ownerComponentId = "component:protocol.reader";
     const dirty: ExtractionResult = {
       counts: derived.counts,
@@ -1754,11 +1755,11 @@ describe("the agent-surface recipe corpus", () => {
   // memberOf edges retained — invalid, but still a graph validateGraph can report.
   // When: catalog recipe 19 runs through real runSdpCli on that override.
   // Then: validateGraph reports conformance/referential-integrity, the sink exits 0, the
-  // unresolved component row keeps null label/file/line, impl:protocol.agent-surface is retained,
+  // unresolved component row keeps null label/file/line, impl:protocol.reader is retained,
   // and that component contributes no entry point.
   it("preserves an unresolved component row when memberOf outlives the node", async () => {
     const missingComponentId = "component:protocol.reader";
-    const retainedImplId = "impl:protocol.agent-surface";
+    const retainedImplId = "impl:protocol.reader";
     const dirty: ExtractionResult = {
       counts: derived.counts,
       report: derived.report,
@@ -5815,6 +5816,55 @@ describe("design recipes", () => {
         supersededBy: [],
       },
     ]);
+  });
+
+  it("keeps the decoder in reader without adding crossings against the lawful notation alternative", async () => {
+    // spec:protocol.significant-units-review#rule.decoderBoundary
+    const decoder = "impl:protocol.example-space-decoding";
+    expect(
+      derived.graph.edges.filter((edge) => edge.from === decoder && edge.type === "memberOf"),
+    ).toEqual([
+      { from: decoder, to: "component:protocol.reader", type: "memberOf", claim: "anchored" },
+    ]);
+    const fallback = {
+      ...derived,
+      graph: {
+        ...derived.graph,
+        edges: [
+          ...derived.graph.edges
+            .filter(
+              (edge) =>
+                !(
+                  edge.type === "uses" &&
+                  edge.from === "component:protocol.codegen" &&
+                  edge.to === "component:protocol.reader"
+                ),
+            )
+            .map((edge) =>
+              edge.type === "memberOf" && edge.from === decoder
+                ? { ...edge, to: "component:protocol.notation" }
+                : edge,
+            ),
+          {
+            from: "component:protocol.notation",
+            to: "component:protocol.graph",
+            type: "uses" as const,
+            claim: "anchored" as const,
+          },
+          {
+            from: "component:protocol.notation",
+            to: "component:protocol.validate",
+            type: "uses" as const,
+            claim: "anchored" as const,
+          },
+        ],
+      },
+    };
+    // Both alternatives retain the real reader → notation slot-parser import.
+    const moved = asRecord(await runRecipe(recipeByOrdinal(32)));
+    const stayed = asRecord(await runRecipe(recipeByOrdinal(32), undefined, fallback));
+    expect(asRecord(moved.totals).layerCrossings).toBe(asRecord(stayed.totals).layerCrossings);
+    expect(asRecord(moved.totals).contextCrossings).toBe(asRecord(stayed.totals).contextCrossings);
   });
 
   it("reports the corpus's architecture crossings as the raw edges state them", async () => {

@@ -30,9 +30,14 @@ export interface RunnableExampleWorld<W, C, O extends RunnableOutcome> {
   observed?: O;
 }
 
+/**
+ * Start with RunnableExampleAdapters and createRunnableExample here.
+ * Follow the comparator through observed, expected and Spec-authored outcomes
+ * when changing generated registrar integration or failure rendering.
+ */
 const testingComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.testing"),
-  label: "Protocol testing seam",
+  label: "the generated registrar runtime",
   satisfies: ref("spec:extraction.runnable-modules"),
   uses: [
     componentAnchorId("component:protocol.adapters"),
@@ -40,13 +45,14 @@ const testingComponentAnchor = codeAnchor({
   ],
   layer: "adapter",
   context: "protocol",
+  role: "adapter",
 });
 const exampleTestingHelpersAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-testing-helpers"),
   label: "adapter-lifecycle and oracle-comparison helpers for bound examples",
   satisfies: ref("spec:extraction.runnable-modules"),
   component: componentAnchorId("component:protocol.testing"),
-  role: "utility",
+  role: "adapter",
 });
 void testingComponentAnchor;
 void exampleTestingHelpersAnchor;

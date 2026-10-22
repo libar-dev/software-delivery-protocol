@@ -118,6 +118,13 @@ function readParams(
   return { params: parsed as Readonly<Record<string, unknown>> };
 }
 
+/**
+ * @sdpAnchor impl:protocol.parameter-codec
+ * @sdpLabel decodes recipe parameters and refuses duplicate keys
+ * @sdpSatisfies spec:consumers.agent-surface.recipe-parameters
+ * @sdpComponent component:protocol.cli
+ * @sdpRole codec
+ */
 export function mergeParams(
   forms: readonly string[],
   output: CliOutput,

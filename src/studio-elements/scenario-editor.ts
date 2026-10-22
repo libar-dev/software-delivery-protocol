@@ -19,7 +19,7 @@ export function scenarioText(given: string, when: string, then: string): string 
  * @sdpLabel gathers the edited Given, When and Then as exact text scoped to its subject
  * @sdpSatisfies spec:consumers.spec-studio.intent-panel, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
  */
 export function registerScenarioEditor(): void {
   class ScenarioEditor extends globalThis.HTMLElement {

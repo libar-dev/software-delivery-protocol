@@ -85,7 +85,6 @@ export const expectedWarnings = [
   gap("spec:protocol.capability-epics"),
   gap("spec:protocol.roadmap-replaces-plans"),
   gap("spec:protocol.role-vocabulary"),
-  gap("spec:protocol.significant-units-review"),
 ] as const;
 
 export type { ExpectedAnchor } from "./anchors.js";

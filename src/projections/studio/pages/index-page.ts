@@ -10,6 +10,7 @@ import { codeSpans } from "./text.js";
  * @sdpSatisfies spec:consumers.spec-studio.index-page, spec:consumers.spec-studio.lenses.packs, spec:consumers.spec-studio.navigation
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders Pack disclosures and filterable Spec rows
  */
 export function indexPage(ctx: PageContext): string {
   const { specs, packs, findings } = ctx.data;

@@ -99,6 +99,13 @@ function firstDivergentPath(left: unknown, right: unknown, path = ""): string | 
   return path.length === 0 ? "document" : path;
 }
 
+/**
+ * @sdpAnchor impl:protocol.import-fidelity
+ * @sdpLabel refuses Markdown emission that changes authored meaning
+ * @sdpSatisfies spec:carrier.sdp-import
+ * @sdpComponent component:protocol.import
+ * @sdpRole validator
+ */
 export function assertMarkdownEmissionFidelity(reified: ReifiedSpec, document: string): void {
   const result = reifyMarkdownCarrier(document, reified.file.replace(/\.sdp\.ts$/u, ".sdp.md"));
   const emitted = result.specs[0];

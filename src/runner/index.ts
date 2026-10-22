@@ -91,13 +91,19 @@ function substituteParams(skeleton: string, params: ParamShape): string {
   );
 }
 
+/**
+ * Start with ExampleContract and StepBindings, then planExample here.
+ * Follow the planned sequence into execution to inspect handler order,
+ * fresh-world lifecycle and authored-step failure rendering.
+ */
 const runnerComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.runner"),
-  label: "Protocol example runner seam",
+  label: "provider-neutral example execution",
   satisfies: ref("spec:extraction.example-runner"),
   uses: [componentAnchorId("component:protocol.notation")],
   layer: "application",
   context: "protocol",
+  role: "service",
 });
 const exampleRunnerAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.example-runner"),

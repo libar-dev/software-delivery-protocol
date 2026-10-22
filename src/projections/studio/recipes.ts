@@ -35,7 +35,7 @@ export async function evaluateStudioRecipe(
  * @sdpReferences spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.projections
  * @sdpUses impl:protocol.reader, api:protocol.evaluate-body
- * @sdpRole projection
+ * @sdpRole service
  */
 export async function studioRecipeAnswers(
   reader: Reader,
