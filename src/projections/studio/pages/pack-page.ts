@@ -1,3 +1,4 @@
+import { slicePath } from "../paths.js";
 import { exportPath } from "./export-page.js";
 import { maturityMap } from "./maturity-map.js";
 import { packChangeNote } from "./diff-page.js";
@@ -111,7 +112,7 @@ export function packPage(ctx: PageContext, pack: PackContext, totals: PackTotals
   return frame(
     ctx,
     pack.title ?? pack.id,
-    `<header class="page-head"><h1>${codeSpans(pack.title ?? pack.id)}</h1><div class="ids"><span>${code(pack.id)}${copy(pack.id)}</span><span>${code(pack.file)}${copy(pack.file)}</span></div><p class="export-download"><a href="${escape(relative(ctx, exportPath(pack.id)))}" download="${escape(exportPath(pack.id).split("/").at(-1))}">Download this Pack as one file</a></p><sdp-compose scope="${escape(pack.id)}" action="change-entry" members-complete="${String(pack.members.every((m) => m.resolved))}" members="${escape(
+    `<header class="page-head"><h1>${codeSpans(pack.title ?? pack.id)}</h1><div class="ids"><span>${code(pack.id)}${copy(pack.id)}</span><span>${code(pack.file)}${copy(pack.file)}</span></div><p><a href="${escape(relative(ctx, slicePath(pack.id)))}">Read this Pack as one design</a></p><p class="export-download"><a href="${escape(relative(ctx, exportPath(pack.id)))}" download="${escape(exportPath(pack.id).split("/").at(-1))}">Download this Pack as one file</a></p><sdp-compose scope="${escape(pack.id)}" action="change-entry" members-complete="${String(pack.members.every((m) => m.resolved))}" members="${escape(
       pack.members
         .filter((m) => m.resolved)
         .map((m) => m.id)

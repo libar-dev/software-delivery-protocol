@@ -118,6 +118,7 @@ describe("Studio publication", () => {
       "questions.html",
       "queue.html",
       "search.html",
+      "slices/probe.html",
       "specs/probe.member.html",
       "tests.html",
     ]);

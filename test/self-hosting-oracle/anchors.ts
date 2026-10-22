@@ -21,6 +21,60 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "impl:protocol.studio-slice-answer",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/slice-answer.ts",
+    site: "export interface SliceMember",
+    role: "contract",
+    label: "full design slice answer consumed by the page and drawings",
+  },
+  {
+    id: "impl:protocol.studio-slice-dependencies",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/diagrams/slice.ts",
+    site: "export function dependencyDiagram(",
+    role: "projection",
+    label: "supplied depth bands with protected boundary boxes and lossless text",
+  },
+  {
+    id: "impl:protocol.studio-slice-architecture",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/diagrams/slice.ts",
+    site: "export function scopedArchitectureDiagrams(",
+    role: "projection",
+    label: "selected component grid with distinct planned identities and complete unit edges",
+  },
+  {
+    id: "impl:protocol.studio-slice-page",
+    nodeType: "CodeNode",
+    file: "src/projections/studio/pages/slice-page.ts",
+    site: "export function slicePage(",
+    role: "projection",
+    label: "design slice summaries, member needs, architecture comparisons and boundary tables",
+  },
+  {
+    id: "test:protocol.studio-slice-page",
+    nodeType: "Anchor",
+    file: "test/studio-slice.test.ts",
+    constant: "sliceAnchor",
+    site: 'describe("slice page",',
+  },
+  {
+    id: "test:protocol.studio-slice-dependency",
+    nodeType: "Anchor",
+    file: "test/studio-slice.test.ts",
+    constant: "dependencyAnchor",
+    site: 'describe("slice dependency drawing",',
+  },
+  {
+    id: "test:protocol.studio-slice-architecture",
+    nodeType: "Anchor",
+    file: "test/studio-slice.test.ts",
+    constant: "architectureAnchor",
+    site: 'describe("scoped architecture drawing",',
+  },
+
+  {
     id: "test:protocol.roadmap-priority",
     nodeType: "Anchor",
     label: "checks Pack priority extraction, comparison and Studio change notes",
@@ -4660,6 +4714,30 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["impl:protocol.studio-slice-answer", "references", "spec:consumers.design-slice"],
+  ["impl:protocol.studio-slice-page", "satisfies", "spec:consumers.spec-studio.slice-page"],
+  ["test:protocol.studio-slice-page", "verifies", "spec:consumers.spec-studio.slice-page"],
+  [
+    "impl:protocol.studio-slice-dependencies",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.dependency",
+  ],
+  [
+    "test:protocol.studio-slice-dependency",
+    "verifies",
+    "spec:consumers.spec-studio.diagram-kinds.dependency",
+  ],
+  [
+    "impl:protocol.studio-slice-architecture",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+  ],
+  [
+    "test:protocol.studio-slice-architecture",
+    "verifies",
+    "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
+  ],
+
   [
     "impl:protocol.studio-diagram-layout",
     "satisfies",
@@ -6492,6 +6570,10 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.studio-slice-answer",
+  "impl:protocol.studio-slice-dependencies",
+  "impl:protocol.studio-slice-architecture",
+  "impl:protocol.studio-slice-page",
   "impl:protocol.studio-diagram-layout",
   "impl:protocol.studio-diagram-routing",
   "impl:protocol.studio-diagram-source",

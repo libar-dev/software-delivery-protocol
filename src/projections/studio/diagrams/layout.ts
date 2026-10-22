@@ -105,7 +105,7 @@ export function layoutDiagram(d: Diagram): Layout {
           ? !foldedBand(box) && contextOf(box) === c && layerOf(box) === b
           : (box.band ?? "Units") === b,
       )
-      .sort((a, b) => compare(a.id, b.id));
+      .sort((a, b) => (d.preserveOrder ? 0 : compare(a.id, b.id)));
   const cellWidth = d.grid && columns.length > 1 ? 264 : widthBudget - 48;
   const place = (items: readonly DiagramBox[], x: number, y: number, width: number) => {
     let nextX = x,
@@ -159,7 +159,7 @@ export function layoutDiagram(d: Diagram): Layout {
     for (const band of ["Other layers", "Other contexts"]) {
       const items = d.boxes
         .filter((b) => foldedBand(b) && b.band === band)
-        .sort((a, b) => compare(a.id, b.id));
+        .sort((a, b) => (d.preserveOrder ? 0 : compare(a.id, b.id)));
       if (!items.length) continue;
       const h = label("band", band, margin, y);
       y = place(items, margin, snap(y + h + 80), widthBudget - 48) + 64;

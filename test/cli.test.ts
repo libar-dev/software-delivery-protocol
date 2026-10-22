@@ -313,20 +313,12 @@ describe("sdp cli", () => {
           "spec:consumers.spec-studio.diagram-kinds.capability-tree",
         ],
         [
-          "specs/consumers/spec-studio.diagram-kinds.dependency.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.dependency",
-        ],
-        [
           "specs/consumers/spec-studio.diagram-kinds.maturity-picture.sdp.md",
           "spec:consumers.spec-studio.diagram-kinds.maturity-picture",
         ],
         [
           "specs/consumers/spec-studio.diagram-kinds.requirement-trace.sdp.md",
           "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
-        ],
-        [
-          "specs/consumers/spec-studio.diagram-kinds.scoped-architecture.sdp.md",
-          "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
         ],
         [
           "specs/consumers/spec-studio.diagram-kinds.sdp.md",
@@ -340,7 +332,6 @@ describe("sdp cli", () => {
           "specs/consumers/spec-studio.roadmap-page.sdp.md",
           "spec:consumers.spec-studio.roadmap-page",
         ],
-        ["specs/consumers/spec-studio.slice-page.sdp.md", "spec:consumers.spec-studio.slice-page"],
         ["specs/extraction/executable-examples.sdp.md", "spec:extraction.executable-examples"],
         ["specs/model/spec-sections.sdp.md", "spec:model.spec-sections"],
         ["specs/protocol/roadmap-replaces-plans.sdp.md", "spec:protocol.roadmap-replaces-plans"],
@@ -350,6 +341,9 @@ describe("sdp cli", () => {
       }
       expect(stderr).not.toContain("conformance/prose-mentions");
       for (const specId of [
+        "spec:consumers.spec-studio.slice-page",
+        "spec:consumers.spec-studio.diagram-kinds.dependency",
+        "spec:consumers.spec-studio.diagram-kinds.scoped-architecture",
         "spec:protocol.significant-units-review",
         "spec:consumers.capability-map",
         "spec:protocol.capability-epics",
@@ -361,7 +355,7 @@ describe("sdp cli", () => {
       }
       // Re-measured from the refreshed carriers: no prose-mention pair is retained, and the
       // verifier gaps listed above are the whole warning set.
-      expect(capture.readStdout()).toContain("validate: 0 errors · 14 warnings");
+      expect(capture.readStdout()).toContain("validate: 0 errors · 11 warnings");
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).toContain(
         '"id": "pack:self-hosting-v1"',
       );

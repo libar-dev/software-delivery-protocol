@@ -21,15 +21,31 @@ export function mermaidSource(d: Diagram): string {
   const displayed = layoutDiagram(d).boxes.map((p) => p.box);
   const aliases = new Map(displayed.map((b, i) => [b.id, `n${String(i)}`]));
   return [
-    "flowchart TB",
+    d.mermaidKind === "dependencies"
+      ? "flowchart BT"
+      : d.mermaidKind === "block"
+        ? "block-beta\n  columns 1"
+        : "flowchart TB",
+    ...(d.mermaidKind === "dependencies"
+      ? [...new Set(displayed.map((b) => b.band))].flatMap((band, i) => [
+          `  subgraph depth${String(i)}["${mermaidText(band ?? "Units")}"]`,
+          ...displayed
+            .filter((b) => b.band === band)
+            .map((b) => `    ${aliases.get(b.id) ?? ""}["${mermaidText(`${b.words} · ${b.id}`)}"]`),
+          "  end",
+        ])
+      : []),
     ...displayed.flatMap((b) => [
-      `  ${aliases.get(b.id) ?? ""}["${mermaidText(`${b.words} · ${b.id}`)}"]`,
+      ...(d.mermaidKind === "dependencies"
+        ? []
+        : [`  ${aliases.get(b.id) ?? ""}["${mermaidText(`${b.words} · ${b.id}`)}"]`]),
       ...(b.folded
         ? [`  %% folded ${mermaidText(b.id)}: ${(b.foldedIds ?? []).map(mermaidText).join(", ")}`]
         : []),
     ]),
     ...d.edges.flatMap((e) => [
-      `  ${aliases.get(e.from) ?? ""} -->|"${mermaidText(edgeWords(e))}"| ${aliases.get(e.to) ?? ""}`,
+      ...(d.mermaidKind === "block" ? [`  %% ${mermaidText(edgeWords(e))}`] : []),
+      `  ${aliases.get(e.from) ?? ""} ${e.kind === "plans to use" || e.orders === false ? "-.->" : "-->"}${d.mermaidKind === "block" ? "" : `|"${mermaidText(edgeWords(e))}"|`} ${aliases.get(e.to) ?? ""}`,
       ...(e.count === undefined
         ? []
         : [`  %% count: ${String(e.count)}; ${mermaidText(e.from)} to ${mermaidText(e.to)}`]),

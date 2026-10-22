@@ -6927,7 +6927,7 @@ export const consumersSpecs = [
           "`flowchart BT` with depth subgraphs and exact relation labels; export the displayed folds and name the full text equivalent beside the source.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diagram-kinds.dependency.sdp.md",
   },
   {
@@ -7009,7 +7009,7 @@ export const consumersSpecs = [
           "`block` with generic component boxes and uses arrows for a purely anchored grid; use `flowchart TB` with explicit declared and anchored labels when planned, comparison or folded edges cannot be preserved by block syntax. Architecture icons never infer deployment meaning.",
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.diagram-kinds.scoped-architecture.sdp.md",
   },
   {
@@ -7192,9 +7192,9 @@ export const consumersSpecs = [
         memberSummary:
           "`{ id, specKind, statedReadiness, floorReached, statedNextRung, holds, depth, restsOn, exampleOf, design, rules, implementedBy, referencedBy }` is a member's summary row, with `holds` as `[{ clauseId, targets: [id] }]`, as Pack design's summary reads it, and `implementedBy` and `referencedBy` as counts.",
         structureShape:
-          "`{ edges: [{ from, to, type, orders, reason }], cycles: [{ members, cycle }] }`, one edge per declared typed relation between two members, sorted by `from`, `type` and `to`, `orders` false only for a `refines` the target names back, and `reason` present only when the relation states one; `cycles` in the statement queue's cycle row; a summary drops each edge's `reason`.",
+          "`{ edges: [{ from, to, type, orders, reason }], cycles: [{ members, cycle }], unresolved: [{ from, to, type, reason }] }`, one edge per declared typed relation between two members, sorted by `from`, `type` and `to`, `orders` false only for a `refines` the target names back, and `reason` present only when the relation states one; `cycles` in the statement queue's cycle row; a summary drops each edge's `reason`; `unresolved` keeps unresolved outgoing typed targets apart from the resolved boundary, with no invented title or rung.",
         boundaryRow:
-          "Pack design's boundary row `{ id, title, statedReadiness, implemented, via }` with `specKind`, `floorReached`, `holds`, the member ids whose stated-next-rung failures name it as a target, empty outside `restsOn`, and `inPack: true` on a Pack member left out of a narrowed slice, in `{ restsOn, restedOnBy, verifiedBy, supersededBy }` sorted by id; a summary keeps `{ id, statedReadiness, holds }` and `inPack`.",
+          "Pack design's boundary row `{ id, title, statedReadiness, implemented, via }` with a `via` that has relation reasons also carrying `reasons: [{ member, reason }]` for those relations, and with `specKind`, `floorReached`, `holds`, the member ids whose stated-next-rung failures name it as a target, empty outside `restsOn`, and `inPack: true` on a Pack member left out of a narrowed slice, in `{ restsOn, restedOnBy, verifiedBy, supersededBy }` sorted by id; a summary keeps `{ id, statedReadiness, holds }` and `inPack`.",
         componentRow:
           "`{ id, label, layer, context, members: { satisfies, references }, restsOn, designs }` sorted by id, one per touched anchored component, where `members.satisfies` and `members.references` are the members whose units belong to it by each binding, `restsOn` the outside Specs the slice rests on whose satisfying units belong to it, `designs` the member component designs naming it, and `label`, `layer` and `context` come from the architecture map's component row.",
         componentSummary:
@@ -7251,7 +7251,7 @@ export const consumersSpecs = [
           "Under `What each member needs next` comes one row per member that is not a folded example, by depth and then in the scope's order: the member's title linked to its card on the Pack page with its id, its depth, its stated rung beside the floor reached, its stated next rung with `nothing blocks` or each unmet clause and the Specs it names with their stated rungs, then the design it carries, its rules with how many are keyed, its design entries, pinned declarations, open questions with how many block, decisions, and verifying examples with how many are bound, each count on its own line, and its implementation and reference bindings as counts; the table has no total row, and no count is combined with another.",
           "A folded example member has no row of its own and stays readable in a disclosure within its parent's row, whose summary counts the folded examples and how many are held below their stated next rung; inside, each example shows its title linked to its card on the Pack page, its id, its own stated rung, floor reached and stated next rung with each unmet clause and the Specs it names. Folding lends the parent no rung, hold or binding, and the folded count stays apart from the count of examples that verify the parent.",
           "Under `The architecture it touches` comes the scoped architecture drawing of the diagram kinds, given the answer's components, designs, uses, planned uses and outside components, then one row per touched component: its id linked to its detail on the architecture lens; its label, layer and context; and how the slice reaches it, the members whose code satisfies it, the members whose code references it, the Specs the slice rests on whose code it holds, and the member designs naming it, each on its own line in words.",
-          "After the component rows comes one row per member component design: the design linked to its Spec page, the component it names, the layer, context, role and uses it declares, whether an anchor holds that component and whether that anchor satisfies the design, in words, and its differing rows with the declared and anchored values side by side and its unreadable rows; a declared value and an anchored value never share a cell.",
+          "After the component rows comes one row per member component design: the design linked to its Spec page, the component it names, the layer, context, role and uses it declares, whether an anchor holds that component and whether that anchor satisfies the design, in words, and its differing rows with the declared and anchored values side by side and its unreadable rows; declared entries stay in the Declared cell, and every anchored value in the Comparison cell is labelled anchored.",
           "Then come the components outside the slice, each with how it is reached and whether an anchor holds it, under a heading that says they are shown for context and not counted as touched.",
           "After them come the units that implement or reference a member and belong to no component, reading None when empty.",
           "A slice that touches no component and holds no component design says so in one sentence and names, by count, the Specs it rests on that no code satisfies, so an empty architecture never reads as an architecture nobody needs.",
@@ -7317,7 +7317,7 @@ export const consumersSpecs = [
         ],
       },
     },
-    deliveryFacts: [],
+    deliveryFacts: ["implemented", "has-verifier"],
     file: "specs/consumers/spec-studio.slice-page.sdp.md",
   },
   {

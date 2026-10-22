@@ -8282,7 +8282,16 @@ describe("the shipped design slice", () => {
       expect(
         asArray(boundary[direction]).map((row) => {
           const { id, title, statedReadiness, implemented, via } = asRecord(row);
-          return { id, title, statedReadiness, implemented, via };
+          return {
+            id,
+            title,
+            statedReadiness,
+            implemented,
+            via: asArray(via).map((entry) => {
+              const { type, members } = asRecord(entry);
+              return { type, members };
+            }),
+          };
         }),
       ).toEqual(rows);
     }

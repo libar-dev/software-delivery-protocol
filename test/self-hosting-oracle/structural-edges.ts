@@ -79,6 +79,27 @@ export const structuralMembershipExceptions = [
  */
 export const acceptedArchitecturalUnits = [
   {
+    unit: "src/projections/studio/slice-answer.ts#SliceMember",
+    anchorId: "impl:protocol.studio-slice-answer",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/slice.ts#dependencyDiagram",
+    anchorId: "impl:protocol.studio-slice-dependencies",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/diagrams/slice.ts#scopedArchitectureDiagrams",
+    anchorId: "impl:protocol.studio-slice-architecture",
+    componentId: "component:protocol.projections",
+  },
+  {
+    unit: "src/projections/studio/pages/slice-page.ts#slicePage",
+    anchorId: "impl:protocol.studio-slice-page",
+    componentId: "component:protocol.projections",
+  },
+
+  {
     unit: "src/cli/params.ts#mergeParams",
     anchorId: "impl:protocol.parameter-codec",
     componentId: "component:protocol.cli",

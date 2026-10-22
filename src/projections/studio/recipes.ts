@@ -7,6 +7,7 @@ import { graphReportId } from "../../validate/validators.js";
 export interface StudioRecipeAnswers {
   readonly all: ReadonlyMap<number, unknown>;
   readonly packs: ReadonlyMap<string, unknown>;
+  readonly slices: ReadonlyMap<string, unknown>;
   readonly packDiffs: ReadonlyMap<string, unknown>;
   readonly specs: ReadonlyMap<string, ReadonlyMap<number, unknown>>;
 }
@@ -51,6 +52,7 @@ export async function studioRecipeAnswers(
   const evaluate = value as RecipeCaller;
   const all = new Map<number, unknown>();
   const packs = new Map<string, unknown>();
+  const slices = new Map<string, unknown>();
   const packDiffs = new Map<string, unknown>();
   const specs = new Map<string, ReadonlyMap<number, unknown>>();
   for (const number of [17, 20, 24, 31, 33, 43, 44, 46, 51])
@@ -60,6 +62,7 @@ export async function studioRecipeAnswers(
     all.set(35, await evaluate(35, { base: inputs.base.graph, detail: true }));
   for (const pack of reader.packs()) {
     packs.set(pack.id, await evaluate(29, { pack: pack.id }));
+    slices.set(pack.id, await evaluate(54, { pack: pack.id, detail: true }));
     if (inputs.base !== undefined)
       packDiffs.set(
         pack.id,
@@ -73,5 +76,5 @@ export async function studioRecipeAnswers(
     if (spec.specKind !== "example") answers.set(34, await evaluate(34, { spec: spec.id }));
     specs.set(spec.id, answers);
   }
-  return { all, packs, packDiffs, specs };
+  return { all, packs, slices, packDiffs, specs };
 }
