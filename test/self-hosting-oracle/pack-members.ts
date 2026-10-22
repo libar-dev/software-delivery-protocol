@@ -357,12 +357,26 @@ export const expectedPackMembers = [
   "spec:consumers.command-line.generate-check-failure",
   "spec:consumers.command-line.generate-writes-every-root",
   "spec:consumers.command-line.verb-help-touches-nothing",
+  "spec:consumers.capability-map",
+  "spec:consumers.spec-studio.capability-map-page",
+  "spec:consumers.spec-studio.diagram-kinds",
+  "spec:consumers.design-slice",
+  "spec:consumers.spec-studio.slice-page",
+  "spec:consumers.roadmap",
+  "spec:consumers.spec-studio.roadmap-page",
+  "spec:consumers.roadmap.memo",
+  "spec:consumers.spec-studio.cited-line-text",
+  "spec:consumers.spec-studio.register-input",
   "spec:observation.runtime-overlay",
   "spec:observation.run-evidence",
   "spec:observation.run-evidence.absolute-path-joins",
   "spec:observation.run-evidence.unanchored-file-unjoined",
   "spec:protocol.self-hosting",
   "spec:protocol.structural-self-binding",
+  "spec:protocol.significant-units-review",
+  "spec:protocol.role-vocabulary",
+  "spec:protocol.capability-epics",
+  "spec:protocol.roadmap-replaces-plans",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -407,6 +421,8 @@ export const expectedPackMembers = [
   "spec:decisions.architectural-annotation",
   "spec:decisions.pack-design-page",
   "spec:decisions.vault-owned-folder",
+  "spec:decisions.roadmap-priority",
+  "spec:decisions.roadmap-over-plans",
 ] as const;
 
 export const expectedStudioPackMembers = [
@@ -543,6 +559,24 @@ export const expectedObsidianVaultPackMembers = [
   "spec:consumers.obsidian-vault.iteration.watch-source-anchor",
   "spec:consumers.vault-on-ramp",
   "spec:model.term-addresses",
+] as const;
+
+// The authored membership of `pack:roadmaps-and-slices-v1`, in manifest order.
+export const expectedRoadmapsAndSlicesPackMembers = [
+  "spec:protocol.significant-units-review",
+  "spec:protocol.role-vocabulary",
+  "spec:consumers.capability-map",
+  "spec:protocol.capability-epics",
+  "spec:consumers.spec-studio.capability-map-page",
+  "spec:consumers.spec-studio.diagram-kinds",
+  "spec:consumers.design-slice",
+  "spec:consumers.spec-studio.slice-page",
+  "spec:decisions.roadmap-priority",
+  "spec:consumers.roadmap",
+  "spec:consumers.spec-studio.roadmap-page",
+  "spec:consumers.roadmap.memo",
+  "spec:decisions.roadmap-over-plans",
+  "spec:protocol.roadmap-replaces-plans",
 ] as const;
 
 export const expectedCorpusChecksPackMembers = [
@@ -689,6 +723,16 @@ export const expectedPacks = [
       "A human interface for iterating on designs: the one graph regenerated as an Obsidian vault of linked notes, read beside the carriers an agent edits. First the vault, its verb and its place among the projections, with the decision that its generator owns one folder of the vault and never touches a note a person wrote. Then its notes and links, its tables, the loop a design pass runs through it, and the skill that teaches an agent to keep the vault and answer a pass from it. Each Spec is followed by the examples that will verify it. Last, the one model change the vault asks for, an address for a Model term, so a concept links as exactly as a Spec does.",
     file: "specs/obsidian-vault.pack.sdp.md",
     members: expectedObsidianVaultPackMembers,
+  },
+  {
+    id: "pack:roadmaps-and-slices-v1",
+    nodeType: "Pack",
+    claim: "declared",
+    title: "Roadmaps, capability maps and design slices",
+    framing:
+      "How a corpus reads where it stands and what comes next, drawn from the graph. First the architecture the views stand on: a review of which engine units are significant enough to anchor, and the meaning of each role they carry. Then the capability map, epics with their features and stories, and the Protocol's own capabilities stated as epics. Then the diagrams the graph has data for, and the design slice, a Pack read as one design with the architecture it touches. Last the roadmap: the decision that lets the graph hold an advisory priority, the roadmap reading and its page and memo, and the decision that lets the roadmap replace the Protocol's numbered plans.",
+    file: "specs/roadmaps-and-slices.pack.sdp.md",
+    members: expectedRoadmapsAndSlicesPackMembers,
   },
   {
     id: "pack:self-hosting-v1",

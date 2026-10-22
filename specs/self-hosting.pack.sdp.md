@@ -356,12 +356,26 @@ specs:
   - spec:consumers.command-line.generate-check-failure
   - spec:consumers.command-line.generate-writes-every-root
   - spec:consumers.command-line.verb-help-touches-nothing
+  - spec:consumers.capability-map
+  - spec:consumers.spec-studio.capability-map-page
+  - spec:consumers.spec-studio.diagram-kinds
+  - spec:consumers.design-slice
+  - spec:consumers.spec-studio.slice-page
+  - spec:consumers.roadmap
+  - spec:consumers.spec-studio.roadmap-page
+  - spec:consumers.roadmap.memo
+  - spec:consumers.spec-studio.cited-line-text
+  - spec:consumers.spec-studio.register-input
   - spec:observation.runtime-overlay
   - spec:observation.run-evidence
   - spec:observation.run-evidence.absolute-path-joins
   - spec:observation.run-evidence.unanchored-file-unjoined
   - spec:protocol.self-hosting
   - spec:protocol.structural-self-binding
+  - spec:protocol.significant-units-review
+  - spec:protocol.role-vocabulary
+  - spec:protocol.capability-epics
+  - spec:protocol.roadmap-replaces-plans
   - spec:decisions.plain-language-references
   - spec:decisions.concept-docs-dissolve
   - spec:decisions.one-validation-path
@@ -406,6 +420,8 @@ specs:
   - spec:decisions.architectural-annotation
   - spec:decisions.pack-design-page
   - spec:decisions.vault-owned-folder
+  - spec:decisions.roadmap-priority
+  - spec:decisions.roadmap-over-plans
 modelRefs:
   - spec:model.core-model
 ---

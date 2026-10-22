@@ -76,11 +76,11 @@ afterEach(() => {
 });
 
 describe("the self-hosting records gate", () => {
-  it("discovers plan 46 as the current primary plan", () => {
-    // re-measured after plan 46's opening commit
+  it("discovers plan 47 as the current primary plan", () => {
+    // re-measured after plan 47 was drafted
     expect(currentPlan).toMatchObject({
-      number: 46,
-      name: "46-studio-phase-one-and-adopter-speed.md",
+      number: 47,
+      name: "47-roadmaps-capability-maps-and-slices.md",
     });
   });
 

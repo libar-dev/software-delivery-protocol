@@ -6455,4 +6455,237 @@ export const consumersSpecs = [
     deliveryFacts: ["has-verifier"],
     file: "specs/consumers/agent-surface.example-space-coverage.number-not-enumerable.sdp.md",
   },
+  {
+    id: "spec:consumers.capability-map",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    title: "The capability map reads every epic with the features and stories that refine it",
+    narrative:
+      "A corpus already states its capabilities through refinement: a story refines a feature, a feature refines an epic. No view draws that structure, so a person filtering by altitude sees a flat list and reads the corpus by Pack instead. The capability map draws it as a tree read from `refines`, each Spec with its readiness and delivery facts, and lists every Spec no epic reaches, so the map never hides one.",
+    sections: {
+      intent: {
+        actor:
+          "A person or an agent who wants to see what the corpus can do, capability by capability, before reading any one Pack.",
+        problem:
+          "Refinement is authored on every Spec, yet no view draws it, so the corpus reads as Packs and a flat list, and a reader cannot see which capabilities exist or how far each is designed and built.",
+        outcome:
+          "Draw every epic with the features and stories that refine it, each with its stated readiness, the floor it reaches and its delivery facts, and list the Specs no epic reaches.",
+        openQuestions: [
+          {
+            question: "Where does the map place a Spec that refines more than one parent?",
+            blocking: true,
+            key: "multipleParents",
+            decider: "delegated",
+            provisional:
+              "under every parent, the second and later placements marked as repeats that link to the first",
+          },
+          {
+            question: "How does the map show a Spec that no epic reaches through refinement?",
+            blocking: true,
+            key: "unreached",
+            decider: "delegated",
+            provisional:
+              "in its own section after the epics, grouped by the highest Spec its refinement reaches",
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/capability-map.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.capability-map-page",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    title: "The capability map page shows each epic as a tree of its features and stories",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give the Studio a page that draws the capability map, each epic a tree of its features and stories with their rungs, and lets a person narrow the index's Specs by epic.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.capability-map-page.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.diagram-kinds",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    title: "The Studio draws every diagram kind the graph holds data for",
+    narrative:
+      "The Studio draws four diagrams today: the architecture grid, a component's members, a Spec's one-hop relations and a Spec's realization. The graph holds more structure than they show: dependency chains across a Pack, the refinement tree of a capability, the components a Pack's members touch, and the stated and reached rungs of many Specs at once. Each kind the graph has honest data for gets a drawing, and a kind it has no data for is named and refused rather than guessed from prose.",
+    sections: {
+      intent: {
+        outcome:
+          "Draw every diagram kind the graph holds honest data for, legible at a desktop width without zooming, each offering its Mermaid source to copy, and name each kind the graph cannot support.",
+        openQuestions: [
+          {
+            question:
+              "Which diagram kinds does the graph hold honest data for, and which would need data it does not hold, such as message order for a sequence diagram?",
+            blocking: true,
+            key: "kindCatalog",
+            decider: "delegated",
+          },
+          {
+            question:
+              "How does a drawing wider than its column keep its labels legible: a wider figure, shorter labels, a smallest scale with scrolling, or a mix?",
+            blocking: true,
+            key: "legibleLabels",
+            decider: "delegated",
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.diagram-kinds.sdp.md",
+  },
+  {
+    id: "spec:consumers.design-slice",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    title:
+      "A slice reads a Pack as one design, with the architecture it touches and what each member needs next",
+    narrative:
+      "Features that must be reviewed together are already grouped as a Pack, and the Pack page shows each member in turn. A design pass also needs the whole at once: how the members depend on each other, which components they touch, realized or planned, which decisions and open questions bound them, and what each member needs for its next rung. Rounds of design add detail a little at a time; the floor sets how little a rung needs, and how much is enough stays a judgment the authoring guidance supports and no check makes.",
+    sections: {
+      intent: {
+        actor:
+          "A person or an agent running a design pass over features that must be reviewed together.",
+        problem:
+          "The Pack page reads member by member, so a reviewer assembles the dependency order, the touched architecture and the open decisions by hand before judging the design as a whole.",
+        outcome:
+          "Read a Pack as one design slice: its members and their relations, the components they touch, realized and planned, the decisions and open questions that bound them, and what each member needs for its next rung.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/design-slice.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.slice-page",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    title: "A slice page shows a Pack's design as one whole",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give the Studio a page per Pack that shows its design slice: the members' dependency drawing, the components they touch, the decisions and open questions in scope, and each member's next rung.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.slice-page.sdp.md",
+  },
+  {
+    id: "spec:consumers.roadmap",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    title: "A roadmap orders the next bodies of work, and the graph says what each still needs",
+    narrative:
+      "The Protocol's planning reads the graph: the build backlog lists ready work no code realizes, the design backlog lists defined work, and the statement queue orders what a person can state. None of them says which capability comes first. A roadmap is that one authored choice, the order of the next few bodies of work. Everything else about an entry, whether it still needs design, is ready to build, or is built, is read from the graph each time, so a roadmap never goes stale in what it says about state.",
+    sections: {
+      intent: {
+        actor:
+          "The owner choosing what the next pull requests take up, and an agent opening the next body of work.",
+        problem:
+          "Priority lives in prose, in each pull request's forward section and in the plan files, which the graph cannot read and which go stale as work lands.",
+        outcome:
+          "Read a roadmap as an ordered list of upcoming capabilities, each placed by the graph in what it needs next, to design, to build or built, with the design it lacks and the work it rests on.",
+        openQuestions: [
+          {
+            question:
+              "Which graph facts place an entry in to design, to build or built, and how does an entry that is an epic or a feature count its descendants?",
+            blocking: true,
+            key: "lanes",
+            decider: "delegated",
+            provisional:
+              "to build when it or a descendant states `ready` without `implemented`, to design when one states below `ready`, built when every one is implemented; examples and decisions follow the build backlog's exclusions",
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/roadmap.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.roadmap-page",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    title: "The roadmap page shows the upcoming work in priority order, split by what it needs",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Give the Studio a page that shows each roadmap in its priority order, with what to design, what to build and what is built, and for each entry what it lacks.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.roadmap-page.sdp.md",
+  },
+  {
+    id: "spec:consumers.roadmap.memo",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    title: "A roadmap renders as the forward section of a pull request description",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Render a roadmap's next entries as Markdown a pull request description carries as its forward section, so the plan a description proposes is the roadmap the graph holds.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/roadmap.memo.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.cited-line-text",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    title: "A pinned declaration shows the words of each test line that cites it",
+    narrative:
+      "A reader checking a pinned declaration reaches the test line that cites it and then follows a source link to read the assertion. The words of that line would close the task on the page.",
+    sections: {
+      intent: {
+        outcome:
+          "Show beside each pinned declaration the text of every test line that cites it, so a reviewer reads the check without leaving the page.",
+        openQuestions: [
+          {
+            question:
+              "May the Studio show source text the graph does not hold, and if so is it recorded in the graph beside the citation or read as a named input?",
+            blocking: true,
+            key: "lineText",
+            decider: "owner",
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.cited-line-text.sdp.md",
+  },
+  {
+    id: "spec:consumers.spec-studio.register-input",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    title: "An outside register is a named Studio input, so a cited token links to its entry",
+    narrative:
+      "A corpus that cites an outside register, an open-decisions list or an earlier system's references, writes its tokens in prose. The external-registers recipe checks them; a reader on the page still sees only the token.",
+    sections: {
+      intent: {
+        outcome:
+          "Let the Studio take an outside register as a named input, so each token a corpus cites from it links to its entry, named as outside evidence and never as graph data.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/spec-studio.register-input.sdp.md",
+  },
 ] as const;

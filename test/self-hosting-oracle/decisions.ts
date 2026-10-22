@@ -1399,4 +1399,58 @@ export const decisionsSpecs = [
     deliveryFacts: [],
     file: "specs/decisions/studio-build-renders.sdp.md",
   },
+  {
+    id: "spec:decisions.roadmap-priority",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "idea",
+    title: "A roadmap states advisory priority in the graph",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Decide whether and how the graph may hold an advisory priority over upcoming work, a roadmap, without dates, without a new relation, and without gating or sequencing any work.",
+        openQuestions: [
+          {
+            question:
+              "Where does a roadmap's priority live: in the authored order of a Pack marked as a roadmap, in a Pack the corpus names by convention, or outside the graph as corpus data a recipe reads?",
+            blocking: true,
+            key: "priorityHome",
+            decider: "owner",
+            provisional:
+              "in the authored member order of a Pack whose manifest marks its order as priority",
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/decisions/roadmap-priority.sdp.md",
+  },
+  {
+    id: "spec:decisions.roadmap-over-plans",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "idea",
+    title: "Plan files stop carrying forward planning once the roadmap does",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Decide whether the Protocol retires its numbered plan files as the carrier of forward planning, reading its next work from the roadmap instead, and what replaces the gate that requires a current plan.",
+        openQuestions: [
+          {
+            question:
+              "Does the roadmap replace the numbered plan as the record an agent reads first, with `plans/` kept as frozen history?",
+            blocking: true,
+            key: "planCarrier",
+            decider: "owner",
+            provisional:
+              "yes; the handbook names the roadmap recipe, and the arc's execution record moves to its pull request description",
+          },
+        ],
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/decisions/roadmap-over-plans.sdp.md",
+  },
 ] as const;

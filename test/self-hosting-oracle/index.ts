@@ -70,6 +70,7 @@ export {
   expectedObsidianVaultPackMembers,
   expectedDesignManagementPackMembers,
   expectedPackMembers,
+  expectedRoadmapsAndSlicesPackMembers,
   expectedStudioPackMembers,
   expectedPacks,
 } from "./pack-members.js";
