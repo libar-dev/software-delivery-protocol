@@ -73,7 +73,7 @@ export function requirementView(ctx: PageContext, spec: SpecContext): string {
       title,
       detail: `${claim}${absence}`,
       words: `${title} · ${claim}${absence}`,
-      target: s ? (/href="([^"]+)"/u.exec(link(ctx, id))?.[1] ?? "#main") : "#panel.verification",
+      target: s ? (/href="([^"]+)"/u.exec(link(ctx, id))?.[1] ?? "#main") : "#bindings",
       ...(s
         ? {}
         : {
@@ -99,5 +99,5 @@ export function requirementView(ctx: PageContext, spec: SpecContext): string {
     "Satisfying or referencing units",
     "Test or oracle bindings",
   ].filter((band) => !boxes.some((b) => b.band === band));
-  return `<h3>Requirement drawing</h3>${list(empty.map((band) => `${band}: no ${band === "Declared verifying examples" ? "declared verifying example" : "recorded binding"}.`))}${renderDiagram(requirementDiagram({ subject: spec.id, boxes, edges }), `${spec.id}.requirement`)}${edges.length ? "" : `<p>${code(spec.id)} has no requirement edges recorded.</p>`}`;
+  return `<h3>Requirement drawing</h3>${empty.length ? list(empty.map((band) => `${band}: no ${band === "Declared verifying examples" ? "declared verifying example" : "recorded binding"}.`)) : ""}${renderDiagram(requirementDiagram({ subject: spec.id, boxes, edges }), `${spec.id}.requirement`)}${edges.length ? "" : `<p>${code(spec.id)} has no requirement edges recorded.</p>`}`;
 }

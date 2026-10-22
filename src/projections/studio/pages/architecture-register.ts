@@ -16,16 +16,21 @@ export function unitRegister(
   architecture: Architecture,
 ): {
   index: string;
-  component: (id: string) => string;
+  source: (id: string) => string;
+  members: (id: string) => string;
   unowned: string;
 } {
-  const units = ctx.data.search.records.filter((r) => r.nodeType === "CodeNode");
+  const units = ctx.data.codeUnits;
   const row = (id: string): string => {
     const unit = units.find((r) => r.id === id);
     if (!unit) return code(id);
     const bindings = (edge: string) =>
-      list(unit.bindings.filter((b) => b.edge === edge).map((b) => link(ctx, b.specId)));
-    return `<li data-unit="${escape(id)}">${code(id)} ${codeSpans(unit.label ?? "")} · ${sourceCode(unit.file, unit.line)}${unit.file === undefined ? "" : copy(location(unit.file, unit.line))}<p>Satisfies</p>${bindings("satisfies")}<p>References</p>${bindings("references")}</li>`;
+      list(
+        (ctx.data.search.records.find((r) => r.id === id)?.bindings ?? [])
+          .filter((b) => b.edge === edge)
+          .map((b) => link(ctx, b.specId)),
+      );
+    return `<li data-unit="${escape(id)}">${code(id)} ${codeSpans(unit.label ?? "")} · ${sourceCode(unit.file, unit.line)}${copy(location(unit.file, unit.line))}<p>Satisfies</p>${bindings("satisfies")}<p>References</p>${bindings("references")}</li>`;
   };
   const groups = (ids: string[]): string => {
     const role = (id: string) => units.find((r) => r.id === id)?.role ?? null;
@@ -48,14 +53,14 @@ export function unitRegister(
   const declared = architecture.components
     .filter((c) => c.declared)
     .sort((a, b) => compare(a.id, b.id));
-  const members = new Set(architecture.components.flatMap((c) => c.members.map((m) => m.id)));
+  const members = new Set(declared.flatMap((c) => c.members.map((m) => m.id)));
   const unowned = units
     .filter((u) => !members.has(u.id) && !declared.some((c) => c.id === u.id))
     .map((u) => u.id);
   return {
     index: `<section><h2>Significant units</h2><p>Recorded bindings state no review approval or execution verdict.</p>${list(declared.map((c) => `<a href="#${escape(c.id)}">${code(c.id)}</a>`))}</section>`,
-    component: (id) =>
-      `<h3>Component source binding</h3><ul>${row(id)}</ul><h3>Members by role</h3>${groups(architecture.components.find((c) => c.id === id)?.members.map((m) => m.id) ?? [])}`,
+    source: (id) => `<h3>Component source binding</h3><ul>${row(id)}</ul>`,
+    members: (id) => groups(declared.find((c) => c.id === id)?.members.map((m) => m.id) ?? []),
     unowned: `<section><h2>No component</h2>${groups(unowned)}</section>`,
   };
 }

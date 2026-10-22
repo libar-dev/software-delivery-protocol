@@ -1598,7 +1598,7 @@ export const consumersSpecs = [
         traceGraph:
           "`sdp-trace-graph` with `spec-id`: the Spec's relations one hop each way, drawn in relation bands inside an `sdp-diagram`, then its text equivalent; no behavior of its own.",
         maturityMap:
-          "`sdp-maturity-map` with `pack-id`: the Pack's members placed by stated rung and floor reached, as a table of short cards with its axis explanation in the caption; an empty cell shows `—` alone and a filled cell names its count and Specs; no behavior.",
+          "`sdp-maturity-map` with `pack-id`: the Pack's members placed by stated rung and floor reached, drawn as a static SVG grid of counts, then its count table and each populated cell's member list; no behavior.",
         exampleSpace:
           "`sdp-example-space` with `spec-id`, naming the Spec that owns the example space: the space's slots with their types and the step that declares each, its children's bound points as a table with one row per example and one column per slot, an unbound slot written `unbound`, its expected-outcome oracle binding as present or none, and recipe 44's coverage; its coverage is a report, never a verifier run or a delivery fact; no behavior beyond the composing actions inside it.",
         diagramView:
@@ -5375,7 +5375,7 @@ export const consumersSpecs = [
           "A diagram of one context still over the bound draws one box per layer of that context, and then each layer's components in a section of their own.",
           "A drawing still over the bound after these folds, the context overview, one context's diagram or one layer's, writes no SVG; its text equivalent lists every box and edge the drawing would hold and then says the drawing was omitted because it exceeds the bound.",
           "A trace graph over the bound folds its largest relation group first, ties broken by direction and then by relation type, into one box that names the count and the relation and links to the Spec page's relations, until the drawing fits.",
-          "A member or realization diagram over the bound writes no SVG; its text equivalent lists every member or unit and every use or realization edge, and then says the drawing was omitted because it exceeds the bound.",
+          "A member diagram over the bound writes no SVG; its text equivalent lists every member and every use edge, and then says the drawing was omitted because it exceeds the bound.",
           "Every reading a fill, outline or line style marks is also in words: bands and columns carry labels, a planned component reads `planned`, a folded box reads `folded`, and an aggregated edge's count is in its text equivalent. A drawing whose edges all have one relation names it once in its legend and draws no edge label; solid `uses` and dashed `plans to use` share the use relation, with the planned wording also in the legend. A drawing with several relations keeps its labelled bands and edge labels.",
           "Each diagram is followed by its text equivalent, which states every box with its words and every edge as a sentence naming its two ends and its kind, and the SVG names it as its description.",
           "The diagram element adds only pan, zoom and pinch by changing the SVG's view box; it never moves a box or edge. At viewport widths of at least 720 CSS pixels the SVG starts at natural size inside a keyboard-accessible scroll region, with overflow inside the figure. Below that width the responsive contract fits the same drawing to the screen. Reset restores the initial view and scroll position. Without script the drawing, scrolling, links and text equivalent remain usable. Print fits the drawing to paper and exposes its text equivalent.",
@@ -5643,7 +5643,7 @@ export const consumersSpecs = [
         designedNotBuilt:
           "a table with one row per unrealized design in Spec id order: the component design's Spec, linked; the planned component's id as code; its planned context, layer and role, or `not stated`; the components it plans to use; and whether its component anchor exists without satisfying it; a design whose value recipe 43 cannot read adds a row naming the design, the key and the unreadable value.",
         componentDetail:
-          "a heading with the component's id as code and its label, a line with its layer, context and role in words, its file and line with a copy action, then lists headed Members, Uses, Used by, Satisfies and References, an empty list reading None, then the member diagram.",
+          "a heading with the component's id as code and its label, a line with its layer, context and role in words, its source binding apart from its members, then Members grouped by recorded role, Uses with supporting unit edges at the table's fragment targets, Used by, any design differences, Satisfies and References, an empty list reading None, then the member diagram.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -6679,7 +6679,7 @@ export const consumersSpecs = [
         legibleLabels:
           "The figure keeps the Studio's navigation rail. Title-first labels and width-based cell wrapping reduce width; natural-size SVG with local horizontal scrolling preserves readable labels on desktop. Below the responsive breakpoint the same drawing fits the screen. The legibility child pins these measurements and behavior.",
         flowchart:
-          "Draw for a Spec set, Pack, slice or roadmap from declared relations; dependency depth reveals chains and cycles the one-hop trace cannot show. Arrows retain their exact relation and direction, never execution order. The existing trace, members and realization remain equivalent flowchart subjects.",
+          "Draw for a Spec set, Pack, slice or roadmap from declared relations; dependency depth reveals chains and cycles the one-hop trace cannot show. Arrows retain their exact relation and direction, never execution order. The existing trace and members remain equivalent flowchart subjects.",
         mindmap:
           "Draw capability refinement from declared refines for an epic or capability map. The tree shows nesting absent from a flat list; repeated parents and cycles stay explicit rather than becoming an invented hierarchy.",
         treeView:

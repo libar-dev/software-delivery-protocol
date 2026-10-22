@@ -1700,7 +1700,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     nodeType: "CodeNode",
     file: "src/projections/studio/diagrams/bands.ts",
     site: "export function traceDiagram(",
-    label: "relation, member and realization bands and bounded relation folds",
+    label: "relation and member bands and bounded relation folds",
     role: "projection",
   },
   {

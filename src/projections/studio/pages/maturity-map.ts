@@ -31,21 +31,21 @@ export function maturityMap(pack: PackContext): string {
   const first = populated[0];
   const uniform = populated.length === 1 && first !== undefined;
   const sentence = uniform
-    ? `<p>${String(first.members.length)} members at stated ${first.stated} and floor ${first.floor}: <a href="#${escape(first.id)}">full member list</a>.</p>`
+    ? `<p>${count(first.members.length, "member", "members", false)} at stated ${first.stated} and floor ${first.floor}: <a href="#${escape(first.id)}">full member list</a>.</p>`
     : "";
   const caption =
     "Rows: stated readiness, idea to ready. Columns: floor reached, none to ready. Each mark counts one member; above 100 members a cell is solid. Floor none is distinct from idea.";
   const legend =
     '<p class="maturity-legend">Outlined diagonal: matches. Right of diagonal: floor above statement. Left of diagonal: statement above floor.</p>';
   const axis = `<text x="152" y="20">Floor reached →</text><text x="8" y="48">Stated readiness ↓</text>${floors.map((floor, i) => `<text x="${String(224 + i * 144)}" y="48" text-anchor="middle">${floor}</text>`).join("")}${SPEC_READINESS.map((stated, i) => `<text x="8" y="${String(88 + i * 120)}">${stated}</text>`).join("")}`;
-  const grid = `<figure><figcaption>${caption}</figcaption>${legend}<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-describedby="${escape(prefix)}.text" viewBox="0 0 872 552" width="872" height="552"><title>Maturity map for ${escape(plainTitle(pack.title ?? pack.id))}</title>${axis}${cells
+  const grid = `<figure><figcaption>${caption}</figcaption>${legend}<svg xmlns="http://www.w3.org/2000/svg" role="group" aria-describedby="${escape(prefix)}.text" viewBox="0 0 872 552" width="872" height="552"><title>Maturity map for ${escape(plainTitle(pack.title ?? pack.id))}</title>${axis}${cells
     .map((c) => {
       const x = 152 + c.column * 144,
         y = 64 + c.row * 120,
         n = c.members.length;
       const contents = `<g class="maturity-cell ${n ? `populated${n > 100 ? " solid" : ""}` : "empty"}${c.stated === c.floor ? " matches" : ""}" data-stated="${c.stated}" data-floor="${c.floor}"><rect x="${String(x)}" y="${String(y)}" width="136" height="112"/>${n ? `<text class="cell-count" x="${String(x + 12)}" y="${String(y + 22)}">${String(n)}</text>${n <= 100 ? Array.from({ length: n }, (_, i) => `<circle class="member-mark" cx="${String(x + 14 + (i % 10) * 11)}" cy="${String(y + 34 + Math.floor(i / 10) * 7)}" r="2"/>`).join("") : ""}` : ""}</g>`;
       return n
-        ? `<a href="#${escape(c.id)}"><title>stated ${c.stated}, floor ${c.floor}: ${String(n)} members</title>${contents}</a>`
+        ? `<a href="#${escape(c.id)}"><title>stated ${c.stated}, floor ${c.floor}: ${count(n, "member", "members", false)}</title>${contents}</a>`
         : contents;
     })
     .join("")}</svg></figure>`;

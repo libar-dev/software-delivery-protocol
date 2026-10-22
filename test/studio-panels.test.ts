@@ -1,3 +1,5 @@
+import * as diagrams from "../src/projections/studio/diagrams/index.js";
+import { searchIndex } from "../src/projections/studio/data.js";
 import { requirementDiagram } from "../src/projections/studio/diagrams/requirement.js";
 import { renderDiagram } from "../src/projections/studio/diagrams/svg.js";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
@@ -65,7 +67,7 @@ describe("architecture tables and register", () => {
       [...matrix.matchAll(/<th scope="col"[^>]*>(.*?)<\/th>/gsu)].map((m) => m[1]).join(" "),
     ).toMatch(/component:z.*component:a.*component:b.*component:u/su);
     expect(matrix).toContain('href="#uses.component:z.component:a">3</a>');
-    expect(page).toContain('id="uses.component:z.component:a"');
+    expect(page).toContain('<div id="uses.component:z.component:a"><h4>');
     expect(page).toContain("component:z</code> uses <code>impl:a");
     expect(matrix).toContain('class="uses-self"></td>');
     expect(matrix).toContain(
@@ -107,7 +109,12 @@ describe("architecture tables and register", () => {
     expect(row).toContain("spec:reference");
     expect(page).toContain("No component");
     expect(page).toContain('data-unit="impl:free"');
-    expect(page).not.toContain("accepted badge");
+    const component = page.split('<section id="component:sample"')[1]?.split("</section>")[0] ?? "";
+    expect(component).not.toContain("<h3>Members by role</h3>");
+    expect(component.match(/data-source-file="a.ts"/gu)).toHaveLength(1);
+    expect(component).toMatch(
+      /<h3>References<\/h3>(?:<ul[^>]*>.*?<\/ul>|<p>None\.<\/p>)<section><sdp-diagram/su,
+    );
   });
 });
 
@@ -135,7 +142,23 @@ describe("maturity picture", () => {
     expect(map).toContain("Unresolved members");
     expect(map).toContain("spec:missing");
     expect(map).not.toContain("Stated readiness by floor reached</summary>");
-    expect(map).toContain("block");
+    const legend = /<p class="maturity-legend">(.*?)<\/p>/su.exec(map)?.[1] ?? "";
+    for (const phrase of ["matches", "floor above statement", "statement above floor"])
+      expect(legend.split(phrase)).toHaveLength(2);
+    const cells = [
+      ...map.matchAll(
+        /<g class="maturity-cell ([^"]+)" data-stated="([^"]+)" data-floor="([^"]+)">(.*?)<\/g>/gsu,
+      ),
+    ];
+    expect(cells).toHaveLength(20);
+    expect(cells.filter((c) => c[1]?.split(" ").includes("matches"))).toHaveLength(4);
+    for (const cell of cells) {
+      expect(cell[1]?.split(" ").includes("matches")).toBe(cell[2] === cell[3]);
+      if (cell[1]?.startsWith("empty")) expect(cell[4]).not.toContain("<text");
+    }
+    expect(map).toContain("block-beta\n  columns 6");
+    expect(map).toContain('role="group"');
+    expect(map).not.toContain('role="img"');
   });
   it("puts a uniform map behind a closed disclosure and uses solid fill above the mark bound", async () => {
     const files: Record<string, string> = { "basis.sdp.md": carrier("basis") };
@@ -196,7 +219,16 @@ describe("requirement drawing", () => {
     ])
       expect(drawing).toContain(id);
     expect(drawing).not.toContain("spec:outside");
-    expect(drawing).toContain("no test binding");
+    const exampleBox = (id: string) => {
+      const box = new RegExp(`<li>${id}: ([^<]+)<\\/li>`, "u").exec(drawing)?.[1];
+      expect(box, id).toBeDefined();
+      return box;
+    };
+    expect(exampleBox("spec:example")).not.toContain("no test binding");
+    expect(exampleBox("spec:other-example")).toContain("no test binding");
+    expect(drawing).not.toContain("None.");
+    expect(drawing).toMatch(/data-id="impl:sample"><a href="#bindings"/u);
+    expect(drawing).toMatch(/data-id="test:example"><a href="#bindings"/u);
     expect(drawing).toContain("no satisfying binding");
     expect(drawing).toContain("binding present");
     expect(drawing).toContain("anchored oracle binding");
@@ -297,4 +329,117 @@ it("lets full component ids wrap so every uses column fits the printed page", ()
   const css = readFileSync("src/projections/studio/studio.css", "utf8");
   expect(css).toMatch(/@media print\s*\{\s*\.component-uses\s*\{[^}]*table-layout: fixed/su);
   expect(css).toMatch(/\.component-uses code\s*\{[^}]*overflow-wrap: anywhere/su);
+});
+
+it("keeps roles out of the pinned search record while preserving them on graph units", () => {
+  // Use the extractor's current schema and a recorded unfamiliar role.
+  const root = mkdtempSync(join(tmpdir(), "sdp-role-index-"));
+  roots.push(root);
+  writeFileSync(join(root, "unit.ts"), anchor("impl:role", " * @sdpRole adopter-role\n"));
+  const reader = createReader(extract({ root }).graph);
+  expect(reader.graph.nodes.find((n) => n.id === "impl:role")).toMatchObject({
+    role: "adopter-role",
+  });
+  expect(searchIndex(reader).records.find((r) => r.id === "impl:role")).not.toHaveProperty("role");
+});
+
+it("lists a unit whose recorded component is missing in No component and in unresolved structure", async () => {
+  const page = find(
+    await pages({
+      "unit.ts": anchor(
+        "impl:orphan",
+        " * @sdpComponent component:ghost\n * @sdpRole adopter-role\n",
+      ),
+    }),
+    "architecture.html",
+  );
+  const unowned = page.split("<h2>No component</h2>")[1]?.split("</section>")[0] ?? "";
+  expect(unowned).toContain("Role adopter-role");
+  expect(unowned).toContain('data-unit="impl:orphan"');
+  expect(page.split("<h2>Unresolved structure</h2>")[1]).toContain("component:ghost");
+});
+
+it("uses the singular member in a one-member Pack's uniform sentence", async () => {
+  const page = find(
+    await pages({
+      "s.sdp.md": carrier("solo"),
+      "p.pack.sdp.md": "---\nid: pack:solo\nspecs: [spec:solo]\n---\n# Solo\n",
+    }),
+    "packs/solo.html",
+  );
+  expect(page).toContain("1 member at stated defined and floor idea");
+  expect(page).not.toContain("1 members at stated");
+  expect(page).toContain("<title>stated defined, floor idea: 1 member</title>");
+});
+
+it("states each absent requirement band without implying that a populated drawing is missing", async () => {
+  const page = find(await pages({ "s.sdp.md": carrier("solo") }), "specs/solo.html");
+  const drawing =
+    page.split("<h3>Requirement drawing</h3>")[1]?.split("<h3>Decisions</h3>")[0] ?? "";
+  expect(drawing).toContain("Declared verifying examples: no declared verifying example.");
+  expect(drawing).toContain("Satisfying or referencing units: no recorded binding.");
+  expect(drawing).toContain("Test or oracle bindings: no recorded binding.");
+});
+
+it.each([
+  {
+    field: "kind",
+    first: ["satisfies", "incoming", "anchored"],
+    second: ["verifies", "incoming", "anchored"],
+  },
+  {
+    field: "direction",
+    first: ["verifies", "incoming", "anchored"],
+    second: ["verifies", "outgoing", "anchored"],
+  },
+  {
+    field: "claim",
+    first: ["verifies", "incoming", "anchored"],
+    second: ["verifies", "incoming", "declared"],
+  },
+])("breaks equal requirement fold groups by $field in lexical order", ({ first, second }) => {
+  const subject = { id: "spec:sample", words: "Sample", target: "#main", band: "Intended Specs" };
+  const groups = [first, second].map(([kind, direction, claim], group) => {
+    const boxes = Array.from({ length: 20 }, (_, i) => ({
+      id: `test:group${String(group)}.binding${String(i)}`,
+      words: "Binding",
+      target: "#bindings",
+      band: "Test or oracle bindings",
+    }));
+    return {
+      boxes,
+      edges: boxes.map((b) => ({
+        from: direction === "incoming" ? b.id : subject.id,
+        to: direction === "incoming" ? subject.id : b.id,
+        kind: kind ?? "verifies",
+        claim: claim ?? "anchored",
+      })),
+    };
+  });
+  const drawing = requirementDiagram({
+    subject: subject.id,
+    boxes: [subject, ...groups.flatMap((g) => g.boxes)].reverse(),
+    edges: groups.flatMap((g) => g.edges).reverse(),
+  });
+  expect(drawing.boxes.filter((b) => b.folded).map((b) => b.id)).toEqual([
+    `diagram.spec:sample.requirement.fold.${first.join(".")}`,
+  ]);
+  expect(drawing.textEquivalent?.boxes).toHaveLength(41);
+  expect(drawing.textEquivalent?.edges).toHaveLength(40);
+});
+
+it("offers only the active relation and member renderers after requirement replaces realization", () => {
+  expect(diagrams).toHaveProperty("traceDiagram");
+  expect(diagrams).toHaveProperty("memberDiagram");
+  expect(diagrams).not.toHaveProperty("realizationDiagram");
+});
+
+it("applies the closed-source print rule to both requirement and maturity drawings", () => {
+  const css = readFileSync("src/projections/studio/studio.css", "utf8");
+  expect(css).toMatch(
+    /sdp-maturity-map details\[id\$="\.source"\]:not\(\[open\]\)\s*\{[^}]*display: none !important/su,
+  );
+  expect(css).toMatch(
+    /sdp-maturity-map details\[id\$="\.source"\]\[open\] textarea\s*\{[^}]*display: block !important/su,
+  );
 });

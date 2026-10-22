@@ -949,10 +949,12 @@ sdp-compose button {
 }
 
 @media print {
-  sdp-diagram details[id$=".source"]:not([open]) {
+  sdp-diagram details[id$=".source"]:not([open]),
+  sdp-maturity-map details[id$=".source"]:not([open]) {
     display: none !important;
   }
-  sdp-diagram details[id$=".source"][open] textarea {
+  sdp-diagram details[id$=".source"][open] textarea,
+  sdp-maturity-map details[id$=".source"][open] textarea {
     display: block !important;
   }
 }

@@ -3,7 +3,7 @@ import { codeSpans, plainTitle } from "./code-spans.js";
 import { architectureDiagrams, memberDiagram, renderDiagram } from "../diagrams/index.js";
 import type { DiagramBox, DiagramEdge } from "../diagrams/index.js";
 import { frame } from "./frame.js";
-import { code, sourceCode, copy, count, escape, link, list } from "./html.js";
+import { code, count, escape, link, list } from "./html.js";
 import type { PageContext } from "./html.js";
 interface Member {
   id: string;
@@ -47,9 +47,6 @@ interface Plans {
   }[];
   unreadable: { spec: string; key: string; value: unknown }[];
 }
-const location = (m: Member) =>
-  m.file === null ? "not recorded" : `${m.file}${m.line === null ? "" : `:${String(m.line)}`}`;
-
 /**
  * @sdpAnchor impl:protocol.studio-architecture-lens
  * @sdpLabel renders recipe component rows and planned designs as architecture and member diagrams
@@ -168,7 +165,7 @@ export function architecturePage(ctx: PageContext): string {
           ),
         );
       const diff = plans.differing.filter((d) => d.componentId === c.id);
-      return `<section id="${escape(c.id)}"><h2>${code(c.id)}${c.label === null ? "" : ` ${codeSpans(c.label)}`}</h2><p>Layer ${escape(c.layer ?? "not stated")}, context ${escape(c.context ?? "not stated")}, role ${escape(c.role ?? "not stated")}.</p><p>${sourceCode(c.file ?? undefined, c.line ?? undefined)}${c.file === null ? "" : copy(location(c))}</p><h3>Members</h3>${list(c.members.map((m) => `${code(m.id)} ${codeSpans(m.label ?? "")} · role ${escape(m.role ?? "not stated")} · ${sourceCode(m.file ?? undefined, m.line ?? undefined)}${m.file === null ? "" : copy(location(m))}`))}<h3>Uses</h3>${directions(c.usesCounts)}<h3>Used by</h3>${directions(c.usedByCounts)}<h3>Satisfies</h3>${list(c.satisfiedSpecs.map((s) => link(ctx, s)))}<h3>References</h3>${list(c.referencedSpecs.map((s) => link(ctx, s)))}${diff.length ? `<h3>Design differences</h3>${list(diff.map((d) => `${link(ctx, d.spec)} ${code(d.field)}: planned ${code(JSON.stringify(d.planned))}; realized ${code(JSON.stringify(d.realized))}`))}` : ""}${register.component(c.id)}${supportingUses(architecture, c, components)}${c.members.length === 0 ? "<p>None.</p>" : renderDiagram(diagram)}</section>`;
+      return `<section id="${escape(c.id)}"><h2>${code(c.id)}${c.label === null ? "" : ` ${codeSpans(c.label)}`}</h2><p>Layer ${escape(c.layer ?? "not stated")}, context ${escape(c.context ?? "not stated")}, role ${escape(c.role ?? "not stated")}.</p>${register.source(c.id)}<h3>Members</h3>${register.members(c.id)}<h3>Uses</h3>${directions(c.usesCounts)}${supportingUses(architecture, c, components)}<h3>Used by</h3>${directions(c.usedByCounts)}${diff.length ? `<h3>Design differences</h3>${list(diff.map((d) => `${link(ctx, d.spec)} ${code(d.field)}: planned ${code(JSON.stringify(d.planned))}; realized ${code(JSON.stringify(d.realized))}`))}` : ""}<h3>Satisfies</h3>${list(c.satisfiedSpecs.map((s) => link(ctx, s)))}<h3>References</h3>${list(c.referencedSpecs.map((s) => link(ctx, s)))}${c.members.length === 0 ? "<p>None.</p>" : renderDiagram(diagram)}</section>`;
     })
     .join("");
   const unresolved = [
@@ -227,7 +224,7 @@ function supportingUses(
     .filter((u) => u.component !== component.id && components.some((c) => c.id === u.component))
     .map(
       (u) =>
-        `<details id="${escape(useId(component.id, u.component))}"><summary>Uses ${code(u.component)} · ${String(u.edges)} unit edges</summary>${list(architecture.usesEdges.filter((e) => owner.get(e.from) === component.id && owner.get(e.to) === u.component).map((e) => `${code(e.from)} uses ${code(e.to)} · anchored`))}</details>`,
+        `<div id="${escape(useId(component.id, u.component))}"><h4>Uses ${code(u.component)} · ${String(u.edges)} unit edges</h4>${list(architecture.usesEdges.filter((e) => owner.get(e.from) === component.id && owner.get(e.to) === u.component).map((e) => `${code(e.from)} uses ${code(e.to)} · anchored`))}</div>`,
     )
     .join("");
 }

@@ -8,7 +8,7 @@ const relationIndex = (kind: string): number => {
 type Rooted = DiagramInput & Pick<Diagram, "subject" | "sectionId">;
 /**
  * @sdpAnchor impl:protocol.studio-relation-diagrams
- * @sdpLabel relation, member and realization bands and bounded relation folds
+ * @sdpLabel relation and member bands and bounded relation folds
  * @sdpSatisfies spec:consumers.spec-studio.diagrams
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
@@ -102,16 +102,5 @@ export function memberDiagram(input: Rooted): Diagram {
           (own.has(a.id) ? (depth.get(a.id) ?? 0) : Infinity) -
             (own.has(b.id) ? (depth.get(b.id) ?? 0) : Infinity) || compare(a.id, b.id),
       ),
-  };
-}
-export function realizationDiagram(input: Rooted): Diagram {
-  return {
-    ...input,
-    caption: `Realization of ${input.subject}`,
-    boxes: [...input.boxes].sort(
-      (a, b) =>
-        ["Satisfying units", "Components", "Uses"].indexOf(a.band ?? "") -
-          ["Satisfying units", "Components", "Uses"].indexOf(b.band ?? "") || compare(a.id, b.id),
-    ),
   };
 }

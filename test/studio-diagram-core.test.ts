@@ -1,3 +1,4 @@
+import { requirementDiagram } from "../src/projections/studio/diagrams/requirement.js";
 import { describe, expect, it, vi } from "vitest";
 import { specTest, testAnchorId, ref } from "../src/anchors.js";
 import { labelLines, shortIds, layoutDiagram } from "../src/projections/studio/diagrams/layout.js";
@@ -260,7 +261,7 @@ it("offers deterministic Mermaid source for each existing drawing and pins the s
     ),
     memberDiagram(input),
     traceDiagram(input),
-    realizationDiagram(input),
+    requirementDiagram(input),
   ];
   for (const d of drawings) {
     const html = renderDiagram(d);
@@ -282,7 +283,6 @@ import {
   architectureDiagrams,
   memberDiagram,
   traceDiagram,
-  realizationDiagram,
 } from "../src/projections/studio/diagrams/index.js";
 
 it("folds reason-bearing trace groups without attributing a member reason to the group", () => {
