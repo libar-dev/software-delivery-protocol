@@ -165,10 +165,10 @@ not suppress `console.*`, so a body a machine reads, every recipe below included
 to the console. Returning a conclusion costs a fraction of returning a dump, so every recipe
 below returns counts, ids, and decoded reasons rather than whole nodes.
 
-Changed-file impact, Pack design, the design diff and the design slice, recipes 4, 29, 35 and 54, accept `detail: true`
-and default to summaries that preserve every total and name omitted detail in `leftOut`. Pack
-design and the design slice also accept member ids in `detail` for selected full rows. Other recipes follow their
-own documented result shapes.
+Changed-file impact, Pack design, the design diff and the design slice, recipes 4, 29, 35 and 54,
+accept `detail: true` and default to summaries that preserve every total and name omitted detail
+in `leftOut`. Pack design and the design slice also accept member ids in `detail` for selected
+full rows. Other recipes follow their own documented result shapes.
 
 **Trust stance.** `sdp q` evaluates local operator-supplied code with the trust of any local
 developer tool — no sandbox is claimed and none exists. A body is code you author yourself; never
@@ -5164,7 +5164,6 @@ return {
 };
 ```
 
-
 ## 54. The design slice
 
 *When you need this: you are reviewing features that must be reviewed together and want the whole at once.*
@@ -5385,7 +5384,7 @@ const members = ids.map((id) => {
     if (componentId !== undefined) components.add(componentId);
   }
   const verifiers = spec.verifiers;
-  const examples = verifiers.filter((verifier) => verifier.via === "example");
+  const examples = verifiers.filter((verifier) => verifier.via === "example" && g.specContext(verifier.verifierId)?.specKind === "example");
   return {
     id,
     title: spec.title ?? null,
@@ -5695,14 +5694,14 @@ return {
   decisions: decisions.map((row) => ({ id: row.id, statedReadiness: row.statedReadiness, member: row.member, shapes: row.shapes.length })),
   questions: questions.map((row) => (row.blocking ? row : { address: row.address, spec: row.spec, index: row.index })),
   leftOut: [
-    "Titles, altitudes, rested-on-by and example member lists, example and verifier counts, and unit and component ids of unselected members; unit counts kept.",
+    "Titles, altitudes, rested-on-by and example member lists, example and verifier counts, and unit and component ids of unselected members; hold descriptions, target types and rungs; unit counts and hold target ids kept.",
     "Relation reasons; relation types kept.",
     "Boundary titles, kinds, floors, implementation bindings and joined members; ids, stated rungs and holds kept.",
     "Component labels and the Specs that reach each component; counts kept.",
     "Declared values, differing rows and unreadable rows of each member design; their counts kept.",
     "The unit edges behind each component pair; counts kept.",
     "Labels, layers and contexts of outside components.",
-    "Decision titles, floors, refinements, supersessions and question counts.",
+    "Decision titles, floors, refinements, supersessions and question counts; shaped member ids, with their count kept.",
     "Non-blocking question text and fields; addresses kept.",
   ],
   ...(Array.isArray(detail) ? { diagnostics: detail.filter((id) => !inSlice.has(id)).map((id) => ({ id, reason: "not-member" })) } : {}),

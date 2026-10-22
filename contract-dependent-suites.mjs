@@ -25,6 +25,7 @@ export const contractDependentSuites = [
     generation: "npm run generate:self-hosting",
     testPaths: [
       "test/self-hosting-design-slice.test.ts",
+      "test/consumers.design-slice.outside-components.test.generated.ts",
       "test/consumers.design-slice.chain.test.generated.ts",
       "test/consumers.design-slice.decision-backlink.test.generated.ts",
       "test/consumers.design-slice.dependency-cycle.test.generated.ts",

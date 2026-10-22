@@ -21,6 +21,13 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.design-slice.outside-components",
+    nodeType: "Anchor",
+    file: "test/self-hosting-design-slice.test.ts",
+    constant: "outsideComponentsAnchor",
+    site: "registerOutsideComponents(",
+  },
+  {
     id: "impl:protocol.design-slice-recipe",
     nodeType: "CodeNode",
     file: "test/self-hosting-design-slice.test.ts",
@@ -4427,6 +4434,11 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  [
+    "test:protocol.design-slice.outside-components",
+    "verifies",
+    "spec:consumers.design-slice.outside-components",
+  ],
   ["impl:protocol.design-slice-recipe", "satisfies", "spec:consumers.design-slice"],
   ["test:protocol.design-slice", "verifies", "spec:consumers.design-slice"],
   ["oracle:protocol.design-slice", "models", "spec:consumers.design-slice"],

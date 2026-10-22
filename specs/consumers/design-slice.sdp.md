@@ -102,6 +102,6 @@ Then the members read in depth order {order:string}
 Then the slice reports {cycles:number} cycles and {exampleMembers:number} folded example members
 Then the touched components are {components:string}, {throughRestsOn:number} of them reached through what the slice rests on
 Then the member design reads {realized:"realized"|"unrealized"} with {differing:number} differing and {unreadable:number} unreadable rows
-Then the outside components are {outside:string}
+Then the outside components are {outsideComponents:string}
 Then the outside Spec holds {held:string}
 ```

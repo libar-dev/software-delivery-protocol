@@ -1,3 +1,4 @@
+import { registerOutsideComponents } from "./consumers.design-slice.outside-components.test.generated.js";
 import { registerOutsideHolding } from "./consumers.design-slice.outside-holding.test.generated.js";
 import { registerOutsideUnbound } from "./consumers.design-slice.outside-unbound.test.generated.js";
 import { registerOutsideSatisfied } from "./consumers.design-slice.outside-satisfied.test.generated.js";
@@ -49,6 +50,7 @@ interface Member {
   exampleOf: string | null;
   exampleMembers: string[];
   holds: unknown[];
+  design: Record<string, number>;
   rules: { total: number; keyed: number };
   implementedBy: string[] | number;
   referencedBy: string[] | number;
@@ -105,6 +107,17 @@ interface Slice {
   }[];
   leftOut?: string[];
   diagnostics?: unknown[];
+}
+function assertKeys(value: unknown, names: string): void {
+  expect(Object.keys(value as object).sort()).toEqual(names.split(" ").sort());
+}
+function assertMemberKeys(value: unknown, full: boolean): void {
+  assertKeys(
+    value,
+    full
+      ? "id title specKind altitude statedReadiness floorReached statedNextRung holds depth restsOn restedOnBy exampleOf exampleMembers design rules examples verifiers implementedBy referencedBy components"
+      : "id specKind statedReadiness floorReached statedNextRung holds depth restsOn exampleOf design rules implementedBy referencedBy",
+  );
 }
 function required<T>(value: T | undefined): T {
   if (value === undefined) throw new Error("The probe did not produce the expected value.");
@@ -333,10 +346,12 @@ const DESIGN =
   "the member design reads {realized} with {differing} differing and {unreadable} unreadable rows";
 const COMPONENTS =
   "the touched components are {components}, {throughRestsOn} of them reached through what the slice rests on";
+const OUTSIDE = "the outside components are {outsideComponents}";
 const HELD = "the outside Spec holds {held}";
 interface World {
   point: Partial<DesignSliceConditions>;
   graph: GraphSchema;
+  outcomeKind: DesignSliceOutcome["kind"];
   answer?: Slice;
 }
 function createWorld(point: Partial<DesignSliceConditions>): World {
@@ -439,7 +454,88 @@ function createWorld(point: Partial<DesignSliceConditions>): World {
     );
   }
   setMembers(graph, ["top", "base", "design"]);
-  return { point, graph };
+  const outcomeKind = point.structure?.includes("decision")
+    ? point.anchor === "an anchor satisfies, matching every declared value" &&
+      point.outside === "that a component's unit satisfies"
+      ? OUTSIDE
+      : point.outside === "stated below defined"
+        ? HELD
+        : point.anchor === "an anchor holds without satisfying the design"
+          ? COMPONENTS
+          : ORDER
+    : point.structure?.includes("two members") || point.structure?.includes("example")
+      ? COUNTS
+      : point.outside === "that a component's unit satisfies"
+        ? DESIGN
+        : ORDER;
+  return { point, graph, outcomeKind };
+}
+function columnProbe() {
+  const world = createWorld({
+    structure: "rest on each other in a chain",
+    outside: "stated below defined",
+    anchor: "an anchor satisfies, with a differing layer and uses",
+  });
+  const graph = world.graph as ReturnType<typeof sliceProbe>;
+  graph.nodes.push(
+    primitive("choice", {
+      specKind: "decision",
+      readiness: "scoped",
+      sections: {
+        intent: {
+          outcome: "Choose the contract.",
+          openQuestions: [
+            {
+              question: "Which contract?",
+              blocking: true,
+              key: "contract",
+              decider: "owner",
+              links: [sid("base")],
+              provisional: "Use the base.",
+              trigger: "The contract is chosen.",
+            },
+            { question: "Which spelling?", blocking: false },
+          ],
+        },
+        decision: { context: "Choose a contract.", decision: "Use the base." },
+      },
+    }),
+    primitive("old", { specKind: "decision" }),
+    primitive("new", { specKind: "decision" }),
+    primitive("waiting"),
+    primitive("downstream"),
+    primitive("enabled", { specKind: "example" }),
+    primitive("disabled", { specKind: "example" }),
+    {
+      id: "test:probe.enabled",
+      nodeType: "Anchor",
+      claim: "anchored",
+      file: "enabled.test.ts",
+      line: 1,
+    },
+    {
+      id: "test:probe.direct",
+      nodeType: "Anchor",
+      claim: "anchored",
+      file: "direct.test.ts",
+      line: 1,
+    },
+    { id: "impl:probe.bare", nodeType: "CodeNode", claim: "anchored", file: "bare.ts", line: 1 },
+  );
+  graph.edges.push(
+    link(sid("top"), "decidedBy", sid("choice")),
+    link(sid("waiting"), "dependsOn", sid("base")),
+    link(sid("choice"), "supersedes", sid("old")),
+    link(sid("new"), "supersedes", sid("choice")),
+    link(sid("downstream"), "dependsOn", sid("base")),
+    link(sid("enabled"), "verifies", sid("base")),
+    link(sid("disabled"), "verifies", sid("base")),
+    link("test:probe.enabled", "verifies", sid("enabled"), "anchored"),
+    link("test:probe.direct", "verifies", sid("base"), "anchored"),
+    link("impl:probe.bare", "references", sid("top"), "anchored"),
+  );
+  setMembers(graph, ["top", "base", "design", "choice", "waiting", "missing"]);
+  return graph;
 }
 const sliceOracleAnchor = specOracle({
   id: oracleAnchorId("oracle:protocol.design-slice"),
@@ -448,6 +544,12 @@ const sliceOracleAnchor = specOracle({
 void sliceOracleAnchor;
 
 function expected(point: Partial<DesignSliceConditions>): DesignSliceOutcome {
+  if (
+    point.structure === "include a decision that refines the member it shapes" &&
+    point.outside === "that a component's unit satisfies" &&
+    point.anchor === "an anchor satisfies, matching every declared value"
+  )
+    return { kind: OUTSIDE, outsideComponents: "component:probe.neighbor" };
   if (
     point.outside === "that no code satisfies" &&
     point.anchor === "an anchor satisfies, matching every declared value"
@@ -490,13 +592,12 @@ function expected(point: Partial<DesignSliceConditions>): DesignSliceOutcome {
 }
 function observe(world: World): DesignSliceOutcome {
   const answer = required(world.answer);
-  const outcome = expected(world.point);
-  switch (outcome.kind) {
+  switch (world.outcomeKind) {
     case ORDER:
       return {
         kind: ORDER,
         order: [...answer.members]
-          .sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id))
+          .sort((a, b) => a.depth - b.depth)
           .map((row) => row.id)
           .join(", "),
       };
@@ -521,6 +622,11 @@ function observe(world: World): DesignSliceOutcome {
         components: answer.architecture.components.map((row) => row.id).join(", "),
         throughRestsOn: required(answer.totals.components.throughRestsOn),
       };
+    case OUTSIDE:
+      return {
+        kind: OUTSIDE,
+        outsideComponents: answer.architecture.outside.map((row) => row.id).join(", "),
+      };
     case HELD:
       return {
         kind: HELD,
@@ -541,6 +647,52 @@ const adapters = {
   expected,
   assertions(world: World) {
     const answer = required(world.answer);
+    if (world.point.structure === "rest on each other in a chain") {
+      expect(answer.scope).toMatchObject({
+        pack: "pack:probe.slice",
+        subset: false,
+        members: [sid("top"), sid("base"), sid("design")],
+        unresolved: [],
+      });
+      for (const member of answer.members) assertMemberKeys(member, true);
+      expect(answer.members[0]).toMatchObject({
+        statedReadiness: "defined",
+        floorReached: "ready",
+        statedNextRung: "ready",
+        rules: { total: 1, keyed: 1 },
+        examples: { total: 0, enabled: 0 },
+        verifiers: { total: 0, enabled: 0 },
+      });
+    }
+    if (world.point.structure?.includes("decision")) {
+      expect(answer.decisions).toEqual([
+        expect.objectContaining({
+          id: sid("base"),
+          member: true,
+          shapes: [sid("top")],
+          refines: [],
+          supersedes: [],
+          supersededBy: [],
+          openQuestions: 0,
+          blockingQuestions: 0,
+        }),
+      ]);
+    }
+    if (world.point.structure?.includes("two members")) {
+      expect(answer.members.map((row) => row.depth)).toEqual([1, 1, 1]);
+      expect(answer.totals.depth).toBe(1);
+    }
+    if (
+      world.point.structure ===
+      "include an example that refines a member and depends on an outside Spec"
+    ) {
+      expect(answer.boundary.restsOn).toContainEqual(
+        expect.objectContaining({
+          id: sid("outside"),
+          via: [{ type: "dependsOn", members: [sid("top"), sid("base")] }],
+        }),
+      );
+    }
     if (world.point.outside === "that a component's unit satisfies") {
       expect(answer.architecture.outside).toContainEqual(
         expect.objectContaining({
@@ -598,6 +750,12 @@ const adapters = {
       );
   },
 };
+const outsideComponentsAnchor = specTest({
+  id: testAnchorId("test:protocol.design-slice.outside-components"),
+  verifies: ref("spec:consumers.design-slice.outside-components"),
+});
+void outsideComponentsAnchor;
+registerOutsideComponents(adapters);
 const chainAnchor = specTest({
   id: testAnchorId("test:protocol.design-slice.chain"),
   verifies: ref("spec:consumers.design-slice.chain"),
@@ -678,6 +836,292 @@ void outsideHoldingAnchor;
 registerOutsideHolding(adapters);
 
 describe("design slice composition", () => {
+  it("pins every full and summary row shape to the carrying Design entries", async () => {
+    const graph = columnProbe();
+    const full = await slice(graph);
+    const summary = await slice(graph, { pack: "pack:probe.slice" });
+    expect(full.scope).toEqual({
+      pack: "pack:probe.slice",
+      title: "Probe slice",
+      framing: null,
+      subset: false,
+      members: [sid("top"), sid("base"), sid("design"), sid("choice"), sid("waiting")],
+      unresolved: [sid("missing")],
+    });
+    expect(summary.scope).toEqual(full.scope);
+    expect(summary.totals).toEqual(full.totals);
+    for (const [answer, detailed] of [
+      [full, true],
+      [summary, false],
+    ] as const) {
+      assertKeys(
+        answer,
+        `scope totals members structure boundary architecture decisions questions${detailed ? "" : " leftOut"}`,
+      );
+      assertKeys(
+        answer.totals,
+        "members exampleMembers relations depth cycles heldBelowNextRung waitingForAuthor restsOn holdingOutside restedOnBy verifiedBy supersededBy components designs componentUses decisions decisionsBelowReady openQuestions blockingQuestions",
+      );
+      assertKeys(
+        answer.totals.components,
+        "touched throughMembers throughRestsOn throughDesigns outside",
+      );
+      assertKeys(answer.totals.designs, "total realized matching unrealized differing unreadable");
+      assertKeys(answer.totals.componentUses, "inside outside planned");
+      for (const row of answer.members) {
+        assertMemberKeys(row, detailed);
+        assertKeys(row.design, "entries declarations openQuestions blockingQuestions decisions");
+        assertKeys(row.rules, "total keyed");
+        for (const hold of row.holds as { targets: unknown[] }[]) {
+          assertKeys(hold, detailed ? "clauseId description targets" : "clauseId targets");
+          for (const target of hold.targets)
+            if (detailed) assertKeys(target, "type id statedReadiness");
+            else expect(typeof target).toBe("string");
+        }
+        if (detailed) {
+          assertKeys(row.examples, "total enabled");
+          assertKeys(row.verifiers, "total enabled");
+        }
+      }
+      for (const rows of Object.values(answer.boundary)) {
+        expect(rows.length).toBeGreaterThan(0);
+        for (const row of rows)
+          assertKeys(
+            row,
+            detailed
+              ? "id title specKind statedReadiness floorReached implemented via holds"
+              : "id statedReadiness holds",
+          );
+      }
+      for (const row of answer.decisions)
+        assertKeys(
+          row,
+          detailed
+            ? "id title statedReadiness floorReached member shapes refines supersedes supersededBy openQuestions blockingQuestions"
+            : "id statedReadiness member shapes",
+        );
+      for (const row of answer.questions)
+        assertKeys(
+          row,
+          detailed || row.blocking
+            ? "address spec origin index question blocking deferral decider links provisional trigger holds"
+            : "address spec index",
+        );
+      assertKeys(answer.architecture, "components designs uses plannedUses outside unplaced");
+      for (const row of answer.architecture.components)
+        assertKeys(
+          row,
+          detailed
+            ? "id label layer context members restsOn designs"
+            : "id layer context members restsOn designs",
+        );
+      for (const row of answer.architecture.designs)
+        assertKeys(
+          row,
+          detailed
+            ? "spec componentId layer context role uses anchorExists realized differing unreadable"
+            : "spec componentId anchorExists realized differing unreadable",
+        );
+      for (const row of answer.architecture.plannedUses) assertKeys(row, "design from to outside");
+      for (const row of answer.architecture.outside)
+        assertKeys(
+          row,
+          detailed ? "id label layer context anchored reachedBy" : "id anchored reachedBy",
+        );
+      for (const row of answer.architecture.unplaced) assertKeys(row, "unit member via");
+      for (const row of answer.structure.edges)
+        assertKeys(
+          row,
+          detailed && row.reason !== undefined
+            ? "from to type orders reason"
+            : "from to type orders",
+        );
+    }
+    const touched = createWorld({
+      structure: "rest on each other in a chain",
+      outside: "that a component's unit satisfies",
+      anchor: "an anchor satisfies, matching every declared value",
+    });
+    for (const detail of [true, false]) {
+      const answer = await slice(touched.graph, { pack: "pack:probe.slice", detail });
+      expect(answer.architecture.uses.length).toBeGreaterThan(0);
+      for (const row of answer.architecture.uses) {
+        assertKeys(row, detail ? "from to count outside units" : "from to count outside");
+        if (detail) for (const unit of row.units) assertKeys(unit, "from to claim");
+      }
+      const narrowed = await slice(graph, {
+        pack: "pack:probe.slice",
+        members: [sid("top")],
+        detail,
+      });
+      for (const row of required(narrowed.boundary.restsOn))
+        assertKeys(
+          row,
+          detail
+            ? "id title specKind statedReadiness floorReached implemented via holds inPack"
+            : "id statedReadiness holds inPack",
+        );
+    }
+  });
+  it("reports outside holds, waiting statements, decision replacements and own-Spec question holds", async () => {
+    const graph = columnProbe();
+    const full = await slice(graph);
+    const summary = await slice(graph, { pack: "pack:probe.slice" });
+    expect(full.totals).toMatchObject({
+      holdingOutside: 1,
+      decisionsBelowReady: 1,
+      heldBelowNextRung: 4,
+      waitingForAuthor: 1,
+      supersededBy: 1,
+    });
+    const pack = await catalogRecipe<{
+      totals: { heldBelowNextRung: number; waitingForAuthor: number };
+    }>(29, graph, { pack: "pack:probe.slice", detail: true });
+    expect(full.totals).toMatchObject({
+      heldBelowNextRung: pack.totals.heldBelowNextRung,
+      waitingForAuthor: pack.totals.waitingForAuthor,
+    });
+    expect(full.decisions).toEqual([
+      expect.objectContaining({
+        id: sid("choice"),
+        supersedes: [sid("old")],
+        supersededBy: [sid("new")],
+        shapes: [sid("top")],
+      }),
+    ]);
+    expect(summary.decisions).toEqual([
+      { id: sid("choice"), statedReadiness: "scoped", member: true, shapes: 1 },
+    ]);
+    expect(full.questions.find((row) => row.spec === sid("choice") && row.blocking)).toEqual({
+      address: `${sid("choice")}#question.contract`,
+      spec: sid("choice"),
+      origin: "member",
+      index: 0,
+      question: "Which contract?",
+      blocking: true,
+      deferral: true,
+      decider: "owner",
+      links: [sid("base")],
+      provisional: "Use the base.",
+      trigger: "The contract is chosen.",
+      holds: [sid("choice"), sid("top")],
+    });
+    expect(summary.questions.find((row) => row.spec === sid("choice") && !row.blocking)).toEqual({
+      address: null,
+      spec: sid("choice"),
+      index: 1,
+    });
+    expect(full.boundary.supersededBy).toEqual([
+      expect.objectContaining({
+        id: sid("new"),
+        holds: [],
+        via: [{ type: "supersedes", members: [sid("choice")] }],
+      }),
+    ]);
+    expect(full.members.find((row) => row.id === sid("base"))).toMatchObject({
+      examples: { total: 2, enabled: 1 },
+      verifiers: { total: 3, enabled: 2 },
+    });
+  });
+  it.each([
+    ["rest on each other in a chain", "setDepth[index] = 1;"],
+    ["include a decision that refines the member it shapes", "setDepth[index] = 1;"],
+    ["include a decision that refines the member it shapes", "edge.orders = true;"],
+  ] as const)(
+    "the executable order observation rejects %s with %s",
+    async (structure, mutation) => {
+      const world = createWorld({
+        structure,
+        outside: "that no code satisfies",
+        anchor: "an anchor satisfies, matching every declared value",
+      });
+      const body = required(
+        recipeFiles(
+          readFileSync(new URL("../docs/agent-surface/recipes.md", import.meta.url), "utf8"),
+        ).find((row) => row.ordinal === 54),
+      ).content;
+      const mutated = mutation.startsWith("setDepth")
+        ? body.replace("setDepth[index] = deepest + 1;", mutation)
+        : body.replace(
+            'edge.orders = !(edge.type === "refines" && names(edge.to, edge.from, typed.slice(1)));',
+            mutation,
+          );
+      expect(mutated).not.toBe(body);
+      world.answer = (await evaluateBody(mutated, {
+        graph: world.graph,
+        params: { pack: "pack:probe.slice", detail: true },
+      })) as Slice;
+      expect(observe(world)).not.toEqual(expected(world.point));
+    },
+  );
+  it.each([
+    ["rest on each other in a chain", "scope"],
+    ["rest on each other in a chain", "memberColumns"],
+    ["include a decision that refines the member it shapes", "decisionsInScope"],
+    ["include an example that refines a member and depends on an outside Spec", "boundary"],
+    ["include two members that depend on each other", "depth"],
+  ] as const)(
+    "the executable assertions reject missing %s evidence for %s",
+    async (structure, rule) => {
+      const world = createWorld({
+        structure,
+        outside: "that no code satisfies",
+        anchor: "an anchor satisfies, matching every declared value",
+      });
+      world.answer = await slice(world.graph);
+      if (rule === "scope") world.answer.scope.members = [];
+      if (rule === "memberColumns") delete (world.answer.members[0] as Partial<Member>).rules;
+      if (rule === "decisionsInScope") world.answer.decisions = [];
+      if (rule === "boundary") world.answer.boundary.restsOn = [];
+      if (rule === "depth") for (const row of world.answer.members) row.depth = 7;
+      expect(() => {
+        adapters.assertions(world);
+      }).toThrow();
+    },
+  );
+  it("counts only example-kind declared verifiers as examples, keeping all verifiers", async () => {
+    const graph = sliceProbe();
+    graph.nodes.push(
+      primitive("enabled", { specKind: "example" }),
+      primitive("disabled", { specKind: "example" }),
+      primitive("behavior-verifier"),
+      {
+        id: "test:probe.enabled",
+        nodeType: "Anchor",
+        claim: "anchored",
+        file: "enabled.test.ts",
+        line: 1,
+      },
+      {
+        id: "test:probe.direct",
+        nodeType: "Anchor",
+        claim: "anchored",
+        file: "direct.test.ts",
+        line: 1,
+      },
+    );
+    for (const name of ["enabled", "disabled", "behavior-verifier"])
+      graph.edges.push(link(sid(name), "verifies", sid("base")));
+    graph.edges.push(
+      link("test:probe.enabled", "verifies", sid("enabled"), "anchored"),
+      link("test:probe.direct", "verifies", sid("base"), "anchored"),
+    );
+    const answer = await slice(graph);
+    const pack = await catalogRecipe<{
+      members: { id: string; examples: unknown; verifiers: unknown }[];
+    }>(29, graph, { pack: "pack:probe.slice", detail: true });
+    const member = required(answer.members.find((row) => row.id === sid("base")));
+    expect(member.examples).toEqual({ total: 2, enabled: 1 });
+    expect(member.verifiers).toEqual({ total: 4, enabled: 2 });
+    expect(member.examples).toEqual(
+      required(pack.members.find((row) => row.id === sid("base"))).examples,
+    );
+  });
+  it("names the hold detail and decision shape lists the summary omits", async () => {
+    const summary = await slice(sliceProbe(), { pack: "pack:probe.slice" });
+    expect(summary.leftOut?.[0]).toMatch(/hold descriptions.*target types.*rungs/u);
+    expect(summary.leftOut?.[7]).toMatch(/shaped member ids.*count kept/u);
+  });
   it("summarizes component and design rows without losing totals", async () => {
     const world = createWorld({
       structure: "rest on each other in a chain",

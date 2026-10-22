@@ -7504,5 +7504,17 @@ describe("the shipped design slice", () => {
     expect(asArray(full.members).length).toBeGreaterThan(0);
     expect(asArray(summary.leftOut).length).toBeGreaterThan(0);
     expect(full).not.toHaveProperty("diagnostics");
+    const pack = asRecord(
+      await runRecipe(recipeByOrdinal(29), { pack: "pack:roadmaps-and-slices-v1", detail: true }),
+    );
+    for (const [direction, rows] of Object.entries(asRecord(pack.boundary))) {
+      const boundary = asRecord(full.boundary);
+      expect(
+        asArray(boundary[direction]).map((row) => {
+          const { id, title, statedReadiness, implemented, via } = asRecord(row);
+          return { id, title, statedReadiness, implemented, via };
+        }),
+      ).toEqual(rows);
+    }
   });
 });

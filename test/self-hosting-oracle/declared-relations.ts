@@ -4605,6 +4605,14 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.spec-studio.data.inputs",
     "the register joins the base graph and the run records as a named input",
   ],
+  ["spec:consumers.design-slice.outside-components", "refines", "spec:consumers.design-slice"],
+  [
+    "spec:consumers.design-slice.outside-components",
+    "verifies",
+    "spec:consumers.design-slice",
+    null,
+    ["outsideNeighbors"],
+  ],
   ["spec:consumers.design-slice.chain", "refines", "spec:consumers.design-slice"],
   [
     "spec:consumers.design-slice.chain",

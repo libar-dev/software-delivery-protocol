@@ -7165,7 +7165,7 @@ export const consumersSpecs = [
             "the slice reports {cycles:number} cycles and {exampleMembers:number} folded example members",
             "the touched components are {components:string}, {throughRestsOn:number} of them reached through what the slice rests on",
             'the member design reads {realized:"realized"|"unrealized"} with {differing:number} differing and {unreadable:number} unreadable rows',
-            "the outside components are {outside:string}",
+            "the outside components are {outsideComponents:string}",
             "the outside Spec holds {held:string}",
           ],
         },
@@ -8040,6 +8040,32 @@ export const consumersSpecs = [
             ],
             when: ["the design slice runs over the probe Pack"],
             then: ['the outside Spec holds {held: "spec:probe.base"}'],
+          },
+        ],
+      },
+    },
+    deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.design-slice.outside-components",
+    specKind: "example",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/design-slice.outside-components.sdp.md",
+    title: "Outside components stop at the touched components' neighbors",
+    narrative: null,
+    sections: {
+      intent: { outcome: "Outside components stop at the touched components' neighbors." },
+      behavior: {
+        examples: [
+          {
+            given: [
+              'a probe Pack whose members {structure: "include a decision that refines the member it shapes"}',
+              'one member depends on an outside Spec {outside: "that a component\'s unit satisfies"}',
+              'one member is a component design whose component {anchor: "an anchor satisfies, matching every declared value"}',
+            ],
+            when: ["the design slice runs over the probe Pack"],
+            then: ['the outside components are {outsideComponents: "component:probe.neighbor"}'],
           },
         ],
       },

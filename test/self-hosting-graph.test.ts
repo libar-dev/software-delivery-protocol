@@ -264,13 +264,13 @@ describe("the self-hosting corpus", () => {
     // cannot certify itself by moving both sides of a comparison at once.
     // The design-slice examples add their carriers, Pack memberships and bound registrars;
     // the recipe realization, direct verifier and oracle add their source bindings.
-    expect(result.counts).toEqual({ specs: 445, packs: 9, anchors: 559 });
-    expect(expectedSpecs).toHaveLength(445);
-    expect(expectedPackMembers).toHaveLength(445);
-    expect(expectedAnchors).toHaveLength(559);
-    expect(expectedBindingEdges).toHaveLength(697);
-    expect(result.graph.nodes).toHaveLength(1013);
-    expect(result.graph.edges).toHaveLength(2787);
+    expect(result.counts).toEqual({ specs: 446, packs: 9, anchors: 560 });
+    expect(expectedSpecs).toHaveLength(446);
+    expect(expectedPackMembers).toHaveLength(446);
+    expect(expectedAnchors).toHaveLength(560);
+    expect(expectedBindingEdges).toHaveLength(698);
+    expect(result.graph.nodes).toHaveLength(1015);
+    expect(result.graph.edges).toHaveLength(2792);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -354,7 +354,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ idea: 4, ready: 437, scoped: 4 });
+    ).toEqual({ idea: 4, ready: 438, scoped: 4 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {

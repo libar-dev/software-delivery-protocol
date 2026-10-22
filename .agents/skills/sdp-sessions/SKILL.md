@@ -71,7 +71,8 @@ questions; it states no rung. A clear floor is evidence, not an automatic `ready
 Pinned declarations (recipe 24) and the key-family register (recipe 41) list the shapes a builder
 and a test author share. For a Pack, read Pack design (recipe 29) member by member and the design
 slice (recipe 54) as one whole: how the members rest on each other, the architecture they touch,
-and the decisions and questions in scope. Before changing a Spec others rest on, run design-change impact (recipe 30). Follow `sdp-authoring` for capability-based Pack
+and the decisions and questions in scope. Before changing a Spec others rest on, run
+design-change impact (recipe 30). Follow `sdp-authoring` for capability-based Pack
 names and plan pointers.
 
 A design pass over a Pack runs in a loop:

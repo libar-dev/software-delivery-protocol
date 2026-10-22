@@ -179,7 +179,8 @@ and column.
 
 A recipe that takes `params.detail` returns a summary by default: every total, ids in place of
 rows, and `leftOut` naming what `detail: true` adds (changed-file impact, recipe 4; Pack design,
-recipe 29; the design diff, recipe 35). To filter any shipped answer, run it inside your own body:
+recipe 29; the design diff, recipe 35; the design slice, recipe 54).
+To filter any shipped answer, run it inside your own body:
 
 ```sh
 pnpm --silent sdp:q 'const answer = await recipes(29, { pack: params.pack }); return answer.members.filter((member) => member.blockingQuestions > 0)' --params '{"pack":"pack:design-iteration-v1"}' --json

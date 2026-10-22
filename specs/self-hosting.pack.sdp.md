@@ -370,6 +370,7 @@ specs:
   - spec:consumers.spec-studio.diagram-kinds.maturity-picture
   - spec:consumers.spec-studio.diagram-kinds.requirement-trace
   - spec:consumers.design-slice
+  - spec:consumers.design-slice.outside-components
   - spec:consumers.design-slice.chain
   - spec:consumers.design-slice.decision-backlink
   - spec:consumers.design-slice.dependency-cycle
