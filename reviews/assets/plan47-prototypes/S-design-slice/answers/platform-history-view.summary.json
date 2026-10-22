@@ -1,0 +1,2208 @@
+{
+  "scope": {
+    "pack": "pack:history-view",
+    "title": "History view",
+    "framing": "The Specs a history view rests on, in reading order. A history view is a read model whose row folds the events of several streams, such as the order allocation history of the example domain. The history projection comes first because it pins the form, its fold and that view; the projection contract and the read models follow with the row conventions and the read-model rules every view shares. The rebuild, the history rebuild with its five examples, the write pause and the generation registry say how such a view comes to exist and is rebuilt while the commands that write its sources are refused. The rebuild comes first because it holds the operator entries and the batch chain both paths share; the history rebuild holds the paused path alone and the five examples verify it, so the rebuild's implementation binding claims the online path and the history rebuild shows the paused path designed apart from it. The example domain names the events the view folds, and the command declaration and the command pipeline bind the view to the commands that feed it and write it inside each command. The event envelope, the journal and the queries are where the events come from on the live path and on the backfill, and D9 is the decision that a read model which depends on history across several streams rebuilds under a write pause.",
+    "subset": false,
+    "members": [
+      "spec:application.history-projection",
+      "spec:application.projection-contract",
+      "spec:application.read-models",
+      "spec:application.rebuild",
+      "spec:application.history-rebuild",
+      "spec:application.history-rebuild.write-pause-rebuild-interrupt",
+      "spec:application.history-rebuild.write-pause-rebuild-abort",
+      "spec:application.history-rebuild.write-pause-rebuild-version-change",
+      "spec:application.history-rebuild.write-pause-rebuild-installation",
+      "spec:application.history-rebuild.write-pause-rebuild-source-order-mismatch",
+      "spec:application.write-pause",
+      "spec:application.generation-registry",
+      "spec:application.orders-inventory-example",
+      "spec:command.command-declaration",
+      "spec:command.command-pipeline",
+      "spec:context.event-envelope",
+      "spec:context.journal",
+      "spec:context.queries",
+      "spec:decisions.d09-rebuild-online-by-default"
+    ],
+    "unresolved": []
+  },
+  "totals": {
+    "members": 19,
+    "exampleMembers": 5,
+    "relations": 44,
+    "depth": 11,
+    "cycles": 0,
+    "heldBelowNextRung": 0,
+    "waitingForAuthor": 19,
+    "restsOn": 56,
+    "holdingOutside": 0,
+    "restedOnBy": 39,
+    "verifiedBy": 21,
+    "supersededBy": 0,
+    "components": {
+      "touched": 9,
+      "throughMembers": 9,
+      "throughRestsOn": 2,
+      "throughDesigns": 0,
+      "outside": 3
+    },
+    "designs": {
+      "total": 0,
+      "realized": 0,
+      "matching": 0,
+      "unrealized": 0,
+      "differing": 0,
+      "unreadable": 0
+    },
+    "componentUses": {
+      "inside": 22,
+      "outside": 13,
+      "planned": 0
+    },
+    "decisions": 15,
+    "decisionsBelowReady": 15,
+    "openQuestions": 62,
+    "blockingQuestions": 0
+  },
+  "members": [
+    {
+      "id": "spec:application.history-projection",
+      "specKind": "contract",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:application.projection-contract",
+        "spec:application.read-models",
+        "spec:context.event-envelope",
+        "spec:decisions.d09-rebuild-online-by-default"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 10,
+        "declarations": 8,
+        "openQuestions": 4,
+        "blockingQuestions": 0,
+        "decisions": 7
+      },
+      "rules": {
+        "total": 12,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 1
+    },
+    {
+      "id": "spec:application.projection-contract",
+      "specKind": "contract",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 7,
+      "restsOn": [
+        "spec:application.read-models",
+        "spec:decisions.d09-rebuild-online-by-default"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 21,
+        "declarations": 11,
+        "openQuestions": 5,
+        "blockingQuestions": 0,
+        "decisions": 2
+      },
+      "rules": {
+        "total": 16,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 2
+    },
+    {
+      "id": "spec:application.read-models",
+      "specKind": "behavior",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 6,
+      "restsOn": [
+        "spec:context.queries"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 20,
+        "declarations": 11,
+        "openQuestions": 6,
+        "blockingQuestions": 0,
+        "decisions": 3
+      },
+      "rules": {
+        "total": 31,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 2
+    },
+    {
+      "id": "spec:application.rebuild",
+      "specKind": "workflow",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:application.generation-registry",
+        "spec:application.history-projection",
+        "spec:application.projection-contract",
+        "spec:application.read-models",
+        "spec:application.write-pause",
+        "spec:context.queries",
+        "spec:decisions.d09-rebuild-online-by-default"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 42,
+        "declarations": 27,
+        "openQuestions": 5,
+        "blockingQuestions": 0,
+        "decisions": 4
+      },
+      "rules": {
+        "total": 32,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 1
+    },
+    {
+      "id": "spec:application.history-rebuild",
+      "specKind": "workflow",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 10,
+      "restsOn": [
+        "spec:application.generation-registry",
+        "spec:application.history-projection",
+        "spec:application.read-models",
+        "spec:application.rebuild",
+        "spec:application.write-pause",
+        "spec:context.event-envelope",
+        "spec:context.queries",
+        "spec:decisions.d09-rebuild-online-by-default"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 12,
+        "declarations": 3,
+        "openQuestions": 6,
+        "blockingQuestions": 0,
+        "decisions": 3
+      },
+      "rules": {
+        "total": 10,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:application.history-rebuild.write-pause-rebuild-interrupt",
+      "specKind": "example",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 11,
+      "restsOn": [
+        "spec:application.history-rebuild"
+      ],
+      "exampleOf": "spec:application.history-rebuild",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:application.history-rebuild.write-pause-rebuild-abort",
+      "specKind": "example",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 11,
+      "restsOn": [
+        "spec:application.history-rebuild"
+      ],
+      "exampleOf": "spec:application.history-rebuild",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:application.history-rebuild.write-pause-rebuild-version-change",
+      "specKind": "example",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 11,
+      "restsOn": [
+        "spec:application.history-rebuild"
+      ],
+      "exampleOf": "spec:application.history-rebuild",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:application.history-rebuild.write-pause-rebuild-installation",
+      "specKind": "example",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 11,
+      "restsOn": [
+        "spec:application.history-rebuild"
+      ],
+      "exampleOf": "spec:application.history-rebuild",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:application.history-rebuild.write-pause-rebuild-source-order-mismatch",
+      "specKind": "example",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 11,
+      "restsOn": [
+        "spec:application.history-rebuild"
+      ],
+      "exampleOf": "spec:application.history-rebuild",
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:application.write-pause",
+      "specKind": "contract",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:decisions.d09-rebuild-online-by-default"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 20,
+        "declarations": 14,
+        "openQuestions": 3,
+        "blockingQuestions": 0,
+        "decisions": 2
+      },
+      "rules": {
+        "total": 15,
+        "keyed": 0
+      },
+      "implementedBy": 4,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:application.generation-registry",
+      "specKind": "contract",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 8,
+      "restsOn": [
+        "spec:application.projection-contract",
+        "spec:decisions.d09-rebuild-online-by-default"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 20,
+        "declarations": 13,
+        "openQuestions": 6,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 17,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 2
+    },
+    {
+      "id": "spec:application.orders-inventory-example",
+      "specKind": "model",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:application.history-projection"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 0,
+        "decisions": 5
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 14
+    },
+    {
+      "id": "spec:command.command-declaration",
+      "specKind": "contract",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 10,
+      "restsOn": [
+        "spec:application.history-projection",
+        "spec:application.projection-contract",
+        "spec:command.command-pipeline"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 19,
+        "declarations": 18,
+        "openQuestions": 3,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 13,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 2
+    },
+    {
+      "id": "spec:command.command-pipeline",
+      "specKind": "workflow",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 9,
+      "restsOn": [
+        "spec:application.history-projection",
+        "spec:application.projection-contract",
+        "spec:application.write-pause",
+        "spec:context.event-envelope"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 35,
+        "declarations": 18,
+        "openQuestions": 7,
+        "blockingQuestions": 0,
+        "decisions": 8
+      },
+      "rules": {
+        "total": 24,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 2
+    },
+    {
+      "id": "spec:context.event-envelope",
+      "specKind": "contract",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 4,
+      "restsOn": [
+        "spec:context.journal"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 16,
+        "declarations": 10,
+        "openQuestions": 2,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 18,
+        "keyed": 0
+      },
+      "implementedBy": 1,
+      "referencedBy": 0
+    },
+    {
+      "id": "spec:context.journal",
+      "specKind": "behavior",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 3,
+      "restsOn": [
+        "spec:application.write-pause"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 39,
+        "declarations": 18,
+        "openQuestions": 1,
+        "blockingQuestions": 0,
+        "decisions": 3
+      },
+      "rules": {
+        "total": 28,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 1
+    },
+    {
+      "id": "spec:context.queries",
+      "specKind": "contract",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 5,
+      "restsOn": [
+        "spec:context.event-envelope",
+        "spec:context.journal"
+      ],
+      "exampleOf": null,
+      "design": {
+        "entries": 29,
+        "declarations": 18,
+        "openQuestions": 3,
+        "blockingQuestions": 0,
+        "decisions": 1
+      },
+      "rules": {
+        "total": 21,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 1
+    },
+    {
+      "id": "spec:decisions.d09-rebuild-online-by-default",
+      "specKind": "decision",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "exampleOf": null,
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "implementedBy": 0,
+      "referencedBy": 0
+    }
+  ],
+  "structure": {
+    "edges": [
+      {
+        "from": "spec:application.generation-registry",
+        "to": "spec:decisions.d09-rebuild-online-by-default",
+        "type": "decidedBy",
+        "orders": true
+      },
+      {
+        "from": "spec:application.generation-registry",
+        "to": "spec:application.projection-contract",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.generation-registry",
+        "to": "spec:application.rebuild",
+        "type": "refines",
+        "orders": false
+      },
+      {
+        "from": "spec:application.history-projection",
+        "to": "spec:decisions.d09-rebuild-online-by-default",
+        "type": "decidedBy",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-projection",
+        "to": "spec:application.projection-contract",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-projection",
+        "to": "spec:context.event-envelope",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-projection",
+        "to": "spec:application.read-models",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:decisions.d09-rebuild-online-by-default",
+        "type": "decidedBy",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:application.generation-registry",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:application.history-projection",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:application.rebuild",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:application.write-pause",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:context.event-envelope",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:context.queries",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:application.read-models",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild.write-pause-rebuild-abort",
+        "to": "spec:application.history-rebuild",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild.write-pause-rebuild-installation",
+        "to": "spec:application.history-rebuild",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild.write-pause-rebuild-interrupt",
+        "to": "spec:application.history-rebuild",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild.write-pause-rebuild-source-order-mismatch",
+        "to": "spec:application.history-rebuild",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild.write-pause-rebuild-version-change",
+        "to": "spec:application.history-rebuild",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.orders-inventory-example",
+        "to": "spec:application.history-projection",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.projection-contract",
+        "to": "spec:decisions.d09-rebuild-online-by-default",
+        "type": "decidedBy",
+        "orders": true
+      },
+      {
+        "from": "spec:application.projection-contract",
+        "to": "spec:application.read-models",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.read-models",
+        "to": "spec:context.queries",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:decisions.d09-rebuild-online-by-default",
+        "type": "decidedBy",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:application.generation-registry",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:application.history-projection",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:application.projection-contract",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:application.write-pause",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:context.queries",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:application.read-models",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.write-pause",
+        "to": "spec:decisions.d09-rebuild-online-by-default",
+        "type": "decidedBy",
+        "orders": true
+      },
+      {
+        "from": "spec:application.write-pause",
+        "to": "spec:application.rebuild",
+        "type": "refines",
+        "orders": false
+      },
+      {
+        "from": "spec:command.command-declaration",
+        "to": "spec:application.history-projection",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:command.command-declaration",
+        "to": "spec:application.projection-contract",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:command.command-declaration",
+        "to": "spec:command.command-pipeline",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:command.command-pipeline",
+        "to": "spec:application.history-projection",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:command.command-pipeline",
+        "to": "spec:application.projection-contract",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:command.command-pipeline",
+        "to": "spec:application.write-pause",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:command.command-pipeline",
+        "to": "spec:context.event-envelope",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:context.event-envelope",
+        "to": "spec:context.journal",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:context.journal",
+        "to": "spec:application.write-pause",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:context.queries",
+        "to": "spec:context.event-envelope",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:context.queries",
+        "to": "spec:context.journal",
+        "type": "dependsOn",
+        "orders": true
+      }
+    ],
+    "cycles": []
+  },
+  "boundary": {
+    "restsOn": [
+      {
+        "id": "spec:application.first-experiment",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.actor-and-scope",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.idempotency-and-receipts",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.outcome-boundary",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.receipt-table",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.tenancy-and-authority",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:constraints.bulk-operations-bounded",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:constraints.events-stay-small",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:constraints.no-queue-recovery-for-essential-reads",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:constraints.zero-core-projection-jobs",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:context.batch-shaped-api",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:context.context-component",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:context.persistence-adapter",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:context.tables",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d01-one-mutation-per-operation",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d02-context-owns-state-and-journal",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d03-events-only-source-of-next-state",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d04-four-outcomes",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d05-rebuildable-history-with-baselines",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d06-idempotency-client-and-receipts",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d07-rejections-thrown-not-stored",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d08-read-models-in-command",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d10-contexts-meet-in-parent-use-cases",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d11-tenant-scope-and-authority",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d12-one-declaration-per-command",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d18-everything-else-waits-for-trigger",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d19-operations-travel-with-capability",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f01-serializable-mutations-under-occ",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f02-component-calls-commit-with-caller",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f03-nested-run-mutation-partial-rollback",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f04-nested-calls-cost-more-than-helpers",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f07-queries-reactive-not-durable-delivery",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f08-scheduling-commits-with-mutation",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f11-components-have-no-ctx-auth",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f12-backups-exclude-pending-scheduled-functions",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f13-transactions-have-limits",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f14-convex-error-survives-nested-and-component-boundary",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f15-parent-query-over-component-query-stays-reactive",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f17-migrations-fits-generation-backfill",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f18-commit-timestamps",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f19-nested-calls-share-time-budgets",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f20-pagination-checks-bytes-after-reading",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:kernel.outcome-model",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:kernel.state-document-mapping",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law01-sanctioned-writes-only",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law02-state-and-events-commit-together",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law03-events-only-source-of-state",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law04-server-scoped-idempotency-key",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law06-technical-failure-never-a-rejection",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law09-no-invariant-on-late-read-model",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law10-replay-never-runs-commands-or-effects",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law11-tenant-scope-named",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:operations.baseline-operations",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:platform.transactional-domain-platform",
+        "statedReadiness": "defined",
+        "holds": []
+      }
+    ],
+    "restedOnBy": [
+      {
+        "id": "spec:advanced.cross-stream-online-rebuild",
+        "statedReadiness": "scoped",
+        "holds": []
+      },
+      {
+        "id": "spec:agents.agent-runs",
+        "statedReadiness": "scoped",
+        "holds": []
+      },
+      {
+        "id": "spec:application.aggregate-projection",
+        "statedReadiness": "scoped",
+        "holds": []
+      },
+      {
+        "id": "spec:application.first-experiment",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.generation-registry.command-without-generation-fails",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.generation-registry.first-rebuild-installs-read-model",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-duplicate-answered-from-receipt",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-placed-order",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-second-context-rejects",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-twice-rejected",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-unknown-order-rejected",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-without-grant-refused",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.parent-use-cases",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.committed-state-read-through-query",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.committed-state-visible",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.list-pages-by-cursor",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.query-refused-before-disclosure",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.query-refused-without-grant",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.rebuild.online-rebuild-interrupt-resume",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.restore",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.write-pause.restore-door-without-deploy",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-declaration.broken-argument-contract-fails-build",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-declaration.renamed-handler-fails-build",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-pipeline.failure-after-journal-append",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-pipeline.failure-after-state-write",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-pipeline.failure-before-receipt",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.idempotency-and-receipts",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.outcome-boundary",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.receipt-table",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.tenancy-and-authority",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:context.context-component",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:context.journal.rebuild-from-baseline",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:context.persistence-adapter",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:context.tables",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d18-everything-else-waits-for-trigger",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:obligations.fan-out-and-chains",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:obligations.local-reaction-wrapper",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:obligations.obligation-module",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:operations.baseline-operations",
+        "statedReadiness": "defined",
+        "holds": []
+      }
+    ],
+    "verifiedBy": [
+      {
+        "id": "spec:application.generation-registry.command-without-generation-fails",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.generation-registry.first-rebuild-installs-read-model",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-duplicate-answered-from-receipt",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-placed-order",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-second-context-rejects",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-twice-rejected",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-unknown-order-rejected",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.orders-inventory-example.cancel-without-grant-refused",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.committed-state-read-through-query",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.committed-state-visible",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.list-pages-by-cursor",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.query-refused-before-disclosure",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.query-refused-without-grant",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.rebuild.online-rebuild-interrupt-resume",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:application.write-pause.restore-door-without-deploy",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-declaration.broken-argument-contract-fails-build",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-declaration.renamed-handler-fails-build",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-pipeline.failure-after-journal-append",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-pipeline.failure-after-state-write",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-pipeline.failure-before-receipt",
+        "statedReadiness": "defined",
+        "holds": []
+      },
+      {
+        "id": "spec:context.journal.rebuild-from-baseline",
+        "statedReadiness": "defined",
+        "holds": []
+      }
+    ],
+    "supersededBy": []
+  },
+  "architecture": {
+    "components": [
+      {
+        "id": "component:example.inventory-context",
+        "layer": "adapter",
+        "context": "inventory",
+        "members": {
+          "satisfies": 0,
+          "references": 1
+        },
+        "restsOn": 0,
+        "designs": 0
+      },
+      {
+        "id": "component:example.inventory-domain",
+        "layer": "domain",
+        "context": "inventory",
+        "members": {
+          "satisfies": 0,
+          "references": 1
+        },
+        "restsOn": 0,
+        "designs": 0
+      },
+      {
+        "id": "component:example.orders-context",
+        "layer": "adapter",
+        "context": "orders",
+        "members": {
+          "satisfies": 0,
+          "references": 1
+        },
+        "restsOn": 0,
+        "designs": 0
+      },
+      {
+        "id": "component:example.orders-domain",
+        "layer": "domain",
+        "context": "orders",
+        "members": {
+          "satisfies": 0,
+          "references": 1
+        },
+        "restsOn": 0,
+        "designs": 0
+      },
+      {
+        "id": "component:example.parent",
+        "layer": "application",
+        "context": "orders-inventory",
+        "members": {
+          "satisfies": 0,
+          "references": 2
+        },
+        "restsOn": 0,
+        "designs": 0
+      },
+      {
+        "id": "component:platform.command",
+        "layer": "application",
+        "context": "platform",
+        "members": {
+          "satisfies": 0,
+          "references": 2
+        },
+        "restsOn": 3,
+        "designs": 0
+      },
+      {
+        "id": "component:platform.context",
+        "layer": "adapter",
+        "context": "platform",
+        "members": {
+          "satisfies": 1,
+          "references": 2
+        },
+        "restsOn": 1,
+        "designs": 0
+      },
+      {
+        "id": "component:platform.gate",
+        "layer": "infrastructure",
+        "context": "platform",
+        "members": {
+          "satisfies": 1,
+          "references": 0
+        },
+        "restsOn": 0,
+        "designs": 0
+      },
+      {
+        "id": "component:platform.read-model",
+        "layer": "application",
+        "context": "platform",
+        "members": {
+          "satisfies": 0,
+          "references": 5
+        },
+        "restsOn": 0,
+        "designs": 0
+      }
+    ],
+    "designs": [],
+    "uses": [
+      {
+        "from": "component:example.inventory-context",
+        "to": "component:example.inventory-domain",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.inventory-context",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.inventory-domain",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:example.orders-context",
+        "to": "component:example.orders-domain",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.orders-context",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.orders-domain",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:example.inventory-context",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:example.inventory-domain",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:example.orders-context",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:example.orders-domain",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.audit",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.gate",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.read-model",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.audit",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:platform.audit",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.audit",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.gate",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.operations",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.read-model",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.context",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.context",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:platform.gate",
+        "to": "component:platform.audit",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:platform.gate",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.gate",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.gate",
+        "to": "component:platform.read-model",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.operations",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:platform.operations",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": true
+      },
+      {
+        "from": "component:platform.read-model",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.read-model",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.read-model",
+        "to": "component:platform.gate",
+        "count": 1,
+        "outside": false
+      },
+      {
+        "from": "component:platform.read-model",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true
+      }
+    ],
+    "plannedUses": [],
+    "outside": [
+      {
+        "id": "component:platform.audit",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses",
+          "usesTouched"
+        ]
+      },
+      {
+        "id": "component:platform.kernel",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses"
+        ]
+      },
+      {
+        "id": "component:platform.operations",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses",
+          "usesTouched"
+        ]
+      }
+    ],
+    "unplaced": [
+      {
+        "unit": "impl:command.command-declaration.depot-commands",
+        "member": "spec:command.command-declaration",
+        "via": "references"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "spec:decisions.d01-one-mutation-per-operation",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.d02-context-owns-state-and-journal",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 3
+    },
+    {
+      "id": "spec:decisions.d03-events-only-source-of-next-state",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 1
+    },
+    {
+      "id": "spec:decisions.d04-four-outcomes",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 5
+    },
+    {
+      "id": "spec:decisions.d05-rebuildable-history-with-baselines",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.d06-idempotency-client-and-receipts",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.d07-rejections-thrown-not-stored",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.d08-read-models-in-command",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 6
+    },
+    {
+      "id": "spec:decisions.d09-rebuild-online-by-default",
+      "statedReadiness": "defined",
+      "member": true,
+      "shapes": 6
+    },
+    {
+      "id": "spec:decisions.d10-contexts-meet-in-parent-use-cases",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.d11-tenant-scope-and-authority",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 3
+    },
+    {
+      "id": "spec:decisions.d12-one-declaration-per-command",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 2
+    },
+    {
+      "id": "spec:decisions.d18-everything-else-waits-for-trigger",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 1
+    },
+    {
+      "id": "spec:decisions.d19-operations-travel-with-capability",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 3
+    },
+    {
+      "id": "spec:kernel.state-document-mapping",
+      "statedReadiness": "defined",
+      "member": false,
+      "shapes": 1
+    }
+  ],
+  "questions": [
+    {
+      "address": "spec:application.generation-registry#question.generationRollbackPolicy",
+      "spec": "spec:application.generation-registry",
+      "index": 0
+    },
+    {
+      "address": "spec:application.generation-registry#question.generationTenantReach",
+      "spec": "spec:application.generation-registry",
+      "index": 1
+    },
+    {
+      "address": "spec:application.generation-registry#question.restoreGenerationFence",
+      "spec": "spec:application.generation-registry",
+      "index": 2
+    },
+    {
+      "address": "spec:application.generation-registry#question.readModelInstallation",
+      "spec": "spec:application.generation-registry",
+      "index": 3
+    },
+    {
+      "address": "spec:application.generation-registry#question.rebuildProgressRow",
+      "spec": "spec:application.generation-registry",
+      "index": 4
+    },
+    {
+      "address": "spec:application.generation-registry#question.tenantListGenerationStart",
+      "spec": "spec:application.generation-registry",
+      "index": 5
+    },
+    {
+      "address": "spec:application.history-projection#question.historyFoldOrder",
+      "spec": "spec:application.history-projection",
+      "index": 0
+    },
+    {
+      "address": "spec:application.history-projection#question.historyProjectionCost",
+      "spec": "spec:application.history-projection",
+      "index": 1
+    },
+    {
+      "address": "spec:application.history-projection#question.historyFoldPureTest",
+      "spec": "spec:application.history-projection",
+      "index": 2
+    },
+    {
+      "address": "spec:application.history-projection#question.historySubjectErasure",
+      "spec": "spec:application.history-projection",
+      "index": 3
+    },
+    {
+      "address": "spec:application.history-rebuild#question.historyBatchShape",
+      "spec": "spec:application.history-rebuild",
+      "index": 0
+    },
+    {
+      "address": "spec:application.history-rebuild#question.verifyPassUnderPause",
+      "spec": "spec:application.history-rebuild",
+      "index": 1
+    },
+    {
+      "address": "spec:application.history-rebuild#question.historyBatchWriteThroughput",
+      "spec": "spec:application.history-rebuild",
+      "index": 2
+    },
+    {
+      "address": "spec:application.history-rebuild#question.historyMigrationBeforePause",
+      "spec": "spec:application.history-rebuild",
+      "index": 3
+    },
+    {
+      "address": "spec:application.history-rebuild#question.abortSwitchAtomicity",
+      "spec": "spec:application.history-rebuild",
+      "index": 4
+    },
+    {
+      "address": "spec:application.history-rebuild#question.historyTenantPauseIsolation",
+      "spec": "spec:application.history-rebuild",
+      "index": 5
+    },
+    {
+      "address": "spec:application.orders-inventory-example#question.orderInventoryCommandChoices",
+      "spec": "spec:application.orders-inventory-example",
+      "index": 0
+    },
+    {
+      "address": "spec:application.projection-contract#question.projectionRowContract",
+      "spec": "spec:application.projection-contract",
+      "index": 0
+    },
+    {
+      "address": "spec:application.projection-contract#question.projectionGenerationVersions",
+      "spec": "spec:application.projection-contract",
+      "index": 1
+    },
+    {
+      "address": "spec:application.projection-contract#question.backfillVersionOverwrite",
+      "spec": "spec:application.projection-contract",
+      "index": 2
+    },
+    {
+      "address": "spec:application.projection-contract#question.compositeCurrentStateRow",
+      "spec": "spec:application.projection-contract",
+      "index": 3
+    },
+    {
+      "address": "spec:application.projection-contract#question.historySourceVersionTenant",
+      "spec": "spec:application.projection-contract",
+      "index": 4
+    },
+    {
+      "address": "spec:application.read-models#question.parentListGenerationSwitch",
+      "spec": "spec:application.read-models",
+      "index": 0
+    },
+    {
+      "address": "spec:application.read-models#question.readModelListBounds",
+      "spec": "spec:application.read-models",
+      "index": 1
+    },
+    {
+      "address": "spec:application.read-models#question.parentQueryRefusal",
+      "spec": "spec:application.read-models",
+      "index": 2
+    },
+    {
+      "address": "spec:application.read-models#question.contextQueryCost",
+      "spec": "spec:application.read-models",
+      "index": 3
+    },
+    {
+      "address": "spec:application.read-models#question.parentQueryReadBounds",
+      "spec": "spec:application.read-models",
+      "index": 4
+    },
+    {
+      "address": "spec:application.read-models#question.crossContextReadForm",
+      "spec": "spec:application.read-models",
+      "index": 5
+    },
+    {
+      "address": "spec:application.rebuild#question.rebuildBatchDriver",
+      "spec": "spec:application.rebuild",
+      "index": 0
+    },
+    {
+      "address": "spec:application.rebuild#question.rebuildBatchBounds",
+      "spec": "spec:application.rebuild",
+      "index": 1
+    },
+    {
+      "address": "spec:application.rebuild#question.rebuildGenerationPauseContract",
+      "spec": "spec:application.rebuild",
+      "index": 2
+    },
+    {
+      "address": "spec:application.rebuild#question.rebuildReadModelForms",
+      "spec": "spec:application.rebuild",
+      "index": 3
+    },
+    {
+      "address": "spec:application.rebuild#question.tenantListFill",
+      "spec": "spec:application.rebuild",
+      "index": 4
+    },
+    {
+      "address": "spec:application.write-pause#question.writePauseSourceScopes",
+      "spec": "spec:application.write-pause",
+      "index": 0
+    },
+    {
+      "address": "spec:application.write-pause#question.generationGateExemption",
+      "spec": "spec:application.write-pause",
+      "index": 1
+    },
+    {
+      "address": "spec:application.write-pause#question.writePauseOperatingInstructions",
+      "spec": "spec:application.write-pause",
+      "index": 2
+    },
+    {
+      "address": "spec:command.command-declaration#question.commandEntrySignatures",
+      "spec": "spec:command.command-declaration",
+      "index": 0
+    },
+    {
+      "address": "spec:command.command-declaration#question.commandDeclarationLookup",
+      "spec": "spec:command.command-declaration",
+      "index": 1
+    },
+    {
+      "address": "spec:command.command-declaration#question.commandDeclarationFields",
+      "spec": "spec:command.command-declaration",
+      "index": 2
+    },
+    {
+      "address": "spec:command.command-pipeline#question.commandOutcomeWireShape",
+      "spec": "spec:command.command-pipeline",
+      "index": 0
+    },
+    {
+      "address": "spec:command.command-pipeline#question.operationIdentityCause",
+      "spec": "spec:command.command-pipeline",
+      "index": 1
+    },
+    {
+      "address": "spec:command.command-pipeline#question.commandAdmissionPolicy",
+      "spec": "spec:command.command-pipeline",
+      "index": 2
+    },
+    {
+      "address": "spec:command.command-pipeline#question.publicRequestKey",
+      "spec": "spec:command.command-pipeline",
+      "index": 3
+    },
+    {
+      "address": "spec:command.command-pipeline#question.contextCallBudgetReservation",
+      "spec": "spec:command.command-pipeline",
+      "index": 4
+    },
+    {
+      "address": "spec:command.command-pipeline#question.commandReadModelWrites",
+      "spec": "spec:command.command-pipeline",
+      "index": 5
+    },
+    {
+      "address": "spec:command.command-pipeline#question.commandTextBounds",
+      "spec": "spec:command.command-pipeline",
+      "index": 6
+    },
+    {
+      "address": "spec:context.event-envelope#question.eventEnvelopeFields",
+      "spec": "spec:context.event-envelope",
+      "index": 0
+    },
+    {
+      "address": "spec:context.event-envelope#question.envelopeTextBounds",
+      "spec": "spec:context.event-envelope",
+      "index": 1
+    },
+    {
+      "address": "spec:context.journal#question.baselineMigrationContract",
+      "spec": "spec:context.journal",
+      "index": 0
+    },
+    {
+      "address": "spec:context.queries#question.contextPaginationSplit",
+      "spec": "spec:context.queries",
+      "index": 0
+    },
+    {
+      "address": "spec:context.queries#question.contextQueryContract",
+      "spec": "spec:context.queries",
+      "index": 1
+    },
+    {
+      "address": "spec:context.queries#question.queryRefusalEntry",
+      "spec": "spec:context.queries",
+      "index": 2
+    },
+    {
+      "address": "spec:decisions.d02-context-owns-state-and-journal#question.contextCallLatencyQuota",
+      "spec": "spec:decisions.d02-context-owns-state-and-journal",
+      "index": 0
+    },
+    {
+      "address": "spec:decisions.d02-context-owns-state-and-journal#question.contextIsolationChoice",
+      "spec": "spec:decisions.d02-context-owns-state-and-journal",
+      "index": 1
+    },
+    {
+      "address": "spec:decisions.d03-events-only-source-of-next-state#question.initialStateChoice",
+      "spec": "spec:decisions.d03-events-only-source-of-next-state",
+      "index": 0
+    },
+    {
+      "address": "spec:decisions.d03-events-only-source-of-next-state#question.streamStateSizeBudget",
+      "spec": "spec:decisions.d03-events-only-source-of-next-state",
+      "index": 1
+    },
+    {
+      "address": "spec:decisions.d06-idempotency-client-and-receipts#question.httpCallerReceipts",
+      "spec": "spec:decisions.d06-idempotency-client-and-receipts",
+      "index": 0
+    },
+    {
+      "address": "spec:decisions.d07-rejections-thrown-not-stored#question.refusedCommandHistory",
+      "spec": "spec:decisions.d07-rejections-thrown-not-stored",
+      "index": 0
+    },
+    {
+      "address": "spec:decisions.d08-read-models-in-command#question.parentQueryPaginationSplit",
+      "spec": "spec:decisions.d08-read-models-in-command",
+      "index": 0
+    },
+    {
+      "address": "spec:decisions.d09-rebuild-online-by-default#question.rebuildContentionCoverage",
+      "spec": "spec:decisions.d09-rebuild-online-by-default",
+      "index": 0
+    },
+    {
+      "address": "spec:decisions.d19-operations-travel-with-capability#question.restoreObligationCoverage",
+      "spec": "spec:decisions.d19-operations-travel-with-capability",
+      "index": 0
+    },
+    {
+      "address": "spec:kernel.state-document-mapping#question.streamStateBudget",
+      "spec": "spec:kernel.state-document-mapping",
+      "index": 0
+    }
+  ],
+  "leftOut": [
+    "Titles, altitudes, rested-on-by and example member lists, example and verifier counts, and unit and component ids of unselected members; unit counts kept.",
+    "Relation reasons; relation types kept.",
+    "Boundary titles, kinds, floors, implementation bindings and joined members; ids, stated rungs and holds kept.",
+    "Component labels and the Specs that reach each component; counts kept.",
+    "Declared values, differing rows and unreadable rows of each member design; their counts kept.",
+    "The unit edges behind each component pair; counts kept.",
+    "Labels, layers and contexts of outside components.",
+    "Decision titles, floors, refinements, supersessions and question counts.",
+    "Non-blocking question text and fields; addresses kept."
+  ]
+}

@@ -1,0 +1,3092 @@
+{
+  "scope": {
+    "pack": "pack:slice-probe",
+    "title": "Slice probe",
+    "framing": "A probe Pack in a throwaway copy of the platform corpus. It holds a few history-view members, five member component designs, one for each way a design meets its code, and two example members, one that folds into its parent and one that does not.",
+    "subset": false,
+    "members": [
+      "spec:decisions.d09-rebuild-online-by-default",
+      "spec:application.read-models",
+      "spec:probe.read-models-held-example",
+      "spec:application.write-pause",
+      "spec:probe.write-pause-extra-dependency",
+      "spec:application.rebuild",
+      "spec:application.history-rebuild",
+      "spec:probe.history-library",
+      "spec:probe.read-model-design",
+      "spec:probe.gate-design",
+      "spec:probe.audit-design",
+      "spec:probe.operations-design"
+    ],
+    "unresolved": []
+  },
+  "totals": {
+    "members": 12,
+    "exampleMembers": 1,
+    "relations": 16,
+    "depth": 5,
+    "cycles": 0,
+    "heldBelowNextRung": 1,
+    "waitingForAuthor": 11,
+    "restsOn": 34,
+    "holdingOutside": 0,
+    "restedOnBy": 26,
+    "verifiedBy": 12,
+    "supersededBy": 0,
+    "components": {
+      "touched": 6,
+      "throughMembers": 3,
+      "throughRestsOn": 2,
+      "throughDesigns": 4,
+      "outside": 5
+    },
+    "designs": {
+      "total": 5,
+      "realized": 3,
+      "matching": 1,
+      "unrealized": 2,
+      "differing": 2,
+      "unreadable": 1
+    },
+    "componentUses": {
+      "inside": 17,
+      "outside": 11,
+      "planned": 9
+    },
+    "decisions": 6,
+    "decisionsBelowReady": 6,
+    "openQuestions": 24,
+    "blockingQuestions": 1
+  },
+  "members": [
+    {
+      "id": "spec:decisions.d09-rebuild-online-by-default",
+      "title": "Rebuild online by default, pause writes only for history-dependent views",
+      "specKind": "decision",
+      "altitude": "feature",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "restedOnBy": [
+        "spec:application.history-rebuild",
+        "spec:application.rebuild",
+        "spec:application.write-pause"
+      ],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      },
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "implementedBy": [],
+      "referencedBy": [],
+      "components": []
+    },
+    {
+      "id": "spec:application.read-models",
+      "title": "Read models",
+      "specKind": "behavior",
+      "altitude": "feature",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "restedOnBy": [
+        "spec:application.history-rebuild",
+        "spec:application.rebuild",
+        "spec:probe.history-library",
+        "spec:probe.read-model-design",
+        "spec:probe.read-models-held-example"
+      ],
+      "exampleOf": null,
+      "exampleMembers": [
+        "spec:probe.read-models-held-example"
+      ],
+      "design": {
+        "entries": 20,
+        "declarations": 11,
+        "openQuestions": 6,
+        "blockingQuestions": 0,
+        "decisions": 3
+      },
+      "rules": {
+        "total": 31,
+        "keyed": 0
+      },
+      "examples": {
+        "total": 5,
+        "enabled": 5
+      },
+      "verifiers": {
+        "total": 6,
+        "enabled": 6
+      },
+      "implementedBy": [],
+      "referencedBy": [
+        "impl:application.read-models",
+        "impl:application.read-models.queries"
+      ],
+      "components": [
+        "component:platform.read-model"
+      ]
+    },
+    {
+      "id": "spec:probe.read-models-held-example",
+      "title": "A read model rebuilt while a writer waits",
+      "specKind": "example",
+      "altitude": "story",
+      "statedReadiness": "scoped",
+      "floorReached": "scoped",
+      "statedNextRung": "defined",
+      "holds": [
+        {
+          "clauseId": "kind-evidence-complete",
+          "description": "The kind's natural evidence is complete (per-kind evidence table).",
+          "targets": []
+        },
+        {
+          "clauseId": "no-blocking-open-questions",
+          "description": "Spec has no blocking open question in intent.openQuestions.",
+          "targets": []
+        }
+      ],
+      "depth": 2,
+      "restsOn": [
+        "spec:application.read-models"
+      ],
+      "restedOnBy": [],
+      "exampleOf": "spec:application.read-models",
+      "exampleMembers": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 1,
+        "blockingQuestions": 1,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      },
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "implementedBy": [],
+      "referencedBy": [],
+      "components": []
+    },
+    {
+      "id": "spec:application.write-pause",
+      "title": "Write pause",
+      "specKind": "contract",
+      "altitude": "story",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:decisions.d09-rebuild-online-by-default"
+      ],
+      "restedOnBy": [
+        "spec:application.history-rebuild",
+        "spec:application.rebuild",
+        "spec:probe.audit-design",
+        "spec:probe.gate-design",
+        "spec:probe.write-pause-extra-dependency"
+      ],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 20,
+        "declarations": 14,
+        "openQuestions": 3,
+        "blockingQuestions": 0,
+        "decisions": 2
+      },
+      "rules": {
+        "total": 15,
+        "keyed": 0
+      },
+      "examples": {
+        "total": 1,
+        "enabled": 1
+      },
+      "verifiers": {
+        "total": 2,
+        "enabled": 2
+      },
+      "implementedBy": [
+        "component:platform.gate",
+        "impl:application.write-pause",
+        "impl:application.write-pause.entries",
+        "impl:application.write-pause.tables"
+      ],
+      "referencedBy": [],
+      "components": [
+        "component:platform.gate"
+      ]
+    },
+    {
+      "id": "spec:probe.write-pause-extra-dependency",
+      "title": "A paused scope replays the journal on resume",
+      "specKind": "example",
+      "altitude": "story",
+      "statedReadiness": "scoped",
+      "floorReached": "ready",
+      "statedNextRung": "defined",
+      "holds": [],
+      "depth": 3,
+      "restsOn": [
+        "spec:application.write-pause"
+      ],
+      "restedOnBy": [],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 0,
+        "declarations": 0,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 0,
+        "keyed": 0
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      },
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "implementedBy": [],
+      "referencedBy": [],
+      "components": []
+    },
+    {
+      "id": "spec:application.rebuild",
+      "title": "Rebuild: generations, backfill and the write pause",
+      "specKind": "workflow",
+      "altitude": "feature",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 3,
+      "restsOn": [
+        "spec:application.read-models",
+        "spec:application.write-pause",
+        "spec:decisions.d09-rebuild-online-by-default"
+      ],
+      "restedOnBy": [
+        "spec:application.history-rebuild"
+      ],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 42,
+        "declarations": 27,
+        "openQuestions": 5,
+        "blockingQuestions": 0,
+        "decisions": 4
+      },
+      "rules": {
+        "total": 32,
+        "keyed": 0
+      },
+      "examples": {
+        "total": 1,
+        "enabled": 1
+      },
+      "verifiers": {
+        "total": 2,
+        "enabled": 2
+      },
+      "implementedBy": [],
+      "referencedBy": [
+        "impl:application.rebuild"
+      ],
+      "components": [
+        "component:platform.read-model"
+      ]
+    },
+    {
+      "id": "spec:application.history-rebuild",
+      "title": "Rebuild of a history view under a write pause",
+      "specKind": "workflow",
+      "altitude": "feature",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "statedNextRung": "ready",
+      "holds": [],
+      "depth": 4,
+      "restsOn": [
+        "spec:application.read-models",
+        "spec:application.rebuild",
+        "spec:application.write-pause",
+        "spec:decisions.d09-rebuild-online-by-default"
+      ],
+      "restedOnBy": [
+        "spec:probe.history-library"
+      ],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 12,
+        "declarations": 3,
+        "openQuestions": 6,
+        "blockingQuestions": 0,
+        "decisions": 3
+      },
+      "rules": {
+        "total": 10,
+        "keyed": 0
+      },
+      "examples": {
+        "total": 5,
+        "enabled": 0
+      },
+      "verifiers": {
+        "total": 5,
+        "enabled": 0
+      },
+      "implementedBy": [],
+      "referencedBy": [],
+      "components": []
+    },
+    {
+      "id": "spec:probe.history-library",
+      "title": "The history library a later build adds",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "scoped",
+      "floorReached": "ready",
+      "statedNextRung": "defined",
+      "holds": [],
+      "depth": 5,
+      "restsOn": [
+        "spec:application.history-rebuild",
+        "spec:application.read-models"
+      ],
+      "restedOnBy": [],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 4,
+        "declarations": 4,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 1,
+        "keyed": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      },
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "implementedBy": [],
+      "referencedBy": [],
+      "components": []
+    },
+    {
+      "id": "spec:probe.read-model-design",
+      "title": "The read-model library as designed",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "scoped",
+      "floorReached": "ready",
+      "statedNextRung": "defined",
+      "holds": [],
+      "depth": 2,
+      "restsOn": [
+        "spec:application.read-models"
+      ],
+      "restedOnBy": [],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 4,
+        "declarations": 4,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 1,
+        "keyed": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      },
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "implementedBy": [
+        "component:platform.read-model"
+      ],
+      "referencedBy": [],
+      "components": [
+        "component:platform.read-model"
+      ]
+    },
+    {
+      "id": "spec:probe.gate-design",
+      "title": "The maintenance gate as designed",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "scoped",
+      "floorReached": "ready",
+      "statedNextRung": "defined",
+      "holds": [],
+      "depth": 3,
+      "restsOn": [
+        "spec:application.write-pause"
+      ],
+      "restedOnBy": [],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 4,
+        "declarations": 4,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 1,
+        "keyed": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      },
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "implementedBy": [
+        "component:platform.gate"
+      ],
+      "referencedBy": [],
+      "components": [
+        "component:platform.gate"
+      ]
+    },
+    {
+      "id": "spec:probe.audit-design",
+      "title": "The audit library records gate changes",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "scoped",
+      "floorReached": "ready",
+      "statedNextRung": "defined",
+      "holds": [],
+      "depth": 3,
+      "restsOn": [
+        "spec:application.write-pause"
+      ],
+      "restedOnBy": [],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 3,
+        "declarations": 3,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 1,
+        "keyed": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      },
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "implementedBy": [],
+      "referencedBy": [],
+      "components": []
+    },
+    {
+      "id": "spec:probe.operations-design",
+      "title": "The operations library as designed",
+      "specKind": "behavior",
+      "altitude": "story",
+      "statedReadiness": "scoped",
+      "floorReached": "ready",
+      "statedNextRung": "defined",
+      "holds": [],
+      "depth": 1,
+      "restsOn": [],
+      "restedOnBy": [],
+      "exampleOf": null,
+      "exampleMembers": [],
+      "design": {
+        "entries": 3,
+        "declarations": 3,
+        "openQuestions": 0,
+        "blockingQuestions": 0,
+        "decisions": 0
+      },
+      "rules": {
+        "total": 1,
+        "keyed": 1
+      },
+      "examples": {
+        "total": 0,
+        "enabled": 0
+      },
+      "verifiers": {
+        "total": 0,
+        "enabled": 0
+      },
+      "implementedBy": [
+        "component:platform.operations"
+      ],
+      "referencedBy": [],
+      "components": [
+        "component:platform.operations"
+      ]
+    }
+  ],
+  "structure": {
+    "edges": [
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:decisions.d09-rebuild-online-by-default",
+        "type": "decidedBy",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:application.rebuild",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:application.write-pause",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:application.read-models",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:decisions.d09-rebuild-online-by-default",
+        "type": "decidedBy",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:application.write-pause",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:application.read-models",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:application.write-pause",
+        "to": "spec:decisions.d09-rebuild-online-by-default",
+        "type": "decidedBy",
+        "orders": true
+      },
+      {
+        "from": "spec:application.write-pause",
+        "to": "spec:application.rebuild",
+        "type": "refines",
+        "orders": false
+      },
+      {
+        "from": "spec:probe.audit-design",
+        "to": "spec:application.write-pause",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:probe.gate-design",
+        "to": "spec:application.write-pause",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:probe.history-library",
+        "to": "spec:application.history-rebuild",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:probe.history-library",
+        "to": "spec:application.read-models",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:probe.read-model-design",
+        "to": "spec:application.read-models",
+        "type": "dependsOn",
+        "orders": true
+      },
+      {
+        "from": "spec:probe.read-models-held-example",
+        "to": "spec:application.read-models",
+        "type": "refines",
+        "orders": true
+      },
+      {
+        "from": "spec:probe.write-pause-extra-dependency",
+        "to": "spec:application.write-pause",
+        "type": "refines",
+        "orders": true
+      }
+    ],
+    "cycles": []
+  },
+  "boundary": {
+    "restsOn": [
+      {
+        "id": "spec:application.generation-registry",
+        "title": "Generation registry",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.rebuild",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-projection",
+        "title": "History projection",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.rebuild",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.projection-contract",
+        "title": "Projection contract",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:command.actor-and-scope",
+        "title": "Actor, tenant scope, namespace and grants",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.write-pause",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-pipeline",
+        "title": "The command pipeline",
+        "specKind": "workflow",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:probe.operations-design"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:constraints.bulk-operations-bounded",
+        "title": "Every bulk operation has a stated bound",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:constraints.no-queue-recovery-for-essential-reads",
+        "title": "No queue recovery needed for essential reads",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:constraints.zero-core-projection-jobs",
+        "title": "Zero core projection jobs",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:context.event-envelope",
+        "title": "The event envelope",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:context.journal",
+        "title": "The journal",
+        "specKind": "behavior",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:probe.write-pause-extra-dependency"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:context.queries",
+        "title": "The context queries",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.rebuild",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d01-one-mutation-per-operation",
+        "title": "One mutation per business operation",
+        "specKind": "decision",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d04-four-outcomes",
+        "title": "Four outcomes, not a boolean",
+        "specKind": "decision",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:application.write-pause",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d08-read-models-in-command",
+        "title": "Read models update inside the command",
+        "specKind": "decision",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:decisions.d09-rebuild-online-by-default"
+            ]
+          },
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d11-tenant-scope-and-authority",
+        "title": "Tenant scope and authority from day one",
+        "specKind": "decision",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d19-operations-travel-with-capability",
+        "title": "Operations travel with the capability",
+        "specKind": "decision",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:application.rebuild",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f01-serializable-mutations-under-occ",
+        "title": "Mutations are serializable under optimistic concurrency",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:decisions.d09-rebuild-online-by-default",
+              "spec:application.write-pause",
+              "spec:application.rebuild",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f04-nested-calls-cost-more-than-helpers",
+        "title": "Nested calls cost more than helper calls",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f07-queries-reactive-not-durable-delivery",
+        "title": "Queries are reactive, subscriptions are not durable delivery",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f08-scheduling-commits-with-mutation",
+        "title": "Scheduling from a mutation commits with it",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "title": "Scheduled mutations run once, scheduled actions are not retried",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.write-pause",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f11-components-have-no-ctx-auth",
+        "title": "Components have no ctx.auth",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.write-pause",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f12-backups-exclude-pending-scheduled-functions",
+        "title": "Backups exclude pending scheduled functions",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.write-pause",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f13-transactions-have-limits",
+        "title": "Transactions have limits",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.write-pause",
+              "spec:application.rebuild",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f15-parent-query-over-component-query-stays-reactive",
+        "title": "A parent query over a component query stays reactive",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f17-migrations-fits-generation-backfill",
+        "title": "The migrations component fits a generation backfill",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:decisions.d09-rebuild-online-by-default",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:facts.f19-nested-calls-share-time-budgets",
+        "title": "Nested calls draw on a system-operation time budget",
+        "specKind": "constraint",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "title": "Authorization comes before execution and disclosure",
+        "specKind": "rule",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law06-technical-failure-never-a-rejection",
+        "title": "A technical failure is never stored as a rejection",
+        "specKind": "rule",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law09-no-invariant-on-late-read-model",
+        "title": "No invariant depends on a late read model",
+        "specKind": "rule",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law10-replay-never-runs-commands-or-effects",
+        "title": "Replay never runs commands or repeats effects",
+        "specKind": "rule",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:laws.law11-tenant-scope-named",
+        "title": "Every command and query names its tenant scope",
+        "specKind": "rule",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "constrainedBy",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.rebuild",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:operations.baseline-operations",
+        "title": "Baseline operations",
+        "specKind": "rule",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:platform.transactional-domain-platform",
+        "title": "Convex transactional domain platform",
+        "specKind": "behavior",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:decisions.d09-rebuild-online-by-default",
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      }
+    ],
+    "restedOnBy": [
+      {
+        "id": "spec:advanced.cross-stream-online-rebuild",
+        "title": "Online rebuild of cross-stream history views",
+        "specKind": "behavior",
+        "statedReadiness": "scoped",
+        "floorReached": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.aggregate-projection",
+        "title": "Aggregate projection",
+        "specKind": "contract",
+        "statedReadiness": "scoped",
+        "floorReached": "scoped",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.read-models"
+            ]
+          },
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:decisions.d09-rebuild-online-by-default"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.first-experiment",
+        "title": "The first experiment",
+        "specKind": "workflow",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.read-models",
+              "spec:application.rebuild",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.generation-registry",
+        "title": "Generation registry",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.rebuild"
+            ]
+          },
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:decisions.d09-rebuild-online-by-default"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-projection",
+        "title": "History projection",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.read-models"
+            ]
+          },
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:decisions.d09-rebuild-online-by-default"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-abort",
+        "title": "Rebuild a cross-stream history view under a write pause; interrupt, then abort",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-installation",
+        "title": "Install a history view through the handoff",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-interrupt",
+        "title": "Rebuild a cross-stream history view under a write pause; interrupt, then resume",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-source-order-mismatch",
+        "title": "Reorder a history view's sources while its generation is interrupted",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-version-change",
+        "title": "Deploy a changed history projection version through the handoff",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.projection-contract",
+        "title": "Projection contract",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.read-models"
+            ]
+          },
+          {
+            "type": "decidedBy",
+            "members": [
+              "spec:decisions.d09-rebuild-online-by-default"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.committed-state-read-through-query",
+        "title": "A successful command, then a query",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.committed-state-visible",
+        "title": "A successful command, then a query or subscription",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.list-pages-by-cursor",
+        "title": "A client reads a tenant's order list in pages by cursor",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.query-refused-before-disclosure",
+        "title": "A caller with no identity reads an order through the parent",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.query-refused-without-grant",
+        "title": "A caller with no grant in the tenant reads an order through the parent",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.rebuild.online-rebuild-interrupt-resume",
+        "title": "Rebuild a per-entity read model online while commands run; interrupt and resume",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.restore",
+        "title": "Restore",
+        "specKind": "workflow",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.write-pause",
+              "spec:application.rebuild",
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.write-pause.restore-door-without-deploy",
+        "title": "The restore door closes and opens with no deploy",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "refines",
+            "members": [
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:command.command-pipeline",
+        "title": "The command pipeline",
+        "specKind": "workflow",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:command.idempotency-and-receipts",
+        "title": "Idempotency and receipts",
+        "specKind": "behavior",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:command.receipt-table",
+        "title": "The receipts table",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:command.tenancy-and-authority",
+        "title": "Tenancy and authority",
+        "specKind": "behavior",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": true,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:context.journal",
+        "title": "The journal",
+        "specKind": "behavior",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:decisions.d18-everything-else-waits-for-trigger",
+        "title": "Everything else waits for its trigger",
+        "specKind": "decision",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:decisions.d09-rebuild-online-by-default"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:obligations.local-reaction-wrapper",
+        "title": "Local reaction wrapper",
+        "specKind": "contract",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "dependsOn",
+            "members": [
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      }
+    ],
+    "verifiedBy": [
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-abort",
+        "title": "Rebuild a cross-stream history view under a write pause; interrupt, then abort",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-installation",
+        "title": "Install a history view through the handoff",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-interrupt",
+        "title": "Rebuild a cross-stream history view under a write pause; interrupt, then resume",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-source-order-mismatch",
+        "title": "Reorder a history view's sources while its generation is interrupted",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.history-rebuild.write-pause-rebuild-version-change",
+        "title": "Deploy a changed history projection version through the handoff",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.history-rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.committed-state-read-through-query",
+        "title": "A successful command, then a query",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.committed-state-visible",
+        "title": "A successful command, then a query or subscription",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.list-pages-by-cursor",
+        "title": "A client reads a tenant's order list in pages by cursor",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.query-refused-before-disclosure",
+        "title": "A caller with no identity reads an order through the parent",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.read-models.query-refused-without-grant",
+        "title": "A caller with no grant in the tenant reads an order through the parent",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.read-models"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.rebuild.online-rebuild-interrupt-resume",
+        "title": "Rebuild a per-entity read model online while commands run; interrupt and resume",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.rebuild"
+            ]
+          }
+        ],
+        "holds": []
+      },
+      {
+        "id": "spec:application.write-pause.restore-door-without-deploy",
+        "title": "The restore door closes and opens with no deploy",
+        "specKind": "example",
+        "statedReadiness": "defined",
+        "floorReached": "ready",
+        "implemented": false,
+        "via": [
+          {
+            "type": "verifies",
+            "members": [
+              "spec:application.write-pause"
+            ]
+          }
+        ],
+        "holds": []
+      }
+    ],
+    "supersededBy": []
+  },
+  "architecture": {
+    "components": [
+      {
+        "id": "component:platform.audit",
+        "label": "the audit library: the audit record of a command and of a gate change",
+        "layer": "infrastructure",
+        "context": "platform",
+        "members": {
+          "satisfies": [],
+          "references": []
+        },
+        "restsOn": [],
+        "designs": [
+          "spec:probe.audit-design"
+        ]
+      },
+      {
+        "id": "component:platform.command",
+        "label": "the command library that runs in the parent deployment",
+        "layer": "application",
+        "context": "platform",
+        "members": {
+          "satisfies": [],
+          "references": []
+        },
+        "restsOn": [
+          "spec:command.actor-and-scope"
+        ],
+        "designs": []
+      },
+      {
+        "id": "component:platform.context",
+        "label": "the context library that runs inside every context component",
+        "layer": "adapter",
+        "context": "platform",
+        "members": {
+          "satisfies": [],
+          "references": []
+        },
+        "restsOn": [
+          "spec:context.event-envelope"
+        ],
+        "designs": []
+      },
+      {
+        "id": "component:platform.gate",
+        "label": "the maintenance gate: its table, the writer check, the two writers and the operator entries",
+        "layer": "infrastructure",
+        "context": "platform",
+        "members": {
+          "satisfies": [
+            "spec:application.write-pause",
+            "spec:probe.gate-design"
+          ],
+          "references": []
+        },
+        "restsOn": [],
+        "designs": [
+          "spec:probe.gate-design"
+        ]
+      },
+      {
+        "id": "component:platform.operations",
+        "label": "the operations library: the diagnostic record a command writes",
+        "layer": "infrastructure",
+        "context": "platform",
+        "members": {
+          "satisfies": [
+            "spec:probe.operations-design"
+          ],
+          "references": []
+        },
+        "restsOn": [],
+        "designs": [
+          "spec:probe.operations-design"
+        ]
+      },
+      {
+        "id": "component:platform.read-model",
+        "label": "the read-model library: declare, rebuild, write and read a read model",
+        "layer": "application",
+        "context": "platform",
+        "members": {
+          "satisfies": [
+            "spec:probe.read-model-design"
+          ],
+          "references": [
+            "spec:application.read-models",
+            "spec:application.rebuild"
+          ]
+        },
+        "restsOn": [],
+        "designs": [
+          "spec:probe.read-model-design"
+        ]
+      }
+    ],
+    "designs": [
+      {
+        "spec": "spec:probe.audit-design",
+        "componentId": "component:platform.audit",
+        "layer": "infrastructure",
+        "context": "platform",
+        "role": null,
+        "uses": null,
+        "anchorExists": true,
+        "realized": false,
+        "differing": [],
+        "unreadable": []
+      },
+      {
+        "spec": "spec:probe.gate-design",
+        "componentId": "component:platform.gate",
+        "layer": "application",
+        "context": "platform",
+        "role": null,
+        "uses": [
+          "component:platform.command",
+          "component:platform.context"
+        ],
+        "anchorExists": true,
+        "realized": true,
+        "differing": [
+          {
+            "field": "layer",
+            "planned": "application",
+            "realized": "infrastructure"
+          },
+          {
+            "field": "uses",
+            "planned": [],
+            "realized": [
+              "component:platform.audit",
+              "component:platform.read-model"
+            ]
+          }
+        ],
+        "unreadable": []
+      },
+      {
+        "spec": "spec:probe.history-library",
+        "componentId": "component:platform.history",
+        "layer": "application",
+        "context": "platform",
+        "role": null,
+        "uses": [
+          "component:platform.gate",
+          "component:platform.journal",
+          "component:platform.read-model"
+        ],
+        "anchorExists": false,
+        "realized": false,
+        "differing": [],
+        "unreadable": []
+      },
+      {
+        "spec": "spec:probe.operations-design",
+        "componentId": "component:platform.operations",
+        "layer": null,
+        "context": "platform",
+        "role": null,
+        "uses": null,
+        "anchorExists": true,
+        "realized": true,
+        "differing": [],
+        "unreadable": [
+          {
+            "key": "layer",
+            "value": "`middleware`"
+          }
+        ]
+      },
+      {
+        "spec": "spec:probe.read-model-design",
+        "componentId": "component:platform.read-model",
+        "layer": "application",
+        "context": "platform",
+        "role": null,
+        "uses": [
+          "component:platform.command",
+          "component:platform.context",
+          "component:platform.gate",
+          "component:platform.kernel"
+        ],
+        "anchorExists": true,
+        "realized": true,
+        "differing": [],
+        "unreadable": []
+      }
+    ],
+    "uses": [
+      {
+        "from": "component:example.inventory-context",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:example.inventory-context",
+            "to": "component:platform.context",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:example.orders-context",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:example.orders-context",
+            "to": "component:platform.context",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.audit",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:example.parent",
+            "to": "component:platform.audit",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:example.parent",
+            "to": "component:platform.command",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:example.parent",
+            "to": "component:platform.context",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.gate",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:example.parent",
+            "to": "component:platform.gate",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:example.parent",
+        "to": "component:platform.read-model",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:example.parent",
+            "to": "component:platform.read-model",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.audit",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.audit",
+            "to": "component:platform.command",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.audit",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.audit",
+            "to": "component:platform.context",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.audit",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.command",
+            "to": "component:platform.audit",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.command",
+            "to": "component:platform.context",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.gate",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.command",
+            "to": "component:platform.gate",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:platform.command",
+            "to": "component:platform.kernel",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.operations",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.command",
+            "to": "component:platform.operations",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.command",
+        "to": "component:platform.read-model",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.command",
+            "to": "component:platform.read-model",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.context",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.context",
+            "to": "component:platform.command",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.context",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:platform.context",
+            "to": "component:platform.kernel",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.gate",
+        "to": "component:platform.audit",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.gate",
+            "to": "component:platform.audit",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.gate",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.gate",
+            "to": "component:platform.command",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.gate",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.gate",
+            "to": "component:platform.context",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.gate",
+        "to": "component:platform.read-model",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.gate",
+            "to": "component:platform.read-model",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.operations",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.operations",
+            "to": "component:platform.command",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.operations",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.operations",
+            "to": "component:platform.context",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.operations",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:platform.operations",
+            "to": "component:platform.kernel",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.read-model",
+        "to": "component:platform.command",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.read-model",
+            "to": "component:platform.command",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.read-model",
+        "to": "component:platform.context",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.read-model",
+            "to": "component:platform.context",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.read-model",
+        "to": "component:platform.gate",
+        "count": 1,
+        "outside": false,
+        "units": [
+          {
+            "from": "component:platform.read-model",
+            "to": "component:platform.gate",
+            "claim": "anchored"
+          }
+        ]
+      },
+      {
+        "from": "component:platform.read-model",
+        "to": "component:platform.kernel",
+        "count": 1,
+        "outside": true,
+        "units": [
+          {
+            "from": "component:platform.read-model",
+            "to": "component:platform.kernel",
+            "claim": "anchored"
+          }
+        ]
+      }
+    ],
+    "plannedUses": [
+      {
+        "design": "spec:probe.gate-design",
+        "from": "component:platform.gate",
+        "to": "component:platform.command",
+        "outside": false
+      },
+      {
+        "design": "spec:probe.gate-design",
+        "from": "component:platform.gate",
+        "to": "component:platform.context",
+        "outside": false
+      },
+      {
+        "design": "spec:probe.history-library",
+        "from": "component:platform.history",
+        "to": "component:platform.gate",
+        "outside": false
+      },
+      {
+        "design": "spec:probe.history-library",
+        "from": "component:platform.history",
+        "to": "component:platform.journal",
+        "outside": true
+      },
+      {
+        "design": "spec:probe.history-library",
+        "from": "component:platform.history",
+        "to": "component:platform.read-model",
+        "outside": false
+      },
+      {
+        "design": "spec:probe.read-model-design",
+        "from": "component:platform.read-model",
+        "to": "component:platform.command",
+        "outside": false
+      },
+      {
+        "design": "spec:probe.read-model-design",
+        "from": "component:platform.read-model",
+        "to": "component:platform.context",
+        "outside": false
+      },
+      {
+        "design": "spec:probe.read-model-design",
+        "from": "component:platform.read-model",
+        "to": "component:platform.gate",
+        "outside": false
+      },
+      {
+        "design": "spec:probe.read-model-design",
+        "from": "component:platform.read-model",
+        "to": "component:platform.kernel",
+        "outside": true
+      }
+    ],
+    "outside": [
+      {
+        "id": "component:example.inventory-context",
+        "label": "the Inventory context component",
+        "layer": "adapter",
+        "context": "inventory",
+        "anchored": true,
+        "reachedBy": [
+          "usesTouched"
+        ]
+      },
+      {
+        "id": "component:example.orders-context",
+        "label": "the Orders context component",
+        "layer": "adapter",
+        "context": "orders",
+        "anchored": true,
+        "reachedBy": [
+          "usesTouched"
+        ]
+      },
+      {
+        "id": "component:example.parent",
+        "label": "the production composition's parent deployment over Orders and Inventory",
+        "layer": "application",
+        "context": "orders-inventory",
+        "anchored": true,
+        "reachedBy": [
+          "usesTouched"
+        ]
+      },
+      {
+        "id": "component:platform.journal",
+        "label": null,
+        "layer": null,
+        "context": null,
+        "anchored": false,
+        "reachedBy": [
+          "plannedUse"
+        ]
+      },
+      {
+        "id": "component:platform.kernel",
+        "label": "the pure domain kernel: the decider contract and the outcome types",
+        "layer": "domain",
+        "context": "platform",
+        "anchored": true,
+        "reachedBy": [
+          "touchedUses",
+          "plannedUse"
+        ]
+      }
+    ],
+    "unplaced": []
+  },
+  "decisions": [
+    {
+      "id": "spec:decisions.d01-one-mutation-per-operation",
+      "title": "One mutation per business operation",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "member": false,
+      "shapes": [
+        "spec:application.read-models"
+      ],
+      "refines": [],
+      "supersedes": [],
+      "supersededBy": [],
+      "openQuestions": 0,
+      "blockingQuestions": 0
+    },
+    {
+      "id": "spec:decisions.d04-four-outcomes",
+      "title": "Four outcomes, not a boolean",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "member": false,
+      "shapes": [
+        "spec:application.write-pause",
+        "spec:application.history-rebuild"
+      ],
+      "refines": [],
+      "supersedes": [],
+      "supersededBy": [],
+      "openQuestions": 0,
+      "blockingQuestions": 0
+    },
+    {
+      "id": "spec:decisions.d08-read-models-in-command",
+      "title": "Read models update inside the command",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "member": false,
+      "shapes": [
+        "spec:application.read-models",
+        "spec:application.rebuild"
+      ],
+      "refines": [],
+      "supersedes": [],
+      "supersededBy": [],
+      "openQuestions": 1,
+      "blockingQuestions": 0
+    },
+    {
+      "id": "spec:decisions.d09-rebuild-online-by-default",
+      "title": "Rebuild online by default, pause writes only for history-dependent views",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "member": true,
+      "shapes": [
+        "spec:application.write-pause",
+        "spec:application.rebuild",
+        "spec:application.history-rebuild"
+      ],
+      "refines": [],
+      "supersedes": [],
+      "supersededBy": [],
+      "openQuestions": 1,
+      "blockingQuestions": 0
+    },
+    {
+      "id": "spec:decisions.d11-tenant-scope-and-authority",
+      "title": "Tenant scope and authority from day one",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "member": false,
+      "shapes": [
+        "spec:application.read-models",
+        "spec:application.rebuild"
+      ],
+      "refines": [],
+      "supersedes": [],
+      "supersededBy": [],
+      "openQuestions": 0,
+      "blockingQuestions": 0
+    },
+    {
+      "id": "spec:decisions.d19-operations-travel-with-capability",
+      "title": "Operations travel with the capability",
+      "statedReadiness": "defined",
+      "floorReached": "ready",
+      "member": false,
+      "shapes": [
+        "spec:application.rebuild",
+        "spec:application.history-rebuild"
+      ],
+      "refines": [],
+      "supersedes": [],
+      "supersededBy": [],
+      "openQuestions": 1,
+      "blockingQuestions": 0
+    }
+  ],
+  "questions": [
+    {
+      "address": "spec:probe.read-models-held-example#question.waitBound",
+      "spec": "spec:probe.read-models-held-example",
+      "origin": "member",
+      "index": 0,
+      "question": "How long does a writer wait before the command is refused?",
+      "blocking": true,
+      "deferral": false,
+      "decider": "owner",
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": [
+        "spec:probe.read-models-held-example"
+      ]
+    },
+    {
+      "address": "spec:application.history-rebuild#question.historyBatchShape",
+      "spec": "spec:application.history-rebuild",
+      "origin": "member",
+      "index": 0,
+      "question": "Extension E-40, the shape of a history batch: a batch takes one stream, so a pass costs at least one scheduled mutation per source stream and the pause lasts about twice the stream count times one batch; the alternative is a batch that takes streams from one `list` page until its event budget is spent, one `history` call per stream, with the byte bound counting one baseline per stream; the first paused rebuild on the native backend measures one batch, and the shape is chosen with that number (E-40, E-9, F13, F19, D9)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.history-rebuild#question.verifyPassUnderPause",
+      "spec": "spec:application.history-rebuild",
+      "origin": "member",
+      "index": 1,
+      "question": "The verify pass under the write pause: a history view's generation is built while no source changes, so its verify pass repeats the backfill's batches and, by `spec:application.history-rebuild#design.historyVerify`, finds nothing over a covered generation, which doubles the pause; the option kept here is the pass, as D9's \"Verify coverage, then switch\" and Sc L2-6's \"writes reopen only after verification\" read, and whether a paused generation is `verified` when its backfill ends is the owner's (D9, Sc L2-6, OD-157)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.history-rebuild#question.historyBatchWriteThroughput",
+      "spec": "spec:application.history-rebuild",
+      "origin": "member",
+      "index": 2,
+      "question": "Whether a history view's batch chain, at up to 2 MiB of rows per batch scheduled with `runAfter(0)`, is held by the deployment class's write throughput limit, `spec:facts.f13-transactions-have-limits#design.limitWriteThroughput`, which the first paused rebuild on the native backend and one hosted run show (F13, E-40)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.history-rebuild#question.historyMigrationBeforePause",
+      "spec": "spec:application.history-rebuild",
+      "origin": "member",
+      "index": 3,
+      "question": "Must every source's migration that reads history finish before `startGeneration` closes its source scopes, with abort, migration completion and a fresh generation as the recovery if it did not? If enumeration must instead remain possible during that migration, which context query provides it without constructing a DTO of the wrong meaning?",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.history-rebuild#question.abortSwitchAtomicity",
+      "spec": "spec:application.history-rebuild",
+      "origin": "member",
+      "index": 4,
+      "question": "Should the native-backend abort example inject failure in the second source's audit insert, assert unchanged generation, progress, gate entries and audit records, then retry after removing the fault and assert one successful abort with both sources reopened? The same atomicity check should cover the switch that reopens them.",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.history-rebuild#question.historyTenantPauseIsolation",
+      "spec": "spec:application.history-rebuild",
+      "origin": "member",
+      "index": 5,
+      "question": "Should the native-backend example use two tenants with equal local order and stock item IDs, check their folds separately, and refuse a command that writes a paused source without a history binding in both tenants, while a command writing only an unrelated source remains allowed? Include a retry of resume after its response is lost so the same saved event page cannot change the fold twice.",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.read-models#question.parentListGenerationSwitch",
+      "spec": "spec:application.read-models",
+      "origin": "member",
+      "index": 0,
+      "question": "Probe 5 showed that the built-in `.paginate` treats `maximumRowsRead` as advice once a page has an end cursor and that a cursor it issued is refused by any other query, so a subscription over the active generation threw `InvalidCursor` at a switch; a parent list therefore pages with `paginator` of `convex-helpers`, as a context list does, and a pinned page is bounded on every run by the row cap and by the byte cap as `spec:context.queries` states it, the helper stopping at the row that reaches it and admitting that row whole, and answers `SplitRequired` beyond them (Probe 5, F13, D8, D9)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.read-models#question.readModelListBounds",
+      "spec": "spec:application.read-models",
+      "origin": "member",
+      "index": 1,
+      "question": "Extension E-24, as it reaches read models: a list over a parent read-model table calls `paginator` of `convex-helpers` with the options of `boundedPage`, a row cap of twice the item cap, with each cursor of the client's pair moved into the active generation by `pageInGeneration`, and returns through `paginationResultValidator` with its rows mapped by `readModelView`, and a client pages every list by an explicit cursor pair with no hook; these are options taken here and the owner has not ruled (E-24, S4, Probe 5, D8)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.read-models#question.parentQueryRefusal",
+      "spec": "spec:application.read-models",
+      "origin": "member",
+      "index": 2,
+      "question": "Extension E-6, as it reaches queries: a parent query establishes and authorizes its actor through `authorizeQuery`, and its refusal is the command's rejection shape, `RejectionData` with the query's name in the field `entry` and the codes `unauthenticated` or `forbidden`; the owner confirmed the word, and nothing else of the shape is new (E-6, D7, D11, Law 5)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.read-models#question.contextQueryCost",
+      "spec": "spec:application.read-models",
+      "origin": "member",
+      "index": 3,
+      "question": "Probe 3 pending: the cost of one component call in latency and function-call quota decides whether one entity's detail stays a component query or hot reads move, which is OQ1 (Probe 3, F4, OQ1)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.read-models#question.parentQueryReadBounds",
+      "spec": "spec:application.read-models",
+      "origin": "member",
+      "index": 4,
+      "question": "Extension E-45: the doc says a small cross-context view is a parent query over bounded component reads and does not give the bound; the option taken here is at most 8 component reads per parent query and at most 4 read-model rows written per command, both measured by the first experiment (E-45, D8)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.read-models#question.crossContextReadForm",
+      "spec": "spec:application.read-models",
+      "origin": "member",
+      "index": 5,
+      "question": "Extension E-9, as it reaches read models: D8 lets a small cross-context view be a parent query over bounded component reads or a read model updated in the command; the option taken here is the parent query for a view of current state, because no form of `spec:application.projection-contract` writes one row from the DTOs of two sources, and the history projection for a view that folds the events of several streams; a composite row of current state is a form for the view that needs it (E-9, E-45, D8)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.rebuild#question.rebuildBatchDriver",
+      "spec": "spec:application.rebuild",
+      "origin": "member",
+      "index": 0,
+      "question": "`@convex-dev/migrations` walks only the tables of the component it is defined in, reaches a context's rows only through a parent internal mutation written by hand against a contract its README does not document and the compiled tier needs a cast for, keeps a status apart from the generation's state, and leaves no error on its row when a batch fails past the read limit, so every batch is driven by the rebuild's own self-scheduled internal mutation and the progress row is the one checkpoint; a hosted deployment and sustained contention are not observed (Probe 6, F1, F17, D9)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.rebuild#question.rebuildBatchBounds",
+      "spec": "spec:application.rebuild",
+      "origin": "member",
+      "index": 1,
+      "question": "Extension E-40: the doc binds resumable batching to `@convex-dev/migrations` and gives no batch size; the component iterates a parent table while the sources of a read model live in a context component. The option taken here: a batch is one mutation with one cursor on the progress row and a bound of at most 100 entities, capped by the read model's declared `rowBudgetBytes` so that the parent's point reads and writes stay under 4 MiB, and by the context's byte-derived `list` page bound, which is 16 items at the default 256 KiB stream budget; every batch, the backfill and the verify pass over a context's enumeration and the purge over a parent table, is driven by the platform's own self-scheduled internal mutation, and the rebuild uses the component for nothing, because Probe 6 showed that it walks only the tables of the component it is defined in and drives a context's rows only through a parent internal mutation written by hand against a contract its README does not document; the progress row is the one checkpoint (E-40, E-24, E-9, F17, F13, F1)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.rebuild#question.rebuildGenerationPauseContract",
+      "spec": "spec:application.rebuild",
+      "origin": "member",
+      "index": 2,
+      "question": "Extension E-8: the registry states, the rollback period, what a rollback does, the gate document, the scope a paused rebuild closes and the reach of a generation are design choices the doc does not make; they are pinned in the two contracts under this workflow (E-8, E-9, E-38, D9)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.rebuild#question.rebuildReadModelForms",
+      "spec": "spec:application.rebuild",
+      "origin": "member",
+      "index": 3,
+      "question": "Extension E-8, what this workflow does not offer: the online path is pinned for a per-entity read model with one source stream type and the paused path for a history view, a `HistoryRebuildTarget` with its sources, in `spec:application.history-rebuild`; the aggregate form's rebuild is deferred with the form in its own Spec, the aggregate projection, and a row made from the current state of more than one source has no form at all, as `spec:application.projection-contract` records; `rollbackGeneration` refuses a generation that needs a write pause, because nothing would hold its sources while live commands fold onto a row that missed the events since its retirement, so such a view returns to earlier rules only through a new generation under the pause (E-8, E-9, D9, D18)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.rebuild#question.tenantListFill",
+      "spec": "spec:application.rebuild",
+      "origin": "member",
+      "index": 4,
+      "question": "Extension E-49, a deployment whose grants predate the tenant list: the tenant list is written by `insertGrant`, so on such a deployment it holds no row while `grants` holds many, and a pass over an empty list visits no tenant and still ends; the option taken here is that `startGeneration` refuses an empty list beside a grant with a message naming `fillTenants`, and `fillTenants`, an operator entry, walks the grants in bounded batches through a progress row of its own and inserts each missing tenant once; a list that holds a tenant whose first grant came after the table and misses an older one is not detected by that refusal, so the operator runs `fillTenants` on such a deployment before its first `startGeneration` (E-49, E-48, E-40, Law 11)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.write-pause#question.writePauseSourceScopes",
+      "spec": "spec:application.write-pause",
+      "origin": "member",
+      "index": 0,
+      "question": "Extension E-8: the doc names a maintenance gate every writer reads, fencing or draining of background writers, and operator resume and abort; the option taken here is one gate document per deployment holding the closed scopes, each in one `closed` state, with no fence of its own and no drain interval, because optimistic concurrency serializes every writer's gate read against the close and the generation row's fence already fences a rebuild's batches, and a refusal answered with `writePaused`, the transient code the outcome boundary reserves for this contract under its E-35, which this contract confirms; the scope a paused rebuild closes is the paused view's sources, one `source:` entry per context and stream type its bindings name, because a consistent cut must hold every writer of those streams and a use case that writes a source stream without maintaining the view would otherwise pass the gate, which is why the command declaration names what it writes under E-38 and the pipeline proves the list at its step 9; an operator entry closes only a tenant or `all`, the coarser and always safe scopes, and no scope names a read model, because nothing would close it (E-8, E-38, D9, D4, F1)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.write-pause#question.generationGateExemption",
+      "spec": "spec:application.write-pause",
+      "origin": "member",
+      "index": 1,
+      "question": "Extension E-8, the generation exemption: a batch reads the gate with the scopes `all` and its tenant, and no entry of either scope ever names a generation, so the exemption `gateAllows` makes for a given generation is reached by no reader; either the exemption goes, or a history batch reads the gate with its source scopes as well and passes them by it (E-8, D9)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:application.write-pause#question.writePauseOperatingInstructions",
+      "spec": "spec:application.write-pause",
+      "origin": "member",
+      "index": 2,
+      "question": "Should its operating instructions distinguish a stopped pass from a verified generation awaiting switch, using `getGenerations` and `getGate`, and measure the closed interval through the successful switch or abort? Keep any acceptable pause length for the owner's decision rather than deriving a timeout from a batch estimate.",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:decisions.d08-read-models-in-command#question.parentQueryPaginationSplit",
+      "spec": "spec:decisions.d08-read-models-in-command",
+      "origin": "decision",
+      "index": 0,
+      "question": "Probe 5 ran on 2026-10-01: a parent query over component queries stays reactive, and pagination crosses the boundary with pages pinned by their end cursors; the client hook lost rows after a capped page split, which slice S2 settles before it builds a list (Probe 5, F15, D8)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:decisions.d09-rebuild-online-by-default#question.rebuildContentionCoverage",
+      "spec": "spec:decisions.d09-rebuild-online-by-default",
+      "origin": "member",
+      "index": 0,
+      "question": "Probe 6 ran a backfill batch racing a live command and the migrations component on the native backend, with its results on F17; a hosted deployment and sustained contention are not run (Probe 6, F1, F17, D9)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    },
+    {
+      "address": "spec:decisions.d19-operations-travel-with-capability#question.restoreObligationCoverage",
+      "spec": "spec:decisions.d19-operations-travel-with-capability",
+      "origin": "decision",
+      "index": 0,
+      "question": "Probe 7 pending: what a restore leaves of Workpool and Workflow state decides how much of the restore procedure the obligation module must rebuild (Probe 7, F12, D19)",
+      "blocking": false,
+      "deferral": false,
+      "decider": null,
+      "links": [],
+      "provisional": null,
+      "trigger": null,
+      "holds": []
+    }
+  ]
+}
