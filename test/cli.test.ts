@@ -151,6 +151,8 @@ describe("sdp cli", () => {
       ".agents/skills/sdp-agent-surface/SKILL.md",
       ".agents/skills/sdp-authoring/SKILL.md",
       ".agents/skills/sdp-sessions/SKILL.md",
+      ".agents/skills/sdp-studio/SKILL.md",
+      ".agents/skills/sdp-vault/SKILL.md",
       "docs/agent-surface/recipes.md",
       "docs/agent-surface/architecture.md",
       "schemas/sdp-proposal-1.schema.json",

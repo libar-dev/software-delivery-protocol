@@ -126,7 +126,7 @@ Progressive disclosure — start at the top, follow the pointers down.
 | Look here | What you get | Read |
 |---|---|---|
 | `CONTEXT.md` (repo root) | **the vocabulary** — the ratified lean glossary (terms · relations · a worked dialogue · flagged ambiguities); sole source of truth for terminology; the model exposition lives in the Specs under `specs/` and in the surviving concept docs | **first, always** |
-| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — three repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), also exposed to Claude through the `.claude/skills` symlink; plus the catalog of runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, or delivery-session routing; see "Query the graph first" |
+| `.agents/skills/` + `docs/agent-surface/recipes.md` | **the agent on-ramps** — five repository-owned skills: `sdp-agent-surface` (reading the graph), `sdp-authoring` (authoring intent), `sdp-sessions` (advisory delivery-session routing), `sdp-studio` (publishing, sharing and reading the Studio), `sdp-vault` (keeping the Obsidian vault), also exposed to Claude through the `.claude/skills` symlink; plus the catalog of runnable `sdp q` bodies | **mandatory** — after `CONTEXT.md`, load the matching skill before any corpus question, Spec authoring, delivery-session routing, Studio publishing or reading, or vault work; see "Query the graph first" |
 | `specs/` | **the self-hosted corpus** — the Protocol's own Specs in its own carrier (families: `model` · `extraction` · `validation` · `carrier` · `consumers` · `protocol` · `observation` · `decisions`, plus Pack manifests for self-hosting and grouped design work); the primary carrier of intended truth | when design truth is in question — but query it through `sdp q` first, then read the carrying Spec |
 | `jtbd-stories/` | **the jobs (functional spec)** — stable `When / I want / so I can` stories (themes A–H); no personas, because consumers are heterogeneous (humans, CI, CLIs, **AI agents**) | to know *what* we serve |
 | `docs/concept/` (+ README) | **the technical design** — the surviving principle-led docs: vision & MVP boundary, founding principles (P1–P10), authoring & binding, the consumer pointers and discipline mapping (06), and the MVP acceptance of record (07); the core model, the one graph, validation & honesty and the consumer law dissolved into the `model.*`, `extraction.*`, `validation.*` and `consumers.*` Spec families; the historical MVP slice record lives in the slice-5 plan under `plans/` and in `examples/checkout-v1`, while forward roadmap intent lives in capture Specs — locate any of them with concept search (recipe 6) | to know *how* it is designed |
@@ -151,7 +151,8 @@ Key decisions (names first): the executable meta-model (MD-1); one primitive nam
 **The skills are mandatory on-ramps; the graph is the sole read model.** Before any corpus
 question, load `.agents/skills/sdp-agent-surface/SKILL.md`. Before authoring or editing a carrier,
 load `.agents/skills/sdp-authoring/SKILL.md`. Before routing delivery work, load
-`.agents/skills/sdp-sessions/SKILL.md`. The skills teach the workflow; the graph answers the
+`.agents/skills/sdp-sessions/SKILL.md`. Before publishing or reading the Studio, or keeping the
+vault, load `sdp-studio` or `sdp-vault`. The skills teach the workflow; the graph answers the
 questions.
 
 `sdp q` is the agent front door (MD-22): it derives the graph in process and evaluates a plain
@@ -187,8 +188,8 @@ the build. `sdp vault --out DIR` synchronizes linked notes in its owned `sdp/` f
 The upgrade guide is `docs/agent-surface/upgrade-guide.md`. The
 runnable recipe bodies live in `docs/agent-surface/recipes.md` (each executed as written by
 `test/recipes.test.ts`), and the repository-owned skills (`sdp-agent-surface` for reading,
-`sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing) are the
-on-ramps. In this checkout, always go through
+`sdp-authoring` for writing intent, `sdp-sessions` for advisory work-shape routing, `sdp-studio`
+for the Studio, `sdp-vault` for the vault) are the on-ramps. In this checkout, always go through
 `pnpm --silent sdp:q '<body>'` — `pnpm exec` cannot resolve the package's own bin.
 
 ## The build path

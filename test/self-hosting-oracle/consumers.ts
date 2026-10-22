@@ -1382,7 +1382,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "Beside the runtime and runnable recipe files in `dist/`, the package ships the Protocol's Spec and Pack carriers under `specs/`, the glossary `CONTEXT.md`, the decision registry `docs/concept/DECISIONS.md`, the reading, authoring and session skills under `.agents/skills/`, the recipe catalog and architecture walkthrough under `docs/agent-surface/`, and the change-proposal schema under `schemas/`; package metadata, README and license files also ship.",
+          "Beside the runtime and runnable recipe files in `dist/`, the package ships the Protocol's Spec and Pack carriers under `specs/`, the glossary `CONTEXT.md`, the decision registry `docs/concept/DECISIONS.md`, the reading, authoring, session, Studio and vault skills under `.agents/skills/`, the recipe catalog and architecture walkthrough under `docs/agent-surface/`, and the change-proposal schema under `schemas/`; package metadata, README and license files also ship.",
           "An adopter reads a cited Spec through the front door by selecting the package's `specs/` directory, installed or checked out, as the root, or by opening the carrier file. `sdp --help` names that path, as `spec:consumers.adopter-on-ramp#rule.helpNamesOnRamps` requires.",
           "The shipped corpus stays outside an adopter's own graph under the canonical discovery rules in `spec:extraction.excludes`.",
           "The package ships no source anchors. A graph derived from the shipped corpus answers what the Protocol intends; its delivery facts are empty, and verifier-gap and example-verifier-linkage warnings caused by the absent bindings are not evidence about the Protocol's realization.",
@@ -4186,6 +4186,80 @@ export const consumersSpecs = [
           "The skill links the Specs that own law and uses summaries for orientation; current graph data answers state questions and the carrying Specs answer intended truth.",
           "The skill carries one sheet that maps a delivery task to the recipe that answers it.",
         ],
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.studio-on-ramp",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/studio-on-ramp.sdp.md",
+    title: "The Studio skill teaches agents to publish, share and read the Spec Studio",
+    narrative:
+      "The Studio's work reaches an agent in three forms: a person or an agent holding only a link, a coding agent that publishes pages or receives intent a person composed in them, and a developer who sets up previews in CI. Each needs steps that most graph questions never use, so the Studio has its own skill and the reading skill points to it.",
+    sections: {
+      intent: {
+        outcome:
+          "Give an agent a shipped on-ramp that publishes and shares the Spec Studio, reads it by task from a repository or a link, and turns intent composed in it into checked carrier edits.",
+      },
+      behavior: {
+        rules: [
+          "The Studio is taught in its own shipped skill, beside the reading, authoring and session skills, and the reading skill points to it.",
+          "The skill starts from what the agent holds: a repository to publish from, a page set or a link to read, composed intent to apply, or a CI workflow to set up; a reader holding only a link reads the pages without building a graph.",
+          "The skill teaches `sdp studio` for a page set with a base graph or run records and `sdp generate` for every root without them; that every command entering the shared build removes the page set; that supplied inputs lie outside every path the build writes or removes; and that the watch rebuilds on carrier edits with no server.",
+          "The skill teaches stamping after the final build with the commit the build read, that a later build removes the stamp, that source links need a stamp served over http or https, and the reusable preview workflow's inputs, permissions, artifact, deployment and fork behavior.",
+          "The skill maps a reviewer's task to the page that answers it, and states what a page does not: it shows values the build computed, its order sets no priority, a run row is no verdict, and a Pack export carries no stamp or composing panel.",
+          "The skill teaches receiving the composing panel's hand-off: the proposal and its memo, and the scoped-intent text the proposal cannot carry. The agent writes the graph at the proposal's base, runs the proposal check, sends a moved or uncheckable change to a person, applies the rest through the authoring skill, and writes scoped-intent text into a proposal against a known base before checking it.",
+          "The skill cites the Studio's Specs for law and each verb's `--help` for its flags, and restates neither.",
+        ],
+        ruleKeys: {
+          ownSkill: "rules[0]",
+          startFromEvidence: "rules[1]",
+          publishRun: "rules[2]",
+          stampAndShare: "rules[3]",
+          readByTask: "rules[4]",
+          receiveIntent: "rules[5]",
+          citesLaw: "rules[6]",
+        },
+      },
+    },
+    deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.vault-on-ramp",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "ready",
+    file: "specs/consumers/vault-on-ramp.sdp.md",
+    title: "The vault skill teaches agents to keep an Obsidian vault of the graph",
+    narrative:
+      "A person keeps the vault open beside an agent's design pass and writes notes of their own in it. The agent has to place and refresh the vault without touching those notes, recover a refused run without losing them, and turn them into carrier edits. None of that belongs in the on-ramp for graph questions, so the vault has its own skill and the reading skill points to it.",
+    sections: {
+      intent: {
+        outcome:
+          "Give an agent a shipped on-ramp that places, synchronizes and recovers the Obsidian vault without losing a person's notes, and turns the intent a person writes there into checked carrier edits.",
+      },
+      behavior: {
+        rules: [
+          "The vault is taught in its own shipped skill, beside the reading, authoring, session and Studio skills, and the reading skill points to it.",
+          "The skill teaches choosing the vault directory: `--out` resolves against the working directory, a vault inside the root lies under a directory discovery skips or an excluded prefix and apart from every path the build writes or removes, and a person opens that directory itself as the vault.",
+          "The skill teaches that the command writes only the vault's `sdp/` folder, and that a person's notes, intent notes under `intent/` by convention, and Obsidian's settings lie outside it.",
+          "The skill teaches synchronizing and watching: `sdp vault` enters the shared build and removes the five page roots, `sdp generate --vault DIR` publishes those roots and the vault together, the watch follows carriers and TypeScript sources, and an index that opens with a failed-regeneration warning shows an older graph.",
+          "The skill teaches recovering a refused run without losing a person's work: name what each refusal means, move the person's words out of `sdp/` before deleting a refused path, and keep or delete a changed Base on purpose.",
+          "The skill teaches turning an intent note into carrier edits: convert its links to ids and entry addresses, write a change proposal against the graph the person read, run the proposal check, send a moved or uncheckable change to a person, and apply the rest through the authoring skill.",
+          "The skill cites the vault's Specs for law and the verb's `--help` for its flags, and restates neither.",
+        ],
+        ruleKeys: {
+          ownSkill: "rules[0]",
+          placement: "rules[1]",
+          ownership: "rules[2]",
+          synchronize: "rules[3]",
+          recover: "rules[4]",
+          intentNotes: "rules[5]",
+          citesLaw: "rules[6]",
+        },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],

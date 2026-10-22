@@ -300,6 +300,7 @@ specs:
   - spec:consumers.spec-studio.diagrams.folds-by-layer
   - spec:consumers.spec-studio.export
   - spec:consumers.spec-studio.export.self-contained
+  - spec:consumers.studio-on-ramp
   - spec:consumers.pack-design
   - spec:consumers.design-review.pack-design-page
   - spec:consumers.agent-surface.recipe-parameters
@@ -339,6 +340,7 @@ specs:
   - spec:consumers.obsidian-vault.iteration
   - spec:consumers.obsidian-vault.iteration.watch-rewrites-changed-notes
   - spec:consumers.obsidian-vault.iteration.watch-source-anchor
+  - spec:consumers.vault-on-ramp
   - spec:consumers.readiness-planner
   - spec:consumers.readiness-planner.dependency-order
   - spec:consumers.readiness-planner.decision-first
