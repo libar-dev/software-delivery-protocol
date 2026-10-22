@@ -1,4 +1,12 @@
-import { lstatSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
+import {
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readlinkSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,8 +14,10 @@ import { fileURLToPath } from "node:url";
 import {
   buildGraphIndex,
   deriveReadiness,
+  evaluateBody,
   evaluateReadinessFloor,
   extract,
+  generateContracts,
   graphValidatorIds,
   refines,
   spec,
@@ -1084,5 +1094,356 @@ describe("the taught question marker", () => {
     expect(probe.mentionFindings).toHaveLength(1);
     expect(probe.mentionFindings[0]?.severity).toBe("error");
     expect(probe.mentionFindings[0]?.message).toContain("points to missing entry");
+  });
+});
+
+/** The text from a heading up to the next heading of the same or a higher level. */
+function skillSection(path: string, heading: string): string {
+  const { source } = readSkill(path);
+  const start = source.indexOf(`\n${heading}\n`);
+  if (start === -1) throw new Error(`${path} has no heading ${heading}`);
+  const level = /^#+/u.exec(heading)?.[0].length ?? 2;
+  const rest = source.slice(start + heading.length + 2);
+  const next = new RegExp(`^#{1,${String(level)}} `, "mu").exec(rest);
+  return next === null ? rest : rest.slice(0, next.index);
+}
+
+function flat(text: string): string {
+  return text.replaceAll(/\s+/gu, " ");
+}
+
+/** Writes the files into a fresh extraction root, extracts it, and removes the root. */
+function probeGraph(files: Readonly<Record<string, string>>) {
+  const root = mkdtempSync(join(tmpdir(), "sdp-skill-probe-"));
+  try {
+    for (const [path, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(root, path)), { recursive: true });
+      writeFileSync(join(root, path), text);
+    }
+    return extract({ root });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+function probeCarrier(id: string, kind: string, body: string, relations = "{}"): string {
+  return `---\nid: ${id}\nkind: ${kind}\naltitude: story\nreadiness: scoped\nrelations: ${relations}\n---\n# Probe\n\n## Intent\n- outcome: Probe the taught behavior.\n\n${body}\n`;
+}
+
+/** A behavior parent whose example space opens with the Given step, and one example child. */
+function exampleCarriers(vocabularyStep: string, childStep: string): Record<string, string> {
+  return {
+    "parent.sdp.md": probeCarrier(
+      "spec:probe.parent",
+      "behavior",
+      `## Behavior\n- rule: The probe states one rule.\n\n## Example space\n\`\`\`gwt-vocabulary\nGiven ${vocabularyStep}\nWhen the probe runs\nThen the probe ends with {result:string}\n\`\`\``,
+    ),
+    "child.sdp.md": probeCarrier(
+      "spec:probe.child",
+      "example",
+      `\`\`\`gwt\nGiven ${childStep}\nWhen the probe runs\nThen the probe ends with {result: "done"}\n\`\`\``,
+      "\n  refines: spec:probe.parent\n  verifies: spec:probe.parent",
+    ),
+  };
+}
+
+const anchoredSuite =
+  "/**\n * @sdpAnchor test:probe.suite\n * @sdpVerifies spec:probe.child\n */\nexport const probeSuite = 1;\n";
+
+/** A model Spec with one keyed term, a Pack, an anchored file and an unanchored file citing it. */
+const termCorpus = {
+  "terms.sdp.md": probeCarrier(
+    "spec:probe.terms",
+    "model",
+    "## Model\n- **step key** — [#stepKey] the key a step carries",
+  ),
+  "probe.pack.sdp.md":
+    "---\nid: pack:probe.review\nspecs:\n  - spec:probe.terms\n---\n# Probe review\n\nThe probe's framing.\n",
+  "src/cited.ts":
+    "/**\n * @sdpAnchor impl:probe.cited\n * @sdpReferences spec:probe.terms\n */\n// checks spec:probe.terms#term.missing\nexport const cited = 1;\n",
+  "src/plain.ts": "// checks spec:probe.terms#term.unrecorded\nexport const plain = 1;\n",
+};
+
+/** The `sdp <verb>` line of the help's usage block. */
+function usageLine(verb: string): string {
+  const line = SDP_HELP_TEXT.split("\n").find((candidate) =>
+    candidate.startsWith(`  sdp ${verb} `),
+  );
+  if (line === undefined) throw new Error(`the help has no usage line for ${verb}`);
+  return line;
+}
+
+describe("the reviewed skill teaching", () => {
+  const surfacePath = skillPaths[0];
+  const authoringPath = skillPaths[1];
+  const sessionsPath = skillPaths[2];
+
+  it("creates the anchored suite before generating, and the build places the registrar beside it", () => {
+    const steps = skillSection(authoringPath, "## Make an example executable");
+    const anchorFirst = steps.indexOf("top-level `specTest` anchor");
+    expect(anchorFirst).toBeGreaterThan(-1);
+    expect(anchorFirst).toBeLessThan(steps.indexOf("npm run generate:self-hosting"));
+    expect(shellFenceLines(steps).map((line) => line.trim())).not.toContainEqual(
+      expect.stringContaining("sdp build . --exclude"),
+    );
+
+    const step = "a cart with {items:number} items";
+    const point = "a cart with {items: 2} items";
+    const bare = generateContracts(probeGraph(exampleCarriers(step, point)).graph);
+    const anchored = generateContracts(
+      probeGraph({ ...exampleCarriers(step, point), "suites/probe.test.ts": anchoredSuite }).graph,
+    );
+    expect([...bare.registrars.keys()]).toEqual([]);
+    expect([...anchored.registrars.keys()]).toEqual(["suites/probe.child.test.generated.ts"]);
+  });
+
+  it("keys a step in the vocabulary, as the step-key law and the contract generator agree", () => {
+    const keying = skillSection(authoringPath, "### Key a step or a term");
+    const taught = /`Given (\[#([a-z][A-Za-z0-9]*)\] ([^`]+))`/u.exec(keying);
+    const [, marked, key, step] = taught ?? [];
+    if (marked === undefined || key === undefined || step === undefined) {
+      throw new Error("the authoring skill must teach one keyed Given step");
+    }
+    const point = step.replace(/\{(\w+):number\}/u, "{$1: 2}");
+    expect(point).not.toBe(step);
+
+    const keyed = generateContracts(probeGraph(exampleCarriers(marked, point)).graph);
+    expect(keyed.findings.filter((finding) => finding.subjectId === "spec:probe.child")).toEqual(
+      [],
+    );
+    expect(keyed.files.get("probe.child.contract.ts")).toContain(`"${key}"`);
+
+    const childOnly = generateContracts(
+      probeGraph(exampleCarriers(step, `[#${key}] ${point}`)).graph,
+    );
+    expect(childOnly.files.has("probe.child.contract.ts")).toBe(false);
+    expect(childOnly.findings.map((finding) => finding.validatorId)).toContain(
+      "contracts/conflicting-step-key",
+    );
+
+    const text = flat(keying);
+    for (const clause of [
+      "after the keyword in the parent's vocabulary",
+      "inherits the key",
+      "Keying only the child when the vocabulary step is unkeyed withholds its contract",
+      "Introducing a key changes the contract key from the skeleton to that key",
+      "the oracle's outcome `kind`",
+      "performs no step-key migration",
+    ]) {
+      expect(text).toContain(clause);
+    }
+  });
+
+  it("owns publishing in one reader section that agrees with each verb's flags", () => {
+    const section = skillSection(surfacePath, "## Publish pages and notes");
+    const publish = flat(section);
+    const studioBullet =
+      section.split("\n- ").find((bullet) => bullet.startsWith("Use `sdp studio`")) ?? "";
+    const studioFlags = [...studioBullet.matchAll(/`(--[a-z-]+)/gu)].map((match) => match[1]);
+    expect(studioFlags).toEqual(["--base", "--base-label", "--runs"]);
+    for (const flag of studioFlags) expect(usageLine("studio")).toContain(flag);
+
+    const neither = /takes neither `(--[a-z-]+)` nor `(--[a-z-]+)`/u.exec(publish);
+    expect(neither).not.toBeNull();
+    for (const flag of [neither?.[1], neither?.[2]]) {
+      expect(usageLine("studio")).toContain(flag);
+      expect(usageLine("generate")).not.toContain(`${flag ?? ""} `);
+    }
+    expect(publish).toContain("writes the Studio without optional inputs");
+    expect(publish).toContain("Keep supplied inputs outside the paths the build writes or removes");
+    expect(publish).toContain("run `sdp stamp` with the corpus commit, then upload");
+    expect(publish).toContain("A later build removes the stamp");
+
+    for (const path of [authoringPath, sessionsPath]) {
+      const text = flat(readSkill(path).source);
+      expect(text).toContain('"Publish pages and notes"');
+      expect(text).not.toContain("Use `sdp stamp` after publication");
+    }
+  });
+
+  it("names the vault's owned folder, the person's notes and the roots a vault run removes", () => {
+    const publish = flat(skillSection(surfacePath, "## Publish pages and notes"));
+    for (const clause of [
+      "the command owns its `sdp/` folder",
+      "Keep personal notes outside that folder, conventionally under `intent/`",
+      "`sdp vault` enters the shared build and invalidates the five page roots",
+      "use `sdp generate --vault DIR`",
+    ]) {
+      expect(publish).toContain(clause);
+    }
+    expect(usageLine("generate")).toContain("[--vault DIR]");
+    const vaultHelp = flat(SDP_HELP_TEXT.slice(SDP_HELP_TEXT.indexOf("  vault      ")));
+    expect(vaultHelp).toContain("Keep your notes outside sdp/, by convention in intent/.");
+  });
+
+  it("teaches entry addresses, term addresses and anchored source citations as the engine derives them", async () => {
+    const addresses = flat(skillSection(surfacePath, "### Entry addresses"));
+    for (const clause of [
+      "`spec:<id>#term.<key>` a keyed Model term",
+      "An unresolved entry address mentioned in Spec prose is a Protocol prose-mentions error.",
+      "An entry address cited in source is recorded only when the source file carries a recognized anchor.",
+      "only when recipe 51 is selected through `validate --rules`; ordinary validation does not report them",
+      "a keyed rule or flow, or a keyed Model term",
+      'off-grammar keys such as `"01"`, return `address: null`',
+    ]) {
+      expect(addresses).toContain(clause);
+    }
+    expect(readSkill(surfacePath).source).not.toContain('a lawful `"01"` key included');
+    const citing = flat(skillSection(authoringPath, "### Cite an entry from source"));
+    expect(citing).toContain("recorded only when the source file carries a recognized anchor");
+    expect(citing).toContain("only when recipe 51 is selected through `validate --rules`");
+
+    const { graph } = probeGraph(termCorpus);
+    const report = validateGraph(graph);
+    const search = (await evaluateBody('return recipes(23, { term: "step key" })', {
+      graph,
+      report,
+    })) as { matches: { address: string | null }[] };
+    expect(search.matches.map((match) => match.address)).toContain("spec:probe.terms#term.stepKey");
+    expect((graph.citations ?? []).map((citation) => citation.file)).toEqual(["src/cited.ts"]);
+    expect(report.findings.filter((finding) => finding.message.includes("term.missing"))).toEqual(
+      [],
+    );
+    const citations = (await evaluateBody("return recipes(51)", { graph, report })) as {
+      findings: { subjectId: string }[];
+    };
+    expect(citations.findings.map((finding) => finding.subjectId)).toEqual([
+      "spec:probe.terms#term.missing",
+    ]);
+  });
+
+  it("states what an empty or ready answer establishes and no more", () => {
+    const surface = flat(readSkill(surfacePath).source);
+    for (const clause of [
+      "Recipe 1 lists ready, unimplemented Specs excluding examples and decisions. Recipe 33 applies the same exclusions at `defined`. An empty answer establishes absence only within that recipe's selection.",
+      '`floorReached: "ready"`: the structural floor allows `ready`. Read `statedReadiness` separately to learn whether the author has stated it.',
+    ]) {
+      expect(surface).toContain(clause);
+    }
+    expect(surface).not.toContain("the author has not stated it");
+    expect(surface).not.toContain("nothing stated `ready` is unbuilt");
+    const sessions = flat(readSkill(sessionsPath).source);
+    expect(sessions).toContain("Specs carrying both `implemented` and `has-verifier`");
+    expect(sessions).not.toMatch(/implemented, verified Specs?/u);
+  });
+
+  it("teaches a refused bundle as the end of pagination, as recipe 36 refuses", async () => {
+    const parts = flat(skillSection(surfacePath, "### Read a large scope in parts"));
+    for (const clause of [
+      "Check `diagnostics` and `budgetExceeded` before using `part.of`",
+      "with the same scope, budget and declaration mode",
+      "`budgetExceeded: true`, `part.of: null` and `oversized`",
+      "A refusal is not a partial bundle.",
+    ]) {
+      expect(parts).toContain(clause);
+    }
+    for (const path of [authoringPath, sessionsPath]) {
+      const text = flat(readSkill(path).source);
+      expect(text).toContain('"Read a large scope in parts"');
+      expect(text).not.toMatch(/from 1 through (?:the returned )?`part\.of`/u);
+    }
+
+    const { graph } = probeGraph(termCorpus);
+    const refused = (await evaluateBody(
+      'return recipes(36, { pack: "pack:probe.review", budget: 1, part: 1 })',
+      { graph },
+    )) as Record<string, unknown>;
+    expect(refused.budgetExceeded).toBe(true);
+    expect(refused.part).toEqual({ index: 1, of: null });
+    expect(refused.oversized).toBeDefined();
+    expect(refused.members).toBeUndefined();
+  });
+
+  it("keeps corpus rules in one section whose composed rules file runs as taught", async () => {
+    const rules = skillSection(authoringPath, "## Write and run corpus rules");
+    expect(rules).toContain("sdp validate --rules PATH [--params FORM]...");
+    expect(rules).toContain("spec:validation.corpus-rules#design.ruleFinding");
+    expect(rules).toContain("spec:validation.corpus-rules#rule.readsGraphOnly");
+    expect(skillSection(authoringPath, "### Place what is not settled")).not.toContain("--rules");
+    expect(skillSection(authoringPath, "### Author behavior and examples in Gherkin")).not.toMatch(
+      /recipe 5[01]|--rules/u,
+    );
+
+    const body = /```js\n([\s\S]*?)\n```/u.exec(rules)?.[1];
+    if (body === undefined) throw new Error("the corpus-rules section must carry a rules file");
+    const { graph } = probeGraph(termCorpus);
+    const run = (params: Record<string, unknown>) =>
+      evaluateBody(body, { graph, params }) as Promise<{ findings: { validatorId: string }[] }>;
+
+    expect((await run({})).findings).toEqual([]);
+    expect(
+      (await run({ addresses: ["spec:probe.terms#term.missing"] })).findings.map(
+        (finding) => finding.validatorId,
+      ),
+    ).toEqual(["unresolved-address"]);
+    await expect(run({ severity: "warn" })).rejects.toThrow(/diagnostics/u);
+  });
+
+  it("points every skill at the installed upgrade guide and triggers authoring on upgrades and rules", () => {
+    for (const path of skillPaths) {
+      expect(flat(readSkill(path).source)).toContain(
+        "`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/upgrade-guide.md` in an adopter",
+      );
+    }
+    const description = String(readSkill(authoringPath).frontmatter.description);
+    expect(description).toContain("upgrading a corpus to new Protocol capabilities");
+    expect(description).toContain("corpus rules files");
+  });
+
+  it("orders the reader as a task route and leaves recipe contracts to the catalog", () => {
+    const { source } = readSkill(surfacePath);
+    const order = [
+      "## Bootstrap discipline",
+      "## Answer a task with a recipe",
+      "## The contract",
+      "## The entry adapters",
+      "## The shape of the graph",
+      "## How delivery state derives",
+      "## Empty answers that mislead",
+    ].map((heading) => source.indexOf(`\n${heading}\n`));
+    expect(order.every((index) => index > -1)).toBe(true);
+    expect(order).toEqual([...order].sort((left, right) => left - right));
+    expect(flat(source)).toContain("The catalog owns recipe contracts; carrying Specs own law.");
+
+    const description = String(readSkill(sessionsPath).frontmatter.description);
+    expect(description.startsWith("Route delivery work")).toBe(true);
+    for (const trigger of [
+      "resuming",
+      "handing off",
+      "a change proposal received from a reviewer",
+    ]) {
+      expect(description).toContain(trigger);
+    }
+  });
+
+  it("states the graph's flat topology and which node types carry lines, as the graph does", () => {
+    const shape = flat(skillSection(surfacePath, "## The shape of the graph"));
+    for (const clause of [
+      "The graph's topology is flat",
+      "Section content may contain nested values.",
+      "Primitive and Pack nodes carry no source lines; Anchor and CodeNode nodes carry their binding file and line.",
+    ]) {
+      expect(shape).toContain(clause);
+    }
+    expect(shape).not.toContain("nothing nested");
+    expect(shape).not.toContain("Nodes carry no lines");
+
+    const { graph } = probeGraph({
+      ...termCorpus,
+      ...exampleCarriers("a cart with {items:number} items", "a cart with {items: 2} items"),
+      "suites/probe.test.ts": anchoredSuite,
+    });
+    const lines = Object.fromEntries(
+      ["Primitive", "Pack", "Anchor", "CodeNode"].map((type) => [
+        type,
+        graph.nodes
+          .filter((node) => node.nodeType === type)
+          .map((node) => typeof (node as { line?: unknown }).line),
+      ]),
+    );
+    expect(new Set(lines.Primitive)).toEqual(new Set(["undefined"]));
+    expect(new Set(lines.Pack)).toEqual(new Set(["undefined"]));
+    expect(new Set(lines.Anchor)).toEqual(new Set(["number"]));
+    expect(new Set(lines.CodeNode)).toEqual(new Set(["number"]));
   });
 });
