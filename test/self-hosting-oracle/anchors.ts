@@ -140,7 +140,44 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     role: "projection",
     label: "selects Studio pages, optional inputs and Pack exports",
   },
-
+  {
+    id: "impl:protocol.studio-diagram-layout",
+    nodeType: "CodeNode",
+    label: "title-first box placement, wrapping and band sizing for desktop and phone",
+    file: "src/projections/studio/diagrams/layout.ts",
+    site: "export function layoutDiagram(",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-diagram-routing",
+    nodeType: "CodeNode",
+    label: "port, channel and overflow-rail edge routes around boxes and labels",
+    file: "src/projections/studio/diagrams/routing.ts",
+    site: "export function routeDiagram(",
+    role: "projection",
+  },
+  {
+    id: "impl:protocol.studio-diagram-source",
+    nodeType: "CodeNode",
+    label: "escaped Mermaid flowchart source in placed box order",
+    file: "src/projections/studio/diagrams/mermaid.ts",
+    site: "export function mermaidSource(",
+    role: "projection",
+  },
+  {
+    id: "test:protocol.studio-diagram-core",
+    nodeType: "Anchor",
+    file: "test/studio-diagram-core.test.ts",
+    constant: "core",
+    site: 'describe("shared diagram core",',
+  },
+  {
+    id: "test:protocol.studio-copy-source",
+    nodeType: "Anchor",
+    file: "test/studio-diagram-core.test.ts",
+    constant: "copyAnchor",
+    site: 'it("copies the current value of the labelled textarea and selects that same area on clipboard failure",',
+  },
   {
     id: "test:protocol.studio-navigation",
     nodeType: "Anchor",
@@ -4361,6 +4398,56 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  [
+    "impl:protocol.studio-diagram-layout",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.legibility",
+  ],
+  ["impl:protocol.studio-diagram-layout", "references", "spec:consumers.spec-studio.diagram-kinds"],
+  [
+    "impl:protocol.studio-diagram-routing",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.edge-routing",
+  ],
+  [
+    "impl:protocol.studio-diagram-source",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+  ],
+  ["impl:protocol.studio-diagram-source", "references", "spec:consumers.spec-studio.diagram-kinds"],
+  ["impl:protocol.studio-diagrams", "references", "spec:consumers.spec-studio.diagram-kinds"],
+  [
+    "impl:protocol.studio-diagram-element",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.legibility",
+  ],
+  ["test:protocol.studio-copy-source", "verifies", "spec:consumers.spec-studio.page-elements"],
+  [
+    "test:protocol.studio-diagram-core",
+    "verifies",
+    "spec:consumers.spec-studio.diagram-kinds.legibility",
+  ],
+  [
+    "test:protocol.studio-diagram-core",
+    "verifies",
+    "spec:consumers.spec-studio.diagram-kinds.edge-routing",
+  ],
+  [
+    "test:protocol.studio-diagram-core",
+    "verifies",
+    "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+  ],
+  [
+    "impl:protocol.studio-diagrams",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.legibility",
+  ],
+  [
+    "impl:protocol.studio-diagrams",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.mermaid-source",
+  ],
+
   ["impl:protocol.studio-pack-page", "satisfies", "spec:consumers.spec-studio.components"],
   ["impl:protocol.studio-diagram-element", "satisfies", "spec:consumers.spec-studio.components"],
   [
@@ -5041,6 +5128,11 @@ export const expectedBindingEdges = [
     "spec:consumers.spec-studio.diagrams",
   ],
   ["impl:protocol.studio-relation-diagrams", "satisfies", "spec:consumers.spec-studio.diagrams"],
+  [
+    "impl:protocol.studio-diagrams",
+    "satisfies",
+    "spec:consumers.spec-studio.diagram-kinds.edge-routing",
+  ],
   ["impl:protocol.studio-diagrams", "satisfies", "spec:consumers.spec-studio.diagrams"],
   ["impl:protocol.studio-diagrams", "references", "spec:decisions.studio-diagram-renderer"],
   ["impl:protocol.studio-diagrams", "references", "spec:decisions.studio-build-renders"],
@@ -6041,6 +6133,9 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "impl:protocol.studio-diagram-layout",
+  "impl:protocol.studio-diagram-routing",
+  "impl:protocol.studio-diagram-source",
   "impl:protocol.studio-proposal-memo",
   "impl:protocol.studio-intent-panel",
   "impl:protocol.studio-intent-panel-element",

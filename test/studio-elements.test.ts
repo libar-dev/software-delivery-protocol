@@ -525,6 +525,8 @@ it("enhances a diagram through its view box, preserves links on click and remove
   type Listener = (event: Record<string, unknown>) => void;
   const created: FakeElement[] = [];
   class FakeElement {
+    scrollLeft = 120;
+    scrollTop = 200;
     textContent = "";
     type = "";
     className = "";
@@ -567,11 +569,18 @@ it("enhances a diagram through its view box, preserves links on click and remove
       return { width: 1000, height: 500 };
     }
     querySelector(name: string) {
-      return name === "svg" ? svg : name === "figcaption" ? caption : null;
+      return name === "svg"
+        ? svg
+        : name === "figcaption"
+          ? caption
+          : name === ".diagram-scroll"
+            ? viewport
+            : null;
     }
   }
   const svg = new FakeElement(),
-    caption = new FakeElement();
+    caption = new FakeElement(),
+    viewport = new FakeElement();
   const constructors = new Map<
     string,
     new () => FakeElement & { connectedCallback(): void; disconnectedCallback(): void }
@@ -599,6 +608,7 @@ it("enhances a diagram through its view box, preserves links on click and remove
   expect(svg.attributes.get("viewBox")).toBe("100 50 800 400");
   controls[2]?.listeners.get("click")?.({});
   expect(svg.attributes.get("viewBox")).toBe("0 0 1000 500");
+  expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([0, 0]);
   const preventDefault = vi.fn();
   svg.listeners.get("wheel")?.({ ctrlKey: false, metaKey: false, deltaY: 1, preventDefault });
   expect(preventDefault).not.toHaveBeenCalled();
