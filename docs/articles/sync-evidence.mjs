@@ -32,9 +32,11 @@ if (sourceCommit !== pinnedCommit) {
   );
 }
 
-const sourceStatus = execFileSync("git", ["-C", sourceRoot, "status", "--porcelain"], {
-  encoding: "utf8",
-}).trim();
+const sourceStatus = execFileSync(
+  "git",
+  ["-C", sourceRoot, "status", "--porcelain", "--", ".", ":(exclude)node_modules"],
+  { encoding: "utf8" },
+).trim();
 if (sourceStatus) {
   throw new Error(
     "The pinned source checkout must be clean before generating article evidence. " +
