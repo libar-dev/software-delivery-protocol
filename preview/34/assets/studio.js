@@ -316,10 +316,21 @@ ${i.text}`}
       control;
       selected;
       static get observedAttributes() {
-        return ["text"];
+        return ["text", "for"];
+      }
+      target() {
+        const id = this.getAttribute("for");
+        if (!id) return void 0;
+        return Array.from(this.ownerDocument.querySelectorAll("textarea")).find(
+          (area) => area.id === id || area.getAttribute("id") === id
+        );
       }
       attributeChangedCallback() {
-        this.control?.setAttribute("aria-label", `Copy ${this.getAttribute("text") ?? ""}`);
+        const target = this.target();
+        const label = target ? Array.from(this.ownerDocument.querySelectorAll("label")).find(
+          (label2) => label2.getAttribute("for") === (target.id || target.getAttribute("id"))
+        )?.textContent ?? target.getAttribute("aria-label") ?? "text" : this.getAttribute("text") ?? "";
+        this.control?.setAttribute("aria-label", `Copy ${label}`);
       }
       connectedCallback() {
         if (this.control) return;
@@ -328,7 +339,14 @@ ${i.text}`}
         this.control.addEventListener("click", () => {
           const clipboard = this.ownerDocument.defaultView?.navigator.clipboard;
           const write = clipboard === void 0 ? void 0 : (text) => clipboard.writeText(text);
-          void copyText(this.getAttribute("text") ?? "", write, (text) => {
+          const target = this.target();
+          if (this.getAttribute("for") && !target) return;
+          void copyText(target?.value ?? this.getAttribute("text") ?? "", write, (text) => {
+            if (target) {
+              target.focus();
+              target.select();
+              return;
+            }
             this.selected?.parentElement?.remove();
             const label = this.ownerDocument.createElement("label");
             label.textContent = "Text to copy ";
@@ -851,6 +869,11 @@ ${i.text}`}
             "Reset",
             () => {
               this.view = this.original;
+              const viewport = this.querySelector(".diagram-scroll");
+              if (viewport) {
+                viewport.scrollLeft = 0;
+                viewport.scrollTop = 0;
+              }
               this.draw();
             }
           ]
@@ -932,6 +955,7 @@ ${i.text}`}
   }
 
   // src/studio-elements/expander.ts
+  var sourceDisclosure = 'sdp-diagram details[id$=".source"], sdp-maturity-map details[id$=".source"]';
   function fragmentTarget(fragment) {
     if (fragment.length < 2) return null;
     try {
@@ -946,7 +970,7 @@ ${i.text}`}
       printed = [];
       beforePrint = () => {
         if (this.printed.length) return;
-        this.printed = Array.from(this.querySelectorAll("details")).map((details) => ({
+        this.printed = Array.from(this.querySelectorAll("details")).filter((details) => !details.matches(sourceDisclosure)).map((details) => ({
           details,
           open: details.open
         }));
@@ -1009,6 +1033,14 @@ ${i.text}`}
       ([name, chosen]) => chosen === "any" || (row[name] ?? "").split(/\s+/u).includes(chosen)
     );
   }
+  function epicFilter(href, epics) {
+    const values = new URL(href).searchParams.getAll("epic");
+    if (values.length === 0) return { value: "any", unknown: false };
+    const value = values[0] ?? "";
+    if (values.length !== 1 || value !== "none" && !epics.includes(value))
+      return { value: "any", unknown: true };
+    return { value, unknown: false };
+  }
   function registerFilter() {
     class Filter extends globalThis.HTMLElement {
       update = () => {
@@ -1027,20 +1059,77 @@ ${i.text}`}
         }
         liveOutput(this).textContent = `${String(rows.filter((row) => !row.hidden).length)} of ${String(rows.length)} shown`;
       };
+      // A link or fragment that targets a row this filter hides clears every choice, so the
+      // linked row shows; the expander opens its disclosures.
+      showTarget = (id) => {
+        const target = id === null ? null : this.ownerDocument.getElementById(id);
+        if (!target || !this.contains(target) || !target.closest("[data-row]")?.hidden)
+          return;
+        for (const select of Array.from(
+          this.querySelectorAll("select[data-filter]")
+        ))
+          select.value = "any";
+        this.update();
+        const output = liveOutput(this);
+        output.textContent = `${output.textContent}; the filter was cleared to show ${id ?? "the linked entry"}`;
+        target.scrollIntoView();
+      };
+      hashChange = () => {
+        this.showTarget(fragmentTarget(this.ownerDocument.location.hash));
+      };
+      linkClick = (event) => {
+        const link2 = event.target?.closest("a[href]");
+        const href = link2?.getAttribute("href") ?? "";
+        if (href.startsWith("#")) this.showTarget(fragmentTarget(href));
+      };
       connectedCallback() {
         const form = this.querySelector("form");
         if (form) {
           form.hidden = false;
           form.addEventListener("submit", this.preventSubmit);
         }
-        this.addEventListener("change", this.update);
+        const epic = this.querySelector('select[data-filter="epic"]');
+        if (epic) {
+          const requested = epicFilter(
+            this.ownerDocument.location.href,
+            Array.from(epic.options).map((o) => o.value).filter((v) => v !== "any" && v !== "none")
+          );
+          epic.value = requested.value;
+          const note = this.querySelector("[data-filter-note]");
+          if (note)
+            note.textContent = requested.unknown ? "Unknown epic filter. All Specs are shown." : "";
+        }
+        form?.addEventListener("reset", this.reset);
+        this.addEventListener("change", this.change);
+        this.ownerDocument.addEventListener("click", this.linkClick, true);
+        this.ownerDocument.defaultView?.addEventListener("hashchange", this.hashChange);
         this.update();
+        this.hashChange();
       }
+      change = () => {
+        const note = this.querySelector("[data-filter-note]");
+        if (note) note.textContent = "";
+        this.update();
+      };
+      reset = () => {
+        queueMicrotask(() => {
+          for (const select of Array.from(
+            this.querySelectorAll("select[data-filter]")
+          ))
+            select.value = "any";
+          const note = this.querySelector("[data-filter-note]");
+          if (note) note.textContent = "";
+          this.update();
+        });
+      };
       preventSubmit = (event) => {
         event.preventDefault();
       };
       disconnectedCallback() {
-        this.removeEventListener("change", this.update);
+        this.removeEventListener("change", this.change);
+        this.ownerDocument.removeEventListener("click", this.linkClick, true);
+        this.ownerDocument.defaultView?.removeEventListener("hashchange", this.hashChange);
+        this.querySelector("form")?.removeEventListener("reset", this.reset);
         this.querySelector("form")?.removeEventListener("submit", this.preventSubmit);
       }
     }
