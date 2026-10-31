@@ -32,6 +32,16 @@ if (sourceCommit !== pinnedCommit) {
   );
 }
 
+const sourceStatus = execFileSync("git", ["-C", sourceRoot, "status", "--porcelain"], {
+  encoding: "utf8",
+}).trim();
+if (sourceStatus) {
+  throw new Error(
+    "The pinned source checkout must be clean before generating article evidence. " +
+      `Found changed or untracked paths:\n${sourceStatus}`,
+  );
+}
+
 if (!existsSync(path.join(sourceRoot, "dist/cli/sdp.js"))) {
   throw new Error(`Build the source checkout first: npm --prefix ${sourceRoot} run build`);
 }
