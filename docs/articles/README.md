@@ -224,7 +224,7 @@ Baseline measured at `b5e0a8be`:
 
 ### Step 4: Regenerate the article evidence
 
-Marked evidence blocks are generated, not maintained by hand. The sync reads the pinned commit from this playbook, verifies that the source checkout matches it and is clean, then runs the real CLI and extracts the actual source. It refuses changed or untracked source paths before any generation. It covers graph-derived tables, build and query output, source anchors, the oracle and Mermaid.
+Marked evidence blocks are generated, not maintained by hand. The sync reads the pinned commit from this playbook, verifies that the source checkout matches it and is clean, and checks the CLI build metadata against the same commit before running anything. It refuses changed or untracked source paths and stale builds before any generation. It covers graph-derived tables, build and query output, source anchors, the oracle and Mermaid.
 
 ```sh
 # SOURCE_DIR is a built checkout of the commit named as the source baseline.

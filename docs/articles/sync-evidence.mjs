@@ -46,6 +46,18 @@ if (!existsSync(path.join(sourceRoot, "dist/cli/sdp.js"))) {
   throw new Error(`Build the source checkout first: npm --prefix ${sourceRoot} run build`);
 }
 
+const buildInfoPath = path.join(sourceRoot, "dist/cli/build-info.json");
+if (!existsSync(buildInfoPath)) {
+  throw new Error(`Build metadata is missing at ${buildInfoPath}; rebuild the pinned source checkout.`);
+}
+const buildCommit = JSON.parse(readFileSync(buildInfoPath, "utf8")).commit;
+if (buildCommit !== pinnedCommit) {
+  throw new Error(
+    `Article baseline ${pinnedCommit} does not match the CLI build ${buildCommit ?? "unknown"}. ` +
+      "Rebuild the pinned source checkout before generating evidence.",
+  );
+}
+
 const exclusions = [
   "--exclude",
   "explorations",
