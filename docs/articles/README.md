@@ -1,7 +1,7 @@
 # Media plan and living series playbook
 
 > **Pinned source baseline:** commit [`b5e0a8be`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753), the merge of [PR #36](https://github.com/libar-dev/software-delivery-protocol/pull/36).
-> **Posture:** This directory lives on a standing pull request refreshed as `main` advances. Current behavior, seed-design intent and future directions must read as three different things. Re-run Protocol-corpus measurements at a new pin rather than inheriting them; adopter and historical counts keep their cited measurement sources. Evidence verification always uses a separate checkout of the exact source pin, so manuscript commits cannot change the answers being verified. CI creates that checkout with full git history.
+> **Posture:** This directory is maintained on `main` through focused refresh PRs as the Protocol advances. The opening arc used a standing PR for review, but no permanent media diff is needed. Current behavior, seed-design intent and future directions must read as three different things. Re-run Protocol-corpus measurements at a new pin rather than inheriting them; adopter and historical counts keep their cited measurement sources. Evidence verification always uses a separate checkout of the exact source pin, so manuscript commits cannot change the answers being verified. CI creates that checkout with full git history.
 
 ## 1. The series argument
 
