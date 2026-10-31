@@ -1,7 +1,7 @@
 # Media plan and living series playbook
 
 > **Pinned source baseline:** commit [`b5e0a8be`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753), the merge of [PR #36](https://github.com/libar-dev/software-delivery-protocol/pull/36).
-> **Posture:** This directory lives on a standing pull request refreshed as `main` advances. Current behavior, seed-design intent and future directions must read as three different things. Re-run every measurement at a new pin rather than inheriting it. Evidence verification always uses a separate checkout of the exact source pin, so manuscript commits cannot change the answers being verified. CI creates that checkout with full git history.
+> **Posture:** This directory lives on a standing pull request refreshed as `main` advances. Current behavior, seed-design intent and future directions must read as three different things. Re-run Protocol-corpus measurements at a new pin rather than inheriting them; adopter and historical counts keep their cited measurement sources. Evidence verification always uses a separate checkout of the exact source pin, so manuscript commits cannot change the answers being verified. CI creates that checkout with full git history.
 
 ## 1. The series argument
 
@@ -155,15 +155,17 @@ Use `npm run --silent sdp:q --` or `pnpm --silent sdp:q` in this checkout. Never
 Generate the base graph in a temporary worktree outside the repository. The current previous pin is `b5e0a8bea1e3bedd48c616f96c9928e955792753`.
 
 ```sh
+set -euo pipefail
 BASE_SHA="b5e0a8bea1e3bedd48c616f96c9928e955792753"
 BASE_DIR="$(mktemp -d)/base"
-git worktree add --detach "$BASE_DIR" "$BASE_SHA" && ln -s "$PWD/node_modules" "$BASE_DIR/node_modules"
+trap 'git worktree remove --force "$BASE_DIR" 2>/dev/null || true' EXIT
+git worktree add --detach "$BASE_DIR" "$BASE_SHA"
+ln -s "$PWD/node_modules" "$BASE_DIR/node_modules"
 npm --prefix "$BASE_DIR" run build
 node "$BASE_DIR/dist/cli/sdp.js" build "$BASE_DIR" \
   --exclude explorations --exclude examples --exclude test/fixtures/import/parity
 npm run --silent sdp:q -- "$(cat dist/recipes/35-the-design-diff.js)" \
   --params "base=@$BASE_DIR/generated/graph.json" --params '{"detail":true}' --json
-git worktree remove --force "$BASE_DIR"
 ```
 
 Read the roadmap at the new head too:
@@ -176,6 +178,7 @@ npm run --silent sdp:q -- "$(cat dist/recipes/53-the-roadmap.js)" \
 ### Step 3: Re-derive corpus metrics
 
 ```sh
+set -euo pipefail
 npm run --silent sdp:q -- 'const tally = (xs, f) => xs.reduce((a, x) => ((a[f(x)] = (a[f(x)] || 0) + 1), a), {}); return {
   schemaVersion: graph.schemaVersion,
   specs: g.specs().length,

@@ -20,7 +20,7 @@ Before designing [`spec:consumers.agent-surface`](https://github.com/libar-dev/s
 
 The typed reader freezes a small set of entry adapters for those arrivals:
 
-- `g.findByConcept(term)` searches IDs, titles, binding labels, Pack framing, narratives and section values, and names the matching field.
+- `g.findByConcept(term)` searches IDs, titles, anchor labels, Pack framing, narratives and section values, and names the matching field.
 - `g.byFile(path)` returns every node recorded at a path and the Specs reachable from them.
 - `g.blastRadius(files)` reports directly impacted Specs and Packs, the explicit one-hop neighborhood, changed units linked to no Spec and `coverageUnknown` files.
 

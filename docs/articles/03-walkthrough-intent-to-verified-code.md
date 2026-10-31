@@ -268,7 +268,7 @@ The second example, `invalid-cart`, declares `verifies` but has no test anchor. 
 
 ## Break it on purpose
 
-Run each experiment, then restore the example with `git checkout -- examples/checkout-v1` and rerun `npm run generate:example`.
+Run each experiment in a disposable worktree. If you edit your checkout directly, restore only the files changed by that experiment and rerun `npm run generate:example`.
 
 | Experiment | Edit | Run | Expected result |
 |---|---|---|---|
