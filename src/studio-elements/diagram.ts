@@ -23,10 +23,10 @@ export function zoomViewBox(
 /**
  * @sdpAnchor impl:protocol.studio-diagram-element
  * @sdpLabel adds view-box pan, zoom and pinch to build-rendered SVG without changing its layout
- * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.export, spec:consumers.spec-studio.components
+ * @sdpSatisfies spec:consumers.spec-studio.diagrams, spec:consumers.spec-studio.responsive, spec:consumers.spec-studio.export, spec:consumers.spec-studio.components, spec:consumers.spec-studio.diagram-kinds.legibility
  * @sdpReferences spec:decisions.studio-diagram-renderer, spec:decisions.studio-build-renders
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
  */
 export function registerDiagram(): void {
   class Diagram extends globalThis.HTMLElement {
@@ -87,6 +87,11 @@ export function registerDiagram(): void {
           "Reset",
           () => {
             this.view = this.original;
+            const viewport = this.querySelector<HTMLElement>(".diagram-scroll");
+            if (viewport) {
+              viewport.scrollLeft = 0;
+              viewport.scrollTop = 0;
+            }
             this.draw();
           },
         ],

@@ -4,6 +4,9 @@ kind: behavior
 altitude: story
 readiness: ready
 relations:
+  refines:
+    target: spec:consumers.command-line
+    reason: the version flag is one more answer the command line gives an adopter
   dependsOn:
     target: spec:consumers.adopter-on-ramp
     reason: an adopter pinned to a build asks the CLI the adopter on-ramp points it to which build it runs

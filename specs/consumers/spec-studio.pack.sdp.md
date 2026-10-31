@@ -18,6 +18,7 @@ specs:
   - spec:consumers.spec-studio.lenses.packs
   - spec:consumers.spec-studio.index-page
   - spec:consumers.spec-studio.lenses.architecture
+  - spec:consumers.spec-studio.lenses.architecture.unit-register
   - spec:consumers.spec-studio.lenses.architecture.planned-apart
   - spec:consumers.spec-studio.lenses.tests
   - spec:consumers.spec-studio.lenses.tests.coverage-row

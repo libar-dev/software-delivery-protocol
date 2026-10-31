@@ -353,7 +353,7 @@ export const validationSpecs = [
   {
     id: "spec:validation.two-check-families",
     specKind: "rule",
-    altitude: "feature",
+    altitude: "epic",
     readiness: "ready",
     file: "specs/validation/two-check-families.sdp.md",
     title: "Validation separates well-formedness from non-pretending",

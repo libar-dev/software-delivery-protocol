@@ -4,7 +4,10 @@ kind: behavior
 altitude: feature
 readiness: ready
 relations:
-  refines: spec:extraction.build-pipeline
+  refines:
+    - spec:extraction.build-pipeline
+    - target: spec:extraction.executable-examples
+      reason: typed contracts carry the authored steps and example space into execution
   dependsOn:
     target: spec:carrier.step-keys
     reason: a keyed step's contract key is its step key

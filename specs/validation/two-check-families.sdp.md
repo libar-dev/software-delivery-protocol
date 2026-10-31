@@ -1,10 +1,9 @@
 ---
 id: spec:validation.two-check-families
 kind: rule
-altitude: feature
+altitude: epic
 readiness: ready
 relations:
-  refines: spec:protocol.self-hosting
   decidedBy: spec:decisions.one-validation-path
 ---
 # Validation separates well-formedness from non-pretending

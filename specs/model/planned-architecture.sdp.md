@@ -4,6 +4,9 @@ kind: model
 altitude: feature
 readiness: ready
 relations:
+  refines:
+    target: spec:model.core-model
+    reason: planned components enrich Specs before code binds them
   dependsOn:
     target: spec:model.anchors
     reason: a planned component is realized by a component anchor that satisfies its design

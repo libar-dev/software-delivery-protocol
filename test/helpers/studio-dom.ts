@@ -11,6 +11,7 @@ export function studioDom(
 ) {
   const definitions = new Map<string, new () => Element>();
   const events = new Map<string, Set<Listener>>();
+  const documentEvents = new Map<string, Set<Listener>>();
   const observers = new Map<Element, Listener>();
   const copied: string[] = [];
   const downloads = new Map<string, Blob>();
@@ -151,6 +152,17 @@ export function studioDom(
     },
     querySelectorAll(selector: string) {
       return body.querySelectorAll(selector);
+    },
+    getElementById(id: string) {
+      return (
+        body.querySelectorAll("[id]").find((element) => element.getAttribute("id") === id) ?? null
+      );
+    },
+    addEventListener(type: string, listener: Listener) {
+      documentEvents.set(type, new Set([...(documentEvents.get(type) ?? []), listener]));
+    },
+    removeEventListener(type: string, listener: Listener) {
+      documentEvents.get(type)?.delete(listener);
     },
     defaultView: {
       localStorage: storage,

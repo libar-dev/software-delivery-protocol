@@ -49,6 +49,7 @@ function decisionRelations(
  * @sdpSatisfies spec:consumers.spec-studio.registers
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders question, decision, declaration and backlog registers
  */
 export function questionsPage(ctx: PageContext): string {
   const result = answer(ctx, 20);

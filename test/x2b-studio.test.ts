@@ -95,6 +95,11 @@ it("renders export member pages from the graph alone with meaningful base and ru
   const member = required(enriched.find((p) => p.path === "specs/probe.member.html")).content;
   expect(member).toContain("earlier-design");
   expect(member).toContain("data-run-result");
+  for (const result of [plain, enriched]) {
+    const exported = required(result.find((p) => p.path === "exports/probe.html")).content;
+    expect(exported).toContain("<p><code>pack:probe</code></p>");
+    expect(exported).not.toMatch(/<code>\.\.\//u);
+  }
   expect(required(enriched.find((p) => p.path === "exports/probe.html")).content).toBe(
     required(plain.find((p) => p.path === "exports/probe.html")).content,
   );

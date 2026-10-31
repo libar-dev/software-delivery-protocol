@@ -12,6 +12,7 @@ export function escapeHtml(value: string): string {
  * @sdpSatisfies spec:consumers.spec-studio.shell
  * @sdpComponent component:protocol.projections
  * @sdpRole codec
+ * @sdpLabel escapes and maps code spans across Studio text
  */
 export function mapCodeSpans(
   value: string,

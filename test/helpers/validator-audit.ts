@@ -87,7 +87,7 @@ export function scanFindingIds(srcRoot: string): SourceScan {
  * @sdpAnchor impl:protocol.validator-self-testing
  * @sdpLabel audits the finding registries against source literals and paired probes
  * @sdpSatisfies spec:validation.validator-self-testing
- * @sdpRole utility
+ * @sdpRole validator
  */
 export function auditValidatorEvidence(
   table: readonly ProbeEntry[],

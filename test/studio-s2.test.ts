@@ -348,7 +348,8 @@ describe("Spec panels", () => {
     expect(map).toContain("stated defined");
     expect(map).toContain("floor none");
     expect(map.indexOf('href="#spec:another"')).toBeLessThan(map.indexOf('href="#spec:orders"'));
-    expect(map).not.toContain("spec:missing");
+    expect(map).toContain("Unresolved members");
+    expect(map).toContain("spec:missing");
     expect(page).toContain('<sdp-spec-card spec-id="spec:orders" variant="full">');
     const rows = [...map.matchAll(/<tr><th scope="row">(.*?)<\/th>(.*?)<\/tr>/gsu)];
     expect(rows).toHaveLength(4);
@@ -358,53 +359,18 @@ describe("Spec panels", () => {
       [[], [], [], [], []],
       [[], ["spec:above"], [], [], ["spec:equal"]],
     ];
-    const relations = [
-      [
-        "statement above floor",
-        "statement matches floor",
-        "floor above statement",
-        "floor above statement",
-        "floor above statement",
-      ],
-      [
-        "statement above floor",
-        "statement above floor",
-        "statement matches floor",
-        "floor above statement",
-        "floor above statement",
-      ],
-      [
-        "statement above floor",
-        "statement above floor",
-        "statement above floor",
-        "statement matches floor",
-        "floor above statement",
-      ],
-      [
-        "statement above floor",
-        "statement above floor",
-        "statement above floor",
-        "statement above floor",
-        "statement matches floor",
-      ],
-    ];
     rows.forEach((row, rowIndex) => {
-      const cells = [...(row[2] ?? "").matchAll(/<td>(.*?)<\/td>/gsu)].map((cell) => cell[1] ?? "");
+      const cells = [...(row[2] ?? "").matchAll(/<td>(.*?)<\/td>/gsu)].map((c) => c[1] ?? "");
       expect(cells).toHaveLength(5);
       cells.forEach((cell, column) => {
         const members = expected[rowIndex]?.[column] ?? [];
-        expect([...cell.matchAll(/<sdp-spec-card spec-id="([^"]+)"/gu)].map((m) => m[1])).toEqual(
-          members,
-        );
-        if (members.length) {
-          expect(cell).toContain(
-            `<p>${String(members.length)} · ${relations[rowIndex]?.[column] ?? ""}</p>`,
-          );
-        } else expect(cell).toBe("—");
+        if (members.length) expect(cell).toContain(`>${String(members.length)}</a>`);
+        else expect(cell).toBe("—");
       });
     });
     for (const id of ["another", "orders", "equal", "above"])
-      expect(map.match(new RegExp(`<sdp-spec-card spec-id="spec:${id}"`, "gu"))).toHaveLength(1);
+      expect([...map.matchAll(new RegExp(`<li><a href="#spec:${id}"`, "gu"))]).toHaveLength(1);
+    expect(map).not.toContain("<sdp-spec-card");
   });
   it("keeps the maturity heading and axis explanations inside the embeddable element", async () => {
     const files = coverageFiles({});
@@ -415,8 +381,8 @@ describe("Spec panels", () => {
     const labels = [...map.matchAll(/<th[^>]*>(.*?)<\/th>/gsu)].map((m) => m[1]).join(" ");
     expect(labels).not.toMatch(/<p>|above statement|above floor/u);
     const caption = /<caption>(.*?)<\/caption>/su.exec(map)?.[1] ?? "";
-    expect(caption).toContain("floor above statement");
-    expect(caption).toContain("statement above floor");
+    expect(caption).toContain("floor exceeds the statement");
+    expect(caption).toContain("statement exceeds the floor");
   });
   it("distinguishes test lines from citations by files with unrelated anchors", async () => {
     const files = coverageFiles({});
@@ -512,7 +478,7 @@ describe("Structural panels and targets", () => {
     expect(runtime).toContain('text="units.ts:14"');
     expect(page).toContain("Use the recorded structure.");
     expect([...page.matchAll(/<sdp-diagram subject="spec:orders">/gu)]).toHaveLength(2);
-    expect(page).toContain("Realization of spec:orders</figcaption>");
+    expect(page).toContain("Requirement drawing for spec:orders</figcaption>");
     const impact = page.split('id="panel.impact"')[1] ?? "";
     expect(impact).toContain("Distance 1");
     expect(impact).toContain("Distance 2");
@@ -576,7 +542,8 @@ describe("Structural panels and targets", () => {
       )?.content ?? "";
     expect(panel(page, "runtime")).toContain("impl:repository");
     expect(panel(page, "runtime")).toContain("units.ts:6");
-    expect(panel(page, "design-view")).toContain("impl:orders uses impl:repository");
+    expect(panel(page, "design-view")).toContain("impl:orders satisfies spec:orders");
+    expect(panel(page, "design-view")).not.toContain("impl:orders uses impl:repository");
   });
 });
 
@@ -614,12 +581,12 @@ it("keeps example steps and composing actions outside a short Spec card", async 
   expect(short).not.toContain("sdp-compose");
 });
 
-it("keeps trace and realization description and arrow ids distinct for one Spec subject", async () => {
+it("keeps trace and requirement description and arrow ids distinct for one Spec subject", async () => {
   const files = coverageFiles({});
   files["implementation.ts"] =
     "/**\n * @sdpAnchor impl:orders\n * @sdpSatisfies spec:orders\n */\nexport const order=1;\n";
   const page = (await pages(files)).find((p) => p.path === "specs/orders.html")?.content ?? "";
-  for (const view of ["", ".realization"])
+  for (const view of ["", ".requirement"])
     for (const part of ["text", "arrow"])
       expect(
         page.match(
@@ -627,6 +594,6 @@ it("keeps trace and realization description and arrow ids distinct for one Spec 
         ),
       ).toHaveLength(1);
   expect(page.match(/<sdp-diagram subject="spec:orders"/gu)).toHaveLength(2);
-  expect(page).toContain('aria-describedby="diagram.spec:orders.realization.text"');
+  expect(page).toContain('aria-describedby="diagram.spec:orders.requirement.text"');
   expect(page).toContain('aria-describedby="diagram.spec:orders.text"');
 });

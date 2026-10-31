@@ -7,6 +7,8 @@ relations:
   refines: spec:consumers.spec-studio
   dependsOn:
     - spec:consumers.spec-studio.data
+    - target: spec:consumers.spec-studio.diagram-kinds.requirement-trace
+      reason: the Design view reads the selected set and claims the requirement drawing defines
     - spec:consumers.derived-readiness-banner
     - spec:consumers.binding-language-views
     - spec:model.open-question-keys
@@ -16,7 +18,7 @@ relations:
     - spec:extraction.entry-locations
     - spec:consumers.pack-design
     - target: spec:consumers.spec-studio.diagrams
-      reason: the design view and the impact panel draw the realization diagram and the trace graph
+      reason: the design view and impact panel draw requirement traceability and the one-hop trace graph
     - target: spec:extraction.entry-citations
       reason: the design section shows the source lines that cite each entry
     - target: spec:model.term-addresses
@@ -44,7 +46,7 @@ The page shows only what the graph and the build's named inputs hold. The origin
 - rule: [#sectionAdditions] Inside the core's sections the page adds a composing action beside each keyed entry that proposes new text for it, the composing actions beside each open question, the rule coverage beside each keyed rule or flow and the example cards after the rules, each constraint's target, the citations beside each cited entry, and an element id on each keyed term, as the rules below state.
 - rule: [#termIds] Each keyed Model term in the core's Model section carries the element id `term.<key>`, its address after the `#`, and shows its key and its recorded line, as the core's entry ids do.
 - rule: [#citations] Beside each keyed entry an anchored source file cites, its section lists every citing file and line recipe 51 records, as text with a copy action; a pinned declaration no file cites reads `no citation recorded`.
-- rule: [#designView] The Design view panel draws the realization diagram of the units that satisfy the Spec, their components and what they use, and then lists the decision records the Spec names through `decidedBy`, each with its title linked and its decision text inline.
+- rule: [#designView] The Design view panel draws the requirement drawing defined by spec:consumers.spec-studio.diagram-kinds.requirement-trace in place of realization, then lists the decision records the Spec names through decidedBy with linked titles and decision text inline. The Runtime panel retains the implementation anchors' components and uses.
 - rule: [#runtime] The Runtime panel shows the structural neighborhood of the Spec's implementation anchors: each anchor's component with its layer and context, and the units it uses, each with its file and line; runtime observation reads not tracked.
 - rule: [#impact] The Impact panel draws the Spec's trace graph, one hop each way, and then lists what it rests on with each target's stated and derived rung, from recipe 21, and every Spec that rests on it to any depth, by distance, with the units, enabled verifiers and Packs each brings, from recipe 30.
 - rule: [#diffChangeNote] Given a base graph, a line under the header names the base and lists the Spec's changed parts, as `spec:consumers.spec-studio.diff-page` states.
@@ -57,7 +59,7 @@ The panels the core does not hold, in page order.
 - constraintsAdditions: each constraint with its target, laid out as `spec:consumers.spec-studio.verification-panels` states.
 - citationList: under a cited entry, `Cited at` and each citing file and line with a copy action, the citing anchor's id as code when the citation names one.
 - verificationPanel: the verifier list, with run evidence given run records, then the coverage grid when the Spec owns an example space, laid out as `spec:consumers.spec-studio.verification-panels` states; the panel's element id is `panel.verification`.
-- designViewPanel: the realization diagram, drawn as SVG whose nodes show their id, source file and line as the source-text rule states, then the decision records with their decision text; the panel's element id is `panel.design-view`.
+- designViewPanel: The requirement drawing, with the text equivalent naming each binding's id, source file and line under the source-text rule, then the decision records and their decision text; its element id remains `panel.design-view`.
 - runtimePanel: the structural neighborhood of the Spec's implementation anchors, each anchor's component and the code units it uses, with file and line, then `Runtime observation: not tracked`; the panel's element id is `panel.runtime`.
 - evidencePanel: the evidence fields and absence labels `spec:consumers.spec-studio.verification-panels` states, with no invented build, deployment, measurement or bill-of-materials data; the panel's element id is `panel.evidence`.
 - impactPanel: the trace graph, then `Rests on` and `Rested on by` lists, the second grouped by distance, each row with its units, enabled verifiers and Packs; the panel's element id is `panel.impact`.

@@ -1,0 +1,589 @@
+[
+  {
+    "subject": "spec:laws.law05-authorization-before-execution-and-disclosure",
+    "boxes": [
+      {
+        "id": "spec:agents.agent-runs",
+        "words": "Agent runs",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:application.read-models",
+        "words": "Read models",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:command.actor-and-scope",
+        "words": "Actor, tenant scope, namespace and grants",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:command.command-pipeline",
+        "words": "The command pipeline",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:command.idempotency-and-receipts",
+        "words": "Idempotency and receipts",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:command.outcome-boundary",
+        "words": "The outcome and rejection boundary",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:command.tenancy-and-authority",
+        "words": "Tenancy and authority",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:context.queries",
+        "words": "The context queries",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:effects.claim-call-settle",
+        "words": "Claim, call and settle",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "words": "Authorization comes before execution and disclosure",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:obligations.local-reaction-wrapper",
+        "words": "Local reaction wrapper",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:obligations.obligation-module",
+        "words": "Obligation module",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:obligations.operator-operations",
+        "words": "Operator operations on obligations",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:operations.baseline-operations",
+        "words": "Baseline operations",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:platform.transactional-domain-platform",
+        "words": "Convex transactional domain platform",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:processes.approvals",
+        "words": "Approvals bind to the exact proposal",
+        "target": "#relations"
+      }
+    ],
+    "edges": [
+      {
+        "from": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "to": "spec:platform.transactional-domain-platform",
+        "kind": "refines",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:agents.agent-runs",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.read-models",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:command.actor-and-scope",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:command.command-pipeline",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:command.idempotency-and-receipts",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:command.outcome-boundary",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:command.tenancy-and-authority",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:context.queries",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:effects.claim-call-settle",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:obligations.local-reaction-wrapper",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:obligations.obligation-module",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:obligations.operator-operations",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:operations.baseline-operations",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:platform.transactional-domain-platform",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:processes.approvals",
+        "to": "spec:laws.law05-authorization-before-execution-and-disclosure",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      }
+    ]
+  },
+  {
+    "subject": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+    "boxes": [
+      {
+        "id": "spec:application.rebuild",
+        "words": "Rebuild: generations, backfill and the write pause",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:application.write-pause",
+        "words": "Write pause",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:context.journal",
+        "words": "The journal",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:decisions.d13-deferred-work-is-an-obligation",
+        "words": "Deferred work is an obligation",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:decisions.d14-external-effects-declare-safe-repetition",
+        "words": "External effects declare how repetition is safe",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:effects.claim-call-settle",
+        "words": "Claim, call and settle",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:effects.external-effects",
+        "words": "External effects",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:effects.retry-ownership",
+        "words": "One retry owner per obligation",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "words": "Scheduled mutations run once, scheduled actions are not retried",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:facts.fact-ledger",
+        "words": "The fact ledger",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:obligations.do-nothing-check",
+        "words": "Do-nothing check at obligation activation",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:obligations.local-reaction-wrapper",
+        "words": "Local reaction wrapper",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:obligations.obligation-module",
+        "words": "Obligation module",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:obligations.sweeper",
+        "words": "Obligation sweeper",
+        "target": "#relations"
+      }
+    ],
+    "edges": [
+      {
+        "from": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "to": "spec:facts.fact-ledger",
+        "kind": "refines",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.write-pause",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:context.journal",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:decisions.d13-deferred-work-is-an-obligation",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:decisions.d14-external-effects-declare-safe-repetition",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:effects.claim-call-settle",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:effects.external-effects",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:effects.retry-ownership",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:obligations.do-nothing-check",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:obligations.local-reaction-wrapper",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:obligations.obligation-module",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:obligations.sweeper",
+        "to": "spec:facts.f09-scheduled-mutation-and-action-retry-semantics",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      }
+    ]
+  },
+  {
+    "subject": "spec:laws.law11-tenant-scope-named",
+    "boxes": [
+      {
+        "id": "spec:application.aggregate-projection",
+        "words": "Aggregate projection",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:application.generation-registry",
+        "words": "Generation registry",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:application.history-rebuild",
+        "words": "Rebuild of a history view under a write pause",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:application.parent-use-cases",
+        "words": "Parent use cases",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:application.projection-contract",
+        "words": "Projection contract",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:application.read-models",
+        "words": "Read models",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:application.rebuild",
+        "words": "Rebuild: generations, backfill and the write pause",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:application.restore",
+        "words": "Restore",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:command.actor-and-scope",
+        "words": "Actor, tenant scope, namespace and grants",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:command.command-pipeline",
+        "words": "The command pipeline",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:command.receipt-table",
+        "words": "The receipts table",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:command.tenancy-and-authority",
+        "words": "Tenancy and authority",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:context.context-component",
+        "words": "The context component",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:context.journal",
+        "words": "The journal",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:context.persistence-adapter",
+        "words": "The persistence adapter",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:context.queries",
+        "words": "The context queries",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:context.tables",
+        "words": "The context tables",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:laws.law11-tenant-scope-named",
+        "words": "Every command and query names its tenant scope",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:obligations.operator-operations",
+        "words": "Operator operations on obligations",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:obligations.record-contract",
+        "words": "Obligation record contract",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:operations.baseline-operations",
+        "words": "Baseline operations",
+        "target": "#relations"
+      },
+      {
+        "id": "spec:platform.transactional-domain-platform",
+        "words": "Convex transactional domain platform",
+        "target": "#relations"
+      }
+    ],
+    "edges": [
+      {
+        "from": "spec:laws.law11-tenant-scope-named",
+        "to": "spec:platform.transactional-domain-platform",
+        "kind": "refines",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.aggregate-projection",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.generation-registry",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.history-rebuild",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.parent-use-cases",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.projection-contract",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.read-models",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.rebuild",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:application.restore",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:command.actor-and-scope",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:command.command-pipeline",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:command.receipt-table",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:command.tenancy-and-authority",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:context.context-component",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:context.journal",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:context.persistence-adapter",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:context.queries",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:context.tables",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:obligations.operator-operations",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:obligations.record-contract",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:operations.baseline-operations",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      },
+      {
+        "from": "spec:platform.transactional-domain-platform",
+        "to": "spec:laws.law11-tenant-scope-named",
+        "kind": "constrainedBy",
+        "claim": "declared"
+      }
+    ]
+  }
+]

@@ -198,6 +198,15 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
 
       expect(reader.packs()).toEqual([
         {
+          id: "pack:checkout-roadmap",
+          title: "Checkout roadmap",
+          framing:
+            "Clarify how a customer reaches order creation, then review the shared order vocabulary. The order is advisory priority; needs come from the graph and confer no permission.",
+          file: "specs/roadmap.pack.sdp.md",
+          modelRefs: [],
+          order: "priority",
+        },
+        {
           id: "pack:checkout-v1",
           title: "Checkout v1",
           framing:

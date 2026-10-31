@@ -8,6 +8,13 @@ import { InvalidExcludePathError, normalizeExcludes } from "../extract/discover.
 import type { CliOutput } from "./output.js";
 import { writeStderr } from "./output.js";
 
+/**
+ * @sdpAnchor impl:protocol.build-args
+ * @sdpLabel shared build arguments and corpus-rule inputs
+ * @sdpSatisfies spec:consumers.command-line
+ * @sdpComponent component:protocol.cli
+ * @sdpRole codec
+ */
 export interface BuildArgs {
   readonly studioInputs?: StudioInputs;
   readonly studioBaseFile?: string;

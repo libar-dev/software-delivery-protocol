@@ -16,6 +16,7 @@
 
 ## Packs
 
+- [`pack:checkout-roadmap`](pack/checkout-roadmap.md)
 - [`pack:checkout-v1`](pack/checkout-v1.md)
 
 _Generated from the one graph by `sdp mermaid` — read-only; regenerate to update._

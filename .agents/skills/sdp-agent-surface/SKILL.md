@@ -70,6 +70,7 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Compare stated readiness with the floor                        | readiness divergence (recipe 7)                                                                            |
 | Read warnings, gaps and verifier health                        | orphans and gaps (recipe 8); declared versus enabled verifiers (recipe 10)                                 |
 | Review a Pack                                                  | the Pack review backbone (recipe 5), Pack design (recipe 29), references into a design (recipe 27)         |
+| Read a Pack or a set of Specs as one design                    | the design slice (recipe 54)                                                                               |
 | List open questions                                            | the open-question register (recipe 20)                                                                     |
 | See what a Spec rests on                                       | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
 | Change a Spec others rest on                                   | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
@@ -97,6 +98,9 @@ pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/r
 | Propose rule keys for review                                   | the rule-key proposal (recipe 48), then the proposal check (recipe 38)                                     |
 | Check prose tokens against an outside register                 | external registers (recipe 50)                                                                             |
 | Find source and test lines citing an entry                     | entry citations (recipe 51)                                                                                |
+| Read epic scopes and direct binding evidence                   | the capability map (recipe 52)                                                                             |
+| Read upcoming work in the owner's order                        | the roadmap (recipe 53)                                                                                    |
+| Render a description's forward section                         | the roadmap memo (recipe 55)                                                                               |
 
 Choose a recipe from the task sheet, then read its numbered catalog entry for parameters,
 defaults, diagnostics and answer fields. Run the shipped body unchanged, or call
@@ -178,7 +182,8 @@ and column.
 
 A recipe that takes `params.detail` returns a summary by default: every total, ids in place of
 rows, and `leftOut` naming what `detail: true` adds (changed-file impact, recipe 4; Pack design,
-recipe 29; the design diff, recipe 35). To filter any shipped answer, run it inside your own body:
+recipe 29; the design diff, recipe 35; the design slice, recipe 54).
+To filter any shipped answer, run it inside your own body:
 
 ```sh
 pnpm --silent sdp:q 'const answer = await recipes(29, { pack: params.pack }); return answer.members.filter((member) => member.blockingQuestions > 0)' --params '{"pack":"pack:design-iteration-v1"}' --json
@@ -252,8 +257,9 @@ binding target. Four node types exist:
   its title, narrative, reified section content, and the derived `deliveryFacts`. Use case, NFR,
   decision record, epic, and story are coordinates on this one type, never separate node types.
 - `Pack` — the review grouping, carrying its title, framing prose, ordered `members` as authored,
-  and `modelRefs`. `belongsTo` edges re-express membership in the global edge order; read
-  authored reading order from `members`. A Pack states no system truth.
+  optional `order`, and `modelRefs`. `belongsTo` edges re-express membership in the global edge
+  order; read authored order from `members`, advisory priority when `order` is `priority` and
+  reading order otherwise. A Pack states no system truth.
 - `Anchor` — a test or oracle binding, with the `file` and `line` of the binding itself.
 - `CodeNode` — the code unit a code anchor mints, from either form: a `codeAnchor` constant or a
   comment-form block whose id sits in the `impl:`, `api:`, or `component:` namespace. It carries

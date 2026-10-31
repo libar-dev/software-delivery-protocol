@@ -21,7 +21,8 @@ export function searchUrl(root: string, term: string): string {
  * @sdpAnchor impl:protocol.studio-search-form
  * @sdpSatisfies spec:consumers.spec-studio.page-elements
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
+ * @sdpLabel routes search forms through page-root URLs and fragments
  */
 export function registerSearch(): void {
   class Search extends globalThis.HTMLElement {

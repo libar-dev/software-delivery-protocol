@@ -9,6 +9,7 @@ export interface Pack {
   readonly framing?: string;
   readonly specs: readonly SpecId[];
   readonly modelRefs?: readonly SpecId[];
+  readonly order?: "priority";
 }
 
 export function pack(definition: Pack): Pack {
@@ -23,6 +24,7 @@ const packAggregateAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.pack-aggregate"),
   label: "Pack aggregate and model references",
   satisfies: ref("spec:model.pack-aggregate"),
+  references: [ref("spec:decisions.roadmap-priority")],
   component: componentAnchorId("component:protocol.model"),
   role: "contract",
 });

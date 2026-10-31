@@ -2022,6 +2022,27 @@ function reifyPackCall(
       continue;
     }
 
+    if (name === "order") {
+      const result = reifyStaticString(initializer, name);
+      if (!result.ok || result.value !== "priority") {
+        findings.push(
+          createExtractFinding(
+            extractFindingIds.invalidFrontmatter,
+            "error",
+            'order must be the static string "priority"',
+            file,
+            property.getStartLineNumber(),
+            subjectId,
+            name,
+          ),
+        );
+        envelopeOk = false;
+        continue;
+      }
+      data.order = result.value;
+      continue;
+    }
+
     if (name === "title" || name === "framing") {
       const result = reifyStaticString(initializer, name);
 
@@ -2068,7 +2089,7 @@ function reifyPackCall(
       createExtractFinding(
         extractFindingIds.unrecognizedProperty,
         "warning",
-        `property "${name}" is outside the pack manifest shape (id · specs · modelRefs · title · framing) and is dropped — authored content must never silently fall out of the graph (L2)`,
+        `property "${name}" is outside the pack manifest shape (id · specs · modelRefs · order · title · framing) and is dropped — authored content must never silently fall out of the graph (L2)`,
         file,
         property.getStartLineNumber(),
         subjectId,
@@ -2121,6 +2142,7 @@ const staticReificationAnchor = codeAnchor({
   satisfies: [
     ref("spec:extraction.determinism"),
     ref("spec:carrier.markdown-parser"),
+    ref("spec:carrier.markdown-pack-authoring"),
     ref("spec:model.open-question-keys"),
   ],
   component: componentAnchorId("component:protocol.extract"),

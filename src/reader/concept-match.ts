@@ -46,7 +46,8 @@ function contains(value: unknown, needle: string, includeKeys: boolean): boolean
  * @sdpAnchor impl:protocol.studio-concept-match
  * @sdpSatisfies spec:consumers.spec-studio.search
  * @sdpComponent component:protocol.reader
- * @sdpRole utility
+ * @sdpRole reader
+ * @sdpLabel matches concepts deterministically across graph and browser queries
  */
 export function matchConcept(
   records: readonly ConceptRecord[],

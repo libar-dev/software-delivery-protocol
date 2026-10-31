@@ -4,6 +4,9 @@ kind: behavior
 altitude: feature
 readiness: ready
 relations:
+  refines:
+    target: spec:extraction.executable-examples
+    reason: step dispatch and failure rendering execute a bound example
   dependsOn:
     target: spec:extraction.executable-contracts
     reason: runs the step contracts the build emits

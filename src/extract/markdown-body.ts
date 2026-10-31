@@ -119,8 +119,8 @@ function narrative(lines: readonly MarkdownLine[], file: string, findings: Findi
 
 const markdownBodyGrammarAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.markdown-body-grammar"),
-  label: "enforces the closed Markdown body grammar",
-  satisfies: ref("spec:carrier.markdown-body-grammar"),
+  label: "maps Markdown body content to typed prose owners",
+  satisfies: [ref("spec:carrier.markdown-body-grammar"), ref("spec:carrier.prose-ownership-rule")],
   component: componentAnchorId("component:protocol.extract"),
   role: "codec",
 });

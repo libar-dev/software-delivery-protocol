@@ -28,7 +28,13 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
-import { expect, it, onTestFinished } from "vitest";
+import { expect, it, onTestFinished, vi } from "vitest";
+
+// Every example here drives the CLI through full validation runs, and each watch example runs three
+// cycles of a probe corpus; under CI load that outruns Vitest's default five seconds, so the file's
+// tests, registered by the generated registrars, carry the heavy-test timeout.
+const REACH_EXAMPLE_TIMEOUT_MS = 30_000;
+vi.setConfig({ testTimeout: REACH_EXAMPLE_TIMEOUT_MS });
 import { evaluateBody, extract } from "../src/index.js";
 import { unspecified } from "@libar-dev/software-delivery-protocol/runner";
 import type {
@@ -354,6 +360,23 @@ const watchAdapters = (contract: Contract) => ({
     if (expected === undefined) throw new Error("the watch oracle does not specify this point");
     assertThens(contract, world.answer, expected);
   },
+});
+const WATCH_EXAMPLE_SPECS = [
+  "spec:validation.corpus-rules.rules-edit-starts-a-cycle",
+  "spec:validation.corpus-rules.params-edit-starts-a-cycle",
+  "spec:validation.corpus-rules.unreadable-params-fail-one-file",
+];
+it("gives every watch example the heavy-test timeout", ({ task }) => {
+  const suites = task.file.tasks.filter(
+    (entry) =>
+      entry.type === "suite" && WATCH_EXAMPLE_SPECS.some((id) => entry.name.endsWith(`(${id})`)),
+  );
+  expect(
+    suites.map((suite) => suite.name.slice(suite.name.lastIndexOf("(") + 1, -1)).sort(),
+  ).toEqual([...WATCH_EXAMPLE_SPECS].sort());
+  for (const suite of suites)
+    for (const example of suite.type === "suite" ? suite.tasks : [])
+      expect(example.type === "test" ? example.timeout : 0).toBe(REACH_EXAMPLE_TIMEOUT_MS);
 });
 it("leaves non-watch corpus-rule points and incomplete points unspecified", () => {
   for (const first of [

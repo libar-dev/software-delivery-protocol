@@ -17,7 +17,7 @@ export function gatherInPage(host: HTMLElement, intent: GatheredIntent): void {
  * @sdpSatisfies spec:consumers.spec-studio.intent-panel, spec:consumers.spec-studio.components
  * @sdpReferences spec:consumers.edit-model, spec:consumers.intent-composition
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
  */
 export function registerIntentPanel(): void {
   class Panel extends globalThis.HTMLElement implements IntentPanelElement {

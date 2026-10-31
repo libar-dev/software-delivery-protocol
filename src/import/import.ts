@@ -37,16 +37,23 @@ function importFinding(
   };
 }
 
+/**
+ * Start with importTypeScriptSpec here for source acceptance and orchestration.
+ * Read emit-markdown.ts for section and relation serialization, then
+ * markdown-fidelity.ts for the reparse comparison before emission returns.
+ */
 const importComponentAnchor = codeAnchor({
   id: codeAnchorId("component:protocol.import"),
-  label: "Protocol import seam",
+  label: "canonical conversion with a fidelity boundary",
   satisfies: ref("spec:carrier.sdp-import"),
   uses: [
     componentAnchorId("component:protocol.extract"),
     componentAnchorId("component:protocol.validate"),
+    componentAnchorId("component:protocol.notation"),
   ],
   layer: "application",
   context: "protocol",
+  role: "service",
 });
 const sdpImportCoreAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.sdp-import-core"),

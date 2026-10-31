@@ -1,6 +1,6 @@
 # Design Review
 
-The Design Review — a pure projection of the one graph (`graph.json`, schema `0.11.0`): 17 nodes · 32 edges.
+The Design Review — a pure projection of the one graph (`graph.json`, schema `0.12.0`): 18 nodes · 34 edges.
 
 ## Specs
 
@@ -20,6 +20,7 @@ The Design Review — a pure projection of the one graph (`graph.json`, schema `
 
 ## Packs
 
+- [`pack:checkout-roadmap`](pack/checkout-roadmap.md) Checkout roadmap — Clarify how a customer reaches order creation, then review the shared order vocabulary. The order is advisory priority; needs come from the graph and confer no permission.
 - [`pack:checkout-v1`](pack/checkout-v1.md) Checkout v1 — Let customers create orders from valid carts with honest authored traceability.
 
 ## Findings

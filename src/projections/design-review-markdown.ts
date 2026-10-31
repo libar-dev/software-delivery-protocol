@@ -1,6 +1,14 @@
 import { escapeRenderedField } from "./owned-prose.js";
 
-/** `spec:orders.create-order` → `spec/orders.create-order.md` — bijective by the id grammar (one `:`). */
+/**
+ * `spec:orders.create-order` → `spec/orders.create-order.md` — bijective by the id grammar (one `:`).
+ *
+ * @sdpAnchor impl:protocol.design-review-codec
+ * @sdpLabel shared Design Review Markdown paths and links
+ * @sdpSatisfies spec:consumers.design-review
+ * @sdpComponent component:protocol.projections
+ * @sdpRole codec
+ */
 export function pagePathOf(id: string): string {
   const colonIndex = id.indexOf(":");
 

@@ -39,7 +39,7 @@ const claimTaxonomyTestAnchor = specTest({
 void claimTaxonomyTestAnchor;
 
 describe("graph schema", () => {
-  it("serializes authored entry order with description first and schema 0.11.0", () => {
+  it("serializes authored entry order with description first and schema 0.12.0", () => {
     const graph = deriveFixtureGraph({
       specs: [
         spec({
@@ -62,7 +62,7 @@ describe("graph schema", () => {
     });
     const serialized = JSON.parse(serializeGraph(graph)) as GraphSchema;
     const node = serialized.nodes.find((entry) => entry.nodeType === "Primitive");
-    expect(serialized.schemaVersion).toBe("0.11.0");
+    expect(serialized.schemaVersion).toBe("0.12.0");
     expect(Object.keys(node?.sections?.design ?? {})).toEqual([
       "description",
       "zeta",
@@ -209,12 +209,19 @@ The Model prose.
     const root = fileURLToPath(new URL("../examples/checkout-v1", import.meta.url));
     const { graph, report } = extract({ root });
     expect(report.findings).toEqual([]);
-    const pack = graph.nodes.find((node) => node.nodeType === "Pack");
-    if (pack?.nodeType !== "Pack") throw new Error("Missing example Pack.");
-    expect(pack.claim).toBe("declared");
-    const membership = graph.edges.filter((edge) => edge.type === "belongsTo");
-    expect(membership.map((edge) => edge.from).sort()).toEqual([...pack.members].sort());
-    expect(membership.every((edge) => edge.to === pack.id && edge.claim === pack.claim)).toBe(true);
+    const packs = graph.nodes.filter((node) => node.nodeType === "Pack");
+    expect(packs.map((pack) => pack.id).sort()).toEqual([
+      "pack:checkout-roadmap",
+      "pack:checkout-v1",
+    ]);
+    for (const pack of packs) {
+      expect(pack.claim).toBe("declared");
+      const membership = graph.edges.filter(
+        (edge) => edge.type === "belongsTo" && edge.to === pack.id,
+      );
+      expect(membership.map((edge) => edge.from).sort()).toEqual([...pack.members].sort());
+      expect(membership.every((edge) => edge.claim === pack.claim)).toBe(true);
+    }
     const verifies = graph.edges.filter((edge) => edge.type === "verifies");
     expect(new Set(verifies.map((edge) => edge.claim))).toEqual(new Set(["declared", "anchored"]));
     expect(
@@ -240,7 +247,7 @@ The Model prose.
   });
 
   it("exports the graph schema contracts", () => {
-    expect(schemaVersion).toBe("0.11.0");
+    expect(schemaVersion).toBe("0.12.0");
     expect(graphClaims).toEqual(["declared", "anchored", "inferred"]);
     expect(graphNodeTypes).toEqual(["Primitive", "Pack", "Anchor", "CodeNode"]);
     expect(deliveryFactNames).toEqual(["implemented", "has-verifier", "observed"]);

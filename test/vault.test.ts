@@ -48,6 +48,14 @@ import { renderVault } from "../src/projections/vault/notes.js";
 import { extract } from "../src/extract/index.js";
 import { createReader } from "../src/reader/reader.js";
 import { bytes, carrier, checkLinks, probe, put } from "./helpers/vault-probe.js";
+import { ref, specTest, testAnchorId } from "../src/anchors.js";
+
+const priorityNoteTest = specTest({
+  id: testAnchorId("test:protocol.vault-priority"),
+  verifies: ref("spec:consumers.obsidian-vault.notes"),
+});
+void priorityNoteTest;
+
 function scratch(run: (root: string) => void): void {
   const root = mkdtempSync(join(tmpdir(), "sdp-vault-unit-"));
   try {
@@ -56,6 +64,34 @@ function scratch(run: (root: string) => void): void {
     rmSync(root, { recursive: true, force: true });
   }
 }
+it("changes the Pack note's meaning when only advisory priority changes", () => {
+  scratch((root) => {
+    probe(root);
+    const { graph, report } = extract({ root });
+    const ordinary = renderVault(graph, report.findings);
+    const priority = renderVault(
+      {
+        ...graph,
+        nodes: graph.nodes.map((node) =>
+          node.nodeType === "Pack" ? { ...node, order: "priority" as const } : node,
+        ),
+      },
+      report.findings,
+    );
+    const note = (files: typeof ordinary) =>
+      files.find((file) => file.path === "packs/pack.probe.md")?.content ?? "";
+    expect(note(ordinary)).toContain("## Members, in reading order");
+    expect(note(ordinary)).not.toContain("order:");
+    expect(note(priority)).toContain('order: "priority"');
+    expect(note(priority)).toContain("## Members, in advisory priority order");
+    expect(note(priority)).toContain("Priority confers no permission or sequencing requirement.");
+    const members = (text: string) => text.split("\n").filter((line) => /^\d+\. /u.test(line));
+    expect(members(note(priority))).toEqual(members(note(ordinary)));
+    expect(priority.filter((file) => file.path !== "packs/pack.probe.md")).toEqual(
+      ordinary.filter((file) => file.path !== "packs/pack.probe.md"),
+    );
+  });
+});
 it.each([
   ...buildOwnedPaths,
   "generated/Design-Review",

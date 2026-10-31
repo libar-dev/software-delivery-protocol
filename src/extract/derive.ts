@@ -154,6 +154,7 @@ const packMemberOrderAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.pack-member-order"),
   label: "keeps manifest member order on the Pack node",
   satisfies: ref("spec:extraction.pack-member-order"),
+  references: [ref("spec:decisions.roadmap-priority")],
   component: componentAnchorId("component:protocol.extract"),
   role: "extractor",
 });
@@ -173,6 +174,7 @@ function derivePackNode(entry: ReifiedPack, memberIds: readonly string[]): PackN
     file: entry.file,
     members: [...memberIds],
     ...(Array.isArray(modelRefs) ? { modelRefs: modelRefs as readonly string[] } : {}),
+    ...(entry.data.order === "priority" ? { order: entry.data.order } : {}),
   };
 }
 

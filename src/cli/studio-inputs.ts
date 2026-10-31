@@ -11,6 +11,7 @@ import { writeStderr } from "./output.js";
  * @sdpSatisfies spec:consumers.spec-studio.data.inputs
  * @sdpComponent component:protocol.cli
  * @sdpRole codec
+ * @sdpLabel reads named Studio base graphs and run inputs
  */
 export function readStudioBase(
   path: string,

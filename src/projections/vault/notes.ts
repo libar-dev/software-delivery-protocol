@@ -91,6 +91,7 @@ export function renderVault(
           aliases: [node.id, ...(node.title === undefined ? [] : [node.title])],
           title: node.title,
           manifest: node.file,
+          order: node.order,
         }),
         banner("Pack manifest", node.file),
         "",
@@ -102,7 +103,13 @@ export function renderVault(
         "",
         `![[${notePath(node.id).slice(0, -3)}.base]]`,
         "",
-        "## Members, in reading order",
+        ...(node.order === "priority"
+          ? [
+              "Priority confers no permission or sequencing requirement.",
+              "",
+              "## Members, in advisory priority order",
+            ]
+          : ["## Members, in reading order"]),
         "",
       ];
       context.members.forEach((m, i) =>

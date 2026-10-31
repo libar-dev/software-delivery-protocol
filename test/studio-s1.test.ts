@@ -45,7 +45,6 @@ import {
   renderDiagram,
   traceDiagram,
   memberDiagram,
-  realizationDiagram,
 } from "../src/projections/studio/diagrams/index.js";
 import { createStudioData } from "../src/projections/studio/data.js";
 import { renderStudio } from "./helpers/studio-render.js";
@@ -141,7 +140,7 @@ describe("Studio diagrams", () => {
       "Shown as text: this drawing exceeds the bound of 40 boxes and 100 edges.",
     );
   });
-  it("orders grid contexts and layers and wraps after six boxes with pinned label metrics", () => {
+  it("orders grid contexts and layers and wraps cells within the fixed width budget", () => {
     const input = architectureInput(12, 1, 1);
     const drawing = required(
       architectureDiagrams({
@@ -171,12 +170,21 @@ describe("Studio diagrams", () => {
     ]);
     const nodes = groups(c0, "node");
     const y = (i: number) => /<rect x="\d+" y="(\d+)"/u.exec(required(nodes[i]))?.[1];
-    expect(y(0)).toBe(y(5));
-    expect(Number(y(6))).toBeGreaterThan(Number(y(5)));
-    expect(y(6)).toBe(y(11));
+    expect(new Set(nodes.map((_, i) => y(i))).size).toBeGreaterThan(1);
+    for (const row of new Set(nodes.map((_, i) => y(i)))) {
+      const rectangles = nodes
+        .filter((_, i) => y(i) === row)
+        .map((node) => {
+          const rect = /<rect x="(\d+)" y="\d+" width="(\d+)"/u.exec(node);
+          return { x: Number(rect?.[1]), width: Number(rect?.[2]) };
+        });
+      expect(
+        Math.max(...rectangles.map((r) => r.x + r.width)) - Math.min(...rectangles.map((r) => r.x)),
+      ).toBeLessThanOrEqual(264);
+    }
     expect(labelLines("component:probe.a-very-long-identifier")).toEqual([
-      "component:probe.",
-      "a-very-long-identifier",
+      "component:probe.a-very-long-",
+      "identifier",
     ]);
     expect(labelLines("a-very-long-identifier-with-hyphens-only")).toEqual([
       "a-very-long-identifier-with-",
@@ -184,7 +192,8 @@ describe("Studio diagrams", () => {
     ]);
     const node = required(nodes[0]);
     const width = Number(/width="(\d+)"/u.exec(node)?.[1]);
-    expect(width).toBe(Math.ceil("component:probe.c01".length * 7.5) + 24);
+    expect(width).toBeLessThanOrEqual(264);
+    expect(node).toContain("…c01");
     expect(html).toContain('role="img"');
     expect(html).toContain('aria-describedby="diagram.architecture.text"');
   });
@@ -230,9 +239,9 @@ describe("Studio diagrams", () => {
   });
   it("places outgoing relation bands above the subject and folds ties in relation order", () => {
     const subject = { id: "spec:probe.subject", words: "Subject", target: "#s" };
-    const kinds = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
+    const kinds = ["refines", "dependsOn"];
     const boxes = kinds.flatMap((kind) =>
-      Array.from({ length: 11 }, (_, i) => ({
+      Array.from({ length: 10 }, (_, i) => ({
         id: `spec:probe.${kind}${String(i)}`,
         words: kind,
         target: "#relations",
@@ -241,12 +250,13 @@ describe("Studio diagrams", () => {
     const edges = boxes.map((box) => ({ from: subject.id, to: box.id, kind: box.words }));
     const trace = traceDiagram({ subject: subject.id, boxes: [subject, ...boxes], edges });
     expect(trace.boxes.filter((b) => b.folded).map((b) => b.band)).toEqual(["Outgoing refines"]);
+    expect(trace.boxes).toHaveLength(12);
     const bands = groups(renderDiagram(trace), "band").map(
       (g) => /data-label="([^"]+)"/u.exec(g)?.[1],
     );
     expect(bands).toEqual([...kinds.map((kind) => `Outgoing ${kind}`), "Subject"]);
   });
-  it("folds trace relation groups and leaves member and realization overflow as text", () => {
+  it("folds trace relation groups and leaves member overflow as text", () => {
     const boxes = architectureInput(50, 1, 1).boxes;
     const relations = boxes
       .slice(1)
@@ -257,9 +267,6 @@ describe("Studio diagrams", () => {
     expect(renderDiagram(memberDiagram({ subject: "members", boxes, edges: [] }))).not.toContain(
       "<svg",
     );
-    expect(
-      renderDiagram(realizationDiagram({ subject: "realization", boxes, edges: [] })),
-    ).not.toContain("<svg");
   });
 });
 const empty: GraphSchema = { schemaVersion, nodes: [], edges: [] };
@@ -340,7 +347,7 @@ describe("Studio lenses", () => {
       spy.mockRestore();
     }
   });
-  it("publishes all four ordered lenses and honest evidence without script", async () => {
+  it("publishes all five ordered lenses and honest evidence without script", async () => {
     const data = await createStudioData(
       fixture({
         "a.sdp.md": carrier("spec:probe.a", "behavior", "{}", "\n## Behavior\n- rule: A.\n"),
@@ -368,9 +375,11 @@ describe("Studio lenses", () => {
     const nav = required(/<nav aria-label="Studio">(.*?)<\/nav>/u.exec(evidence)?.[1]);
     expect([...nav.matchAll(/<a[^>]*>(.*?)<\/a>/gu)].map((m) => m[1])).toEqual([
       "Packs",
+      "Capabilities",
       "Architecture",
       "Tests",
       "Evidence",
+      "Roadmap",
       "Queue",
       "Questions",
       "Decisions",
@@ -1024,8 +1033,11 @@ it.each([false, true])(
       expect(spy.mock.calls[0]?.[1].report).toBe(report);
       const expected = [
         ...[17, 20, 24, 31, 33, 43, 44, 46, 51].map((number) => ({ number, params: {} })),
+        { number: 52, params: { detail: true } },
+        { number: 53, params: {} },
         ...(withBase ? [{ number: 35, params: { base: reader.graph, detail: true } }] : []),
         { number: 29, params: { pack: "pack:probe" } },
+        { number: 54, params: { pack: "pack:probe", detail: true } },
         ...(withBase
           ? [{ number: 35, params: { base: reader.graph, pack: "pack:probe", detail: true } }]
           : []),
@@ -1072,16 +1084,6 @@ it("keeps label lines bounded and orders member depths numerically with outside 
     ...Array.from({ length: 12 }, (_, i) => `Member depth ${String(i)}`),
     "Outside component",
   ]);
-  const realization = realizationDiagram({
-    subject: "spec:probe",
-    boxes: [
-      { id: "impl:a", words: "Unit", target: "#unit", band: "Satisfying units" },
-      { id: "component:a", words: "Owner", target: "#owner", band: "Components" },
-      { id: "component:b", words: "Used", target: "#used", band: "Uses" },
-    ].reverse(),
-    edges: [],
-  });
-  expect(realization.boxes.map((b) => b.band)).toEqual(["Satisfying units", "Components", "Uses"]);
 });
 it("labels planned uses, reports unreadable designs and keeps unknown structure visible", async () => {
   const reader = fixture({
@@ -1142,7 +1144,7 @@ it("names a single edge relation once in the legend and preserves its text equiv
     ...drawing,
     edges: [required(drawing.edges[0]), { from: "a", to: "c", kind: "dependsOn" }],
   });
-  expect(mixed).not.toContain('class="diagram-legend"');
+  expect(mixed).not.toContain("data-edge-key=");
   expect(groups(mixed, "edge").every((edge) => edge.includes("<text"))).toBe(true);
   expect(mixed).toContain("dependsOn</text>");
 });
@@ -1156,16 +1158,17 @@ it("names solid and planned uses once without repeating edge labels", () => {
       { id: "b", words: "Second", target: "#b", planned: true },
     ],
     edges: [
-      { from: "a", to: "b", kind: "uses" },
-      { from: "b", to: "a", kind: "plans to use" },
+      { from: "a", to: "b", kind: "uses", claim: "anchored" },
+      { from: "b", to: "a", kind: "plans to use", claim: "declared" },
     ],
   };
   const html = renderDiagram(drawing);
   expect(html).toContain(
-    '<p class="diagram-legend">Arrows: uses. Dashed arrows: plans to use.</p>',
+    '<p class="diagram-legend">Arrows: uses (anchored). Dashed arrows: plans to use (declared).</p>',
   );
   expect(groups(html, "edge").every((edge) => !edge.includes("<text"))).toBe(true);
+  expect(html).not.toContain("data-edge-key");
   expect(html).toContain('stroke-dasharray="6 4"');
-  expect(html).toContain("<li>b plans to use a</li>");
-  expect(html).toContain("<li>a uses b</li>");
+  expect(html).toContain("<li>b plans to use a · declared</li>");
+  expect(html).toContain("<li>a uses b · anchored</li>");
 });

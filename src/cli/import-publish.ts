@@ -23,9 +23,9 @@ interface PreparedImport extends PlannedImport {
 /**
  * @sdpAnchor impl:protocol.sdp-import-publish
  * @sdpLabel stages Markdown siblings and publishes them with atomic hard links
- * @sdpReferences spec:carrier.sdp-import
  * @sdpComponent component:protocol.cli
- * @sdpRole service
+ * @sdpRole publisher
+ * @sdpSatisfies spec:carrier.sdp-import
  */
 export function publishImports(
   planned: readonly PlannedImport[],

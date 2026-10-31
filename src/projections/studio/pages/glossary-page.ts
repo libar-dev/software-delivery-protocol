@@ -9,6 +9,7 @@ import { titleLink, total } from "./register-common.js";
  * @sdpSatisfies spec:consumers.spec-studio.glossary-page
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders Model terms with their entry-address links
  */
 export function glossaryPage(ctx: PageContext): string {
   const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);

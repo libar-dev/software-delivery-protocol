@@ -1,12 +1,9 @@
 ---
 id: spec:model.core-model
 kind: model
-altitude: feature
+altitude: epic
 readiness: ready
 relations:
-  refines:
-    target: spec:protocol.self-hosting
-    reason: the self-hosted corpus models itself with this primitive
   decidedBy:
     - spec:decisions.one-primitive
     - spec:decisions.example-realization-posture

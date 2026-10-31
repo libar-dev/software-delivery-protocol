@@ -23,6 +23,45 @@ Keep the result as your starting measurement. Add your project's `--root` and `-
 arguments where needed. The catalog is
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md`.
 
+## Organize features in epics
+
+Here a capability is one of your corpus's own intended outcomes, not a Protocol capability
+that capability adoption counts. Follow `spec:consumers.capability-map` for its law. Read the capability-map summary, recipe 52, before choosing new parents:
+
+```sh
+pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/recipes/52-the-capability-map.js)" --json
+pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/recipes/07-readiness-divergence.js)" --json
+pnpm exec sdp q "$(cat node_modules/@libar-dev/software-delivery-protocol/dist/recipes/11-the-lower-ladder.js)" --json
+```
+
+Pass `--params '{"detail":true}'` for the complete map, or combine it with `epic` to read one
+epic. Inspect `damage` and `cycles`; a refused parameter returns `diagnostics` without a map.
+
+An epic states an enduring intended outcome. When an existing hub already owns that outcome,
+change its altitude to `epic` and preserve its id, kind and intent. Author a new epic only when
+no existing Spec owns the outcome. Choose parents by reading intended truth; paths, Pack
+membership and dependencies do not establish refinement.
+
+Keep genuine intermediate parents and multiple-parent relationships. A capability map can show
+an epic inside another epic. Examples and decisions remain visible, and descendant counts do
+not confer readiness or delivery facts on their parent.
+
+Before reparenting a ready Spec, run promotion preflight, recipe 9, for the proposed parent.
+That parent must state at least `defined` and clear its floor. Preserve existing readiness
+statements that remain supported; the map never states a rung for you.
+
+Review the carrier diff, validate, then re-run recipes 7, 11 and 52. Compare every previously ready Spec's floor. Read the Studio's Capabilities page and use its Epic filter to inspect the
+new scope. Unreached Specs are information, not a requirement to invent a parent. A single
+broad epic is lawful; divide it only when the intended outcomes warrant separate identities.
+
+## Model upcoming work in the graph; keep review history in git and pull requests
+
+Author your next bodies of work as Specs and group each in a Pack named for its capability. Make one Pack your roadmap by stating `order: priority` in its manifest and listing the next few entries, first entry first; recipe 53 places each by what it needs, and recipe 55 renders the forward section of a pull request description. Turn each open review finding about a Spec into an open question with `decider`, `provisional` and `links`, or into a change proposal checked by recipe 38. Unresolved intended design lives in open questions. Review disposition and acceptance remain in git and the pull request; neither becomes a graph field. Keep your plan and state documents if you want them; they confer nothing, so point them at Packs and recipes instead of copying counts.
+
+The roadmap law is `spec:consumers.roadmap`; the Protocol's own record convention is
+`spec:protocol.roadmap-replaces-plans` and imposes none on an adopter. A defect against settled
+intent remains a code finding rather than an invented design question.
+
 ## Propose and apply rule keys
 
 Choose one Pack first. Write its base graph with `pnpm exec sdp build .` and save

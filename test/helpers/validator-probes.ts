@@ -373,6 +373,6 @@ const extractionPairs: ProbeEntry[] = [
  * @sdpAnchor impl:protocol.validator-probe-table
  * @sdpLabel declares the refusing and accepting probes for every registered finding id
  * @sdpSatisfies spec:validation.validator-self-testing
- * @sdpRole utility
+ * @sdpRole contract
  */
 export const validatorProbeTable: readonly ProbeEntry[] = [...graphPairs, ...extractionPairs];

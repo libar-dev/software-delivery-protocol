@@ -99,6 +99,7 @@ export function entryMatches(record: SearchRecord, entry: SearchEntry, term: str
  * @sdpSatisfies spec:consumers.spec-studio.search, spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.studio-elements
  * @sdpRole projection
+ * @sdpLabel ranks and renders concept, entry and file search hits
  */
 export function searchRecords(index: SearchIndex, term: string): readonly SearchHit[] {
   const needle = term.toLowerCase().trim();

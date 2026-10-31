@@ -1,7 +1,7 @@
 ---
 id: spec:extraction.derive-graph
 kind: behavior
-altitude: feature
+altitude: epic
 readiness: ready
 relations:
   dependsOn:
@@ -11,7 +11,6 @@ relations:
       reason: the relations Spec owns the kind restrictions on authored relations
     - target: spec:model.anchors
       reason: the anchors Spec owns binding eligibility and structural endpoint restrictions
-  refines: spec:protocol.self-hosting
   constrainedBy: spec:extraction.determinism
   decidedBy:
     - spec:decisions.one-validation-path

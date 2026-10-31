@@ -4,7 +4,9 @@ kind: workflow
 altitude: feature
 readiness: ready
 relations:
-  refines: spec:protocol.self-hosting
+  refines:
+    target: spec:extraction.derive-graph
+    reason: the build orchestrates derivation and publication of the one graph
   dependsOn: spec:extraction.derive-graph
 ---
 # The build pipeline has one ordered flow

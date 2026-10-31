@@ -65,7 +65,7 @@ export function isEnabledExampleVerify(
 const deliveryFactsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.delivery-facts"),
   label: "computes delivery facts from resolving binding edges",
-  satisfies: ref("spec:extraction.delivery-facts"),
+  satisfies: [ref("spec:extraction.delivery-facts"), ref("spec:extraction.executable-examples")],
   component: componentAnchorId("component:protocol.graph"),
   role: "decider",
 });

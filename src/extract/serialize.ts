@@ -104,9 +104,10 @@ function canonicalConstraint(constraint: ConstraintSection): Record<string, unkn
 
 const openSectionOrderAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.open-section-order"),
-  label: "preserves authored open-section and model-term order",
+  label: "preserves authored open-section and model-term order and Pack field order",
   satisfies: [
     ref("spec:extraction.open-section-order"),
+    ref("spec:extraction.pack-member-order"),
     ref("spec:model.open-question-keys"),
     ref("spec:carrier.step-keys"),
     ref("spec:model.term-addresses"),
@@ -221,6 +222,7 @@ function canonicalNode(node: GraphNode): Record<string, unknown> {
         file: node.file,
         members: [...node.members],
         ...(node.modelRefs === undefined ? {} : { modelRefs: node.modelRefs }),
+        ...(node.order === undefined ? {} : { order: node.order }),
       };
     case "Anchor":
       return {

@@ -4,7 +4,9 @@ kind: behavior
 altitude: feature
 readiness: ready
 relations:
-  refines: spec:protocol.self-hosting
+  refines:
+    target: spec:validation.two-check-families
+    reason: duplicate identity is a conformance refusal
   dependsOn:
     target: spec:carrier.markdown-parser
     reason: duplicate exclusion includes the default Markdown carrier

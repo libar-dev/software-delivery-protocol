@@ -121,9 +121,12 @@ available on the runner, and `pnpm exec sdp`.
 | The task                                                                   | Open                                                                                                      |
 | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | See where the corpus stands, narrow the Specs, read the findings           | `index.html`, the Packs lens                                                                              |
+| See the epics, what each holds and what no epic reaches                    | `capabilities.html`, the capabilities lens (recipe 52)                                                    |
 | Find a Spec, an entry or a bound file by a word                            | `search.html`, which needs the script                                                                     |
 | Read a Pack's design member by member                                      | `packs/<name>.html`                                                                                       |
+| Read a Pack as one design: depths, footing, the architecture it touches    | `slices/<name>.html`, the Pack's design slice (recipe 54)                                                 |
 | Read one Spec in context                                                   | `specs/<name>.html`                                                                                       |
+| See what comes next and what each roadmap entry needs                      | `roadmap.html`, every roadmap Pack with its memo (recipes 53 and 55)                                      |
 | Order the waiting statements and the owner's questions                     | `queue.html`, the statement queue (recipe 46)                                                             |
 | List open questions, decisions, pinned declarations and the design backlog | `questions.html`, `decisions.html`, `declarations.html` with the source lines citing each, `backlog.html` |
 | Compare designed components with built ones                                | `architecture.html`                                                                                       |
@@ -137,9 +140,10 @@ A page's `<name>` is the id after its namespace, each uppercase letter written a
 lowercase (`spec:consumers.spec-studio.publisher#rule.pageSet`).
 
 Read what a page states and no more. The queue's order sets no priority, and no waiting
-statement is approved. A run row is external evidence from a test file, never a verdict on a
-verifier. A binding shown as present says code or a test is bound, not that it works. A diagram
-over its bound folds, or leaves only its text equivalent, which states every box and edge
+statement is approved. A roadmap's order is advisory priority, never a schedule or a gate. A run
+row is external evidence from a test file, never a verdict on a verifier. A binding shown as
+present says code or a test is bound, not that it works. A diagram over its bound folds, or
+leaves only its text equivalent, which states every box and edge
 (`spec:consumers.spec-studio.diagrams#rule.textEquivalent`).
 
 ### Export and print

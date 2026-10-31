@@ -28,6 +28,21 @@ const authoredPack = pack({
   specs: [ref("spec:orders.create-order")],
 });
 
+pack({
+  id: packId("pack:roadmap"),
+  title: "Upcoming work",
+  specs: [],
+  order: "priority",
+});
+
+pack({
+  id: packId("pack:roadmap"),
+  title: "Upcoming work",
+  specs: [],
+  // @ts-expect-error only priority is authored; reading order is represented by omission
+  order: "reading",
+});
+
 const implementationAnchor = codeAnchor({
   id: codeAnchorId("impl:orders.create-order-use-case"),
   label: "CreateOrderUseCase",

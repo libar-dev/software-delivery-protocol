@@ -154,6 +154,9 @@ interface Diff {
     membersAdded: string[];
     membersRemoved: string[];
     reordered: boolean;
+    orderChanged: boolean;
+    orderBefore: "reading" | "priority" | null;
+    orderAfter: "reading" | "priority" | null;
   }[];
   bindings: {
     id: string;
@@ -318,6 +321,9 @@ describe("iteration loop: design diff", () => {
           membersAdded: ["spec:probe.new"],
           membersRemoved: ["spec:probe.b"],
           reordered: false,
+          orderChanged: false,
+          orderBefore: "reading",
+          orderAfter: "reading",
         },
       ]);
       const all = await runRecipe<Diff>(35, { base: base.graph }, head);
@@ -2009,6 +2015,9 @@ describe("iteration loop: comparison and budget edges", () => {
           membersAdded: [],
           membersRemoved: ["spec:probe.a", "spec:probe.b", "spec:probe.model"],
           reordered: false,
+          orderChanged: false,
+          orderBefore: "reading",
+          orderAfter: null,
         },
       ]);
     });

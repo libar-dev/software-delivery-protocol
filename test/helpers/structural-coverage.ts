@@ -7,7 +7,72 @@ import { createRuntimeExportResolver, referencedModuleSource } from "./runtime-e
 export type StructuralCoverageResult =
   | "ok"
   | "exported unit missing"
+  | "covering source does not type-consume unit"
   | "covering source does not value-consume unit";
+
+function auditTypeCoverage(
+  checker: ts.TypeChecker,
+  source: ts.SourceFile,
+  name: string,
+  coveringSource: ts.SourceFile | undefined,
+): StructuralCoverageResult {
+  const module = checker.getSymbolAtLocation(source);
+  const exported =
+    module && checker.getExportsOfModule(module).find((entry) => entry.name === name);
+  const resolve = (symbol: ts.Symbol): ts.Symbol =>
+    symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+  const target = exported && resolve(exported);
+  if (target === undefined || !(target.flags & ts.SymbolFlags.Type)) return "exported unit missing";
+  if (coveringSource === undefined) return "covering source does not type-consume unit";
+
+  const imported = new Set<ts.Symbol>();
+  const namespaces = new Set<ts.Symbol>();
+  for (const statement of coveringSource.statements) {
+    if (!ts.isImportDeclaration(statement)) continue;
+    const bindings = statement.importClause?.namedBindings;
+    if (bindings === undefined) continue;
+    if (ts.isNamespaceImport(bindings)) {
+      const symbol = checker.getSymbolAtLocation(bindings.name);
+      if (symbol !== undefined) namespaces.add(symbol);
+      continue;
+    }
+    for (const entry of bindings.elements) {
+      const symbol = checker.getSymbolAtLocation(entry.name);
+      if (symbol !== undefined && resolve(symbol) === target) imported.add(symbol);
+    }
+  }
+  // Audit explicit type references, heritage clauses and type queries. Resolve both
+  // ends of qualified names so an unused, shadowed or wrong-source import stays uncovered.
+  const consumes = (name: ts.Node): boolean => {
+    let root = name;
+    const leaf = ts.isQualifiedName(name)
+      ? name.right
+      : ts.isPropertyAccessExpression(name)
+        ? name.name
+        : name;
+    while (ts.isQualifiedName(root) || ts.isPropertyAccessExpression(root)) {
+      root = ts.isQualifiedName(root) ? root.left : root.expression;
+    }
+    const local = checker.getSymbolAtLocation(root);
+    if (local === undefined) return false;
+    if (ts.isIdentifier(name)) return imported.has(local);
+    const member = checker.getSymbolAtLocation(leaf);
+    return namespaces.has(local) && member !== undefined && resolve(member) === target;
+  };
+  const consumed = new Set<ts.Node>();
+  const visit = (node: ts.Node): void => {
+    if (
+      (ts.isTypeReferenceNode(node) && consumes(node.typeName)) ||
+      (ts.isExpressionWithTypeArguments(node) && consumes(node.expression)) ||
+      (ts.isTypeQueryNode(node) && consumes(node.exprName))
+    ) {
+      consumed.add(node);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(coveringSource);
+  return consumed.size > 0 ? "ok" : "covering source does not type-consume unit";
+}
 
 function valueImportedLocals(
   checker: ts.TypeChecker,
@@ -53,6 +118,7 @@ export function auditStructuralCoverage(
   program: ts.Program,
   unit: string,
   coveringSourcePath: string,
+  consumption: "value" | "type" = "value",
 ): StructuralCoverageResult {
   const separator = unit.indexOf("#");
   if (separator <= 0 || separator !== unit.lastIndexOf("#") || separator === unit.length - 1) {
@@ -67,6 +133,12 @@ export function auditStructuralCoverage(
   }
 
   const checker = program.getTypeChecker();
+  const coveringSource = program.getSourceFile(
+    resolve(program.getCurrentDirectory(), coveringSourcePath),
+  );
+  if (consumption === "type") {
+    return auditTypeCoverage(checker, source, unit.slice(separator + 1), coveringSource);
+  }
   const resolveRuntimeExport = createRuntimeExportResolver(checker);
   const resolution = resolveRuntimeExport(source, unit.slice(separator + 1));
   if (resolution.cyclic || resolution.candidates.size !== 1) {
@@ -83,9 +155,6 @@ export function auditStructuralCoverage(
     return "exported unit missing";
   }
 
-  const coveringSource = program.getSourceFile(
-    resolve(program.getCurrentDirectory(), coveringSourcePath),
-  );
   if (coveringSource === undefined) {
     return "covering source does not value-consume unit";
   }

@@ -1,3 +1,10 @@
+/**
+ * @sdpAnchor impl:protocol.studio-proposal-contract
+ * @sdpLabel browser proposal shape and schema checks
+ * @sdpSatisfies spec:consumers.intent-composition.proposal
+ * @sdpComponent component:protocol.studio-elements
+ * @sdpRole contract
+ */
 export interface ProposalChange {
   scope: string[];
   request: string;

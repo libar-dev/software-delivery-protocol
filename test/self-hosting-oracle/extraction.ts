@@ -6,7 +6,7 @@ export const extractionSpecs = [
   {
     id: "spec:extraction.derive-graph",
     specKind: "behavior",
-    altitude: "feature",
+    altitude: "epic",
     readiness: "ready",
     file: "specs/extraction/derive-graph.sdp.md",
     title: "Carrier reification derives the one graph",
@@ -312,7 +312,7 @@ export const extractionSpecs = [
               'a graph derived from the authored spec {specId: "spec:probe.schema-versioning"}',
             ],
             when: ["the graph payload is serialized"],
-            then: ['the payload declares the schema version {schemaVersion: "0.11.0"}'],
+            then: ['the payload declares the schema version {schemaVersion: "0.12.0"}'],
           },
         ],
       },
@@ -321,6 +321,47 @@ export const extractionSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:extraction.executable-examples",
+    specKind: "behavior",
+    altitude: "epic",
+    readiness: "ready",
+    file: "specs/extraction/executable-examples.sdp.md",
+    title: "Bound examples execute their authored steps",
+    narrative:
+      "The capability connects authored intent to an example's execution. Contract generation and the runner own narrower parts of that outcome; neither alone owns it. A change to the authored example must reach its test through the generated contract.",
+    sections: {
+      intent: {
+        actor: "An author binding an example to a test of the intended behavior.",
+        problem:
+          "A separately handwritten test can drift from the Spec's own steps and expected outcome.",
+        outcome:
+          "Run an example against its authored intent through graph-derived contracts and report failures in the words of its steps.",
+      },
+      behavior: {
+        rules: [
+          "Execution reads the steps and bound values from contracts derived from the graph; it adds no second authored description of the example.",
+          "A bound test supplies the world and step handlers, and the runner executes the contract's steps in authored order. Contract generation and execution keep their separate responsibilities.",
+          "A failing step names the authored intent it exercised. An unspecified expected outcome remains explicit and cannot become a passing comparison by assumption.",
+          "A verifier binding says the example has a verifier. Execution results stay outside the graph and confer no readiness or delivery fact on this epic.",
+        ],
+        ruleKeys: {
+          authoredSteps: "rules[0]",
+          binding: "rules[1]",
+          failure: "rules[2]",
+          facts: "rules[3]",
+        },
+      },
+      verification: {
+        mode: "reviewed",
+        criteria: [
+          "Trace a bound example from its graph steps through generated contracts to runner dispatch, then change an expected outcome and check that its test fails in the example's words.",
+          "Read the epic's own binding facts separately from the bindings on its contract-generation and runner descendants.",
+        ],
+      },
+    },
+    deliveryFacts: ["implemented"],
   },
   {
     id: "spec:extraction.executable-contracts",
@@ -849,7 +890,7 @@ export const extractionSpecs = [
       behavior: {
         rules: [
           "A Pack node carries `members`, the manifest's `specs` list in authored order, a repeat included where the carrier admits one. The `belongsTo` edges re-express the same list, one edge per entry, so the members of a Pack node and the sources of its `belongsTo` edges are one list read twice and never disagree in a derived graph.",
-          "`members` is always present on a Pack node, and an empty manifest list derives `members: []`. The serialized Pack node writes its fields in the order `id`, `nodeType`, `claim`, `title`, `framing`, `file`, `members`, `modelRefs`, omitting an absent optional field.",
+          "`members` is always present on a Pack node, and an empty manifest list derives `members: []`. The serialized Pack node writes its fields in the order `id`, `nodeType`, `claim`, `title`, `framing`, `file`, `members`, `modelRefs`, `order`, omitting an absent optional field.",
           "Nodes keep their sort by id and edges keep their sort by from, type, and to. Authored member order is content of the Pack node, as authored entry order is content of a Spec's open sections, so two derivations of one commit stay byte-identical and two manifests that list the same members in different orders derive different Pack nodes.",
           "The reader's Pack context lists one member row per entry of `members`, in that order, and its verifier gaps follow the same order. The Design Review's Pack page renders its member table and its verifier gap list in that order.",
           "A repeated member is kept only where its carrier admits it. TypeScript keeps repetitions in `members` and reader rows, and pack-coherence reports the duplicate `belongsTo` edge. Markdown refuses a repeated manifest member with `extract/invalid-frontmatter` and the message `duplicate entry in specs`.",

@@ -1,10 +1,11 @@
+import { graphReportId } from "../src/validate/validators.js";
 import { reifyMarkdownCarrier } from "../src/extract/markdown.js";
 import { deriveGraph } from "../src/extract/derive.js";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import { extract } from "../src/extract/index.js";
@@ -32,7 +33,8 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const corpora = [
   { name: "Protocol", root, exclude: ["explorations", "examples", "test/fixtures/import/parity"] },
   { name: "checkout", root: join(root, "examples/checkout-v1"), exclude: [] },
-].map((corpus) => ({ ...corpus, extracted: extract(corpus) }));
+];
+type Corpus = (typeof corpora)[number] & { extracted: ReturnType<typeof extract> };
 
 function required<T>(value: T | null | undefined): T {
   if (value === null || value === undefined) throw new Error("Expected a value");
@@ -49,7 +51,7 @@ function recipeBody(ordinal: number): string {
 
 async function recipe<T>(
   ordinal: number,
-  corpus: (typeof corpora)[number],
+  corpus: Corpus,
   params: Record<string, unknown>,
 ): Promise<T> {
   const capture = createCaptureOutput();
@@ -71,12 +73,18 @@ async function recipe<T>(
   return JSON.parse(capture.readStdout()) as T;
 }
 
-describe.each(corpora)("Studio data over $name", (corpus) => {
-  const reader = createReader(corpus.extracted.graph);
+describe.each(corpora)("Studio data over $name", (subject) => {
+  let corpus: Corpus;
+  let reader: ReturnType<typeof createReader>;
+  let data: Awaited<ReturnType<typeof createStudioData>>;
+  beforeAll(async () => {
+    corpus = { ...subject, extracted: extract(subject) };
+    reader = createReader(corpus.extracted.graph);
+    data = await createStudioData(reader);
+  }, 30_000);
 
   it("counts every Pack exactly as recipe 29", async () => {
     expect(reader.packs().length).toBeGreaterThan(0);
-    const data = await createStudioData(reader);
     for (const pack of reader.packs()) {
       const answer = await recipe<{ totals: unknown }>(29, corpus, { pack: pack.id });
       expect(data.packs.find((p) => p.context.id === pack.id)?.totals).toEqual(answer.totals);
@@ -150,7 +158,7 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
     },
   );
 
-  it("keeps rails in Pack-id and authored-member order, with severity and space ownership", async () => {
+  it("keeps rails in Pack-id and authored-member order, with severity and space ownership", () => {
     const rails = railValues(reader);
     expect(rails.packs.map((pack) => pack.id)).toEqual(
       reader
@@ -171,7 +179,6 @@ describe.each(corpora)("Studio data over $name", (corpus) => {
       errors: reader.findings().filter((finding) => finding.severity === "error").length,
       warnings: reader.findings().filter((finding) => finding.severity === "warning").length,
     });
-    const data = await createStudioData(reader);
     expect(data.specs).toEqual(reader.specs().map((spec) => reader.specContext(spec.id)));
     expect(data.findings).toEqual(reader.findings());
     expect(data.packs.map((pack) => pack.context)).toEqual(
@@ -345,4 +352,25 @@ relations: {}
       }),
     );
   }
+});
+
+it("shares only parameterless recipe answers within one Studio evaluation", async () => {
+  const { evaluateBodyWithReader } = await import("../src/reader/evaluate-body.js");
+  const reader = createReader({ schemaVersion, nodes: [], edges: [], locations: [] });
+  const input = {
+    reader,
+    graph: reader.graph,
+    report: { validatorId: graphReportId, findings: [] },
+    memoizeParameterlessRecipes: true,
+  };
+  const body = "return [await recipes(20), await recipes(20, {}), await recipes(20, {scope:[]})];";
+  const first = (await evaluateBodyWithReader(body, input)) as unknown[];
+  const second = (await evaluateBodyWithReader(body, input)) as unknown[];
+  expect(first[0]).toBe(first[1]);
+  expect(first[0]).not.toBe(first[2]);
+  expect(first[0]).not.toBe(second[0]);
+  expect(Object.isFrozen(first[0])).toBe(true);
+  const answer = first[0] as { questions: unknown[] };
+  expect(Object.isFrozen(answer.questions)).toBe(true);
+  expect(() => answer.questions.push("changed")).toThrow(TypeError);
 });

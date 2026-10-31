@@ -33,7 +33,8 @@ export function sourceUrl(template: string, file: string, line: string): string 
  * @sdpAnchor impl:protocol.studio-stamp
  * @sdpSatisfies spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.sharing
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
+ * @sdpLabel resolves published stamps and source links in the browser
  */
 export function registerStamp(): void {
   class Stamp extends globalThis.HTMLElement {

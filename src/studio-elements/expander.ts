@@ -1,5 +1,9 @@
 import { button, liveOutput } from "./dom.js";
 
+// Mermaid source stays as the reader left it in print; the print style hides a closed one.
+const sourceDisclosure =
+  'sdp-diagram details[id$=".source"], sdp-maturity-map details[id$=".source"]';
+
 export function fragmentTarget(fragment: string): string | null {
   if (fragment.length < 2) return null;
   try {
@@ -15,7 +19,8 @@ export function fragmentTarget(fragment: string): string | null {
  * @sdpAnchor impl:protocol.studio-expander
  * @sdpSatisfies spec:consumers.spec-studio.page-elements, spec:consumers.spec-studio.export
  * @sdpComponent component:protocol.studio-elements
- * @sdpRole utility
+ * @sdpRole interaction
+ * @sdpLabel opens fragment ancestors and expands disclosures for print
  */
 export function registerExpander(): void {
   class Expander extends globalThis.HTMLElement {
@@ -23,10 +28,12 @@ export function registerExpander(): void {
     private printed: { details: HTMLDetailsElement; open: boolean }[] = [];
     private readonly beforePrint = (): void => {
       if (this.printed.length) return;
-      this.printed = Array.from(this.querySelectorAll("details")).map((details) => ({
-        details,
-        open: details.open,
-      }));
+      this.printed = Array.from(this.querySelectorAll("details"))
+        .filter((details) => !details.matches(sourceDisclosure))
+        .map((details) => ({
+          details,
+          open: details.open,
+        }));
       for (const { details } of this.printed) details.open = true;
     };
     private readonly afterPrint = (): void => {

@@ -53,6 +53,10 @@
 | 49 | The proposal memo | proposal | Render a proposal as the memo the composing panel hands off |
 | 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
+| 52 | The capability map | epic, detail | Read capability epics, distinct descendants and direct binding evidence |
+| 53 | The roadmap | pack, decider | Read upcoming work in authored order and what each entry needs |
+| 54 | The design slice | pack or specs, members, detail | Read a set of Specs as one design |
+| 55 | The roadmap memo | pack, decider | Render a roadmap as a description's forward section |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -164,10 +168,10 @@ not suppress `console.*`, so a body a machine reads, every recipe below included
 to the console. Returning a conclusion costs a fraction of returning a dump, so every recipe
 below returns counts, ids, and decoded reasons rather than whole nodes.
 
-Changed-file impact, Pack design and the design diff, recipes 4, 29 and 35, accept `detail: true`
-and default to summaries that preserve every total and name omitted detail in `leftOut`. Pack
-design also accepts member ids in `detail` for selected full rows. Other recipes follow their
-own documented result shapes.
+Changed-file impact, Pack design, the design diff and the design slice, recipes 4, 29, 35 and 54,
+accept `detail: true` and default to summaries that preserve every total and name omitted detail
+in `leftOut`. Pack design and the design slice also accept member ids in `detail` for selected
+full rows. Other recipes follow their own documented result shapes.
 
 **Trust stance.** `sdp q` evaluates local operator-supplied code with the trust of any local
 developer tool — no sandbox is claimed and none exists. A body is code you author yourself; never
@@ -3185,11 +3189,20 @@ const packs = [];
 for (const id of [...new Set([...basePacks.keys(), ...headPacks.keys()])].sort()) {
   if (packId !== undefined && id !== packId) continue;
   const a = basePacks.get(id), b = headPacks.get(id);
-  const members = delta(a?.members ?? [], b?.members ?? []);
+  const orderOf = (node, side) => {
+    if (node === undefined) return null;
+    if (node.order === undefined) return "reading";
+    if (node.order === "priority") return "priority";
+    diagnostics.push({ part: "order", id, side, value: node.order, problem: "Part is outside the common schema." });
+    return null;
+  };
+  const orderBefore = orderOf(a, "base"), orderAfter = orderOf(b, "head");
+  const orderChanged = a !== undefined && b !== undefined && orderBefore !== null && orderAfter !== null && orderBefore !== orderAfter;
+  const members = { added: (b?.members ?? []).filter((member) => !a?.members.includes(member)), removed: (a?.members ?? []).filter((member) => !b?.members.includes(member)) };
   const common = new Set((a?.members ?? []).filter((member) => b?.members.includes(member)));
   const reordered = !same((a?.members ?? []).filter((member) => common.has(member)), (b?.members ?? []).filter((member) => common.has(member)));
-  if (!a || !b || members.added.length || members.removed.length || reordered) packs.push({ id,
-    change: !a ? "added" : !b ? "removed" : "changed", membersAdded: members.added, membersRemoved: members.removed, reordered });
+  if (!a || !b || members.added.length || members.removed.length || reordered || orderChanged) packs.push({ id,
+    change: !a ? "added" : !b ? "removed" : "changed", membersAdded: members.added, membersRemoved: members.removed, reordered, orderChanged, orderBefore, orderAfter });
 }
 const bound = (value, id, type) => {
   const nodes = new Map(value.nodes.map((node) => [node.id, node]));
@@ -3237,6 +3250,12 @@ For a probe whose two rules were keyed and whose second rule was also reworded, 
 ```
 
 `packs` reports membership additions, removals and relative order changes among retained members.
+`membersAdded` and `membersRemoved` keep their respective manifest order.
+`orderChanged` reports a change in what the order means, with `orderBefore` and `orderAfter`
+reading `"reading"` or `"priority"`; an absent `order` reads as `"reading"` in every schema version.
+An absent Pack reads null on that side. An unknown value produces an order diagnostic
+`{ part: "order", id, side, value, problem }`, where `side` is `"base"` or `"head"`, and reads null
+on that side; the Pack's membership and member order still compare, with `orderChanged: false`.
 `bindings` keeps anchor-derived changes apart, with added and removed ids for realizing units,
 referencing units, enabled verifiers and delivery facts. Each list has a count in `totals`.
 A schema difference is diagnostic data. Parts outside the schemas' shared capabilities are
@@ -5161,4 +5180,1095 @@ return {
   unresolved,
   findings,
 };
+```
+
+## 52. The capability map
+
+Read every epic and its distinct refinement descendants, or pass `params.epic` to select one
+epic and its descendants. Every kind participates. The default summary (`params.detail` absent
+or false) keeps every total, each epic's title, direct epic parents and rollup, unreached ids,
+cycles and damage. `leftOut` names what `detail: true` adds: node rows, edges, descendant ids
+and unreached roots. A parameter refusal returns `diagnostics` without a map; unknown names
+return `unknownParams` and `accepts`. Inspect `damage` and `cycles` on a returned map.
+The contract is `spec:consumers.capability-map#design.mapRecipe` through its keyed answer entries.
+
+```js
+const accepts = ["epic", "detail"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const detail = params.detail ?? false;
+const diagnostics = [];
+if (params.detail !== undefined && typeof params.detail !== "boolean") {
+  diagnostics.push({ parameter: "detail", problem: "Expected a boolean" });
+}
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const byEnds = (a, b) => compare(a.from, b.from) || compare(a.to, b.to);
+const specs = g.specs().sort((a, b) => compare(a.id, b.id));
+const byId = new Map(specs.map((spec) => [spec.id, spec]));
+if (params.epic !== undefined) {
+  if (typeof params.epic !== "string") {
+    diagnostics.push({ parameter: "epic", problem: "Expected a Spec id string" });
+  } else {
+    const epic = byId.get(params.epic);
+    if (!epic) {
+      diagnostics.push({ parameter: "epic", problem: `No resolving Spec for ${params.epic}` });
+    } else if (epic.altitude !== "epic") {
+      diagnostics.push({ parameter: "epic", problem: `${params.epic} is a ${epic.altitude} Spec, not an epic` });
+    }
+  }
+}
+if (diagnostics.length > 0) return { diagnostics };
+const allEdges = graph.edges.filter((edge) => edge.type === "refines" && edge.claim === "declared");
+const edges = allEdges.filter((edge) => byId.has(edge.from) && byId.has(edge.to)).sort(byEnds);
+const parents = new Map(specs.map((spec) => [spec.id, new Set()]));
+const children = new Map(specs.map((spec) => [spec.id, new Set()]));
+for (const edge of edges) {
+  parents.get(edge.from).add(edge.to);
+  children.get(edge.to).add(edge.from);
+}
+for (const adjacency of [parents, children]) {
+  for (const [id, neighbors] of adjacency) adjacency.set(id, [...neighbors].sort(compare));
+}
+const reach = (root) => {
+  const seen = new Set();
+  const todo = [root];
+  while (todo.length > 0) {
+    const id = todo.pop();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    for (const child of children.get(id)) todo.push(child);
+  }
+  return seen;
+};
+const epicIds = specs.filter((spec) => spec.altitude === "epic").map((spec) => spec.id);
+const reaches = new Map(epicIds.map((id) => [id, reach(id)]));
+const selected = params.epic === undefined ? new Set(byId.keys()) : reaches.get(params.epic);
+const nodes = specs.filter((spec) => selected.has(spec.id)).map((spec) => ({
+  id: spec.id,
+  title: spec.title ?? null,
+  specKind: spec.specKind,
+  altitude: spec.altitude,
+  statedReadiness: spec.statedReadiness,
+  floorReached: spec.derivedReadiness ?? "none",
+  deliveryFacts: spec.deliveryFacts,
+  questions: g.specContext(spec.id).designColumns.openQuestions.map((question) => ({
+    index: question.index,
+    address: question.key ? `${spec.id}#question.${question.key}` : null,
+    question: question.question,
+    blocking: question.blocking,
+  })),
+  parents: parents.get(spec.id),
+  children: children.get(spec.id),
+  epicIds: epicIds.filter((id) => reaches.get(id).has(spec.id)),
+}));
+const nodeById = new Map(nodes.map((node) => [node.id, node]));
+const count = (ids) => {
+  const zeroes = (keys) => Object.fromEntries(keys.map((key) => [key, 0]));
+  const counts = {
+    specs: ids.length,
+    byStatedReadiness: zeroes(["idea", "scoped", "defined", "ready"]),
+    byFloorReached: zeroes(["none", "idea", "scoped", "defined", "ready"]),
+    byKind: zeroes(["behavior", "workflow", "example", "rule", "constraint", "model", "decision", "contract"]),
+    byAltitude: zeroes(["epic", "feature", "story"]),
+    withImplementationBinding: 0,
+    withVerifierBinding: 0,
+    openQuestions: 0,
+    blockingQuestions: 0,
+  };
+  for (const id of ids) {
+    const node = nodeById.get(id);
+    counts.byStatedReadiness[node.statedReadiness]++;
+    counts.byFloorReached[node.floorReached]++;
+    counts.byKind[node.specKind]++;
+    counts.byAltitude[node.altitude]++;
+    counts.withImplementationBinding += Number(node.deliveryFacts.includes("implemented"));
+    counts.withVerifierBinding += Number(node.deliveryFacts.includes("has-verifier"));
+    counts.openQuestions += node.questions.length;
+    counts.blockingQuestions += node.questions.filter((question) => question.blocking).length;
+  }
+  return counts;
+};
+// Two iterative passes keep cycles finite without using the call stack for long branches.
+const components = (ids) => {
+  const allowed = new Set(ids);
+  const seen = new Set();
+  const finished = [];
+  for (const root of ids) {
+    if (seen.has(root)) continue;
+    seen.add(root);
+    const stack = [{ id: root, next: 0 }];
+    while (stack.length > 0) {
+      const frame = stack[stack.length - 1];
+      const neighbors = children.get(frame.id);
+      if (frame.next === neighbors.length) {
+        finished.push(frame.id);
+        stack.pop();
+        continue;
+      }
+      const child = neighbors[frame.next++];
+      if (allowed.has(child) && !seen.has(child)) {
+        seen.add(child);
+        stack.push({ id: child, next: 0 });
+      }
+    }
+  }
+  seen.clear();
+  const groups = [];
+  for (const root of finished.reverse()) {
+    if (seen.has(root)) continue;
+    const group = [];
+    const todo = [root];
+    seen.add(root);
+    while (todo.length > 0) {
+      const id = todo.pop();
+      group.push(id);
+      for (const parent of parents.get(id)) {
+        if (allowed.has(parent) && !seen.has(parent)) {
+          seen.add(parent);
+          todo.push(parent);
+        }
+      }
+    }
+    groups.push(group.sort(compare));
+  }
+  return groups.sort((a, b) => compare(a[0], b[0]));
+};
+const ids = nodes.map((node) => node.id);
+const unreached = nodes.filter((node) => node.epicIds.length === 0).map((node) => node.id);
+const unreachedSet = new Set(unreached);
+const roots = components(unreached).filter((group) => {
+  const members = new Set(group);
+  return !group.some((id) => parents.get(id).some((parent) => unreachedSet.has(parent) && !members.has(parent)));
+}).map((group) => group[0]).sort(compare);
+const cycles = components(ids).filter((group) => group.length > 1 || children.get(group[0]).includes(group[0])).map((members) => ({ members }));
+const epics = epicIds.filter((id) => selected.has(id)).map((id) => {
+  const descendantIds = [...reaches.get(id)].filter((child) => child !== id && selected.has(child)).sort(compare);
+  return {
+    id,
+    title: byId.get(id).title ?? null,
+    parentEpicIds: parents.get(id).filter((parent) => parent !== id && byId.get(parent).altitude === "epic"),
+    descendantIds,
+    rollup: count(descendantIds),
+  };
+});
+const damage = allEdges.filter((edge) => (!byId.has(edge.from) || !byId.has(edge.to)) &&
+  (params.epic === undefined || selected.has(edge.from) || selected.has(edge.to)))
+  .map((edge) => ({ code: "unresolved-refinement", from: edge.from, to: edge.to })).sort(byEnds);
+const input = { epic: params.epic === undefined ? null : params.epic };
+const totals = { ...count(ids), epics: epics.length, reached: ids.length - unreached.length, unreached: unreached.length };
+if (detail) {
+  return {
+    input,
+    totals,
+    nodes,
+    edges: edges.filter((edge) => selected.has(edge.from) && selected.has(edge.to)).map((edge) => ({
+      from: edge.from, to: edge.to, claim: "declared", reason: edge.reason ?? null,
+    })),
+    epics,
+    unreached: { ids: unreached, roots },
+    cycles,
+    damage,
+  };
+}
+return {
+  input,
+  totals,
+  epics: epics.map(({ id, title, parentEpicIds, rollup }) => ({ id, title, parentEpicIds, rollup })),
+  unreached: { ids: unreached },
+  cycles,
+  damage,
+  leftOut: [
+    "nodes: full Spec rows and memberships",
+    "edges: selected refinement edges and reasons",
+    "epics.descendantIds: distinct descendant ids",
+    "unreached.roots: roots of the unreached refinement subgraph",
+  ],
+};
+```
+
+## 53. The roadmap
+
+Read every Pack stating `order: priority`, in Pack-id order, or the Pack named by `params.pack`.
+`params.decider` defaults to `owner`. The answer keeps member places, derives each entry's need
+over its refinement subtree, and follows the statement queue for waiting statements. Invalid
+Pack ids and decider tokens return diagnostics without roadmaps. An explicitly selected ordinary
+Pack reads as reading order.
+
+The answer is `{ decider, roadmaps }`. Each roadmap is
+`{ pack, title, framing, order, totals, entries, apart, unresolved, waiting }`: `entries` carries the work,
+dependencies and earlier statements at each place; `apart` carries entries with no work;
+`unresolved` lists unresolved manifest members as `{ place, id }`, with every place kept as its
+manifest position; `totals.unresolved` counts them. `waiting` carries questions, questions without
+a decider and readiness statements. The row and total fields are defined by
+`spec:consumers.roadmap#design.roadmapAnswer` and its following entries.
+
+```js
+const accepts = ["pack", "decider"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const decider = params.decider ?? "owner";
+const diagnostics = [];
+if (params.decider === null || typeof decider !== "string" || !/^[a-z][a-z0-9-]*$/u.test(decider)) diagnostics.push({ parameter: "decider", problem: "Expected a lowercase token." });
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const packs = graph.nodes.filter((node) => node.nodeType === "Pack");
+let selected = [];
+if (params.pack !== undefined) {
+  const pack = typeof params.pack === "string" ? packs.find((node) => node.id === params.pack) : undefined;
+  if (pack === undefined) diagnostics.push({ parameter: "pack", problem: "Expected the id of a Pack in this graph." });
+  else selected = [pack];
+} else selected = packs.filter((node) => node.order === "priority").sort((a, b) => compare(a.id, b.id));
+if (diagnostics.length > 0) return { diagnostics };
+
+const rungs = ["idea", "scoped", "defined", "ready"];
+const contexts = new Map(g.specs().map((spec) => [spec.id, g.specContext(spec.id)]));
+const children = new Map();
+for (const edge of graph.edges) {
+  if (edge.type !== "refines" || edge.claim !== "declared" || !contexts.has(edge.from) || !contexts.has(edge.to)) continue;
+  children.set(edge.to, [...(children.get(edge.to) ?? []), edge.from]);
+}
+const settledKinds = new Set(["example", "decision"]);
+const needOf = (spec) => spec.statedReadiness !== "ready" ? (spec.derivedReadiness === "ready" ? "to state" : "to design")
+  : settledKinds.has(spec.specKind) ? "settled"
+  : spec.deliveryFacts.includes("implemented") ? "built" : "to build";
+const open = (need) => need === "to design" || need === "to state" || need === "to build";
+const waits = (spec) => rungs.indexOf(spec.derivedReadiness) > rungs.indexOf(spec.statedReadiness);
+const drifts = (spec) => spec.statedReadiness !== "ready" && spec.deliveryFacts.includes("implemented");
+const holds = (spec) => spec.statedNextRungFailures.map((failure) => ({ clause: failure.clauseId, targets: (failure.targets ?? []).map((target) => target.id) }));
+const questionRow = (spec, question) => ({ address: question.key === undefined ? null : `${spec.id}#question.${question.key}`, spec: spec.id,
+  index: question.index, question: question.question, blocking: question.blocking, decider: question.decider ?? null, provisional: question.provisional ?? null });
+const scopeOf = (id) => {
+  const seen = new Set([id]);
+  const queue = [id];
+  for (let at = 0; at < queue.length; at += 1) for (const child of children.get(queue[at]) ?? []) if (!seen.has(child)) { seen.add(child); queue.push(child); }
+  return [...seen].sort(compare);
+};
+
+// The statement queue owns dependency order: its places order every waiting statement, and its
+// `restsOn` names the waiting Specs each statement rests on.
+const queue = await recipes(46, { decider });
+const queuePlace = new Map((queue.statements ?? []).map((row) => [row.id, row.place]));
+const queueRestsOn = new Map((queue.statements ?? []).map((row) => [row.id, row.restsOn]));
+const byQueue = (a, b) => (queuePlace.get(a) ?? Infinity) - (queuePlace.get(b) ?? Infinity) || compare(a, b);
+
+const roadmaps = selected.map((pack) => {
+  const members = pack.members;
+  const scopes = members.map((id) => new Set(contexts.has(id) ? scopeOf(id) : []));
+  const placeOf = (id) => { const at = scopes.findIndex((scope) => scope.has(id)); return at === -1 ? null : at + 1; };
+  const entries = [], apart = [], unresolved = [];
+  const questionRows = new Map(), undecided = new Map(), statements = new Map();
+  const touch = (map, key, row, place) => { const existing = map.get(key) ?? { ...row, places: [] }; if (!existing.places.includes(place)) existing.places.push(place); map.set(key, existing); };
+  members.forEach((id, index) => {
+    const place = index + 1;
+    const spec = contexts.get(id);
+    if (spec === undefined) { unresolved.push({ place, id }); return; }
+    const scope = scopes[index];
+    const scopeIds = [...scope];
+    const work = scopeIds.filter((member) => !settledKinds.has(contexts.get(member).specKind));
+    const needs = work.map((member) => needOf(contexts.get(member)));
+
+    // Decisions the entry holds or names by decidedBy, and what waits on a person over both.
+    const decisionIds = new Set(scopeIds.filter((member) => contexts.get(member).specKind === "decision"));
+    for (const member of scopeIds) for (const end of contexts.get(member).relationsOut) if (end.claim === "declared" && end.type === "decidedBy" && contexts.has(end.otherId)) decisionIds.add(end.otherId);
+    const shaping = [...decisionIds].filter((decision) => !scope.has(decision)).sort(compare);
+    const ownStatements = [];
+    for (const member of [...scopeIds, ...shaping]) {
+      const context = contexts.get(member);
+      for (const question of context.designColumns.openQuestions) {
+        const row = questionRow(context, question);
+        if (question.decider === decider) touch(questionRows, `${member}\u0000${question.index}`, row, place);
+        else if (question.decider === undefined) touch(undecided, `${member}\u0000${question.index}`, row, place);
+      }
+      if (waits(context)) { touch(statements, member, { id: member, statedReadiness: context.statedReadiness, floorReached: context.derivedReadiness }, place); ownStatements.push(member); }
+    }
+    if (work.length === 0) { apart.push({ place, id, specKind: spec.specKind, statedReadiness: spec.statedReadiness, need: needOf(spec) }); return; }
+
+    const need = ["to design", "to state", "to build"].find((value) => needs.includes(value)) ?? "built";
+    const decisions = [...decisionIds].sort(compare).map((decision) => contexts.get(decision)).filter((decision) => decision.statedReadiness !== "ready")
+      .map((decision) => ({ id: decision.id, title: decision.title ?? null, statedReadiness: decision.statedReadiness,
+        blockingQuestions: decision.designColumns.openQuestions.filter((question) => question.blocking).map((question) => questionRow(decision, question)) }));
+    const blockingQuestions = scopeIds.flatMap((member) => contexts.get(member).designColumns.openQuestions.filter((question) => question.blocking).map((question) => questionRow(contexts.get(member), question)));
+
+    // What the entry rests on: any Spec of its scope reaching outside it, whichever part reaches.
+    const restsOn = new Map();
+    for (const member of scopeIds) for (const end of contexts.get(member).relationsOut) {
+      if (end.claim !== "declared" || scope.has(end.otherId) || !contexts.has(end.otherId)) continue;
+      if (!(end.type === "dependsOn" || end.type === "constrainedBy" || end.type === "refines")) continue;
+      const target = contexts.get(end.otherId);
+      const targetNeed = needOf(target);
+      if (!open(targetNeed)) continue;
+      const key = `${end.otherId}\u0000${end.type}`;
+      const row = restsOn.get(key) ?? { id: end.otherId, via: end.type, from: [], need: targetNeed, statedReadiness: target.statedReadiness, holdsReady: rungs.indexOf(target.statedReadiness) < rungs.indexOf("defined"), onRoadmap: placeOf(end.otherId) };
+      if (!row.from.includes(member)) row.from.push(member);
+      restsOn.set(key, row);
+    }
+    for (const row of restsOn.values()) row.from.sort(compare);
+    const restedOnBy = new Map();
+    for (const member of scopeIds) for (const end of contexts.get(member).relationsIn) {
+      if (end.claim !== "declared" || scope.has(end.otherId) || !contexts.has(end.otherId)) continue;
+      if (!(end.type === "dependsOn" || end.type === "constrainedBy" || end.type === "decidedBy")) continue;
+      const source = contexts.get(end.otherId);
+      const sourceNeed = needOf(source);
+      if (!open(sourceNeed)) continue;
+      restedOnBy.set(`${end.otherId}\u0000${end.type}`, { id: end.otherId, via: end.type, need: sourceNeed, onRoadmap: placeOf(end.otherId) });
+    }
+
+    const byIdThenVia = (a, b) => compare(a.id, b.id) || compare(a.via, b.via);
+    entries.push({
+      place, id, title: spec.title ?? null, specKind: spec.specKind, altitude: spec.altitude, need,
+      statedReadiness: spec.statedReadiness, floorReached: spec.derivedReadiness ?? null,
+      statedNextRung: spec.statedNextRung ?? null, holdsNextRung: holds(spec),
+      work: { specs: work.length, toDesign: needs.filter((value) => value === "to design").length, toState: needs.filter((value) => value === "to state").length, toBuild: needs.filter((value) => value === "to build").length,
+        built: needs.filter((value) => value === "built").length, drift: work.filter((member) => drifts(contexts.get(member))).length },
+      workRows: work.map((member) => { const context = contexts.get(member); return { id: member, need: needOf(context), statedReadiness: context.statedReadiness,
+        floorReached: context.derivedReadiness ?? null, statedNextRung: context.statedNextRung ?? null, holdsNextRung: holds(context), drift: drifts(context) }; }),
+      buildNow: work.filter((member) => needOf(contexts.get(member)) === "to build"),
+      blockingQuestions, decisions,
+      restsOn: [...restsOn.values()].sort(byIdThenVia), restedOnBy: [...restedOnBy.values()].sort(byIdThenVia),
+      earlierStatements: [], own: new Set([...scopeIds, ...shaping]), ownStatements,
+      packs: [...spec.packs].filter((packId) => packId !== pack.id).sort(compare),
+      sharesScopeWith: scopes.map((other, at) => at !== index && scopeIds.some((member) => other.has(member)) ? at + 1 : null).filter((value) => value !== null),
+    });
+  });
+  // Collect all touches before classifying earlier statements: later entries can name a target.
+  for (const row of entries) {
+    const earlier = new Set();
+    for (const statement of row.ownStatements) for (const target of queueRestsOn.get(statement) ?? []) earlier.add(target);
+    row.earlierStatements = [...earlier].sort(byQueue).map((target) => {
+      const touched = statements.get(target)?.places ?? [];
+      const where = row.own.has(target) ? "entry" : touched.length > 0 ? "roadmap" : "outside";
+      return { id: target, where, onRoadmap: where === "roadmap" ? Math.min(...touched) : null };
+    });
+    delete row.own;
+    delete row.ownStatements;
+  }
+  // Only questions sort by roadmap place; statements keep the queue rank.
+  const byQuestion = (a, b) => a.places[0] - b.places[0] || Number(b.blocking) - Number(a.blocking) || compare(a.spec, b.spec) || a.index - b.index;
+  const waiting = {
+    questions: [...questionRows.values()].sort(byQuestion),
+    withoutDecider: [...undecided.values()].sort(byQuestion),
+    statements: [...statements.values()].sort((a, b) => byQueue(a.id, b.id)),
+  };
+  return {
+    pack: pack.id, title: pack.title ?? null, framing: pack.framing ?? null, order: pack.order === "priority" ? "priority" : "reading",
+    totals: { entries: members.length, toDesign: entries.filter((row) => row.need === "to design").length, toState: entries.filter((row) => row.need === "to state").length, toBuild: entries.filter((row) => row.need === "to build").length,
+      built: entries.filter((row) => row.need === "built").length, apart: apart.length, unresolved: unresolved.length,
+      questions: waiting.questions.length, blockingQuestions: waiting.questions.filter((row) => row.blocking).length,
+      withoutDecider: waiting.withoutDecider.length, blockingWithoutDecider: waiting.withoutDecider.filter((row) => row.blocking).length,
+      statements: waiting.statements.length },
+    entries, apart, unresolved, waiting,
+  };
+});
+return { decider, roadmaps };
+```
+
+## 54. The design slice
+
+*When you need this: you are reviewing features that must be reviewed together and want the whole at once.*
+
+Supply exactly one scope: `params.pack`, a resolving Pack id, or `params.specs`, a non-empty
+ordered list of distinct resolving Spec ids. Beside a Pack, `params.members` narrows the scope to
+an ordered, non-empty list of distinct resolved members. The Pack scope names unresolved
+manifest members, preserves authored order, and marks a narrowed scope as a subset.
+
+`params.detail` defaults to `false` for a summary, is `true` for every row in full, or lists
+member ids whose full rows appear beside summary rows. Unknown detail ids add
+`{ id, reason: "not-member" }` diagnostics. A summary preserves every total and names omitted
+detail in `leftOut`. Unknown parameter names return `{ unknownParams, accepts }` alone.
+
+Input checks accumulate in this order; a check needing an invalid earlier value is skipped.
+A refused input returns `{ diagnostics }` without a slice:
+
+| Input | Diagnostic scope | Problem |
+| --- | --- | --- |
+| Detail is neither boolean nor a list of strings, including null | detail | Expected true, false or a list of member ids. |
+| Neither or both scopes supplied | scope | Supply exactly one of pack or specs. |
+| Pack does not resolve | pack | Pack does not resolve. |
+| Members is not a non-empty list of distinct strings | members | Expected a non-empty list of distinct member ids. |
+| Each unresolved or outside Pack member, in list order | the id | Not a resolved member of the Pack. |
+| Specs is not a non-empty list of distinct strings | specs | Expected a non-empty list of distinct Spec ids. |
+| Each unresolved Spec, in list order | the id | Spec does not resolve. |
+| Members supplied beside Specs | members | members narrows only a Pack scope. |
+
+The answer is `{ scope, totals, members, structure, boundary, architecture, decisions, questions }`.
+Members stay in scope order, with their depth, next-rung holds and design columns. Structure
+lists typed relations with their ordering mark and reasons, and cycles with a closed path.
+`structure.unresolved` lists unresolved outgoing typed targets apart from the resolved boundary,
+with their relation type and optional reason, and no invented title or rung.
+Boundary rows extend Pack design with floors and held members, marking excluded Pack members
+with `inPack`; a full row's `via` includes `reasons: [{ member, reason }]` only for relations that
+state a reason. Architecture keeps touched anchored components, member component designs,
+anchored component pairs with unit edges, planned uses, one-step outside components, and
+unplaced units apart. A member's bound unit whose component membership does not resolve stays
+unplaced and touches no invented component. Decisions include member decisions and those members name; questions
+include members', decisions', and blocking questions of outside Specs holding a member.
+Totals count these readings without a score, finding, schedule or gate. The law and complete
+row shapes are `spec:consumers.design-slice`.
+
+```js
+const accepts = ["pack", "specs", "members", "detail"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const compare = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const strings = (value) => Array.isArray(value) && value.every((item) => typeof item === "string");
+const idList = (value) => strings(value) && value.length > 0 && new Set(value).size === value.length;
+const diagnostics = [];
+const bad = (scope, problem) => diagnostics.push({ scope, problem });
+const packId = params.pack;
+const specIds = params.specs;
+const subset = params.members;
+const detail = params.detail === undefined ? false : params.detail;
+// Collect independent failures before composing any answers.
+if (typeof detail !== "boolean" && !strings(detail)) bad("detail", "Expected true, false or a list of member ids.");
+let pack = null;
+let ids = [];
+const unresolved = [];
+if ((packId !== undefined) === (specIds !== undefined)) bad("scope", "Supply exactly one of pack or specs.");
+else if (packId !== undefined) {
+  pack = typeof packId === "string" ? g.packContext(packId) ?? null : null;
+  if (pack === null) bad("pack", "Pack does not resolve.");
+  else {
+    for (const member of pack.members) (member.resolved ? ids : unresolved).push(member.id);
+    if (subset !== undefined) {
+      if (!idList(subset)) bad("members", "Expected a non-empty list of distinct member ids.");
+      else {
+        const strangers = subset.filter((id) => !ids.includes(id));
+        for (const id of strangers) bad(id, "Not a resolved member of the Pack.");
+        if (strangers.length === 0) ids = subset;
+      }
+    }
+  }
+} else {
+  if (!idList(specIds)) bad("specs", "Expected a non-empty list of distinct Spec ids.");
+  else {
+    for (const id of specIds) if (!g.specContext(id)) bad(id, "Spec does not resolve.");
+    ids = specIds;
+  }
+  if (subset !== undefined) bad("members", "members narrows only a Pack scope.");
+}
+if (diagnostics.length) return { diagnostics };
+
+const inSlice = new Set(ids);
+const position = new Map(ids.map((id, index) => [id, index]));
+const context = new Map(ids.map((id) => [id, g.specContext(id)]));
+const rungs = ["idea", "scoped", "defined", "ready"];
+const typed = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
+
+// Keep the unresolvable outgoing ends apart from the resolved boundary.
+const unresolvedEdges = ids.flatMap((id) => context.get(id).relationsOut
+  .filter((end) => end.claim === "declared" && typed.includes(end.type) && !end.resolved)
+  .map((end) => ({ from: id, to: end.otherId, type: end.type, ...(end.reason === undefined ? {} : { reason: end.reason }) })));
+
+// Structure inside the slice: the four typed relations between members.
+const edgeKeys = new Set();
+const edges = [];
+for (const id of ids) {
+  for (const end of context.get(id).relationsOut) {
+    if (end.claim !== "declared" || !typed.includes(end.type) || !inSlice.has(end.otherId) || end.otherId === id) continue;
+    const key = `${id}\u0000${end.type}\u0000${end.otherId}`;
+    if (edgeKeys.has(key)) continue;
+    edgeKeys.add(key);
+    edges.push({ from: id, to: end.otherId, type: end.type, orders: true, ...(end.reason === undefined ? {} : { reason: end.reason }) });
+  }
+}
+edges.sort((a, b) => compare(a.from, b.from) || compare(a.type, b.type) || compare(a.to, b.to));
+const names = (from, to, types) => edges.some((edge) => edge.from === from && edge.to === to && types.includes(edge.type));
+const restsOn = new Map(ids.map((id) => [id, new Set()]));
+for (const edge of edges) {
+  // Keep the edge even when its reverse dependency determines the order.
+  edge.orders = !(edge.type === "refines" && names(edge.to, edge.from, typed.slice(1)));
+  if (edge.orders) restsOn.get(edge.from).add(edge.to);
+}
+const restedOnBy = new Map(ids.map((id) => [id, new Set()]));
+for (const [from, targets] of restsOn) for (const to of targets) restedOnBy.get(to).add(from);
+
+// Strongly connected sets, with an explicit frame stack, as the statement queue finds them.
+const sorted = [...ids].sort(compare);
+const targetsOf = (id) => [...restsOn.get(id)].sort(compare);
+const order = new Map();
+const low = new Map();
+const stack = [];
+const onStack = new Set();
+const sets = [];
+const visit = (id) => { order.set(id, order.size); low.set(id, order.get(id)); stack.push(id); onStack.add(id); };
+for (const root of sorted) {
+  if (order.has(root)) continue;
+  visit(root);
+  const frames = [{ id: root, at: 0 }];
+  while (frames.length) {
+    const frame = frames[frames.length - 1];
+    const list = targetsOf(frame.id);
+    if (frame.at < list.length) {
+      const next = list[frame.at++];
+      if (!order.has(next)) { visit(next); frames.push({ id: next, at: 0 }); }
+      else if (onStack.has(next)) low.set(frame.id, Math.min(low.get(frame.id), order.get(next)));
+      continue;
+    }
+    frames.pop();
+    if (frames.length) {
+      const parent = frames[frames.length - 1].id;
+      low.set(parent, Math.min(low.get(parent), low.get(frame.id)));
+    }
+    if (low.get(frame.id) === order.get(frame.id)) {
+      const members = [];
+      let popped;
+      do { popped = stack.pop(); onStack.delete(popped); members.push(popped); } while (popped !== frame.id);
+      sets.push(members.sort(compare));
+    }
+  }
+}
+const setOf = new Map();
+sets.forEach((members, index) => { for (const id of members) setOf.set(id, index); });
+// Tarjan emits a set only after every set it rests on, so one pass in emission order assigns depth.
+const setDepth = [];
+sets.forEach((members, index) => {
+  let deepest = 0;
+  for (const id of members) for (const target of restsOn.get(id)) {
+    const other = setOf.get(target);
+    if (other !== index) deepest = Math.max(deepest, setDepth[other]);
+  }
+  setDepth[index] = deepest + 1;
+});
+const depthOf = (id) => setDepth[setOf.get(id)];
+const cycleThrough = (members) => {
+  const inside = new Set(members);
+  const start = members[0];
+  const parent = new Map();
+  const seen = new Set([start]);
+  const queue = [start];
+  while (queue.length) {
+    const current = queue.shift();
+    for (const next of targetsOf(current).filter((id) => inside.has(id))) {
+      if (next === start) {
+        const path = [start];
+        for (let step = current; step !== start; step = parent.get(step)) path.splice(1, 0, step);
+        return [...path, start];
+      }
+      if (!seen.has(next)) { seen.add(next); parent.set(next, current); queue.push(next); }
+    }
+  }
+  return [];
+};
+const cycles = sets.filter((members) => members.length > 1).sort((a, b) => compare(a[0], b[0]))
+  .map((members) => ({ members, cycle: cycleThrough(members) }));
+
+// Inspect both directions before choosing a parent for the example.
+const exampleOf = new Map();
+for (const id of ids) {
+  const spec = context.get(id);
+  if (spec.specKind !== "example") continue;
+  const typedEnds = (list) => [...new Map(list.filter((end) => end.claim === "declared" && typed.includes(end.type)).map((end) => [`${end.type}\u0000${end.otherId}`, end])).values()];
+  const out = typedEnds(spec.relationsOut);
+  const into = typedEnds(spec.relationsIn);
+  if (out.length === 1 && into.length === 0 && out[0].type === "refines" && out[0].otherId !== id && inSlice.has(out[0].otherId)) exampleOf.set(id, out[0].otherId);
+}
+
+// Count the primary owner rules and flows without evaluating coverage for each member.
+const primitive = new Map(graph.nodes.filter((node) => node.nodeType === "Primitive").map((node) => [node.id, node]));
+const ruleCounts = new Map(ids.map((id) => {
+  const behavior = primitive.get(id)?.sections?.behavior;
+  return [id, { total: (behavior?.rules?.length ?? 0) + (behavior?.flows?.length ?? 0), keyed: Object.keys(behavior?.ruleKeys ?? {}).length }];
+}));
+const architectureMap = await recipes(17);
+const componentRow = new Map(architectureMap.components.filter((row) => row.declared).map((row) => [row.id, row]));
+const unitComponent = new Map();
+for (const row of componentRow.values()) for (const member of row.members) unitComponent.set(member.id, row.id);
+const componentOfUnit = (unitId) => (componentRow.has(unitId) ? unitId : unitComponent.get(unitId));
+const comparison = await recipes(43);
+const decisionRegister = await recipes(31);
+const decisionRow = new Map(decisionRegister.rows.map((row) => [row.id, row]));
+const questionRegister = await recipes(20);
+const questionsOf = new Map(questionRegister.specs.map((row) => [row.id, row.questions]));
+
+// Member rows.
+const members = ids.map((id) => {
+  const spec = context.get(id);
+  const at = rungs.indexOf(spec.statedReadiness);
+  const statedNextRung = at >= 0 && at < rungs.length - 1 ? rungs[at + 1] : null;
+  const components = new Set();
+  for (const unit of [...spec.implementations, ...spec.references]) {
+    const componentId = componentOfUnit(unit.codeId);
+    if (componentId !== undefined) components.add(componentId);
+  }
+  const verifiers = spec.verifiers;
+  const examples = verifiers.filter((verifier) => verifier.via === "example" && g.specContext(verifier.verifierId)?.specKind === "example");
+  return {
+    id,
+    title: spec.title ?? null,
+    specKind: spec.specKind,
+    altitude: spec.altitude,
+    statedReadiness: spec.statedReadiness,
+    floorReached: spec.derivedReadiness ?? "none",
+    statedNextRung,
+    holds: spec.statedNextRungFailures.map((failure) => ({ clauseId: failure.clauseId, description: failure.description,
+      targets: (failure.targets ?? []).map((target) => ({ type: target.type, id: target.id, statedReadiness: target.statedReadiness ?? null })) })),
+    depth: depthOf(id),
+    restsOn: [...restsOn.get(id)].sort(compare),
+    restedOnBy: [...restedOnBy.get(id)].sort(compare),
+    exampleOf: exampleOf.get(id) ?? null,
+    exampleMembers: ids.filter((other) => exampleOf.get(other) === id),
+    design: {
+      entries: spec.designColumns.entries,
+      declarations: spec.designColumns.declarations,
+      openQuestions: spec.designColumns.openQuestions.length,
+      blockingQuestions: spec.designColumns.blockingQuestions,
+      decisions: spec.designColumns.decisions.length,
+    },
+    rules: ruleCounts.get(id),
+    examples: { total: examples.length, enabled: examples.filter((example) => example.enabled).length },
+    verifiers: { total: verifiers.length, enabled: verifiers.filter((verifier) => verifier.enabled).length },
+    implementedBy: spec.implementations.map((unit) => unit.codeId).sort(compare),
+    referencedBy: spec.references.map((unit) => unit.codeId).sort(compare),
+    components: [...components].sort(compare),
+  };
+});
+const memberRow = new Map(members.map((row) => [row.id, row]));
+
+// The boundary over the slice members, as Pack design builds the Pack boundary.
+const directions = { restsOn: new Map(), restedOnBy: new Map(), verifiedBy: new Map(), supersededBy: new Map() };
+const join = (direction, otherId, type, memberId) => {
+  const row = directions[direction].get(otherId) ?? new Map();
+  const list = row.get(type) ?? [];
+  if (!list.includes(memberId)) list.push(memberId);
+  row.set(type, list);
+  directions[direction].set(otherId, row);
+};
+const isSpec = (end) => end.resolved && end.otherNodeType === "Primitive";
+for (const id of ids) {
+  const spec = context.get(id);
+  for (const end of spec.relationsOut) if (end.claim === "declared" && typed.includes(end.type) && isSpec(end) && !inSlice.has(end.otherId)) join("restsOn", end.otherId, end.type, id);
+  for (const end of spec.relationsIn) {
+    if (end.claim !== "declared" || !isSpec(end) || inSlice.has(end.otherId)) continue;
+    if (typed.includes(end.type)) join("restedOnBy", end.otherId, end.type, id);
+    else if (end.type === "verifies") join("verifiedBy", end.otherId, end.type, id);
+    else if (end.type === "supersedes") join("supersededBy", end.otherId, end.type, id);
+  }
+}
+const relationOrder = ["refines", "dependsOn", "constrainedBy", "decidedBy", "verifies", "supersedes"];
+const packMembers = new Set(pack === null ? [] : pack.members.map((member) => member.id));
+const holdsTarget = (otherId) => members.filter((row) => row.holds.some((hold) => hold.targets.some((target) => target.id === otherId))).map((row) => row.id);
+const boundaryRows = (direction) => [...directions[direction]].sort(([a], [b]) => compare(a, b)).map(([otherId, byType]) => {
+  const other = g.specContext(otherId);
+  return {
+    id: otherId,
+    title: other.title ?? null,
+    specKind: other.specKind,
+    statedReadiness: other.statedReadiness,
+    floorReached: other.derivedReadiness ?? "none",
+    implemented: other.deliveryFacts.includes("implemented"),
+    via: [...byType].sort(([a], [b]) => relationOrder.indexOf(a) - relationOrder.indexOf(b))
+      .map(([type, list]) => { const reasons = list.flatMap((member) => {
+        const ends = direction === "restsOn" ? context.get(member).relationsOut : context.get(member).relationsIn;
+        return ends.filter((end) => end.claim === "declared" && end.type === type && end.otherId === otherId && end.reason !== undefined).map((end) => ({ member, reason: end.reason }));
+      }); return { type, members: [...list].sort((a, b) => position.get(a) - position.get(b)), ...(reasons.length ? { reasons } : {}) }; }),
+    holds: direction === "restsOn" ? holdsTarget(otherId) : [],
+    ...(packMembers.has(otherId) ? { inPack: true } : {}),
+  };
+});
+const boundary = Object.fromEntries(Object.keys(directions).map((direction) => [direction, boundaryRows(direction)]));
+
+// Parse declared values with the same opening-span grammar as recipe 43.
+const read = (value) => (typeof value === "string" ? (/^(`+)(?!`)([^\r\n]+?)(?<!`)\1(?!`)/u.exec(value)?.[2] ?? value).trim() : null);
+const componentForm = /^component:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*$/u;
+const token = /^[a-z][a-z0-9-]*$/u;
+const layers = ["edge", "application", "domain", "adapter", "infrastructure"];
+const anchoredComponents = new Set(graph.nodes.filter((node) => node.nodeType === "CodeNode" && node.claim === "anchored" && node.id.startsWith("component:")).map((node) => node.id));
+const satisfiesPairs = new Set(graph.edges.filter((edge) => edge.type === "satisfies" && edge.claim === "anchored").map((edge) => `${edge.from}\u0000${edge.to}`));
+const designs = [];
+for (const id of ids) {
+  const entries = primitive.get(id)?.sections?.design;
+  const componentId = read(entries?.id);
+  if (componentId === null || !componentForm.test(componentId)) continue;
+  const declared = { layer: null, context: null, role: null, uses: null };
+  for (const key of ["layer", "context", "role", "uses"]) {
+    if (entries[key] === undefined) continue;
+    const value = read(entries[key]);
+    if (key === "uses") {
+      const list = value === "none" ? [] : value?.split(",").map((item) => item.trim());
+      if (list !== undefined && list.every((item) => componentForm.test(item))) declared.uses = [...new Set(list)].sort(compare);
+    } else if (value !== null && (key === "layer" ? layers.includes(value) : token.test(value))) declared[key] = value;
+  }
+  const anchorExists = anchoredComponents.has(componentId);
+  designs.push({
+    spec: id,
+    componentId,
+    ...declared,
+    anchorExists,
+    realized: anchorExists && satisfiesPairs.has(`${componentId}\u0000${id}`),
+    differing: comparison.differing.filter((row) => row.spec === id).map(({ field, planned, realized }) => ({ field, planned, realized })),
+    unreadable: comparison.unreadable.filter((row) => row.spec === id).map(({ key, value }) => ({ key, value })),
+  });
+}
+designs.sort((a, b) => compare(a.spec, b.spec));
+
+// The anchored components the slice touches: through member bindings, through the code that
+// satisfies what the slice rests on, and through member designs that name an anchored component.
+const touched = new Map();
+const touch = (componentId) => {
+  if (!touched.has(componentId)) touched.set(componentId, { satisfies: new Set(), references: new Set(), restsOn: new Set(), designs: new Set() });
+  return touched.get(componentId);
+};
+const unplaced = [];
+for (const id of ids) {
+  const spec = context.get(id);
+  for (const [via, units] of [["satisfies", spec.implementations], ["references", spec.references]]) {
+    for (const unit of units) {
+      const componentId = componentOfUnit(unit.codeId);
+      if (componentId === undefined) unplaced.push({ unit: unit.codeId, member: id, via });
+      else touch(componentId)[via].add(id);
+    }
+  }
+}
+for (const row of boundary.restsOn) {
+  for (const unit of g.specContext(row.id).implementations) {
+    const componentId = componentOfUnit(unit.codeId);
+    if (componentId !== undefined) touch(componentId).restsOn.add(row.id);
+  }
+}
+for (const design of designs) if (anchoredComponents.has(design.componentId)) touch(design.componentId).designs.add(design.spec);
+const byPosition = (list) => [...list].sort((a, b) => position.get(a) - position.get(b));
+const components = [...touched].sort(([a], [b]) => compare(a, b)).map(([componentId, reach]) => {
+  const anchored = componentRow.get(componentId);
+  return {
+    id: componentId,
+    label: anchored?.label ?? null,
+    layer: anchored?.layer ?? null,
+    context: anchored?.context ?? null,
+    members: { satisfies: byPosition(reach.satisfies), references: byPosition(reach.references) },
+    restsOn: [...reach.restsOn].sort(compare),
+    designs: byPosition(reach.designs),
+  };
+});
+
+// Anchored uses aggregated to component pairs, as the architecture map counts them, each with the
+// unit edges behind its count; pairs with one end outside the touched set are kept and marked.
+const pairs = new Map();
+for (const edge of architectureMap.usesEdges) {
+  const from = componentOfUnit(edge.from);
+  const to = componentOfUnit(edge.to);
+  if (from === undefined || to === undefined || from === to || (!touched.has(from) && !touched.has(to))) continue;
+  const key = `${from}\u0000${to}`;
+  if (!pairs.has(key)) pairs.set(key, { from, to, count: 0, outside: !(touched.has(from) && touched.has(to)), units: [] });
+  const pair = pairs.get(key);
+  pair.count += 1;
+  pair.units.push({ from: edge.from, to: edge.to, claim: edge.claim });
+}
+const uses = [...pairs.values()].sort((a, b) => compare(a.from, b.from) || compare(a.to, b.to));
+// Planned uses: each component a member design declares, kept apart from the anchored pairs.
+const designed = new Set(designs.map((design) => design.componentId));
+const plannedUses = designs.flatMap((design) => (design.uses ?? []).filter((to) => to !== design.componentId)
+  .map((to) => ({ design: design.spec, from: design.componentId, to, outside: !(touched.has(to) || designed.has(to)) })))
+  .sort((a, b) => compare(a.from, b.from) || compare(a.to, b.to) || compare(a.design, b.design));
+// Components one step outside: reached by an anchored pair or named by a planned use; no further reach.
+const reachOrder = ["touchedUses", "usesTouched", "plannedUse"];
+const outsideReach = new Map();
+const reachOutside = (id, how) => outsideReach.set(id, (outsideReach.get(id) ?? new Set()).add(how));
+for (const pair of uses) {
+  if (!touched.has(pair.to)) reachOutside(pair.to, "touchedUses");
+  if (!touched.has(pair.from)) reachOutside(pair.from, "usesTouched");
+}
+for (const use of plannedUses) if (use.outside) reachOutside(use.to, "plannedUse");
+const outside = [...outsideReach].sort(([a], [b]) => compare(a, b)).map(([id, how]) => ({
+  id,
+  label: componentRow.get(id)?.label ?? null,
+  layer: componentRow.get(id)?.layer ?? null,
+  context: componentRow.get(id)?.context ?? null,
+  anchored: anchoredComponents.has(id),
+  reachedBy: reachOrder.filter((name) => how.has(name)),
+}));
+
+// Decisions in scope: decision members and every decision a member names through decidedBy.
+const decisionIds = new Set(ids.filter((id) => context.get(id).specKind === "decision"));
+for (const id of ids) for (const decision of context.get(id).designColumns.decisions) if (decision.resolved) decisionIds.add(decision.id);
+const decisions = [...decisionIds].sort(compare).map((decisionId) => {
+  const row = decisionRow.get(decisionId);
+  const spec = g.specContext(decisionId);
+  return {
+    id: decisionId,
+    title: spec.title ?? null,
+    statedReadiness: spec.statedReadiness,
+    floorReached: spec.derivedReadiness ?? "none",
+    member: inSlice.has(decisionId),
+    shapes: (row?.shapes ?? []).filter((id) => inSlice.has(id)).sort((a, b) => position.get(a) - position.get(b)),
+    refines: row?.refines ?? [],
+    supersedes: row?.supersedes ?? [],
+    supersededBy: row?.supersededBy ?? [],
+    openQuestions: spec.designColumns.openQuestions.length,
+    blockingQuestions: spec.designColumns.blockingQuestions,
+  };
+});
+
+// Open questions in scope: members, decisions, and those of outside Specs that hold a member.
+const holdingOutside = boundary.restsOn.filter((row) => row.holds.length > 0).map((row) => row.id);
+const questionSources = [
+  ...ids.map((id) => [id, "member"]),
+  ...decisions.filter((row) => !row.member).map((row) => [row.id, "decision"]),
+  ...holdingOutside.filter((id) => !decisionIds.has(id)).map((id) => [id, "restsOn"]),
+];
+const questions = [];
+for (const [specId, origin] of questionSources) {
+  const holdsOwn = memberRow.get(specId)?.holds.some((hold) => hold.clauseId === "no-blocking-open-questions") ?? false;
+  const heldMembers = holdsTarget(specId);
+  (questionsOf.get(specId) ?? []).forEach((question, index) => {
+    if (origin === "restsOn" && !question.blocking) return;
+    questions.push({
+      address: question.key === null ? null : `${specId}#question.${question.key}`,
+      spec: specId,
+      origin,
+      index,
+      question: question.question,
+      blocking: question.blocking,
+      deferral: question.deferral,
+      decider: question.decider,
+      links: question.links,
+      provisional: question.provisional,
+      trigger: question.trigger,
+      holds: question.blocking ? [...(holdsOwn ? [specId] : []), ...heldMembers] : [],
+    });
+  });
+}
+questions.sort((a, b) => Number(b.blocking) - Number(a.blocking) || b.holds.length - a.holds.length || compare(a.spec, b.spec) || a.index - b.index);
+
+const count = (test) => members.filter(test).length;
+const answer = {
+  scope: pack === null ? { specs: ids } : { pack: packId, title: pack.title ?? null, framing: pack.framing ?? null, subset: subset !== undefined, members: ids, unresolved },
+  totals: {
+    members: members.length,
+    exampleMembers: exampleOf.size,
+    relations: edges.length,
+    depth: members.reduce((deepest, row) => Math.max(deepest, row.depth), 0),
+    cycles: cycles.length,
+    heldBelowNextRung: count((row) => row.holds.length > 0),
+    waitingForAuthor: count((row) => row.statedNextRung !== null && row.holds.length === 0),
+    restsOn: boundary.restsOn.length,
+    holdingOutside: holdingOutside.length,
+    restedOnBy: boundary.restedOnBy.length,
+    verifiedBy: boundary.verifiedBy.length,
+    supersededBy: boundary.supersededBy.length,
+    components: {
+      touched: components.length,
+      throughMembers: components.filter((row) => row.members.satisfies.length + row.members.references.length > 0).length,
+      throughRestsOn: components.filter((row) => row.restsOn.length > 0).length,
+      throughDesigns: components.filter((row) => row.designs.length > 0).length,
+      outside: outside.length,
+    },
+    designs: {
+      total: designs.length,
+      realized: designs.filter((row) => row.realized).length,
+      matching: designs.filter((row) => row.realized && row.differing.length === 0 && row.unreadable.length === 0).length,
+      unrealized: designs.filter((row) => !row.realized).length,
+      differing: designs.reduce((total, row) => total + row.differing.length, 0),
+      unreadable: designs.reduce((total, row) => total + row.unreadable.length, 0),
+    },
+    componentUses: {
+      inside: uses.filter((row) => !row.outside).length,
+      outside: uses.filter((row) => row.outside).length,
+      planned: plannedUses.length,
+    },
+    decisions: decisions.length,
+    decisionsBelowReady: decisions.filter((row) => row.statedReadiness !== "ready").length,
+    openQuestions: questions.length,
+    blockingQuestions: questions.filter((row) => row.blocking).length,
+  },
+  members,
+  structure: { edges, cycles, unresolved: unresolvedEdges },
+  boundary,
+  architecture: { components, designs, uses, plannedUses, outside, unplaced },
+  decisions,
+  questions,
+};
+if (detail === true) return answer;
+
+// The summary keeps every total and names what it leaves out.
+const selected = new Set(Array.isArray(detail) ? detail : []);
+const memberSummary = (row) => selected.has(row.id) ? row : {
+  id: row.id, specKind: row.specKind, statedReadiness: row.statedReadiness, floorReached: row.floorReached,
+  statedNextRung: row.statedNextRung, holds: row.holds.map((hold) => ({ clauseId: hold.clauseId, targets: hold.targets.map((target) => target.id) })), depth: row.depth, restsOn: row.restsOn, exampleOf: row.exampleOf,
+  design: row.design, rules: row.rules, implementedBy: row.implementedBy.length, referencedBy: row.referencedBy.length,
+};
+return {
+  ...answer,
+  members: members.map(memberSummary),
+  structure: { edges: edges.map(({ from, to, type, orders }) => ({ from, to, type, orders })), cycles, unresolved: unresolvedEdges.map(({ from, to, type }) => ({ from, to, type })) },
+  boundary: Object.fromEntries(Object.entries(boundary).map(([direction, rows]) => [direction, rows.map((row) => ({ id: row.id, statedReadiness: row.statedReadiness, holds: row.holds, ...(row.inPack ? { inPack: true } : {}) }))])),
+  architecture: {
+    components: components.map((row) => ({ id: row.id, layer: row.layer, context: row.context,
+      members: { satisfies: row.members.satisfies.length, references: row.members.references.length }, restsOn: row.restsOn.length, designs: row.designs.length })),
+    designs: designs.map((row) => ({ spec: row.spec, componentId: row.componentId, anchorExists: row.anchorExists, realized: row.realized,
+      differing: row.differing.length, unreadable: row.unreadable.length })),
+    uses: uses.map(({ from, to, count, outside: beyond }) => ({ from, to, count, outside: beyond })),
+    plannedUses,
+    outside: outside.map(({ id, anchored, reachedBy }) => ({ id, anchored, reachedBy })),
+    unplaced,
+  },
+  decisions: decisions.map((row) => ({ id: row.id, statedReadiness: row.statedReadiness, member: row.member, shapes: row.shapes.length })),
+  questions: questions.map((row) => (row.blocking ? row : { address: row.address, spec: row.spec, index: row.index })),
+  leftOut: [
+    "Titles, altitudes, rested-on-by and example member lists, example and verifier counts, and unit and component ids of unselected members; hold descriptions, target types and rungs; unit counts and hold target ids kept.",
+    "Relation reasons; relation types kept.",
+    "Boundary titles, kinds, floors, implementation bindings and joined members; ids, stated rungs and holds kept.",
+    "Component labels and the Specs that reach each component; counts kept.",
+    "Declared values, differing rows and unreadable rows of each member design; their counts kept.",
+    "The unit edges behind each component pair; counts kept.",
+    "Labels, layers and contexts of outside components.",
+    "Decision titles, floors, refinements, supersessions and question counts; shaped member ids, with their count kept.",
+    "Non-blocking question text and fields; addresses kept.",
+  ],
+  ...(Array.isArray(detail) ? { diagnostics: detail.filter((id) => !inSlice.has(id)).map((id) => ({ id, reason: "not-member" })) } : {}),
+};
+```
+
+## 55. The roadmap memo
+
+Render the roadmap selected by `params.pack` and `params.decider` as a Markdown forward section.
+Without a Pack, exactly one priority Pack must exist. The roadmap and open-question register
+supply the reading. Purpose and reach describes intent and structural reach; the author supplies
+the reason for an entry's place around the memo.
+
+The answer is `{ diagnostics: [], memo }`, with `memo` one Markdown string. A missing or ambiguous
+Pack selection or an invalid decider returns `{ diagnostics: [{ parameter, problem }], memo: null }`.
+The answer and section formats are defined by `spec:consumers.roadmap.memo#design.memoRecipe`
+and its following entries.
+
+```js
+const accepts = ["pack", "decider"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+let pack = params.pack;
+if (pack === undefined) {
+  const priority = graph.nodes.filter((node) => node.nodeType === "Pack" && node.order === "priority");
+  if (priority.length !== 1) return { diagnostics: [{ parameter: "pack", problem: priority.length === 0 ? "No Pack states order: priority; name one." : "Several Packs state order: priority; name one." }], memo: null };
+  pack = priority[0].id;
+}
+const decider = params.decider === null ? null : params.decider ?? "owner";
+const answer = await recipes(53, { pack, decider });
+if (answer.diagnostics !== undefined) return { diagnostics: answer.diagnostics, memo: null };
+const roadmap = answer.roadmaps[0];
+const register = await recipes(20);
+
+const span = (text) => {
+  const value = String(text);
+  const longest = Math.max(0, ...[...value.matchAll(/`+/gu)].map((match) => match[0].length));
+  const ticks = "`".repeat(longest + 1);
+  const pad = value.startsWith("`") || value.endsWith("`") ? " " : "";
+  return `${ticks}${pad}${value}${pad}${ticks}`;
+};
+const html = (value) => value.replace(/[<>&]/gu, (char) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[char]);
+const text = (value) => {
+  const source = String(value).replace(/\r\n|\r|\n/gu, " ");
+  const runs = [...source.matchAll(/`+/gu)];
+  let at = 0, out = "";
+  for (let i = 0; i < runs.length; i += 1) {
+    const open = runs[i];
+    const closing = runs.findIndex((run, j) => j > i && run[0].length === open[0].length);
+    if (closing < 0) continue;
+    const close = runs[closing];
+    out += html(source.slice(at, open.index)) + source.slice(open.index, close.index + close[0].length);
+    at = close.index + close[0].length;
+    i = closing;
+  }
+  return out + html(source.slice(at));
+};
+const cell = (value) => text(value).replace(/\|/gu, "\\|");
+const lines = [];
+const push = (...values) => lines.push(...values);
+const contexts = new Map(roadmap.entries.map((entry) => [entry.id, g.specContext(entry.id)]));
+const purposeAndReach = (entry) => {
+  const intent = contexts.get(entry.id).sections?.intent ?? {};
+  const line = (intent.problem ?? intent.outcome ?? "").trim();
+  const own = line === "" || line.endsWith(".") ? line : `${line}.`;
+  const derived = [];
+  const waitingSpecs = new Set(entry.restedOnBy.map((row) => row.id)).size;
+  if (waitingSpecs > 0) derived.push(`Waited on by ${waitingSpecs}.`);
+  if (entry.buildNow.length > 0 && entry.need !== "to build") derived.push(`${entry.buildNow.length} of its parts ready to build now.`);
+  return [own, ...derived].filter((part) => part !== "").join(" ");
+};
+const holdText = (clauses) => clauses.length === 0 ? "nothing holds it" : `held by ${clauses.map((row) => row.targets.length === 0 ? row.clause : `${row.clause} (${row.targets.map(span).join(", ")})`).join(", ")}`;
+const entryCell = (entry) => `${entry.title ?? entry.id} ${span(entry.id)}`;
+
+push("## The next work, from the roadmap", "");
+push(`Roadmap: ${text(roadmap.title ?? roadmap.pack)} ${span(roadmap.pack)}`, "");
+push("To state means the floor allows ready and a person still judges the statement. Built means every Spec of the entry\u0027s work states ready and has an implementation binding; it reports no passing test and no deployment.", "");
+for (const paragraph of (roadmap.framing ?? "").split(/\n\s*\n/u).map((part) => part.trim()).filter((part) => part !== "")) push(text(paragraph), "");
+if (roadmap.order !== "priority") push("This Pack\u0027s order is reading order, not a stated priority.", "");
+
+const need = (name) => roadmap.entries.filter((entry) => entry.need === name);
+push("### To design", "");
+if (need("to design").length === 0) push("No entry needs design.", "");
+else {
+  push("| Place | Entry | Next | Purpose and reach |", "| --- | --- | --- | --- |");
+  for (const entry of need("to design")) {
+    const next = [];
+    // Put the entry before its descendants, then truncate.
+    const parts = entry.workRows.filter((row) => row.need === "to design");
+    const shown = [...parts.filter((row) => row.id === entry.id), ...parts.filter((row) => row.id !== entry.id)].slice(0, 3);
+    for (const row of shown) next.push(`${row.id === entry.id ? "itself" : span(row.id)} ${span(row.statedReadiness)} → ${span(row.statedNextRung)}, ${holdText(row.holdsNextRung)}`);
+    if (parts.length > shown.length) next.push(`and ${parts.length - shown.length} more parts to design`);
+    const blocked = entry.blockingQuestions.map((question) => question.address === null ? span(question.spec) : span(question.address));
+    if (blocked.length > 0) next.push(`blocked by ${blocked.join(", ")}`);
+    if (entry.decisions.length > 0) next.push(`decided by ${entry.decisions.map((decision) => `${span(decision.id)} (${decision.statedReadiness})`).join(", ")}`);
+    push(`| ${entry.place} | ${cell(entryCell(entry))} | ${cell(next.join("; "))} | ${cell(purposeAndReach(entry))} |`);
+  }
+  push("");
+}
+if (need("to state").length > 0) {
+  push("### To state", "");
+  push("| Place | Entry | Earlier waiting statements | Purpose and reach |", "| --- | --- | --- | --- |");
+  for (const entry of need("to state")) {
+    const rows = entry.earlierStatements;
+    const parts = [];
+    const inside = rows.filter((row) => row.where === "entry");
+    const onRoadmap = rows.filter((row) => row.where === "roadmap");
+    const outside = rows.filter((row) => row.where === "outside");
+    if (inside.length > 0) parts.push(`in this entry ${inside.map((row) => span(row.id)).join(", ")}`);
+    if (onRoadmap.length > 0) parts.push(`on the roadmap ${onRoadmap.map((row) => `${span(row.id)} (place ${row.onRoadmap})`).join(", ")}`);
+    if (outside.length > 0) parts.push(`${outside.length} outside the roadmap`);
+    const earlier = parts.length === 0 ? "No preceding waiting statement in the statement queue." : parts.join("; ");
+    push(`| ${entry.place} | ${cell(entryCell(entry))} | ${cell(earlier)} | ${cell(purposeAndReach(entry))} |`);
+  }
+  push("");
+}
+push("### To build", "");
+if (need("to build").length === 0) push("No entry is ready to build.", "");
+else {
+  push("| Place | Entry | Purpose and reach | Rests on |", "| --- | --- | --- | --- |");
+  for (const entry of need("to build")) {
+    const rests = [...new Map(entry.restsOn.map((row) => [row.id, row])).values()].map((row) => `${span(row.id)} (${row.need})`);
+    push(`| ${entry.place} | ${cell(entryCell(entry))} | ${cell(purposeAndReach(entry))} | ${cell(rests.length === 0 ? "nothing unbuilt" : rests.join(", "))} |`);
+  }
+  push("");
+}
+const questions = roadmap.waiting.questions;
+const statements = roadmap.waiting.statements;
+const questionLine = (question) => `- ${question.address === null ? span(question.spec) : span(question.address)}${question.blocking ? " (blocking)" : ""}, place ${question.places.join(", ")}: ${text(question.question)}`;
+if (questions.length + statements.length > 0) {
+  push(`### Waiting on the ${answer.decider}`, "");
+  for (const question of questions) push(questionLine(question));
+  for (const statement of statements) push(`- State ${span(statement.id)}: it states ${span(statement.statedReadiness)} and its floor allows ${span(statement.floorReached)}; place ${statement.places.join(", ")}`);
+  push("");
+}
+if (roadmap.waiting.withoutDecider.length > 0) {
+  push("### Questions without a decider", "", "These questions have no named decider.", "");
+  // Addresses keep this list short; the page carries the question text.
+  for (const question of roadmap.waiting.withoutDecider) push(`- ${question.address === null ? `${span(question.spec)} question ${question.index + 1}` : span(question.address)}${question.blocking ? " (blocking)" : ""}, place ${question.places.join(", ")}`);
+  push("");
+}
+const built = need("built");
+if (built.length > 0) {
+  push("### Built and still on the roadmap", "");
+  for (const entry of built) push(`- Place ${entry.place}: ${text(entryCell(entry))}`);
+  push("");
+}
+if (roadmap.unresolved.length > 0) {
+  push("### Unresolved members", "");
+  for (const row of roadmap.unresolved) push(`- Place ${row.place}: ${span(row.id)}`);
+  push("");
+}
+const deferrals = register.specs.flatMap((spec) => spec.questions.filter((question) => question.deferral).map((question) => ({ spec: spec.id, question })));
+if (deferrals.length > 0) {
+  push("### Deferred, with their triggers", "");
+  for (const { spec, question } of deferrals) push(`- ${question.key === undefined || question.key === null ? span(spec) : span(`${spec}#question.${question.key}`)}: ${text(question.question)} Trigger: ${text(question.trigger)}`);
+  push("");
+}
+while (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
+return { diagnostics: [], memo: `${lines.join("\n")}\n` };
 ```

@@ -1,3 +1,4 @@
+import { slicePath } from "../paths.js";
 import { exportPath } from "./export-page.js";
 import { maturityMap } from "./maturity-map.js";
 import { packChangeNote } from "./diff-page.js";
@@ -70,6 +71,7 @@ function memberCard(ctx: PageContext, member: PackMemberSummary, index: number):
  * @sdpSatisfies spec:consumers.spec-studio.pack-page, spec:consumers.spec-studio.export, spec:consumers.spec-studio.components
  * @sdpComponent component:protocol.projections
  * @sdpRole projection
+ * @sdpLabel renders Pack members, maturity and boundary joins
  */
 export function packPage(ctx: PageContext, pack: PackContext, totals: PackTotals): string {
   const held = pack.members.filter((m) => (m.statedNextRungFailures?.length ?? 0) > 0);
@@ -84,7 +86,7 @@ export function packPage(ctx: PageContext, pack: PackContext, totals: PackTotals
       )
       .join(", ");
   const summary = [
-    `${count(totals.members, "member")} in authored reading order; ${count(totals.unresolved, "unresolved member", "unresolved members", false)}.`,
+    `${count(totals.members, "member")} ${pack.order === "priority" ? "in priority order" : "in authored reading order"}; ${count(totals.unresolved, "unresolved member", "unresolved members", false)}.`,
     `${count(totals.heldBelowNextRung, "member")} held below their stated next rung${held.length ? `: ${cards(held, true)}` : ""}.`,
     `${count(totals.waitingForAuthor, "member")} waiting only for their author's statement${waiting.length && waiting.length !== pack.members.length ? `: ${cards(waiting)}` : ""}.`,
     `${count(totals.entries, "design entry", "design entries")} and ${count(totals.declarations, "pinned declaration", "pinned declarations", false)}.`,
@@ -110,12 +112,12 @@ export function packPage(ctx: PageContext, pack: PackContext, totals: PackTotals
   return frame(
     ctx,
     pack.title ?? pack.id,
-    `<header class="page-head"><h1>${codeSpans(pack.title ?? pack.id)}</h1><div class="ids"><span>${code(pack.id)}${copy(pack.id)}</span><span>${code(pack.file)}${copy(pack.file)}</span></div><p class="export-download"><a href="${escape(relative(ctx, exportPath(pack.id)))}" download="${escape(exportPath(pack.id).split("/").at(-1))}">Download this Pack as one file</a></p><sdp-compose scope="${escape(pack.id)}" action="change-entry" members-complete="${String(pack.members.every((m) => m.resolved))}" members="${escape(
+    `<header class="page-head"><h1>${codeSpans(pack.title ?? pack.id)}</h1><div class="ids"><span>${code(pack.id)}${copy(pack.id)}</span><span>${code(pack.file)}${copy(pack.file)}</span></div><p><a href="${escape(relative(ctx, slicePath(pack.id)))}">Read this Pack as one design</a></p><p class="export-download"><a href="${escape(relative(ctx, exportPath(pack.id)))}" download="${escape(exportPath(pack.id).split("/").at(-1))}">Download this Pack as one file</a></p><sdp-compose scope="${escape(pack.id)}" action="change-entry" members-complete="${String(pack.members.every((m) => m.resolved))}" members="${escape(
       pack.members
         .filter((m) => m.resolved)
         .map((m) => m.id)
         .join(" "),
-    )}"></sdp-compose><h2>Where the design stands</h2><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header>${maturityMap(pack)}<h2>Framing</h2>${prose(ctx, pack.framing)}${pack.modelRefs.length === 0 ? "" : `<p>Vocabulary: ${pack.modelRefs.map((id) => link(ctx, id)).join(", ")}</p>`}${packChangeNote(ctx, pack.id)}<h2>Members</h2><sdp-expander>${pack.members.map((m, i) => memberCard(ctx, m, i)).join("")}<h2>Boundary</h2>${boundary}<h2>Members with no verifier binding</h2><p class="prose">The graph records bindings and never runs${ctx.data.recipes.all.has(45) ? "" : ", so no page shows a run result"}. Decision records are left out: a decision never needs a verifier binding.${ctx.data.recipes.all.has(45) ? ` The <a href="${escape(relative(ctx, "runs.html"))}">runs page</a>, the <a href="${escape(relative(ctx, "tests.html"))}">tests lens</a> and the Spec pages of the Specs their files verify show the run records as external evidence from test files.` : ""}</p>${list(gaps.map((g) => `${link(ctx, g.id, ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id, codeSpans(ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id))} · ${code(g.id)} · stated ${escape(g.statedReadiness ?? "not recorded")}`))}<h2>Findings</h2><sdp-validation-findings filter="${escape(pack.id)}">${findingList(
+    )}"></sdp-compose><h2>Where the design stands</h2><ul class="summary">${summary.map((s) => `<li>${s}</li>`).join("")}</ul></header><sdp-expander>${maturityMap(pack)}<h2>Framing</h2>${prose(ctx, pack.framing)}${pack.modelRefs.length === 0 ? "" : `<p>Vocabulary: ${pack.modelRefs.map((id) => link(ctx, id)).join(", ")}</p>`}${packChangeNote(ctx, pack.id)}<h2>Members</h2>${pack.members.map((m, i) => memberCard(ctx, m, i)).join("")}<h2>Boundary</h2>${boundary}<h2>Members with no verifier binding</h2><p class="prose">The graph records bindings and never runs${ctx.data.recipes.all.has(45) ? "" : ", so no page shows a run result"}. Decision records are left out: a decision never needs a verifier binding.${ctx.data.recipes.all.has(45) ? ` The <a href="${escape(relative(ctx, "runs.html"))}">runs page</a>, the <a href="${escape(relative(ctx, "tests.html"))}">tests lens</a> and the Spec pages of the Specs their files verify show the run records as external evidence from test files.` : ""}</p>${list(gaps.map((g) => `${link(ctx, g.id, ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id, codeSpans(ctx.data.specs.find((s) => s.id === g.id)?.title ?? g.id))} · ${code(g.id)} · stated ${escape(g.statedReadiness ?? "not recorded")}`))}<h2>Findings</h2><sdp-validation-findings filter="${escape(pack.id)}">${findingList(
       ctx,
       ctx.data.findings.filter((f) => f.subjectId === pack.id),
     )}</sdp-validation-findings></sdp-expander>`,

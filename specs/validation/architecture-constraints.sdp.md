@@ -4,6 +4,9 @@ kind: rule
 altitude: feature
 readiness: ready
 relations:
+  refines:
+    target: spec:validation.corpus-rules
+    reason: the architecture walk is a corpus-selected rule over anchored structure
   dependsOn:
     - spec:model.anchors
     - spec:validation.corpus-rules

@@ -1,6 +1,6 @@
 # Census
 
-A disposable projection of the one graph (schema `0.11.0`): 17 nodes · 32 edges · 11 Specs.
+A disposable projection of the one graph (schema `0.12.0`): 18 nodes · 34 edges · 11 Specs.
 
 ## Spec kinds
 
@@ -47,7 +47,7 @@ A disposable projection of the one graph (schema `0.11.0`): 17 nodes · 32 edges
 | Value | Count |
 | --- | ---: |
 | `Primitive` | 11 |
-| `Pack` | 1 |
+| `Pack` | 2 |
 | `Anchor` | 2 |
 | `CodeNode` | 3 |
 
@@ -55,7 +55,7 @@ A disposable projection of the one graph (schema `0.11.0`): 17 nodes · 32 edges
 
 | Value | Count |
 | --- | ---: |
-| `declared` | 12 |
+| `declared` | 13 |
 | `anchored` | 5 |
 | `inferred` | 0 |
 
@@ -77,7 +77,7 @@ A disposable projection of the one graph (schema `0.11.0`): 17 nodes · 32 edges
 | `decidedBy` | 2 |
 | `verifies` | 3 |
 | `supersedes` | 0 |
-| `belongsTo` | 11 |
+| `belongsTo` | 13 |
 | `satisfies` | 3 |
 | `models` | 1 |
 | `memberOf` | 0 |
@@ -88,7 +88,7 @@ A disposable projection of the one graph (schema `0.11.0`): 17 nodes · 32 edges
 
 | Value | Count |
 | --- | ---: |
-| `declared` | 27 |
+| `declared` | 29 |
 | `anchored` | 5 |
 | `inferred` | 0 |
 

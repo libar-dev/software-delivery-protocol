@@ -3,6 +3,14 @@
  * Gherkin remains a lawful canonical per-ID option only for behavior and example.
  * The other six kinds stay Markdown because a Gherkin mapping would lie.
  */
+/**
+ * @sdpAnchor impl:protocol.gherkin-kind-policy
+ * @sdpLabel shared Gherkin kind-refusal and loss explanations
+ * @sdpSatisfies spec:carrier.gherkin-authoring, spec:consumers.gherkin-view
+ * @sdpReferences spec:decisions.carrier-universality
+ * @sdpComponent component:protocol.extract
+ * @sdpRole decider
+ */
 export const GHERKIN_KIND_LIE_REASONS = {
   workflow: "workflow has no distinct Gherkin root and Feature mapping erases the kind",
   rule: "rule collides with Rule: already consumed as inline behavior.rules",

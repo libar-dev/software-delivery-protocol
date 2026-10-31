@@ -613,7 +613,10 @@ it("opens disclosures for print and restores exactly their prior state", () => {
     new () => { connectedCallback(): void; disconnectedCallback(): void }
   >();
   const events = new Map<string, () => void>();
-  const details = [{ open: false }, { open: true }];
+  const details = [
+    { open: false, matches: () => false },
+    { open: true, matches: () => false },
+  ];
   const doc = {
     location: { hash: "" },
     createElement: () => ({
@@ -666,6 +669,66 @@ it("opens disclosures for print and restores exactly their prior state", () => {
   expect(details.map((d) => d.open)).toEqual([false, true]);
   expander.disconnectedCallback();
   expect(events.size).toBe(0);
+});
+
+it("leaves Mermaid source closed for print unless the reader opened it", () => {
+  const definitions = new Map<
+    string,
+    new () => { connectedCallback(): void; disconnectedCallback(): void }
+  >();
+  const events = new Map<string, () => void>();
+  const sourceSelector = 'sdp-diagram details[id$=".source"]';
+  const panel = (open: boolean, source: boolean) => ({
+    open,
+    matches: (selector: string) => source && selector.includes(sourceSelector),
+  });
+  // A closed text equivalent, a closed source, a source the reader opened, a closed section.
+  const details = [panel(false, false), panel(false, true), panel(true, true), panel(false, false)];
+  const doc = {
+    location: { hash: "" },
+    createElement: () => ({
+      append: () => undefined,
+      setAttribute: () => undefined,
+      addEventListener: () => undefined,
+    }),
+    defaultView: {
+      addEventListener: (type: string, fn: () => void) => {
+        events.set(type, fn);
+      },
+      removeEventListener: (type: string) => events.delete(type),
+    },
+  };
+  class Host {
+    ownerDocument = doc;
+    querySelectorAll(selector: string) {
+      return selector === "details" ? details : [];
+    }
+    prepend() {
+      /* The print probe does not render controls. */
+    }
+    append() {
+      /* The print probe does not render controls. */
+    }
+  }
+  runInNewContext(readFileSync(assets.script, "utf8"), {
+    HTMLElement: Host,
+    customElements: {
+      get: () => undefined,
+      define: (
+        name: string,
+        ctor: new () => { connectedCallback(): void; disconnectedCallback(): void },
+      ) => definitions.set(name, ctor),
+    },
+  });
+  const Expander = definitions.get("sdp-expander");
+  if (!Expander) throw new Error("No expander");
+  const expander = new Expander();
+  expander.connectedCallback();
+  events.get("beforeprint")?.();
+  expect(details.map((d) => d.open)).toEqual([true, false, true, true]);
+  events.get("afterprint")?.();
+  expect(details.map((d) => d.open)).toEqual([false, false, true, false]);
+  expander.disconnectedCallback();
 });
 
 import { spawn } from "node:child_process";
@@ -1412,19 +1475,37 @@ it("keeps table headers and one-word cells intact while allowing word-boundary w
   }
 });
 
-it("fits diagrams without enlarging them at desktop and phone widths", () => {
+it("keeps natural desktop diagram size and fits only on phones", () => {
   const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
-  const values: Record<string, string> = {};
+  const byMedia: Record<string, Record<string, string>> = {};
   css.walkRules("sdp-diagram svg", (rule) => {
-    if (rule.parent?.type === "atrule" && rule.parent.params === "print") return;
-    expect(
-      rule.nodes
-        .filter((node) => node.type === "decl" && node.prop === "width")
-        .map((node) => node.type),
-    ).toEqual([]);
+    const key = rule.parent?.type === "atrule" ? rule.parent.params : "desktop";
     rule.walkDecls((decl) => {
-      values[decl.prop] = decl.value;
+      (byMedia[key] ??= {})[decl.prop] = decl.value;
     });
   });
-  expect(values).toMatchObject({ "max-width": "100%", height: "auto" });
+  expect(byMedia.desktop).toMatchObject({ "max-width": "none", height: "auto" });
+  expect(byMedia["(max-width: 719.98px)"]).toMatchObject({ "max-width": "100%", height: "auto" });
+});
+it("hides phone scroll advice and closed source in print while keeping opened source printable", () => {
+  const css = parseCss(readFileSync("src/projections/studio/studio.css", "utf8"));
+  const values: Record<string, Record<string, string>> = {};
+  css.walkRules((rule) => {
+    if (rule.parent?.type !== "atrule") return;
+    for (const selector of rule.selectors)
+      rule.walkDecls((decl) => {
+        (values[`${rule.parent?.type === "atrule" ? rule.parent.params : ""}/${selector}`] ??= {})[
+          decl.prop
+        ] = decl.value;
+      });
+  });
+  expect(values["(max-width: 719.98px)/.scroll-help"]).toMatchObject({ display: "none" });
+  for (const element of ["sdp-diagram", "sdp-maturity-map"]) {
+    expect(values[`print/${element} details[id$=".source"]:not([open])`]).toMatchObject({
+      display: "none",
+    });
+    expect(values[`print/${element} details[id$=".source"][open] textarea`]).toMatchObject({
+      display: "block",
+    });
+  }
 });

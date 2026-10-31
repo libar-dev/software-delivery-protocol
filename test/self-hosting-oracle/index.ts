@@ -50,14 +50,22 @@ export const expectedSpecs: readonly ExpectedSpec[] = specFamilies.flatMap(
 );
 
 // No intended prose-mention pair is left without a declared relation. The owner retains the
-// honesty gap on spec:model.spec-sections. The Studio gaps now have genuine bound verifiers.
-export const expectedWarnings = [
-  {
+// honesty gap on spec:model.spec-sections. The owner's ready statements on plan 47's
+// roadmaps-and-slices Pack add one gap for each newly ready non-decision Spec that no verifier
+// binds yet; decisions take no gap. The validator sorts findings by carrier path, so the rows
+// follow the carriers' paths in code-unit order.
+const gap = (subjectId: string) =>
+  ({
     validatorId: "honesty/gaps",
     family: "honesty",
     severity: "warning",
-    subjectId: "spec:model.spec-sections",
-  },
+    subjectId,
+  }) as const;
+
+export const expectedWarnings = [
+  gap("spec:extraction.executable-examples"),
+  gap("spec:model.spec-sections"),
+  gap("spec:protocol.role-vocabulary"),
 ] as const;
 
 export type { ExpectedAnchor } from "./anchors.js";
@@ -70,6 +78,8 @@ export {
   expectedObsidianVaultPackMembers,
   expectedDesignManagementPackMembers,
   expectedPackMembers,
+  expectedRoadmapPackMembers,
+  expectedRoadmapsAndSlicesPackMembers,
   expectedStudioPackMembers,
   expectedPacks,
 } from "./pack-members.js";

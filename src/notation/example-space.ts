@@ -474,7 +474,7 @@ function decode(graph: GraphSchema) {
  * @sdpAnchor impl:protocol.example-space-decoding
  * @sdpLabel shared example-space interpretation for contracts and reader contexts
  * @sdpSatisfies spec:consumers.agent-surface.example-space-coverage, spec:carrier.step-keys
- * @sdpComponent component:protocol.notation
+ * @sdpComponent component:protocol.reader
  * @sdpRole codec
  */
 export function decodeExampleSpaces(graph: GraphSchema): ReturnType<typeof decode> {
