@@ -4,6 +4,25 @@ Libar Software Delivery Protocol is a typed, executable, self-validating meta-mo
 delivery: author `Spec` documents in the repository, derive one graph, and check conformance and
 honesty.
 
+## Read the product story
+
+The [article series and publication plan](docs/articles/README.md) are the guided introduction to
+the Protocol, its human review experience and its AI direction. They are developed in the open in
+[PR #34](https://github.com/libar-dev/software-delivery-protocol/pull/34).
+
+Start with [the spec is the prompt is the design](docs/articles/01-the-spec-is-the-prompt-is-the-design.md),
+then read [one graph, many views](docs/articles/02-one-graph-many-views.md) to see why HTML,
+Markdown, Mermaid and other projections can change without becoming competing sources of truth.
+The [hands-on walkthrough](docs/articles/03-walkthrough-intent-to-verified-code.md) follows intent
+into verified code. [The agent-surface article](docs/articles/04-stop-building-verb-walls-for-coding-agents.md)
+explains `sdp q`, and [the AI direction](docs/articles/05-ai-can-shape-the-reading.md) separates
+current agent workflows from future presentation assistance.
+
+The [pre-code seed design](docs/lineage/v0-design/README.md) carries the original product
+experience. The [short annotation context](docs/lineage/annotation-context.md) explains why source
+bindings are critical to useful projections. For the first UX/UI design pass, use the compact
+article packet, its designer's brief and a Studio page set generated from the same source pin.
+
 **Carrier rule:** Specs and Packs default to Markdown; the TS DSL survives as import source and a
 lawful per-ID option, while behavior and example Specs may use Gherkin canonically per ID (the
 carrier ruling, MD-18, the Pack syntax ruling, MD-25, and the Gherkin carrier option, MD-27).

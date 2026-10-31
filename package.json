@@ -71,6 +71,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:temporal": "node ./check-temporal.mjs",
+    "check:articles": "node docs/articles/sync-evidence.mjs --check",
     "generate:example": "node ./projection-suite.mjs examples/checkout-v1",
     "generate:self-hosting": "node ./projection-suite.mjs . --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
     "check:self-hosting": "node ./projection-suite.mjs . --exclude explorations --exclude examples --exclude test/fixtures/import/parity --check-clean",

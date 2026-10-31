@@ -1,198 +1,192 @@
-# Media Plan & Living Series Playbook — Libar Software Delivery Protocol
+# Media plan and living series playbook
 
-> **Pinned baseline:** commit [`5a0b22c`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6) (`5a0b22c2d9ead98c900b60ed6209342fce2cbef6`), the merge of [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33).
-> **Posture:** This directory lives on a standing, unmerged pull request that is periodically refreshed as `main` advances. Every corpus number in this series is derived from the graph at the pinned commit—re-run the queries in [The Living-PR Refresh Playbook](#5-the-living-pr-refresh-playbook) rather than inheriting counts across updates.
+> **Pinned source baseline:** commit [`b5e0a8be`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753), the merge of [PR #36](https://github.com/libar-dev/software-delivery-protocol/pull/36).
+> **Posture:** This directory lives on a standing pull request refreshed as `main` advances. Current behavior, seed-design intent and future directions must read as three different things. Re-run every measurement at a new pin rather than inheriting it. The source baseline may be ahead of the article branch. Evidence verification therefore uses a separate checkout of the pinned source until the branch contains it.
 
----
+## 1. The series argument
 
-## 1. Narrative Positioning & Core Thesis
+Software teams keep intent in tickets and product documents, architecture in diagrams and wikis, decisions in ADRs, acceptance criteria in test files and run results in CI. The links between them are usually prose. AI coding agents inherit that fragmentation and must guess at structure.
 
-### The problem we lead with
-Software teams have more tools than ever, yet delivery truth is more fragmented than ever. Intent lives in tickets and product docs, architecture lives on whiteboards and stale wikis, decisions live in scattered ADR files, acceptance criteria live in `.feature` files, and verification lives in CI logs. Nothing joins them except rot-prone prose. Within weeks of implementation, documentation drifts from code.
+Libar Software Delivery Protocol (`@libar-dev/software-delivery-protocol`, CLI `sdp`) models delivery as typed repository content, derives one graph and generates consumer-specific readings from it. Its founding slogan is:
 
-When AI coding agents enter that environment, the fragmentation compounds. Agents read raw source files and stale Markdown, guess at boundaries, and hallucinate structure because **no typed model of the system exists in the repository for them to reason over**.
+> Specs are code; the graph is derived; the `claim` stays honest; git is the event log.
 
-### The thesis
-**Libar Software Delivery Protocol** (`@libar-dev/software-delivery-protocol`, CLI `sdp`) is a programmatic, AI-native software-delivery system built on one bet: **the spec is the prompt is the design**. Instead of syncing external trackers or bolting a workflow state machine onto git, you model the whole delivery lifecycle as typed code in the repository, derive **one regenerable graph** from it, check **conformance and honesty** in CI, and generate every human- and AI-facing artifact off that graph.
+The series has to carry four consequences, not just the engine behind them:
 
-### The four-part slogan
-Every article in the series reinforces one or more clauses of the founding slogan from the [concept overview](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/README.md):
+1. **One Spec, enriched in place.** Eight kinds, three altitudes and four stated readiness rungs cover delivery intent without migrating an idea through artifact types.
+2. **Authored intent and derived facts stay separate.** `declared`, `anchored` and `inferred` claims are never collapsed. `implemented` and `has-verifier` are derived from bindings; `observed` remains deferred.
+3. **Projections are cheap to replace.** Markdown, Mermaid, Gherkin, HTML, CLI answers and generated notes are readings, not competing stores. The current Studio is working material for UX learning, not a finished interface.
+4. **AI has explicit trust boundaries.** Agents already read the graph and apply scoped intent. AI-assisted presentation is a future direction that must preserve those boundaries and address non-determinism honestly.
 
-1. **Specs are code** — One authored truth-primitive (`Spec`) enriched in place across three independent descriptors (`kind` × `altitude` × `readiness`), authored in Markdown (`.sdp.md`) by default, with TypeScript (`.sdp.ts`) as a lawful per-ID option and graph-aware Gherkin (`.sdp.gherkin`) as a per-ID option for `behavior` and `example` Specs only (the Gherkin carrier option, MD-27).
-2. **The graph is derived** — One flat, deterministic, regenerable graph (`graph = f(repo)`) serves as the sole read model for validators, human views, and coding agents. Delete `generated/` and rebuild it byte-for-byte.
-3. **The `claim` stays honest** — Every fact carries its epistemic status (`declared` human intent, `anchored` source bindings, or `inferred` mechanical structure) and the three are never collapsed. The delivery facts `implemented` and `has-verifier` are derived today from resolving edges, never hand-authored; `observed` is designed into the model but not yet derived.
-4. **Git is the event log** — History and prior states live in git commits, not in a second database or ticket status machine.
+The pre-code seed design in [`docs/lineage/v0-design/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design) is primary context for the product experience. It is historical evidence, not current law. Current Specs decide what is built and ratified.
 
----
+## 2. Audiences and distribution
 
-## 2. Target Audiences & Distribution Strategy
-
-| Audience segment | What hurts them today | What hooks them in the Protocol | Primary articles |
+| Audience | Problem to lead with | Protocol story | Main articles |
 |---|---|---|---|
-| **Staff / Principal Engineers & Software Architects** | Architecture diagrams and ADRs rot the week after a design review; no way to verify whether code still honors the design or which decisions shape a module. | One primitive with named coordinates; zero-import `@sdp*` comment-form anchors (`satisfies` vs. `references`, `role`, `layer`, `context`); deterministic conformance + honesty checks in CI. | Articles 1, 2, 5, 7 |
-| **AI / Coding-Agent Builders & Power Users** | `AGENTS.md` files bloat into thousands of lines of prose; MCP tools and CLI "verb walls" force agents to make 20+ calls or grep raw files and guess. | "Agents script the graph, not a verb wall": `sdp q` + `createReader`, 43 runnable recipes, context bundles composed within a budget counted in UTF-16 code units, and structured change proposals. | Articles 1, 3, 7, 8 |
-| **Engineering Leaders & Technical Founders** | Process theatre—mandatory sprint gates, Jira status choreography, and "100% spec coverage" quotas that produce AI-generated boilerplate nobody reads. | "Adopt the nouns, reject the gates" (MD-2); readiness floors instead of quotas; the build backlog (`ready` Specs without `implemented`, excluding `example` and `decision` Specs) and the drift alarm (`implemented ∧ ¬ready`) as live graph queries. | Articles 1, 4, 7 |
-| **BDD & Testing Practitioners** | Cucumber `.feature` files drift from step regexes, duplicate domain logic, and turn non-behavioral NFRs or domain models into awkward Given/When/Then prose. | Carrier-independent executable specs: typed `gwt-vocabulary` example spaces, generated step and space contracts, generated registrars committed once a test adopts them (adopted registrars are committed, MD-31), and authored `specOracle` expected-outcome functions. | Articles 2, 4, 6 |
+| Staff engineers and architects | Design and code drift apart; impact and ownership are hard to reconstruct | Stable Spec identities, source anchors, claim-aware graph, architecture and design slices | 1, 3, 7, 9 |
+| AI and coding-agent builders | Verb walls and raw-file search waste calls and context | `sdp q`, typed reader, recipes, context bundles and explicit edit hand-offs | 1, 4, 5, 9 |
+| Engineering leaders and technical founders | Process theater and hand-authored status create false confidence | Readiness floors instead of quotas, live backlog and drift queries, evidence with named limits | 1, 2, 5, 6 |
+| Product, QA and design reviewers | The repository holds the design but the useful review job is hard to perform | Stamped Studio previews, task-based projections, open questions, run evidence and scoped intent | 2, 3, 5, 9 |
+| UX/UI designers | The product has many possible readings and no settled visual language | One graph, disposable projections, visible honesty, current Studio as prototype | 2 and 5, with 1 as orientation |
+| BDD practitioners | Scenario text and step regexes drift; non-behavioral truth fits Gherkin poorly | Typed example spaces, generated contracts, oracles and lawful carriers | 3 and 8 |
 
-### Channel & format rollout
-- **Long-form canonical posts** — Publish from the Markdown manuscripts in `docs/articles/` to the project blog, Substack, or dev.to, with commit-pinned links to the public repository (`libar-dev/software-delivery-protocol`) and `try-it` blocks readers can run in 60 seconds.
-- **Tables on other platforms** — Substack and Medium do not render Markdown tables. When cross-posting there, convert each table in an article (and in this playbook) to a bulleted list, one bullet per row, or to a rendered image with the same content as its alt text. dev.to and GitHub render the tables as written.
-- **Hacker News / Lobsters launches** — Lead with Articles 1, 3, and 5. Title for technical substance and contrarian clarity (e.g., why we refused to carry over Gen 1's 24-tag registry, why we built one JS evaluation sink instead of 30 CLI subcommands, why we ran a 4-way carrier competition to choose Markdown).
-- **Visual & interactive companions** — Pair Article 3 and Article 7 with the static HTML **Spec Studio** screenshots from [`reviews/assets/pr33`](https://github.com/libar-dev/software-delivery-protocol/tree/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/reviews/assets/pr33) and live static-host previews generated by `sdp studio`.
-- **Podcast / Audio briefings (NotebookLM)** — Feed [the 24 core sources](#the-24-core-sources-pinned-to-5a0b22c) plus Articles 1–3 into NotebookLM to produce an audio overview for commuters and architecture-review prep.
+### Channels
 
-### The 24 Core Sources (Pinned to `5a0b22c`)
+- Publish long-form manuscripts from `docs/articles/` to the project blog, dev.to or another canonical home. Keep commit-pinned repository links and runnable try-it blocks.
+- Convert Markdown tables to lists or accessible images on platforms that do not render tables.
+- Lead technical launches with Articles 1, 4 and 7. Lead design and product discussions with Article 2.
+- Generate the articles' Markdown tables, source excerpts, CLI output and Mermaid blocks at the publication pin. Screenshots are optional UX review material, not the primary evidence and never a substitute for regenerable content.
+- Use compact versions of Articles 1, 2 and 5 as the first UX/UI design packet, together with the Studio page set generated at the source pin. Article 2 already contains the compact design brief. The generated pages let the designer inspect the current interface without relying on screenshots. The packet does not need to wait for public serialization.
+- For audio or NotebookLM, supply the five full manuscripts and the reading path below, not the whole repository.
 
-<details>
-<summary>The repository files the series draws on, each pinned to commit <code>5a0b22c</code> (expand)</summary>
+## 3. Source reading path
 
-**Vocabulary and principles**
+### Current vocabulary and jobs
 
-1. [`CONTEXT.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/CONTEXT.md) — the ratified glossary
-2. [`docs/concept/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/README.md) — the concept overview and the four-part slogan
-3. [`docs/concept/00-vision-scope-and-mvp-boundary.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/00-vision-scope-and-mvp-boundary.md) — vision, scope, and non-goals
-4. [`docs/concept/01-founding-principles-and-invariants.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/01-founding-principles-and-invariants.md) — principles P1 to P10
-5. [`docs/concept/04-authoring-and-binding.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/04-authoring-and-binding.md) — authoring and binding
-6. [`docs/concept/06-consumers-and-projections.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/06-consumers-and-projections.md) — consumers and the two surfaces
-7. [`docs/concept/DECISIONS.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/DECISIONS.md) — the decision registry
+1. [`CONTEXT.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/CONTEXT.md), the ratified language.
+2. [`docs/concept/00`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/concept/00-vision-scope-and-mvp-boundary.md) and [`01`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/concept/01-founding-principles-and-invariants.md), scope and principles.
+3. [`jtbd-stories/05`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/jtbd-stories/05-see-and-share.md) and [`06`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/jtbd-stories/06-edit-through-the-lens.md), the human reading and edit jobs.
 
-**Carrying Specs**
+### Seed design and annotation evidence
 
-8. [`specs/model/core-model.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/model/core-model.sdp.md) — the one primitive and its descriptors
-9. [`specs/decisions/carrier-ruling.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/carrier-ruling.sdp.md) — the carrier ruling (MD-18)
-10. [`specs/decisions/anchor-comment-form.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/anchor-comment-form.sdp.md) — the comment form (MD-36)
-11. [`specs/decisions/anchor-binding-grain.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/anchor-binding-grain.sdp.md) — bindings are optional, plural, and may reference a design (MD-37)
-12. [`specs/decisions/architectural-annotation.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/architectural-annotation.sdp.md) — architectural significance is annotated where it is realized (MD-38)
-13. [`specs/extraction/executable-contracts.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/extraction/executable-contracts.sdp.md) — generated step and space contracts
-14. [`specs/consumers/agent-surface.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/consumers/agent-surface.sdp.md) — the agent surface and the demand map
-15. [`specs/consumers/context-bundle.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/consumers/context-bundle.sdp.md) — the context bundle
-16. [`specs/validation/corpus-rules.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/validation/corpus-rules.sdp.md) — corpus rules under `sdp validate --rules`
-17. [`specs/consumers/spec-studio.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/consumers/spec-studio.sdp.md) — the Spec Studio
+4. [`docs/lineage/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/README.md), the lineage guide and annotation-scout pointer.
+5. Seed [`00`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/00-vision-and-product.md), [`01`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/01-core-primitives.md) and [`02`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/02-system-architecture.md), the original model and canonical/derived split.
+6. Seed [`07`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/07-spec-studio-and-projections.md) and [`08`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/08-delivery-evidence-and-tooling.md), the original human experience, AI slices and evidence ambition.
+7. The [short annotation context](../lineage/annotation-context.md), with the archived scout behind it and the rulings carried by [PR #29](https://github.com/libar-dev/software-delivery-protocol/pull/29). It explains why complete annotation exclusion was an overcorrection and why source bindings are critical to projections.
 
-**Agent on-ramps and recipes**
+### Current carrying Specs and on-ramps
 
-18. [`docs/agent-surface/recipes.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/agent-surface/recipes.md) — the runnable recipe catalog
-19. [`.agents/skills/sdp-agent-surface/SKILL.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-agent-surface/SKILL.md) — the reading skill
-20. [`.agents/skills/sdp-authoring/SKILL.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-authoring/SKILL.md) — the authoring skill
-21. [`.agents/skills/sdp-sessions/SKILL.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-sessions/SKILL.md) — the sessions skill
+8. [`spec:model.core-model`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/model/core-model.sdp.md) and [`spec:consumers.projections-model`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/projections-model.sdp.md).
+9. [`spec:consumers.spec-studio`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/spec-studio.sdp.md), its lenses, sharing and intent-panel Specs in the same directory.
+10. [`spec:consumers.agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/agent-surface.sdp.md), [`spec:consumers.context-bundle`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/context-bundle.sdp.md) and [`spec:consumers.design-slice`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/design-slice.sdp.md).
+11. The five skills under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/.agents/skills) and the [recipe catalog](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/agent-surface/recipes.md).
+12. [`examples/checkout-v1`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/examples/checkout-v1), the worked engineering loop.
 
-**Worked example, lineage, and review**
+For any corpus fact, query the graph before reading a carrier. The source list is reading material for prose and design context, not permission to bypass the graph for measurements.
 
-22. [`examples/checkout-v1/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/README.md) — the worked MVP example
-23. [`docs/lineage/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/lineage/README.md) — the restored v0 design documents and the Gen 1 lineage scout report
-24. [`reviews/26-whole-corpus-refresh.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/reviews/26-whole-corpus-refresh.md) — the whole-corpus refresh record
+## 4. The ten-part series
 
-</details>
+| # | Title and file | Status | Job in the series |
+|---|---|---|---|
+| 01 | [The spec is the prompt is the design](./01-the-spec-is-the-prompt-is-the-design.md) | Full draft | The problem, one Spec, one graph, claim separation and the two check families |
+| 02 | [One graph, many views: the interface is allowed to change](./02-one-graph-many-views.md) | Full draft and UX/UI input | The seed's human scenario updated to current mechanics, the projection family, Studio honesty and a compact designer's brief |
+| 03 | [From rough idea to verified code](./03-walkthrough-intent-to-verified-code.md) | Full draft | The engineering loop through the worked example, bindings, contracts, oracles and deliberate failures |
+| 04 | [Stop building 30-verb CLI walls for coding agents](./04-stop-building-verb-walls-for-coding-agents.md) | Full draft | Demand map, `sdp q`, recipes, bundles in parts, design slices and measured agent use |
+| 05 | [AI can shape the reading, but it cannot rewrite the record](./05-ai-can-shape-the-reading.md) | Full direction draft | Built AI roles versus future presentation assistance, including the deterministic-projection tension |
+| 06 | Shared language is a performance feature | Detailed outline | Vocabulary decisions, readiness wording and the four-way carrier competition |
+| 07 | Excluding annotations was the mistake: what three generations taught us | Detailed outline | Gen 1, the pre-code seed and the current Protocol; the return of source bindings and what projections need from them |
+| 08 | Executable specifications without Cucumber glue | Detailed outline | The design behind typed example spaces, contracts and expected-outcome oracles, without repeating Part 3's tutorial |
+| 09 | Designing a large platform ahead of its code | Detailed outline | The first adopter, entry addresses, bundles in parts, design slices, corpus rules and roadmap readings |
+| 10 | Auditing your own corpus with cross-family AI reviewers | Detailed outline | A transferable review method, with the historical whole-corpus audit as evidence rather than the headline |
 
----
+### Article 06: *Shared language is a performance feature*
 
-## 3. The 8-Part Article Series Plan
+- Open on the cost of ambiguous words such as `status`, `abstraction` and `provenance` for people and agents.
+- Explain the governing rubric in `CONTEXT.md`: adopt established delivery nouns, reject process gates, coin a term only for a real difference.
+- Use the seed's "readiness is a claim" as the concrete collision. Today readiness is stated, while `claim` names epistemic status. The wording change records a model decision.
+- Cover the rename ledger and why a rejected name may return with a narrower job, as `marker` did for carrier syntax.
+- Tell the four-way carrier competition through its exhibits and probes. Explain why Markdown won the default, why TypeScript remains lawful per ID and why graph-aware Gherkin returned for behavior and example Specs.
+- Keep one canonical carrier per ID as the closing rule.
 
-| # | Title & file | Status | Core angle | Key repo sources & PRs |
-|---|---|---|---|---|
-| **01** | **[The Spec Is the Prompt Is the Design: Why AI-Native Software Delivery Needs One Graph, Not Another Ticket Tracker](./01-the-spec-is-the-prompt-is-the-design.md)** | **Ready in this PR** | The launch manifesto: why delivery truth fractures across tools, why AI agents hallucinate structure without a graph, and how one primitive (`Spec`), three claims (`declared` / `anchored` / `inferred`), and two check families (conformance + honesty) replace workflow gates. | [`docs/concept/00`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/00-vision-scope-and-mvp-boundary.md), [`01`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/01-founding-principles-and-invariants.md), [`CONTEXT.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/CONTEXT.md), [`spec:model.core-model`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/model/core-model.sdp.md), [PR #1](https://github.com/libar-dev/software-delivery-protocol/pull/1) |
-| **02** | **[From Rough Idea to Verified Code: A Hands-On Tour of the Libar Software Delivery Protocol](./02-walkthrough-intent-to-verified-code.md)** | **Ready in this PR** | The step-by-step engineer's tour through `pack:checkout-v1` and the self-hosted engine: authoring `.sdp.md` Specs (with a sidebar on the `.sdp.gherkin` option), clearing readiness floors, binding code with constant-form and `@sdp*` comment-form anchors, generating step/space contracts, binding an authored `specOracle`, and tripping the checks on purpose. | [`examples/checkout-v1/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/examples/checkout-v1/README.md), [`docs/concept/04`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/04-authoring-and-binding.md), [`sdp-authoring`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-authoring/SKILL.md), [PR #3](https://github.com/libar-dev/software-delivery-protocol/pull/3), [PR #29](https://github.com/libar-dev/software-delivery-protocol/pull/29) |
-| **03** | **[Stop Building 30-Verb CLI Walls for Coding Agents: Scripting the Delivery Graph with `sdp q` and Spec Studio](./03-stop-building-verb-walls-for-coding-agents.md)** | **Ready in this PR** | How coding agents and human reviewers consume the same derived graph: the demand map (`findByConcept`, `byFile`, `blastRadius`), the `sdp q` evaluation sink, growing by recipe instead of CLI verbs, scaling to a 243-Spec adopter with context bundles and corpus rules, and browsing the static HTML Spec Studio. | [`docs/concept/06`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/06-consumers-and-projections.md), [`sdp-agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-agent-surface/SKILL.md), [`spec:consumers.spec-studio`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/consumers/spec-studio.sdp.md), [PR #14](https://github.com/libar-dev/software-delivery-protocol/pull/14), [PR #31](https://github.com/libar-dev/software-delivery-protocol/pull/31), [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33) |
-| **04** | **Shared Language Is a Performance Feature: Ubiquitous Language, Rejecting Workflow Gates, and the Four-Way Carrier Competition** | Planned | Why settling the words first (`claim` vs. provenance, `altitude` vs. abstraction, `readiness floor` vs. readiness profile) gave the engine a design to be built on, and how a four-entrant carrier competition (Markdown vs. custom grammar vs. Gherkin fork vs. TSX), closed on exhibits, scorecards, and probes, ruled `.sdp.md` the default while keeping one canonical surface per ID. | [`CONTEXT.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/CONTEXT.md), [`DECISIONS.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/concept/DECISIONS.md), [`spec:decisions.carrier-ruling`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/carrier-ruling.sdp.md), [PR #1](https://github.com/libar-dev/software-delivery-protocol/pull/1), PRs [#4](https://github.com/libar-dev/software-delivery-protocol/pull/4) to [#7](https://github.com/libar-dev/software-delivery-protocol/pull/7), [PR #8](https://github.com/libar-dev/software-delivery-protocol/pull/8), [PR #17](https://github.com/libar-dev/software-delivery-protocol/pull/17), [PR #19](https://github.com/libar-dev/software-delivery-protocol/pull/19) |
-| **05** | **What We Learned Rebuilding `@libar-dev/architect`: Git Archaeology, the Comment-Form Reversal, and Honest Code Bindings** | Planned | A candid post-mortem on Gen 1 (`@libar-dev/architect`), how an evidence-based scout report overturned our own Gen 2 refusal of identity tags in doc comments, and why separating `satisfies` (code that realizes a Spec) from `references` (code that answers to a design without realizing it) stopped a stub from reading as `implemented`. | [`docs/lineage/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/lineage/README.md), [`docs/agent-surface/architecture.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/docs/agent-surface/architecture.md), [`spec:decisions.anchor-comment-form`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/anchor-comment-form.sdp.md), [`spec:decisions.anchor-binding-grain`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/decisions/anchor-binding-grain.sdp.md), [PR #28](https://github.com/libar-dev/software-delivery-protocol/pull/28), [PR #29](https://github.com/libar-dev/software-delivery-protocol/pull/29), [PR #32](https://github.com/libar-dev/software-delivery-protocol/pull/32) |
-| **06** | **Executable Specifications Without Cucumber Glue: Typed Example Spaces, Generated Contracts, and Expected-Outcome Oracles** | Planned | Why traditional BDD rots at the regex boundary, and how the Protocol generates TypeScript step and space contracts and deterministic registrars from `gwt-vocabulary` example spaces and bound points, then checks each bound example against an authored `specOracle` whose answers include `unspecified`. | [`spec:extraction.executable-contracts`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/extraction/executable-contracts.sdp.md), [`spec:extraction.runnable-modules`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/extraction/runnable-modules.sdp.md), [`spec:validation.oracle-target-eligibility`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/validation/oracle-target-eligibility.sdp.md), [PR #3](https://github.com/libar-dev/software-delivery-protocol/pull/3), [PR #19](https://github.com/libar-dev/software-delivery-protocol/pull/19), [PR #21](https://github.com/libar-dev/software-delivery-protocol/pull/21) |
-| **07** | **Designing a 243-Spec Platform Ahead of Its Code: Context Bundles, Entry Addresses, and Corpus Rules at Scale** | Planned | How the first adopter (`libar-platform`) pressured the Protocol while designing six Packs months ahead of their code: entry addresses (`#design.<key>`, `#ui.<key>`, `#question.<key>`, `#rule.<key>`), pinned declarations, context bundles within a default budget of 100,000 UTF-16 code units, planned components, and `sdp validate --rules`. | [`spec:consumers.context-bundle`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/consumers/context-bundle.sdp.md), [`spec:validation.corpus-rules`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/validation/corpus-rules.sdp.md), [`spec:model.planned-architecture`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/model/planned-architecture.sdp.md), [PR #26](https://github.com/libar-dev/software-delivery-protocol/pull/26), [PR #27](https://github.com/libar-dev/software-delivery-protocol/pull/27), [PR #31](https://github.com/libar-dev/software-delivery-protocol/pull/31), [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33) |
-| **08** | **Auditing 258 Self-Hosted Specs with Cross-Family AI Reviewers: Inside the 595-Finding Whole-Corpus Refresh** | Planned | How one developer and multi-model agent teams audited the entire self-hosted corpus (258 Specs at PR #32's base, `46f0280`) against the engine: splitting it into 13 units, running Fidelity and Quality lenses across model families, cross-verifying 595 findings (refuting 59), applying them in 18 lanes, each in its own worktree, and re-transcribing the self-hosting oracle from the carriers. | [`reviews/26-whole-corpus-refresh.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/reviews/26-whole-corpus-refresh.md), [`specs/self-hosting.pack.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/specs/self-hosting.pack.sdp.md), [`sdp-sessions`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/.agents/skills/sdp-sessions/SKILL.md), [PR #32](https://github.com/libar-dev/software-delivery-protocol/pull/32) |
+### Article 07: *Excluding annotations was the mistake*
 
-### Detailed outlines for Planned Articles (04–08)
+- Start with the apparent contradiction: Gen 1's tag sprawl was a real failure, but removing source annotations altogether cut off the bindings that make architecture, traceability and impact projections valuable.
+- Use three generations rather than a simple old-versus-new story. Gen 1 proved production value and taxonomy drift. The pre-code seed restored structured source markers to the design. The early current Protocol overcorrected by refusing JSDoc identity tags and restricting bindings.
+- Let the annotation scout supply the evidence: formal vocabulary cleanup was not the same as a shipped runtime registry shrinking; multiple extractors do not require multiple read models; source bindings feed generated documentation.
+- Explain why adoption made the cost visible. Runtime code that could not import the package had to bind in tests, and source-file queries missed the actual units.
+- Cover the comment-form return, optional plural bindings, `satisfies` versus `references`, and architectural `role`, `layer` and `context` where they are realized.
+- Connect the ruling to Article 2: a projection cannot show a component, realization or design reference the graph does not hold. Anchors are identity and structure, never Spec prose, and that narrowness is what makes them safe to project.
+- Include what did not return: sprawling tags, workflow statuses in code and hand-authored delivery facts.
 
-#### Article 04: *Shared Language Is a Performance Feature*
-- **Hook:** An unratified domain vocabulary costs every reader, human or agent: ambiguous words like *status*, *abstraction*, and *provenance* silently corrupt both human design reviews and subagent reasoning.
-- **Section 1 — Define first, name last:** The governing rubric from [`CONTEXT.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/CONTEXT.md): adopt established industry nouns, reject process state-machine gates (adopt the nouns, reject the gates, MD-2), and keep a coined word only for a genuine differentiator, where the word must name the difference it marks.
-- **Section 2 — Seven renames the engine was built on:** The rename table in [PR #1](https://github.com/libar-dev/software-delivery-protocol/pull/1)'s description, settled before any engine code: `claim` replacing provenance, `anchor` replacing marker, `altitude` replacing abstraction, `section` replacing facet, `readiness floor` replacing readiness profile, `Pack` replacing SpecPack, and `reader` and `impact graph` replacing handle and mechanical substrate. `CONTEXT.md` keeps the rejected names in its ledger; one came back with a narrower job, since `marker` now names only the bracket prefix of an open question or keyed entry, never the binding.
-- **Section 3 — The four-way carrier competition:** Four entrants, each with its own exhibit PR ([#4](https://github.com/libar-dev/software-delivery-protocol/pull/4) to [#7](https://github.com/libar-dev/software-delivery-protocol/pull/7)): F2 Markdown and the C2 custom grammar as full exhibits judged on their recorded scorecards in [PR #8](https://github.com/libar-dev/software-delivery-protocol/pull/8), the Gherkin fork and typed markup (TSX) closed earlier on falsifiable probes. Why C2's permanent ecosystem tax (parser, formatter, highlighting, editor integrations, LSP, and a grammar every agent must be taught) lost to `.sdp.md` with the TS DSL as a lawful per-ID option (the carrier ruling, MD-18), and how a graph-aware `.sdp.gherkin` option for behavior and example Specs arrived later ([PR #17](https://github.com/libar-dev/software-delivery-protocol/pull/17); the Gherkin carrier option, MD-27).
+### Article 08: *Executable specifications without Cucumber glue*
 
-#### Article 05: *What We Learned Rebuilding `@libar-dev/architect`*
-- **Hook:** Our first-generation tool (`@libar-dev/architect`) worked in production, and Gen 1's own self-hosted graph held 349 patterns—and it taught us every trap of source-first architecture graphs.
-- **Section 1 — The sins we refused to carry over:** Sprawling tag registries, workflow lifecycle gates (`candidate → roadmap → active → completed`), and hand-authored delivery status.
-- **Section 2 — When git archaeology corrects memory:** How the lineage scout report (carried by [PR #28](https://github.com/libar-dev/software-delivery-protocol/pull/28)) read Gen 1's commit history and found that the "50 tags shrank to 26" story was a cleanup of the formal vocabulary, not of a shipped runtime registry, and that what actually drifted was two Gherkin files sharing one identity, CLI fixtures leaking into the production scan, and misread tag syntax. Its tag inventory, not the history, showed the overloaded `implements`, used both for code realizing a Spec and for a feature file pointing at production code.
-- **Section 3 — The comment-form reversal ([PR #29](https://github.com/libar-dev/software-delivery-protocol/pull/29)):** Three rulings, each grounded in the scout, the original design, and the owner's direction to move closer to it. The `@sdp*` comment form (the comment form, MD-36) answered the first adopter (`libar-platform`), whose runtime code cannot import the Protocol package, so every one of its code anchors sat in a test. Optional plural bindings and the non-conferring `references` edge (bindings are optional, plural, and may reference a design, MD-37) answered its stub problem: the only way to name a design from code was to claim to realize it. Architectural attributes where code is realized (architectural significance is annotated where it is realized, MD-38) came from the original design and the owner, not the adopter: a `role` on any code anchor, and a `layer` and `context` on `component:` anchors only. The collective reading of `satisfies`, where the satisfying units together realize every promise of the Spec, was made explicit later, as ruling R01 of the whole-corpus refresh ([PR #32](https://github.com/libar-dev/software-delivery-protocol/pull/32)).
+- Lead with regex rot and with the deeper problem of tests verifying values that no longer match the authored example.
+- Explain carrier independence: Markdown and Gherkin can derive the same example space and contracts.
+- Focus on the authored/generated direction, point-per-example, bound points and the outcome union. Point back to Part 3 for registrar mechanics.
+- Explain the oracle's job and `unspecified`, including why an authored Then that lands on `unspecified` still fails rather than silently witnessing a gap.
+- Use the Protocol's own reader Spec in `.sdp.gherkin` as the self-hosting example.
+- Keep the boundary clear: `has-verifier` records a binding, supplied run evidence records results, and `observed` remains a separate deferred fact.
 
-#### Article 06: *Executable Specifications Without Cucumber Glue*
-- **Hook:** Everyone loves readable scenarios until a one-word phrasing change breaks a regex step definition—or worse, passes silently while testing the wrong value.
-- **Section 1 — Carrier-independent executability:** How `sdp build` turns `gwt-vocabulary` example spaces and bound points (`{n: 2}`, `{total: 100}`) into typed TypeScript step and space contracts under `generated/contracts/`.
-- **Section 2 — Authored → generated, never the reverse:** How the generated registrar, written beside its test as a `*.test.generated.ts` file and committed once that test imports it (adopted registrars are committed, MD-31), takes four required adapters (`createWorld`, `invoke`, `observe`, `expected`) and an optional fifth (`assertions`), without the generated code ever importing authored code.
-- **Section 3 — The `specOracle` and `unspecified`:** Why expected-outcome semantics belong in an authored, typed oracle beside the tests—and why an oracle that answers `unspecified` for an unmodeled region reports a coverage gap rather than a failure. One caveat belongs in the article: a bound executable example whose point lands on `unspecified` still turns its test red, because no authored Then may silently witness a gap.
+### Article 09: *Designing a large platform ahead of its code*
 
-#### Article 07: *Designing a 243-Spec Platform Ahead of Its Code*
-- **Hook:** What happens when an adopter models a transactional platform in 243 Specs (measured at its pin, per [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33)) across seven layers, 0 to 6, and states the components of layers 3 to 6 as designs before their code exists? The assumptions a small example never tests start to break, and the design-at-scale loop has to be built.
-- **Section 1 — Addressing one entry without splitting the Spec:** Entry addresses (`spec:<id>#design.<key>`, `#ui.<key>`, `#question.<key>`, `#rule.<key>`, from [PR #27](https://github.com/libar-dev/software-delivery-protocol/pull/27)), pinned declarations (recipe 24), and the key-family register (recipe 41). The limit belongs in the article too: an entry address is admitted in prose, where it must resolve, and refused in every ID slot (checked mentions, MD-40), so a relation still targets a whole Spec.
-- **Section 2 — Fitting a Pack into a model's context budget:** Recipe 36 (the context bundle) cuts in a deterministic seven-step order. At first `pack:history-view` needed at least 299,106 UTF-16 code units against the default budget of 100,000; [PR #33](https://github.com/libar-dev/software-delivery-protocol/pull/33)'s compact bundle shape plus the `declarations: "addresses"` opt-in brought it to 93,806. Two of the platform's Packs still exceed the budget after every cut, and are read through a perspective (recipe 37) until then.
-- **Section 3 — Corpus rules and planned architecture:** Running project-specific policies and the architecture walk (recipe 42) via `sdp validate --rules`, and comparing component design Specs against realized `component:` anchors with recipe 43.
+- Use the first adopter's historical 243-Spec pin as the opening scale example, not as a current count.
+- Show why design ahead of code needs entry addresses, pinned declarations and planned components rather than fabricated implementation bindings.
+- Follow one design pass through a context bundle. Explain deterministic cuts, complete scopes and ordered parts. Do not repeat the retired claim that a bundle never returns a subset of members.
+- Add the design slice as the whole-Pack reading and the design diff as the comparison between passes.
+- Explain change proposals against a named base and corpus rules that remain separate from Protocol findings.
+- Close with capability maps, design slices and the priority roadmap as current readings of planned work, with recipe 53 as the live source of next work.
 
-#### Article 08: *Auditing 258 Self-Hosted Specs with Cross-Family AI Reviewers*
-- **Hook:** When your repository self-hosts 258 Specs and 40 recipes (measured at `46f0280`, the merge of PR #31 and the base of [PR #32](https://github.com/libar-dev/software-delivery-protocol/pull/32)), how do you verify that the Specs, the engine, and the docs actually agree?
-- **Section 1 — Two lenses, two model families:** The methodology behind [`reviews/26-whole-corpus-refresh.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/reviews/26-whole-corpus-refresh.md) ([PR #32](https://github.com/libar-dev/software-delivery-protocol/pull/32)): pairing a Fidelity lens (code + tests vs. Spec rules) with a Quality lens (cross-Spec consistency, vocabulary, readiness honesty), then cross-verifying every finding with the opposite model family.
-- **Section 2 — What the 595 findings caught (and the 59 that were refuted):** Code that broke its own promises, such as Gherkin status lookalikes (`@status.ready`) passing as decoration; two homes of the law that disagreed, such as the authoring skill reading `satisfies` collectively while a Spec read it per unit (ruled as R01); and why cross-verification by the other model family was needed to refute false blockers.
-- **Section 3 — The distillation boundary and living hygiene:** Two recipes with different jobs. Slimming candidates (recipe 39) lists the pinned declarations of implemented, verified Specs that bound code may now carry, so a person can slim a Spec past the distillation boundary. The curation report (recipe 40) curates anchors rather than Specs: over the file-level imports `sdp build --imports` writes, it ranks load-bearing files no anchor covers and imports that disagree with anchored `uses` edges.
+### Article 10: *Auditing your own corpus with cross-family AI reviewers*
 
----
+- Lead with the method, not the finding count: one lens checks Specs against code and tests, another checks cross-Spec consistency and language, and a different model family verifies each finding.
+- Use the historical 258-Spec, 595-finding audit as the evidence at its own pin. Include the 59 refuted findings so review does not become a volume contest.
+- Show what the method caught: code that broke promises, two homes of one law and stale authoring guidance.
+- Explain why self-hosting makes drift testable and why the self-hosting oracle must be re-transcribed rather than inherited.
+- Close with slimming candidates and curation advice as different recurring hygiene tasks.
 
-## 4. Editorial House Rules & Guardrails
+## 5. Editorial house rules
 
-Every article in `docs/articles/` must conform to the repository's ratified language and automated checks:
+1. Use ratified terminology from `CONTEXT.md`. Readiness is stated, never "claimed." The Protocol defines a contract and instances conform. Claim "deterministically validated," never "provably correct."
+2. Label time and status. Current realization comes from the pinned graph and source. The seed design is pre-code evidence and direction. AI-assisted presentation is a future direction, not shipped functionality.
+3. Do not present today's Studio layout as settled UX. It is a working projection used to learn which readings help. Conversely, do not treat an open visual question as permission to change graph law in prose.
+4. Keep AI roles distinct: reading the graph, applying scoped intent and assisting presentation. If an AI-generated view varies, do not silently attribute the deterministic projection guarantee to it.
+5. Derive every current count at the named commit. Cite historical adopter and audit figures to the pull request or review that measured them.
+6. Run `npm run check:temporal`. Articles must not contain raw calendar dates, numbered plan paths or session/wave/fold tokens. Link the pull request that carried historical material instead of a dated lineage file.
+7. Link sibling articles relatively. At publication, rewrite relative links to public URLs or commit-pinned repository URLs. Refresh sibling links after renumbering.
+8. Use sentence-case headings and plain language. Cut repeated definitions; cross-link to the article that owns the detailed treatment.
+9. Check code fences and links manually. The standard formatter ignores `docs/**`, and the green gate does not prove that article links resolve.
+10. Regenerate article evidence at the publication pin and run its check mode. Screenshots are optional UX review material. Name the commit beside any screenshot or shared Pack export.
 
-1. **Ratified terminology only ([`CONTEXT.md`](https://github.com/libar-dev/software-delivery-protocol/blob/5a0b22c2d9ead98c900b60ed6209342fce2cbef6/CONTEXT.md)).**
-   - Use **`Spec`**, **`Pack`**, **`section`**, **`anchor`** (constant form / comment form), **`claim`** (`declared` / `anchored` / `inferred`), **`altitude`** (`epic` / `feature` / `story`), **`readiness`** (`idea` / `scoped` / `defined` / `ready`), **`readiness floor`**, **`delivery fact`** (`implemented` / `has-verifier` / `observed`).
-   - Readiness is **stated** or **asserted**, never "claimed" ("claim" is reserved for the `claim` taxonomy).
-   - The Protocol **defines a contract** and instances **conform**; never write that the Protocol "governs" or "polices" a project ("checks police conformance and honesty" is the sole guardrail phrasing).
-   - State **"deterministically validated," never "provably correct."**
-   - Lead decision references with meaning first, code in parentheses: e.g., *the carrier ruling (MD-18)*, *the agent front door (MD-22)*, *the comment form (MD-36)*.
-2. **Temporal-guard compliance (`npm run check:temporal`).**
-   - `check-temporal.mjs` sweeps every tracked file and every untracked file `.gitignore` does not exclude, except the temporal-by-genre artifacts (`plans/`, `reviews/`, `explorations/`, `docs/lineage/`, `docs/concept/DECISIONS.md`, the tracked drafts, plans, and evidence under `.omo/`) and the machine-generated `package-lock.json`.
-   - Never include raw calendar dates (`YYYY-MM-DD`), numbered plan paths (`plans/<number>`), or session/wave/fold tokens in `docs/articles/*.md`. To point a reader at a numbered plan or a dated lineage file, link to the pull request that carried it (`.../pull/33`), never to the file itself, and never encode a path to slip it past the check.
-3. **Every count is pinned and re-derivable.**
-   - A count of the Protocol's own corpus names the commit it was measured at, and a reader can re-derive it with an `sdp validate` or `sdp q` command, given beside the number or in this playbook.
-   - An adopter figure or a historical figure cites the pull request or review that measured it.
-4. **Links survive publication.**
-   - Inside the repository, link sibling articles relatively (`./02-….md`); at publication, rewrite each relative link to the published URL or to a commit-pinned GitHub URL, since a relative link breaks off the repository.
+## 6. Refresh playbook
 
----
-
-## 5. The Living-PR Refresh Playbook
-
-Because this pull request stays open and is periodically updated as `main` evolves, refreshing the series after merging or rebasing onto a new `main` commit takes four deterministic steps:
+A refresh measures both numbers and qualitative claims. A design diff alone cannot tell you that the series now describes an old Studio phase or misses a new recipe parameter.
 
 ### Step 1: Install and build
+
 ```sh
-npm ci   # installs and builds dist/, including dist/recipes/
+npm ci
 ```
 
-The commands below use `npm run --silent sdp:q -- …`, which adds the corpus's three exclusions; `pnpm --silent sdp:q …` is equivalent where pnpm is installed. Never run a bare `sdp` in this checkout.
+Use `npm run --silent sdp:q --` or `pnpm --silent sdp:q` in this checkout. Never invoke a bare `sdp`.
 
-### Step 2: Measure the design diff from the last pinned commit
-Generate the base graph at the previously pinned commit (currently `5a0b22c2d9ead98c900b60ed6209342fce2cbef6`) in a temporary worktree outside the repository and run recipe 35 (the design diff) to see every Spec, Pack, section, entry key, and binding that changed. Keep the worktree outside: inside the checkout it is an untracked directory the gate trips over, and `check:temporal` fails on it.
+### Step 2: Diff against the previous pin
+
+Generate the base graph in a temporary worktree outside the repository. The current previous pin is `b5e0a8bea1e3bedd48c616f96c9928e955792753`.
 
 ```sh
-BASE_SHA="5a0b22c2d9ead98c900b60ed6209342fce2cbef6"
+BASE_SHA="b5e0a8bea1e3bedd48c616f96c9928e955792753"
 BASE_DIR="$(mktemp -d)/base"
 git worktree add --detach "$BASE_DIR" "$BASE_SHA" && ln -s "$PWD/node_modules" "$BASE_DIR/node_modules"
 npm --prefix "$BASE_DIR" run build
-node "$BASE_DIR/dist/cli/sdp.js" build "$BASE_DIR" --exclude explorations --exclude examples --exclude test/fixtures/import/parity
-npm run --silent sdp:q -- "$(cat dist/recipes/35-the-design-diff.js)" --params "base=@$BASE_DIR/generated/graph.json" --params '{"detail":true}' --json
+node "$BASE_DIR/dist/cli/sdp.js" build "$BASE_DIR" \
+  --exclude explorations --exclude examples --exclude test/fixtures/import/parity
+npm run --silent sdp:q -- "$(cat dist/recipes/35-the-design-diff.js)" \
+  --params "base=@$BASE_DIR/generated/graph.json" --params '{"detail":true}' --json
 git worktree remove --force "$BASE_DIR"
 ```
 
-### Step 3: Re-derive the headline corpus metrics at the new `HEAD`
+Read the roadmap at the new head too:
+
 ```sh
-# 1. Overall graph, node-type, claim, readiness, kind, and delivery-fact census
-npm run --silent sdp:q -- 'return {
-  commit: "HEAD",
+npm run --silent sdp:q -- "$(cat dist/recipes/53-the-roadmap.js)" \
+  --params '{"pack":"pack:roadmap"}' --json
+```
+
+### Step 3: Re-derive corpus metrics
+
+```sh
+npm run --silent sdp:q -- 'const tally = (xs, f) => xs.reduce((a, x) => ((a[f(x)] = (a[f(x)] || 0) + 1), a), {}); return {
   schemaVersion: graph.schemaVersion,
   specs: g.specs().length,
-  packs: g.packs().map((p) => p.id),
+  packs: graph.nodes.filter((n) => n.nodeType === "Pack").map((p) => ({ id: p.id, members: p.members.length })),
   nodes: graph.nodes.length,
-  nodeTypes: graph.nodes.reduce((a, n) => ((a[n.nodeType] = (a[n.nodeType] || 0) + 1), a), {}),
+  nodeTypes: tally(graph.nodes, (n) => n.nodeType),
   edges: graph.edges.length,
-  edgeClaims: graph.edges.reduce((a, e) => ((a[e.claim] = (a[e.claim] || 0) + 1), a), {}),
+  edgeClaims: tally(graph.edges, (e) => e.claim),
   locations: graph.locations.length,
-  readiness: g.specs().reduce((a, s) => ((a[s.statedReadiness] = (a[s.statedReadiness] || 0) + 1), a), {}),
-  kinds: g.specs().reduce((a, s) => ((a[s.specKind] = (a[s.specKind] || 0) + 1), a), {}),
+  readiness: tally(g.specs(), (s) => s.statedReadiness),
+  kinds: tally(g.specs(), (s) => s.specKind),
   deliveryFacts: {
     implemented: g.specs().filter((s) => s.deliveryFacts.includes("implemented")).length,
     hasVerifier: g.specs().filter((s) => s.deliveryFacts.includes("has-verifier")).length,
@@ -200,44 +194,59 @@ npm run --silent sdp:q -- 'return {
   }
 }' --json
 
-# 2. Operational build backlog (recipe 1) and drift alarm (recipe 2)
 npm run --silent sdp:q -- "$(cat dist/recipes/01-the-build-backlog.js)" --json
 npm run --silent sdp:q -- "$(cat dist/recipes/02-the-drift-alarm.js)" --json
-
-# 3. Open-question register (recipe 20) and design backlog (recipe 33)
 npm run --silent sdp:q -- "$(cat dist/recipes/20-open-question-register.js)" --json
 npm run --silent sdp:q -- "$(cat dist/recipes/33-the-design-backlog.js)" --json
-
-# 4. Pack design summaries across all Packs (recipe 29)
-npm run --silent sdp:q -- '
-  const out = [];
-  for (const p of g.packs()) {
-    const r = await (async (params) => { '"$(cat dist/recipes/29-pack-design.js)"' })({ pack: p.id });
-    out.push({ id: r.id, totals: r.totals });
-  }
-  return out;
-' --json
-
-# 5. Shipped recipe bodies
 ls dist/recipes/*.js | wc -l
 ```
 
-### Step 4: Baseline snapshot at `5a0b22c` (for comparison on next refresh)
-Measured at `5a0b22c2d9ead98c900b60ed6209342fce2cbef6` (re-run the commands above rather than inheriting):
+Baseline measured at `b5e0a8be`:
 
-| Metric | Value at `5a0b22c` | Source in Step 3 (command · output field) |
-|---|---|---|
-| Schema version | `0.10.0` | 1 · `schemaVersion` |
-| Authored `Spec`s | `276` (`245 ready`, `17 defined`, `3 scoped`, `11 idea`) | 1 · `specs`, `readiness` |
-| Authored `Pack`s | `6` (`self-hosting-v1`, `design-management-v1`, `spec-studio-v1`, `corpus-checks-v1`, `design-iteration-v1`, `obsidian-vault-v1`) | 1 · `packs` |
-| Total nodes / edges / locations | `621` nodes (`276 Primitive`, `6 Pack`, `160 CodeNode`, `179 Anchor`) · `1,624` edges (`1,063 declared`, `561 anchored`) · `1,774` locations | 1 · `nodes`, `nodeTypes`, `edges`, `edgeClaims`, `locations` |
-| Delivery facts | `94 implemented` · `205 has-verifier` · `0 observed` | 1 · `deliveryFacts` |
-| Operational build backlog | `0` (`110` ready examples and `41` ready decisions audited and excluded) | 2 · recipe 1's `total`, `excludedReadyExamples`, `excludedReadyDecisions` |
-| Drift alarm (`implemented ∧ ¬ready`) | `0` | 2 · recipe 2's `total` |
-| Design backlog (`defined` Specs no code realizes) | `17` Specs | 3 · recipe 33's `totals.specs` |
-| Open questions | `43` across `24` Specs (`16` blocking: `8` deferrals with triggers, `8` holds; `27` non-blocking) | 3 · recipe 20's `totals` (`questions`, `specs`, `blocking`, `deferrals`, `holds`, `nonBlocking`) |
-| Shipped recipes | `43` runnable bodies under `dist/recipes/` | 5 · the file count |
+<!-- evidence:baseline-metrics -->
+| Metric | Value |
+|---|---|
+| Schema | `0.12.0` |
+| Specs and readiness | 456: 447 `ready`, 4 `scoped`, 5 `idea` |
+| Packs | 9: `adopter-speed-v1`, `spec-studio-v1`, `corpus-checks-v1`, `design-iteration-v1`, `design-management-v1`, `obsidian-vault-v1`, `roadmap`, `roadmaps-and-slices-v1`, `self-hosting-v1` |
+| Nodes, edges and locations | 1,072 nodes (456 Primitive, 9 Pack, 241 CodeNode, 366 Anchor); 2,978 edges (1,929 declared, 1,049 anchored); 3,120 locations |
+| Delivery facts | 166 `implemented`, 397 `has-verifier`, 0 `observed` |
+| Build backlog | 2, with 232 ready examples and 47 ready decisions audited and excluded |
+| Drift alarm | 0 |
+| Design backlog | 0 |
+| Open questions | 16 across 12 Specs: 10 blocking (6 deferrals, 4 holds), 6 non-blocking |
+| Validation | 0 errors and 3 intentional `honesty/gaps` warnings |
+| Shipped recipes | 55 |
+<!-- /evidence:baseline-metrics -->
 
-After updating any changed counts or commit links, stage the files (`preflight` fails on an untracked file `.gitignore` does not exclude) and run the full green gate, `npm run check`: thirteen steps from `check:temporal` to `preflight`, all of which must exit `0`.
+### Step 4: Regenerate the article evidence
 
-That gate covers less of this directory than it seems. `check:temporal` does sweep `docs/articles/` for dates, numbered plan paths, and session tokens, but `.prettierignore` excludes `docs/**`, so `format:check` never reads these articles, and `lint` reads only code. Nothing in the gate catches an unbalanced code fence or a broken link here. Before publishing, check both yourself, with a throwaway script you do not commit: every fence must close with a backtick run at least as long as the one that opened it (a Markdown example that contains its own fences needs a four-backtick outer fence), and every relative link and every commit-pinned GitHub link must resolve.
+Marked evidence blocks are generated, not maintained by hand. The sync reads the pinned commit from this playbook, verifies that the source checkout matches it, runs the real CLI and extracts the actual source. It covers graph-derived tables, build and query output, source anchors, the oracle and Mermaid.
+
+```sh
+# SOURCE_DIR is a built checkout of the commit named as the source baseline.
+node docs/articles/sync-evidence.mjs "$SOURCE_DIR"
+
+# Check mode leaves the manuscripts unchanged and fails when any block differs.
+node docs/articles/sync-evidence.mjs --check "$SOURCE_DIR"
+```
+
+When the article branch itself is at the baseline commit, omit `$SOURCE_DIR`. Add a marked block and its generator whenever a manuscript gains a reusable output excerpt. Keep elision explicit, as in the constant-anchor excerpt. Do not paste a modified version of source or command output and call it an example.
+
+Mermaid stays live source. Markdown tables come from graph queries. Screenshots remain optional supplements for discussing visual design, never the only record of behavior.
+
+### Step 5: Check version-sensitive prose
+
+- Recount recipes and skills. The current counts are 55 and five.
+- Check `sdp q` bindings. The current sink injects `g`, `graph`, `report`, `params` and `recipes`.
+- Re-read the Studio's carrying Specs and publish a current page set. Check lenses, roadmap, registers, queue, diff, runs, export and composing panel rather than saying "phase 0" from memory.
+- Check context-bundle parameters and behavior. `part` now returns ordered parts; never restore the old blanket statement that partial member lists are refused.
+- Re-run the worked example. At this pin it reports 11 Specs, two Packs, five anchors, 18 nodes and 34 edges.
+- Keep run evidence, `has-verifier` and `observed` distinct. Supplied CTRF results do not derive runtime observation.
+- Review command coverage. Any new reusable output belongs in a generated evidence block.
+- Check every sibling link after renumbering, every commit-pinned path, every code fence and every image.
+- Record which articles need conceptual changes, not only which tables need new counts. This is the feedback loop between the repository and the series.
+
+### Step 6: Verify
+
+Run `npm run check:articles -- "$SOURCE_DIR"` and `npm run check` after staging new article files so preflight can see them. CI runs the same article check in a built worktree of the pinned source with full git history, so a manuscript branch behind the pin cannot merge stale evidence green. Then manually inspect the rendered Markdown, relative links and commit-pinned links. The main gate does not check those links or all Markdown fence structure.
