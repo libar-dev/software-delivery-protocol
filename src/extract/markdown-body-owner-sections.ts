@@ -8,7 +8,7 @@ import {
   append,
   keyed,
   propertyFinding,
-  reservedMarkdownProperties,
+  isReservedMarkdownProperty,
   single,
   structureFinding,
 } from "./markdown-body-owner-support.js";
@@ -49,7 +49,7 @@ export function mapConstraints(
   const constraint: Record<string, unknown> = {};
   for (const item of parsed.items) {
     const entry = keyed(item.text);
-    if (entry !== undefined && reservedMarkdownProperties.has(entry.key)) {
+    if (entry !== undefined && isReservedMarkdownProperty(entry.key)) {
       addMarkdownFinding(findings, propertyFinding(file, item.line, entry.key));
       continue;
     }
@@ -145,7 +145,7 @@ export function mapOpen(
         findings,
         structureFinding(file, item.line, "open section keys must be unique"),
       );
-    else if (reservedMarkdownProperties.has(entry.key))
+    else if (isReservedMarkdownProperty(entry.key))
       addMarkdownFinding(findings, propertyFinding(file, item.line, entry.key));
     else {
       section[entry.key] = entry.value;
@@ -179,7 +179,7 @@ export function mapDecision(
   };
   for (const item of parsed.items) {
     const entry = keyed(item.text);
-    if (entry !== undefined && reservedMarkdownProperties.has(entry.key)) {
+    if (entry !== undefined && isReservedMarkdownProperty(entry.key)) {
       addMarkdownFinding(findings, propertyFinding(file, item.line, entry.key));
       continue;
     }

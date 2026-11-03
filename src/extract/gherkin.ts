@@ -1,4 +1,4 @@
-import { deliveryFactSpellings } from "../graph/delivery-fact-spellings.js";
+import { isDeliveryFactTag } from "../graph/delivery-fact-spellings.js";
 import { normalizeAuthoring, entryKeyPattern } from "./authoring-normalization.js";
 import { generateMessages } from "@cucumber/gherkin";
 import {
@@ -379,10 +379,8 @@ function tagHead(tagName: string): string {
   return dot === -1 ? body : body.slice(0, dot);
 }
 
-const deliveryFactTagPattern = new RegExp(`^@(${deliveryFactSpellings.join("|")})(?=$|[.-])`, "iu");
-
 function authoredFactReason(name: string): string | undefined {
-  if (deliveryFactTagPattern.test(name)) return "delivery-fact lookalike";
+  if (isDeliveryFactTag(name)) return "delivery-fact lookalike";
   const head = /^@(claim|status|lifecycle|workflow|architect)(?=$|[.-])/iu
     .exec(name)?.[1]
     ?.toLowerCase();
@@ -407,7 +405,7 @@ function decorationTagFinding(tag: Tag, file: string): Finding | undefined {
     return grammarFinding(
       file,
       tag.location.line,
-      `Gherkin tag "${name}" is refused as an ${factReason}; delivery facts, claims, and lifecycle state are never authored by the carrier`,
+      `Gherkin tag "${name}" is refused: ${factReason}; delivery facts, claims, and lifecycle state are never authored by the carrier`,
     );
   }
 

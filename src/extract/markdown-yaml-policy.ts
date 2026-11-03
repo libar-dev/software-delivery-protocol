@@ -1,4 +1,4 @@
-import { deliveryFactSpellings } from "../graph/delivery-fact-spellings.js";
+import { isReservedDerivedProperty } from "../graph/delivery-fact-spellings.js";
 import { extractFindingIds } from "./reify.js";
 import { setOwn } from "./set-own.js";
 import { relationOptionsRefusal } from "./authoring-normalization.js";
@@ -16,17 +16,6 @@ const invalidIdFindingId = extractFindingIds.invalidId;
 
 const nonStringPlainScalars =
   /^(?:true|false|null|~|0o[0-7]+|0x[0-9a-f]+|[-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+|[-+]?(?:\.[0-9]+|[0-9]+\.[0-9]*)|[-+]?\.inf|\.nan)$/iu;
-const reservedEnvelopeKeys = new Set([
-  ...deliveryFactSpellings,
-  "claim",
-  "deliveryFacts",
-  "nodeType",
-  "specKind",
-  "satisfies",
-  "verifies",
-  "belongsTo",
-  "models",
-]);
 
 /**
  * @sdpAnchor impl:protocol.markdown-yaml-policy
@@ -36,7 +25,7 @@ const reservedEnvelopeKeys = new Set([
  * @sdpRole codec
  */
 export function isReservedEnvelopeKey(value: string): boolean {
-  return reservedEnvelopeKeys.has(value);
+  return isReservedDerivedProperty(value);
 }
 
 function isNode(value: unknown): value is Node {

@@ -51,4 +51,25 @@ ${padded} \t
     expect(value.packs[0]?.data.framing === padded).toBe(true);
     expect(ms).toBeLessThan(budgetMs);
   });
+  it.each(["***", "---", "___"])("keeps thematic-break near misses linear: %s", (marker) => {
+    const text = `${marker}${run}text`;
+    for (const body of [`## Rule\n- ${text}`, `## Rule\n${text}`, text]) {
+      const source = `---\nid: spec:probe.linear\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Title\n${body}`;
+      const { value, ms } = timed(() => reifyMarkdownCarrier(source, "linear.sdp.md"));
+      // Narrative disallows every leading hyphen; section prose and list text keep this text.
+      if (body === text && marker === "---") expect(value.specs).toEqual([]);
+      else {
+        expect(value.findings).toEqual([]);
+        expect(value.specs).toHaveLength(1);
+      }
+      expect(ms).toBeLessThan(budgetMs);
+    }
+    const { ms } = timed(() =>
+      reifyMarkdownCarrier(
+        `---\nid: pack:probe.linear\nspecs: []\n---\n# Pack\n${text}`,
+        "linear.pack.sdp.md",
+      ),
+    );
+    expect(ms).toBeLessThan(budgetMs);
+  });
 });

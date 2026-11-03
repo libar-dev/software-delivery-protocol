@@ -10,7 +10,11 @@ import {
   markdownFinding,
 } from "./markdown-support.js";
 import { mapOwner } from "./markdown-body-owners.js";
-import { isUnsupportedCommonMarkBlock, normalizeProse } from "./markdown-body-content.js";
+import {
+  isMarkdownFenceOpener,
+  isUnsupportedCommonMarkBlock,
+  normalizeProse,
+} from "./markdown-body-content.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
 import type { ReifiedEntryLine } from "./reify.js";
 import type { MarkdownBodyResult } from "./markdown-types.js";
@@ -108,6 +112,7 @@ function narrative(lines: readonly MarkdownLine[], file: string, findings: Findi
     if (
       /^(?:-|```|\||>|<|#)/u.test(line.text) ||
       /^[\t ]/u.test(line.text) ||
+      isMarkdownFenceOpener(line.text) ||
       isUnsupportedCommonMarkBlock(line.text)
     )
       addMarkdownFinding(
