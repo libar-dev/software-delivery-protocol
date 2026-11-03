@@ -109,6 +109,18 @@ describe("the Studio over a floor the reader does not evaluate", () => {
     ).toEqual(["not evaluated", "not evaluated"]);
   });
 
+  it("counts the floors not evaluated and the unratified values on the capabilities page", () => {
+    const html = page("capabilities.html");
+    expect(html).not.toContain("NaN");
+    const floors = [...html.matchAll(/<dt>Floors reached<\/dt><dd>([^<]*)<\/dd>/gu)].map(
+      (match) => match[1] ?? "",
+    );
+    // The one epic's rollup reaches both Specs; each counts once, under its own key.
+    expect(floors).toEqual(["none 0 · idea 1 · scoped 0 · defined 0 · ready 7 · not evaluated 2"]);
+    expect(html).toMatch(/<dt>Kinds<\/dt><dd>[^<]* · contract 1 · saga 1<\/dd>/u);
+    expect(html).toMatch(/<dt>Altitudes<\/dt><dd>[^<]* · story 7 · planet 1<\/dd>/u);
+  });
+
   it("labels the roadmap, its memo, the design slice and the backlog without a next rung", () => {
     const roadmap = page("roadmap.html");
     for (const place of [1, 2]) {

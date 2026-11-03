@@ -1566,6 +1566,7 @@ const footing = context.relationsOut
       types.indexOf(left.type) - types.indexOf(right.type) || compare(left.id, right.id),
   );
 const count = (key, value) => footing.filter((row) => row[key] === value).length;
+const notEvaluated = count("floorReached", "not evaluated");
 
 return {
   id,
@@ -1582,6 +1583,7 @@ return {
     ]),
     byFloorReached: Object.fromEntries([
       ...[...rungs, "none"].map((rung) => [rung, count("floorReached", rung)]),
+      ...(notEvaluated === 0 ? [] : [["not evaluated", notEvaluated]]),
     ]),
   },
   footing,
@@ -1592,7 +1594,9 @@ return {
 `constrainedBy`, or `decidedBy`, in that order and then by target id, with `reason` when the
 relation states one. The reach is one hop; run
 the recipe on a target to see what that target rests on. `floorReached` is the target's derived
-readiness, read beside the rung its author stated. A target that does not resolve keeps its row
+readiness, read beside the rung its author stated; `not evaluated` marks a target whose kind or
+altitude is unratified, counted under `totals.byFloorReached["not evaluated"]`, a key present
+only when such a target exists. A target that does not resolve keeps its row
 with `resolved: false` and null readiness, and counts under `totals.byStatedReadiness.unresolved`.
 Resolved targets that are not Specs have null readiness and count under
 `totals.byStatedReadiness.nonSpec`. The recipe reports readiness and applies no threshold: which rung a target must state before this
@@ -5208,6 +5212,8 @@ or false) keeps every total, each epic's title, direct epic parents and rollup, 
 cycles and damage. `leftOut` names what `detail: true` adds: node rows, edges, descendant ids
 and unreached roots. A parameter refusal returns `diagnostics` without a map; unknown names
 return `unknownParams` and `accepts`. Inspect `damage` and `cycles` on a returned map.
+Each count keeps every ratified value at zero. A value outside them, such as an unratified kind
+or altitude or the floor `not evaluated`, gets its own key only when a counted Spec carries it.
 The contract is `spec:consumers.capability-map#design.mapRecipe` through its keyed answer entries.
 
 ```js
@@ -5281,13 +5287,22 @@ const nodes = specs.filter((spec) => selected.has(spec.id)).map((spec) => ({
 }));
 const nodeById = new Map(nodes.map((node) => [node.id, node]));
 const count = (ids) => {
-  const zeroes = (keys) => Object.fromEntries(keys.map((key) => [key, 0]));
+  // Ratified values keep a key at zero. Any other value, such as an unratified kind or altitude or
+  // a floor not evaluated, gets its own key when a counted Spec carries it.
+  const tally = (keys, field) => {
+    const tallies = new Map(keys.map((key) => [key, 0]));
+    for (const id of ids) {
+      const value = nodeById.get(id)[field];
+      tallies.set(value, (tallies.get(value) ?? 0) + 1);
+    }
+    return Object.fromEntries(tallies);
+  };
   const counts = {
     specs: ids.length,
-    byStatedReadiness: zeroes(["idea", "scoped", "defined", "ready"]),
-    byFloorReached: zeroes(["none", "idea", "scoped", "defined", "ready"]),
-    byKind: zeroes(["behavior", "workflow", "example", "rule", "constraint", "model", "decision", "contract"]),
-    byAltitude: zeroes(["epic", "feature", "story"]),
+    byStatedReadiness: tally(["idea", "scoped", "defined", "ready"], "statedReadiness"),
+    byFloorReached: tally(["none", "idea", "scoped", "defined", "ready"], "floorReached"),
+    byKind: tally(["behavior", "workflow", "example", "rule", "constraint", "model", "decision", "contract"], "specKind"),
+    byAltitude: tally(["epic", "feature", "story"], "altitude"),
     withImplementationBinding: 0,
     withVerifierBinding: 0,
     openQuestions: 0,
@@ -5295,10 +5310,6 @@ const count = (ids) => {
   };
   for (const id of ids) {
     const node = nodeById.get(id);
-    counts.byStatedReadiness[node.statedReadiness]++;
-    counts.byFloorReached[node.floorReached]++;
-    counts.byKind[node.specKind]++;
-    counts.byAltitude[node.altitude]++;
     counts.withImplementationBinding += Number(node.deliveryFacts.includes("implemented"));
     counts.withVerifierBinding += Number(node.deliveryFacts.includes("has-verifier"));
     counts.openQuestions += node.questions.length;

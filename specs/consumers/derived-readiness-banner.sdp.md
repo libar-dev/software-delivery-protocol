@@ -18,6 +18,7 @@ relations:
 - The divergence banner is raised only in the dishonest direction — the floor reached standing below the stated rung. A floor reached at or above the stated rung raises nothing, because a floor is a floor and never a quota that nags upward.
 - A raised banner names the first unmet clause by its clause id and its description, so the reader is told which clause to satisfy rather than only that something is wrong.
 - When even the `idea` floor is unmet, the floor reached renders as none rather than as a rung, and a raised banner states that the floor stands below `idea`.
+- When no floor is evaluated over a Spec because its kind or altitude is unratified, the floor reached renders as `floor not evaluated (unratified descriptor)` on its page, in the index and in the Pack member table, and no banner is raised, because no clause was evaluated to be unmet.
 - The banner is rendering, never a check: the same divergence is already the readiness floor's own finding, and the page shows it in context rather than gating on it.
 
 ## Example space

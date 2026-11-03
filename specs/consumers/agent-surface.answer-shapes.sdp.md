@@ -26,7 +26,7 @@ A usability trial gave agents only the skills, the recipe catalog and `sdp q` an
 - rule: The guarantees recipe (recipe 3) returns each section's entries as the Spec states them and the binding fields the Spec context carries, not only the names of the sections.
 - rule: The orphans and gaps recipe (recipe 8) reports each kind the verifier-gap signal exempts and how many ready Specs it exempts, as the build backlog reports its exclusions.
 - rule: A design-backlog recipe lists the Specs stated `defined` that no code realizes, with their design columns, excluding examples and decisions as the build backlog does.
-- rule: [#floorNotEvaluated] A recipe that reports a Spec's floor reached reports `not evaluated`, never `none`, for a Spec over whose unratified kind or altitude the reader evaluates no floor, with no stated next rung and no unmet clause; readiness divergence leaves such a Spec out.
+- rule: [#floorNotEvaluated] A recipe that reports a Spec's floor reached reports `not evaluated`, never `none`, for a Spec over whose unratified kind or altitude the reader evaluates no floor, with no stated next rung and no unmet clause; readiness divergence leaves such a Spec out, and a count by floor reached counts it under a `not evaluated` key, present only when such a Spec is counted.
 - rule: The catalog opens with an index, one row per recipe, and shows how to run a shipped body inside a caller's own body to filter its answer.
 
 ## Design

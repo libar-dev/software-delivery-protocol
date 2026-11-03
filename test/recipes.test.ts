@@ -8592,6 +8592,53 @@ describe("a floor the reader does not evaluate", () => {
     expect(asRecord(slice.totals).waitingForAuthor).toBe(0);
   });
 
+  it("counts it in the capability map's totals and rollups, beside an unratified kind or altitude", async () => {
+    const map = asRecord(await runRecipe(recipeByOrdinal(52), undefined, foreign));
+    const totals = asRecord(map.totals);
+    const rollups = asArray(map.epics).map((epic) => asRecord(asRecord(epic).rollup));
+    // Every bucket is whole numbers that add up to the Specs counted: none is lost or NaN.
+    for (const count of [totals, ...rollups]) {
+      for (const bucket of ["byStatedReadiness", "byFloorReached", "byKind", "byAltitude"]) {
+        const values = Object.values(asRecord(count[bucket]));
+        for (const value of values) expect(Number.isInteger(value), bucket).toBe(true);
+        const sum = values.reduce<number>((total, value) => total + Number(value), 0);
+        expect(sum, bucket).toBe(count.specs);
+      }
+    }
+    expect(asRecord(totals.byFloorReached)["not evaluated"]).toBe(flagged.length);
+    expect(asRecord(totals.byKind).saga).toBe(1);
+    expect(asRecord(totals.byAltitude).planet).toBe(2);
+    expect(
+      rollups.some((rollup) => asRecord(rollup.byFloorReached)["not evaluated"] !== undefined),
+    ).toBe(true);
+    // Ratified values keep their keys at zero; any other value has a key only when counted.
+    const plain = asRecord(
+      asRecord(await runRecipe(recipeByOrdinal(52), undefined, example)).totals,
+    );
+    expect(Object.keys(asRecord(plain.byFloorReached))).toEqual([
+      "none",
+      "idea",
+      "scoped",
+      "defined",
+      "ready",
+    ]);
+    expect(Object.keys(asRecord(plain.byAltitude))).toEqual(["epic", "feature", "story"]);
+  });
+
+  it("counts a footing target it holds in dependency footing's totals", async () => {
+    const params = { spec: "spec:orders.order-placement-flow" };
+    const resting = asRecord(await runRecipe(recipeByOrdinal(21), params, foreign));
+    const byFloor = asRecord(asRecord(resting.totals).byFloorReached);
+    expect(byFloor["not evaluated"]).toBe(1);
+    const specRows = asArray(resting.footing)
+      .map(asRecord)
+      .filter((row) => row.floorReached !== null);
+    const sum = Object.values(byFloor).reduce<number>((total, value) => total + Number(value), 0);
+    expect(sum).toBe(specRows.length);
+    const plain = asRecord(await runRecipe(recipeByOrdinal(21), params, example));
+    expect(asRecord(asRecord(plain.totals).byFloorReached)).not.toHaveProperty("not evaluated");
+  });
+
   it("puts the roadmap entries to design and renders their memo rows as not evaluated", async () => {
     const params = { pack: "pack:checkout-roadmap" };
     const answer = asRecord(await runRecipe(recipeByOrdinal(53), params, foreign));
