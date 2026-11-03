@@ -14,7 +14,7 @@ import { codeAnchor } from "../model/code-anchor.js";
 import { renderMermaid } from "../projections/mermaid.js";
 import { createReader } from "../reader/reader.js";
 import type { Reader } from "../reader/reader.js";
-import { removeArtifacts } from "./artifacts.js";
+import { assertDistinctPagePaths, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import type { BuildOutcome } from "./build-command.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
@@ -127,6 +127,7 @@ export function prepareMermaidPublication(
 
     try {
       const pages = normalizePages(render(createReader(validate.graph)));
+      assertDistinctPagePaths(pages);
 
       if (parsed.checkClean) {
         const second = normalizePages(render(createReader(validate.graph)));

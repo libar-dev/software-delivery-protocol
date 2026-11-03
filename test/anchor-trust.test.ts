@@ -93,7 +93,15 @@ void binding;
 
     const result = extract({ root });
 
-    expect(result.report.findings).toEqual([]);
+    expect(result.report.findings).toEqual(
+      ["ids.ts", "model/code-anchor.ts"].map((file) => ({
+        validatorId: "extract/symbolic-link-skipped",
+        family: "conformance",
+        severity: "warning",
+        file,
+        message: `symbolic link "${file}" is skipped; discovery never follows links below the root`,
+      })),
+    );
     expect(result.counts.anchors).toBe(1);
     expect(result.graph.nodes).toContainEqual(
       expect.objectContaining({ id: "impl:protocol.deep-binding", nodeType: "CodeNode" }),

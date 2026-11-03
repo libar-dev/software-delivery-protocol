@@ -1,4 +1,12 @@
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import ts from "typescript";
@@ -7,7 +15,9 @@ import { extract } from "../../src/extract/index.js";
 import type { Finding } from "../../src/validate/contracts.js";
 import { validateGraph } from "../../src/validate/validators.js";
 
-export type Probe = { graph: GraphSchema } | { carriers: Readonly<Record<string, string>> };
+export type Probe =
+  | { graph: GraphSchema }
+  | { carriers: Readonly<Record<string, string>>; links?: Readonly<Record<string, string>> };
 export interface ProbeEntry {
   id: string;
   refusing: Probe;
@@ -35,6 +45,11 @@ export function runValidatorProbe(probe: Probe): readonly Finding[] {
       const path = join(root, file);
       mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, text);
+    }
+    for (const [file, target] of Object.entries(probe.links ?? {})) {
+      const path = join(root, file);
+      mkdirSync(dirname(path), { recursive: true });
+      symlinkSync(join(root, target), path);
     }
     return extract({ root }).report.findings;
   } finally {

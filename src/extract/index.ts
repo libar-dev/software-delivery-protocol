@@ -223,7 +223,13 @@ export function extract(options: ExtractOptions): ExtractionResult {
   const specs: ReifiedSpec[] = [];
   const packs: ReifiedPack[] = [];
   const anchors: ReifiedAnchor[] = [];
-  const findings: Finding[] = [];
+  const findings: Finding[] = files.skippedLinks.map((file) => ({
+    validatorId: extractFindingIds.symbolicLinkSkipped,
+    family: "conformance",
+    severity: "warning",
+    message: `symbolic link "${file}" is skipped; discovery never follows links below the root`,
+    file,
+  }));
   const citations: EntryCitationLocation[] = [];
 
   for (const file of files.specFiles) {

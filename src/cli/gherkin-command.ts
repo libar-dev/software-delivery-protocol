@@ -14,7 +14,7 @@ import { codeAnchor } from "../model/code-anchor.js";
 import { renderGherkinView } from "../projections/gherkin-view.js";
 import type { GherkinViewPage } from "../projections/gherkin-view.js";
 import { createReader } from "../reader/reader.js";
-import { removeArtifacts } from "./artifacts.js";
+import { assertDistinctPagePaths, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import type { BuildOutcome } from "./build-command.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
@@ -111,6 +111,7 @@ export function prepareGherkinPublication(
 
     try {
       const pages = render(createReader(validate.graph));
+      assertDistinctPagePaths(pages, ".feature.md");
 
       if (parsed.checkClean) {
         const second = render(createReader(validate.graph));

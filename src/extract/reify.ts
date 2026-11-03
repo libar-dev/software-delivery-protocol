@@ -56,6 +56,7 @@ import { setOwn } from "./set-own.js";
  * file's content stays out of the graph (ambiguity is loud, L2).
  */
 export const extractFindingIds = {
+  symbolicLinkSkipped: "extract/symbolic-link-skipped",
   parseError: "extract/parse-error",
   invalidMarkdownStructure: "extract/invalid-markdown-structure",
   unrecognizedHeading: "extract/unrecognized-heading",

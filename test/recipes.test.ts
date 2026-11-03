@@ -47,6 +47,9 @@ import {
   testAnchorId,
 } from "@libar-dev/software-delivery-protocol";
 
+const rootLinkWarning =
+  'CLAUDE.md — [warning] extract/symbolic-link-skipped — symbolic link "CLAUDE.md" is skipped; discovery never follows links below the root\n';
+
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const recipesPath = "docs/agent-surface/recipes.md";
 
@@ -181,13 +184,17 @@ async function runRecipe(
     },
   );
 
-  // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
-  // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
-  // failure diff when it does.
+  // The self-hosted corpus names its CLAUDE.md link; every other diagnostic still fails here.
   expect(
     { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
     `recipe ${String(recipe.ordinal)} must run as written`,
-  ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
+  ).toEqual({
+    recipe: recipe.title,
+    exitCode: 0,
+    stderr: extraction.report.findings.some((finding) => finding.file === "CLAUDE.md")
+      ? rootLinkWarning
+      : "",
+  });
 
   return JSON.parse(capture.readStdout()) as unknown;
 }
@@ -2213,7 +2220,7 @@ describe("register recipe semantics", () => {
           queryHooks,
         ),
       ).toBe(0);
-      expect(capture.readStderr()).toBe("");
+      expect(capture.readStderr()).toBe(rootLinkWarning);
       expect(capture.readStdout()).toContain("totals:");
     },
   );
@@ -4685,7 +4692,10 @@ describe("recipe parameters and the shipped recipe files", () => {
       writeFileSync(path, JSON.stringify({ files, detail: true }));
 
       const run = await runShipped(shippedBody(recipeByOrdinal(4)), ["--params", `@${path}`]);
-      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
+        exitCode: 0,
+        stderr: rootLinkWarning,
+      });
 
       const result = asRecord(JSON.parse(run.stdout));
       const radius = reader.blastRadius(files);
@@ -4723,7 +4733,10 @@ describe("recipe parameters and the shipped recipe files", () => {
       "--params",
       JSON.stringify({ addresses }),
     ]);
-    expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+    expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
+      exitCode: 0,
+      stderr: rootLinkWarning,
+    });
 
     const result = asRecord(JSON.parse(run.stdout));
     expect(result.totals).toEqual({
@@ -4751,7 +4764,10 @@ describe("recipe parameters and the shipped recipe files", () => {
     for (const ordinal of [5, 27]) {
       const body = shippedBody(recipeByOrdinal(ordinal));
       const run = await runShipped(body, ["--params", JSON.stringify({ pack: chosen })]);
-      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
+        exitCode: 0,
+        stderr: rootLinkWarning,
+      });
 
       const result = asRecord(JSON.parse(run.stdout));
       expect(result.id).toBe(chosen);
