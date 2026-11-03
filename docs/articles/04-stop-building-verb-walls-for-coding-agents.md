@@ -90,7 +90,7 @@ Part 9 follows these mechanisms through the first adopter's design-at-scale work
 
 After [PR #30](https://github.com/libar-dev/software-delivery-protocol/pull/30), three agents from two model families answered thirteen delivery questions using the skills and `sdp q` alone. All three answered every question correctly. They also exposed recurring costs: oversized answers, unexplained misses, two meanings of "next rung" and rules without addresses or source lines.
 
-[PR #31](https://github.com/libar-dev/software-delivery-protocol/pull/31) added summary-first answers, explained misses, both next rungs, rule keys and recorded lines. A re-run on `gpt-6.1-sol`, recorded in [PR #32](https://github.com/libar-dev/software-delivery-protocol/pull/32), again answered 13 of 13 but took 23 calls against the first trial's 20 and overflowed one batched answer. The response was not another verb. It was a clearer task-to-recipe guide and better answer shapes.
+[PR #31](https://github.com/libar-dev/software-delivery-protocol/pull/31) added summary-first answers, explained misses, both next rungs, rule keys and recorded lines. Its acceptance re-run on `gpt-6.1-sol` again answered 13 of 13 but took 23 calls against the first trial's 20 and overflowed one batched answer. The response, in [PR #32](https://github.com/libar-dev/software-delivery-protocol/pull/32), was not another verb. It was a task-to-recipe sheet in the `sdp-agent-surface` skill and better answer shapes, such as the impacted Packs in recipe 4's summary.
 
 That is the useful feedback loop. The graph remains stable while the on-ramps and recipes improve from observed use.
 

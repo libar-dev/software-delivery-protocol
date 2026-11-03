@@ -36,7 +36,7 @@ At the pinned commit, the package publishes five projection roots:
 
 The graph also serves `sdp q`, CLI answers and typed contracts. An Obsidian vault provides generated notes and Bases beside a person's own notes. These are different readings, not competing repositories of delivery status.
 
-This breadth is intentional. We have not settled the human experience by shipping several output forms. We have made it cheap to discover which forms earn their place.
+This breadth is intentional, but not every form is open. The [shipped-projections decision](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/decisions/shipped-projections-frozen.sdp.md) (MD-32) settles Design Review, census, Mermaid and Gherkin as read models. The Studio and any new reading are where we learn which forms earn their place.
 
 The article's diagram evidence comes from the same mechanism. This Mermaid source is emitted by `sdp mermaid` from the checkout roadmap Pack, not redrawn for publication:
 

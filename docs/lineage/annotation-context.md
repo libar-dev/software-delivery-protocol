@@ -17,13 +17,15 @@ An anchor is a human-written pointer in source code or tests. It binds identity 
 The graph needs those bindings for several kinds of projections:
 
 - `satisfies` identifies code that realizes a Spec and confers `implemented` when the edge resolves.
-- `verifies` identifies a test or example that verifies a Spec and can confer `has-verifier`.
+- `verifies`, on a test anchor, identifies a test that verifies a Spec. The edge is `anchored` and can confer `has-verifier`.
 - `models` binds an expected-outcome oracle to an example space.
 - `references` identifies code that answers to a design without claiming to realize it. It confers no delivery fact.
 - `memberOf` and `uses` record curated architectural structure between code units.
 - `role`, and `layer` and `context` on component anchors, describe the unit's architectural place.
 
 These bindings let a projection answer from repository evidence rather than reconstructing architecture from filenames, imports or prose. A binding still does not prove behavior. `implemented` is not liveness, and `has-verifier` is not a passing test.
+
+An example verifies differently. An example Spec states its own `verifies` relation in its carrier, with the `declared` claim, not through an anchor. That relation confers `has-verifier` on its target only when a resolving test anchor binds the example itself, which makes the example an enabled verifier.
 
 ## The current representations
 

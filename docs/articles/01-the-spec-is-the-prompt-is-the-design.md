@@ -46,11 +46,11 @@ That only works when authors avoid padding. The Protocol's readiness floor is a 
 
 Nobody authors the graph. `sdp build` reads the carriers and source anchors and derives one flat, typed, deterministic document: nodes, edges and a location table. Validators, recipes and projections consume that one read model rather than parsing source into private alternatives ([`spec:extraction.derive-graph`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/extraction/derive-graph.sdp.md)).
 
-Two edges can point at the same Spec and mean different things:
+Edges that touch the same Spec can carry different claims:
 
 - `refines` from one Spec to another is authored intent with a `declared` claim.
 - `satisfies` from a code unit to a Spec comes from an anchor and has an `anchored` claim.
-- `belongsTo` is computed from a Pack manifest and inherits the manifest's `declared` claim.
+- `belongsTo` from a Spec to its Pack is computed from the Pack manifest and inherits the manifest's `declared` claim.
 
 The distinction is not bookkeeping. It lets a consumer answer "what did the authors intend?" separately from "what source did they bind?" and "what did static analysis infer?"
 
@@ -155,7 +155,7 @@ At the pinned commit, installation is from a reviewed git commit rather than an 
 
 ## Try it
 
-For this source checkout, use Node `^20.19.0 || >=22.12.0`, the installed test toolchain's declared requirement. The installed CLI separately declares Node `>=20`:
+For this source checkout, use Node `^20.19.0 || ^22.12.0 || >=24.0.0`, where the ranges declared by the installed test toolchain (Vitest, Vite and Rolldown) overlap. The installed CLI separately declares Node `>=20`:
 
 ```sh
 git clone https://github.com/libar-dev/software-delivery-protocol.git

@@ -2,13 +2,13 @@
 
 *Part 3 in a series introducing the Libar Software Delivery Protocol. Links and measurements are pinned to one commit; see the footer.*
 
-[Part 1](./01-the-spec-is-the-prompt-is-the-design.md) introduced one enrichable `Spec`, source anchors and the derived graph. [Part 2](./02-one-graph-many-views.md) showed how people read that graph through replaceable projections.
+[Part 1](./01-the-spec-is-the-prompt-is-the-design.md) introduced one enrichable `Spec`, source anchors and the derived graph. [Part 2](./02-one-graph-many-views.md) showed how people read that graph through regenerable projections.
 
 This article follows the engineering loop in a text editor and a terminal. We will use Order Management in [`examples/checkout-v1`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/examples/checkout-v1), then inspect a comment-form binding in the Protocol's own engine.
 
 ## Setup
 
-Every command runs from a checkout at the pinned commit. Use Node `^20.19.0 || >=22.12.0` for the installed test toolchain:
+Every command runs from a checkout at the pinned commit. Use Node `^20.19.0 || ^22.12.0 || >=24.0.0`, where the ranges declared by the installed test toolchain (Vitest, Vite and Rolldown) overlap:
 
 ```sh
 git clone https://github.com/libar-dev/software-delivery-protocol.git

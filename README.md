@@ -7,8 +7,9 @@ honesty.
 ## Read the product story
 
 The [article series and publication plan](docs/articles/README.md) are the guided introduction to
-the Protocol, its human review experience and its AI direction. They are developed in the open in
-[PR #34](https://github.com/libar-dev/software-delivery-protocol/pull/34).
+the Protocol, its human review experience and its AI direction. The series opened in
+[PR #34](https://github.com/libar-dev/software-delivery-protocol/pull/34) and is maintained on
+`main` through focused refresh PRs.
 
 Start with [the spec is the prompt is the design](docs/articles/01-the-spec-is-the-prompt-is-the-design.md),
 then read [one graph, many views](docs/articles/02-one-graph-many-views.md) for the projection
