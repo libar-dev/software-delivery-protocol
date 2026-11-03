@@ -9,7 +9,7 @@
     "verifier": "claude-opus-5-5 (high)",
     "measuredAt": "4e78fd14 (differs from base only in evidence/pr38/README.md)",
     "summary": "Reviewed PRs 31, 32, 33, 35 and 36 against the graph and local commit objects. Found one accepted policy carried only as provisional intent plus its PR record, and two deferred extensions missing from the graph's deferral register. All 196 distinct pinned blob/raw file links resolve. No shipped-capability regression established by the selected checks.",
-    "verifySummary": "Both findings hold at 4e78fd14; L12-01 lowered from high to medium. Recipes 1, 20, 25 (with addresses) and 55 re-run. All 50 Spec ids the ledger cites resolve. Pinned links re-checked with git cat-file -e: PR31 34/34, PR32 24/24, PR33 28/28, PR35 65/65, PR36 45/45. Entry addresses open-question-fields#rule.droppedListWarning, design-maturity#question.designColumnsSufficiency and example-space-coverage#rule.perSlotOnly resolve. No ledger row materially wrong; four corrected.",
+    "verifySummary": "Both findings hold at 4e78fd14; L12-01 lowered from high to medium. Recipes 1, 20, 25 (with addresses) and 55 re-run. All 50 Spec ids the ledger cites resolve. Pinned file (blob/raw) links re-checked with git cat-file -e: PR31 34/34, PR32 24/24, PR33 28/28, PR35 65/65, PR36 45/45. Entry addresses open-question-fields#rule.droppedListWarning, design-maturity#question.designColumnsSufficiency and example-space-coverage#rule.perSlotOnly resolve. No ledger row materially wrong; four corrected.",
     "pinnedLinks": {
       "31": "34/34",
       "32": "24/24",
@@ -17,7 +17,9 @@
       "35": "65/65",
       "36": "45/45",
       "distinctTotal": 196,
-      "broken": 0
+      "broken": 0,
+      "kinds": "blob and raw file links only",
+      "notChecked": "17 distinct pinned tree and commit links (6 tree, 11 commit), 213 pinned links in all; a later check resolved all 213"
     },
     "ledgerCorrections": [
       {

@@ -1,9 +1,14 @@
 # Open questions from the review
 
-Each confirmed design finding, written as an open question ready to author on its carrying Spec.
-The form follows `spec:model.open-question-fields`: a `[blocking]` or `[non-blocking]` flag with a
-key, then optional `decider`, `provisional`, `links` and, on a blocking question, `trigger`. Only
-the `[blocking]` flag moves a readiness floor.
+**The owner has ruled on every question here and on both unsettled items.** Each section opens with
+its ruling, which supersedes the draft below it where they differ: questions 1, 2 and 6 were not
+authored as open questions, questions 3, 4 and 5 became `idea` captures, and the trigger of
+question 4 was reworded. PR #39 carries out the rulings. The drafts stay as the review wrote them.
+
+Each confirmed design finding, drafted as an open question on its carrying Spec. The form follows
+`spec:model.open-question-fields`: a `[blocking]` or `[non-blocking]` flag with a key, then
+optional `decider`, `provisional`, `links` and, on a blocking question, `trigger`. Only the
+`[blocking]` flag moves a readiness floor.
 
 - **Questions 1, 2 and 6** sit on Specs that state `ready`, so they are proposed non-blocking: a
   blocking question would hold a ready, implemented Spec below its floor for a gap that does not
@@ -22,6 +27,10 @@ at the end; they are not findings.
 
 ## 1. Symbolic links in discovery (from L3-02)
 
+- **Ruling:** a decision, not an open question. Discovery never follows a symbolic link below the
+  root and warns once per link outside excluded or skipped paths; an explicitly named root resolves
+  to its real directory first, which also fixes L4-04. Carried by
+  `spec:extraction.excludes#rule.canonicalDiscovery` and `src/extract/discover.ts`.
 - **Spec:** `spec:extraction.excludes` (`specs/extraction/excludes.sdp.md`), beside
   `#rule.canonicalDiscovery`.
 - **Authored form:**
@@ -46,6 +55,9 @@ at the end; they are not findings.
 
 ## 2. Token budget in the composing view (from L9-F3)
 
+- **Ruling:** a job-story change, not a Spec question. The panel hands off scope; the receiving
+  agent picks its own budget and reads the scope with the context bundle. Carried by
+  `jtbd-stories/06-edit-through-the-lens.md`.
 - **Spec:** `spec:consumers.spec-studio.intent-panel`
   (`specs/consumers/spec-studio.intent-panel.sdp.md`).
 - **Authored form:**
@@ -73,6 +85,9 @@ at the end; they are not findings.
 
 ## 3. A boundary for AI-written presentation (from L11-01)
 
+- **Ruling:** an `idea` capture with four declared relations and a one-line provisional: select
+  existing deterministic readings only; generated text stays outside the Studio and the frozen
+  projections.
 - **Spec:** a new capture, `spec:consumers.ai-assisted-reading` (behavior, story, readiness
   `idea`). Outcome: "Let a reader ask for a useful existing reading and inspect why it was selected
   and what scope it omits." The verifier moved the question here from a non-blocking question on
@@ -106,6 +121,8 @@ at the end; they are not findings.
 
 ## 4. When bound-file changes make run evidence stale (from L12-02)
 
+- **Ruling:** an `idea` capture with the owner as decider, its trigger reworded: "a reader cannot
+  tell whether a run at another commit still applies". The draft's trigger below is superseded.
 - **Spec:** a new capture, `spec:observation.run-evidence.bound-file-freshness` (`idea`), refining
   `spec:observation.run-evidence`. The existing non-blocking question
   `spec:observation.run-evidence#question.freshness` moves here and becomes the deferral.
@@ -136,6 +153,7 @@ at the end; they are not findings.
 
 ## 5. Which slot-value combinations coverage reports (from L12-02)
 
+- **Ruling:** an `idea` capture as drafted, with the owner as decider.
 - **Spec:** a new capture, `spec:consumers.agent-surface.combination-coverage` (`idea`), refining
   `spec:consumers.agent-surface.example-space-coverage`.
 - **Authored form:**
@@ -163,6 +181,9 @@ at the end; they are not findings.
 
 ## 6. A preview of the hand-off in the composing panel (from L10-9)
 
+- **Ruling:** split, and not authored as an open question. The missing action label on each row is
+  a code defect against `#ui.gatheredIntents`; a collapsed, read-only memo preview is ruled yes,
+  with a UI entry and a rule on `spec:consumers.spec-studio.intent-panel`.
 - **Spec:** `spec:consumers.spec-studio.intent-panel`
   (`specs/consumers/spec-studio.intent-panel.sdp.md`). It has no `### Open questions` yet; add one
   at the end of Intent. If question 2 (`#viewBudget`) lands too, both share it.
@@ -190,10 +211,18 @@ at the end; they are not findings.
 - **Links:** the panel already declares `dependsOn` `spec:consumers.intent-composition.proposal.memo`,
   so the link raises no prose-mentions warning.
 
-## Unsettled: items the PR-record lane raised but no verifier ruled on
+## Unsettled at the review: items the PR-record lane raised but no verifier ruled on
 
 These come from L12's per-PR ledger, not its findings list. They are not findings and are not
-counted as confirmed. Each says what would settle it.
+counted as confirmed. Each says what would settle it; the owner has since settled both.
+
+- **Ruling on U1:** PR #32's delegated choices are ratified as the graph carries them today; where
+  a later ruling narrowed one, the later ruling wins. No Spec edit and no question.
+- **Ruling on U2:** PR #35's refused-list wording was wrong. The build composes every join; what is
+  refused is a page that recomputes one, or a second graph
+  (`spec:consumers.spec-studio#rule.noSecondGraph`).
+
+The items as the review drafted them:
 
 - **U1. The whole-corpus refresh's delegated choices have no recorded owner confirmation.** PR #32
   carried a batch of delegated choices (collective satisfaction, prose ownership, separate rule and

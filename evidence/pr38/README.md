@@ -4,7 +4,29 @@ This directory is the evidence of one whole-repository review of the Libar Softw
 Protocol. It is **arc evidence**: it is committed on the review branch only so the pull request
 can link it, and it is **removed before merge**. Nothing here is intended truth. Spec findings
 reach the corpus only through a change proposal and an applying commit; record findings reach it
-only after the owner reviews the inventory.
+through the cleanup arc, which lands the inventory the owner accepted in its first commit.
+
+## The owner's rulings
+
+The owner has ruled on the review's six questions, its two unsettled items, the proposal, the
+inventory and the review's delegated choices. The sections below keep the review's recommendations,
+verdicts and counts as they were measured; where a ruling differs, the ruling wins. PR #39 carries
+out the rulings on code and Specs; PR #34 carries the article corrections.
+
+| Item                                            | Ruling                                                                                                                                                                                                                                                                                    |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Question 1, symbolic links in discovery (L3-02) | A decision, not an open question: discovery never follows a symbolic link below the root and warns once per link outside excluded or skipped paths; an explicitly named root resolves to its real directory first, which also fixes L4-04                                                 |
+| Question 2, a token budget in the panel (L9-F3) | A job-story change, not a Spec question: the panel hands off scope, and the receiving agent picks its own budget and reads the scope with the context bundle                                                                                                                              |
+| Question 3, AI-written presentation (L11-01)    | An `idea` capture with four declared relations and a one-line provisional: select existing deterministic readings only; generated text stays outside the Studio and the frozen projections                                                                                                |
+| Question 4, bound-file freshness (L12-02)       | An `idea` capture with the owner as decider; its trigger reworded: "a reader cannot tell whether a run at another commit still applies"                                                                                                                                                   |
+| Question 5, slot-combination coverage (L12-02)  | An `idea` capture as drafted, with the owner as decider                                                                                                                                                                                                                                   |
+| Question 6, a preview of the hand-off (L10-9)   | Split: the missing action label is a code defect against `#ui.gatheredIntents`, and a collapsed, read-only memo preview is ruled yes, with a UI entry and a rule                                                                                                                          |
+| U1, PR #32's delegated choices                  | Ratified as the graph carries them today; where a later ruling narrowed one, the later ruling wins; no Spec edit                                                                                                                                                                          |
+| U2, "the Studio build computes a join"          | PR #35's refused-list wording was wrong: the build composes every join, and what is refused is a page that recomputes one, or a second graph (`spec:consumers.spec-studio#rule.noSecondGraph`)                                                                                            |
+| The change proposal                             | All seven changes accepted                                                                                                                                                                                                                                                                |
+| The inventory                                   | Accepted as the answer to `#durableContent`, with row rulings (`inventory.md`, last section). The cleanup arc lands it in its first commit and closes the question there; R6, R8 and the prototypes' new location are settled within that arc or later. R12, added since, awaits a ruling |
+| This review's delegated choices                 | Seven ratified, the temporal guard's `evidence/` exemption among them; "design findings stay open questions" is superseded by the rulings on questions 1, 2 and 6                                                                                                                         |
+| The article corrections                         | All eight accepted (L10-4, L10-5, L10-7, L10-8, L10-11, L11-02, L9-F6 and L9-F7), as PR #34 applies them in `2dc6a1a2`                                                                                                                                                                    |
 
 ## Why this review
 
@@ -34,7 +56,7 @@ that reads the recent pull-request descriptions, which AGENTS.md makes the durab
   - `4e78fd14` adds the product-lens lanes to the scaffold;
   - `5f528a15` exempts `evidence/` from the temporal guard (`check-temporal.mjs` and its test),
     beside the existing `.omo/evidence/` exemption, so an inventory can cite the plan files it
-    classifies. This is a **delegated choice awaiting the owner's review**.
+    classifies. This was a delegated choice; the owner has ratified it.
 
   Every lane ran before `5f528a15`, and `src/`, `specs/`, `test/` and the docs the lanes read are
   identical to the base. Verifiers that reported HEAD `209f5553` or `4e78fd14` saw a difference of
@@ -71,7 +93,8 @@ that reads the recent pull-request descriptions, which AGENTS.md makes the durab
 | **Total**                              |                                                                                                                 |                                        |                                        |   **73** |    **55** |  **16** |     **2** |
 
 L12's two uncertain items are ledger items, U1 and U2, that the lane raised outside its findings
-list and no verifier ruled on; `open-questions.md` lists them as unsettled.
+list and no verifier ruled on; the owner has since settled both (see the owner's rulings). The
+counts here stay as the verifiers left them.
 
 Across the twelve lanes, the 55 confirmed findings are 2 high, 26 medium and 27 low:
 
@@ -131,11 +154,14 @@ Confirmed findings by route (ids merged as one item where they are the same find
   Specs). Low: L1-05, L3-03, L4-03, L2-5, L2-6, L6-4, L6-6, C1, L9-F1, L9-F4, L9-F5, L9-F6, L9-F7.
 - **Article corrections (comments on PR #34):** medium: L10-4, L10-7. Low: L10-5, L10-8, L10-11,
   L11-02 (`product-lens.md`, section 4).
-- **Design (open questions):** L3-02, L9-F3, L11-01, L12-02, L10-9 (`open-questions.md`). L11-01
-  and L12-02 each need a new `idea` capture; they are capture candidates for an authoring session.
+- **Design (open questions):** L3-02, L9-F3, L11-01, L12-02, L10-9 (`open-questions.md`). The
+  owner ruled each: L3-02 became a decision, L9-F3 a job-story change, L10-9 a code defect and a UI
+  entry with a rule, and L11-01 and L12-02 `idea` captures.
 - **Record (inventory):** R1, R4, R5, R6, L12-01, L12-02 (medium); R2, R7, R8, R9, R11, L8-01,
-  L8-02 (low) (`inventory.md`).
-- **Unsettled:** L12's U1 and U2 (`open-questions.md`, last section).
+  L8-02 (low) (`inventory.md`). R12 (low) was added to the inventory after the owner's rulings, by a
+  later cross-family review, and is outside the counts above.
+- **Unsettled at the review, settled since by the owner:** L12's U1 and U2 (`open-questions.md`,
+  last section).
 - **Refuted (16):** L2-4, L2-7, L2-8, L3-04, L3-05, L6-7, L6-8, R3, R10, L9-F8, L9-F9 (reasons in
   `findings.json`, under each `verdict.reason`); L10-1, L10-2, L10-3, L10-6, L10-10 (reasons in
   `product-lens.md`, section 6).
@@ -158,9 +184,14 @@ Confirmed findings by route (ids merged as one item where they are the same find
    question leaves the Spec (L12-01).
 
 Changes 6 and 7 follow the authoring skill's form for an answered question: a settled question
-leaves the Spec and its answer becomes intent. `#durableContent` is only half settled (the owner
-accepted how it is answered; the answer is this inventory, which awaits review), so changes 4 and 5
-record the method and keep the question. Each change's request names the oracle pin
+leaves the Spec and its answer becomes intent. When the proposal was written, `#durableContent` was
+only half settled (the owner had accepted how it is answered; the answer is the inventory, which
+then awaited review), so changes 4 and 5 record the method and keep the question. The owner has
+since accepted the inventory, and ruled when the question closes: when the cleanup arc lands the
+inventory in its first commit. Change 5's request and provisional, written before that ruling, close
+it once the owner has reviewed the inventory and each piece has moved to its home. The proposal
+stays as the owner accepted it; the provisional applied from change 5 must be amended to name the
+acceptance and the closing commit. Each change's request names the oracle pin
 (`test/self-hosting-oracle/`) that moves with it. Changes 6 and 7 say to apply them at the start of
 the cited-line arc, as PR #36 planned, or earlier at the owner's word.
 
@@ -261,16 +292,16 @@ commands.
 
 ## Files
 
-| File                                   | Holds                                                                                                                                       |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `README.md`                            | this dossier                                                                                                                                |
-| `findings.md`                          | the L1–L9 findings, rendered from `findings.json`: confirmed by route, then refuted with reasons                                            |
-| `findings.json`                        | every L1–L9 finding with its verdict, and the lane metadata                                                                                 |
-| `product-lens.md`, `product-lens.json` | L10 and L11: the seed-to-current map, Part 2's seven task questions, the current-to-future table, and every finding with its verdict        |
-| `pr-record.md`, `pr-record.json`       | L12: the ledger of five merged descriptions, its two findings and two unsettled items                                                       |
-| `inventory.md`                         | the answer draft for `spec:protocol.delivery-record-cleanup#question.durableContent`, from L7, L8 and L12                                   |
-| `open-questions.md`                    | confirmed design findings written as open questions ready to author (L3-02, L9-F3, L11-01, L12-02 twice, L10-9), then L12's unsettled items |
-| `proposal.json`                        | the change proposal: seven changes on base `b5e0a8be`                                                                                       |
-| `proposal-check.json`                  | recipe 38's check of the proposal against the base graph                                                                                    |
-| `proposal-memo.md`                     | recipe 49's memo of the proposal                                                                                                            |
-| `not-proposed.md`                      | the parts of the findings the proposal does not carry, why, and where each goes                                                             |
+| File                                   | Holds                                                                                                                                                                        |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `README.md`                            | this dossier                                                                                                                                                                 |
+| `findings.md`                          | the L1–L9 findings, rendered from `findings.json`: confirmed by route, then refuted with reasons                                                                             |
+| `findings.json`                        | every L1–L9 finding with its verdict, and the lane metadata                                                                                                                  |
+| `product-lens.md`, `product-lens.json` | L10 and L11: the seed-to-current map, Part 2's seven task questions, the current-to-future table, and every finding with its verdict                                         |
+| `pr-record.md`, `pr-record.json`       | L12: the ledger of five merged descriptions, its two findings and two unsettled items                                                                                        |
+| `inventory.md`                         | the inventory the owner accepted as the answer to `spec:protocol.delivery-record-cleanup#question.durableContent`, from L7, L8 and L12, with the owner's row rulings         |
+| `open-questions.md`                    | confirmed design findings drafted as open questions (L3-02, L9-F3, L11-01, L12-02 twice, L10-9), each with the owner's ruling, then L12's two ledger items and their rulings |
+| `proposal.json`                        | the change proposal: seven changes on base `b5e0a8be`                                                                                                                        |
+| `proposal-check.json`                  | recipe 38's check of the proposal against the base graph                                                                                                                     |
+| `proposal-memo.md`                     | recipe 49's memo of the proposal                                                                                                                                             |
+| `not-proposed.md`                      | the parts of the findings the proposal does not carry, why, and where each goes                                                                                              |

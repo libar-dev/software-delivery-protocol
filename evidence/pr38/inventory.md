@@ -1,6 +1,6 @@
-# Durable-content inventory: answer draft
+# Durable-content inventory
 
-This is the answer draft for `spec:protocol.delivery-record-cleanup#question.durableContent`:
+This inventory answers `spec:protocol.delivery-record-cleanup#question.durableContent`:
 
 > Which content in `plans/`, `reviews/` and the concept documents does no Spec, test, decision or
 > recipe carry yet, and where does each piece belong?
@@ -11,18 +11,22 @@ and added two details: the inventory is the cleanup arc's first commit, and a cr
 checks it before anything is deleted. Only PR #36's description records that acceptance (finding
 L12-01, below).
 
-This draft is that inventory, measured at base `b5e0a8bea1e3bedd48c616f96c9928e955792753` by lanes
-L7 (`plans/`, `docs/concept/`) and L8 (`reviews/`), each verified by the other model family, and
-completed by L12 for the pull-request descriptions. **Nothing is deleted before the owner reviews
-it.** No lane proposed a deletion, and this draft proposes none; it says where durable content should
-move so a later cleanup arc can remove the records safely.
+This inventory was measured at base `b5e0a8bea1e3bedd48c616f96c9928e955792753` by lanes L7
+(`plans/`, `docs/concept/`) and L8 (`reviews/`), each verified by the other model family, and
+completed by L12 for the pull-request descriptions. The owner has accepted it, with the row rulings
+at the end of this file. No lane proposed a deletion, and this inventory proposes none; it says
+where durable content should move so the cleanup arc can remove the records safely. **Nothing is
+deleted before that arc lands this inventory, and no record goes before the durable content it
+holds has its home.**
 
 A "carrier" here is any graph home (a Spec, decision Spec, open question) or a test or recipe that
 states the content. Tests count as carriers: that is why R3 was refuted.
 
 ## Record findings: durable content with no carrier yet
 
-All 11 record findings were confirmed; none is uncertain. Severities are the verifier's.
+The lanes' 11 record findings were all confirmed; none is uncertain. R12 was found after the
+owner's rulings, by a later cross-family review of this inventory, and awaits the owner's ruling.
+Severities are the verifier's.
 
 | Id    | Source (path:lines)                                                                                                             | Durable content                                                                                                                                                                                                                                                                                                                                                                                                | Proposed home                                                                                                                                                                                                                                                                                                                     | Severity |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -37,6 +41,7 @@ All 11 record findings were confirmed; none is uncertain. Severities are the ver
 | R11   | `plans/18-self-hosting-phase-2-brief.md:197-220`                                                                                | The rewrite test for decision prose ("would this still hold if the repository were rebuilt tomorrow under the same design?") and the exclusion of procedural context (dates, commit hashes, session numbers) from decision Specs                                                                                                                                                                               | The decision guidance in `.agents/skills/sdp-authoring/SKILL.md` (around the Decision row at :129). Rejected paths and supersession are already carried by `CONTEXT.md` and need no move                                                                                                                                          | low      |
 | L8-01 | `reviews/12-self-hosting-phase-5-post-close-review.md:62`                                                                       | Why the reading skill keeps a self-contained summary of the `sdp q` contract: an agent loads the skill without the catalog in context, so a pointer-only contract is weaker. The Studio and vault on-ramps "restate neither", so without this reason the reading skill looks inconsistent                                                                                                                      | Narrative before Intent in `specs/consumers/reading-on-ramp.sdp.md`                                                                                                                                                                                                                                                               | low      |
 | L8-02 | `reviews/14-executable-verification-design-review.md:203-209`, `:223`, `:236`                                                   | The cost of the rejected engine-execution alternative: loading and executing adopter code crosses a trust boundary and moves module loading, isolation, world setup and test-framework integration into the engine                                                                                                                                                                                             | Narrative before Intent in `specs/extraction/runnable-modules.sdp.md`; a decision `alternative:` would also work but is not required                                                                                                                                                                                              | low      |
+| R12   | `docs/concept/01-founding-principles-and-invariants.md:99`, `:117`                                                              | The designed-for, deferred carve-out of principle L8: an optional generated `spec-ids` union type that `tsc` reads for early checks of Spec references, never a gate, because the graph validator catches the same broken references at build time                                                                                                                                                             | Owner decision: keep it beside R6's deferrals, in the form R6 takes, or drop it. No Spec carries it: recipe 6 finds no match for `spec-ids`                                                                                                                                                                                       | low      |
 
 Refuted record findings, kept here so they are not re-raised: **R3** (the correctness-oracle law is
 carried by tests: `test/extract.test.ts:1852-1857`, `test/checkout-v1.test.ts:17-19,68-74`,
@@ -47,41 +52,51 @@ keys are settled law in `specs/carrier/markdown-body-grammar.sdp.md:44-45`).
 
 Lane L12 read the five most recent merged descriptions (#31, #32, #33, #35, #36) against the graph,
 because the descriptions are the delivery record the cleanup keeps and some of their content also
-sits in the plans it removes. All 196 distinct pinned links in them resolve. Two findings were
-confirmed, both medium; two ledger items are unsettled. Full ledger: `pr-record.md`.
+sits in the plans it removes. All 196 distinct pinned file links (blob and raw) in them resolve. The
+lane checked no other kind of link: the descriptions also hold 17 distinct pinned tree and commit
+links, 213 pinned links in all, and a later check found that those 17 resolve too. Two findings were
+confirmed, both medium. Two ledger items, U1 and U2, had no verifier ruling; the owner has since
+settled both. Full ledger: `pr-record.md`.
 
-| Id     | Where it lives today                                                                                | Content                                                                                                                                                                                                                                                                                                   | Proposed home                                                                                                                                                                                                                                                           | Severity |
-| ------ | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| L12-01 | PR #36's description only, "Answered since the memo was rendered" (lines 347-358 of the saved copy) | The owner let three provisional answers stand: `#durableContent` (with the first-commit inventory and the cross-family review), `#lineText` and `#lineBound`                                                                                                                                              | Proposal changes 4 to 7: the accepted method becomes rule `#inventoryFirst` on the cleanup Spec, whose question stays blocking until the owner reviews this inventory; the two cited-line answers become a rule and a Design entry, and their questions leave that Spec | medium   |
-| L12-02 | The plan "Designs people can read, and an adopter at full speed" only (plan 46)                     | Two re-entry triggers: "A reader is misled by a run whose commit matches but whose files moved" (bound-file freshness) and "A design pass asks which combinations no example exercises" (slot-combination coverage). PR #35 lists both as deferred without them, and recipe 55's deferral list omits both | Two `idea` captures, each with a blocking question carrying its trigger (`open-questions.md`, questions 4 and 5). Move them before plan 46 goes                                                                                                                         | medium   |
+| Id     | Where it lives today                                                                                | Content                                                                                                                                                                                                                                                                                                                       | Proposed home                                                                                                                                                                                                                                                                                                                 | Severity |
+| ------ | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| L12-01 | PR #36's description only, "Answered since the memo was rendered" (lines 347-358 of the saved copy) | The owner let three provisional answers stand: `#durableContent` (with the first-commit inventory and the cross-family review), `#lineText` and `#lineBound`                                                                                                                                                                  | Proposal changes 4 to 7: the accepted method becomes rule `#inventoryFirst` on the cleanup Spec, and its question stays blocking until the cleanup arc lands this inventory in its first commit (the owner's ruling, below); the two cited-line answers become a rule and a Design entry, and their questions leave that Spec | medium   |
+| L12-02 | The plan "Designs people can read, and an adopter at full speed" only (plan 46)                     | Two re-entry triggers, in plan 46's words: "A reader is misled by a run whose commit matches but whose files moved" (bound-file freshness) and "A design pass asks which combinations no example exercises" (slot-combination coverage). PR #35 lists both as deferred without them, and recipe 55's deferral list omits both | Two `idea` captures, each with a blocking question carrying its trigger (`open-questions.md`, questions 4 and 5). The owner reworded the freshness trigger: "a reader cannot tell whether a run at another commit still applies". Move them before plan 46 goes                                                               | medium   |
 
 The same plan also defers build attestations, deployments and SBOMs until "a Spec designs their
 source". That condition is carried as prose and rules in
 `spec:consumers.spec-studio.lenses.evidence#notTracked` and the verification panels, so it is not
 lost.
 
-Two ledger items are unsettled (no verifier ruled on them; see `open-questions.md`):
+Two ledger items had no verifier ruling (see `open-questions.md`); the owner has since settled
+both:
 
-- **U1:** no description records the owner confirming the delegated choices of the whole-corpus
-  refresh (PR #32, plan 44). The law is carried; whether it was reviewed is the owner's to say.
+- **U1:** no description recorded the owner confirming the delegated choices of the whole-corpus
+  refresh (PR #32, plan 44). **Ruled:** they are ratified as the graph carries them; where a later
+  ruling narrowed one, the later ruling wins. No Spec edit.
 - **U2:** PR #35's phrase "the Studio build computes a join" reads broader than the carrying law in
-  `spec:consumers.spec-studio`. If the cleanup keeps a record note, it says the Spec wins.
+  `spec:consumers.spec-studio`. **Ruled:** PR #35's refused-list wording was wrong. The build
+  composes every join; what is refused is a page that recomputes one, or a second graph
+  (`spec:consumers.spec-studio#rule.noSecondGraph`).
 
 ### What L12-01 means for the cleanup entry
 
-- **The answer to the cleanup's blocking question is this inventory.** The owner settled how the
-  question is answered, not its answer: which content and where it belongs still needs the owner's
-  review of this file. The question stays open until then.
-- **This file is a draft, not the arc's first commit.** It lives in the review's evidence, which is
-  removed before merge. To meet the accepted answer, the cleanup arc opens with this inventory, as
-  the owner amends it, in its first commit. Its cross-family check is already done: L7, L8 and L12
-  were each verified by the other model family.
+- **The answer to the cleanup's blocking question is this inventory.** In PR #36 the owner settled
+  how the question is answered; the owner has since accepted this inventory as its answer, with the
+  row rulings below. The question stays open until the cleanup arc lands this inventory in its first
+  commit, which closes it.
+- **This file is not the arc's first commit.** It lives in the review's evidence, which is removed
+  before merge. To meet the accepted answer, the cleanup arc opens with this inventory, as the owner
+  ruled it, in its first commit. Its cross-family check is already done: L7, L8 and L12 were each
+  verified by the other model family.
 - **The graph does not yet show the acceptance.** At the base, recipe 20 lists `#durableContent` as
   blocking and recipe 55 lists it under "Waiting on the owner", with a provisional that lacks both
-  accepted details. An agent reading only the graph would ask the owner again. Changes 4 and 5 fix
-  that. Measured in a trial application of all seven changes, recipe 55 still lists place 1 as to
-  design, blocked by `#durableContent` and waiting on the owner, and the Spec's floor then allows
-  `scoped`.
+  accepted details. An agent reading only the graph would ask the owner again. Changes 4 and 5
+  record the accepted method. Measured in a trial application of all seven changes, recipe 55 still
+  lists place 1 as to design, blocked by `#durableContent` and waiting on the owner, and the Spec's
+  floor then allows `scoped`. Change 5's provisional predates the owner's acceptance of this
+  inventory, so the provisional must also come to name that acceptance and the closure condition,
+  or an agent would still ask the owner to review the inventory.
 - **The acceptance passage needs no other home** once those changes land: GitHub keeps PR #36's
   description, and the graph then carries the answers.
 
@@ -98,7 +113,8 @@ Two neighbouring findings are not record findings but bear on the cleanup:
 
 ## Live dependencies on the records
 
-A cleanup arc must move or retire these first, or the gate breaks:
+A cleanup arc must move, repoint or retire these before it removes what they depend on. The first
+two break the gate:
 
 - `check-self-hosting-gates.mjs` reads plans 16, 17 and 18 (plan 16 at line 44; plan 17's docket and
   ledger; plan 18's G1–G8 ledger) as frozen historical checks.
@@ -107,6 +123,25 @@ A cleanup arc must move or retire these first, or the gate breaks:
   `reviews/assets/plan46-prototypes/**` as design evidence.
 - `docs/concept/DECISIONS.md` is the live registry (read by `AGENTS.md`, the gates script and package
   smoke tests). It is not cleanup material.
+- 21 Markdown links in documents the cleanup keeps point into the concept documents it may dissolve:
+  - `jtbd-stories/`, 17, by story number and line: `01:33`, `02:11` and `02:32` (concept 04);
+    `01:117`, `05:13`, `05:34`, `05:56`, `05:77`, `06:11`, `07:11` and `07:54` (concept 06);
+    `03:74`, `07:54` and `08:13` (concept 01); `08:13` (concept 00); `README.md:3` and
+    `README.md:15` (the concept README);
+  - `README.md:11` (the concept README);
+  - `examples/checkout-v1/README.md`, 3: `:12` (the concept README), `:164` (concept 04) and `:166`
+    (concept 06).
+
+  Each is repointed to the Spec that carries its subject, or removed, before its target goes. Nine
+  of them target concept 06, whose dissolution depends on R8. Two exploration exhibits also link
+  plans the cleanup removes: `explorations/carrier-competition/gherkin-fork/CLOSED.md:19` (plan 15c)
+  and `explorations/carrier-competition/typed-markup/CLOSED.md:23` (plan 15d); the cleanup treats
+  them the same way, or records why a verbatim exhibit keeps a dangling link. No code or test reads
+  a concept document other than `DECISIONS.md`. Apart from OmO's own state under `.omo/`, which other
+  sessions leave alone, nothing else outside the records links into `plans/` or `reviews/`.
+
+- `AGENTS.md` (lines 22, 61 and 69) and `CONTEXT.md` (line 8) name `plans/`, `reviews/` and
+  `docs/concept/` in prose; the cleanup rewrites those pointers in the same change.
 
 ## Per-file classification
 
@@ -158,7 +193,7 @@ L7 read the ledgers of plans 17, 18a, 20, 21, 22, 24, 26, 29, 32 and 34 by secti
 | ------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | README       | C                           | founding principles carried by `spec:extraction.regenerability`, `spec:extraction.claim-taxonomy`, `spec:decisions.executable-meta-model`, `spec:extraction.derive-graph`; reading conventions in `AGENTS.md` |
 | 00           | U + drift [R5, R6]          | stale CLI list and intent-panel status (L6-5, D1)                                                                                                                                                             |
-| 01           | mostly C + drift            | P1–P10, L2, L3, L9 carried; the L8 `spec-ids` union aspiration is uncarried but low value; stale statuses (D1)                                                                                                |
+| 01           | C + U + drift [R6, R12]     | P1–P10, L2, L3, L9 carried; the L8 `spec-ids` union aspiration is uncarried (R12), and line 124 holds part of R6's deferred trajectory; stale statuses (D1)                                                   |
 | 04           | U + drift [R4, R7]          | §4 carried by `spec:carrier.gherkin-authoring` and `spec:decisions.sdp-gherkin-extension`; "one runtime truth" stale (D1)                                                                                     |
 | 06           | pointers C + U + drift [R8] | stale built/unbuilt statements (L6-2, D1)                                                                                                                                                                     |
 | 07           | C                           | the correctness-oracle law is carried by tests (R3 refuted); L7 had marked it U                                                                                                                               |
@@ -202,18 +237,20 @@ L7 read the ledgers of plans 17, 18a, 20, 21, 22, 24, 26, 29, 32 and 34 by secti
 
 Most of `plans/` and `reviews/` is either carried by Specs, decision Specs, open questions, tests
 and recipes, or is execution history that git and the pull requests already hold. The uncarried
-durable content is small and named above: four medium items (R1, R4, R5, R6), seven low items (R2,
-R7, R8, R9, R11, L8-01, L8-02), two deferral triggers that live only in plan 46 (L12-02), and the
-concept-document drift to fix as the documents dissolve. The owner's acceptance of this method lives
-only in PR #36's description (L12-01) until proposal changes 4 to 7 land. Before any record is
-removed, the owner reviews this inventory, the cleanup arc opens with it in its first commit, the
-durable items land in their homes, and the four live dependencies are moved or retired.
+durable content is small and named above: four medium items (R1, R4, R5, R6), eight low items (R2,
+R7, R8, R9, R11, R12, L8-01, L8-02), two deferral triggers that live only in plan 46 (L12-02), and
+the concept-document drift to fix as the documents dissolve. The owner's acceptance of this method
+lives only in PR #36's description (L12-01) until proposal changes 4 to 7 land. The owner has
+accepted this inventory. The cleanup arc opens with it in its first commit, which closes the
+question; before any record is removed, its durable items land in their homes and the live
+dependencies are moved, repointed or retired.
 
 ## The owner's rulings on this inventory
 
 The owner accepted this inventory as the answer to
 `spec:protocol.delivery-record-cleanup#question.durableContent`. The cleanup arc lands it in its
-first commit and closes the question there. The rows are ruled as follows:
+first commit and closes the question there: that is the question's one closure condition, and
+nothing listed below as still open holds it open. The rows are ruled as follows:
 
 | Rows                                       | Ruling                                                                                                                                                                                              |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -223,8 +260,17 @@ first commit and closes the question there. The rows are ruled as follows:
 | Live dependencies                          | `docs/concept/DECISIONS.md` stays. The plan-reading gate checks retire with the folders (`spec:protocol.roadmap-replaces-plans#rule.gateRecord`). `measure.mjs` moves beside the test that runs it. |
 | L12-01, L12-02                             | Carried by the proposal and the captures that PR #39 applies.                                                                                                                                       |
 
-Still open, on purpose, and settled in the cleanup arc or later:
+Still open, on purpose. None of these blocks opening the cleanup arc or closing the question; each
+is settled before the record that holds it is removed, so in the cleanup arc, or later if that
+record stays:
 
 - R6's re-entry conditions, or dropping R6;
 - R8's home, which depends on whether the cleanup dissolves `docs/concept/06`;
 - the new location of the plan-46 prototypes under `reviews/assets/`, which two Specs cite.
+
+Added after these rulings, by a later cross-family review of this inventory:
+
+- R12, which awaits the owner's ruling, keep it with a home or drop it; like R6, it is settled
+  before concept 01 is removed and does not hold the question open;
+- the Markdown links and prose pointers in the live-dependency list, which need no ruling: the
+  cleanup repoints or removes each before its target goes.
