@@ -506,6 +506,48 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
+  // A caller checks the shape the intro names; a recipe missing from its list reads an absent
+  // subject as an empty answer.
+  it("names in the intro every recipe that reports an absent subject, by its shape", async () => {
+    const intro = source.slice(0, source.indexOf("## 1.")).replace(/\s+/gu, " ");
+    const ordinals = (list: string | undefined) =>
+      [...(list ?? "").matchAll(/\d+/gu)].map((match) => Number(match[0]));
+    const documented = {
+      foundFalse: ordinals(
+        /Recipes ([\d, and]+) answer an absent subject with `found: false`/u.exec(intro)?.[1],
+      ),
+      diagnosed: ordinals(
+        /\(recipes ([\d, and]+)\) report an absent Pack in `diagnostics`/u.exec(intro)?.[1],
+      ),
+    };
+    // Inputs these recipes refuse before they look the Pack up.
+    const companions: Readonly<Record<number, Readonly<Record<string, unknown>>>> = {
+      35: { base: derived.graph },
+      48: { commit: "0".repeat(40) },
+    };
+    const subjects = { pack: "pack:absent-v1", spec: "spec:absent", component: "component:absent" };
+    const answered = { foundFalse: new Set<number>(), diagnosed: new Set<number>() };
+    for (const recipe of recipes) {
+      for (const [key, id] of Object.entries(subjects)) {
+        const answer = await runRecipe(recipe, { ...companions[recipe.ordinal], [key]: id });
+        if (typeof answer !== "object" || answer === null || Array.isArray(answer)) continue;
+        const record = answer as Record<string, unknown>;
+        if (record.found === false) answered.foundFalse.add(recipe.ordinal);
+        const diagnostics = Array.isArray(record.diagnostics) ? record.diagnostics : [];
+        if (
+          key === "pack" &&
+          diagnostics.some((entry) => Object.values(asRecord(entry)).includes("pack"))
+        ) {
+          answered.diagnosed.add(recipe.ordinal);
+        }
+      }
+    }
+    expect(documented).toEqual({
+      foundFalse: [...answered.foundFalse],
+      diagnosed: [...answered.diagnosed],
+    });
+  }, 120_000);
+
   it("keeps every body plain JavaScript with a return", () => {
     for (const recipe of recipes) {
       expect({ recipe: recipe.title, hasReturn: recipe.body.includes("return ") }).toEqual({

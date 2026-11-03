@@ -1510,7 +1510,7 @@ describe("the reviewed skill teaching", () => {
       "## Bootstrap discipline",
       "## Answer a task with a recipe",
       "## The contract",
-      "## The entry adapters",
+      "## Entry adapters and reader joins",
       "## The shape of the graph",
       "## How delivery state derives",
       "## Empty answers that mislead",
@@ -1528,6 +1528,25 @@ describe("the reviewed skill teaching", () => {
     ]) {
       expect(description).toContain(trigger);
     }
+  });
+
+  // The demand map rules the adapters by what an agent holds; a by-id join taught as an adapter
+  // would send agents looking up ids they do not have.
+  it("names as entry adapters exactly the ones the demand map rules, apart from the reader joins", () => {
+    const reader = createReader(shippedCorpusGraph());
+    const address = reader.resolveEntryAddress("spec:consumers.agent-surface#rule.entryAdapters");
+    const index = Number(/^rule\[(\d+)\]$/u.exec(String(address.entry))?.[1]);
+    const rule = reader.specContext("spec:consumers.agent-surface")?.sections?.behavior?.rules?.[
+      index
+    ];
+    const ruled = [...String(rule).matchAll(/`(\w+)`/gu)].map((match) => match[1]);
+    expect(ruled).toHaveLength(3);
+    const section = flat(skillSection(surfacePath, "## Entry adapters and reader joins"));
+    const adapters = /the entry adapters are (.+?) \(/u.exec(section)?.[1] ?? "";
+    expect([...adapters.matchAll(/`g\.(\w+)\(/gu)].map((match) => match[1])).toEqual(ruled);
+    expect(section).toContain(
+      "`g.specContext(id)`, `g.packContext(id)` and `g.resolveEntryAddress(address)` are joins frozen into the reader",
+    );
   });
 
   it("states the graph's flat topology and which node types carry lines, as the graph does", () => {

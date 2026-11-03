@@ -35,6 +35,18 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
     expect(roadmap).not.toContain("Order placement needs design");
   });
 
+  // A newcomer's first step compares this line with what `build` prints.
+  it("documents the build summary the example's extraction produces", () => {
+    const readme = readFileSync(
+      new URL("../examples/checkout-v1/README.md", import.meta.url),
+      "utf8",
+    );
+    const { specs, packs, anchors } = extraction.counts;
+    const { nodes, edges } = extraction.graph;
+    const summary = `${String(specs)} specs · ${String(packs)} packs · ${String(anchors)} anchors → ${String(nodes.length)} nodes · ${String(edges.length)} edges (0 errors, 0 warnings)`;
+    expect(readme).toContain(`\`\`\`\n${summary}\n\`\`\``);
+  });
+
   it("extracts the example with zero findings", () => {
     expect(extraction.report.findings).toEqual([]);
     expect(extraction.counts).toEqual({ specs: 11, packs: 2, anchors: 5 });

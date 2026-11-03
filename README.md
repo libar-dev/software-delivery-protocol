@@ -4,9 +4,8 @@ Libar Software Delivery Protocol is a typed, executable, self-validating meta-mo
 delivery: author `Spec` documents in the repository, derive one graph, and check conformance and
 honesty.
 
-**Carrier rule:** Specs and Packs default to Markdown; the TS DSL survives as import source and a
-lawful per-ID option, while behavior and example Specs may use Gherkin canonically per ID (the
-carrier ruling, MD-18, the Pack syntax ruling, MD-25, and the Gherkin carrier option, MD-27).
+You write Specs as Markdown files (`*.sdp.md`) and group them into Packs. `sdp` derives one graph
+from those files and from anchors in your code, then checks it.
 
 Read the [concept](docs/concept/README.md), the [ubiquitous language](CONTEXT.md), and the
 [checkout-v1 walkthrough](examples/checkout-v1/README.md).
@@ -56,6 +55,13 @@ dependency binaries, but a package does not install or link itself into its own
 fails with `xcode-select: error: tool 'sdp' requires Xcode`. The checked-in pnpm setting also
 disables pnpm 11's dependency auto-reconciliation for repository scripts, so the supported
 `pnpm sdp` / `pnpm sdp:q` forms do not rewrite an npm-installed dependency tree.
+
+## Carriers
+
+A carrier is the file that holds a Spec or a Pack. Specs and Packs default to Markdown; the
+TypeScript DSL survives as import source and a lawful per-ID option, and behavior and example Specs
+may use Gherkin canonically per ID (the carrier ruling, MD-18, the Pack syntax ruling, MD-25, and
+the Gherkin carrier option, MD-27).
 
 ## Installed CLI (adopter repositories)
 
@@ -145,10 +151,11 @@ diagrams, `gherkin` the Gherkin-shaped read view, and `studio` the static Spec S
 JavaScript query body against a freshly derived graph. Run `sdp --help` for the complete option
 contract. Adopters own their root and exclusion policy.
 
-The Studio's phase 1 adds static SVG diagrams, the architecture and tests lenses, all Spec-page
-panels, registers, the owner queue and a glossary. A base graph adds a design diff; CTRF reports
-add external run evidence. The composing panel hands off scoped proposals, every Pack downloads
-as one HTML file, and pages print as documents. Open `generated/spec-studio/index.html` through
+The Studio is a static page set: five lenses (Packs, capabilities, architecture, tests and
+evidence), static SVG diagrams, every Spec-page panel, registers, the owner queue, the roadmap and a
+glossary. A base graph adds a design diff; CTRF reports add external run evidence. The composing
+panel hands off scoped proposals, every Pack downloads as one HTML file, and pages print as
+documents. Open `generated/spec-studio/index.html` through
 `file://` or a static host. `studio --watch` rebuilds on carrier changes, with no server; source
 and input edits start no cycle. Copy a base graph outside `generated/` before using `--base`.
 Run `stamp` after building to record publishing metadata. The reusable

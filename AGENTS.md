@@ -293,7 +293,8 @@ self-hosting/example checks → preflight correctly, so prefer it after engine e
 The `check:example` step reports 0 errors and 0 warnings. The unbound `defined` example stays
 visible in the Design Review verifier bindings and recipe 10, declared versus enabled verifiers.
 
-The `check:self-hosting` step emits two kinds of intentional warning: `honesty/gaps`, one per
-owner-ratified ready Spec without a resolving verifier binding, and `conformance/prose-mentions`,
-one per mentioning Spec and target pair with no declared relation either way (recipe 22 lists the
-pairs). The self-hosting oracle pins both sets; they are expected, not a regression.
+The `check:self-hosting` step emits one kind of intentional warning: `honesty/gaps`, one per
+owner-ratified ready Spec, decisions aside, without a resolving verifier binding. The self-hosting
+oracle pins that set and pins that no prose mention lacks a declared relation (recipe 22's
+`unbacked` stays empty), so a `conformance/prose-mentions` warning, like any other new warning, is
+a regression.

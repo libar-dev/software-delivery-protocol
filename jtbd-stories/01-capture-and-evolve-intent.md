@@ -10,7 +10,7 @@ The job here is to get a thought into the system and let it grow without ever fo
 **Phase:** MVP
 **References:** [the core-model spec](../specs/model/core-model.sdp.md) (`spec:model.core-model`)
 
-> **When** a half-formed idea for a behaviour or capability shows up mid-work, **I want to** record it as a spec in seconds with only an `id`, a `title`, and a sentence of intent, **so I can** keep the thought in the canonical repo instead of losing it to a side channel.
+> **When** a half-formed idea for a behaviour or capability shows up mid-work, **I want to** record it as a spec in seconds with only an `id`, a `title`, its `kind` and `altitude`, and a sentence of intent (or a parent relation), **so I can** keep the thought in the canonical repo instead of losing it to a side channel.
 
 **Essence:** The cheapest possible on-ramp to the one graph. If capture has friction, intent leaks out of the repo.
 
