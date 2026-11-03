@@ -18,7 +18,7 @@ import type { GraphSchema } from "../graph/schema.js";
 import type { ValidationReport } from "../validate/contracts.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
-import { removeArtifact, removeArtifacts } from "./artifacts.js";
+import { assertOutputParent, removeArtifact, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
@@ -283,22 +283,44 @@ export function runBuild(
   let nextRegistrarPaths: readonly string[] = [];
   const projectionPaths = projectionOutputs.map((path) => join(resolvedRoot, path));
 
+  const outputParentIsSafe = (): boolean => {
+    try {
+      assertOutputParent(resolvedRoot, graphPath);
+      return true;
+    } catch (error) {
+      writeStderr(
+        output,
+        `sdp ${command}: ${errorMessage(error)} — outputs must not be read as current.\n`,
+      );
+      return false;
+    }
+  };
+  if (!outputParentIsSafe()) return { exitCode: 1 };
+
+  const stageFile = (path: string, content: string): void => {
+    assertOutputParent(resolvedRoot, path);
+    // Unlink stale entries first; exclusive creation also refuses a link planted after removal.
+    rmSync(path, { force: true });
+    write(path, content, { encoding: "utf8", flag: "wx" });
+  };
+
   const failBuild = (message: string, report?: ValidationReport): BuildOutcome => {
     writeStderr(output, message);
-    removeArtifacts(
-      [
-        graphPath,
-        `${graphPath}.tmp`,
-        contractsPath,
-        `${contractsPath}.tmp`,
-        registrarManifestPath,
-        `${registrarManifestPath}.tmp`,
-        ...(parsed.imports === undefined ? [] : [importsPath, `${importsPath}.tmp`]),
-      ],
-      output,
-      command,
-      recoveryRm,
-    );
+    if (outputParentIsSafe())
+      removeArtifacts(
+        [
+          graphPath,
+          `${graphPath}.tmp`,
+          contractsPath,
+          `${contractsPath}.tmp`,
+          registrarManifestPath,
+          `${registrarManifestPath}.tmp`,
+          ...(parsed.imports === undefined ? [] : [importsPath, `${importsPath}.tmp`]),
+        ],
+        output,
+        command,
+        recoveryRm,
+      );
 
     for (const path of new Set([...priorRegistrarPaths, ...nextRegistrarPaths])) {
       try {
@@ -448,9 +470,10 @@ export function runBuild(
     }
 
     const temporaryPath = `${graphPath}.tmp`;
+    assertOutputParent(resolvedRoot, graphPath);
     mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
-    write(temporaryPath, serialized, "utf8");
-    if (imports !== undefined) write(`${importsPath}.tmp`, imports, "utf8");
+    stageFile(temporaryPath, serialized);
+    if (imports !== undefined) stageFile(`${importsPath}.tmp`, imports);
 
     const contractsTemporaryPath = `${contractsPath}.tmp`;
     rmSync(contractsTemporaryPath, { recursive: true, force: true });
@@ -461,7 +484,7 @@ export function runBuild(
       for (const [relativePath, content] of contracts.files) {
         const target = join(contractsTemporaryPath, relativePath);
         mkdirSync(join(target, ".."), { recursive: true });
-        write(target, content, "utf8");
+        stageFile(target, content);
       }
     }
 
@@ -486,12 +509,12 @@ export function runBuild(
       }
 
       if (existsSync(registrarPath) && readFileSync(registrarPath, "utf8") === content) continue;
-      write(`${registrarPath}.tmp`, content, "utf8");
+      stageFile(`${registrarPath}.tmp`, content);
       changedRegistrarPaths.add(relativePath);
     }
 
     const registrarManifestTemporaryPath = `${registrarManifestPath}.tmp`;
-    write(registrarManifestTemporaryPath, serializeRegistrarManifest(nextRegistrarPaths), "utf8");
+    stageFile(registrarManifestTemporaryPath, serializeRegistrarManifest(nextRegistrarPaths));
 
     // Changed bytes now exist in temporary locations. Publish, reconcile, and remove stale
     // siblings; any later failure falls through failBuild, which removes the whole known set so

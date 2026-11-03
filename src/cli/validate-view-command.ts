@@ -7,7 +7,7 @@ import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { CorpusValidationReport, Finding, ValidationReport } from "../validate/contracts.js";
 import { validateGraph } from "../validate/validators.js";
-import { removeArtifacts } from "./artifacts.js";
+import { assertDistinctPagePaths, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import { runBuild } from "./build-command.js";
 import type { BuildHooks, BuildOutcome } from "./build-command.js";
@@ -159,6 +159,7 @@ export function publishDesignReview(
 
   try {
     const pages = render(createReader(validate.graph));
+    assertDistinctPagePaths(pages);
 
     if (parsed.checkClean) {
       const second = render(createReader(validate.graph));

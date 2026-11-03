@@ -227,7 +227,10 @@ function createFilesystemWatchSource(input: {
   readonly lstatWatchPath?: (path: string) => Stats;
 }): ValidateWatchEventSource {
   const createNativeWatch = input.createNativeWatch ?? defaultNativeWatch;
-  const lstatWatchPath = input.lstatWatchPath ?? lstatSync;
+  // Resolve only the selected root; descendant links stay outside the watched tree.
+  const lstatWatchPath =
+    input.lstatWatchPath ??
+    ((path: string) => lstatSync(path === input.root ? realpathSync.native(path) : path));
   const watchers = new Map<string, NativeWatchHandle>();
   let eventListener: ((event: ValidateWatchEvent) => void) | undefined;
   let errorListener: ((error: unknown) => void) | undefined;

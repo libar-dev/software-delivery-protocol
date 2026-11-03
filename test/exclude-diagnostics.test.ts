@@ -1,8 +1,10 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
+
+import { extract } from "../src/extract/index.js";
 
 import { discoverFiles, normalizeExcludes } from "../src/extract/discover.js";
 
@@ -19,6 +21,54 @@ describe("exclusion diagnostics", () => {
     for (const root of temporaryRoots.splice(0)) {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+
+  it("names each skipped symbolic link while resolving an explicitly linked root", () => {
+    const workspace = temporaryRoot();
+    const root = join(workspace, "corpus");
+    const outside = join(workspace, "outside");
+    const alias = join(workspace, "alias");
+    mkdirSync(root);
+    mkdirSync(outside);
+    symlinkSync(root, alias, "dir");
+    writeFileSync(
+      join(root, "included.sdp.md"),
+      "---\nid: spec:probe.included\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Included\n\n## Intent\n- outcome: Keep a real carrier.\n",
+    );
+    writeFileSync(join(outside, "hidden.sdp.md"), "invalid carrier");
+    for (const name of ["linked.sdp.md", "linked.ts", "other.txt"]) {
+      symlinkSync(join(outside, "hidden.sdp.md"), join(root, name));
+    }
+    symlinkSync(outside, join(root, "directory"), "dir");
+    symlinkSync(root, join(root, "loop"), "dir");
+    symlinkSync(join(outside, "missing"), join(root, "dangling.sdp.md"));
+    for (const name of ["node_modules", "dist", "generated", "coverage", ".hidden", "excluded"]) {
+      symlinkSync(outside, join(root, name), "dir");
+    }
+    mkdirSync(join(root, "omitted"));
+    symlinkSync(outside, join(root, "omitted", "nested"), "dir");
+    const exclude = ["excluded", "omitted"];
+    const discovered = discoverFiles(alias, exclude);
+    expect(discovered.specFiles).toEqual([
+      {
+        absolutePath: join(realpathSync.native(root), "included.sdp.md"),
+        relativePath: "included.sdp.md",
+      },
+    ]);
+    expect(discovered.anchorCandidateFiles).toEqual([]);
+    const result = extract({ root: alias, exclude });
+    expect(result.counts).toEqual({ specs: 1, packs: 0, anchors: 0 });
+    expect(result.report.findings).toEqual(
+      ["dangling.sdp.md", "directory", "linked.sdp.md", "linked.ts", "loop", "other.txt"].map(
+        (file) => ({
+          validatorId: "extract/symbolic-link-skipped",
+          family: "conformance",
+          severity: "warning",
+          file,
+          message: `symbolic link "${file}" is skipped; discovery never follows links below the root`,
+        }),
+      ),
+    );
   });
 
   it("rejects a Windows drive-letter absolute path instead of accepting an unmatched prefix", () => {

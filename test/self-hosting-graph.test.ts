@@ -336,8 +336,17 @@ describe("the self-hosting corpus", () => {
   });
 
   // Then: the frozen corpus enters one graph with exact descriptors and its direct bindings.
-  it("reifies the root corpus without an extraction finding", () => {
-    expect(result.report.findings).toEqual([]);
+  it("names the root corpus's skipped symbolic link", () => {
+    expect(result.report.findings).toEqual([
+      {
+        validatorId: "extract/symbolic-link-skipped",
+        family: "conformance",
+        severity: "warning",
+        file: "CLAUDE.md",
+        message:
+          'symbolic link "CLAUDE.md" is skipped; discovery never follows links below the root',
+      },
+    ]);
   });
 
   it("reports exactly the retained verifier gaps and no unbacked prose mention", () => {
