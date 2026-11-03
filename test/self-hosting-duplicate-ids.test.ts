@@ -230,6 +230,18 @@ describe("generated contract preflight", () => {
     );
   });
 
+  it.each([[["--reporter", "verbose"]], [["--maxWorkers", "1"]], [["-t", "duplicate"]]])(
+    "reads an option value %j as no file filter, so the whole suite's contracts are required",
+    (options) => {
+      const result = runPreflight(preflightRoot([]), options);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toBe(
+        "Generated contracts required by the selected test suite are missing.\nRun `npm run build && npm run generate:self-hosting && npm run generate:example` first.\n",
+      );
+    },
+  );
+
   it("does not require contracts for an unrelated Vitest filter", () => {
     expect(runPreflight(preflightRoot([]), ["test/bootstrap.test.ts"]).status).toBe(0);
   });
@@ -241,8 +253,11 @@ describe("generated contract preflight", () => {
   });
 });
 
-function shimmedPoolRoot(shimBody: string): { root: string; environment: NodeJS.ProcessEnv } {
-  const root = preflightRoot([]);
+function shimmedPoolRoot(
+  shimBody: string,
+  contractDirectories: readonly string[] = [],
+): { root: string; environment: NodeJS.ProcessEnv } {
+  const root = preflightRoot(contractDirectories);
   mkdirSync(join(root, "generated"), { recursive: true });
   writeFileSync(join(root, "generated", "sentinel.txt"), "before\n");
 
@@ -279,6 +294,90 @@ describe("pooled root generated-state sentinel", () => {
       "A pooled test run mutated repository-root generated/ state; only the dedicated test/cli.test.ts pass may regenerate it.",
     );
   });
+
+  it("keeps the dedicated CLI pass when an option carries a separate value", () => {
+    const { root, environment } = shimmedPoolRoot(
+      'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+      [selfHostingContracts, checkoutContracts],
+    );
+    const result = spawnSync(
+      process.execPath,
+      [join(repoRoot, "vitest-test.mjs"), "--run", "--reporter", "verbose"],
+      { cwd: root, encoding: "utf8", env: environment },
+    );
+
+    expect(result.status).toBe(0);
+    const spawns = readFileSync(join(root, "spawns.log"), "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as string[]);
+    expect(spawns).toEqual([
+      ["--run", "--reporter", "verbose", "--exclude", "test/cli.test.ts"],
+      ["--run", "test/cli.test.ts", "--pool", "forks", "--maxWorkers", "1", "--no-isolate"],
+    ]);
+  });
+
+  it.each([[["list", "--filesOnly"]], [["--reporter", "verbose", "list", "test/cli.test.ts"]]])(
+    "forwards the listing command %j once, without running the CLI suite",
+    (options) => {
+      const { root, environment } = shimmedPoolRoot(
+        'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+        [selfHostingContracts, checkoutContracts],
+      );
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+        cwd: root,
+        encoding: "utf8",
+        env: environment,
+      });
+
+      expect(result.status).toBe(0);
+      const spawns = readFileSync(join(root, "spawns.log"), "utf8")
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line) as string[]);
+      expect(spawns).toEqual([["--run", ...options]]);
+    },
+  );
+
+  it.each([["watch"], ["dev"]])(
+    "keeps the dedicated CLI pass for the executing command %s",
+    (command) => {
+      // The shim stands in for the CLI suite: it regenerates generated/ whenever it executes
+      // test/cli.test.ts, which only the dedicated pass may do.
+      const { root, environment } = shimmedPoolRoot(
+        [
+          'const fs = require("node:fs");',
+          "const args = process.argv.slice(2);",
+          'fs.appendFileSync("spawns.log", JSON.stringify(args) + "\\n");',
+          'if (args.includes("test/cli.test.ts") && !args.includes("--exclude")) fs.writeFileSync("generated/sentinel.txt", "after\\n");',
+        ].join("\n"),
+        [selfHostingContracts, checkoutContracts],
+      );
+      const result = spawnSync(
+        process.execPath,
+        [join(repoRoot, "vitest-test.mjs"), command, "test/cli.test.ts"],
+        { cwd: root, encoding: "utf8", env: environment },
+      );
+
+      expect(result.stderr).toBe("");
+      expect(result.status).toBe(0);
+      const spawns = readFileSync(join(root, "spawns.log"), "utf8")
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line) as string[]);
+      expect(spawns).toEqual([
+        [
+          "--run",
+          command,
+          "test/cli.test.ts",
+          "--exclude",
+          "test/cli.test.ts",
+          "--passWithNoTests",
+        ],
+        ["--run", "test/cli.test.ts", "--pool", "forks", "--maxWorkers", "1", "--no-isolate"],
+      ]);
+    },
+  );
 
   it("passes a pooled run that leaves repository-root generated state untouched", () => {
     const { root, environment } = shimmedPoolRoot("");

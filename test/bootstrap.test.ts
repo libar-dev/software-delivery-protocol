@@ -49,7 +49,7 @@ describe("bootstrap package surface", () => {
       type: string;
       packageManager?: string;
       bin: { sdp: string };
-      exports: Record<string, { types: string; import: string }>;
+      exports: Record<string, unknown>;
       scripts: Record<string, string>;
     };
     const rootExport = packageJson.exports["."];
@@ -61,8 +61,11 @@ describe("bootstrap package surface", () => {
     expect(packageJson.type).toBe("module");
     expect(packageJson.packageManager).toBeUndefined();
     expect(packageJson.bin.sdp).toBe("./dist/cli/sdp.js");
-    expect(rootExport.types).toBe("./dist/index.d.ts");
-    expect(rootExport.import).toBe("./dist/index.js");
+    // Each condition carries its own declarations: the ESM .d.ts cannot type a `require`.
+    expect(rootExport).toEqual({
+      import: { types: "./dist/index.d.ts", default: "./dist/index.js" },
+      require: { types: "./dist/index.d.cts", default: "./dist/index.cjs" },
+    });
     expect(packageJson.scripts["generate:self-hosting"]).toBe(
       "node ./projection-suite.mjs . --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
     );

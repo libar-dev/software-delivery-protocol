@@ -29,9 +29,14 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./anchors": {
       "types": "./dist/anchors.d.ts",
@@ -58,7 +63,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsup src/index.ts --no-config --format cjs --dts-only",
     "prepare": "npm run build 1>&2",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "typecheck:examples": "tsc --noEmit -p tsconfig.examples.json",

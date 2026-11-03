@@ -4,6 +4,8 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, isAbsolute, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { parseCLI } from "vitest/node";
+
 import { contractDependentSuites } from "./contract-dependent-suites.mjs";
 
 const argv = process.argv.slice(2);
@@ -16,7 +18,18 @@ const repositoryRoot = dirname(fileURLToPath(import.meta.url));
 // too, so a new bound suite is named once and both surfaces follow.
 const contractDependencies = contractDependentSuites;
 
-const pathFilters = argv.filter((argument) => !argument.startsWith("-"));
+// Vitest's own parser separates file filters from option values, so `--reporter verbose` keeps
+// the dedicated CLI pass and the contract preflight. Parsing behind a fixed `run` keeps a selected
+// command such as `list` among the positionals instead of consuming it. Help is left out: parsing
+// it prints usage.
+const vitestCommands = new Set(["run", "watch", "dev", "related", "bench", "init", "list"]);
+const positionals = parseCLI([
+  "vitest",
+  "run",
+  ...argv.filter((argument) => argument !== "--help" && argument !== "-h"),
+]).filter;
+const command = vitestCommands.has(positionals[0]) ? positionals[0] : undefined;
+const pathFilters = command === undefined ? positionals : positionals.slice(1);
 const hasPathFilter = pathFilters.length > 0;
 const cliTestPath = "test/cli.test.ts";
 
@@ -125,6 +138,13 @@ function runPooledVitest(args) {
 
 if (argv.includes("--help")) {
   process.exit(runVitest(vitestArgs));
+}
+
+// A command that executes no test, such as `list`, is forwarded once as selected. Executing
+// commands (`run`, and `watch` or `dev`, which the added `--run` makes single-pass) keep the split,
+// so test/cli.test.ts still runs only in its dedicated process.
+if (command === "list" || command === "init") {
+  process.exit(runPooledVitest(vitestArgs));
 }
 
 if (hasPathFilter && !selectsCliTest) {

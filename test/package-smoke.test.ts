@@ -518,6 +518,31 @@ void [${expectedRootExports.join(", ")}];
         ],
         consumer,
       );
+      // Node16 resolution forbids a CommonJS file from typing an ESM declaration, so the
+      // `require` condition must name declarations of its own.
+      await writeFile(
+        join(consumer, "type-surface.cts"),
+        `import { ${expectedRootExports.join(", ")} } from "${packageName}";
+import type { ${typeOnlyRootExports.join(", ")} } from "${packageName}";
+void [${expectedRootExports.join(", ")}];
+`,
+      );
+      run(
+        join(repositoryRoot, "node_modules", ".bin", "tsc"),
+        [
+          "--module",
+          "Node16",
+          "--moduleResolution",
+          "Node16",
+          "--target",
+          "ES2022",
+          "--strict",
+          "--skipLibCheck",
+          "--noEmit",
+          "type-surface.cts",
+        ],
+        consumer,
+      );
 
       const sdpHelp = run(join(consumer, "node_modules", ".bin", "sdp"), ["--help"], consumer);
       for (const path of [...adopterAssets, "schemas/sdp-proposal-1.schema.json", "specs/"]) {

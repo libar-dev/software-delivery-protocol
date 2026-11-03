@@ -2,7 +2,12 @@ import { extractFindingIds } from "./reify.js";
 import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
 import { parseSlots } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
-import { addMarkdownFinding, markdownFinding } from "./markdown-support.js";
+import {
+  addMarkdownFinding,
+  asciiTrim,
+  asciiTrimEnd,
+  markdownFinding,
+} from "./markdown-support.js";
 
 /**
  * @sdpAnchor impl:protocol.markdown-content
@@ -39,8 +44,6 @@ export interface MarkdownFence {
   };
 }
 
-const ASCII_TRIM = /^[\t ]+|[\t ]+$/gu;
-
 function bodyFinding(file: string, line: number, message: string): Finding {
   return markdownFinding(file, line, message, extractFindingIds.invalidMarkdownStructure);
 }
@@ -49,7 +52,7 @@ export function normalizeProse(lines: readonly MarkdownLine[]): string {
   const paragraphs: string[] = [];
   let paragraph: string[] = [];
   for (const line of lines) {
-    const trimmed = line.text.replace(ASCII_TRIM, "");
+    const trimmed = asciiTrim(line.text);
     if (trimmed.length === 0) {
       if (paragraph.length > 0) paragraphs.push(paragraph.join(" "));
       paragraph = [];
@@ -246,7 +249,7 @@ export function parseSectionContent(
           findings,
           bodyFinding(file, line.line, "an H3 owner is authored more than once"),
         );
-      else h3 = { text: line.text.replace(/[\t ]+$/gu, ""), line: line.line };
+      else h3 = { text: asciiTrimEnd(line.text), line: line.line };
       continue;
     }
     if (line.text.startsWith("#")) {

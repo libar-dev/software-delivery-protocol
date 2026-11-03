@@ -8,7 +8,13 @@ import { isUnsupportedCommonMarkBlock, normalizeProse } from "./markdown-body-co
 import type { MarkdownLine } from "./markdown-body-content.js";
 import { readMarkdownEnvelope } from "./markdown-envelope.js";
 import { parseMarkdownFrontmatter } from "./markdown-frontmatter.js";
-import { addMarkdownFinding, capMarkdownFindings, markdownFinding } from "./markdown-support.js";
+import {
+  addMarkdownFinding,
+  asciiTrim,
+  asciiTrimEnd,
+  capMarkdownFindings,
+  markdownFinding,
+} from "./markdown-support.js";
 import type { MarkdownFrontmatter } from "./markdown-types.js";
 
 function structure(file: string, line: number, message: string): Finding {
@@ -37,7 +43,7 @@ function parseMarkdownPackBody(
     };
 
   const rawTitle = first.text.slice(2);
-  const title = rawTitle.replace(/^[\t ]+|[\t ]+$/gu, "");
+  const title = asciiTrim(rawTitle);
   const findings: Finding[] = [];
   if (/^[\t ]/u.test(rawTitle) || title.length === 0)
     addMarkdownFinding(
@@ -50,7 +56,7 @@ function parseMarkdownPackBody(
     const line = lines[index];
     if (line === undefined) continue;
     if (/^#{2,} /u.test(line.text)) {
-      const heading = line.text.replace(/^#+[\t ]+/u, "").replace(/[\t ]+$/gu, "");
+      const heading = asciiTrimEnd(line.text.replace(/^#+[\t ]+/u, ""));
       addMarkdownFinding(
         findings,
         markdownFinding(
