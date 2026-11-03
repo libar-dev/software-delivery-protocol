@@ -685,6 +685,55 @@ Feature: Probe feature
     expect(found?.line).toBe(line);
   });
 
+  describe.each([
+    ["a lone CR", "\r"],
+    ["U+2028", " "],
+    ["U+2029", " "],
+  ])("a description line holding %s", (_name, separator) => {
+    const held = "description line holds a lone CR, U+2028 or U+2029";
+
+    it.each([
+      [
+        "an unknown key",
+        feature(`  - outcom: A misspelt key${separator}with more text.`),
+        3,
+        'Feature "Probe feature"',
+      ],
+      [
+        "a repeated singular key",
+        feature(`  - outcome: First\n  - outcome: A second${separator}outcome.`),
+        4,
+        'Feature "Probe feature"',
+      ],
+      [
+        "a sole outcome",
+        feature(`  - outcome: Turn a cart${separator}into an order.`),
+        3,
+        'Feature "Probe feature"',
+      ],
+      [
+        "narrative prose",
+        feature(`  Some prose${separator}and more prose.`),
+        3,
+        'Feature "Probe feature"',
+      ],
+      [
+        "a Scenario key",
+        feature(
+          `\n${scenario(`    - outcome: Turn a cart${separator}into an order.\n    Given a value`)}`,
+        ),
+        6,
+        'Scenario "Probe scenario"',
+      ],
+    ])("is refused at its physical line in %s", (_case, sourceText, line, construct) => {
+      const found = refusal(sourceText);
+
+      expect(found?.line).toBe(line);
+      expect(found?.message).toContain(construct);
+      expect(found?.message).toContain(held);
+    });
+  });
+
   it("reports Feature and Scenario bad description keys at the same physical lines under CRLF", () => {
     const featureSource = `${FEATURE_TAGS}
 Feature: Probe feature

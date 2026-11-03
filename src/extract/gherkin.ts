@@ -108,8 +108,14 @@ const VERIFICATION_MODES: Readonly<Record<string, true>> = {
   executable: true,
 };
 const HEADING_SHAPED_LINE = /^[A-Z][^:]*:\s*$/u;
-const KEYED_LINE = /^- ([^:]+):\s*(.*)$/u;
-const LANGUAGE_HEADER = /^\s*#\s*language:\s*([^\s#]+).*$/u;
+// Dot-all, so `(.*)` always reaches the end: without it, a line terminator kept `$` out of reach
+// and `\s*` and `(.*)` retried every split of a blank run. Such a line is refused before this
+// match; the flag keeps the match linear on its own.
+const KEYED_LINE = /^- ([^:]+):\s*(.*)$/su;
+// The header pattern `@cucumber/gherkin` reads, so the refusal lands on the line it read; its
+// pieces cannot overlap, where a trailing `.*$` made a long header-like comment quadratic.
+const LANGUAGE_HEADER = /^\s*#\s*language\s*:\s*([A-Za-z_-]+)\s*$/u;
+const DESCRIPTION_LINE_BREAK = /[\r\u2028\u2029]/u;
 const MAX_GHERKIN_FINDINGS = 100;
 
 interface DescriptionSections {
@@ -730,6 +736,23 @@ function parseDescription(
   for (const descriptionLine of description) {
     const line = descriptionLine.text.trim();
     const lineNumber = descriptionLine.line;
+
+    // The parser ends a line only at LF or CRLF. A lone CR, U+2028 or U+2029 left inside one would
+    // let a keyed line pass as prose, or one Intent value span two visual lines, so it is refused.
+    if (DESCRIPTION_LINE_BREAK.test(descriptionLine.text)) {
+      appendFinding(
+        collector,
+        grammarFinding(
+          file,
+          lineNumber,
+          `${construct} description line holds a lone CR, U+2028 or U+2029; a description line ends only at LF or CRLF`,
+          subjectId,
+        ),
+        file,
+      );
+      continue;
+    }
+
     const keyed = KEYED_LINE.exec(line);
 
     if (keyed !== null) {
