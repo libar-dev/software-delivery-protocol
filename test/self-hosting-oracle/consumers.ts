@@ -7242,16 +7242,6 @@ export const consumersSpecs = [
       intent: {
         outcome:
           "Give the Studio a page per Pack that shows its design slice: the members' dependency drawing, the components they touch, the decisions and open questions in scope, and each member's next rung.",
-        openQuestions: [
-          {
-            question: "Does a Pack export also carry the Pack's slice page?",
-            blocking: false,
-            key: "exportCarriesSlice",
-            decider: "delegated",
-            provisional:
-              "no; the export keeps the Pack page and its members, and the slice page stays one link away in the page set",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -7272,6 +7262,7 @@ export const consumersSpecs = [
           "Under `Where the slice meets the rest` come four closed sections, Rests on, Rested on by, Verified by and Superseded by, each headed with its count; a Rests on row shows the outside Spec linked, its stated rung beside the floor reached, its implementation binding as present or none, the members it joins under each relation type, and the members it holds.",
           "The page speaks binding language: a unit implements or references a member, a verifier is bound, and no cell reads built, done, verified or approved.",
           "`Open all` and `Close all` open or close every closed section and text equivalent at once, and the page reads in full without script.",
+          "A Pack export carries the Pack page and its members' pages and not the slice page, which stays one link from the Pack page in the page set.",
         ],
         ruleKeys: {
           slicePerPack: "rules[0]",
@@ -7291,6 +7282,7 @@ export const consumersSpecs = [
           boundary: "rules[14]",
           bindingWords: "rules[15]",
           openAll: "rules[16]",
+          exportOmitsSlice: "rules[17]",
         },
       },
       ui: {

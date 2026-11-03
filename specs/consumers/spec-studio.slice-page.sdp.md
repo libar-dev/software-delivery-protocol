@@ -33,12 +33,6 @@ The Pack page reads a Pack card by card, in the order its author wrote. A review
 
 - outcome: Give the Studio a page per Pack that shows its design slice: the members' dependency drawing, the components they touch, the decisions and open questions in scope, and each member's next rung.
 
-### Open questions
-
-- [non-blocking #exportCarriesSlice] Does a Pack export also carry the Pack's slice page?
-  - decider: delegated
-  - provisional: no; the export keeps the Pack page and its members, and the slice page stays one link away in the page set
-
 ## Behavior
 
 - rule: [#slicePerPack] The page set holds one slice page per Pack, `slices/<name>.html`, its name formed from the Pack's id as the Pack page's name is; it renders the build's design slice answer for that Pack in full and states no value the answer does not hold, apart from counts the build takes of it.
@@ -58,6 +52,7 @@ The Pack page reads a Pack card by card, in the order its author wrote. A review
 - rule: [#boundary] Under `Where the slice meets the rest` come four closed sections, Rests on, Rested on by, Verified by and Superseded by, each headed with its count; a Rests on row shows the outside Spec linked, its stated rung beside the floor reached, its implementation binding as present or none, the members it joins under each relation type, and the members it holds.
 - rule: [#bindingWords] The page speaks binding language: a unit implements or references a member, a verifier is bound, and no cell reads built, done, verified or approved.
 - rule: [#openAll] `Open all` and `Close all` open or close every closed section and text equivalent at once, and the page reads in full without script.
+- rule: [#exportOmitsSlice] A Pack export carries the Pack page and its members' pages and not the slice page, which stays one link from the Pack page in the page set.
 
 ## UI
 

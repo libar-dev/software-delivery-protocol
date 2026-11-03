@@ -252,6 +252,19 @@ describe("slice page", () => {
     for (const p of pages.filter((p) => p.path.startsWith("exports/")))
       expect(p.content).not.toMatch(/<code>\.\.\//u);
   });
+  it("leaves the slice page out of the Pack export", () => {
+    // spec:consumers.spec-studio.slice-page#rule.exportOmitsSlice
+    const { pages, data } = shared;
+    expect(page(pages)).toContain("Members read with the ones others rest on first.");
+    const exported = page(pages, "exports/probe._slice.html");
+    const pack = required(data.packs.find((p) => p.context.id === "pack:probe.Slice")).context;
+    expect([...exported.matchAll(/<section id="([^"]*)"/gu)].map((m) => m[1])).toEqual([
+      pack.id,
+      ...pack.members.map((m) => m.id),
+    ]);
+    expect(text(exported)).not.toContain("Design slice");
+    expect(exported).not.toContain("Members read with the ones others rest on first.");
+  });
   it("names each manifest member that resolves to no Spec beside the summary", async () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-slice-missing-"));
     roots.push(root);
