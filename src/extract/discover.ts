@@ -103,7 +103,8 @@ function byRelativePath(left: DiscoveredSourceFile, right: DiscoveredSourceFile)
   return compareCodeUnits(left.relativePath, right.relativePath);
 }
 
-function isSpecFileName(name: string): boolean {
+/** A regular file with this name is a Spec or Pack carrier. */
+export function isSpecFileName(name: string): boolean {
   return SPEC_FILE_SUFFIXES.some((suffix) => name.endsWith(suffix));
 }
 
@@ -117,11 +118,25 @@ function isDirectoryLink(path: string): boolean {
   }
 }
 
-function isSourceFileName(name: string): boolean {
+/** A regular file with this name is an anchor candidate. */
+export function isSourceFileName(name: string): boolean {
   return (
     SOURCE_FILE_SUFFIXES.some((suffix) => name.endsWith(suffix)) &&
     !name.endsWith(DECLARATION_FILE_SUFFIX)
   );
+}
+
+/**
+ * Whether discovery names a symbolic link in a warning. A link is judged by the entry it stands
+ * for: a link to a directory warns unless discovery skips a directory of that name, and any other
+ * link, one with a missing target included, warns only when its name is a carrier or
+ * anchor-candidate filename, a leading dot included. Discovery skips dot-directories, never
+ * dot-files, so a dot-named file link can hide a carrier while a dot-named directory link cannot.
+ */
+export function isWarnedSymbolicLink(absolutePath: string, name: string): boolean {
+  return isDirectoryLink(absolutePath)
+    ? !isExcludedDiscoveryDirectory(name)
+    : isSpecFileName(name) || isSourceFileName(name);
 }
 
 function isExcluded(relativePath: string, excludes: readonly string[]): boolean {
@@ -144,12 +159,7 @@ function walkDirectory(
     }
 
     if (entry.isSymbolicLink()) {
-      if (
-        !isExcludedDiscoveryDirectory(entry.name) &&
-        (isSpecFileName(entry.name) ||
-          isSourceFileName(entry.name) ||
-          isDirectoryLink(join(absoluteDirectory, entry.name)))
-      ) {
+      if (isWarnedSymbolicLink(join(absoluteDirectory, entry.name), entry.name)) {
         state.skippedLinks.push(relativePath);
       }
       continue;

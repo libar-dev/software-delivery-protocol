@@ -81,6 +81,15 @@ describe("exclusion diagnostics", () => {
     ["x.sdp.gherkin", true],
     ["source.ts", true],
     ["source.tsx", true],
+    // Discovery skips dot-directories, never dot-files: a dot-named candidate link can hide one.
+    [".x.sdp.md", true],
+    [".x.pack.sdp.md", true],
+    [".x.sdp.ts", true],
+    [".x.sdp.gherkin", true],
+    [".source.ts", true],
+    [".source.tsx", true],
+    [".types.d.ts", false],
+    [".other.txt", false],
   ])("warns for the skipped file link %s only when its name is a candidate", (name, warns) => {
     const root = temporaryRoot();
     writeFileSync(join(root, "AGENTS.md"), "This file is not a discovery candidate.\n");
@@ -126,6 +135,41 @@ describe("exclusion diagnostics", () => {
           'symbolic link "CLAUDE.md" is skipped; discovery never follows links below the root',
       },
     ]);
+  });
+
+  // spec:extraction.excludes#rule.canonicalDiscovery
+  it("judges a link by the entry it stands for, so a dot-named directory link stays silent", () => {
+    const workspace = temporaryRoot();
+    const root = join(workspace, "corpus");
+    const outside = join(workspace, "outside");
+    mkdirSync(root);
+    mkdirSync(outside);
+    writeFileSync(join(outside, "hidden.sdp.md"), "invalid carrier");
+    // A regular dot-named file is read, so its linked twin warns even when the target is missing.
+    writeFileSync(
+      join(root, ".regular.sdp.md"),
+      "---\nid: spec:probe.dot-regular\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Dot regular\n\n## Intent\n- outcome: Keep a dot-named carrier.\n",
+    );
+    symlinkSync(join(outside, "hidden.sdp.md"), join(root, ".linked.sdp.md"));
+    symlinkSync(join(outside, "missing.ts"), join(root, ".dangling.ts"));
+    // A dot-directory is skipped, so a dot-named directory link hides nothing, whatever its name.
+    symlinkSync(outside, join(root, ".x.sdp.md"), "dir");
+    symlinkSync(outside, join(root, ".cache"), "dir");
+    // Outside the dot rule, a directory link warns even with a candidate name.
+    symlinkSync(outside, join(root, "x.sdp.md"), "dir");
+
+    const result = extract({ root });
+
+    expect(result.counts).toEqual({ specs: 1, packs: 0, anchors: 0 });
+    expect(result.report.findings).toEqual(
+      [".dangling.ts", ".linked.sdp.md", "x.sdp.md"].map((file) => ({
+        validatorId: "extract/symbolic-link-skipped",
+        family: "conformance",
+        severity: "warning",
+        file,
+        message: `symbolic link "${file}" is skipped; discovery never follows links below the root`,
+      })),
+    );
   });
 
   it("rejects a Windows drive-letter absolute path instead of accepting an unmatched prefix", () => {
