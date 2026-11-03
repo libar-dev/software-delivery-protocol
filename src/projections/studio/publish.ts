@@ -87,14 +87,18 @@ export function studioFilesEqual(
   );
 }
 
-export function publishStudio(root: string, files: readonly StudioFile[]): void {
+export function publishStudio(
+  root: string,
+  files: readonly StudioFile[],
+  fs = { rmSync, mkdirSync, writeFileSync, renameSync },
+): void {
   const temporary = `${root}.tmp`;
-  rmSync(temporary, { recursive: true, force: true });
+  fs.rmSync(temporary, { recursive: true, force: true });
   for (const file of files) {
     const target = join(temporary, file.path);
-    mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, file.content);
+    fs.mkdirSync(dirname(target), { recursive: true });
+    fs.writeFileSync(target, file.content, { flag: "wx" });
   }
-  rmSync(root, { recursive: true, force: true });
-  renameSync(temporary, root);
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.renameSync(temporary, root);
 }

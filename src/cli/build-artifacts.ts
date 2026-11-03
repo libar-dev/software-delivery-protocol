@@ -1,5 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import {
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 
 import { BUILD_INFO_FILE, UNKNOWN_COMMIT, isFullCommit, serializeBuildInfo } from "./build-info.js";
@@ -123,7 +131,8 @@ export function recipeFiles(catalog: string): readonly RecipeFile[] {
 function replaceFile(path: string, content: string): void {
   const temporary = `${path}.${String(process.pid)}.tmp`;
 
-  writeFileSync(temporary, content);
+  rmSync(temporary, { force: true });
+  writeFileSync(temporary, content, { flag: "wx" });
   renameSync(temporary, path);
 }
 
@@ -138,6 +147,12 @@ export function writeRecipeFiles(outDir: string, files: readonly RecipeFile[]): 
   const directory = join(outDir, RECIPES_DIRECTORY);
   const owed = new Set(files.map((file) => file.fileName));
 
+  try {
+    if (!lstatSync(directory).isDirectory())
+      throw new Error(`artifact directory is not a real directory: ${directory}`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
   mkdirSync(directory, { recursive: true });
 
   for (const file of files) {
@@ -175,6 +190,12 @@ export function readBuildCommit(root: string, git: GitRunner = runGit): string {
 export function writeBuildInfo(outDir: string, commit: string): void {
   const directory = join(outDir, "cli");
 
+  try {
+    if (!lstatSync(directory).isDirectory())
+      throw new Error(`artifact directory is not a real directory: ${directory}`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
   mkdirSync(directory, { recursive: true });
   replaceFile(join(directory, BUILD_INFO_FILE), serializeBuildInfo({ commit }));
 }

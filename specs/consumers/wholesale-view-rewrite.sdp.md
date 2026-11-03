@@ -17,10 +17,13 @@ relations:
 ## Rule
 - A view run rewrites the view wholesale: no page written by an earlier run survives a later one, so a Spec that left the corpus leaves no page behind.
 - Pages are written to a temporary sibling of the view directory, the previous directory is removed, and the temporary is renamed into place — one rename, so no half-written view is ever readable and no temporary survives a completed run.
-- A run that cannot produce a current view removes the stale one instead of leaving it readable as current: an absent view is honest, a stale view is not.
+- A run that cannot produce a current view removes the stale one when its output parent remains safe instead of leaving it readable as current: an absent view is honest, a stale view is not.
 - [#buildInvalidates] Before extraction, the shared build removes `generated/design-review/`, `generated/census/`, `generated/mermaid/` and `generated/gherkin/`, each with its temporary sibling, so a run that fails before rendering leaves no view behind; a removal failure refuses the build before extraction. Every command that enters this build, including validate and its watch runs and every publisher, has this invalidation effect, so a sibling root the command does not publish stays absent until a later publication. The Studio's root is removed beside these four, as `spec:consumers.spec-studio.publisher#rule.buildInvalidates` states.
 - Under `--check-clean` the view is rendered twice from the same graph and the run refuses when the two renders diverge, removing the view it could not certify.
-- Findings never withhold the view. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.
+- Validation findings never withhold the view; publication refusals remain separate. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.
+
+- [#portablePublication] A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.
+- [#safeCleanup] Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.
 
 ## Example space
 ```gwt-vocabulary

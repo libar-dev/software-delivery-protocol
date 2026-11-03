@@ -21,3 +21,31 @@ it("accepts a separate vault with Windows path separators", () => {
     });
   }).not.toThrow();
 });
+
+it("accepts the default vault placement with Windows path separators", () => {
+  expect(() => {
+    checkVaultDirectory({ root: "C:\\r", exclude: [], checkClean: false });
+  }).not.toThrow();
+});
+
+it("refuses overlap with build output using Windows path separators and case", () => {
+  expect(() => {
+    checkVaultDirectory({
+      root: "C:\\r",
+      vault: "c:\\R\\generated\\SPEC-STUDIO\\vault",
+      exclude: [],
+      checkClean: false,
+    });
+  }).toThrow("overlaps generated/spec-studio");
+});
+
+it("refuses a source directory as a vault with Windows path separators", () => {
+  expect(() => {
+    checkVaultDirectory({
+      root: "C:\\r",
+      vault: "C:\\r\\notes\\vault",
+      exclude: [],
+      checkClean: false,
+    });
+  }).toThrow("lies inside the root and would be read as source");
+});

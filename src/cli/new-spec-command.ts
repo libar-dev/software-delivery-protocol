@@ -26,7 +26,7 @@ export interface NewSpecArgs {
 }
 
 export interface NewSpecHooks {
-  readonly mkdirSync?: (path: PathLike, options: { recursive: true }) => string | undefined;
+  readonly mkdirSync?: (path: PathLike, options: { recursive: boolean }) => string | undefined;
   /** Runs after the parent is held and verified, before the write — tests inject a swap here. */
   readonly onBeforeScaffoldWrite?: () => void;
 }
@@ -393,15 +393,10 @@ export function runNewSpec(
     return 1;
   }
 
-  const createParent = hooks.mkdirSync ?? mkdirSync;
+  const createParent: NonNullable<NewSpecHooks["mkdirSync"]> =
+    hooks.mkdirSync ?? ((path, options) => mkdirSync(path, options));
   const parentPath = dirname(targetPath);
-
-  try {
-    createParent(parentPath, { recursive: true });
-  } catch (error) {
-    writeStderr(output, `sdp new spec: ${errorMessage(error)}\n`);
-    return 1;
-  }
+  const parentComponents = relative(resolve(process.cwd()), parentPath).split(sep).filter(Boolean);
 
   const cwdReal = workingDirectoryReal(output);
 
@@ -415,12 +410,26 @@ export function runNewSpec(
   // is the handle — it binds the process to the parent's inode, the relative `wx` create names
   // that inode directly, and a swap after the bind cannot redirect it.
   const scaffoldName = basename(targetPath);
-  let restoreCwd: string;
+  let restoreCwd = cwdReal;
 
   try {
     restoreCwd = realpathSync.native(".");
-    process.chdir(parentPath);
+    process.chdir(cwdReal);
+    // Bind each parent before creating its next child; never recursively traverse a checked path.
+    for (const component of parentComponents) {
+      if (!containedWithin(realpathSync.native("."), cwdReal))
+        throw new Error("parent escapes cwd");
+      try {
+        createParent(component, { recursive: false });
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      }
+      process.chdir(component);
+      if (!containedWithin(realpathSync.native("."), cwdReal))
+        throw new Error("parent escapes cwd");
+    }
   } catch (error) {
+    process.chdir(restoreCwd);
     refuse(
       output,
       `PATH cannot be resolved inside the current working directory: ${errorMessage(error)}`,

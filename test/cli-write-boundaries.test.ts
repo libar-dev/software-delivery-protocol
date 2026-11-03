@@ -5,10 +5,14 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { writeBuildInfo, writeRecipeFiles } from "../src/cli/build-artifacts.js";
+import { extract } from "../src/extract/index.js";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -101,31 +105,53 @@ describe("build write boundaries", () => {
     }
   });
 
-  it.each(["build", "view", "mermaid", "gherkin", "studio", "generate"])(
-    "%s refuses an escaping generated parent before writing or cleanup",
-    async (command) => {
-      const workspace = mkdtempSync(join(tmpdir(), "sdp-output-parent-"));
-      const root = join(workspace, "corpus");
-      const outside = join(workspace, "outside");
-      mkdirSync(root);
-      mkdirSync(join(outside, "design-review"), { recursive: true });
-      writeFileSync(join(outside, "graph.json"), "unrelated graph\n");
-      writeFileSync(join(outside, "design-review", "index.md"), "unrelated page\n");
-      symlinkSync(outside, join(root, "generated"), "dir");
-      try {
-        const capture = createCaptureOutput();
-        expect(await runSdpCli([command, root], capture.output)).toBe(1);
-        expect(capture.readStderr()).toContain("escapes the extraction root");
-        expect(readFileSync(join(outside, "graph.json"), "utf8")).toBe("unrelated graph\n");
-        expect(readFileSync(join(outside, "design-review", "index.md"), "utf8")).toBe(
-          "unrelated page\n",
-        );
-        expect(existsSync(join(outside, "registrars.json"))).toBe(false);
-      } finally {
-        rmSync(workspace, { recursive: true, force: true });
-      }
-    },
-  );
+  it.each([
+    "build",
+    "view",
+    "census",
+    "mermaid",
+    "gherkin",
+    "studio",
+    "generate",
+    "vault",
+    "stamp",
+  ])("%s refuses an escaping generated parent before writing or cleanup", async (command) => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-output-parent-"));
+    const root = join(workspace, "corpus");
+    const outside = join(workspace, "outside");
+    mkdirSync(root);
+    mkdirSync(join(outside, "design-review"), { recursive: true });
+    writeFileSync(join(outside, "graph.json"), "unrelated graph\n");
+    writeFileSync(join(outside, "design-review", "index.md"), "unrelated page\n");
+    const sentinels = [
+      "design-review",
+      "census",
+      "mermaid",
+      "gherkin",
+      "spec-studio",
+      "obsidian-vault/sdp",
+    ].flatMap((name) => [name, `${name}.tmp`]);
+    for (const name of sentinels) {
+      mkdirSync(join(outside, name), { recursive: true });
+      writeFileSync(join(outside, name, "sentinel"), "keep");
+    }
+    writeFileSync(join(outside, "spec-studio/index.html"), "old page");
+    symlinkSync(outside, join(root, "generated"), "dir");
+    try {
+      const capture = createCaptureOutput();
+      expect(await runSdpCli([command, root], capture.output)).toBe(1);
+      expect(capture.readStderr()).toContain("escapes the extraction root");
+      expect(readFileSync(join(outside, "graph.json"), "utf8")).toBe("unrelated graph\n");
+      expect(readFileSync(join(outside, "design-review", "index.md"), "utf8")).toBe(
+        "unrelated page\n",
+      );
+      for (const name of sentinels)
+        expect(readFileSync(join(outside, name, "sentinel"), "utf8")).toBe("keep");
+      expect(existsSync(join(outside, "registrars.json"))).toBe(false);
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("explicit symlinked watch root", () => {
@@ -232,3 +258,316 @@ describe("portable projection publication", () => {
     }
   });
 });
+
+/**
+ * @sdpAnchor test:protocol.cli-write-boundaries
+ * @sdpVerifies spec:extraction.build-pipeline, spec:consumers.wholesale-view-rewrite, spec:consumers.design-review, spec:consumers.mermaid-view, spec:consumers.gherkin-view, spec:consumers.projections-model
+ */
+describe("publication boundary regressions", () => {
+  it.each(["symbolic", "hard"])(
+    "stamp replaces a %s link without modifying its target",
+    async (kind) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-stamp-boundary-"));
+      const root = join(workspace, "root"),
+        studio = join(root, "generated/spec-studio"),
+        sentinel = join(workspace, "sentinel");
+      mkdirSync(studio, { recursive: true });
+      writeFileSync(join(studio, "index.html"), "page");
+      writeFileSync(sentinel, "keep");
+      for (const name of ["stamp.json", "stamp.json.tmp"])
+        (kind === "hard" ? linkSync : symlinkSync)(sentinel, join(studio, name));
+      try {
+        expect(await runSdpCli(["stamp", root], createCaptureOutput().output)).toBe(0);
+        expect(readFileSync(sentinel, "utf8")).toBe("keep");
+        expect(lstatSync(join(studio, "stamp.json")).nlink).toBe(1);
+      } finally {
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it.each(["view", "census", "mermaid", "gherkin", "studio", "vault", "generate"])(
+    "%s recovery preserves outside output after a parent swap",
+    async (command) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-recovery-boundary-"));
+      const root = join(workspace, "root"),
+        outside = join(workspace, "outside");
+      mkdirSync(join(root, "generated"), { recursive: true });
+      mkdirSync(outside);
+      const names = [
+        "design-review",
+        "census",
+        "mermaid",
+        "gherkin",
+        "spec-studio",
+        "contracts.tmp",
+        ".projection-suite.tmp",
+      ];
+      for (const name of names.flatMap((name) => [name, `${name}.tmp`])) {
+        mkdirSync(join(outside, name));
+        writeFileSync(join(outside, name, "sentinel"), "keep");
+      }
+      let swapped = false;
+      try {
+        expect(
+          await runSdpCli([command, root], createCaptureOutput().output, {
+            extract: (options) => {
+              if (!swapped) {
+                renameSync(join(root, "generated"), join(root, "saved"));
+                symlinkSync(outside, join(root, "generated"));
+                swapped = true;
+              }
+              return extract(options);
+            },
+          }),
+        ).toBe(1);
+        expect(swapped).toBe(true);
+        for (const name of names.flatMap((name) => [name, `${name}.tmp`]))
+          expect(readFileSync(join(outside, name, "sentinel"), "utf8")).toBe("keep");
+        expect(existsSync(join(outside, "obsidian-vault"))).toBe(false);
+      } finally {
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it.each(["inside-link", "replaced-directory"])(
+    "build refuses %s generated identity",
+    async (kind) => {
+      const root = mkdtempSync(join(tmpdir(), "sdp-generated-identity-"));
+      mkdirSync(join(root, "generated"));
+      let swapped = false;
+      try {
+        const capture = createCaptureOutput();
+        expect(
+          await runSdpCli(["build", root], capture.output, {
+            writeFileSync: (path, data, options) => {
+              writeFileSync(path, data, options);
+              if (!swapped) {
+                renameSync(join(root, "generated"), join(root, "saved"));
+                if (kind === "inside-link")
+                  symlinkSync(join(root, "saved"), join(root, "generated"));
+                else mkdirSync(join(root, "generated"));
+                writeFileSync(join(root, "generated", "sentinel"), "keep");
+                swapped = true;
+              }
+            },
+          }),
+        ).toBe(1);
+        expect(capture.readStderr()).toContain("unsafe output parent");
+        expect(readFileSync(join(root, "generated/sentinel"), "utf8")).toBe("keep");
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it.each(["vault", "generate"])(
+    "%s refuses a linked default vault but allows an explicit outside vault",
+    async (command) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-default-vault-"));
+      const root = join(workspace, "root"),
+        outside = join(workspace, "outside");
+      mkdirSync(join(root, "generated"), { recursive: true });
+      mkdirSync(outside);
+      symlinkSync(outside, join(root, "generated/obsidian-vault"));
+      try {
+        const refused = createCaptureOutput();
+        expect(await runSdpCli([command, root], refused.output)).toBe(1);
+        expect(refused.readStderr()).toContain("explicit --out");
+        expect(existsSync(join(outside, "sdp"))).toBe(false);
+        const capture = createCaptureOutput();
+        expect(
+          await runSdpCli(
+            [command, root, command === "vault" ? "--out" : "--vault", outside],
+            capture.output,
+            {
+              studioAssets: {
+                script: join(process.cwd(), "dist/studio/studio.js"),
+                stylesheet: join(process.cwd(), "dist/studio/studio.css"),
+              },
+            },
+          ),
+          capture.readStderr(),
+        ).toBe(0);
+        expect(existsSync(join(outside, "sdp/index.md"))).toBe(true);
+      } finally {
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it.each([false, true])(
+    "projection suite refuses a linked generated parent (check-clean: %s)",
+    (checkClean) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-suite-boundary-"));
+      const root = join(workspace, "root"),
+        outside = join(workspace, "outside");
+      mkdirSync(root);
+      mkdirSync(outside);
+      const names = [
+        "design-review",
+        "census",
+        "mermaid",
+        "gherkin",
+        "spec-studio",
+        ".projection-suite.tmp",
+      ].flatMap((name) => [name, `${name}.tmp`]);
+      for (const name of names) {
+        mkdirSync(join(outside, name));
+        writeFileSync(join(outside, name, "sentinel"), "keep");
+      }
+      symlinkSync(outside, join(root, "generated"));
+      try {
+        const result = spawnSync(
+          process.execPath,
+          ["projection-suite.mjs", root, ...(checkClean ? ["--check-clean"] : [])],
+          { encoding: "utf8" },
+        );
+        expect(result.status).toBe(1);
+        for (const name of names)
+          expect(readFileSync(join(outside, name, "sentinel"), "utf8")).toBe("keep");
+      } finally {
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it("package artifacts unlink stale staging links and refuse linked recipe directories", () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-package-boundary-"));
+    const dist = join(workspace, "dist"),
+      outside = join(workspace, "outside");
+    mkdirSync(join(dist, "cli"), { recursive: true });
+    mkdirSync(outside);
+    const sentinel = join(outside, "01-old.js");
+    writeFileSync(sentinel, "keep");
+    symlinkSync(sentinel, join(dist, "cli", `build-info.json.${String(process.pid)}.tmp`));
+    try {
+      writeBuildInfo(dist, "unknown");
+      expect(readFileSync(sentinel, "utf8")).toBe("keep");
+      symlinkSync(outside, join(dist, "recipes"));
+      expect(() => {
+        writeRecipeFiles(dist, []);
+      }).toThrow(/real directory/u);
+      expect(readFileSync(sentinel, "utf8")).toBe("keep");
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+});
+
+it("package artifacts refuse a linked recipe directory before stale cleanup", () => {
+  const root = mkdtempSync(join(tmpdir(), "sdp-recipes-boundary-"));
+  const dist = join(root, "dist"),
+    outside = join(root, "outside");
+  mkdirSync(dist);
+  mkdirSync(outside);
+  writeFileSync(join(outside, "01-old.js"), "keep");
+  symlinkSync(outside, join(dist, "recipes"));
+  try {
+    expect(() => {
+      writeRecipeFiles(dist, []);
+    }).toThrow(/real directory/u);
+    expect(readFileSync(join(outside, "01-old.js"), "utf8")).toBe("keep");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it.each(["direct-empty", "direct-managed", "checkout-empty", "checkout-managed", "studio-direct"])(
+  "watch leaves outside bytes unchanged after %s parent swap",
+  async (variant) => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-vault-watch-swap-"));
+    const root = join(workspace, "root"),
+      outside = join(workspace, "outside");
+    mkdirSync(root);
+    mkdirSync(outside);
+    writeCarrier(root, "probe.sdp.md", "spec:probe.watch");
+    const git = (...args: string[]) => {
+      const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
+      if (result.status !== 0) throw new Error(result.stderr);
+    };
+    if (variant.startsWith("checkout")) {
+      git("init", "-b", "initial");
+      git("config", "user.email", "test@example.test");
+      git("config", "user.name", "Test");
+      writeFileSync(join(root, ".gitignore"), "generated/\n");
+      git("add", "probe.sdp.md", ".gitignore");
+      git("commit", "-m", "initial");
+      git("checkout", "-b", "linked");
+      symlinkSync(outside, join(root, "generated"));
+      git("add", "-f", "generated");
+      git("commit", "-m", "link");
+      git("checkout", "initial");
+    }
+    if (variant.endsWith("managed")) {
+      expect(
+        await runSdpCli(
+          ["vault", root, "--out", join(outside, "obsidian-vault")],
+          createCaptureOutput().output,
+        ),
+      ).toBe(0);
+    }
+    if (variant === "studio-direct") {
+      mkdirSync(join(outside, "spec-studio"));
+      mkdirSync(join(outside, "spec-studio.tmp"));
+      writeFileSync(join(outside, "spec-studio/index.html"), "keep");
+      writeFileSync(join(outside, "spec-studio.tmp/sentinel"), "keep");
+    }
+    const index = join(
+      outside,
+      variant === "studio-direct" ? "spec-studio/index.html" : "obsidian-vault/sdp/index.md",
+    );
+    const prior = existsSync(index) ? readFileSync(index, "utf8") : undefined;
+    const manifest = join(outside, "obsidian-vault/sdp/.sdp-vault.json");
+    const priorManifest = existsSync(manifest) ? readFileSync(manifest, "utf8") : undefined;
+    const subscriptions = new Map<string, (event: string, file: string) => void>();
+    const abort = new AbortController();
+    const capture = createCaptureOutput();
+    let cycles = 0;
+    const timer = setTimeout(() => {
+      abort.abort();
+    }, 10000);
+    try {
+      await runSdpCli(
+        [variant === "studio-direct" ? "studio" : "vault", root, "--watch"],
+        capture.output,
+        {
+          studioAssets: {
+            script: join(process.cwd(), "dist/studio/studio.js"),
+            stylesheet: join(process.cwd(), "dist/studio/studio.css"),
+          },
+          abortSignal: abort.signal,
+          createNativeWatch: (dir, listener) => {
+            subscriptions.set(dir, listener);
+            return { on: () => undefined, close: () => undefined };
+          },
+          onWatchCycleComplete: (cycle) => {
+            cycles++;
+            if (cycles === 1) {
+              expect(cycle.exitCode, capture.readStderr()).toBe(0);
+              if (variant.startsWith("checkout")) git("checkout", "linked");
+              else {
+                renameSync(join(root, "generated"), join(root, "saved"));
+                symlinkSync(outside, join(root, "generated"));
+              }
+              subscriptions.get(root)?.("change", "probe.sdp.md");
+            } else {
+              expect(cycle.exitCode).toBe(1);
+              abort.abort();
+            }
+          },
+        },
+      );
+      expect(cycles).toBe(2);
+      if (variant === "studio-direct")
+        expect(readFileSync(join(outside, "spec-studio.tmp/sentinel"), "utf8")).toBe("keep");
+      expect(existsSync(index) ? readFileSync(index, "utf8") : undefined).toBe(prior);
+      expect(existsSync(manifest) ? readFileSync(manifest, "utf8") : undefined).toBe(priorManifest);
+    } finally {
+      clearTimeout(timer);
+      abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  },
+);

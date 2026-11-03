@@ -1,5 +1,6 @@
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync } from "node:fs";
 import { join } from "node:path";
+import { guardedOutput } from "./artifacts.js";
 import { schemaVersion } from "../graph/schema.js";
 import { resolveExtractionRoot } from "./build-args.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
@@ -63,7 +64,15 @@ export function runStamp(args: readonly string[], output: CliOutput, engine: str
       builtAt: new Date().toISOString().replace(/\.\d{3}Z$/u, "Z"),
       ...(source === undefined ? {} : { source }),
     };
-    writeFileSync(join(directory, "stamp.json"), `${JSON.stringify(stamp)}\n`);
+    const fs = guardedOutput(resolved);
+    const destination = join(directory, "stamp.json");
+    const temporary = `${destination}.tmp`;
+    fs.check(destination);
+    if (!lstatSync(directory).isDirectory())
+      throw new Error("Studio page set is not a real directory");
+    fs.rmSync(temporary, { force: true });
+    fs.writeFileSync(temporary, `${JSON.stringify(stamp)}\n`, { flag: "wx" });
+    fs.renameSync(temporary, destination);
     writeStdout(output, `Wrote ${join(directory, "stamp.json")}\n`);
     return 0;
   } catch (error) {
