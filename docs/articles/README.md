@@ -227,7 +227,7 @@ Measured at commit `b5e0a8bea1e3bedd48c616f96c9928e955792753`:
 
 ### Step 4: Regenerate the article evidence
 
-Marked evidence blocks are generated, not maintained by hand. The sync reads this playbook's pin and creates a disposable worktree from that commit, installs dependencies with `npm ci --ignore-scripts`, and builds its CLI before collecting evidence. The supplied repository provides git objects only: its working files, installed dependencies and existing build are not used. It covers graph-derived tables, build and query output, carrier excerpts, source anchors, the oracle and Mermaid. Self-hosting validation accepts only `honesty/gaps` warnings; every other warning rule fails the sync.
+Marked evidence blocks are generated, not maintained by hand. The sync reads this playbook's pin and fills a disposable worktree from that commit's raw Git blobs, with replacement objects disabled. It installs dependencies with `npm ci --ignore-scripts` and builds the CLI before collecting evidence. The supplied repository provides git objects only: its working files, sparse-checkout settings, attribute filters, installed dependencies and existing build are not used. It covers graph-derived tables, build and query output, carrier excerpts, source anchors, the oracle and Mermaid. Self-hosting validation accepts only `honesty/gaps` warnings; every other warning rule fails the sync.
 
 ```sh
 # SOURCE_DIR is a repository checkout containing the pinned commit.
@@ -237,7 +237,7 @@ node docs/articles/sync-evidence.mjs "$SOURCE_DIR"
 node docs/articles/sync-evidence.mjs --check "$SOURCE_DIR"
 ```
 
-Both commands create a temporary worktree under the article checkout's `.scratch/`, install dependencies, build `dist/`, and regenerate `generated/`, test registrars and the example's generated outputs there. They remove that worktree on success or failure; they do not overwrite outputs in `$SOURCE_DIR`. Installing dependencies may populate npm's cache and needs registry access or a populated cache. Sync mode also writes the marked manuscript blocks. Check mode writes no manuscript.
+Both commands create a temporary worktree under the article checkout's `.scratch/`, install dependencies, build `dist/`, and regenerate `generated/`, test registrars and the example's generated outputs there. They temporarily register the worktree in `$SOURCE_DIR`'s Git metadata and remove it on success or failure; they do not overwrite outputs in `$SOURCE_DIR`. Installing dependencies may populate npm's cache and needs registry access or a populated cache. Sync mode also writes the marked manuscript blocks. Check mode writes no manuscript.
 
 Always pass the source repository explicitly. Add a marked block and its generator whenever a manuscript gains a reusable output excerpt. Missing, duplicate, unknown, nested or fenced markers fail the check. Keep elision explicit, as in the constant-anchor excerpt. Do not paste a modified version of source or command output and call it an example.
 

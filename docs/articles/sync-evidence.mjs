@@ -7,6 +7,7 @@ import {
   readdirSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -93,13 +94,61 @@ export function parseArguments(args) {
   return { check, printPin, source };
 }
 
-// The supplied checkout is only an object source. Its files, ignored outputs and installed
-// dependencies never participate in evidence. All writes happen in a disposable worktree.
+// Read raw blobs rather than checking out files: sparse patterns, attributes and filter
+// drivers belong to the supplied repository, not the pin. Preserve binary bytes and modes.
+function materializeTree(git, commit, source) {
+  const entries = git(["ls-tree", "-r", "-z", commit])
+    .toString("utf8")
+    .split("\0")
+    .filter(Boolean)
+    .map((entry) => {
+      const tab = entry.indexOf("\t");
+      const [mode, type, oid] = entry.slice(0, tab).split(" ");
+      const file = entry.slice(tab + 1);
+      if (type !== "blob" || !["100644", "100755", "120000"].includes(mode))
+        throw new Error(`Unsupported pinned tree entry: ${mode} ${file}`);
+      return { mode, oid, file };
+    });
+  const blobs = git(["cat-file", "--batch"], entries.map(({ oid }) => oid + "\n").join(""));
+  let offset = 0;
+  for (const { mode, oid, file } of entries) {
+    const newline = blobs.indexOf(10, offset);
+    const [actualOid, type, sizeText] = blobs.subarray(offset, newline).toString("utf8").split(" ");
+    const size = Number(sizeText);
+    const start = newline + 1;
+    const end = start + size;
+    if (
+      newline < offset ||
+      actualOid !== oid ||
+      type !== "blob" ||
+      !Number.isSafeInteger(size) ||
+      size < 0 ||
+      end >= blobs.length ||
+      blobs[end] !== 10
+    )
+      throw new Error(`Could not read pinned blob: ${file}`);
+    const target = path.join(source, file);
+    mkdirSync(path.dirname(target), { recursive: true });
+    const content = blobs.subarray(start, end);
+    if (mode === "120000") symlinkSync(content, target);
+    else writeFileSync(target, content, { mode: mode === "100755" ? 0o755 : 0o644 });
+    offset = end + 1;
+  }
+}
+
+// The supplied checkout provides objects only. Its files, checkout settings, ignored outputs
+// and dependencies never participate. Worktree registration is temporary git metadata.
 export function withPinnedSource(repository, commit, scratchRoot, action) {
   const root = realpathSync(repository);
-  const top = execFileSync("git", ["-C", root, "rev-parse", "--show-toplevel"], {
-    encoding: "utf8",
-  }).trim();
+  const env = { ...process.env, GIT_NO_REPLACE_OBJECTS: "1" };
+  const git = (args, input) =>
+    execFileSync("git", ["--no-replace-objects", "-C", root, ...args], {
+      env,
+      input,
+      stdio: "pipe",
+      maxBuffer: 128 * 1024 * 1024,
+    });
+  const top = git(["rev-parse", "--show-toplevel"]).toString("utf8").trim();
   if (realpathSync(top) !== root)
     throw new Error("Pass the source repository root, not a subdirectory.");
   mkdirSync(scratchRoot, { recursive: true });
@@ -107,22 +156,19 @@ export function withPinnedSource(repository, commit, scratchRoot, action) {
   const source = path.join(temporary, "source");
   let added = false;
   try {
-    execFileSync("git", ["-C", root, "worktree", "add", "--detach", source, commit], {
-      stdio: "pipe",
-    });
+    git(["worktree", "add", "--detach", "--no-checkout", source, commit]);
     added = true;
+    materializeTree(git, commit, source);
     execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
       cwd: source,
+      env,
       stdio: "pipe",
     });
-    execFileSync("npm", ["run", "build"], { cwd: source, stdio: "pipe" });
+    execFileSync("npm", ["run", "build"], { cwd: source, env, stdio: "pipe" });
     return action(source);
   } finally {
     try {
-      if (added)
-        execFileSync("git", ["-C", root, "worktree", "remove", "--force", source], {
-          stdio: "pipe",
-        });
+      if (added) git(["worktree", "remove", "--force", source]);
     } finally {
       rmSync(temporary, { recursive: true, force: true });
     }

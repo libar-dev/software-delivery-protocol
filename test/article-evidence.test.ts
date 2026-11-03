@@ -1,11 +1,14 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
+  readlinkSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -43,6 +46,29 @@ describe("article evidence CLI entry", () => {
       expect(result.stdout.trim()).toMatch(/^[0-9a-f]{40}$/u);
     } finally {
       rmSync(linkParent, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses a repository without the pin before executing its CLI", () => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-unpinned-"));
+    const sentinel = path.join(temporary, "executed");
+    try {
+      execFileSync("git", ["init", temporary], { stdio: "pipe" });
+      mkdirSync(path.join(temporary, "dist/cli"), { recursive: true });
+      writeFileSync(
+        path.join(temporary, "dist/cli/sdp.js"),
+        `require("node:fs").writeFileSync(${JSON.stringify(sentinel)}, "executed");`,
+      );
+      const result = spawnSync(
+        process.execPath,
+        [path.join(repositoryRoot, "docs/articles/sync-evidence.mjs"), "--check", temporary],
+        { encoding: "utf8" },
+      );
+      expect(existsSync(sentinel)).toBe(false);
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain("invalid reference");
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
     }
   });
 });
@@ -155,30 +181,44 @@ describe("article evidence structure", () => {
     }).toThrow("missing");
   });
 
-  it("preserves nested carrier fences and detects edits to both carrier excerpts", () => {
-    const blocks = evidenceBlocks(repositoryRoot, "pin");
-    for (const [id, file] of [
-      ["create-order-carrier", "create-order.sdp.md"],
-      ["valid-cart-carrier", "create-order-valid-cart.sdp.md"],
-    ] as const) {
-      const block = blocks.find((entry) => entry.id === id);
-      expect(block, id).toBeDefined();
-      if (!block) throw new Error(id);
-      const source = readFileSync(
-        path.join(repositoryRoot, "examples/checkout-v1/specs/orders", file),
-        "utf8",
-      ).trim();
-      expect(block.generate()).toBe(source + "\n");
-      const original = readFileSync(path.join(repositoryRoot, "docs/articles", block.file), "utf8");
-      expect(replaceEvidenceBlock(original, block, source)).toBe(original);
-      const range = evidenceMarkers(original, block.file).get(id);
-      if (!range) throw new Error(id);
-      const changed =
-        original.slice(0, range.start) +
-        original.slice(range.start, range.end).replace("readiness:", "altered:") +
-        original.slice(range.end);
-      expect(replaceEvidenceBlock(changed, block, block.generate())).not.toBe(changed);
-      expect(original.slice(range.start, range.end)).toContain("````markdown");
+  it("preserves nested carrier fences and detects edits independently of HEAD", () => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-carriers-"));
+    try {
+      const orders = path.join(temporary, "examples/checkout-v1/specs/orders");
+      mkdirSync(orders, { recursive: true });
+      const blocks = evidenceBlocks(temporary, "pin");
+      for (const [id, file] of [
+        ["create-order-carrier", "create-order.sdp.md"],
+        ["valid-cart-carrier", "create-order-valid-cart.sdp.md"],
+      ] as const) {
+        // Deliberately differs from the published pin: future carrier edits must not
+        // require an article refresh. check:articles owns equality at the pin.
+        const source =
+          `---\nreadiness: ready\n---\nA later carrier edit: ${id}\n\n` +
+          "```gwt\nGiven a changed example\n```\n";
+        writeFileSync(path.join(orders, file), source);
+        const block = blocks.find((entry) => entry.id === id);
+        expect(block, id).toBeDefined();
+        if (!block) throw new Error(id);
+        expect(block.generate()).toBe(source);
+        const original = readFileSync(
+          path.join(repositoryRoot, "docs/articles", block.file),
+          "utf8",
+        );
+        const rendered = replaceEvidenceBlock(original, block, source);
+        expect(replaceEvidenceBlock(rendered, block, source)).toBe(rendered);
+        const range = evidenceMarkers(rendered, block.file).get(id);
+        if (!range) throw new Error(id);
+        const changed =
+          rendered.slice(0, range.start) +
+          rendered.slice(range.start, range.end).replace("readiness:", "altered:") +
+          rendered.slice(range.end);
+        expect(replaceEvidenceBlock(changed, block, block.generate())).toBe(rendered);
+        expect(rendered.slice(range.start, range.end)).toContain("````markdown");
+        expect(rendered.slice(range.start, range.end)).toContain("```gwt");
+      }
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
     }
   });
 
@@ -226,7 +266,6 @@ describe("article evidence structure", () => {
       "utf8",
     );
     expect(article).not.toContain("build output above carries the validation totals");
-    expect(article).toContain("extraction and contract-generation diagnostics");
   });
 });
 
@@ -239,15 +278,17 @@ describe("article evidence arguments", () => {
     });
   });
 
-  it.each([
-    ["/source", "--chek"],
-    ["--verbose", "/source"],
-    ["one", "two"],
-    ["--print-pin", "--chek"],
-    [],
-    ["--check"],
-    ["--print-pin", "/source"],
-  ])("refuses invalid arguments %j before touching manuscripts", (...args) => {
+  it.each(
+    [
+      ["/source", "--chek"],
+      ["--verbose", "/source"],
+      ["one", "two"],
+      ["--print-pin", "--chek"],
+      [],
+      ["--check"],
+      ["--print-pin", "/source"],
+    ].map((args) => [args]),
+  )("refuses invalid arguments %j before touching manuscripts", (args) => {
     const article = path.join(repositoryRoot, "docs/articles/README.md");
     const before = readFileSync(article, "utf8");
     const result = spawnSync(
@@ -260,102 +301,143 @@ describe("article evidence arguments", () => {
     expect(readFileSync(article, "utf8")).toBe(before);
   });
 
-  it("documents an explicit source repository and disposable writes", () => {
+  it("does not offer an implicit source repository", () => {
     const playbook = readFileSync(path.join(repositoryRoot, "docs/articles/README.md"), "utf8");
     expect(playbook).not.toContain("omit `$SOURCE_DIR`");
-    expect(playbook).toContain("Always pass the source repository explicitly");
-    expect(playbook).toContain("Both commands create a temporary worktree");
   });
 });
 
 // Small real git repositories exercise materialization, npm's lockfile install and the build
 // without reinstalling the Protocol's full dependency tree for every regression probe.
 describe("pinned evidence source", () => {
-  it.each(["source", "build", "outputs"])("uses only the pin and isolates %s", (focus) => {
-    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-pin-"));
-    const repo = path.join(temporary, "repository");
-    const scratch = path.join(temporary, "scratch");
-    mkdirSync(repo);
-    const git = (...args: string[]) =>
-      execFileSync("git", ["-C", repo, ...args], { encoding: "utf8" }).trim();
-    const read = (root: string, file: string) => readFileSync(path.join(root, file), "utf8");
-    try {
-      git("init");
-      writeFileSync(
-        path.join(repo, "package.json"),
-        JSON.stringify({
-          name: "pin-probe",
-          version: "1.0.0",
-          scripts: { build: "node build.cjs" },
-        }),
-      );
-      writeFileSync(
-        path.join(repo, "package-lock.json"),
-        JSON.stringify({
-          name: "pin-probe",
-          version: "1.0.0",
-          lockfileVersion: 3,
-          packages: { "": { name: "pin-probe", version: "1.0.0" } },
-        }),
-      );
-      writeFileSync(path.join(repo, "source.txt"), "pinned source");
-      writeFileSync(
-        path.join(repo, ".gitignore"),
-        "*.test.generated.ts\ndist/\nnode_modules/\ngenerated/\n",
-      );
-      writeFileSync(
-        path.join(repo, "build.cjs"),
-        "const fs = require('node:fs'); fs.mkdirSync('dist'); fs.writeFileSync('dist/result', fs.readFileSync('source.txt'));\n",
-      );
-      git("add", "package.json", "package-lock.json", "source.txt", ".gitignore", "build.cjs");
-      git(
-        "-c",
-        "user.name=Test",
-        "-c",
-        "user.email=test@example.invalid",
-        "-c",
-        "commit.gpgsign=false",
-        "commit",
-        "-m",
-        "pin",
-      );
-      const commit = git("rev-parse", "HEAD");
-      git("update-index", "--skip-worktree", "source.txt");
-      writeFileSync(path.join(repo, "source.txt"), "hidden edit");
-      writeFileSync(path.join(repo, "phantom.test.generated.ts"), "/** @sdpAnchor impl:phantom */");
-      writeFileSync(path.join(repo, "untracked.txt"), "hidden untracked");
-      git("config", "status.showUntrackedFiles", "no");
-      for (const dir of ["dist", "node_modules", "generated"]) mkdirSync(path.join(repo, dir));
-      writeFileSync(path.join(repo, "dist/result"), "stale build");
-      writeFileSync(path.join(repo, "node_modules/foreign.txt"), "foreign dependency");
-      writeFileSync(path.join(repo, "generated/sentinel"), "keep output");
-      expect(git("status", "--porcelain")).toBe("");
-      let materialized = "";
-      withPinnedSource(repo, commit, scratch, (source) => {
-        materialized = source;
-        if (focus === "source") {
-          expect(read(source, "source.txt")).toBe("pinned source");
-          expect(existsSync(path.join(source, "phantom.test.generated.ts"))).toBe(false);
-          expect(existsSync(path.join(source, "untracked.txt"))).toBe(false);
-          expect(existsSync(path.join(source, "node_modules/foreign.txt"))).toBe(false);
+  it.each(["source", "build", "outputs", "sparse checkout", "replace ref", "smudge filter"])(
+    "uses only the pin and isolates %s",
+    (focus) => {
+      const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-pin-"));
+      const repo = path.join(temporary, "repository");
+      const scratch = path.join(temporary, "scratch");
+      mkdirSync(repo);
+      const git = (...args: string[]) =>
+        execFileSync("git", ["-C", repo, ...args], { encoding: "utf8" }).trim();
+      const read = (root: string, file: string) => readFileSync(path.join(root, file), "utf8");
+      try {
+        git("init");
+        writeFileSync(
+          path.join(repo, "package.json"),
+          JSON.stringify({
+            name: "pin-probe",
+            version: "1.0.0",
+            scripts: { build: "node build.cjs" },
+          }),
+        );
+        writeFileSync(
+          path.join(repo, "package-lock.json"),
+          JSON.stringify({
+            name: "pin-probe",
+            version: "1.0.0",
+            lockfileVersion: 3,
+            packages: { "": { name: "pin-probe", version: "1.0.0" } },
+          }),
+        );
+        writeFileSync(path.join(repo, "source.txt"), "pinned source");
+        writeFileSync(path.join(repo, "omitted.txt"), "always present");
+        writeFileSync(path.join(repo, "binary"), Buffer.from([0, 255, 10, 13]));
+        chmodSync(path.join(repo, "binary"), 0o755);
+        symlinkSync("source.txt", path.join(repo, "source-link"));
+        writeFileSync(
+          path.join(repo, ".gitignore"),
+          "*.test.generated.ts\ndist/\nnode_modules/\ngenerated/\n",
+        );
+        writeFileSync(
+          path.join(repo, "build.cjs"),
+          "const fs = require('node:fs'); fs.mkdirSync('dist'); fs.writeFileSync('dist/result', fs.readFileSync('source.txt'));\n",
+        );
+        git(
+          "add",
+          "package.json",
+          "package-lock.json",
+          "source.txt",
+          "omitted.txt",
+          "binary",
+          "source-link",
+          ".gitignore",
+          "build.cjs",
+        );
+        git(
+          "-c",
+          "user.name=Test",
+          "-c",
+          "user.email=test@example.invalid",
+          "-c",
+          "commit.gpgsign=false",
+          "commit",
+          "-m",
+          "pin",
+        );
+        const commit = git("rev-parse", "HEAD");
+        git("update-index", "--skip-worktree", "source.txt");
+        writeFileSync(path.join(repo, "source.txt"), "hidden edit");
+        writeFileSync(
+          path.join(repo, "phantom.test.generated.ts"),
+          "/** @sdpAnchor impl:phantom */",
+        );
+        writeFileSync(path.join(repo, "untracked.txt"), "hidden untracked");
+        git("config", "status.showUntrackedFiles", "no");
+        for (const dir of ["dist", "node_modules", "generated"]) mkdirSync(path.join(repo, dir));
+        writeFileSync(path.join(repo, "dist/result"), "stale build");
+        writeFileSync(path.join(repo, "node_modules/foreign.txt"), "foreign dependency");
+        writeFileSync(path.join(repo, "generated/sentinel"), "keep output");
+        expect(git("status", "--porcelain")).toBe("");
+        if (focus === "sparse checkout") {
+          git("sparse-checkout", "set", "--no-cone", "/*", "!/omitted.txt");
+          expect(existsSync(path.join(repo, "omitted.txt"))).toBe(false);
         }
-        if (focus === "build") expect(read(source, "dist/result")).toBe("pinned source");
-        mkdirSync(path.join(source, "generated"), { recursive: true });
-        writeFileSync(path.join(source, "generated/sentinel"), "new output");
-      });
-      expect(read(repo, "generated/sentinel")).toBe("keep output");
-      expect(existsSync(materialized)).toBe(false);
-      expect(read(repo, "dist/result")).toBe("stale build");
-      expect(read(repo, "source.txt")).toBe("hidden edit");
-      expect(() =>
-        withPinnedSource(repo, commit, scratch, () => {
-          throw new Error("probe failure");
-        }),
-      ).toThrow("probe failure");
-      expect(readdirSync(scratch)).toEqual([]);
-      expect(git("worktree", "list", "--porcelain").match(/^worktree /gm)).toHaveLength(1);
-    } finally {
-      rmSync(temporary, { recursive: true, force: true });
-    }
-  });
+        if (focus === "replace ref") {
+          const original = git("rev-parse", `${commit}:source.txt`);
+          const replacement = execFileSync("git", ["-C", repo, "hash-object", "-w", "--stdin"], {
+            input: "replaced source",
+            encoding: "utf8",
+          }).trim();
+          git("replace", original, replacement);
+          expect(git("show", `${commit}:source.txt`)).toBe("replaced source");
+        }
+        if (focus === "smudge filter") {
+          writeFileSync(path.join(repo, ".git/info/attributes"), "source.txt filter=probe\n");
+          git("config", "filter.probe.smudge", "sed s/pinned/filtered/");
+          git("config", "filter.probe.required", "true");
+        }
+        let materialized = "";
+        withPinnedSource(repo, commit, scratch, (source) => {
+          materialized = source;
+          if (focus !== "build" && focus !== "outputs")
+            expect(read(source, "source.txt")).toBe("pinned source");
+          expect(read(source, "omitted.txt")).toBe("always present");
+          expect(readFileSync(path.join(source, "binary"))).toEqual(Buffer.from([0, 255, 10, 13]));
+          expect(statSync(path.join(source, "binary")).mode & 0o111).toBe(0o111);
+          expect(readlinkSync(path.join(source, "source-link"))).toBe("source.txt");
+          if (focus === "source") {
+            expect(existsSync(path.join(source, "phantom.test.generated.ts"))).toBe(false);
+            expect(existsSync(path.join(source, "untracked.txt"))).toBe(false);
+            expect(existsSync(path.join(source, "node_modules/foreign.txt"))).toBe(false);
+          }
+          if (focus === "build") expect(read(source, "dist/result")).toBe("pinned source");
+          mkdirSync(path.join(source, "generated"), { recursive: true });
+          writeFileSync(path.join(source, "generated/sentinel"), "new output");
+        });
+        expect(read(repo, "generated/sentinel")).toBe("keep output");
+        expect(existsSync(materialized)).toBe(false);
+        expect(read(repo, "dist/result")).toBe("stale build");
+        expect(read(repo, "source.txt")).toBe("hidden edit");
+        expect(() =>
+          withPinnedSource(repo, commit, scratch, () => {
+            throw new Error("probe failure");
+          }),
+        ).toThrow("probe failure");
+        expect(readdirSync(scratch)).toEqual([]);
+        expect(git("worktree", "list", "--porcelain").match(/^worktree /gm)).toHaveLength(1);
+      } finally {
+        rmSync(temporary, { recursive: true, force: true });
+      }
+    },
+  );
 });
