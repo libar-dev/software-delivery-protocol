@@ -1184,7 +1184,17 @@ const MENTION_PATTERN =
   /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"'()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 
 /** Trailing punctuation a sentence, a list, or emphasis may put after an id. */
-const MENTION_TRAILING_PUNCTUATION = /[.,;:!?*_~]+$/u;
+const MENTION_TRAILING_PUNCTUATION = ".,;:!?*_~";
+
+/**
+ * A backward scan rather than `/[.,;:!?*_~]+$/u`: that regex retries every start inside an interior
+ * run of punctuation, so one long run made every mention scan quadratic in its length.
+ */
+function trimMentionPunctuation(rest: string): string {
+  let end = rest.length;
+  while (end > 0 && MENTION_TRAILING_PUNCTUATION.includes(rest.charAt(end - 1))) end -= 1;
+  return rest.slice(0, end);
+}
 
 /** The six authored relations; a declared one in either direction backs a mention. */
 const BACKING_RELATIONS: ReadonlySet<string> = new Set([
@@ -1297,7 +1307,7 @@ function proseMentionTexts(node: PrimitiveNode): readonly MentionText[] {
  */
 export function mentionTokens(text: string): readonly string[] {
   return [...text.replace(MARKDOWN_ESCAPE, "$1").matchAll(MENTION_PATTERN)]
-    .map((match) => match[0].slice("spec:".length).replace(MENTION_TRAILING_PUNCTUATION, ""))
+    .map((match) => trimMentionPunctuation(match[0].slice("spec:".length)))
     .filter((rest) => rest.length > 0)
     .map((rest) => `spec:${rest}`);
 }

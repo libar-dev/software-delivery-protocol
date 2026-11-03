@@ -421,6 +421,53 @@ export const prefixed = 1;
     expect(codeNodeIds(result.graph)).toEqual([]);
   });
 
+  it.each([
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+    ["a lone CR", "\r"],
+  ])("ends a comment line at %s, so a tag line never hides text after it", (_name, separator) => {
+    const result = extract({
+      root: fixtureRoot(
+        "separated.ts",
+        `/**
+ * @sdpAnchor impl:fixture.gate
+ * @sdpSatisfies spec:fixture.gate${separator}(see the gate rules)
+ */
+export const gate = 1;
+
+/**
+ * @sdpAnchor impl:fixture.rebuild
+ * @sdpSatisfie spec:fixture.rebuild${separator}(misspelt tag)
+ */
+export const rebuild = 1;
+`,
+      ),
+    });
+    const refused = (line: number, text: string): unknown =>
+      expect.objectContaining({
+        validatorId: extractFindingIds.nonStaticEnvelope,
+        line,
+        message: expect.stringContaining(text) as string,
+      });
+
+    // The separator ends line 3 and line 10, as the TypeScript compiler counts lines.
+    expect(result.report.findings).toEqual([
+      refused(4, "must open a tag"),
+      refused(10, 'tag "@sdpSatisfie" is not a reserved anchor tag'),
+      refused(11, "must open a tag"),
+    ]);
+    expect(codeNodeIds(result.graph)).toEqual([]);
+  });
+
+  it("reads a comment form saved with CR-only line endings at the same lines", () => {
+    const lf = extract({ root: fixtureRoot("comment.ts", COMMENT_FORM) });
+    const cr = extract({ root: fixtureRoot("comment.ts", COMMENT_FORM.replaceAll("\n", "\r")) });
+
+    expect(cr.report.findings).toEqual([]);
+    expect(cr.counts.anchors).toBe(4);
+    expect(serializeGraph(cr.graph)).toBe(serializeGraph(lf.graph));
+  });
+
   it("reports the same duplicate id across the two forms", () => {
     const result = extract({
       root: fixtureRoot(
