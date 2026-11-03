@@ -23,7 +23,7 @@ describe("exclusion diagnostics", () => {
     }
   });
 
-  it("names each skipped symbolic link while resolving an explicitly linked root", () => {
+  it("names skipped candidate links while resolving an explicitly linked root", () => {
     const workspace = temporaryRoot();
     const root = join(workspace, "corpus");
     const outside = join(workspace, "outside");
@@ -59,16 +59,73 @@ describe("exclusion diagnostics", () => {
     const result = extract({ root: alias, exclude });
     expect(result.counts).toEqual({ specs: 1, packs: 0, anchors: 0 });
     expect(result.report.findings).toEqual(
-      ["dangling.sdp.md", "directory", "linked.sdp.md", "linked.ts", "loop", "other.txt"].map(
-        (file) => ({
-          validatorId: "extract/symbolic-link-skipped",
-          family: "conformance",
-          severity: "warning",
-          file,
-          message: `symbolic link "${file}" is skipped; discovery never follows links below the root`,
-        }),
-      ),
+      ["dangling.sdp.md", "directory", "linked.sdp.md", "linked.ts", "loop"].map((file) => ({
+        validatorId: "extract/symbolic-link-skipped",
+        family: "conformance",
+        severity: "warning",
+        file,
+        message: `symbolic link "${file}" is skipped; discovery never follows links below the root`,
+      })),
     );
+  });
+
+  // spec:extraction.excludes#rule.canonicalDiscovery
+  it.each([
+    ["CLAUDE.md", false],
+    ["types.d.ts", false],
+    ["other.txt", false],
+    ["other.feature", false],
+    ["x.sdp.md", true],
+    ["x.pack.sdp.md", true],
+    ["x.sdp.ts", true],
+    ["x.sdp.gherkin", true],
+    ["source.ts", true],
+    ["source.tsx", true],
+  ])("warns for the skipped file link %s only when its name is a candidate", (name, warns) => {
+    const root = temporaryRoot();
+    writeFileSync(join(root, "AGENTS.md"), "This file is not a discovery candidate.\n");
+    symlinkSync("AGENTS.md", join(root, name));
+
+    const result = extract({ root });
+
+    expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 0 });
+    expect(result.report.findings).toEqual(
+      warns
+        ? [
+            {
+              validatorId: "extract/symbolic-link-skipped",
+              family: "conformance",
+              severity: "warning",
+              file: name,
+              message: `symbolic link "${name}" is skipped; discovery never follows links below the root`,
+            },
+          ]
+        : [],
+    );
+  });
+
+  it("warns once for a directory link even when its name is not a candidate filename", () => {
+    const workspace = temporaryRoot();
+    const root = join(workspace, "corpus");
+    const outside = join(workspace, "outside");
+    mkdirSync(root);
+    mkdirSync(outside);
+    writeFileSync(join(outside, "hidden.sdp.md"), "invalid carrier");
+    symlinkSync(outside, join(root, "CLAUDE.md"), "dir");
+
+    const result = extract({ root });
+
+    expect(result.counts).toEqual({ specs: 0, packs: 0, anchors: 0 });
+    expect(result.report.findings).toEqual([
+      {
+        validatorId: "extract/symbolic-link-skipped",
+        family: "conformance",
+        severity: "warning",
+        file: "CLAUDE.md",
+        message:
+          'symbolic link "CLAUDE.md" is skipped; discovery never follows links below the root',
+      },
+    ]);
   });
 
   it("rejects a Windows drive-letter absolute path instead of accepting an unmatched prefix", () => {

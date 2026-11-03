@@ -47,9 +47,6 @@ import {
   testAnchorId,
 } from "@libar-dev/software-delivery-protocol";
 
-const rootLinkWarning =
-  'CLAUDE.md — [warning] extract/symbolic-link-skipped — symbolic link "CLAUDE.md" is skipped; discovery never follows links below the root\n';
-
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const recipesPath = "docs/agent-surface/recipes.md";
 
@@ -184,16 +181,13 @@ async function runRecipe(
     },
   );
 
-  // The self-hosted corpus names its CLAUDE.md link; every other diagnostic still fails here.
   expect(
     { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
     `recipe ${String(recipe.ordinal)} must run as written`,
   ).toEqual({
     recipe: recipe.title,
     exitCode: 0,
-    stderr: extraction.report.findings.some((finding) => finding.file === "CLAUDE.md")
-      ? rootLinkWarning
-      : "",
+    stderr: "",
   });
 
   return JSON.parse(capture.readStdout()) as unknown;
@@ -2262,7 +2256,7 @@ describe("register recipe semantics", () => {
           queryHooks,
         ),
       ).toBe(0);
-      expect(capture.readStderr()).toBe(rootLinkWarning);
+      expect(capture.readStderr()).toBe("");
       expect(capture.readStdout()).toContain("totals:");
     },
   );
@@ -4736,7 +4730,7 @@ describe("recipe parameters and the shipped recipe files", () => {
       const run = await runShipped(shippedBody(recipeByOrdinal(4)), ["--params", `@${path}`]);
       expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
         exitCode: 0,
-        stderr: rootLinkWarning,
+        stderr: "",
       });
 
       const result = asRecord(JSON.parse(run.stdout));
@@ -4777,7 +4771,7 @@ describe("recipe parameters and the shipped recipe files", () => {
     ]);
     expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
       exitCode: 0,
-      stderr: rootLinkWarning,
+      stderr: "",
     });
 
     const result = asRecord(JSON.parse(run.stdout));
@@ -4808,7 +4802,7 @@ describe("recipe parameters and the shipped recipe files", () => {
       const run = await runShipped(body, ["--params", JSON.stringify({ pack: chosen })]);
       expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
         exitCode: 0,
-        stderr: rootLinkWarning,
+        stderr: "",
       });
 
       const result = asRecord(JSON.parse(run.stdout));
