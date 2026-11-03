@@ -21,4 +21,4 @@ The view is a lens, not an editor. The job here is to let people drive a change 
 4. Conformance + honesty checks (`sdp validate` / CI) are the gate every edit passes — the same gate for an agent-applied edit, a human edit, and any other commit; nothing bypasses it.
 5. Lifecycle operations — split, combine, refine, delete — are plain git + edit (`git mv`, edit in place, `git rm`); maturity and group-readiness signals are computed from the graph, not stored.
 6. After the commit, regenerating the graph and view reflects the change, closing the loop with no manual sync.
-7. The panel shows the exact hand-off before it leaves; the agent reads that scope with a budgeted context bundle.
+7. When the panel offers a memo, it previews the exact memo before it leaves.
