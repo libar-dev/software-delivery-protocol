@@ -397,12 +397,14 @@ or a sandboxed function runtime, imports the same builders from the zero-depende
 builders and nothing else.
 
 Trust comes from the import. The builder import must be a Protocol builder binding: the public
-package, its `/anchors` subpath, or a relative import that resolves to the package's `ids`, `anchors` or
-`model/code-anchor` module. A consumer-local lookalike mints nothing and reports nothing, because
-a source file that never bound to the Protocol is not authoring drift to report. On the CommonJS
-package surface the trusted relative-module set is empty, so relative bindings mint no anchors
-there while package imports stay trusted. When a constant-form anchor fails to appear in the
-graph, suspect the import before the syntax.
+package, its `/anchors` subpath, or a relative import that resolves to `src/ids.ts`,
+`src/anchors.ts` or `src/model/code-anchor.ts` in the running engine's package or in an
+extraction root whose own `package.json` names `@libar-dev/software-delivery-protocol`. A
+consumer-local lookalike mints nothing and reports nothing, because a source file that never
+bound to the Protocol is not authoring drift to report. On the CommonJS package surface,
+relative bindings are trusted only in such an extraction root; package imports stay trusted
+everywhere. When a constant-form anchor fails to appear in the graph, suspect the import before
+the syntax.
 
 ### The comment form
 

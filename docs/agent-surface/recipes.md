@@ -2987,9 +2987,8 @@ limits Specs to that Pack's members at either commit. `params.detail` defaults t
 includes the values and change type for every changed part.
 
 In the Protocol source repository, write the base graph with the base worktree's own engine.
-Its constant-form anchors use relative builder imports, trusted against that engine's own source
-modules. A current-checkout engine cannot recognize those imports in another worktree. Replace
-`BASE` with the commit you read and use the corpus's own exclusions:
+This preserves the extraction behavior that commit's readers saw. Replace `BASE` with the
+commit you read and use the corpus's own exclusions:
 
 ```sh
 git worktree add --detach .sdp-base BASE

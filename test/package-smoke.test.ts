@@ -264,6 +264,39 @@ const shippedProtocolCorpusTestAnchor = specTest({
 void shippedProtocolCorpusTestAnchor;
 
 describe("published package surface", () => {
+  it("CommonJS trusts relative builders only in an identified Protocol root", async () => {
+    const root = await mkdtemp(join(tmpdir(), "sdp-cjs-builder-trust-"));
+    const protocol = requireCommonJs(join(repositoryRoot, "dist/index.cjs")) as Pick<
+      typeof import("../src/index.js"),
+      "extract"
+    >;
+    try {
+      await mkdir(join(root, "src"));
+      await writeFile(join(root, "src/anchors.ts"), "export {};\n");
+      await writeFile(
+        join(root, "binding.ts"),
+        `import { codeAnchor, codeAnchorId } from "./src/anchors.js";
+import { codeAnchor as publicAnchor, codeAnchorId as publicId } from "${packageName}/anchors";
+const relativeBinding = codeAnchor({ id: codeAnchorId("impl:probe.relative") });
+const packageBinding = publicAnchor({ id: publicId("impl:probe.package") });
+`,
+      );
+      const anchorIds = (): string[] =>
+        protocol
+          .extract({ root })
+          .graph.nodes.map((node) => node.id)
+          .sort();
+
+      expect(anchorIds()).toEqual(["impl:probe.package"]);
+      await writeFile(join(root, "package.json"), JSON.stringify({ name: packageName }));
+      expect(anchorIds()).toEqual(["impl:probe.package", "impl:probe.relative"]);
+      await writeFile(join(root, "package.json"), JSON.stringify({ name: "consumer" }));
+      expect(anchorIds()).toEqual(["impl:probe.package"]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("packing leaves every repository dist file's inode, size and mtime untouched", async () => {
     const destination = await mkdtemp(join(tmpdir(), "sdp-pack-unchanged-"));
     try {
