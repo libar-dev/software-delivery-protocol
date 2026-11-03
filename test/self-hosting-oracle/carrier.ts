@@ -45,7 +45,7 @@ export const carrierSpecs = [
           "A `.sdp.gherkin` carrier holds only `behavior` and `example` Specs; the Markdown and TypeScript carriers remain lawful for the other kinds, under `spec:decisions.carrier-universality`.",
           "A relation tag is a head, a dot and a full Spec id, as in `@depends-on.spec:carrier.slot-notation`, and the heads `@refines.`, `@depends-on.`, `@constrained-by.`, `@decided-by.` and `@verifies.` declare `refines`, `dependsOn`, `constrainedBy`, `decidedBy` and `verifies`; an ordinary Scenario defaults `refines` and `verifies` to its Feature unless it explicitly declares that relation type.",
           "`@exercises.<key>` on an ordinary Scenario names a rule key of the Spec it verifies, and it and a Rule title key follow `spec:model.rule-keys`; `@kind.`, `@pack`, `@pack.` and `@supersedes.` are refused.",
-          "A tag whose head, compared case-insensitively, is `implemented`, `has-verifier`, `hasVerifier`, `observed`, `claim`, `status`, `lifecycle`, `workflow` or `architect`, followed by the end of the tag, `.` or `-`, is refused, so the carrier authors no delivery fact, claim, lifecycle state or workflow status.",
+          "A tag whose head, compared case-insensitively, is `implemented`, `has-verifier`, `hasVerifier`, `observed`, `deliveryFacts`, `claim`, `status`, `lifecycle`, `workflow` or `architect`, followed by the end of the tag, `.` or `-`, is refused, so the carrier authors no delivery fact, claim, lifecycle state or workflow status.",
           "A tag whose head has a unique nearest reserved head, within one edit of a reserved head of at most five letters or two edits of a longer one, is refused, and the refusal suggests that head only when its suggested form is lawful; every other tag, `@wip` included, is decoration and authors no graph state.",
           "A keyed Feature or ordinary Scenario description line has the form `- <key>: <value>` with a nonempty value; `actor`, `problem`, `outcome`, `value` and `description` occur at most once and populate Intent, `risk` and `assumption` repeat in Intent, `criterion` repeats in Verification, and `verification-mode` occurs at most once with `manual`, `reviewed`, `contract` or `executable`.",
           "An unknown description key or a heading-shaped description line is refused at its physical source line, despite blanks and comments; remaining non-heading prose is narrative, lawful only as free prose on the typed prose owners named by the prose-ownership decision, `spec:decisions.prose-ownership`, and never a new field or a parser within a parser.",
@@ -83,6 +83,7 @@ export const carrierSpecs = [
           ],
         },
         ruleKeys: {
+          authoredFacts: "rules[7]",
           identityTags: "rules[2]",
           kindBound: "rules[4]",
           relationTags: "rules[5]",
@@ -496,12 +497,13 @@ export const carrierSpecs = [
         outcome: "Make a Markdown Spec's identity and descriptors deterministic to reify.",
       },
       behavior: {
+        ruleKeys: { reservedProperties: "rules[4]" },
         rules: [
           "A Markdown Spec declares id, kind, altitude, readiness, and relations in bounded YAML frontmatter; its first H1 declares title.",
           "The envelope key set is closed and every one of its five keys is required: a key outside the set is refused rather than absorbed, and a missing key refuses the document rather than being defaulted.",
           "Each relation type takes one target or a list; its target forms follow `spec:model.relation-reasons`, and an example's declared `verifies` may carry `exercises` under `spec:model.rule-keys`.",
           "`relations: {}` is written explicitly when the logical relation set is empty — honest carrier syntax, not a new logical requirement: the physical key catches a truncated envelope at reification while the model itself stays relation-optional.",
-          "A derived name is never authorable in the envelope: a delivery-fact or graph-field key (`implemented`, `has-verifier`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo` or `models`) is refused as `extract/reserved-property`, because delivery facts are derived and never authored; `title` is refused as `extract/invalid-frontmatter`, and any other unknown envelope key as `extract/unrecognized-property`.",
+          "A derived name is never authorable in the envelope: a delivery-fact or graph-field key (`implemented`, `has-verifier`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo` or `models`) is refused as `extract/reserved-property`, because delivery facts are derived and never authored; `title` is refused as `extract/invalid-frontmatter`, and any other unknown envelope key as `extract/unrecognized-property`. Delivery-fact names and `deliveryFacts` are compared case-insensitively; underscore forms are not delivery-fact names.",
           "The Protocol owns the envelope grammar and the parser policy while the pinned YAML library stays a swappable representation behind that contract, so an unsupported YAML construct is refused within explicit byte bounds on the carrier and its frontmatter rather than silently becoming carrier semantics.",
           "The bounds are 256 KiB per carrier, 32 KiB of frontmatter, 16 KiB per scalar, 2,000 YAML nodes, and a nesting depth of 16; YAML anchor (`&name`) and alias (`*name`) syntax and explicit YAML tags (`!tag`) are refused at any size.",
           "The frontmatter opens at byte zero with an exact `---` line and closes at the next exact `---` line; a byte-order mark, a `...` line in the frontmatter, a further exact `---` line in the body, a lone CR, or mixed LF and CRLF newlines refuses the carrier.",
@@ -943,7 +945,7 @@ export const carrierSpecs = [
           "The TypeScript carrier may give one Spec several constraint entries, and the evidence clauses read every entry a Spec carries, whichever carrier wrote it. A `constrainedBy` edge names the constraint Spec whole, whatever its entry count, so a Markdown author with two measurable targets writes two constraint Specs.",
           "A Model entry is a bold term, the em dash character with a space on each side, and the definition, which may open with a term key marker under `spec:model.term-addresses`; a hyphen is refused, terms are unique, and an integer-like term is refused. Decision accepts `context` and `decision` once each and `rationale`, `alternative`, and `consequence` repeatedly.",
           "Design and UI are open sections. Each entry is a lower-camel ASCII key, unique within its section, and a one-line value; the same key may appear once under Design and once under UI.",
-          "The keys `implemented`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo`, and `models` are refused in every keyed section, under `spec:validation.authored-honesty`. In Design and UI, an otherwise lawful lower-camel key outside this set is ordinary content, including `dependsOn`, `references`, `uses` and `memberOf`; it creates no edge. Every closed section still admits only its own fields.",
+          "The keys `implemented`, `has-verifier`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo`, and `models` are refused in every keyed section, under `spec:validation.authored-honesty`. In Design and UI, an otherwise lawful lower-camel key outside this set is ordinary content, including `dependsOn`, `references`, `uses` and `memberOf`; it creates no edge. Every closed section still admits only its own fields. Delivery-fact names and `deliveryFacts` are compared case-insensitively; underscore forms are not delivery-fact names.",
           "A refused construct excludes its whole carrier from the graph, and healthy sibling carriers survive.",
         ],
         exampleSpace: {
@@ -955,6 +957,7 @@ export const carrierSpecs = [
           ],
         },
         ruleKeys: {
+          reservedProperties: "rules[14]",
           closedOwners: "rules[1]",
           sectionProse: "rules[2]",
           oneLineEntries: "rules[3]",

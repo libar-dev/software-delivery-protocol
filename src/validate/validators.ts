@@ -1,7 +1,7 @@
 import { resolveEntryAddress } from "../graph/entry-address.js";
 import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel, ownsExampleSpace } from "../graph/oracle-bindings.js";
-import { deliveryFactSpellings } from "../graph/delivery-fact-spellings.js";
+import { deliveryFactName, isReservedDerivedProperty } from "../graph/delivery-fact-spellings.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
 import {
   CODE_ANCHOR_NAMESPACES,
@@ -1558,7 +1558,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 const authoringShapeAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authored-honesty-shape"),
-  label: "refuses delivery facts smuggled through authored section carriers",
+  label: "refuses derived properties smuggled through authored section carriers",
   satisfies: ref("spec:validation.authored-honesty"),
   component: componentAnchorId("component:protocol.validate"),
   role: "validator",
@@ -1566,15 +1566,19 @@ const authoringShapeAnchor = codeAnchor({
 void authoringShapeAnchor;
 
 function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
-  const appendSmuggledFact = (factName: string, path: string): void => {
+  const appendSmuggledFact = (name: string, path: string): void => {
+    const factName = deliveryFactName(name);
     findings.push(
       createFinding({
         validatorId: graphValidatorIds.authoringShape,
         family: "honesty",
         severity: "error",
-        message: `"${node.id}" hand-authors the derived delivery fact "${factName}" at "${path}" — delivery facts are derived, never authored.`,
+        message:
+          factName === undefined
+            ? `"${node.id}" hand-authors the derived property "${name}" at "${path}" — graph truth is derived, never authored.`
+            : `"${node.id}" hand-authors the derived delivery fact "${factName}" at "${path}" — delivery facts are derived, never authored.`,
         subjectId: node.id,
-        relatedId: factName,
+        relatedId: factName ?? name,
         path,
         file: node.file,
       }),
@@ -1586,13 +1590,8 @@ function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
       return;
     }
 
-    for (const spelling of deliveryFactSpellings) {
-      if (spelling in carrier) {
-        appendSmuggledFact(
-          spelling === "hasVerifier" ? "has-verifier" : spelling,
-          `${basePath}.${spelling}`,
-        );
-      }
+    for (const name of Object.keys(carrier)) {
+      if (isReservedDerivedProperty(name)) appendSmuggledFact(name, `${basePath}.${name}`);
     }
   };
 

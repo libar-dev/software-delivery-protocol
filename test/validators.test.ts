@@ -825,6 +825,57 @@ describe("graph validators", () => {
     },
   );
 
+  it.each([
+    "intent",
+    "behavior",
+    "constraints",
+    "model",
+    "decision",
+    "verification",
+    "design",
+    "ui",
+  ])(
+    "refuses reserved properties on foreign graph %s carriers and preserves nested content",
+    (section) => {
+      const names = [
+        "deliveryFacts",
+        "claim",
+        "nodeType",
+        "specKind",
+        "satisfies",
+        "verifies",
+        "belongsTo",
+        "models",
+        "IMPLEMENTED",
+        "hasverifier",
+        "HasVerifier",
+        "HAS-VERIFIER",
+        "Observed",
+      ];
+      const carrier = Object.fromEntries(names.map((name) => [name, ["implemented"]]));
+      const check = (record: Record<string, unknown>) =>
+        validateGraph(
+          syntheticGraph(
+            [
+              {
+                ...ideaPrimitive("spec:probe.reserved", "Keep facts derived."),
+                sections: { [section]: section === "constraints" ? [record] : record },
+              },
+            ],
+            [],
+          ),
+        ).findings.filter((f) => f.validatorId === graphValidatorIds.authoringShape);
+      expect(
+        check(carrier)
+          .map((f) => f.path)
+          .sort(),
+      ).toEqual(
+        names.map((name) => `${section}${section === "constraints" ? "[0]" : ""}.${name}`).sort(),
+      );
+      expect(check({ terms: carrier, has_verifier: true, delivery_facts: true })).toEqual([]);
+    },
+  );
+
   it("fails closed on unratified descriptor values — a conformance error, never a crash or a silent floor skip", () => {
     const bogusKind = {
       ...ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order."),

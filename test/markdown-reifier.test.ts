@@ -1145,6 +1145,45 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
   });
 
   it.each([
+    "implemented",
+    "IMPLEMENTED",
+    "hasverifier",
+    "HasVerifier",
+    "HAS-VERIFIER",
+    "Observed",
+    "deliveryFacts",
+  ])(
+    "refuses reserved delivery properties in Markdown envelopes and keyed sections: %s",
+    (name) => {
+      for (const owner of [
+        "Intent",
+        "Behavior",
+        "Rule",
+        "Workflow",
+        "Contract",
+        "Constraints",
+        "Decision",
+        "Design",
+        "UI",
+        "Verification — manual",
+      ]) {
+        const result = reify(carrierBody(`# Title\n## ${owner}\n- ${name}: yes`));
+        expect(result.specs).toEqual([]);
+        expect(result.findings.some((f) => f.severity === "error")).toBe(true);
+      }
+      for (const source of [
+        validFrontmatter.replace("relations: {}", `relations: {}\n${name}: yes`),
+        `---\nid: pack:probe.reserved\nspecs: []\n${name}: yes\n---\n# Pack`,
+      ]) {
+        const result = reifyMarkdownCarrier(source, "reserved.sdp.md");
+        expect(result.findings).toContainEqual(
+          expect.objectContaining({ validatorId: "extract/reserved-property", severity: "error" }),
+        );
+      }
+    },
+  );
+
+  it.each([
     [
       "frontmatter title",
       validFrontmatter.replace("relations: {}\n---", "relations: {}\ntitle: forbidden\n---"),

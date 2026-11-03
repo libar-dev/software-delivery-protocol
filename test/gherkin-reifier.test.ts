@@ -222,6 +222,7 @@ Feature: Complete carrier
       "implemented",
       "has-verifier",
       "hasVerifier",
+      "deliveryFacts",
       "observed",
       "claim",
       "status",
@@ -240,6 +241,8 @@ Feature: Complete carrier
   });
 
   it.each([
+    "@has_verifier",
+    "@delivery_facts",
     "@wip",
     "@smoke",
     "@implementedness",

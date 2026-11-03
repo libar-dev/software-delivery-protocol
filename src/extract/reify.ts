@@ -9,7 +9,7 @@ import type {
   SourceFile,
 } from "ts-morph";
 
-import { deliveryFactSpellings } from "../graph/delivery-fact-spellings.js";
+import { isReservedDerivedProperty } from "../graph/delivery-fact-spellings.js";
 import { CODE_ANCHOR_NAMESPACES, codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import type { IdParts } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
@@ -98,26 +98,6 @@ const SPEC_KIND_VALUES = new Set<string>(SPEC_KINDS);
 const SPEC_ALTITUDE_VALUES = new Set<string>(SPEC_ALTITUDES);
 const SPEC_READINESS_VALUES = new Set<string>(SPEC_READINESS);
 const SPEC_SECTION_NAME_SET = new Set<string>(SPEC_SECTION_NAMES);
-
-/**
- * Derived graph vocabulary an authored carrier must never state: the delivery facts plus the
- * graph's own node and edge fields. Hand-authoring one impersonates machine truth, so it is an
- * envelope-tier hard error — the extraction-layer twin of authoring-shape honesty
- * (`spec:validation.authored-honesty`) on the top-level authored shape, exactly as raw `relations[]` entries and foreign
- * anchor fields are on theirs. In-section content stays the honesty checks' jurisdiction: it
- * reifies through and the `honesty/authoring-shape` validator sees it in the model.
- */
-const RESERVED_DERIVED_PROPERTIES = new Set<string>([
-  ...deliveryFactSpellings,
-  "deliveryFacts",
-  "claim",
-  "nodeType",
-  "specKind",
-  "satisfies",
-  "verifies",
-  "belongsTo",
-  "models",
-]);
 
 export interface ReifiedEntryLine {
   readonly entry: string;
@@ -811,6 +791,8 @@ const RECOGNIZED_SECTION_PROPERTIES: ReadonlyMap<string, ReadonlySet<string>> = 
   ],
   ["verification", new Set(["description", "mode", "criteria"])],
 ]);
+/** Reserved carrier keys survive sanitization for honesty/authoring-shape to refuse.
+ * Nested content is not a carrier key; envelope keys are refused during extraction. */
 const AUTHORING_SHAPE_PATHS = new Set([
   "intent",
   "behavior",
@@ -1016,7 +998,7 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
     if (
       recognizedNames !== undefined &&
       !recognizedNames.has(name) &&
-      !(AUTHORING_SHAPE_PATHS.has(shapePath) && RESERVED_DERIVED_PROPERTIES.has(name))
+      !(AUTHORING_SHAPE_PATHS.has(shapePath) && isReservedDerivedProperty(name))
     ) {
       issues.push({
         kind: "unrecognized",
@@ -1747,7 +1729,7 @@ function reifySpecCall(
       continue;
     }
 
-    if (RESERVED_DERIVED_PROPERTIES.has(name)) {
+    if (isReservedDerivedProperty(name)) {
       findings.push(
         createExtractFinding(
           extractFindingIds.reservedProperty,
@@ -2066,7 +2048,7 @@ function reifyPackCall(
       continue;
     }
 
-    if (RESERVED_DERIVED_PROPERTIES.has(name)) {
+    if (isReservedDerivedProperty(name)) {
       findings.push(
         createExtractFinding(
           extractFindingIds.reservedProperty,

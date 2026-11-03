@@ -14,7 +14,7 @@ relations:
 - outcome: Keep derived graph truth trustworthy by rejecting any authored substitute for a derived edge or delivery fact.
 
 ## Rule
-- Specs and Packs author no derived edge or delivery fact.
+- [#reservedProperties] Specs and Packs author no derived edge or delivery fact. Carrier-level properties reserve `implemented`, `has-verifier`, `hasVerifier`, `observed` and `deliveryFacts`, compared case-insensitively, and `claim`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo` and `models`. Underscore forms are not delivery-fact names. Nested content may name these concepts without authoring graph truth.
 - A Primitive node's `deliveryFacts` equals the facts the one derivation recomputes from the graph.
 
 ## Example space

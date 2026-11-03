@@ -327,6 +327,93 @@ export const carrier = spec({
     },
   );
 
+  it.each(
+    [
+      "intent",
+      "behavior",
+      "constraints",
+      "model",
+      "decision",
+      "verification",
+      "design",
+      "ui",
+    ].flatMap((section) =>
+      [
+        "deliveryFacts",
+        "claim",
+        "nodeType",
+        "specKind",
+        "satisfies",
+        "verifies",
+        "belongsTo",
+        "models",
+        "IMPLEMENTED",
+        "hasverifier",
+        "HasVerifier",
+        "HAS-VERIFIER",
+        "Observed",
+      ].map((name) => [section, name] as const),
+    ),
+  )("refuses reserved derived property %s.%s (C-g-1, S-C-2, S-C-8)", (section, name) => {
+    for (const value of [
+      '"implemented, has-verifier, observed"',
+      '["implemented", "has-verifier", "observed"]',
+    ]) {
+      const record = `{ "${name}": ${value} }`;
+      const reified = reifyTypeScriptCarrier(
+        `
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:probe.reserved"), title: "Derived properties",
+  kind: "behavior", altitude: "story", readiness: "idea",
+  ${section}: ${section === "constraints" ? `[${record}]` : record},
+});`,
+        "reserved.sdp.ts",
+      );
+      expect(reified.findings).toEqual([]);
+      const findings = validateGraph(deriveGraph(reified.specs, reified.packs, [])).findings;
+      expect(findings, `${section}.${name}`).toContainEqual(
+        expect.objectContaining({
+          validatorId: graphValidatorIds.authoringShape,
+          severity: "error",
+          path: `${section}${section === "constraints" ? "[0]" : ""}.${name}`,
+        }),
+      );
+    }
+  });
+
+  it.each(["spec", "pack"])(
+    "refuses case-folded delivery facts on the TS %s envelope",
+    (builder) => {
+      for (const name of [
+        "IMPLEMENTED",
+        "hasverifier",
+        "HasVerifier",
+        "HAS-VERIFIER",
+        "Observed",
+        "deliveryFacts",
+      ]) {
+        const result = reifyTypeScriptCarrier(
+          `
+import { spec, specId, pack, packId } from "@libar-dev/software-delivery-protocol";
+export const carrier = ${builder}({
+  id: ${builder}Id("${builder}:probe.reserved"), title: "Derived properties",
+  ${builder === "spec" ? 'kind: "behavior", altitude: "story", readiness: "idea",' : "specs: [],"}
+  "${name}": true,
+});`,
+          "reserved.sdp.ts",
+        );
+        expect(result.findings).toContainEqual(
+          expect.objectContaining({
+            validatorId: extractFindingIds.reservedProperty,
+            severity: "error",
+            path: name,
+          }),
+        );
+      }
+    },
+  );
+
   it("unrecognized in-section property: warns before canonical serialization drops it", () => {
     const reified = reifyTypeScriptCarrier(
       `import { spec, specId } from "@libar-dev/software-delivery-protocol";
