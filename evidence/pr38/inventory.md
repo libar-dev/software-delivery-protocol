@@ -208,3 +208,23 @@ concept-document drift to fix as the documents dissolve. The owner's acceptance 
 only in PR #36's description (L12-01) until proposal changes 4 to 7 land. Before any record is
 removed, the owner reviews this inventory, the cleanup arc opens with it in its first commit, the
 durable items land in their homes, and the four live dependencies are moved or retired.
+
+## The owner's rulings on this inventory
+
+The owner accepted this inventory as the answer to
+`spec:protocol.delivery-record-cleanup#question.durableContent`. The cleanup arc lands it in its
+first commit and closes the question there. The rows are ruled as follows:
+
+| Rows                                       | Ruling                                                                                                                                                                                              |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1, R5, R7, R9, R11, L8-01, L8-02          | Take the proposed homes.                                                                                                                                                                            |
+| R4, the TypeScript carrier's grammar       | A new `spec:carrier.typescript-authoring`. The authoring session states its rung honestly.                                                                                                          |
+| R2, field evidence from the earlier system | The cleanup pull request's record, never a Spec: a count inside a Spec is on the durable refused list. At most a number-free rationale sentence on `spec:decisions.point-per-example`.              |
+| Live dependencies                          | `docs/concept/DECISIONS.md` stays. The plan-reading gate checks retire with the folders (`spec:protocol.roadmap-replaces-plans#rule.gateRecord`). `measure.mjs` moves beside the test that runs it. |
+| L12-01, L12-02                             | Carried by the proposal and the captures that PR #39 applies.                                                                                                                                       |
+
+Still open, on purpose, and settled in the cleanup arc or later:
+
+- R6's re-entry conditions, or dropping R6;
+- R8's home, which depends on whether the cleanup dissolves `docs/concept/06`;
+- the new location of the plan-46 prototypes under `reviews/assets/`, which two Specs cite.
