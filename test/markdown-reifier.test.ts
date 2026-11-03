@@ -1098,6 +1098,43 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
   });
 
   it.each([
+    "> quote",
+    "| table",
+    "* nested",
+    "+ nested",
+    "- nested",
+    "- - x",
+    "-",
+    "*",
+    "+",
+    "1.",
+    "1)",
+    "1. numbered",
+    "1) numbered",
+    "---",
+    "***",
+    "___",
+    "===",
+    "<unclosed",
+  ])("refuses block shapes in list text: %s", (text) => {
+    const result = reify(carrierBody(`# Title\n## Rule\n- ${text}`, "rule"));
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toMatchObject([
+      {
+        validatorId: "extract/invalid-markdown-structure",
+        severity: "error",
+        line: 10,
+        message: "nested or unsupported Markdown structure",
+      },
+    ]);
+
+    const quoted = reify(carrierBody(`# Title\n## Rule\n- \`${text}\``, "rule"));
+    expect(quoted.findings).toEqual([]);
+    expect(quoted.specs).toHaveLength(1);
+  });
+
+  it.each([
     [
       "frontmatter title",
       validFrontmatter.replace("relations: {}\n---", "relations: {}\ntitle: forbidden\n---"),

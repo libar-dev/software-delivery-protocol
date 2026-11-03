@@ -1,6 +1,7 @@
 import { resolveEntryAddress } from "../graph/entry-address.js";
 import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel, ownsExampleSpace } from "../graph/oracle-bindings.js";
+import { deliveryFactSpellings } from "../graph/delivery-fact-spellings.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
 import {
   CODE_ANCHOR_NAMESPACES,
@@ -1583,9 +1584,12 @@ function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
       return;
     }
 
-    for (const factName of deliveryFactNames) {
-      if (factName in carrier) {
-        appendSmuggledFact(factName, `${basePath}.${factName}`);
+    for (const spelling of deliveryFactSpellings) {
+      if (spelling in carrier) {
+        appendSmuggledFact(
+          spelling === "hasVerifier" ? "has-verifier" : spelling,
+          `${basePath}.${spelling}`,
+        );
       }
     }
   };

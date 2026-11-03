@@ -295,6 +295,38 @@ describe("extraction corpora", () => {
     expect(JSON.stringify(node)).not.toContain("behaviour");
   });
 
+  it.each(["design", "behavior"])(
+    "reports every reserved delivery-fact spelling reified through %s",
+    (section) => {
+      for (const spelling of ["implemented", "has-verifier", "hasVerifier", "observed"]) {
+        const reified = reifyTypeScriptCarrier(
+          `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:probe.authored-fact"),
+  title: "Keep facts derived",
+  kind: "behavior", altitude: "story", readiness: "idea",
+  intent: { outcome: "Keep facts derived." },
+  ${section}: { "${spelling}": "yes" },
+});`,
+          "authored-fact.sdp.ts",
+        );
+        expect(reified.findings).toEqual([]);
+        const graph = deriveGraph(reified.specs, reified.packs, []);
+        expect(
+          validateGraph(graph).findings.filter(
+            (finding) => finding.validatorId === graphValidatorIds.authoringShape,
+          ),
+        ).toMatchObject([
+          {
+            severity: "error",
+            relatedId: spelling === "hasVerifier" ? "has-verifier" : spelling,
+            path: `${section}.${spelling}`,
+          },
+        ]);
+      }
+    },
+  );
+
   it("unrecognized in-section property: warns before canonical serialization drops it", () => {
     const reified = reifyTypeScriptCarrier(
       `import { spec, specId } from "@libar-dev/software-delivery-protocol";

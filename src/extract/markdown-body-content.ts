@@ -258,6 +258,14 @@ export function parseSectionContent(
       const text = line.text.slice(2);
       if (text.trim().length === 0 || /^[\t ]/u.test(text))
         addMarkdownFinding(findings, bodyFinding(file, line.line, "list text must not be empty"));
+      else if (
+        isUnsupportedCommonMarkBlock(text) ||
+        /^(?:(?:[-*+]|\d+[.)])(?:[\t ]|$)|[|>])/u.test(text)
+      )
+        addMarkdownFinding(
+          findings,
+          bodyFinding(file, line.line, "nested or unsupported Markdown structure"),
+        );
       else items.push({ text, line: line.line, afterH3: h3 !== undefined, fields: [] });
       continue;
     }

@@ -1,3 +1,4 @@
+import { deliveryFactSpellings } from "../graph/delivery-fact-spellings.js";
 import { normalizeAuthoring, entryKeyPattern } from "./authoring-normalization.js";
 import { generateMessages } from "@cucumber/gherkin";
 import {
@@ -372,17 +373,14 @@ function tagHead(tagName: string): string {
   return dot === -1 ? body : body.slice(0, dot);
 }
 
+const deliveryFactTagPattern = new RegExp(`^@(${deliveryFactSpellings.join("|")})(?=$|[.-])`, "iu");
+
 function authoredFactReason(name: string): string | undefined {
-  const head =
-    /^@(implemented|has-verifier|hasVerifier|observed|claim|status|lifecycle|workflow|architect)(?=$|[.-])/iu
-      .exec(name)?.[1]
-      ?.toLowerCase();
+  if (deliveryFactTagPattern.test(name)) return "delivery-fact lookalike";
+  const head = /^@(claim|status|lifecycle|workflow|architect)(?=$|[.-])/iu
+    .exec(name)?.[1]
+    ?.toLowerCase();
   switch (head) {
-    case "implemented":
-    case "has-verifier":
-    case "hasverifier":
-    case "observed":
-      return "delivery-fact lookalike";
     case "claim":
       return "authored claim lookalike";
     case "status":
