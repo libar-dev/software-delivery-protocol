@@ -834,7 +834,8 @@ textarea:focus-visible {
   gap: 0.75rem;
 }
 .intent-actions h3,
-.intent-actions ul {
+.intent-actions ul,
+.intent-actions details {
   flex-basis: 100%;
 }
 dialog {
