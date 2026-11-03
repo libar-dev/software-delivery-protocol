@@ -797,6 +797,7 @@ export const carrierSpecs = [
           'A group holding one double-quoted literal, `{x: "only"}`, is a binding; in a vocabulary it declares no type, no one-value dimension, and contract generation reports `contracts/untyped-vocabulary-slot`.',
           "A bare group, `{n}`, names a slot and binds nothing; in an example it is unbound, and in a vocabulary it declares no type.",
           "Lexical degradation stays local: a stray or unterminated brace group is prose only up to the next candidate, so it never swallows a well-formed binding that follows it.",
+          "The slot name `kind` is reserved in every Then step, both in an example-space vocabulary and in a structured example. Graph validation reports `conformance/reserved-then-slot` at error severity, naming the reserved word. Given and When slots may still be named `kind`.",
         ],
         ruleKeys: {
           slotName: "rules[0]",
@@ -806,6 +807,7 @@ export const carrierSpecs = [
           oneLiteralBinding: "rules[4]",
           bareGroup: "rules[5]",
           localDegradation: "rules[6]",
+          reservedThenSlot: "rules[7]",
         },
         exampleSpace: {
           given: ["the step text {stepText:string}"],

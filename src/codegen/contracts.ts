@@ -12,6 +12,7 @@ import {
   pointEntryOf,
   isCompleteEntry,
   decodeExampleSpaces,
+  reservedThenSlotsOf,
 } from "../notation/example-space.js";
 import type {
   StepPhase,
@@ -714,7 +715,24 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
   );
   const decoded = decodeExampleSpaces(graph);
   const spacesByParent = decoded.spaces;
-  const withheldSpaces = decoded.withheldSpaces;
+  const withheldSpaces = new Set(decoded.withheldSpaces);
+  const withheldExamples = new Set<string>();
+  for (const id of sortedIds) {
+    const node = primitives.get(id);
+    if (node === undefined) continue;
+    for (const { text, path } of reservedThenSlotsOf(node)) {
+      const isSpace = path.startsWith("behavior.exampleSpace.");
+      (isSpace ? withheldSpaces : withheldExamples).add(id);
+      findings.push(
+        contractsFinding(
+          contractsFindingIds.reservedThenSlot,
+          `Then slot "kind" is reserved for the Outcome discriminant in step "${text}"; ${isSpace ? "space" : "step"} contract withheld`,
+          node,
+          path,
+        ),
+      );
+    }
+  }
   findings.push(...decoded.findings);
   const boundPoints = new Map<string, ExamplePointModel>();
   const files = new Map<string, string>();
@@ -729,7 +747,7 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
   for (const id of sortedIds) {
     const node = primitives.get(id);
 
-    if (node?.specKind !== "example") {
+    if (node?.specKind !== "example" || withheldExamples.has(id)) {
       continue;
     }
 

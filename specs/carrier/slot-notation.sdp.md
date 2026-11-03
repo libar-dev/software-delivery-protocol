@@ -21,6 +21,7 @@ A closed union takes two or more literals because a dimension with one value var
 - [#oneLiteralBinding] A group holding one double-quoted literal, `{x: "only"}`, is a binding; in a vocabulary it declares no type, no one-value dimension, and contract generation reports `contracts/untyped-vocabulary-slot`.
 - [#bareGroup] A bare group, `{n}`, names a slot and binds nothing; in an example it is unbound, and in a vocabulary it declares no type.
 - [#localDegradation] Lexical degradation stays local: a stray or unterminated brace group is prose only up to the next candidate, so it never swallows a well-formed binding that follows it.
+- [#reservedThenSlot] The slot name `kind` is reserved in every Then step, both in an example-space vocabulary and in a structured example. Graph validation reports `conformance/reserved-then-slot` at error severity, naming the reserved word. Given and When slots may still be named `kind`.
 
 ## Example space
 A bound value cannot hold a double quote, so a point writes each double quote its step text needs as a single quote, and the world restores them before it parses. The world also runs contract generation over a parent whose example space holds the restored step text as its one Given step; the generation finding is `nothing` when generation reports none.

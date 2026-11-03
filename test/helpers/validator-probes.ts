@@ -191,6 +191,31 @@ const graphPairs: ProbeEntry[] = [
     graph([subject, target], [relation("verifies", target.id, { exercises: ["known"] })]),
   ),
   graphPair(
+    graphValidatorIds.reservedThenSlot,
+    graph([
+      primitive(subject.id, {
+        sections: {
+          ...subject.sections,
+          behavior: {
+            ...subject.sections?.behavior,
+            exampleSpace: { then: ["result {kind:string}"] },
+          },
+        },
+      }),
+    ]),
+    graph([
+      primitive(subject.id, {
+        sections: {
+          ...subject.sections,
+          behavior: {
+            ...subject.sections?.behavior,
+            exampleSpace: { then: ["result {kinds:string}"] },
+          },
+        },
+      }),
+    ]),
+  ),
+  graphPair(
     graphValidatorIds.authoringShape,
     { graph: authoringShape },
     {
