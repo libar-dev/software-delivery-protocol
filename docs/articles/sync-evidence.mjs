@@ -24,7 +24,7 @@ export function summarizeValidation(output) {
   if (!summary) {
     throw new Error("Could not read the self-hosting validation summary.");
   }
-  // AGENTS.md documents exactly these intentional self-hosting warning rules.
+  // Recognize both diagnostic rules; baselineMetrics checks which are expected at the pin.
   const counts = new Map([
     ["honesty/gaps", 0],
     ["conformance/prose-mentions", 0],
@@ -192,6 +192,14 @@ function main() {
   function baselineMetrics() {
     const census = selfHostingCensus();
     const validation = runCli(["validate", ".", ...exclusions]);
+    const warningRules = query(`return [...new Set(report.findings
+      .filter((finding) => finding.severity === "warning")
+      .map((finding) => finding.validatorId))]`);
+    for (const rule of warningRules) {
+      if (rule !== "honesty/gaps") {
+        throw new Error(`Unexpected self-hosting warning rule: ${rule}`);
+      }
+    }
     const validationSummary = summarizeValidation(validation);
     const skills = readdirSync(path.join(sourceRoot, ".agents/skills"), {
       withFileTypes: true,

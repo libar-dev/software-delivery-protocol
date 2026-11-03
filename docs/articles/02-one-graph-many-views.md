@@ -2,11 +2,11 @@
 
 *Part 2 in a series introducing the Libar Software Delivery Protocol. Links are pinned to one commit; see the footer.*
 
-A product manager opens a pull-request preview on a phone. The design under review has no implementation yet. They read the Pack's framing, inspect a blocking question, and open the Spec that carries it. A dependency points to an existing component, so they follow it to see what the new design would touch. A base graph shows what changed since the last review. They want a different example and a clearer constraint, so they gather both requests as scoped intent and hand the resulting proposal to an agent.
+A product manager opens a pull-request preview on a phone. The design under review has no implementation yet. They read the Pack's framing, inspect a blocking question, and open the Spec that carries it. A dependency points to an existing component, so they follow it to see what the new design would touch. A base graph shows what changed in the design against the pull request's base commit. They want a different example and a clearer constraint, so they gather both requests as scoped intent and hand the resulting proposal to an agent.
 
 The agent edits the carriers. Git records the change. The conformance and honesty checks run. A new graph produces a new page set.
 
-Nothing in that workflow requires the interface to be a database, an editor, or the one canonical way of reading a design. The interface is a projection. We can replace it without replacing the truth it presents.
+Nothing in that workflow requires the interface to be a database, an editor, or the one canonical way of reading a design. The interface is a projection. We can replace the Studio interface under its carrying Specs without replacing the truth it presents.
 
 That freedom is the subject of this article.
 
@@ -73,7 +73,7 @@ A flexible interface still has obligations to the model. The important ones are 
 
 **Readiness and realization are independent.** An author states readiness. The graph derives the highest structural floor reached and the delivery facts. A useful review page lets a person see all three without turning them into a single progress score.
 
-**Absence needs words.** `coverage-unknown`, a missing verifier and an evidence lens with no tracked observations say different things. An empty panel with no explanation forces the reader to guess which absence the system means.
+**Absence needs words.** An example-space value no example binds, a slot whose coverage is not measurable, a missing verifier and an evidence lens with no tracked observations say different things. `coverage-unknown` names a separate file-impact blind spot: a changed file the graph records nothing at. An empty panel with no explanation forces the reader to guess which absence the system means.
 
 **A drawing needs a text equivalent.** Studio diagrams retain words that state every box and edge. When a drawing exceeds its bound, it folds and the text remains. This is an accessibility rule and an honesty rule: visual compression must not remove meaning.
 
@@ -97,6 +97,7 @@ The fixed ground:
 
 - The repository is canonical and the graph is the sole read model.
 - A projection is disposable and regenerable. No interface state becomes delivery truth.
+- The [shipped-projections decision](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/decisions/shipped-projections-frozen.sdp.md) (MD-32) freezes Design Review, census, Mermaid and Gherkin. Reshaping one needs a refining or superseding decision. The Studio can evolve under its own Specs.
 - Claims, stated readiness, derived readiness and delivery facts stay distinct.
 - Outside inputs and their commits stay named wherever they appear.
 - Unknowns and missing evidence remain visible.
@@ -107,18 +108,20 @@ The fixed ground:
 The open design space:
 
 - Navigation, page structure, visual hierarchy, typography and interaction patterns.
-- Which projections deserve to survive, merge or disappear.
+- Which Studio pages deserve to survive, merge or disappear.
 - How a person moves between a Pack overview, one Spec, an entry and its source.
 - How desktop and phone review differ.
 - How much information belongs in the first reading and what belongs behind disclosure.
 - How a future AI assistant can steer a reading without obscuring its basis.
+
+Start from the Studio's [manual acceptance tasks](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/spec-studio.sdp.md#verification--manual) and test prototypes against them. These are specified acceptance criteria, not evidence that a person has completed them.
 
 The first design pass should answer these questions with prototypes:
 
 1. What can a reviewer accomplish from a stamped link without opening the repository?
 2. What is the fastest route from "what changed?" to "is this design ready?" for one Pack?
 3. How should a reader distinguish intent, code bindings, inferred structure and supplied run evidence without learning the implementation schema first?
-4. How do missing verification, missing observations and unknown coverage look different?
+4. How do missing verification, missing observations, unmeasurable slot coverage and example-space values with no example look different?
 5. When is a diagram better than prose, and how does its text equivalent read on a phone?
 6. How does a person gather several related requests and understand exactly what will be handed to an agent?
 7. Which current pages solve real review jobs, and which only expose data because it is available?

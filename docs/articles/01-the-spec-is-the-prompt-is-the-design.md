@@ -149,13 +149,13 @@ It is not an embedded permissions system. Approval belongs in git and CI.
 
 It does not infer intent. Mechanical structure can assist curation, but a person authors intent and bindings.
 
-It does not replace every adjacent tool. It links to issue trackers, design tools, API formats and evidence systems.
+The aim is to connect adjacent tools rather than replace them. Today the Studio reads supplied CTRF test reports as run evidence. An interface and API reference remains an [idea-stage capture](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/reference-projection.sdp.md). Dedicated integrations with issue trackers and design tools are not designed yet; generic Design and UI prose can mention them without providing that experience.
 
 At the pinned commit, installation is from a reviewed git commit rather than an npm release. The package version is `0.0.0`; `sdp --version` names the build commit.
 
 ## Try it
 
-With Node 20 or later:
+For this source checkout, use Node `^20.19.0 || >=22.12.0`, the installed test toolchain's declared requirement. The installed CLI separately declares Node `>=20`:
 
 ```sh
 git clone https://github.com/libar-dev/software-delivery-protocol.git

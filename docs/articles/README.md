@@ -15,7 +15,7 @@ The series has to carry four consequences, not just the engine behind them:
 
 1. **One Spec, enriched in place.** Eight kinds, three altitudes and four stated readiness rungs cover delivery intent without migrating an idea through artifact types.
 2. **Authored intent and derived facts stay separate.** `declared`, `anchored` and `inferred` claims are never collapsed. `implemented` and `has-verifier` are derived from bindings; `observed` remains deferred.
-3. **Projections are cheap to replace.** Markdown, Mermaid, Gherkin, HTML, CLI answers and generated notes are readings, not competing stores. The current Studio is working material for UX learning, not a finished interface.
+3. **Projections are regenerable readings.** Markdown, Mermaid, Gherkin, HTML, CLI answers and generated notes are readings, not competing stores. Reshaping Design Review, census, Mermaid or Gherkin requires a decision that refines or supersedes the [shipped-projections decision](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/decisions/shipped-projections-frozen.sdp.md) (MD-32). The Studio can evolve under its own Specs and remains working material for UX learning.
 4. **AI has explicit trust boundaries.** Agents already read the graph and apply scoped intent. AI-assisted presentation is a future direction that must preserve those boundaries and address non-determinism honestly.
 
 The pre-code seed design in [`docs/lineage/v0-design/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design) is primary context for the product experience. It is historical evidence, not current law. Current Specs decide what is built and ratified.
@@ -143,6 +143,8 @@ For any corpus fact, query the graph before reading a carrier. The source list i
 A refresh measures both numbers and qualitative claims. A design diff alone cannot tell you that the series now describes an old Studio phase or misses a new recipe parameter.
 
 ### Step 1: Install and build
+
+Use Node `^20.19.0 || >=22.12.0` for the installed test toolchain. This source-development requirement is separate from the CLI's declared Node `>=20` runtime floor.
 
 ```sh
 npm ci

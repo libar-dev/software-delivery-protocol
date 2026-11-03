@@ -8,7 +8,7 @@ This article follows the engineering loop in a text editor and a terminal. We wi
 
 ## Setup
 
-Every command runs from a checkout at the pinned commit:
+Every command runs from a checkout at the pinned commit. Use Node `^20.19.0 || >=22.12.0` for the installed test toolchain:
 
 ```sh
 git clone https://github.com/libar-dev/software-delivery-protocol.git

@@ -11,8 +11,8 @@ the Protocol, its human review experience and its AI direction. They are develop
 [PR #34](https://github.com/libar-dev/software-delivery-protocol/pull/34).
 
 Start with [the spec is the prompt is the design](docs/articles/01-the-spec-is-the-prompt-is-the-design.md),
-then read [one graph, many views](docs/articles/02-one-graph-many-views.md) to see why HTML,
-Markdown, Mermaid and other projections can change without becoming competing sources of truth.
+then read [one graph, many views](docs/articles/02-one-graph-many-views.md) for the projection
+family and the decision boundaries around changing it.
 The [hands-on walkthrough](docs/articles/03-walkthrough-intent-to-verified-code.md) follows intent
 into verified code. [The agent-surface article](docs/articles/04-stop-building-verb-walls-for-coding-agents.md)
 explains `sdp q`, and [the AI direction](docs/articles/05-ai-can-shape-the-reading.md) separates

@@ -71,7 +71,7 @@ The next useful step is not a button that generates an entire dashboard. It is a
 
 The first UX/UI design pass can explore these questions without committing the product to AI-rendered pages. The deterministic Studio remains a baseline and a fallback.
 
-The strategic value is flexibility. A strong graph and an explicit edit model let us replace weak projections, test specialized ones and add AI assistance where it proves useful. The interface can keep changing. The record does not change with it.
+The strategic value is flexibility within explicit contracts. We can test additional readings and explore AI assistance while preserving the current deterministic surfaces. Reshaping Design Review, census, Mermaid or Gherkin requires a decision that refines or supersedes the [shipped-projections decision](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/decisions/shipped-projections-frozen.sdp.md) (MD-32); Studio changes follow its own carrying Specs. The interface can keep changing. The record does not change with it.
 
 ## Up next
 
