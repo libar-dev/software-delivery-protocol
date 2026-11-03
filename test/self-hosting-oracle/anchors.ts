@@ -21,6 +21,12 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.spec-scaffolder",
+    nodeType: "Anchor",
+    file: "test/cli-new-spec.test.ts",
+    site: 'describe("sdp new spec",',
+  },
+  {
     id: "test:protocol.cli-write-boundaries",
     nodeType: "Anchor",
     file: "test/cli-write-boundaries.test.ts",
@@ -4838,6 +4844,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["test:protocol.spec-scaffolder", "verifies", "spec:consumers.authoring-on-ramp"],
   ["test:protocol.cli-write-boundaries", "verifies", "spec:extraction.build-pipeline"],
   ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.projections-model"],
   ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.wholesale-view-rewrite"],
@@ -6838,6 +6845,7 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "test:protocol.spec-scaffolder",
   "test:protocol.cli-write-boundaries",
   "impl:protocol.studio-capabilities-page",
   "impl:protocol.studio-capability-diagrams",

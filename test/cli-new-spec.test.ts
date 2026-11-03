@@ -124,6 +124,10 @@ function requiredFlags(
   ];
 }
 
+/**
+ * @sdpAnchor test:protocol.spec-scaffolder
+ * @sdpVerifies spec:consumers.authoring-on-ramp
+ */
 describe("sdp new spec", () => {
   it("leaves help to the command dispatcher and parses only scaffold arguments", () => {
     const capture = createCaptureOutput();
@@ -354,6 +358,7 @@ describe("sdp new spec", () => {
     }
   });
 
+  // spec:consumers.authoring-on-ramp#rule.scaffoldWriteBoundary
   it("rejects an existing parent symlink that escapes cwd before any outside write", () => {
     const workspace = mkdtempSync(join(tmpdir(), "sdp-new-spec-symlink-"));
     const outside = join(workspace, "outside");
@@ -427,6 +432,7 @@ describe("sdp new spec", () => {
     }
   });
 
+  // spec:consumers.authoring-on-ramp#rule.scaffoldWriteBoundary
   it("rechecks the created parent boundary after mkdir and refuses a swapped outside parent", () => {
     // process.cwd() resolves aliases such as macOS /var -> /private/var. Use the same
     // physical path so the injected swap runs on the directory the command creates.
@@ -477,7 +483,7 @@ describe("sdp new spec", () => {
     }
   });
 
-  it("holds the parent through the write so a post-check symlink swap cannot escape cwd", () => {
+  it("refuses a post-check parent relocation and removes the scaffold from the held directory", () => {
     const workspace = mkdtempSync(join(tmpdir(), "sdp-new-spec-writeswap-"));
     const outside = join(workspace, "outside");
     const root = join(workspace, "root");
@@ -590,6 +596,7 @@ describe("sdp new spec", () => {
   });
 });
 
+// spec:consumers.authoring-on-ramp#rule.scaffoldWriteBoundary
 it("creates missing parents through the held directory when its path is swapped before mkdir", () => {
   const original = process.cwd();
   const workspace = mkdtempSync(join(tmpdir(), "sdp-new-parent-swap-"));

@@ -1112,6 +1112,7 @@ export const consumersSpecs = [
         rules: [
           "An author starts from the build-backlog and drift-alarm recipes, reads carrying Specs for law, and edits the canonical carrier.",
           "Cheap capture starts with `sdp new spec` (or the equivalent hand-authored idea carrier) in the family found through concept search; the scaffolder emits envelope, Intent outcome, and the kind's bare typed heading, never invented content, and for `constraint` emits envelope, title, and Intent only with no twin section. Every later readiness edit is preceded by the promotion-preflight recipe and remains a human statement.",
+          "`sdp new spec` uses the original working directory as the boundary for parent creation and the scaffold write. It refuses an escaping or unresolvable parent with exit 1, before creating anything through a statically planted escaping link. It creates parents and the scaffold through held directories, rechecks containment before each creation and after entering each parent, and rechecks the scaffold's location before reporting success; a detected relocation removes the scaffold and refuses. This defends against planted links and detects intervening changes; Node has no openat-style operations, so re-verification does not provide race-free confinement against a concurrent writer inside the working directory.",
           "The skill teaches question keys and their optional fields through `spec:model.open-question-keys` and `spec:model.open-question-fields`, rule keys and an example's `exercises` through `spec:model.rule-keys`, and optional relation reasons through `spec:model.relation-reasons`.",
           "The skill teaches the least design two parties need to agree: keyed Design entries for shared names and shapes, code spans for pinned declarations, rule keys for outside citations, one prose owner for why, and no derived counts, delivery state or implementation sequence authored as design.",
           "The skill teaches design in rounds over a design slice: what each rung's design typically settles, that a detail only the builder reads and a question only the builder answers belong to the build, and how a reviewer reads the design columns beside each rung; no check reads this guidance.",
@@ -1125,7 +1126,7 @@ export const consumersSpecs = [
           "An anchor carries identity, an optional label, its flavor's targets and optional structure, never intent; a code anchor with neither `satisfies` nor `references` is identity-only and lawful. A Markdown deliverable binds through the document-realization convention: the suite asserting the shipped document carries the code anchor, and blast radius stays coverage-unknown for the Markdown file.",
           "Design Review supplies context for the human readiness statement without becoming a workflow gate.",
         ],
-        ruleKeys: { designRounds: "rules[4]" },
+        ruleKeys: { scaffoldWriteBoundary: "rules[2]", designRounds: "rules[5]" },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
