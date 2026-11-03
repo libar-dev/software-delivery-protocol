@@ -18,16 +18,11 @@ relations:
 
 The original design put test reports in the graph and used passing runs to mark verification. The Protocol keeps run verdicts in CI. A resolving verifier binding confers `has-verifier`; showing a recorded run beside that binding confers no delivery fact. Runtime observation against a measurable target is a separate concern carried by the runtime overlay.
 
-An adopter that keeps CI run reports needs to read them beside verifier bindings as a separately named input. Recipe 45 reads them, and the Studio admits them as one of its two named inputs. The view identifies each run by its own fields and its commit, and distinguishes evidence from a test file from a verdict for one anchored verifier. Test reporters write a test's file as an absolute path or a path from the directory they ran in, so the join reads a path's end as well as the whole path. The freshness question records what remains unsettled about comparing a run with the source being read.
+An adopter that keeps CI run reports needs to read them beside verifier bindings as a separately named input. Recipe 45 reads them, and the Studio admits them as one of its two named inputs. The view identifies each run by its own fields and its commit, and distinguishes evidence from a test file from a verdict for one anchored verifier. Test reporters write a test's file as an absolute path or a path from the directory they ran in, so the join reads a path's end as well as the whole path. Whether changes to bound files also make a run stale waits on the bound-file freshness capture, `spec:observation.run-evidence.bound-file-freshness`.
 
 ## Intent
 - problem: A reader who wants to know whether a bound verifier passed has to leave the Protocol's views for CI, and an adopter that keeps run records has no view that shows them beside the binding without mistaking them for a delivery fact.
 - outcome: Show a verifier's recorded runs beside its binding in a view, labelled as external input with its commit, while the graph keeps recording only that the binding exists.
-
-### Open questions
-- [non-blocking #freshness] How does a view say a run is stale: by its commit against the commit being read, or by whether the bound files changed between the two?
-  - decider: owner
-  - provisional: Display the run and source commit identifiers when they differ, as the differing-commit rule requires; whether freshness also follows changes to bound files remains open.
 
 ## Behavior
 - rule: [#graphUntouched] Run records are an input a view reads beside the graph, named by the caller; the graph never holds them, and no node, edge or delivery fact derives from them.

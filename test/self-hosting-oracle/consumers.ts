@@ -49,7 +49,7 @@ export const consumersSpecs = [
         catalogIndex:
           "the catalog opens with a table of every recipe, its number, name, parameters and a one-line use, before the contract; the build writes one file per body and none for the index.",
         wrapIdiom:
-          "to filter a shipped answer, the caller wraps the shipped body in an async arrow function that takes `params`, inside its own body, `const answer = await (async (params) => { <shipped body> })({ <the recipe's own parameters> });`, and returns a filtered value, so the caller's own parameters never reach the recipe as names it does not take; the catalog shows the shell form and states that the caller's part must hold no shell expansion.",
+          "to filter a shipped answer, the caller calls the recipe through the `recipes` binding with only the recipe's own parameters, `const answer = await recipes(<number>, { <the recipe's own parameters> });`, inside its own body, and returns a filtered value, so the caller's own parameters never reach the recipe as names it does not take and the shipped body is never inlined into the caller's; the catalog shows the shell form and states that the caller's part must hold no shell expansion.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -417,7 +417,8 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "`createReader` constructs a fresh thin typed loader that indexes graph joins and claims and computes delivery facts and validation findings once, derives readiness when a caller asks, and returns plain composable data without persisting state.",
-          "The reader exposes `graph`, the raw graph it reads, and the methods `specs`, `packs`, `findings`, `findByConcept`, `byFile`, `blastRadius`, `specContext` and `packContext`; a join is added only when a second machine consumer needs it and hand-rolled attempts get it wrong.",
+          "The reader exposes `graph`, the raw graph it reads, and the methods `specs`, `packs`, `findings`, `findByConcept`, `byFile`, `blastRadius`, `resolveEntryAddress`, `specContext` and `packContext`; a join is added only when a second machine consumer needs it and hand-rolled attempts get it wrong.",
+          "`resolveEntryAddress` resolves one entry address with the grammar and entry rules that prose validation and entry citations use, and returns `{ entry, resolves, reason }`: `entry` names the resolved entry, such as `rule[2]`, `question[0]` or `design.wrapIdiom`, or is null; `reason` is null when the address resolves and otherwise `malformed`, `spec`, `section` or `entry`; recipe 51 and the vault projection are its machine consumers.",
           "`findByConcept` matches ids, titles, anchor labels, Pack framing, Spec narrative, and reified section content, including model term keys, and names the fields a node matched on rather than returning a bare hit.",
           "`byFile` answers with the nodes the graph records at the path and with the Specs those nodes reach, so a source file carrying a binding names the Spec it binds and a carrier file names the Spec authored in it.",
           "`blastRadius` maps changed files to Specs and Packs authored at them and Specs reached through `satisfies`, `references`, `verifies` or a usable oracle `models` binding, plus their explicit one-hop at-risk neighbors; it reports every file the graph records nothing at as `coverageUnknown` and every changed code unit with no Spec linkage as `unlinked`, and neither list claims exhaustive coverage.",
@@ -450,10 +451,11 @@ export const consumersSpecs = [
           ],
         },
         ruleKeys: {
-          conceptEntry: "rules[2]",
-          fileEntry: "rules[3]",
-          blastRadius: "rules[4]",
-          reasonsAsData: "rules[5]",
+          entryAddressResolution: "rules[2]",
+          conceptEntry: "rules[3]",
+          fileEntry: "rules[4]",
+          blastRadius: "rules[5]",
+          reasonsAsData: "rules[6]",
         },
       },
     },
@@ -2580,7 +2582,7 @@ export const consumersSpecs = [
           "The engine decodes each Spec's example space into its typed slots, and each example child's steps into its bound point, once, through the notation module that writes the space contracts, and the reader carries both on the Spec context; no recipe or projection parses slot notation a second time.",
           "Slot-value coverage is a catalog recipe, recipe 44, over the decoded reader values, listing each literal-union value with the example children that bind it and each value no child binds.",
           "The recipe enumerates slots typed as closed unions of quoted literals. It reports every other slot type, a boolean included, as not enumerable by this recipe, never as covered or as missing a value.",
-          "Coverage is reported per slot value; the recipe reports no combination of two or more slots until a design pass asks which combinations no example exercises.",
+          "Coverage is reported per slot value; the recipe reports no combination of two or more slots.",
           "The examples counted are the children its space contract collects.",
           "An example that binds no value for a slot is listed under that slot as unbound, never as covering a value of it.",
           "Slot-value coverage reports and confers nothing: it moves no readiness, records no verdict and emits no validation finding.",
@@ -7564,7 +7566,7 @@ export const consumersSpecs = [
     readiness: "scoped",
     title: "A pinned declaration shows the words of each test line that cites it",
     narrative:
-      "A reader checking a pinned declaration reaches the test line that cites it and then follows a source link to read the assertion. The words of that line would close the task on the page. The graph records where a line cites an entry and never what the line says, and the Studio reads only the graph and its named inputs, so one of them has to hold the words. The extractor already reads the line when it records the citation, which makes the citation row the cheapest honest home; the choice is the owner's, because it puts source text in the graph for the first time.",
+      "A reader checking a pinned declaration reaches the test line that cites it and then follows a source link to read the assertion. The words of that line would close the task on the page. The graph records where a line cites an entry and never what the line says, and the Studio reads only the graph and its named inputs, so one of them has to hold the words. The extractor already reads the line when it records the citation, which makes the citation row the cheapest honest home; the owner chose it, though it puts source text in the graph for the first time.",
     sections: {
       intent: {
         actor:
@@ -7573,38 +7575,24 @@ export const consumersSpecs = [
           "The declarations page names each citing line by file and line only, so the reader leaves the page to read it, and has no route at all when the page set carries no source link.",
         outcome:
           "Show beside each pinned declaration the text of every test line that cites it, so a reviewer reads the check without leaving the page.",
-        openQuestions: [
-          {
-            question:
-              "May the Studio show source text the graph does not hold, and if so is it recorded in the graph beside the citation or read as a named input?",
-            blocking: true,
-            key: "lineText",
-            decider: "owner",
-            provisional:
-              "the extractor records the citing line's text, trimmed and bounded, on the citation row it already writes, as inferred data that confers nothing, and the Studio reads no source",
-          },
-          {
-            question:
-              "How long may a recorded line be, and how does a page show a line that was cut?",
-            blocking: false,
-            key: "lineBound",
-            decider: "delegated",
-            provisional:
-              "a bound of a few hundred code units, cut at a word boundary and marked as cut, the whole line one source link away",
-          },
-        ],
       },
       behavior: {
         rules: [
           "Beside each citing line, the declarations page and the Spec page show the line's words as code after its file and line, and the reader's citation row carries them.",
           "The words are what the citing line said at the commit the graph was derived from; no page says the line asserts, checks or passes anything because of them.",
           "A citation whose words are not recorded shows its file and line as it does now.",
+          "The extractor records the citing line's text, trimmed and bounded, on the citation row it already writes, as inferred data that confers nothing; the Studio reads no source to show it.",
         ],
         ruleKeys: {
           lineShown: "rules[0]",
           wordsNotVerdict: "rules[1]",
           withoutWords: "rules[2]",
+          lineRecorded: "rules[3]",
         },
+      },
+      design: {
+        lineBound:
+          "a recorded line holds at most a few hundred code units; a longer line is cut at a word boundary and marked as cut, and the whole line stays one source link away",
       },
     },
     deliveryFacts: [],
@@ -8364,5 +8352,70 @@ export const consumersSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.ai-assisted-reading",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/ai-assisted-reading.sdp.md",
+    title: "A boundary for assistant-written presentation",
+    narrative:
+      "Every reading the Protocol ships is a deterministic function of the graph and the inputs a caller names, as founding principle P3, deterministic derivation, requires. An assistant that only selects one of those readings keeps that property; one that writes explanations or arrangements of its own does not, so its output needs a contract before it reaches a reader.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a reader ask for a useful existing reading and inspect why it was selected and what scope it omits.",
+        openQuestions: [
+          {
+            question:
+              "If an assistant generates explanations or arrangements beyond selecting deterministic readings, what contract keeps its output distinct from graph claims and makes the exact reading reviewable, including how the exact output is retained with its model, prompt and inputs?",
+            blocking: true,
+            key: "aiPresentationBoundary",
+            decider: "owner",
+            provisional:
+              "Select existing deterministic readings only; any generated text stays outside the Studio and the frozen projections, labelled as assistant output with its source commit and scope, and adds no claim, fact or validator.",
+            links: [
+              "spec:consumers.projections-model",
+              "spec:extraction.claim-taxonomy",
+              "spec:decisions.shipped-projections-frozen",
+              "spec:consumers.spec-studio#rule.namedInputs",
+            ],
+            trigger:
+              "the UX design pass measures that assistant selection or a generated explanation helps a named review task",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.agent-surface.combination-coverage",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/agent-surface.combination-coverage.sdp.md",
+    title: "Which slot-value combinations example-space coverage reports",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Report the combinations of slot values no example exercises, once a design pass needs them.",
+        openQuestions: [
+          {
+            question: "Which combinations of slot values should coverage enumerate and report?",
+            blocking: true,
+            key: "combinationCoverage",
+            decider: "owner",
+            provisional: "keep recipe 44 limited to individual slot values",
+            links: ["spec:consumers.agent-surface.example-space-coverage#rule.perSlotOnly"],
+            trigger: "a design pass asks which combinations no example exercises",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
   },
 ] as const;
