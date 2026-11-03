@@ -424,26 +424,6 @@ Feature: Multiple findings
       "outside the behavior/example carrier vocabulary",
     ],
     [
-      "an implemented lookalike",
-      feature("", `${FEATURE_TAGS} @implemented`),
-      "delivery-fact lookalike",
-    ],
-    [
-      "a claim lookalike",
-      feature("", `${FEATURE_TAGS} @claim.declared`),
-      "authored claim lookalike",
-    ],
-    [
-      "a lifecycle lookalike",
-      feature("", `${FEATURE_TAGS} @status-ready`),
-      "lifecycle-status lookalike",
-    ],
-    [
-      "an architect lookalike",
-      feature("", `${FEATURE_TAGS} @architect-implemented`),
-      "architect-status lookalike",
-    ],
-    [
       "a graph-aware near miss",
       feature("", `${FEATURE_TAGS} @readines.ready`),
       'did you mean "@readiness."',
@@ -516,6 +496,20 @@ Feature: Multiple findings
       expect(found?.line).toBeGreaterThan(0);
     },
   );
+
+  it.each([
+    ["@implemented", "delivery-fact lookalike"],
+    ["@claim.declared", "authored claim lookalike"],
+    ["@status-ready", "authored lifecycle-status lookalike"],
+    ["@architect-implemented", "retired architect-status lookalike"],
+  ])("reports the full lookalike refusal for %s", (tag, reason) => {
+    const found = refusal(feature("", `${FEATURE_TAGS} ${tag}`));
+
+    expect(found?.message).toBe(
+      `Gherkin tag "${tag}" is refused: ${reason}; delivery facts, claims, and lifecycle state are never authored by the carrier`,
+    );
+    expect(found?.line).toBe(1);
+  });
 
   it.each([
     [

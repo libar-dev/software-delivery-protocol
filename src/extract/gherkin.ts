@@ -399,7 +399,7 @@ function decorationTagFinding(tag: Tag, file: string): Finding | undefined {
     return grammarFinding(
       file,
       tag.location.line,
-      `Gherkin tag "${name}" is refused as an ${factReason}; delivery facts, claims, and lifecycle state are never authored by the carrier`,
+      `Gherkin tag "${name}" is refused: ${factReason}; delivery facts, claims, and lifecycle state are never authored by the carrier`,
     );
   }
 
