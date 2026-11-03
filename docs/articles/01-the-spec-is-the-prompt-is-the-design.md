@@ -122,9 +122,9 @@ The Spec Studio makes the human side concrete. A reviewer can explore a Pack, in
 
 The Protocol has no separate PRD. It authors its own rules as Specs, binds its engine and tests to them, derives its own graph and checks that graph in CI ([`spec:protocol.self-hosting`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/protocol/self-hosting.sdp.md)).
 
-At commit `b5e0a8be`, its self-hosting graph reports:
-
 <!-- evidence:self-hosting-census -->
+Measured at commit `b5e0a8bea1e3bedd48c616f96c9928e955792753`:
+
 | Measure | Value |
 |---|---|
 | Authored Specs | 456: 447 `ready`, 4 `scoped`, 5 `idea` |

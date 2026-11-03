@@ -80,12 +80,14 @@ npm run --silent sdp -- q "$(cat dist/recipes/02-the-drift-alarm.js)" \
       "id": "spec:orders.create-order",
       "statedReadiness": "defined",
       "floorReached": "ready",
+      "firstUnmetClause": null,
       "implementationBindings": 2
     },
     {
       "id": "spec:orders.order-total-rule",
       "statedReadiness": "defined",
       "floorReached": "ready",
+      "firstUnmetClause": null,
       "implementationBindings": 1
     }
   ]
@@ -93,12 +95,13 @@ npm run --silent sdp -- q "$(cat dist/recipes/02-the-drift-alarm.js)" \
 ```
 <!-- /evidence:example-drift -->
 
-The Specs listed by the generated drift answer have implementation bindings and state only `defined`. Their structural floors reach `ready`, so they wait only for an author's readiness statement. The generated build output above carries the validation totals. The drift alarm is a query, not a workflow gate.
+The Specs listed by the generated drift answer have implementation bindings and state only `defined`. Their structural floors reach `ready`, so they wait only for an author's readiness statement. The build output above counts extraction and contract-generation diagnostics; `sdp validate examples/checkout-v1` runs the conformance and honesty checks. The drift alarm is a query, not a workflow gate.
 
 ## Author the parent and its example space
 
 Open [`create-order.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/examples/checkout-v1/specs/orders/create-order.sdp.md):
 
+<!-- evidence:create-order-carrier -->
 ````markdown
 ---
 id: spec:orders.create-order
@@ -130,6 +133,7 @@ And the order contains the original cart lines
 And order creation is rejected because {reason:"empty cart"|"out of stock"}
 ```
 ````
+<!-- /evidence:create-order-carrier -->
 
 The YAML frontmatter is the closed envelope. It carries identity, the three descriptors and relations. A hand-authored `implemented` property or a derived `satisfies` relation is refused.
 
@@ -141,6 +145,7 @@ The `gwt-vocabulary` fence declares the typed example space its child examples s
 
 The child example [`create-order-valid-cart.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/examples/checkout-v1/specs/orders/create-order-valid-cart.sdp.md) refines and verifies its parent:
 
+<!-- evidence:valid-cart-carrier -->
 ````markdown
 ---
 id: spec:orders.create-order.valid-cart
@@ -156,6 +161,7 @@ relations:
 ## Intent
 
 - outcome: Show that a valid cart can become an order.
+- value: The authored example demonstrates the happy path for create-order.
 
 ```gwt
 Given a customer has a cart with {n: 2} line items
@@ -169,8 +175,9 @@ And the order contains the original cart lines
 ## Verification — executable
 
 - The order result contains a stable id.
-- The returned total matches the authored total.
+- The returned total matches the authored total — the spec's value, never the test's.
 ````
+<!-- /evidence:valid-cart-carrier -->
 
 Under the point-per-example law, one example binds one concrete point. Under the concreteness law, leaving a used slot unbound, such as `{n}` instead of `{n: 2}`, caps the example below `defined` and withholds its step contract and registrar.
 

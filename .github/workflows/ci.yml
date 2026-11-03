@@ -33,13 +33,7 @@ jobs:
       - name: Check article evidence
         shell: bash
         run: |
-          BASE_SHA="$(node docs/articles/sync-evidence.mjs --print-pin)"
-          BASE_DIR="${{ runner.temp }}/article-evidence"
-          git worktree add --detach "$BASE_DIR" "$BASE_SHA"
-          npm --prefix "$BASE_DIR" ci --ignore-scripts
-          npm --prefix "$BASE_DIR" run build
-          npm run check:articles -- "$BASE_DIR"
-          git worktree remove --force "$BASE_DIR"
+          npm run check:articles -- "$GITHUB_WORKSPACE"
 
       - name: Upload run evidence
         if: always()

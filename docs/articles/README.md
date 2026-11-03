@@ -1,7 +1,7 @@
 # Media plan and living series playbook
 
 > **Pinned source baseline:** commit [`b5e0a8be`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753), the merge of [PR #36](https://github.com/libar-dev/software-delivery-protocol/pull/36).
-> **Posture:** This directory is maintained on `main` through focused refresh PRs as the Protocol advances. The opening arc used a standing PR for review, but no permanent media diff is needed. Current behavior, seed-design intent and future directions must read as three different things. Re-run Protocol-corpus measurements at a new pin rather than inheriting them; adopter and historical counts keep their cited measurement sources. Evidence verification always uses a separate checkout of the exact source pin, so manuscript commits cannot change the answers being verified. CI creates that checkout with full git history.
+> **Posture:** This directory is maintained on `main` through focused refresh PRs as the Protocol advances. The opening arc used a standing PR for review, but no permanent media diff is needed. Current behavior, seed-design intent and future directions must read as three different things. Re-run Protocol-corpus measurements at a new pin rather than inheriting them; adopter and historical counts keep their cited measurement sources. Evidence verification always uses a separate checkout of the exact source pin, so manuscript commits cannot change the answers being verified. The sync creates and removes that disposable checkout in both local and CI runs; its writes are described in Step 4.
 
 ## 1. The series argument
 
@@ -206,9 +206,9 @@ npm run --silent sdp:q -- "$(cat dist/recipes/33-the-design-backlog.js)" --json
 ls dist/recipes/*.js | wc -l
 ```
 
-Baseline measured at `b5e0a8be`:
-
 <!-- evidence:baseline-metrics -->
+Measured at commit `b5e0a8bea1e3bedd48c616f96c9928e955792753`:
+
 | Metric | Value |
 |---|---|
 | Schema | `0.12.0` |
@@ -220,24 +220,26 @@ Baseline measured at `b5e0a8be`:
 | Drift alarm | 0 |
 | Design backlog | 0 |
 | Open questions | 16 across 12 Specs: 10 blocking (6 deferrals, 4 holds), 6 non-blocking |
-| Validation | 0 errors and 3 intentional warnings (3 `honesty/gaps`, 0 `conformance/prose-mentions`) |
+| Validation | 0 errors and 3 intentional warnings (3 `honesty/gaps`) |
 | Shipped recipes | 55 |
 | Repository-owned skills | 5 |
 <!-- /evidence:baseline-metrics -->
 
 ### Step 4: Regenerate the article evidence
 
-Marked evidence blocks are generated, not maintained by hand. The sync reads the pinned commit from this playbook, verifies that the source checkout matches it and is clean, and checks the CLI build metadata against the same commit before running anything. It refuses changed or untracked source paths and stale builds before any generation. It covers graph-derived tables, build and query output, source anchors, the oracle and Mermaid.
+Marked evidence blocks are generated, not maintained by hand. The sync reads this playbook's pin and creates a disposable worktree from that commit, installs dependencies with `npm ci --ignore-scripts`, and builds its CLI before collecting evidence. The supplied repository provides git objects only: its working files, installed dependencies and existing build are not used. It covers graph-derived tables, build and query output, carrier excerpts, source anchors, the oracle and Mermaid. Self-hosting validation accepts only `honesty/gaps` warnings; every other warning rule fails the sync.
 
 ```sh
-# SOURCE_DIR is a built checkout of the commit named as the source baseline.
+# SOURCE_DIR is a repository checkout containing the pinned commit.
 node docs/articles/sync-evidence.mjs "$SOURCE_DIR"
 
 # Check mode leaves the manuscripts unchanged and fails when any block differs.
 node docs/articles/sync-evidence.mjs --check "$SOURCE_DIR"
 ```
 
-When the article branch itself is at the baseline commit, omit `$SOURCE_DIR`. Add a marked block and its generator whenever a manuscript gains a reusable output excerpt. Keep elision explicit, as in the constant-anchor excerpt. Do not paste a modified version of source or command output and call it an example.
+Both commands create a temporary worktree under the article checkout's `.scratch/`, install dependencies, build `dist/`, and regenerate `generated/`, test registrars and the example's generated outputs there. They remove that worktree on success or failure; they do not overwrite outputs in `$SOURCE_DIR`. Installing dependencies may populate npm's cache and needs registry access or a populated cache. Sync mode also writes the marked manuscript blocks. Check mode writes no manuscript.
+
+Always pass the source repository explicitly. Add a marked block and its generator whenever a manuscript gains a reusable output excerpt. Missing, duplicate, unknown, nested or fenced markers fail the check. Keep elision explicit, as in the constant-anchor excerpt. Do not paste a modified version of source or command output and call it an example.
 
 Mermaid stays live source. Markdown tables come from graph queries. Screenshots remain optional supplements for discussing visual design, never the only record of behavior.
 
@@ -255,4 +257,4 @@ Mermaid stays live source. Markdown tables come from graph queries. Screenshots 
 
 ### Step 6: Verify
 
-Run `npm run check:articles -- "$SOURCE_DIR"` and `npm run check` after staging new article files so preflight can see them. CI runs the same article check in a built worktree of the pinned source with full git history, so a manuscript branch behind the pin cannot merge stale evidence green. Then manually inspect the rendered Markdown, relative links and commit-pinned links. The main gate does not check those links or all Markdown fence structure.
+Run `npm run check:articles -- "$SOURCE_DIR"` and `npm run check` after staging new article files so preflight can see them. CI runs the same article check with full git history, using its disposable build of the pinned source, so a manuscript branch behind the pin cannot merge stale evidence green. Then manually inspect the rendered Markdown, relative links and commit-pinned links. The main gate does not check those links or all Markdown fence structure.

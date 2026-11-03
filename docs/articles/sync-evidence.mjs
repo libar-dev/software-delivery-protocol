@@ -1,22 +1,136 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export function replaceEvidenceBlock(original, block, generated) {
-  const opening = `<!-- evidence:${block.id} -->`;
-  const closing = `<!-- /evidence:${block.id} -->`;
-  const pattern = new RegExp(
-    `${opening.replaceAll("-", "\\-")}\\n[\\s\\S]*?\\n${closing.replaceAll("-", "\\-")}`,
-  );
-  if (!pattern.test(original)) {
-    throw new Error(`${block.file} is missing the ${block.id} evidence markers.`);
+// Markers are structural lines, never examples inside a Markdown fence.
+export function evidenceMarkers(original, file) {
+  const blocks = new Map();
+  let active;
+  let fence;
+  let offset = 0;
+  for (const line of original.split("\n")) {
+    const marker = /^<!-- (\/?evidence):([a-z0-9-]+) -->$/.exec(line);
+    if (/<!--\s*\/?evidence\s*:/.test(line)) {
+      if (fence || !marker) throw new Error(`${file}: malformed or fenced evidence marker.`);
+      const [, direction, id] = marker;
+      if (direction === "evidence") {
+        if (active || blocks.has(id))
+          throw new Error(`${file}: nested or duplicate evidence: ${id}`);
+        active = { id, start: offset };
+      } else {
+        if (!active || active.id !== id)
+          throw new Error(`${file}: unmatched evidence closing: ${id}`);
+        blocks.set(id, { start: active.start, end: offset + line.length });
+        active = undefined;
+      }
+    }
+    const delimiter = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    if (delimiter) {
+      const [, run, rest] = delimiter;
+      if (!fence) fence = run;
+      else if (run[0] === fence[0] && run.length >= fence.length && !rest.trim()) fence = undefined;
+    }
+    offset += line.length + 1;
   }
+  if (active) throw new Error(`${file}: unclosed evidence: ${active.id}`);
+  return blocks;
+}
+
+export function validateEvidenceMarkers(documents, blocks) {
+  const expected = new Map(blocks.map((block) => [block.id, block.file]));
+  const seen = new Set();
+  for (const [file, text] of documents) {
+    for (const id of evidenceMarkers(text, file).keys()) {
+      if (!expected.has(id)) throw new Error(`${file}: unknown evidence block: ${id}`);
+      if (seen.has(id)) throw new Error(`${file}: duplicate evidence block: ${id}`);
+      if (expected.get(id) !== file) throw new Error(`${file}: misplaced evidence block: ${id}`);
+      seen.add(id);
+    }
+  }
+  for (const [id, file] of expected) {
+    if (!seen.has(id)) throw new Error(`${file} is missing the ${id} evidence markers.`);
+  }
+}
+
+export function replaceEvidenceBlock(original, block, generated) {
+  const range = evidenceMarkers(original, block.file).get(block.id);
+  if (!range) throw new Error(`${block.file} is missing the ${block.id} evidence markers.`);
   const body = generated.trim();
-  const replacement = block.language
-    ? `${opening}\n\`\`\`${block.language}\n${body}\n\`\`\`\n${closing}`
-    : `${opening}\n${body}\n${closing}`;
-  return original.replace(pattern, () => replacement);
+  // Carrier excerpts contain their own triple-backtick notation fences.
+  const fence = block.language === "markdown" ? "````" : "```";
+  const content = block.language ? `${fence}${block.language}\n${body}\n${fence}` : body;
+  const replacement = `<!-- evidence:${block.id} -->\n${content}\n<!-- /evidence:${block.id} -->`;
+  return original.slice(0, range.start) + replacement + original.slice(range.end);
+}
+
+export function parseArguments(args) {
+  let check = false;
+  let printPin = false;
+  let source;
+  let separator = false;
+  const usage = "Usage: sync-evidence.mjs [--check] [--] SOURCE_REPOSITORY | --print-pin";
+  for (const argument of args) {
+    if (argument === "--" && !separator) separator = true;
+    else if (argument === "--check" && !separator && !check) check = true;
+    else if (argument === "--print-pin" && !separator && !printPin) printPin = true;
+    else if (argument.startsWith("-"))
+      throw new Error(`Unknown or repeated option: ${argument}\n${usage}`);
+    else if (source !== undefined)
+      throw new Error(`Only one source repository is allowed.\n${usage}`);
+    else source = argument;
+  }
+  if (printPin ? check || source !== undefined : !source) throw new Error(usage);
+  return { check, printPin, source };
+}
+
+// The supplied checkout is only an object source. Its files, ignored outputs and installed
+// dependencies never participate in evidence. All writes happen in a disposable worktree.
+export function withPinnedSource(repository, commit, scratchRoot, action) {
+  const root = realpathSync(repository);
+  const top = execFileSync("git", ["-C", root, "rev-parse", "--show-toplevel"], {
+    encoding: "utf8",
+  }).trim();
+  if (realpathSync(top) !== root)
+    throw new Error("Pass the source repository root, not a subdirectory.");
+  mkdirSync(scratchRoot, { recursive: true });
+  const temporary = mkdtempSync(path.join(scratchRoot, "article-evidence-"));
+  const source = path.join(temporary, "source");
+  let added = false;
+  try {
+    execFileSync("git", ["-C", root, "worktree", "add", "--detach", source, commit], {
+      stdio: "pipe",
+    });
+    added = true;
+    execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
+      cwd: source,
+      stdio: "pipe",
+    });
+    execFileSync("npm", ["run", "build"], { cwd: source, stdio: "pipe" });
+    return action(source);
+  } finally {
+    try {
+      if (added)
+        execFileSync("git", ["-C", root, "worktree", "remove", "--force", source], {
+          stdio: "pipe",
+        });
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
+    }
+  }
+}
+
+export function measurementLabel(commit, body) {
+  return `Measured at commit \`${commit}\`:\n\n${body}`;
 }
 
 export function summarizeValidation(output) {
@@ -24,11 +138,7 @@ export function summarizeValidation(output) {
   if (!summary) {
     throw new Error("Could not read the self-hosting validation summary.");
   }
-  // Recognize both diagnostic rules; baselineMetrics checks which are expected at the pin.
-  const counts = new Map([
-    ["honesty/gaps", 0],
-    ["conformance/prose-mentions", 0],
-  ]);
+  const counts = new Map([["honesty/gaps", 0]]);
   const warnings = [...output.matchAll(/\[warning\] (\S+) —/g)];
   for (const [, rule] of warnings) {
     if (!counts.has(rule)) {
@@ -43,66 +153,8 @@ export function summarizeValidation(output) {
   return `${summary[1]} errors and ${summary[2]} intentional warnings (${breakdown})`;
 }
 
-function main() {
-  const articlesDir = path.dirname(fileURLToPath(import.meta.url));
-  const repositoryRoot = path.resolve(articlesDir, "../..");
-  const playbook = readFileSync(path.join(articlesDir, "README.md"), "utf8");
-  const pinnedCommit = playbook.match(/Pinned source baseline:.*tree\/([0-9a-f]{40})/)?.[1];
-
-  if (!pinnedCommit) {
-    throw new Error("The publication plan does not name a full pinned source commit.");
-  }
-
-  if (process.argv.includes("--print-pin")) {
-    console.log(pinnedCommit);
-    process.exit(0);
-  }
-
-  const check = process.argv.includes("--check");
-  const sourceArgument = process.argv.slice(2).find((argument) => argument !== "--check");
-  const sourceRoot = path.resolve(sourceArgument ?? repositoryRoot);
+export function evidenceBlocks(sourceRoot, pinnedCommit) {
   const realSourceRoot = realpathSync(sourceRoot);
-  const sourceCommit = execFileSync("git", ["-C", sourceRoot, "rev-parse", "HEAD"], {
-    encoding: "utf8",
-  }).trim();
-
-  if (sourceCommit !== pinnedCommit) {
-    throw new Error(
-      `Article baseline ${pinnedCommit} does not match source checkout ${sourceCommit}. ` +
-        "Pass a checkout of the pinned commit as the source path.",
-    );
-  }
-
-  const sourceStatus = execFileSync(
-    "git",
-    ["-C", sourceRoot, "status", "--porcelain", "--", ".", ":(exclude)node_modules"],
-    { encoding: "utf8" },
-  ).trim();
-  if (sourceStatus) {
-    throw new Error(
-      "The pinned source checkout must be clean before generating article evidence. " +
-        `Found changed or untracked paths:\n${sourceStatus}`,
-    );
-  }
-
-  if (!existsSync(path.join(sourceRoot, "dist/cli/sdp.js"))) {
-    throw new Error(`Build the source checkout first: npm --prefix ${sourceRoot} run build`);
-  }
-
-  const buildInfoPath = path.join(sourceRoot, "dist/cli/build-info.json");
-  if (!existsSync(buildInfoPath)) {
-    throw new Error(
-      `Build metadata is missing at ${buildInfoPath}; rebuild the pinned source checkout.`,
-    );
-  }
-  const buildCommit = JSON.parse(readFileSync(buildInfoPath, "utf8")).commit;
-  if (buildCommit !== pinnedCommit) {
-    throw new Error(
-      `Article baseline ${pinnedCommit} does not match the CLI build ${buildCommit ?? "unknown"}. ` +
-        "Rebuild the pinned source checkout before generating evidence.",
-    );
-  }
-
   const exclusions = [
     "--exclude",
     "explorations",
@@ -192,14 +244,6 @@ function main() {
   function baselineMetrics() {
     const census = selfHostingCensus();
     const validation = runCli(["validate", ".", ...exclusions]);
-    const warningRules = query(`return [...new Set(report.findings
-      .filter((finding) => finding.severity === "warning")
-      .map((finding) => finding.validatorId))]`);
-    for (const rule of warningRules) {
-      if (rule !== "honesty/gaps") {
-        throw new Error(`Unexpected self-hosting warning rule: ${rule}`);
-      }
-    }
     const validationSummary = summarizeValidation(validation);
     const skills = readdirSync(path.join(sourceRoot, ".agents/skills"), {
       withFileTypes: true,
@@ -234,19 +278,7 @@ function main() {
 
   function exampleDrift() {
     const answer = recipe(2, {}, path.join(sourceRoot, "examples/checkout-v1"), false);
-    return JSON.stringify(
-      {
-        total: answer.total,
-        alarms: answer.alarms.map((alarm) => ({
-          id: alarm.id,
-          statedReadiness: alarm.statedReadiness,
-          floorReached: alarm.floorReached,
-          implementationBindings: alarm.implementationBindings,
-        })),
-      },
-      null,
-      2,
-    );
+    return JSON.stringify(answer, null, 2);
   }
 
   function constantAnchor() {
@@ -294,7 +326,7 @@ function main() {
       id: "self-hosting-census",
       file: "01-the-spec-is-the-prompt-is-the-design.md",
       language: null,
-      generate: articleCensus,
+      generate: () => measurementLabel(pinnedCommit, articleCensus()),
     },
     {
       id: "roadmap-mermaid",
@@ -307,6 +339,19 @@ function main() {
       file: "03-walkthrough-intent-to-verified-code.md",
       language: "text",
       generate: exampleBuild,
+    },
+    {
+      id: "create-order-carrier",
+      file: "03-walkthrough-intent-to-verified-code.md",
+      language: "markdown",
+      generate: () => sourceText("examples/checkout-v1/specs/orders/create-order.sdp.md"),
+    },
+    {
+      id: "valid-cart-carrier",
+      file: "03-walkthrough-intent-to-verified-code.md",
+      language: "markdown",
+      generate: () =>
+        sourceText("examples/checkout-v1/specs/orders/create-order-valid-cart.sdp.md"),
     },
     {
       id: "example-drift",
@@ -338,31 +383,69 @@ function main() {
       language: "json",
       generate: byFile,
     },
-    { id: "baseline-metrics", file: "README.md", language: null, generate: baselineMetrics },
+    {
+      id: "baseline-metrics",
+      file: "README.md",
+      language: null,
+      generate: () => measurementLabel(pinnedCommit, baselineMetrics()),
+    },
   ];
 
-  const drift = [];
-  for (const block of blocks) {
-    const filePath = path.join(articlesDir, block.file);
-    const original = readFileSync(filePath, "utf8");
-    const updated = replaceEvidenceBlock(original, block, block.generate());
-    if (updated === original) continue;
-    if (check) {
-      drift.push(`${block.file}: ${block.id}`);
-    } else {
-      writeFileSync(filePath, updated);
-      console.log(`Updated ${block.file}: ${block.id}`);
-    }
+  return blocks;
+}
+
+function main() {
+  const { check, printPin, source: sourceArgument } = parseArguments(process.argv.slice(2));
+  const articlesDir = path.dirname(fileURLToPath(import.meta.url));
+  const repositoryRoot = path.resolve(articlesDir, "../..");
+  const playbook = readFileSync(path.join(articlesDir, "README.md"), "utf8");
+  const pinnedCommit = playbook.match(/Pinned source baseline:.*tree\/([0-9a-f]{40})/)?.[1];
+
+  if (!pinnedCommit) {
+    throw new Error("The publication plan does not name a full pinned source commit.");
   }
 
-  if (drift.length > 0) {
-    console.error(`Article evidence is stale:\n${drift.join("\n")}`);
-    process.exitCode = 1;
-  } else {
-    console.log(
-      `${check ? "Checked" : "Synchronized"} ${blocks.length} evidence blocks at ${pinnedCommit}.`,
-    );
+  if (printPin) {
+    console.log(pinnedCommit);
+    return;
   }
+
+  const documents = new Map(
+    readdirSync(articlesDir)
+      .filter((name) => name.endsWith(".md"))
+      .map((name) => [name, readFileSync(path.join(articlesDir, name), "utf8")]),
+  );
+  validateEvidenceMarkers(documents, evidenceBlocks(repositoryRoot, pinnedCommit));
+  return withPinnedSource(
+    sourceArgument,
+    pinnedCommit,
+    path.join(repositoryRoot, ".scratch"),
+    (sourceRoot) => {
+      const blocks = evidenceBlocks(sourceRoot, pinnedCommit);
+      const drift = [];
+      for (const block of blocks) {
+        const filePath = path.join(articlesDir, block.file);
+        const original = readFileSync(filePath, "utf8");
+        const updated = replaceEvidenceBlock(original, block, block.generate());
+        if (updated === original) continue;
+        if (check) {
+          drift.push(`${block.file}: ${block.id}`);
+        } else {
+          writeFileSync(filePath, updated);
+          console.log(`Updated ${block.file}: ${block.id}`);
+        }
+      }
+
+      if (drift.length > 0) {
+        console.error(`Article evidence is stale:\n${drift.join("\n")}`);
+        process.exitCode = 1;
+      } else {
+        console.log(
+          `${check ? "Checked" : "Synchronized"} ${blocks.length} evidence blocks at ${pinnedCommit}.`,
+        );
+      }
+    },
+  );
 }
 
 // Node resolves the main module through symlinks, so compare real paths: a symlinked checkout
