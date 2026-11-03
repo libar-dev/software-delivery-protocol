@@ -457,7 +457,7 @@ describe("sdp new spec", () => {
       const exitCode = executeNewSpec(parsed, capture.output, {
         mkdirSync(target, options) {
           const created = mkdirSync(target, options);
-          if (String(target) === parent) {
+          if (String(target) === "specs") {
             rmSync(parent, { recursive: true, force: true });
             symlinkSync(outside, parent);
             swapped = true;
@@ -588,4 +588,40 @@ describe("sdp new spec", () => {
     expect(capture.readStderr()).not.toContain("Unknown command: new");
     expect(capture.readStderr()).toMatch(/spec/u);
   });
+});
+
+it("creates missing parents through the held directory when its path is swapped before mkdir", () => {
+  const original = process.cwd();
+  const workspace = mkdtempSync(join(tmpdir(), "sdp-new-parent-swap-"));
+  const root = join(workspace, "root"),
+    parent = join(root, "specs"),
+    outside = join(workspace, "outside");
+  mkdirSync(parent, { recursive: true });
+  mkdirSync(outside);
+  process.chdir(root);
+  try {
+    const capture = createCaptureOutput();
+    const parsed = parseNewSpecArgs(
+      requiredFlags({ path: "specs/nested/deeper/probe.sdp.md" }),
+      capture.output,
+    );
+    if (parsed === undefined) throw new Error(capture.readStderr());
+    let swapped = false;
+    const code = executeNewSpec(parsed, capture.output, {
+      mkdirSync: (target, options) => {
+        if (!swapped) {
+          renameSync(parent, join(root, "saved"));
+          symlinkSync(outside, parent);
+          swapped = true;
+        }
+        return mkdirSync(target, options);
+      },
+    });
+    expect(code).toBe(1);
+    expect(existsSync(join(outside, "nested"))).toBe(false);
+    expect(existsSync(join(outside, "probe.sdp.md"))).toBe(false);
+  } finally {
+    process.chdir(original);
+    rmSync(workspace, { recursive: true, force: true });
+  }
 });
