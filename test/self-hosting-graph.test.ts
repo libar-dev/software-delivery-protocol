@@ -372,6 +372,10 @@ describe("the self-hosting corpus", () => {
     expect([...firstSentence.matchAll(/`([a-z]+\/[a-z-]+)`/gu)].map((match) => match[1])).toEqual([
       ...new Set(expectedWarnings.map(({ validatorId }) => validatorId)),
     ]);
+    // The extraction warnings print on the same step's build line, so the paragraph names them too.
+    for (const { validatorId, file } of result.report.findings) {
+      expect(paragraph).toContain(`\`${validatorId}\` names the \`${file ?? ""}\` link`);
+    }
   });
 
   // The registry's preamble: a decision that narrows another refines it, and the narrowed row

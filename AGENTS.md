@@ -297,4 +297,5 @@ The `check:self-hosting` step emits one kind of intentional warning: `honesty/ga
 owner-ratified ready Spec, decisions aside, without a resolving verifier binding. The self-hosting
 oracle pins that set and pins that no prose mention lacks a declared relation (recipe 22's
 `unbacked` stays empty), so a `conformance/prose-mentions` warning, like any other new warning, is
-a regression.
+a regression. Its build line also counts one extraction warning the oracle pins:
+`extract/symbolic-link-skipped` names the `CLAUDE.md` link, which discovery never follows.
