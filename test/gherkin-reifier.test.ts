@@ -687,8 +687,8 @@ Feature: Probe feature
 
   describe.each([
     ["a lone CR", "\r"],
-    ["U+2028", " "],
-    ["U+2029", " "],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
   ])("a description line holding %s", (_name, separator) => {
     const held = "description line holds a lone CR, U+2028 or U+2029";
 

@@ -422,8 +422,8 @@ export const prefixed = 1;
   });
 
   it.each([
-    ["U+2028", " "],
-    ["U+2029", " "],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
     ["a lone CR", "\r"],
   ])("ends a comment line at %s, so a tag line never hides text after it", (_name, separator) => {
     const result = extract({
