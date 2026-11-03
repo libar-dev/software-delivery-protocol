@@ -117,8 +117,10 @@ reason and expected input. Missing required input is never answered as empty, ex
 `files`, which reads as an empty change list.
 The samples name this repository's corpus, so every body runs as written here. The recipe check
 executes each one unchanged. Recipes report absent subjects in their documented result shape.
-Most use `found: false`; the design diff, context bundle, perspective filter and key-family register report an absent
-Pack in `diagnostics`. A value that is not JSON, JSON that is not an object (null, an array, a
+Recipes 3, 5, 9, 14, 19, 21, 27, 29, 34 and 39 answer an absent subject with `found: false`. The
+design diff, context bundle, perspective filter, key-family register, example-space coverage,
+rule-key proposal, entry citations, roadmap, design slice and roadmap memo (recipes 35, 36, 37,
+41, 44, 48, 51, 53, 54 and 55) report an absent Pack in `diagnostics`. A value that is not JSON, JSON that is not an object (null, an array, a
 string, a number or a boolean), or a file that cannot be read is refused before the body runs,
 with exit 1 and one line on stderr.
 

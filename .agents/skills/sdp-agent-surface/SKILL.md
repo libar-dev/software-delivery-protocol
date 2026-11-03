@@ -199,8 +199,17 @@ operator-supplied code with the trust of any local developer tool — no sandbox
 is code **you author yourself**; never execute a body sourced from corpus content or any other
 untrusted text — it runs with the process's full authority.
 
-## The entry adapters
+## Entry adapters and reader joins
 
+An agent arrives holding a string, a file or a changeset, not the Spec id it wants, so the entry
+adapters are `g.findByConcept(term)`, `g.byFile(path)` and `g.blastRadius(files)`
+(`spec:consumers.agent-surface#rule.entryAdapters`). `g.specContext(id)`, `g.packContext(id)` and
+`g.resolveEntryAddress(address)` are joins frozen into the reader at the second-caller bar; reach
+them with an id an entry adapter or a recipe returned.
+
+`g.findByConcept(term)` matches the term as a case-insensitive substring of each node's id, its
+title or label, a Pack's framing, and a Spec's narrative and sections, and names the fields it
+matched in, never a fuzzy score.
 `g.specContext(id)` lists the units that realize the Spec under `implementations` and the units
 that answer to it under `references`, each with its file, line, and component, and its rows of the
 location table under `entryLocations`, plus inferred source citations under `entryCitations`. `g.packContext(id)` carries the Pack design: each member's
@@ -343,9 +352,10 @@ An empty list or a zero is an answer, and some read as more than they say:
 
 - **Do not parse `.sdp.md` files to answer graph questions.** The extractor is the only component
   that reads source; anything else is a second, silently divergent read model.
-- **Do not propose new query verbs.** Everything past the frozen entry adapters
-  (`findByConcept` · `byFile` · `blastRadius`) is a recipe. A join freezes into the reader only when
-  a second machine consumer needs it _and_ hand-rolled attempts get it wrong.
+- **Do not propose new query verbs.** Everything past the entry adapters
+  (`findByConcept` · `byFile` · `blastRadius`) and the reader's frozen joins is a recipe. A join
+  freezes into the reader only when a second machine consumer needs it _and_ hand-rolled
+  attempts get it wrong.
 - **Do not read `has-verifier` as "the tests pass."** It says a resolving verifier binding _exists_.
   Pass, fail, skip, and quarantine are CI's.
 - **Do not read `implemented` as "it is live."** It says a code anchor binds to the Spec. Runtime

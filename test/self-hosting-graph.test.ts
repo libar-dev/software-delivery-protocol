@@ -363,6 +363,42 @@ describe("the self-hosting corpus", () => {
     ).toEqual(expectedWarnings);
   });
 
+  // The handbook tells a session which warnings to expect; naming one the oracle refuses would
+  // teach a regression as the baseline.
+  it("names in the handbook exactly the warning kinds the oracle retains", () => {
+    const handbook = readFileSync(join(repoRoot, "AGENTS.md"), "utf8").replace(/\s+/gu, " ");
+    const paragraph = handbook.split("The `check:self-hosting` step emits ")[1] ?? "";
+    const firstSentence = paragraph.split(". ")[0] ?? "";
+    expect([...firstSentence.matchAll(/`([a-z]+\/[a-z-]+)`/gu)].map((match) => match[1])).toEqual([
+      ...new Set(expectedWarnings.map(({ validatorId }) => validatorId)),
+    ]);
+  });
+
+  // The registry's preamble: a decision that narrows another refines it, and the narrowed row
+  // names it, so a reader resolving the narrowed code by name never takes it as whole law.
+  it("names every narrowing decision on the narrowed decision's registry row", () => {
+    const rows = readFileSync(join(repoRoot, "docs/concept/DECISIONS.md"), "utf8")
+      .split("\n")
+      .filter((line) => /^\| MD-\d+ \|/u.test(line));
+    const pointer = (row: string) => row.split(" | ").at(-1) ?? "";
+    const unnamed = result.graph.edges
+      .filter(
+        (edge) =>
+          edge.type === "refines" &&
+          edge.from.startsWith("spec:decisions.") &&
+          edge.to.startsWith("spec:decisions."),
+      )
+      .flatMap((edge) => {
+        const row = rows.find((candidate) =>
+          pointer(candidate).split("; narrowed by")[0]?.includes(`\`${edge.to}\``),
+        );
+        return row === undefined || pointer(row).includes(`\`${edge.from}\``)
+          ? []
+          : [`${edge.to} narrowed by ${edge.from}`];
+      });
+    expect(unnamed).toEqual([]);
+  });
+
   it("holds the frozen corpus totals", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
