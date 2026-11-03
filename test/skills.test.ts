@@ -994,6 +994,30 @@ describe("adopter install and upgrade guidance", () => {
   });
 });
 
+// The glossary's term names the text format; a file written in it is a carrier file. The README's
+// definition is the first one an outsider meets, so it keeps the two levels apart the same way.
+describe("the carrier's two levels", () => {
+  it("glosses the format and the file, and the README defines them the same way", () => {
+    const rows = readFileSync(join(repoRoot, "CONTEXT.md"), "utf8")
+      .split("\n")
+      .filter((line) => line.startsWith("| **carrier** |"));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toContain("the text format that carries the authored `Spec` document");
+    expect(rows[0]).toContain(
+      '"A carrier" or "a carrier file" is also one file written in that format; say which level when it matters',
+    );
+
+    const readme = readFileSync(join(repoRoot, "README.md"), "utf8");
+    const carriers = readme
+      .slice(readme.indexOf("## Carriers"), readme.indexOf("## Installed CLI"))
+      .replaceAll(/\s+/gu, " ");
+    expect(carriers).toContain(
+      "A carrier is the text format a Spec or a Pack is written in; a carrier file is one file written in it.",
+    );
+    expect(carriers).not.toMatch(/A carrier is the file/u);
+  });
+});
+
 function grammarProbe(section: string) {
   return parseMarkdownBody(
     `# Teaching probe\n\n${section}\n`,
