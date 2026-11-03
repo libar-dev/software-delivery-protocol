@@ -93,9 +93,12 @@ const AUTHORING_BUILDER_NAMES = new Set<string>([
  * tags map onto the envelope fields, and an unknown or misspelled one (`@sdp-anchor`,
  * `@sdpAnchor:`) is refused, never read as prose. A tag with no value still matches, so it can be
  * refused loudly rather than ignored.
+ *
+ * A line ends at any ECMAScript line terminator, LF, CR, CRLF, U+2028 or U+2029, so a comment line
+ * is the line the TypeScript compiler counts, and line numbers follow the compiler's line map.
  */
-const COMMENT_LINE_BODY = /^\s*\*?\s*(.*?)\s*$/u;
-const COMMENT_TAG = /^@([A-Za-z][A-Za-z0-9]*)(?:\s+(.*))?$/u;
+const COMMENT_LINE_BREAK = /\r\n|[\n\r\u2028\u2029]/u;
+const COMMENT_TAG = /^@([A-Za-z][A-Za-z0-9]*)(?:\s+(\S.*))?$/u;
 const RESERVED_TAG_PREFIX = "sdp";
 const COMMENT_OPEN = "/**";
 const COMMENT_CLOSE = "*/";
@@ -893,8 +896,8 @@ function readCommentBlock(text: string, line: number): CommentBlock | undefined 
   const tags: CommentTag[] = [];
   const continuations: number[] = [];
 
-  for (const [offset, rawLine] of body.split(/\r?\n/u).entries()) {
-    const content = COMMENT_LINE_BODY.exec(rawLine)?.[1] ?? "";
+  for (const [offset, rawLine] of body.split(COMMENT_LINE_BREAK).entries()) {
+    const content = commentLineContent(rawLine);
     const tagMatch = COMMENT_TAG.exec(content);
 
     if (content.startsWith(`@${RESERVED_TAG_PREFIX}`)) {
@@ -927,6 +930,22 @@ function readCommentBlock(text: string, line: number): CommentBlock | undefined 
   }
 
   return tags.length === 0 ? undefined : { line, tags, continuations };
+}
+
+/**
+ * A comment line's text after its leading blanks and one optional `*`, trimmed: the same blanks
+ * `\s` names. Index scans rather than `/^\s*\*?\s*(.*?)\s*$/u`, which retried its trailing `\s*$`
+ * at every lazy step, quadratic in a long interior blank run, and could fail as a whole, which
+ * dropped the line unread.
+ */
+function commentLineContent(rawLine: string): string {
+  const opened = rawLine.trimStart();
+  return (opened.startsWith("*") ? opened.slice(1) : opened).trim();
+}
+
+/** The one-based line of a position, by the TypeScript compiler's line map. */
+function compilerLine(sourceFile: SourceFile, position: number): number {
+  return ts.getLineAndCharacterOfPosition(sourceFile.compilerNode, position).line + 1;
 }
 
 function malformedTagMessage(tag: CommentTag): string {
@@ -1070,7 +1089,7 @@ function topLevelComments(sourceFile: SourceFile): readonly TopLevelComment[] {
       comments.push({
         pos: range.getPos(),
         text: range.getText(),
-        line: sourceFile.getLineAndColumnAtPos(range.getPos()).line,
+        line: compilerLine(sourceFile, range.getPos()),
       });
     }
   };
@@ -1140,7 +1159,7 @@ function everyComment(sourceFile: SourceFile): readonly TopLevelComment[] {
     .map((range) => ({
       pos: range.pos,
       text: fullText.slice(range.pos, range.end),
-      line: sourceFile.getLineAndColumnAtPos(range.pos).line,
+      line: compilerLine(sourceFile, range.pos),
     }));
 }
 
