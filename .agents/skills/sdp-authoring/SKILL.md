@@ -64,7 +64,8 @@ runner.
    delete, or rename. Findings print and the process stays alive; operator stop (SIGINT) exits 0.
    `validate --watch` cannot combine with `--check-clean`. The watcher ignores
    `generated`, `dist`, `node_modules`, `coverage`, dot-directories, configured `--exclude` prefixes,
-   and non-carrier paths, except named rules and parameter files. Events during a run coalesce to
+   and non-carrier paths, except named rules and parameter files and the symbolic links discovery
+   warns about. Events during a run coalesce to
    one pending rerun. In this source checkout, invoke it through the repository `sdp` script with the three fixture exclusions; do
    not invent extra watch flags:
 
