@@ -33,6 +33,36 @@ import {
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 describe("article evidence delimiter scans", () => {
+  it.each([
+    ["backtick", "`", "carriage return", "\r"],
+    ["backtick", "`", "line separator", "\u2028"],
+    ["backtick", "`", "paragraph separator", "\u2029"],
+    ["tilde", "~", "carriage return", "\r"],
+    ["tilde", "~", "line separator", "\u2028"],
+    ["tilde", "~", "paragraph separator", "\u2029"],
+  ])(
+    "%s fence (%s) followed by %s completes within the subprocess deadline",
+    (_name, delimiter, _tailName, tail) => {
+      const script = path.join(repositoryRoot, "docs/articles/sync-evidence.mjs");
+      const result = spawnSync(
+        process.execPath,
+        [
+          "--input-type=module",
+          "--eval",
+          `import { evidenceMarkers } from ${JSON.stringify(script)};
+           const article = "# Article\\n\\n" + ${JSON.stringify(delimiter)}.repeat(100_000)
+             + ${JSON.stringify(tail)} + "\\n\\nprose\\n";
+           console.log(JSON.stringify([...evidenceMarkers(article, "article.md")]));`,
+        ],
+        { encoding: "utf8", timeout: 5_000 },
+      );
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(0);
+      expect(result.stdout.trim()).toBe("[]");
+    },
+    15_000,
+  );
+
   const pin = "a".repeat(40);
   const cases = [
     {
@@ -349,6 +379,13 @@ describe("article evidence structure", () => {
     expect(() => {
       validateEvidenceMarkers(new Map(), [probeBlock]);
     }).toThrow("missing");
+  });
+
+  it.each(["```", "~~~"])("recognizes markers after a CRLF %s closing fence", (fence) => {
+    const original = `${fence}text\nexample\n${fence}\r\n${probeText}`;
+    const range = evidenceMarkers(original, "article.md").get("probe");
+    expect(range).toBeDefined();
+    expect(original.slice(range?.start, range?.end)).toBe(probeText);
   });
 
   it("preserves nested carrier fences and detects edits independently of HEAD", () => {

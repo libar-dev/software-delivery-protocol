@@ -35,9 +35,10 @@ export function evidenceMarkers(original, file) {
         active = undefined;
       }
     }
-    const delimiter = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    const delimiter = /^ {0,3}(`{3,}|~{3,})/.exec(line);
     if (delimiter) {
-      const [, run, rest] = delimiter;
+      const run = delimiter[1];
+      const rest = line.slice(delimiter[0].length);
       if (!fence) fence = run;
       else if (run[0] === fence[0] && run.length >= fence.length && !rest.trim()) fence = undefined;
     }
