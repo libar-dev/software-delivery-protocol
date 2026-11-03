@@ -26,44 +26,100 @@ interface LinkTarget {
   readonly target: string;
 }
 
+/** A fenced code block: opened inside `depth` blockquotes, closed by a long enough `marker` run. */
+interface Fence {
+  readonly marker: string;
+  readonly length: number;
+  readonly depth: number;
+}
+
+/** Removes up to `limit` leading blockquote markers from a line, with how many it removed. */
+function unquote(line: string, limit: number): { readonly depth: number; readonly rest: string } {
+  let depth = 0;
+  let rest = line;
+  for (let marker = /^ {0,3}> ?/u.exec(rest); marker !== null && depth < limit; depth += 1) {
+    rest = rest.slice(marker[0].length);
+    marker = /^ {0,3}> ?/u.exec(rest);
+  }
+  return { depth, rest };
+}
+
+/**
+ * The document's prose, line for line: blockquote markers are removed, so a link can continue on
+ * the next quoted line, and each line of a fenced code block is blank. A fence opens after any
+ * blockquote or list-item markers and closes inside the same blockquote, or where that blockquote
+ * ends. A backtick run with another backtick later on its line opens no fence.
+ */
+function proseOf(markdown: string): string {
+  const prose: string[] = [];
+  let fence: Fence | undefined;
+  for (const line of markdown.split(/\r?\n/u)) {
+    if (fence !== undefined) {
+      const quoted = unquote(line, fence.depth);
+      if (quoted.depth === fence.depth) {
+        const close = /^\s*(`{3,}|~{3,})\s*$/u.exec(quoted.rest)?.[1];
+        if (close !== undefined && close.startsWith(fence.marker) && close.length >= fence.length) {
+          fence = undefined;
+        }
+        prose.push("");
+        continue;
+      }
+      fence = undefined;
+    }
+    const { depth, rest } = unquote(line, Number.POSITIVE_INFINITY);
+    const open = /^\s*(?:(?:[-+*]|\d{1,9}[.)])[ \t]+)*(`{3,}|~{3,})(.*)$/u.exec(rest);
+    const run = open?.[1];
+    if (run !== undefined && !(run.startsWith("`") && (open?.[2] ?? "").includes("`"))) {
+      fence = { marker: run.charAt(0), length: run.length, depth };
+      prose.push("");
+      continue;
+    }
+    prose.push(rest);
+  }
+  return prose.join("\n");
+}
+
+/**
+ * Blanks every code span, keeping line breaks. A span may wrap onto the next line of its
+ * paragraph, never past a blank line or a line that opens a heading, list item or table row.
+ */
+function withoutCodeSpans(prose: string): string {
+  return prose.replaceAll(
+    /(?<!`)(`+)(?!`)(?:(?!\n[ \t]*(?:$|\n|#{1,6}(?:[ \t]|$)|\||[-+*][ \t]|\d{1,9}[.)][ \t]))[\s\S])*?(?<!`)\1(?!`)/gu,
+    (span) => span.replaceAll(/[^\n]/gu, " "),
+  );
+}
+
 /**
  * The targets a Markdown reader follows: inline links and images, reference definitions, and HTML
- * `href` and `src` attributes. Fenced code blocks and code spans hold no links. A target with
- * unbalanced parentheses is read up to the first closing one.
+ * `href` and `src` attributes, each on the line its target starts. A destination may sit on the
+ * line after its `](` or `]:`. Fenced code blocks and code spans hold no links. A target with
+ * parentheses is read up to the first closing one. Indented code blocks, HTML comments and
+ * backslash escapes are read as prose, so a link-shaped text inside them is checked too.
  */
 function markdownLinkTargets(markdown: string): readonly LinkTarget[] {
+  const prose = withoutCodeSpans(proseOf(markdown));
+  const found = [
+    ...prose.matchAll(/\]\([ \t]*(?:\n[ \t]*)?(<[^<>\n]*>|[^\s)]+)/dgu),
+    ...prose.matchAll(/^ {0,3}\[[^\]^][^\]]*\]:[ \t]*(?:\n[ \t]*)?(<[^<>\n]*>|\S+)/dgmu),
+    ...prose.matchAll(/<(?:a|img|source)\b[^>]*?\b(?:href|src)\s*=\s*["']([^"']+)["']/dgiu),
+  ]
+    .flatMap((match) => {
+      const target = match[1];
+      const offset = match.indices?.[1]?.[0];
+      return target === undefined || offset === undefined ? [] : [{ offset, target }];
+    })
+    .sort((left, right) => left.offset - right.offset);
   const targets: LinkTarget[] = [];
-  let fence: { readonly marker: string; readonly length: number } | undefined;
-  for (const [index, raw] of markdown.split(/\r?\n/u).entries()) {
-    const fenceLine = /^\s*(`{3,}|~{3,})(.*)$/u.exec(raw);
-    if (fenceLine !== null) {
-      const run = fenceLine[1] ?? "";
-      const marker = run.charAt(0);
-      if (fence === undefined) {
-        fence = { marker, length: run.length };
-        continue;
-      }
-      if (
-        marker === fence.marker &&
-        run.length >= fence.length &&
-        /^\s*$/u.test(fenceLine[2] ?? "")
-      ) {
-        fence = undefined;
-        continue;
-      }
+  let line = 1;
+  let scanned = 0;
+  for (const { offset, target } of found) {
+    for (let next = prose.indexOf("\n", scanned); next !== -1 && next < offset; ) {
+      line += 1;
+      scanned = next + 1;
+      next = prose.indexOf("\n", scanned);
     }
-    if (fence !== undefined) continue;
-    const line = raw.replaceAll(/(`+)[^`]*?\1/gu, "");
-    const found = [
-      ...[...line.matchAll(/\]\(\s*(<[^>]*>|[^\s)]+)/gu)].map((match) => match[1]),
-      /^ {0,3}\[[^\]^][^\]]*\]:\s*(<[^>]*>|\S+)/u.exec(line)?.[1],
-      ...[
-        ...line.matchAll(/<(?:a|img|source)\b[^>]*?\b(?:href|src)\s*=\s*["']([^"']+)["']/giu),
-      ].map((match) => match[1]),
-    ];
-    for (const target of found) {
-      if (target !== undefined) targets.push({ line: index + 1, target });
-    }
+    targets.push({ line, target });
   }
   return targets;
 }
@@ -169,6 +225,18 @@ describe("relative Markdown links", () => {
       "~~~",
       "````",
       "[after](after.md)",
+      "A span `that wraps",
+      "[onto](wrapped.md)` here, and <img alt='x'",
+      '  src="html/two-line.png">.',
+      "",
+      "[two-line]:",
+      "  two-line/ref.md",
+      "```js` opens no fence: [span-line](span-line.md)",
+      "- ```md",
+      "  [listed](list-fence.md)",
+      "  ```",
+      "A stray ` backtick.",
+      "- [item](item.md) with `code`",
     ].join("\n");
     const targets = markdownLinkTargets(markdown).map(({ line, target }) => [
       line,
@@ -182,10 +250,70 @@ describe("relative Markdown links", () => {
       [2, "/root/file.md", "root/file.md"],
       [4, "https://example.com", undefined],
       [4, "#anchor", undefined],
+      [5, "html/page.md", "jtbd-stories/html/page.md"],
       [5, "mailto:a@b.c", undefined],
       [5, "query.md?x=1", "jtbd-stories/query.md"],
-      [5, "html/page.md", "jtbd-stories/html/page.md"],
       [10, "after.md", "jtbd-stories/after.md"],
+      [13, "html/two-line.png", "jtbd-stories/html/two-line.png"],
+      [16, "two-line/ref.md", "jtbd-stories/two-line/ref.md"],
+      [17, "span-line.md", "jtbd-stories/span-line.md"],
+      [22, "item.md", "jtbd-stories/item.md"],
+    ]);
+  });
+
+  it("reports a missing destination written on the line after its opening", () => {
+    const documents = new Map([
+      [
+        "jtbd-stories/story.md",
+        [
+          "Intro.",
+          "[Removed](",
+          "  ../docs/concept/not-present.md",
+          ")",
+          "",
+          "[gone]:",
+          "  ../docs/gone.md",
+          "",
+          "> A quoted [link](",
+          ">   ../docs/quoted-gone.md).",
+        ].join("\n"),
+      ],
+    ]);
+    expect(danglingLinks(documents, () => false)).toEqual([
+      "jtbd-stories/story.md:3 ../docs/concept/not-present.md",
+      "jtbd-stories/story.md:7 ../docs/gone.md",
+      "jtbd-stories/story.md:10 ../docs/quoted-gone.md",
+    ]);
+  });
+
+  it("skips a fenced block inside a blockquote and reads on where the fence or quote ends", () => {
+    const documents = new Map([
+      [
+        "jtbd-stories/story.md",
+        [
+          "> ```md",
+          "> [example](not-present.md)",
+          "> ```",
+          "> [after-fence](quoted-gone.md)",
+          ">",
+          "> > ~~~",
+          "> > [nested](nested.md)",
+          "> > ~~~",
+          "> ~~~text",
+          "> [unclosed](unclosed.md)",
+          "Out of the quote, [outside](outside-gone.md).",
+          "```text",
+          "> ```",
+          "[quoted-close](still-code.md)",
+          "```",
+          "[end](end-gone.md)",
+        ].join("\n"),
+      ],
+    ]);
+    expect(danglingLinks(documents, () => false)).toEqual([
+      "jtbd-stories/story.md:4 quoted-gone.md",
+      "jtbd-stories/story.md:11 outside-gone.md",
+      "jtbd-stories/story.md:16 end-gone.md",
     ]);
   });
 
