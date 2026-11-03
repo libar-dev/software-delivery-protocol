@@ -1,7 +1,9 @@
 import { readFileSync, readdirSync } from "node:fs";
+import type { Session } from "node:inspector";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Script } from "node:vm";
+import { ts } from "ts-morph";
 import type { GraphSchema } from "../graph/schema.js";
 import { createReader } from "./reader.js";
 import type { Reader } from "./reader.js";
@@ -50,32 +52,117 @@ export function compileBody(source: string): CompiledBody {
   try {
     return new AsyncBody("g", "graph", "report", "params", "recipes", source);
   } catch (error) {
-    // The function constructor omits positions. Compile the same body in a named wrapper
-    // only on refusal, so evaluation keeps the constructor's existing runtime behavior.
-    try {
-      new Script(`(async function(g, graph, report, params, recipes) {\n${source}\n})`, {
-        filename: "sdp-q-body",
-      });
-    } catch (syntaxError) {
-      const stack = syntaxError instanceof Error ? (syntaxError.stack ?? "") : "";
-      // The line and the caret are read apart: an unterminated template literal leaves the
-      // engine's stack without a caret, yet its line still marks where the body stopped.
-      const lineMatch = /^sdp-q-body:(\d+)/u.exec(stack);
-      const caret = /^sdp-q-body:\d+\n[^\n]*\n([^\n^]*)\^/u.exec(stack);
-      const lines = source.split("\n");
-      const wrapperLine = Number(lineMatch?.[1] ?? 2);
-      const line = Math.max(1, Math.min(lines.length, wrapperLine - 1));
-      // An error on the wrapper's closing line means the body stopped short; the engine would
-      // name the wrapper's own brace, a token the caller never wrote.
-      const pastEnd = wrapperLine - 1 > lines.length;
-      const column = pastEnd ? (lines[line - 1]?.length ?? 0) + 1 : (caret?.[1]?.length ?? 0) + 1;
-      const message = pastEnd
-        ? "the body ends before it is complete"
-        : oneLine(errorMessage(syntaxError));
-      throw new BodyParseError(line, column, message);
-    }
-    throw error;
+    // The function constructor omits positions. Diagnose the same body in a named wrapper only
+    // on refusal, so evaluation keeps the constructor's existing runtime behavior.
+    throw diagnoseRefusal(source, error);
   }
+}
+
+const bodyFile = "sdp-q-body";
+const wrapperHead = "(async function(g, graph, report, params, recipes) {\n";
+
+// The engine ends a line at LF, CR, CRLF (one terminator), U+2028 and U+2029. Positions count
+// lines the same way, or a body split by CR alone would be read as one line.
+const lineTerminators = /\r\n|[\n\r\u2028\u2029]/gu;
+
+function diagnoseRefusal(source: string, refusal: unknown): BodyParseError {
+  const wrapper = `${wrapperHead}${source}\n})`;
+  const lines = source.split(lineTerminators);
+  const lastLine = lines.length;
+  const pastEnd = (message: string) =>
+    new BodyParseError(lastLine, (lines[lastLine - 1]?.length ?? 0) + 1, message);
+
+  try {
+    new Script(wrapper, { filename: bodyFile });
+  } catch (syntaxError) {
+    const stack = syntaxError instanceof Error ? (syntaxError.stack ?? "") : "";
+    // The line and the caret are read apart: Node prints a caret only when the error's range
+    // ends on its first line, yet the line it names still marks where the error starts.
+    const lineMatch = /^sdp-q-body:(\d+)/u.exec(stack);
+    const caret = /^sdp-q-body:\d+\n[^\n]*\n([^\n^]*)\^/u.exec(stack);
+    const wrapperLine = Number(lineMatch?.[1] ?? 2);
+    // An error on the wrapper's closing line means the body stopped short; the engine would
+    // name the wrapper's own brace, a token the caller never wrote.
+    if (wrapperLine - 1 > lastLine) return pastEnd("the body ends before it is complete");
+    const line = Math.max(1, wrapperLine - 1);
+    const caretColumn = caret?.[1] === undefined ? undefined : caret[1].length + 1;
+    const column =
+      caretColumn ?? engineColumn(wrapper, wrapperLine) ?? (lines[line - 1]?.length ?? 0) + 1;
+    return new BodyParseError(line, column, oneLine(errorMessage(syntaxError)));
+  }
+
+  // The wrapper compiles while the constructor refused: the body closed the function it runs in
+  // and went on outside it, which the constructor's single-function check refuses.
+  const brace = closingBrace(wrapper) - wrapperHead.length;
+  if (brace < 0 || brace >= source.length) return pastEnd(oneLine(errorMessage(refusal)));
+  const { line, column } = bodyPosition(source, brace);
+  return new BodyParseError(
+    line,
+    column,
+    "this brace closes the function the body runs in, before the body ends",
+  );
+}
+
+/**
+ * The engine's own start column for an error on `wrapperLine`, read through an in-process
+ * inspector session: the stack carries no caret once the error's range runs past its first line.
+ * Without an inspector (a build without one, or a permission model that withholds it), the
+ * caller places the error at the end of that line, which the error's range still covers.
+ */
+function engineColumn(wrapper: string, wrapperLine: number): number | undefined {
+  let session: Session;
+  try {
+    session = new (process.getBuiltinModule("node:inspector").Session)();
+    session.connect();
+  } catch {
+    return undefined;
+  }
+  let column: number | undefined;
+  try {
+    session.post("Runtime.enable");
+    session.post(
+      "Runtime.compileScript",
+      { expression: wrapper, sourceURL: bodyFile, persistScript: false },
+      (error, result) => {
+        const details = error === null ? result.exceptionDetails : undefined;
+        if (details?.lineNumber === wrapperLine - 1) column = details.columnNumber + 1;
+      },
+    );
+  } finally {
+    session.disconnect();
+  }
+  return column;
+}
+
+/** The offset of the brace that closes the wrapper's function, read from a parse of valid source. */
+function closingBrace(wrapper: string): number {
+  const file = ts.createSourceFile(
+    `${bodyFile}.js`,
+    wrapper,
+    ts.ScriptTarget.Latest,
+    false,
+    ts.ScriptKind.JS,
+  );
+  // The wrapper's function starts right after its opening parenthesis, whatever follows it.
+  const functionAt = (node: ts.Node): ts.FunctionExpression | undefined =>
+    ts.isFunctionExpression(node) && node.getStart(file) === 1
+      ? node
+      : ts.forEachChild(node, (child) =>
+          child.pos <= 1 && child.end > 1 ? functionAt(child) : undefined,
+        );
+  return (functionAt(file)?.body.end ?? 0) - 1;
+}
+
+function bodyPosition(source: string, offset: number): { line: number; column: number } {
+  let line = 1;
+  let lineStart = 0;
+  for (const terminator of source.matchAll(lineTerminators)) {
+    const next = terminator.index + terminator[0].length;
+    if (next > offset) break;
+    line += 1;
+    lineStart = next;
+  }
+  return { line, column: offset - lineStart + 1 };
 }
 
 export class BodyParseError extends Error {
