@@ -206,3 +206,30 @@ describe("own comparator data", () => {
     },
   );
 });
+
+it("refuses a legacy Then named unspecified with the coverage-gap diagnostic", async () => {
+  const step = { kind: "then" as const, key: "unspecified", text: "unspecified", params: {} };
+  const observe = vi.fn(() => ({ kind: "unspecified" }));
+  const assertions = vi.fn();
+  const run = createRunnableExample(
+    "spec:probe.legacy",
+    {},
+    [],
+    {
+      createWorld: () => ({}),
+      invoke: () => undefined,
+      observe,
+      assertions,
+      expected: () => ({ kind: "unspecified" }),
+    },
+    [step],
+  );
+  compareContractOutcome(run, step);
+  await expect(completeRunnableExample(run)).rejects.toMatchObject({
+    message:
+      'scenario spec:probe.legacy: oracle selected "unspecified"; coverage gap cannot witness a bound example',
+    cause: new Error('oracle outcome "unspecified" names a coverage gap'),
+  });
+  expect(observe).not.toHaveBeenCalled();
+  expect(assertions).not.toHaveBeenCalled();
+});

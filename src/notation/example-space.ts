@@ -27,6 +27,7 @@ export const contractsFindingIds = {
   conflictingStepKey: "contracts/conflicting-step-key",
   duplicateStepKey: "contracts/duplicate-step-key",
   reservedThenSlot: "contracts/reserved-then-slot",
+  reservedThenKey: "contracts/reserved-then-key",
 } as const;
 
 export function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -74,8 +75,8 @@ export function structuredEntriesOf(node: PrimitiveNode): readonly StructuredEnt
   return structured;
 }
 
-/** Then payload fields share the flat Outcome object with its discriminant. */
-export function reservedThenSlotsOf(
+/** Locate Then occurrences without losing their authored indexes. */
+function thenStepsOf(
   node: PrimitiveNode,
 ): readonly { readonly text: string; readonly path: string }[] {
   const behavior = asRecord(node.sections?.behavior);
@@ -93,7 +94,44 @@ export function reservedThenSlotsOf(
       })),
     ),
   ];
-  return steps.filter(({ text }) => parseSlots(text).some((slot) => slot.name === "kind"));
+  return steps;
+}
+
+/** Then payload fields share the flat Outcome object with its discriminant. */
+export function reservedThenSlotsOf(
+  node: PrimitiveNode,
+): readonly { readonly text: string; readonly path: string }[] {
+  return thenStepsOf(node).filter(({ text }) =>
+    parseSlots(text).some((slot) => slot.name === "kind"),
+  );
+}
+
+/** The coverage-gap outcome cannot also identify an authored Then. */
+export function reservedThenKeysOf(
+  node: PrimitiveNode,
+  graph: GraphSchema,
+): readonly { readonly text: string; readonly path: string }[] {
+  const parents = graph.edges
+    .filter((edge) => edge.from === node.id && edge.type === "refines" && edge.claim === "declared")
+    .flatMap((edge) =>
+      graph.nodes.filter(
+        (candidate): candidate is PrimitiveNode =>
+          candidate.nodeType === "Primitive" && candidate.id === edge.to,
+      ),
+    );
+  return thenStepsOf(node).filter(({ text, path }) => {
+    const skeleton = stepSkeleton(text);
+    const ownKey = authoredStepKey(node, skeleton);
+    if (ownKey !== undefined) return ownKey === "unspecified";
+    if (path.startsWith("behavior.examples[")) {
+      const inheritedKeys = parents.flatMap((parent) => {
+        const entry = vocabularyOf(parent, [])?.find((entry) => entry.skeleton === skeleton);
+        return entry === undefined ? [] : [entry.key];
+      });
+      if (inheritedKeys.length > 0) return inheritedKeys.includes("unspecified");
+    }
+    return skeleton === "unspecified";
+  });
 }
 
 export interface VocabularyEntry {

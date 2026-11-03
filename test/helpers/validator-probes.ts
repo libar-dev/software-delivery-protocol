@@ -216,6 +216,31 @@ const graphPairs: ProbeEntry[] = [
     ]),
   ),
   graphPair(
+    graphValidatorIds.reservedThenKey,
+    graph([
+      primitive(subject.id, {
+        sections: {
+          ...subject.sections,
+          behavior: {
+            ...subject.sections?.behavior,
+            exampleSpace: { then: ["unspecified"] },
+          },
+        },
+      }),
+    ]),
+    graph([
+      primitive(subject.id, {
+        sections: {
+          ...subject.sections,
+          behavior: {
+            ...subject.sections?.behavior,
+            exampleSpace: { then: ["specified"] },
+          },
+        },
+      }),
+    ]),
+  ),
+  graphPair(
     graphValidatorIds.authoringShape,
     { graph: authoringShape },
     {

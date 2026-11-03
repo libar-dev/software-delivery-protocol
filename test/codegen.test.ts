@@ -111,10 +111,15 @@ function loadGeneratedModule(
   return exports;
 }
 
-function generateProbe(steps: string) {
+function generateProbe(
+  steps: string,
+  vocabulary = steps,
+  parentId = "spec:probe.runtime",
+  childId = "spec:probe.runtime.shared",
+) {
   const parent = reifyMarkdownCarrier(
     `---
-id: spec:probe.runtime
+id: ${parentId}
 kind: behavior
 altitude: story
 readiness: scoped
@@ -125,20 +130,20 @@ relations: {}
 - outcome: Exercise generated step dispatch.
 ## Example space
 \`\`\`gwt-vocabulary
-${steps}
+${vocabulary}
 \`\`\`
 `,
     "parent.sdp.md",
   );
   const child = reifyMarkdownCarrier(
     `---
-id: spec:probe.runtime.shared
+id: ${childId}
 kind: example
 altitude: story
 readiness: scoped
 relations:
-  refines: spec:probe.runtime
-  verifies: spec:probe.runtime
+  refines: ${parentId}
+  verifies: ${parentId}
 ---
 # Shared step
 ## Intent
@@ -168,7 +173,7 @@ ${steps}
       {
         from: "test:probe.runtime",
         type: "verifies",
-        to: "spec:probe.runtime.shared",
+        to: childId,
         claim: "anchored",
       },
     ],
@@ -177,8 +182,12 @@ ${steps}
   return generated;
 }
 
-function generatedProbe(steps: string, adapters: ProbeAdapters): () => Promise<void> {
-  const generated = generateProbe(steps);
+function generatedProbe(
+  steps: string,
+  adapters: ProbeAdapters,
+  vocabulary = steps,
+): () => Promise<void> {
+  const generated = generateProbe(steps, vocabulary);
   const contractModule = loadGeneratedModule(
     generated.files.get("probe.runtime.shared.contract.ts") ?? "",
   );
@@ -281,7 +290,7 @@ describe("the contracts codegen stage", () => {
     },
   );
 
-  it("preserves the noMatchingThen diagnostic and cause for an unspecified oracle", async () => {
+  it("names the unspecified coverage gap with its own diagnostic and cause", async () => {
     const observe = vi.fn(() => ({ kind: "unspecified" }));
     const assertions = vi.fn();
     const run = generatedProbe("Given ready\nWhen run\nThen done", {
@@ -294,30 +303,12 @@ describe("the contracts codegen stage", () => {
 
     await expect(run()).rejects.toMatchObject({
       message:
-        'scenario spec:probe.runtime.shared: oracle selected "unspecified"; available Then steps: "done"',
-      cause: new Error('oracle kind "unspecified" has no matching Then'),
+        'scenario spec:probe.runtime.shared: oracle selected "unspecified"; coverage gap cannot witness a bound example',
+      cause: new Error('oracle outcome "unspecified" names a coverage gap'),
     });
     expect(observe).not.toHaveBeenCalled();
     expect(assertions).not.toHaveBeenCalled();
   });
-
-  it.each(["unspecified", "[#unspecified] a coverage gap"])(
-    "refuses an oracle coverage gap even when Then is %s",
-    async (then) => {
-      const observe = vi.fn(() => ({ kind: "unspecified" }));
-      const assertions = vi.fn();
-      const run = generatedProbe(`Given ready\nWhen run\nThen ${then}`, {
-        createWorld: () => ({}),
-        invoke: () => undefined,
-        observe,
-        expected: () => ({ kind: "unspecified" }),
-        assertions,
-      });
-      await expect(run()).rejects.toThrow('oracle selected "unspecified"');
-      expect(observe).not.toHaveBeenCalled();
-      expect(assertions).not.toHaveBeenCalled();
-    },
-  );
 
   it("emits a space contract per example-space parent and a step contract per bindable example", () => {
     const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), child(BOUND_GWT)] });
@@ -1152,7 +1143,29 @@ ${steps}
   );
 });
 
-describe("own generated handler data", () => {
+describe("runtime and generation regressions", () => {
+  it.each(["constructor", "toString", "hasOwnProperty", "valueOf"])(
+    "refuses an omitted inherited Condition %s through the generated registrar",
+    async (name) => {
+      const steps = "Given ready\nWhen run\nThen done";
+      const expected = vi.fn(() => ({ kind: "done" }));
+      const observe = vi.fn(() => ({ kind: "done" }));
+      const run = generatedProbe(
+        steps,
+        {
+          createWorld: () => ({}),
+          invoke: () => undefined,
+          expected,
+          observe,
+        },
+        `Given unused {${name}:number}\n${steps}`,
+      );
+      await expect(run()).rejects.toThrow(`missing Conditions: "${name}"`);
+      expect(expected).not.toHaveBeenCalled();
+      expect(observe).not.toHaveBeenCalled();
+    },
+  );
+
   it("emits an own handler for a prototype-named generated step", async () => {
     const observe = vi.fn(() => ({ kind: "__proto__" }));
     const run = generatedProbe("Given ready\nWhen run\nThen __proto__", {
@@ -1164,4 +1177,236 @@ describe("own generated handler data", () => {
     await run();
     expect(observe).toHaveBeenCalledOnce();
   });
+
+  it("compiles generated names that collide with runtime imports", () => {
+    const generated = generateProbe(
+      "Given ready\nWhen run\nThen done",
+      undefined,
+      "spec:probe.unspecified",
+      "spec:probe.unspecified.runnable-example",
+    );
+    expect(generated.files.size).toBe(2);
+    expect(generated.registrars.size).toBe(1);
+    const sources = new Map([
+      ...[...generated.files].map(
+        ([path, text]) => [process.cwd() + "/generated/contracts/" + path, text] as const,
+      ),
+      ...[...generated.registrars].map(
+        ([path, text]) => [process.cwd() + "/" + path, text] as const,
+      ),
+    ]);
+    const options: ts.CompilerOptions = {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      types: ["node"],
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      paths: {
+        "@libar-dev/software-delivery-protocol/runner": [process.cwd() + "/src/runner/index.ts"],
+        "@libar-dev/software-delivery-protocol/testing": [process.cwd() + "/src/testing/index.ts"],
+      },
+    };
+    const host = ts.createCompilerHost(options);
+    const getSourceFile = host.getSourceFile.bind(host);
+    const fileExists = host.fileExists.bind(host);
+    host.fileExists = (file) => sources.has(file) || fileExists(file);
+    host.getSourceFile = (file, version, onError, fresh) => {
+      const text = sources.get(file);
+      return text === undefined
+        ? getSourceFile(file, version, onError, fresh)
+        : ts.createSourceFile(file, text, version, true);
+    };
+    const program = ts.createProgram([...sources.keys()], options, host);
+    expect(
+      ts
+        .getPreEmitDiagnostics(program)
+        .map((d) => `${String(d.code)}: ${ts.flattenDiagnosticMessageText(d.messageText, "\n")}`),
+    ).toEqual([]);
+  });
+});
+describe("reserved Then contract key unspecified", () => {
+  function carrierGraph(steps: string, vocabulary: boolean) {
+    const carrier = reifyMarkdownCarrier(
+      `---
+id: spec:probe.reserved-key
+kind: ${vocabulary ? "behavior" : "example"}
+altitude: story
+readiness: idea
+relations: {}
+---
+# Reserved slot probe
+## Intent
+- outcome: Check the Then slot reservation.
+${vocabulary ? "## Example space\n```gwt-vocabulary" : "```gwt"}
+${steps}
+\`\`\`
+`,
+      "probe.sdp.md",
+    );
+    expect(carrier.findings).toEqual([]);
+    return deriveGraph(carrier.specs, [], []);
+  }
+
+  for (const vocabulary of [true, false]) {
+    it.each(["unspecified", "[#unspecified] a coverage gap"])(
+      `refuses a reserved Then key in ${vocabulary ? "vocabulary" : "example"}: %s`,
+      (then) => {
+        const graph = carrierGraph(`Given ready\nWhen run\nThen ${then}`, vocabulary);
+        expect(validateGraph(graph).findings).toContainEqual(
+          expect.objectContaining({
+            validatorId: "conformance/reserved-then-key",
+            severity: "error",
+            path: vocabulary ? "behavior.exampleSpace.then[0]" : "behavior.examples[0].then[0]",
+          }),
+        );
+        const generated = generateContracts(graph);
+        expect(generated.files.size).toBe(0);
+        expect(generated.findings).toContainEqual(
+          expect.objectContaining({
+            validatorId: "contracts/reserved-then-key",
+            severity: "warning",
+            message: expect.stringContaining(
+              'Then contract key "unspecified" is reserved',
+            ) as unknown,
+          }),
+        );
+      },
+    );
+  }
+
+  it("checks later structured entries at their authored index", () => {
+    const graph = deriveFixtureGraph({ specs: [parent(), child(BOUND_GWT)] });
+    const changed: GraphSchema = {
+      ...graph,
+      nodes: graph.nodes.map((node) =>
+        node.nodeType === "Primitive" && node.specKind === "example"
+          ? {
+              ...node,
+              sections: {
+                ...node.sections,
+                behavior: {
+                  examples: ["A prose example", BOUND_GWT, { ...BOUND_GWT, then: ["unspecified"] }],
+                },
+              },
+            }
+          : node,
+      ),
+    };
+    expect(validateGraph(changed).findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "conformance/reserved-then-key",
+        path: "behavior.examples[2].then[0]",
+      }),
+    );
+    expect(generateContracts(changed).files.has("orders.create-order.valid-cart.contract.ts")).toBe(
+      false,
+    );
+  });
+
+  it("withholds registrars even when the child does not use the reserved vocabulary step", () => {
+    const base = deriveFixtureGraph({
+      specs: [
+        parent({ ...VOCABULARY, then: [...VOCABULARY.then, "unspecified"] }),
+        child(BOUND_GWT),
+      ],
+    });
+    const graph: GraphSchema = {
+      ...base,
+      nodes: [
+        ...base.nodes,
+        {
+          id: "test:probe.reserved-key",
+          nodeType: "Anchor",
+          claim: "anchored",
+          file: "test/probe.test.ts",
+          line: 1,
+        },
+      ],
+      edges: [
+        ...base.edges,
+        {
+          from: "test:probe.reserved-key",
+          to: "spec:orders.create-order.valid-cart",
+          type: "verifies",
+          claim: "anchored",
+        },
+      ],
+    };
+    const generated = generateContracts(graph);
+    expect(generated.files.has("orders.create-order.space.ts")).toBe(false);
+    expect(generated.files.has("orders.create-order.valid-cart.contract.ts")).toBe(true);
+    expect(generated.registrars.size).toBe(0);
+  });
+
+  it("refuses a reserved Then key inherited from the parent vocabulary", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          ...parent({ given: ["ready"], when: ["run"], then: ["a coverage gap"] }),
+          behavior: {
+            exampleSpace: { given: ["ready"], when: ["run"], then: ["a coverage gap"] },
+            stepKeys: { unspecified: "a coverage gap" },
+          },
+        }),
+        child({ given: ["ready"], when: ["run"], then: ["a coverage gap"] }),
+      ],
+    });
+    expect(validateGraph(graph).findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "conformance/reserved-then-key",
+        subjectId: "spec:orders.create-order.valid-cart",
+      }),
+    );
+    expect(generateContracts(graph).files.size).toBe(0);
+  });
+
+  it("allows unspecified text under a distinct explicit contract key", () => {
+    const graph = carrierGraph("Given ready\nWhen run\nThen [#specified] unspecified", true);
+    expect(
+      validateGraph(graph).findings.filter(
+        (f) => f.validatorId === "conformance/reserved-then-key",
+      ),
+    ).toEqual([]);
+    expect(generateContracts(graph).files.get("probe.reserved-key.space.ts")).toContain(
+      'readonly kind: "specified"',
+    );
+  });
+
+  it.each(["given", "when"] as const)("allows unspecified as a %s key", (phase) => {
+    const steps = { given: "ready", when: "run", then: "done", [phase]: "[#unspecified] open" };
+    const graph = carrierGraph(
+      `Given ${steps.given}\nWhen ${steps.when}\nThen ${steps.then}`,
+      true,
+    );
+    expect(
+      validateGraph(graph).findings.filter(
+        (f) => f.validatorId === "conformance/reserved-then-key",
+      ),
+    ).toEqual([]);
+    expect(generateContracts(graph).files.size).toBe(1);
+  });
+});
+
+it.each([
+  ['result {kind: "accepted"}', "slot"],
+  ["unspecified", "key"],
+])("does not claim to withhold a step contract for a non-example with %s", (then, reservation) => {
+  const graph = deriveFixtureGraph({
+    specs: [
+      spec({
+        ...parent(),
+        behavior: { examples: [{ given: ["ready"], when: ["run"], then: [then] }] },
+      }),
+    ],
+  });
+  expect(validateGraph(graph).findings).toContainEqual(
+    expect.objectContaining({
+      validatorId: `conformance/reserved-then-${reservation}`,
+      severity: "error",
+    }),
+  );
+  expect(generateContracts(graph).files.size).toBe(0);
+  expect(generateContracts(graph).findings).toEqual([]);
 });

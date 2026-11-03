@@ -135,6 +135,13 @@ export async function completeRunnableExample<W, C, O extends RunnableOutcome>(
 ): Promise<void> {
   const oracle = oracleForComparison(execution);
 
+  if (oracle.kind === "unspecified") {
+    throw new Error(
+      `scenario ${execution.spec}: oracle selected "unspecified"; coverage gap cannot witness a bound example`,
+      { cause: new Error('oracle outcome "unspecified" names a coverage gap') },
+    );
+  }
+
   if (!execution.compared) {
     const cause = new Error(`oracle kind ${JSON.stringify(oracle.kind)} has no matching Then`);
     throw new Error(
