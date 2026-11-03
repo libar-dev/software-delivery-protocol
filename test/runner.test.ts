@@ -7,7 +7,7 @@ import {
   stepKindLabel,
   unspecified,
 } from "../src/runner/index.js";
-import type { ExampleContract } from "../src/runner/index.js";
+import type { ExampleContract, ParamShape, StepFn } from "../src/runner/index.js";
 
 /**
  * The runner core, pinned framework-free: the plan (order, dedupe-to-one-handler, per-occurrence
@@ -195,7 +195,7 @@ describe("own step data", () => {
     await expect(runExamplePlan(planExample(contract, {}), {})).rejects.toThrow(
       `at step: Then ${key}\nno handler bound for step key "${key}"`,
     );
-    const handler = vi.fn();
+    const handler = vi.fn<StepFn<object, ParamShape>>();
     const world = {};
     await runExamplePlan(planExample(contract, { [key]: handler }), world);
     expect(handler).toHaveBeenCalledExactlyOnceWith(world, step.params, step);

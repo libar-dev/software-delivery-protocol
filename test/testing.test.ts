@@ -170,7 +170,9 @@ describe("own comparator data", () => {
           expect(expected).toHaveBeenCalledOnce();
           expect(observe).toHaveBeenCalledOnce();
         } else {
-          expect(() => compareContractOutcome(run, step)).toThrow(`missing Conditions: "${name}"`);
+          expect(() => {
+            compareContractOutcome(run, step);
+          }).toThrow(`missing Conditions: "${name}"`);
           expect(expected).not.toHaveBeenCalled();
           expect(observe).not.toHaveBeenCalled();
         }
@@ -194,14 +196,14 @@ describe("own comparator data", () => {
           },
           [],
         );
-        expect(() =>
+        expect(() => {
           compareContractOutcome(run, {
             kind: "then",
             key: "done",
             text: "done",
             params: missing ? payload : {},
-          }),
-        ).toThrow(`$.${name}: ${missing ? "missing; expected" : "extra; actual"} 3`);
+          });
+        }).toThrow(`$.${name}: ${missing ? "missing; expected" : "extra; actual"} 3`);
       }
     },
   );
