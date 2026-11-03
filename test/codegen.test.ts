@@ -1227,6 +1227,89 @@ describe("runtime and generation regressions", () => {
   });
 });
 describe("reserved Then contract key unspecified", () => {
+  for (const withThen of [false, true]) {
+    it.each([
+      ["validation", validateGraph],
+      ["generation", generateContracts],
+    ] as const)(
+      `keeps edge reads linear during %s ${withThen ? "with" : "without"} Then steps`,
+      (_name, run) => {
+        const count = 250;
+        const graph = deriveFixtureGraph({
+          specs: [
+            parent(VOCABULARY),
+            ...Array.from({ length: count }, (_, i) =>
+              spec({
+                ...child(BOUND_GWT, `spec:probe.member-${String(i)}`),
+                kind: "behavior",
+                readiness: "idea",
+                behavior: withThen ? { examples: [BOUND_GWT] } : {},
+              }),
+            ),
+          ],
+        });
+        let edgeReads = 0;
+        const measured = {
+          ...graph,
+          edges: graph.edges.map((edge) => ({
+            ...edge,
+            get from() {
+              edgeReads += 1;
+              return edge.from;
+            },
+          })),
+        };
+        run(measured);
+        // Count graph work, not wall time: unrelated edges must not be read for every Spec.
+        // Allow ample room for the separate validators and generation passes.
+        expect(edgeReads).toBeLessThan(count * 50);
+      },
+    );
+  }
+
+  it.each([false, true])(
+    "uses the first matching parent in id order when the reserved key comes first: %s",
+    (reservedFirst) => {
+      const steps = { given: ["ready"], when: ["run"], then: ["done"] };
+      const parents = ["a", "z"].map((suffix, i) =>
+        spec({
+          ...parent(steps),
+          id: specId(`spec:probe.${suffix}`),
+          behavior: {
+            exampleSpace: steps,
+            stepKeys: { [(i === 0) === reservedFirst ? "unspecified" : "specified"]: "done" },
+          },
+        }),
+      );
+      const graph = deriveFixtureGraph({
+        specs: [
+          ...parents,
+          spec({
+            ...child(steps),
+            // Reverse authored order to distinguish code-unit ordering from edge ordering.
+            relations: [refines(specId("spec:probe.z")), refines(specId("spec:probe.a"))],
+          }),
+        ],
+      });
+      const reversed = { ...graph, edges: [...graph.edges].reverse() };
+      for (const candidate of [graph, reversed]) {
+        const childId = "spec:orders.create-order.valid-cart";
+        const generated = generateContracts(candidate);
+        for (const { findings } of [validateGraph(candidate), generated]) {
+          expect(
+            findings.some(
+              (finding) =>
+                finding.subjectId === childId && finding.validatorId.endsWith("/reserved-then-key"),
+            ),
+          ).toBe(reservedFirst);
+        }
+        const contract = generated.files.get("orders.create-order.valid-cart.contract.ts");
+        if (reservedFirst) expect(contract).toBeUndefined();
+        else expect(contract).toContain('key: "specified"');
+      }
+    },
+  );
+
   function carrierGraph(steps: string, vocabulary: boolean) {
     const carrier = reifyMarkdownCarrier(
       `---

@@ -744,7 +744,7 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
         validatorId: contractsFindingIds.reservedThenSlot,
         reason: 'Then slot "kind" is reserved for the Outcome discriminant',
       })),
-      ...reservedThenKeysOf(node, graph).map((step) => ({
+      ...reservedThenKeysOf(node, graphIndex).map((step) => ({
         ...step,
         validatorId: contractsFindingIds.reservedThenKey,
         reason: 'Then contract key "unspecified" is reserved for the coverage gap',

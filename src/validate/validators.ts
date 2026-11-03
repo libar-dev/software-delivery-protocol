@@ -1922,11 +1922,11 @@ function checkReservedThenSlots(graph: GraphSchema): readonly Finding[] {
   );
 }
 
-function checkReservedThenKeys(graph: GraphSchema): readonly Finding[] {
+function checkReservedThenKeys(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
   return graph.nodes.flatMap((node) =>
     node.nodeType !== "Primitive"
       ? []
-      : reservedThenKeysOf(node, graph).map(({ text, path }) =>
+      : reservedThenKeysOf(node, index).map(({ text, path }) =>
           createFinding({
             validatorId: graphValidatorIds.reservedThenKey,
             family: "conformance",
@@ -1989,7 +1989,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
     ...checkProseMentions(graph, index),
     ...checkRuleExercises(graph, index),
     ...checkReservedThenSlots(graph),
-    ...checkReservedThenKeys(graph),
+    ...checkReservedThenKeys(graph, index),
     ...checkSupersededDecisions(graph, index),
     ...authoringShapeFindings,
     ...checkDeliveryFacts(graph, derivedFacts),

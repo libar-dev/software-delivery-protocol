@@ -1,5 +1,6 @@
 import type { GraphSchema, PrimitiveNode } from "../graph/schema.js";
 import type { Finding } from "../validate/contracts.js";
+import type { GraphIndex } from "../validate/graph-index.js";
 import { parseSlots, stepSkeleton } from "./slots.js";
 import type { SlotDeclaredType, SlotScalar } from "./slots.js";
 export const contractsFindingIds = {
@@ -109,26 +110,30 @@ export function reservedThenSlotsOf(
 /** The coverage-gap outcome cannot also identify an authored Then. */
 export function reservedThenKeysOf(
   node: PrimitiveNode,
-  graph: GraphSchema,
+  index: GraphIndex,
 ): readonly { readonly text: string; readonly path: string }[] {
-  const parents = graph.edges
-    .filter((edge) => edge.from === node.id && edge.type === "refines" && edge.claim === "declared")
-    .flatMap((edge) =>
-      graph.nodes.filter(
-        (candidate): candidate is PrimitiveNode =>
-          candidate.nodeType === "Primitive" && candidate.id === edge.to,
-      ),
-    );
-  return thenStepsOf(node).filter(({ text, path }) => {
+  const steps = thenStepsOf(node);
+  if (steps.length === 0) return [];
+
+  // Both callers already index the graph. Inspect only this Spec's declared parents, in the
+  // same code-unit order codegen uses to resolve a step against multiple vocabularies.
+  const parents = (index.edgesByFrom.get(node.id) ?? [])
+    .filter((edge) => edge.type === "refines" && edge.claim === "declared")
+    .map((edge) => edge.to)
+    .sort()
+    .flatMap((id) => {
+      const parent = index.primitivesById.get(id);
+      return parent === undefined ? [] : [vocabularyOf(parent, []) ?? []];
+    });
+  return steps.filter(({ text, path }) => {
     const skeleton = stepSkeleton(text);
     const ownKey = authoredStepKey(node, skeleton);
     if (ownKey !== undefined) return ownKey === "unspecified";
     if (path.startsWith("behavior.examples[")) {
-      const inheritedKeys = parents.flatMap((parent) => {
-        const entry = vocabularyOf(parent, [])?.find((entry) => entry.skeleton === skeleton);
-        return entry === undefined ? [] : [entry.key];
-      });
-      if (inheritedKeys.length > 0) return inheritedKeys.includes("unspecified");
+      for (const vocabulary of parents) {
+        const entry = vocabulary.find((entry) => entry.skeleton === skeleton);
+        if (entry !== undefined) return entry.key === "unspecified";
+      }
     }
     return skeleton === "unspecified";
   });
