@@ -277,6 +277,83 @@ describe("relative Markdown links", () => {
     ]);
   });
 
+  it("skips code examples, comments and Markdown in HTML blocks, which render no link", () => {
+    const documents = new Map([
+      [
+        "jtbd-stories/story.md",
+        [
+          "Intro.",
+          "",
+          "    [example](not-present.md)",
+          "",
+          "<!-- [hidden](comment-only.md) -->",
+          "Text <!-- [inline](inline-comment.md) --> and \\[escaped](escaped.md).",
+          "",
+          "<pre>",
+          "[pre](pre-example.md)",
+          "</pre>",
+          "",
+          "<details>",
+          '[raw](raw-markdown.md) <a href="details-gone.md">read</a>',
+          "</details>",
+          "",
+          "- Item:",
+          "",
+          "      [listed](listed-code.md)",
+          "",
+          "> Quote:",
+          ">",
+          ">     [quoted](quoted-code.md)",
+          "",
+          "![alt [inner](image-text.md)](image-gone.png)",
+          "[outer [inner](inner-gone.md) text](outer.md)",
+          '<!-- ends early --!> <a href="after-comment-gone.md">x</a> -->',
+          "[after](after-gone.md)",
+          "",
+          "<textarea>",
+          "",
+          "[text](textarea-text.md)",
+          "</textarea>",
+          "[last](last-gone.md)",
+        ].join("\n"),
+      ],
+    ]);
+    expect(danglingLinks(documents, () => false)).toEqual([
+      "jtbd-stories/story.md:13 details-gone.md",
+      "jtbd-stories/story.md:24 image-gone.png",
+      "jtbd-stories/story.md:25 inner-gone.md",
+      "jtbd-stories/story.md:26 after-comment-gone.md",
+      "jtbd-stories/story.md:27 after-gone.md",
+      "jtbd-stories/story.md:33 last-gone.md",
+    ]);
+  });
+
+  it("reads an indented paragraph that continues a list item or footnote, and skips code", () => {
+    const documents = new Map([
+      [
+        "jtbd-stories/story.md",
+        [
+          "1. Step.",
+          "",
+          "    [continued item](item-gone.md)",
+          "",
+          "Text[^1].",
+          "",
+          "[^1]: Note [first](note-gone.md).",
+          "",
+          "    [continued](continued-gone.md)",
+          "",
+          "        [code](footnote-code.md)",
+        ].join("\n"),
+      ],
+    ]);
+    expect(danglingLinks(documents, () => false)).toEqual([
+      "jtbd-stories/story.md:3 item-gone.md",
+      "jtbd-stories/story.md:7 note-gone.md",
+      "jtbd-stories/story.md:9 continued-gone.md",
+    ]);
+  });
+
   it("decodes character references in a destination before it resolves the path", () => {
     const documents = new Map([
       [

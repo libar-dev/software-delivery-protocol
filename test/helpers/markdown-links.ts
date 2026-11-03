@@ -3,19 +3,26 @@ import { posix } from "node:path";
 import { decodeHtmlReferences, decodeMarkdownReferences } from "./character-references.js";
 
 /**
- * The reader behind the relative-link gate (`test/markdown-links.test.ts`): it finds the link
- * targets in a Markdown document as cmark-gfm, the parser the forge renders these documents with,
- * would. It follows cmark-gfm's block rules where they decide what is code or raw HTML:
- * blockquotes, list items, fenced and indented code, HTML blocks, paragraphs with their lazy
- * continuation lines, headings, and GFM tables. Inside each paragraph, heading and table cell it
- * follows the inline rules for code spans, backslash escapes, raw HTML, inline links and images,
- * and reference definitions.
+ * The reader behind the relative-link gate (`test/markdown-links.test.ts`): it finds the targets a
+ * reader can follow in a Markdown document as the forge renders it. The forge parses Markdown with
+ * cmark-gfm, then passes the raw HTML through an HTML sanitizer.
  *
- * Where the reader departs from cmark-gfm, it reads more, never less, so a dangling link cannot
- * pass unseen. It reads every `](` that has a valid destination, with or without an opening `[`.
- * It reads indented code, HTML blocks and inline HTML, comments included, for HTML `href` and
- * `src` values and Markdown link destinations. It reads footnote definitions as paragraphs. A
- * destination decodes character references as `character-references.ts` says.
+ * Blocks follow cmark-gfm line by line: blockquotes, list items, footnote definitions, fenced and
+ * indented code, HTML blocks, paragraphs with their lazy continuation lines, headings, and GFM
+ * tables. Inside each paragraph, heading and table cell the reader follows the inline rules for
+ * code spans, backslash escapes, autolinks (always absolute, so never reported), raw HTML,
+ * brackets, inline links and images, and reference definitions. It reads raw HTML, in a block or
+ * inline, as an HTML parser does, for the `href` and `src` values of its tags.
+ *
+ * What renders no link is skipped: fenced and indented code, code spans, HTML comments, and
+ * Markdown inside an HTML block such as `<pre>`. Brackets pair as cmark-gfm pairs them, so an
+ * escaped bracket opens no link, a link's text holds no other link, and an image's description
+ * renders as text. Destinations decode character references as `character-references.ts` says.
+ *
+ * Where the reader departs from the forge, it reads more, never less. It reads every reference
+ * definition and footnote definition, used or not, and the destination of a link whose text holds
+ * a reference link. It reads tags inside processing instructions, declarations and CDATA
+ * sections, which the forge's sanitizer treats inconsistently.
  */
 
 export interface LinkTarget {
@@ -26,21 +33,21 @@ export interface LinkTarget {
 
 /** Text read as one unit, with the line number of each of its lines. */
 interface Scope {
-  /** A paragraph may open with reference definitions; raw text has no code spans. */
-  readonly kind: "paragraph" | "inline" | "raw";
+  /** A paragraph may open with reference definitions; an HTML block holds no Markdown. */
+  readonly kind: "paragraph" | "inline" | "html";
   readonly lines: { readonly number: number; readonly text: string }[];
 }
 
 type Container =
   | { readonly kind: "quote" }
+  | { readonly kind: "footnote" }
   | { readonly kind: "item"; readonly indent: number; hasChild: boolean };
 
 type Leaf =
-  | { readonly kind: "none" | "table" }
+  | { readonly kind: "none" | "table" | "indented" }
   | { readonly kind: "paragraph"; readonly scope: Scope; tableTried: boolean }
   | { readonly kind: "fence"; readonly marker: string; readonly length: number }
-  | { readonly kind: "html"; readonly end: RegExp | "blank"; readonly scope: Scope }
-  | { readonly kind: "indented"; readonly scope: Scope };
+  | { readonly kind: "html"; readonly end: RegExp | "blank"; readonly scope: Scope };
 
 const none: Leaf = { kind: "none" };
 const punctuation = /[!-/:-@[-`{-~]/u;
@@ -72,7 +79,9 @@ const isBlank = (text: string): boolean => /^ *$/u.test(text);
  * paragraph.
  */
 function htmlBlockEnd(body: string, afterParagraph: boolean): RegExp | "blank" | undefined {
-  if (/^<(?:script|pre|style)(?:[ >]|$)/iu.test(body)) return /<\/(?:script|pre|style)>/iu;
+  if (/^<(?:script|pre|style|textarea)(?:[ >]|$)/iu.test(body)) {
+    return /<\/(?:script|pre|style|textarea)>/iu;
+  }
   if (body.startsWith("<!--")) return /-->/u;
   if (body.startsWith("<?")) return /\?>/u;
   if (/^<![A-Z]/u.test(body)) return />/u;
@@ -96,9 +105,9 @@ function cellsOf(row: string): readonly string[] | undefined {
 
 /**
  * The document cut into the units cmark-gfm parses inline content from: paragraphs, headings and
- * table cells, plus HTML blocks and indented code, which the link reader reads raw. Fenced code is
- * left out. The block structure follows cmark-gfm line by line: open containers continue or
- * close, a paragraph takes lazy continuation lines, and new blocks open in its order.
+ * table cells, plus HTML blocks, which the link reader reads as HTML. Code is left out. The block
+ * structure follows cmark-gfm line by line: open containers continue or close, a paragraph takes
+ * lazy continuation lines, and new blocks open in its order.
  */
 function scopesOf(markdown: string): readonly Scope[] {
   const scopes: Scope[] = [];
@@ -119,6 +128,11 @@ function scopesOf(markdown: string): readonly Scope[] {
         const marker = /^ {0,3}> ?/u.exec(rest);
         if (marker === null) break;
         rest = rest.slice(marker[0].length);
+      } else if (container.kind === "footnote") {
+        // cmark-gfm continues a footnote definition on a line indented four columns, or on an
+        // empty line; a line of only spaces closes it.
+        if (indentOf(rest) >= 4) rest = rest.slice(4);
+        else if (line !== "") break;
       } else if (indentOf(rest) >= container.indent) {
         rest = rest.slice(container.indent);
       } else if (isBlank(rest) && container.hasChild) {
@@ -136,7 +150,6 @@ function scopesOf(markdown: string): readonly Scope[] {
       return;
     }
     if (containersMatched && leaf.kind === "indented" && (isBlank(rest) || indentOf(rest) >= 4)) {
-      leaf.scope.lines.push({ number, text: rest.slice(4) });
       return;
     }
     if (containersMatched && leaf.kind === "html" && !(leaf.end === "blank" && isBlank(rest))) {
@@ -161,7 +174,7 @@ function scopesOf(markdown: string): readonly Scope[] {
       if (indent >= 4) {
         if (maybeLazy || isBlank(rest)) break;
         openBlock();
-        leaf = { kind: "indented", scope: startScope("raw", number, rest.slice(4)) };
+        leaf = { kind: "indented" };
         return;
       }
       if (body.startsWith(">")) {
@@ -187,7 +200,7 @@ function scopesOf(markdown: string): readonly Scope[] {
       const htmlEnd = htmlBlockEnd(body, afterParagraph);
       if (htmlEnd !== undefined) {
         openBlock();
-        const scope = startScope("raw", number, rest);
+        const scope = startScope("html", number, rest);
         if (htmlEnd === "blank" || !htmlEnd.test(body))
           leaf = { kind: "html", end: htmlEnd, scope };
         return;
@@ -199,6 +212,16 @@ function scopesOf(markdown: string): readonly Scope[] {
       if (/^(?:(?:\* *){3,}|(?:- *){3,}|(?:_ *){3,})$/u.test(body)) {
         openBlock();
         return;
+      }
+      const footnote = /^\[\^[^\] ]+\]: */u.exec(body);
+      if (footnote !== null) {
+        openBlock();
+        containers.push({ kind: "footnote" });
+        matched = containers.length;
+        rest = body.slice(footnote[0].length);
+        afterParagraph = false;
+        maybeLazy = false;
+        continue;
       }
       const item = /^(?:[-+*]|(\d{1,9})[.)])(?= |$)/u.exec(body);
       const afterMarker = item === null ? "" : body.slice(item[0].length);
@@ -392,48 +415,118 @@ function definitionAt(text: string, start: number): { found: Found; end: number 
   return end === undefined ? undefined : { found: destination, end };
 }
 
-/** The offset after inline raw HTML or an autolink at `start`, which holds a `<`. */
-function inlineHtmlEnd(text: string, start: number): number | undefined {
-  const rest = text.slice(start, start + 9);
-  const closer = rest.startsWith("<!--")
-    ? "-->"
-    : rest.startsWith("<?")
-      ? "?>"
-      : rest.startsWith("<![CDATA[")
-        ? "]]>"
-        : undefined;
-  if (closer !== undefined) {
-    const end = text.indexOf(closer, start + 2);
-    return end === -1 ? undefined : end + closer.length;
-  }
-  const tag = /<[/!]?[A-Za-z][^"'>]*(?:(?:"[^"]*"|'[^']*')[^"'>]*)*>/uy;
-  tag.lastIndex = start;
-  return tag.exec(text) === null ? undefined : tag.lastIndex;
+const tagSpace = "[ \\t\\n\\v\\f\\r]";
+const inlineAttribute =
+  `${tagSpace}+[A-Za-z_:][A-Za-z0-9:._-]*` +
+  `(?:${tagSpace}*=${tagSpace}*(?:[^ \\t\\n\\v\\f\\r"'=<>\`]+|'[^']*'|"[^"]*"))?`;
+const inlineTag = new RegExp(
+  `<(?:[A-Za-z][A-Za-z0-9-]*(?:${inlineAttribute})*${tagSpace}*/?|/[A-Za-z][A-Za-z0-9-]*${tagSpace}*)>`,
+  "uy",
+);
+const inlineComment = /<!--(?:>|->|(?:[^-]|-[^-]|--[^>])*-->)/uy;
+const inlineCdata = /<!\[CDATA\[(?:[^\]]|\][^\]]|\]\][^>])*\]\]>/uy;
+const inlineDeclaration = new RegExp(`<![A-Z]+${tagSpace}+[^>]*>`, "uy");
+const inlineInstruction = /<\?(?:[^?>]|\?[^>]|>)*\?>/uy;
+// A URI autolink holds no space, control character, `<` or `>`.
+const autolink = new RegExp(
+  "<(?:[A-Za-z][A-Za-z0-9.+-]{1,31}:[!-;=?-\\u{10FFFF}]*|" +
+    "[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?" +
+    "(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>",
+  "uy",
+);
+
+/**
+ * The autolink or inline raw HTML at `start`, which holds a `<`, as cmark-gfm reads them: the
+ * offset after it, and whether it is raw HTML. Undefined when the `<` is text.
+ */
+function inlineHtmlAt(
+  text: string,
+  start: number,
+): { readonly end: number; readonly html: boolean } | undefined {
+  const endOf = (pattern: RegExp): number | undefined => {
+    pattern.lastIndex = start;
+    return pattern.exec(text) === null ? undefined : pattern.lastIndex;
+  };
+  const link = endOf(autolink);
+  if (link !== undefined) return { end: link, html: false };
+  const pattern = text.startsWith("<!--", start)
+    ? inlineComment
+    : text.startsWith("<![", start)
+      ? inlineCdata
+      : text.startsWith("<!", start)
+        ? inlineDeclaration
+        : text.startsWith("<?", start)
+          ? inlineInstruction
+          : inlineTag;
+  const end = endOf(pattern);
+  return end === undefined ? undefined : { end, html: true };
 }
 
-/** The HTML `href` and `src` values and the inline link destinations between `start` and `end`. */
-function rawTargets(text: string, start: number, end: number): readonly Found[] {
-  const raw = text.slice(start, end);
-  const found: Found[] = [];
-  const attributes = /(?<![\w-])(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/dgiu;
-  for (const match of raw.matchAll(attributes)) {
-    const group = [1, 2, 3].find((index) => match[index] !== undefined) ?? 0;
-    const offset = match.indices?.[group]?.[0];
-    const target = match[group];
-    if (offset !== undefined && target !== undefined) {
-      found.push({ offset: start + offset, target: decodeHtmlReferences(target) });
+const htmlSpace = "\\t\\n\\f\\r ";
+const tagName = new RegExp(`[^${htmlSpace}/>]*`, "uy");
+const tagAttribute = new RegExp(
+  `[${htmlSpace}/]*([^${htmlSpace}/>][^${htmlSpace}/>=]*)` +
+    `(?:[${htmlSpace}]*=[${htmlSpace}]*(?:"([^"]*)"|'([^']*)'|([^${htmlSpace}>]*)))?`,
+  "duy",
+);
+
+/**
+ * Reads the tag whose name starts at `start` as an HTML parser does, adding its `href` and `src`
+ * values to `found`, and returns the offset after its `>`, or `end` for a tag left open.
+ */
+function readTag(text: string, start: number, end: number, found: Found[]): number {
+  tagName.lastIndex = start;
+  tagName.exec(text);
+  tagAttribute.lastIndex = tagName.lastIndex;
+  let after = tagName.lastIndex;
+  for (let match = tagAttribute.exec(text); match !== null; match = tagAttribute.exec(text)) {
+    if (tagAttribute.lastIndex > end) break;
+    after = tagAttribute.lastIndex;
+    const group = [2, 3, 4].find((index) => match[index] !== undefined);
+    const offset = group === undefined ? undefined : match.indices?.[group]?.[0];
+    const value = group === undefined ? undefined : match[group];
+    if (/^(?:href|src)$/iu.test(match[1] ?? "") && offset !== undefined && value !== undefined) {
+      found.push({ offset, target: decodeHtmlReferences(value) });
     }
   }
-  for (let at = raw.indexOf("]("); at !== -1; at = raw.indexOf("](", at + 2)) {
-    const link = inlineLinkAt(raw, at + 2);
-    if (link !== undefined) found.push({ ...link.found, offset: start + link.found.offset });
+  const close = text.indexOf(">", after);
+  return close === -1 || close >= end ? end : close + 1;
+}
+
+/**
+ * The `href` and `src` values of the tags in the raw HTML between `start` and `end`, read as an
+ * HTML parser reads them. A comment ends at the first `-->` or `--!>`, or at once when `<!--` is
+ * followed by `>` or `->`. Any other `<` that opens no start or end tag is text.
+ */
+function htmlTargets(text: string, start: number, end: number): readonly Found[] {
+  const found: Found[] = [];
+  let at = text.indexOf("<", start);
+  while (at !== -1 && at < end) {
+    let next = at + 1;
+    if (text.startsWith("<!--", at)) {
+      const abrupt = /->|>/uy;
+      abrupt.lastIndex = at + 4;
+      const closes = ["-->", "--!>"].map((closer) => {
+        const index = text.indexOf(closer, at + 4);
+        return index === -1 ? end : index + closer.length;
+      });
+      next = abrupt.exec(text) === null ? Math.min(end, ...closes) : abrupt.lastIndex;
+    } else if (/[A-Za-z]/u.test(text.charAt(at + 1))) {
+      next = readTag(text, at + 1, end, found);
+    } else if (text.charAt(at + 1) === "/" && /[A-Za-z]/u.test(text.charAt(at + 2))) {
+      // An end tag's attributes are dropped.
+      next = readTag(text, at + 2, end, []);
+    }
+    at = text.indexOf("<", next);
   }
   return found;
 }
 
 /**
  * The link targets in the inline content `text`: the reference definitions it opens with, when
- * `definitions` is set, then its links outside code spans and the targets inside its raw HTML.
+ * `definitions` is set, then its inline links and images and the targets of its raw HTML.
+ * Brackets pair as cmark-gfm pairs them: a `]` closes the last open bracket, a link deactivates
+ * the brackets open before it, and an image's description renders as text.
  */
 function inlineTargets(text: string, definitions: boolean): readonly Found[] {
   const found: Found[] = [];
@@ -444,6 +537,7 @@ function inlineTargets(text: string, definitions: boolean): readonly Found[] {
     at = definition.end;
     definition = definitionAt(text, at);
   }
+  const openers: { readonly image: boolean; readonly mark: number; active: boolean }[] = [];
   const runs = /`+/gu;
   while (at < text.length) {
     const char = text.charAt(at);
@@ -458,14 +552,23 @@ function inlineTargets(text: string, definitions: boolean): readonly Found[] {
       while (closer !== null && closer[0].length !== opener) closer = runs.exec(text);
       next = closer === null ? at + opener : closer.index + opener;
     } else if (char === "<") {
-      const end = inlineHtmlEnd(text, at);
-      if (end !== undefined) {
-        found.push(...rawTargets(text, at, end));
-        next = end;
+      const html = inlineHtmlAt(text, at);
+      if (html !== undefined) {
+        if (html.html) found.push(...htmlTargets(text, at, html.end));
+        next = html.end;
       }
-    } else if (char === "]" && text.charAt(at + 1) === "(") {
-      const link = inlineLinkAt(text, at + 2);
-      if (link !== undefined) {
+    } else if (char === "[" || (char === "!" && text.charAt(at + 1) === "[")) {
+      openers.push({ image: char === "!", mark: found.length, active: true });
+      next = char === "!" ? at + 2 : at + 1;
+    } else if (char === "]") {
+      const opener = openers.pop();
+      const link =
+        opener?.active === true && text.charAt(at + 1) === "("
+          ? inlineLinkAt(text, at + 2)
+          : undefined;
+      if (opener !== undefined && link !== undefined) {
+        if (opener.image) found.length = opener.mark;
+        else for (const earlier of openers) if (!earlier.image) earlier.active = false;
         found.push(link.found);
         next = link.end;
       }
@@ -481,8 +584,8 @@ function scopeTargets(scope: Scope): readonly LinkTarget[] {
   // destination must be followed by one.
   const text = scope.lines.map((line) => `${line.text}\n`).join("");
   const found =
-    scope.kind === "raw"
-      ? rawTargets(text, 0, text.length)
+    scope.kind === "html"
+      ? htmlTargets(text, 0, text.length)
       : inlineTargets(text, scope.kind === "paragraph");
   return found.map(({ offset, target }) => {
     const index = text.slice(0, offset).split("\n").length - 1;
