@@ -1,11 +1,10 @@
+import { deliveryFactSpellings } from "../graph/delivery-fact-spellings.js";
 import { extractFindingIds } from "./reify.js";
 import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, markdownFinding } from "./markdown-support.js";
 
 export const reservedMarkdownProperties = new Set([
-  "implemented",
-  "hasVerifier",
-  "observed",
+  ...deliveryFactSpellings,
   "claim",
   "deliveryFacts",
   "nodeType",

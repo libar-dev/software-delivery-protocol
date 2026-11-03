@@ -9,7 +9,7 @@ import type {
   SourceFile,
 } from "ts-morph";
 
-import { deliveryFactNames } from "../graph/schema.js";
+import { deliveryFactSpellings } from "../graph/delivery-fact-spellings.js";
 import { CODE_ANCHOR_NAMESPACES, codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import type { IdParts } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
@@ -108,9 +108,7 @@ const SPEC_SECTION_NAME_SET = new Set<string>(SPEC_SECTION_NAMES);
  * reifies through and the `honesty/authoring-shape` validator sees it in the model.
  */
 const RESERVED_DERIVED_PROPERTIES = new Set<string>([
-  ...deliveryFactNames,
-  // camel `hasVerifier` joins the kebab delivery facts: every delivery-fact spelling is reserved in both carriers (R-6 parity).
-  "hasVerifier",
+  ...deliveryFactSpellings,
   "deliveryFacts",
   "claim",
   "nodeType",
