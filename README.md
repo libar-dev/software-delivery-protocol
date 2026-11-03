@@ -62,10 +62,10 @@ disables pnpm 11's dependency auto-reconciliation for repository scripts, so the
 
 ## Carriers
 
-A carrier is the file that holds a Spec or a Pack. Specs and Packs default to Markdown; the
-TypeScript DSL survives as import source and a lawful per-ID option, and behavior and example Specs
-may use Gherkin canonically per ID (the carrier ruling, MD-18, the Pack syntax ruling, MD-25, and
-the Gherkin carrier option, MD-27).
+A carrier is the text format a Spec or a Pack is written in; a carrier file is one file written in
+it. Specs and Packs default to Markdown; the TypeScript DSL survives as import source and a lawful
+per-ID option, and behavior and example Specs may use Gherkin canonically per ID (the carrier
+ruling, MD-18, the Pack syntax ruling, MD-25, and the Gherkin carrier option, MD-27).
 
 ## Installed CLI (adopter repositories)
 

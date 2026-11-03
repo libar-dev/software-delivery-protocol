@@ -22,7 +22,7 @@ Since the roadmap and each pull request carry the Protocol's delivery record, `p
 
 - [blocking #durableContent] Which content in `plans/`, `reviews/` and the concept documents does no Spec, test, decision or recipe carry yet, and where does each piece belong?
   - decider: owner
-  - provisional: the measured inventory this Spec's rule requires answers it once the owner has reviewed it; each piece then moves to its home and the question leaves the Spec
+  - provisional: the owner accepted the whole-repository review's measured inventory, with its row rulings, as the answer; the question leaves the Spec when the cleanup arc lands that inventory in its first commit
 
 ## Behavior
 

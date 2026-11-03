@@ -234,10 +234,11 @@ current (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
   graph, synchronizes the vault first except under `--check-clean`, and writes the Studio without
   optional inputs: it takes neither `--base` nor `--runs`.
 - Use `sdp studio` for a page set with `--base PATH`, `--base-label TEXT`, or repeatable
-  `--runs PATH`; that run invalidates the other four page roots. Keep supplied inputs outside the
-  paths the build writes or removes, `generated/` included
-  (`spec:consumers.spec-studio.data.inputs`). `sdp studio --watch` rebuilds after carrier edits;
-  source and input edits start no cycle (`spec:consumers.spec-studio.publisher.watch`).
+  `--runs PATH`; that run invalidates the other four page roots. Keep supplied inputs outside
+  `generated/`: the run refuses an input at a path the build writes or removes, such as
+  `generated/graph.json` or a file beneath a page root (`spec:consumers.spec-studio.data.inputs`).
+  `sdp studio --watch` rebuilds after carrier edits; source and input edits start no cycle
+  (`spec:consumers.spec-studio.publisher.watch`).
 - After the final Studio build, run `sdp stamp` with the corpus commit, then upload the stamped
   page set. A later build removes the stamp
   (`spec:consumers.spec-studio.sharing#rule.stampLifetime`). Follow `sdp-studio` for previews,

@@ -43,11 +43,12 @@ pnpm --silent sdp studio . --exclude explorations --exclude examples --exclude t
   it with that commit's own engine, as the design diff's catalog entry (recipe 35) shows: the
   catalog is `docs/agent-surface/recipes.md` in the Protocol repository and
   `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an adopter.
-- Keep every input outside `generated/` and every other path the build writes or removes. The run
-  refuses an input at such a path, `generated/graph.json` among them, before it changes a file
-  (`spec:consumers.spec-studio.data.inputs#rule.inputPlacement`). Run reports are CTRF JSON files,
-  one `--runs` each, read in flag order. An unreadable input refuses the run before extraction.
-  Pages name each input in words, the base by its `--base-label`, and never show its path.
+- Keep every input outside `generated/`. The run refuses an input at a path the build writes or
+  removes, `generated/graph.json` or a file beneath a page root among them, or at a link resolving
+  to one, before it changes a file (`spec:consumers.spec-studio.data.inputs#rule.inputPlacement`).
+  Another file under `generated/` is read as given. Run reports are CTRF JSON files, one `--runs`
+  each, read in flag order. An unreadable input refuses the run before extraction. Pages name each
+  input in words, the base by its `--base-label`, and never show its path.
 - Findings never withhold the page set: the run shows them on the index and on their subject's
   page, and returns validate's exit code. A run whose extraction fails publishes nothing.
 - `--watch` republishes after every carrier create, change, delete or rename, byte for byte what a
