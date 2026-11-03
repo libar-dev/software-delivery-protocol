@@ -244,6 +244,12 @@ function isNotFoundError(error: unknown): boolean {
   return code === "ENOENT" || code === "ENOTDIR";
 }
 
+/** A watched directory found gone or replaced, with what now stands at its path, if anything. */
+interface ReplacedDirectory {
+  readonly directory: string;
+  readonly replacement: Stats | undefined;
+}
+
 function createFilesystemWatchSource(input: {
   readonly root: string;
   readonly exclude: readonly string[];
@@ -301,9 +307,10 @@ function createFilesystemWatchSource(input: {
 
   // A callback names its entries by path. Once a watched directory on the way up from it is gone
   // or was replaced by a link or a file, those paths resolve through the replacement, perhaps
-  // outside the root. Returns the highest such directory below the root, whose subtree is dropped.
-  const replacedDirectory = (absoluteDirectory: string): string | undefined => {
-    let replaced: string | undefined;
+  // outside the root. Returns the highest such directory below the root, whose subtree is dropped,
+  // with what now stands at its path (`undefined` when nothing does).
+  const replacedDirectory = (absoluteDirectory: string): ReplacedDirectory | undefined => {
+    let replaced: ReplacedDirectory | undefined;
 
     for (
       let directory = absoluteDirectory;
@@ -311,19 +318,48 @@ function createFilesystemWatchSource(input: {
       directory = dirname(directory)
     ) {
       try {
-        if (!lstatWatchPath(directory).isDirectory()) {
-          replaced = directory;
+        const stats = lstatWatchPath(directory);
+
+        if (!stats.isDirectory()) {
+          replaced = { directory, replacement: stats };
         }
       } catch (error) {
         if (!isNotFoundError(error)) {
           throw error;
         }
 
-        replaced = directory;
+        replaced = { directory, replacement: undefined };
       }
     }
 
     return replaced;
+  };
+
+  // A watched directory that is gone, or was replaced by a link or a file, loses its carriers
+  // without per-file events, so its event schedules a run. A replacement link discovery warns about
+  // is remembered like any other, so removing that link later schedules a run too.
+  const dropDirectory = (
+    absoluteDirectory: string,
+    relativeDirectory: string,
+    replacement: Stats | undefined,
+  ): void => {
+    unwatchTree(absoluteDirectory);
+    const wasSkippedLink = skippedLinks.has(absoluteDirectory);
+    const skippedLink =
+      replacement?.isSymbolicLink() === true && isSkippedLink(absoluteDirectory, relativeDirectory);
+
+    if (skippedLink) {
+      skippedLinks.add(absoluteDirectory);
+    } else {
+      skippedLinks.delete(absoluteDirectory);
+    }
+
+    eventListener?.({
+      type: "delete",
+      path: relativeDirectory,
+      subtreeRemoved: true,
+      ...(skippedLink || wasSkippedLink ? { skippedLink: true } : {}),
+    });
   };
 
   // A directory whose subtree loses its watchers recovers through its parent's deletion event —
@@ -356,26 +392,24 @@ function createFilesystemWatchSource(input: {
         return;
       }
 
-      unwatchTree(absoluteDirectory);
-
       if (absoluteDirectory === input.root) {
+        unwatchTree(absoluteDirectory);
         failUnwatchableRoot(error);
         return;
       }
 
-      eventListener?.({ type: "delete", path: relativeDirectory, subtreeRemoved: true });
+      dropDirectory(absoluteDirectory, relativeDirectory, undefined);
       return;
     }
 
     if (!stats.isDirectory()) {
-      unwatchTree(absoluteDirectory);
-
       if (absoluteDirectory === input.root) {
+        unwatchTree(absoluteDirectory);
         failUnwatchableRoot(undefined);
         return;
       }
 
-      eventListener?.({ type: "delete", path: relativeDirectory, subtreeRemoved: true });
+      dropDirectory(absoluteDirectory, relativeDirectory, stats);
       return;
     }
 
@@ -432,7 +466,7 @@ function createFilesystemWatchSource(input: {
           return;
         }
 
-        let replaced: string | undefined;
+        let replaced: ReplacedDirectory | undefined;
 
         try {
           replaced = replacedDirectory(absoluteDirectory);
@@ -442,12 +476,11 @@ function createFilesystemWatchSource(input: {
         }
 
         if (replaced !== undefined) {
-          unwatchTree(replaced);
-          eventListener?.({
-            type: "delete",
-            path: toPosixRelative(input.root, replaced),
-            subtreeRemoved: true,
-          });
+          dropDirectory(
+            replaced.directory,
+            toPosixRelative(input.root, replaced.directory),
+            replaced.replacement,
+          );
           return;
         }
 

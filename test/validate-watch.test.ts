@@ -814,8 +814,10 @@ describe("validate watch symbolic links", () => {
     const capture = createCaptureOutput();
     const cycles = new CycleHarness();
     const native = new NativeWatchHarness();
+    const stderrAtCycle: string[] = [];
     const firstCycle = cycles.cycle(1);
     const secondCycle = cycles.cycle(2);
+    const thirdCycle = cycles.cycle(3);
     writeCarrier(join(nested, "probe.sdp.md"), "spec:tmp.watch-replaced-ancestor");
     mkdirSync(outside);
 
@@ -824,15 +826,18 @@ describe("validate watch symbolic links", () => {
         runSdpCli(["validate", "--watch", root], capture.output, {
           createNativeWatch: native.create,
           onWatchCycleComplete: (completed) => {
+            stderrAtCycle.push(capture.readStderr());
             cycles.onComplete(completed);
 
-            if (completed.index === 2) {
+            if (completed.index === 3) {
               cycles.abort.abort();
             }
           },
           abortSignal: cycles.abort.signal,
         }),
       );
+      const cycleStderr = (index: number): string =>
+        (stderrAtCycle[index - 1] ?? "").slice((stderrAtCycle[index - 2] ?? "").length);
 
       await bounded(firstCycle, "replaced ancestor first cycle");
       const specsSubscription = native.subscriptions.get(specs);
@@ -847,13 +852,23 @@ describe("validate watch symbolic links", () => {
       await deliver(nestedSubscription, "rename", "child");
 
       await bounded(secondCycle, "replaced ancestor rerun");
-      expect(await bounded(running, "replaced ancestor watch exit")).toBe(0);
       expect(native.subscriptions.has(join(nested, "child"))).toBe(false);
       expect(specsSubscription?.closeCount).toBe(1);
       expect(nestedSubscription?.closeCount).toBe(1);
       expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).not.toContain(
         "spec:tmp.watch-replaced-ancestor",
       );
+      expect(cycleStderr(2)).toContain(linkWarning("specs"));
+
+      // The replacement link goes before the root's own event arrives. The watch must still know
+      // the link it saw, or nothing would clear its warning.
+      unlinkSync(specs);
+      await deliver(native.subscriptions.get(root), "rename", "specs");
+
+      await bounded(thirdCycle, "replacement link removal rerun");
+      expect(await bounded(running, "replaced ancestor watch exit")).toBe(0);
+      expect(cycleStderr(3)).not.toContain("symbolic-link-skipped");
+      expect(capture.readStderr()).not.toContain("watch failed");
     } finally {
       cycles.abort.abort();
       rmSync(workspace, { recursive: true, force: true });
