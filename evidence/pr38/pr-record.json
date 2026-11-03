@@ -1,0 +1,128 @@
+{
+  "base": "b5e0a8bea1e3bedd48c616f96c9928e955792753",
+  "prs": [36, 35, 33, 32, 31],
+  "lane": {
+    "lane": "L12",
+    "reader": "gpt-6-astra (xhigh) via relay",
+    "job": "job-mw0xlypz-c9ab53bc",
+    "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0xlypz-c9ab53bc/report.md",
+    "verifier": "claude-opus-5-5 (high)",
+    "measuredAt": "4e78fd14 (differs from base only in evidence/pr38/README.md)",
+    "summary": "Reviewed PRs 31, 32, 33, 35 and 36 against the graph and local commit objects. Found one accepted policy carried only as provisional intent plus its PR record, and two deferred extensions missing from the graph's deferral register. All 196 distinct pinned blob/raw file links resolve. No shipped-capability regression established by the selected checks.",
+    "verifySummary": "Both findings hold at 4e78fd14; L12-01 lowered from high to medium. Recipes 1, 20, 25 (with addresses) and 55 re-run. All 50 Spec ids the ledger cites resolve. Pinned links re-checked with git cat-file -e: PR31 34/34, PR32 24/24, PR33 28/28, PR35 65/65, PR36 45/45. Entry addresses open-question-fields#rule.droppedListWarning, design-maturity#question.designColumnsSufficiency and example-space-coverage#rule.perSlotOnly resolve. No ledger row materially wrong; four corrected.",
+    "pinnedLinks": {
+      "31": "34/34",
+      "32": "24/24",
+      "33": "28/28",
+      "35": "65/65",
+      "36": "45/45",
+      "distinctTotal": 196,
+      "broken": 0
+    },
+    "ledgerCorrections": [
+      {
+        "pr": 35,
+        "correction": "The description only lists bound-file freshness and slot-combination coverage; their triggers live only in the plan 'Designs people can read, and an adopter at full speed', which the cleanup will delete."
+      },
+      {
+        "pr": 35,
+        "correction": "That plan also defers build attestations, deployments and SBOMs until 'a Spec designs their source'; the condition is carried as prose and rules in spec:consumers.spec-studio.lenses.evidence#notTracked and the verification panels, outside the deferral register but not lost."
+      },
+      {
+        "pr": 36,
+        "correction": "#durableContent is a larger instance of the #lineText record gap: its graph provisional lacks the first-commit inventory and the cross-family review, which live only in the PR 36 description."
+      },
+      {
+        "pr": 36,
+        "correction": "The owner also let #lineBound's provisional stand (decider delegated in the graph); that acceptance lives only in the PR 36 description."
+      }
+    ],
+    "notCovered": [
+      "live GitHub state and comments",
+      "hosted previews",
+      "libar-platform repository",
+      "test-suite runs",
+      "browser acceptance",
+      "line-by-line reading of each ledger row against its carrying Spec"
+    ]
+  },
+  "findings": [
+    {
+      "id": "L12-01",
+      "title": "The owner's acceptance of three provisional answers lives only in PR #36",
+      "group": ["law only in a description", "record content the cleanup must keep"],
+      "target": "record",
+      "severity": "high",
+      "location": "PR #36 description, lines 347-358 of the saved copy; specs/consumers/spec-studio.cited-line-text.sdp.md:12 and :26",
+      "claim": "The owner accepted where citation text belongs, but the graph still asks the owner to choose. PR #36 deliberately postpones recording the answer to the next arc, so this is a record-to-Spec handoff gap, not an implementation regression.",
+      "evidence": "Recipe 20 returns #lineText blocking, decider owner, provisional identical to PR #36's policy; recipe 55 lists it under 'Waiting on the owner'; the carrier says 'the choice is the owner's'.",
+      "proposedChange": "Keep PR #36 lines 347-358 in the cleanup inventory. At the start of the cited-line arc, record #lineText as carrying intent: 'The extractor records the citing line's text, trimmed and bounded, on its citation row as inferred data that confers nothing; the Studio reads no source.' Carry the word-boundary and cut-marker policy into Design and settle #lineBound the same way. At the start of the cleanup arc, amend #durableContent's answer to name the first-commit inventory and the cross-family review. State no readiness; infer no implementation.",
+      "failureScenario": "An agent entering through recipe 53 or 20 asks the owner to decide an accepted policy, or chooses the named-input alternative because the corpus still treats the choice as provisional.",
+      "verdict": {
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The acceptance of #lineText and #lineBound is recorded only in PR #36. The policy text is already the graph's provisional, so nothing contradicts it, and PR #36 says each answer is recorded at the start of its own arc. That makes it an unrecorded forward commitment and record content to keep, not contradicted law. #durableContent has the same gap more strongly. The change should cover all three questions.",
+        "evidence": "PR #36 description lines 347-358: 'the owner let the provisional answers of both waiting questions stand. Each answer is recorded at the start of its own arc, not in this PR'. Recipe 20: #lineText blocking:true, decider:owner; #lineBound decider:delegated with a matching provisional; spec:protocol.delivery-record-cleanup#durableContent provisional 'a measured inventory by the arc that removes them, reviewed before anything is deleted'. A search of specs, docs, AGENTS.md, CONTEXT.md and .agents for the acceptance finds nothing."
+      }
+    },
+    {
+      "id": "L12-02",
+      "title": "Two PR #35 deferrals are missing from the deferral register and the forward memo",
+      "group": ["dropped forward items"],
+      "target": "design",
+      "severity": "medium",
+      "location": "PR #35 description lines 315-320; plan 'Designs people can read, and an adopter at full speed', lines 315-316; specs/observation/run-evidence.sdp.md:28; specs/consumers/agent-surface.example-space-coverage.sdp.md:25",
+      "claim": "Bound-file freshness and slot-combination coverage keep deferred intent, but neither has the blocking question and trigger the deferral register needs, so recipe 55 omits both.",
+      "evidence": "Recipe 20 returns spec:observation.run-evidence#freshness with blocking:false, trigger:null, deferral:false and no combination-coverage question. #rule.perSlotOnly states the trigger only in rule text. Recipe 55's deferred section lists six other items.",
+      "proposedChange": "Author two deferred captures that refine their parents: spec:observation.run-evidence.bound-file-freshness#question.freshness (blocking; decider owner; question 'When should changes to bound files make recorded run evidence stale?'; provisional 'Keep the current differing-commit display until a file-sensitive policy is designed.'; links [spec:observation.run-evidence]; trigger 'A reader is misled by a run whose commit matches but whose files moved.'), moving the existing question there; and spec:consumers.agent-surface.combination-coverage#question.combinationCoverage (blocking; decider owner; question 'Which combinations of slot values should coverage enumerate and report?'; provisional 'Keep recipe 44 limited to individual slot values.'; links [spec:consumers.agent-surface.example-space-coverage#rule.perSlotOnly]; trigger 'A design pass asks which combinations no example exercises.'). Reword #perSlotOnly to 'Coverage is reported per slot value; the recipe reports no combination of two or more slots.'",
+      "failureScenario": "The cleanup deletes the plan holding both triggers; sessions use the generated memo as the deferral inventory and the two re-entry conditions vanish though neither extension was built or withdrawn.",
+      "verdict": {
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The placement law (spec:decisions.planning-truths-placement) requires a deferral's trigger in its own blocking open question. Freshness is non-blocking with no trigger; its condition exists only in the frozen plan. Combination coverage is partly carried in rule text but is not a deferral, so recipes 20 and 55 cannot see it. Separate captures keep the parents honestly ready. The owner should confirm the decider values, which the reader proposed.",
+        "evidence": "PR #35 description lines 319-320; plan lines 315-316 give both triggers; recipe 20 output; example-space-coverage.sdp.md:25; recipe 55 deferred section covers featureAdapter, symbolIdentity, releaseReader, namedOutsideReader, namedStructuralReader and observationIdentity only; planning-truths-placement.sdp.md:18."
+      }
+    },
+    {
+      "id": "L12-U1",
+      "title": "Plan 44's delegated choices have no recorded owner confirmation",
+      "group": ["unreviewed delegated choices"],
+      "target": "record",
+      "severity": "low",
+      "location": "PR #32 description; plan 'Designs people can read, and an adopter at full speed', line 97",
+      "claim": "The confirmation row confirms the delegated rulings of plans 43 and 45 only; no description confirms those of 'A whole-corpus refresh before the next arc'. The law is carried, and partly narrowed since by MD-43, MD-44 and MD-47.",
+      "evidence": "Reader's ledger (PR #32 row); this lane read the confirmation row, which names plans 43 and 45.",
+      "proposedChange": "Ask the owner whether the whole-corpus refresh's delegated choices were reviewed. If not, author a blocking question (proposed spec:protocol.delivery-record-cleanup#question.delegatedRulingsReview; decider owner; provisional 'the delegated choices of the whole-corpus refresh stand as carried'; links to the carrying Specs in the PR #32 ledger row).",
+      "failureScenario": "The cleanup deletes the plan and its delegated-versus-owner provenance; delegated choices are later read as owner rulings.",
+      "verdict": {
+        "verdict": "uncertain",
+        "severity": "low",
+        "reason": "From the reader's ledger, not its findings list; the verifier did not rule on it. Merging alone proves neither approval nor rejection.",
+        "settledBy": "The owner's word, or GitHub review comments on PR #32 (not checked)."
+      }
+    },
+    {
+      "id": "L12-U2",
+      "title": "PR #35's 'the Studio build computes a join' reads broader than the carrying law",
+      "group": ["record content the cleanup must keep"],
+      "target": "record",
+      "severity": "low",
+      "location": "PR #35 description",
+      "claim": "The phrase is broader than the page and reader boundary in the Studio Specs and could be read as intent.",
+      "evidence": "Reader's ledger (PR #35 refusals row).",
+      "proposedChange": "If the phrase and spec:consumers.spec-studio's data children disagree, the cleanup inventory notes that the Spec governs. No Spec edit.",
+      "failureScenario": "A reader treats the description as law and widens what the Studio build computes.",
+      "verdict": {
+        "verdict": "uncertain",
+        "severity": "low",
+        "reason": "From the reader's ledger; the verifier did not rule on it.",
+        "settledBy": "Reading the phrase against spec:consumers.spec-studio and its data children."
+      }
+    }
+  ],
+  "counts": {
+    "confirmed": 2,
+    "refuted": 0,
+    "uncertain": 2
+  }
+}
