@@ -13,6 +13,7 @@ import {
   extract,
   extractFindingIds,
   graphValidatorIds,
+  reifyMarkdownCarrier,
   reifyTypeScriptCarrier,
   serializeGraph,
   validateGraph,
@@ -381,6 +382,52 @@ export const carrier = spec({
       );
     }
   });
+
+  it.each(["deliveryFacts", "claim", "satisfies"])(
+    "refuses the same reserved Intent property in TypeScript and Markdown: %s",
+    (name) => {
+      const ts = reifyTypeScriptCarrier(
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:probe.parity"), title: "Carrier parity",
+  kind: "behavior", altitude: "story", readiness: "idea", relations: [],
+  intent: { outcome: "Refuse derived properties.", ${name}: "implemented" },
+});`,
+        "parity.sdp.ts",
+      );
+      const md = reifyMarkdownCarrier(
+        `---
+id: spec:probe.parity
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# Carrier parity
+## Intent
+- outcome: Refuse derived properties.
+- ${name}: implemented`,
+        "parity.sdp.md",
+      );
+      expect(ts.findings).toEqual([]);
+      expect(validateGraph(deriveGraph(ts.specs, ts.packs, [])).findings).toContainEqual(
+        expect.objectContaining({
+          validatorId: graphValidatorIds.authoringShape,
+          severity: "error",
+          path: `intent.${name}`,
+        }),
+      );
+      expect(md.specs).toEqual([]);
+      expect(md.findings).toContainEqual(
+        expect.objectContaining({
+          validatorId: extractFindingIds.reservedProperty,
+          severity: "error",
+          line: 11,
+          message: `property "${name}" is not accepted`,
+        }),
+      );
+    },
+  );
 
   it.each(["spec", "pack"])(
     "refuses case-folded delivery facts on the TS %s envelope",

@@ -163,12 +163,6 @@ export function parseMarkdownBody(
   for (let index = 1; index < lines.length; index += 1) {
     const line = lines[index];
     if (line === undefined) continue;
-    if (!inFence && line.text.startsWith("~~~")) {
-      addMarkdownFinding(
-        findings,
-        structure(file, line.line, "fences must be exact gwt or gwt-vocabulary fences"),
-      );
-    }
     if (line.text.startsWith("```")) inFence = line.text !== "```" ? true : false;
     if (inFence || line.text === "```") {
       if (current === undefined) before.push(line);

@@ -256,7 +256,9 @@ export function parseSectionContent(
       );
       continue;
     }
-    if (isMarkdownFenceOpener(line.text)) {
+    // Match the heading splitter's backtick boundary; the info-string exception is
+    // only for inline list text, not a way to admit malformed section fences.
+    if (line.text.startsWith("```") || line.text.startsWith("~~~")) {
       structured = true;
       const parsed = parseFence(lines, index, file, findings);
       if (parsed.fence !== undefined) fences.push(parsed.fence);
