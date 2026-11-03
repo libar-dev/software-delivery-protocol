@@ -43,7 +43,11 @@ export interface ExampleContract<S extends string, PM extends Record<S, ParamSha
   readonly steps: readonly { readonly [K in S]: ContractStep<K, PM[K]> }[S][];
 }
 
-export type StepFn<W, P extends ParamShape> = (world: W, params: P) => void | Promise<void>;
+export type StepFn<W, P extends ParamShape> = (
+  world: W,
+  params: P,
+  step: ContractStep<string, P>,
+) => void | Promise<void>;
 
 /** Every step, only the steps — and each handler's params typed per step. */
 export type StepBindings<W, S extends string, PM extends Record<S, ParamShape>> = {
@@ -138,7 +142,7 @@ export function planExample<W, S extends string, PM extends Record<S, ParamShape
       key: step.key,
       text: step.text,
       label: renderContractStep(step),
-      run: (world: W) => bindings[step.key](world, step.params),
+      run: (world: W) => bindings[step.key](world, step.params, step),
     })),
   };
 }

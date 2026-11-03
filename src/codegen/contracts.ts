@@ -544,17 +544,26 @@ function renderRunnableRegistrar(
     }
     renderedBindings.add(step.key);
     const bindingKey = `    ${JSON.stringify(step.key)}:`;
-    const opening =
-      step.kind === "given"
+    // One key may occur in several phases; its handler must read the current occurrence.
+    const phases = new Set(
+      steps.filter((entry) => entry.key === step.key).map((entry) => entry.kind),
+    );
+    const shared = phases.size > 1;
+    const opening = shared
+      ? `async (execution, params, step) => {`
+      : step.kind === "given"
         ? `() => {`
         : step.kind === "when"
           ? `async (execution) => {`
           : `(execution, params) => {`;
     const exceedsLine = bindingKey.length + 1 + opening.length > 100;
-    const wrappedThenParams = step.kind === "then" && exceedsLine && bindingKey.length + 2 <= 100;
-    const wrappedWhenParam =
-      step.kind === "when" && exceedsLine && bindingKey.length + " async (".length <= 100;
-    const hanging = exceedsLine && !wrappedThenParams && !wrappedWhenParam;
+    const wrappedThenParams =
+      !shared && step.kind === "then" && exceedsLine && bindingKey.length + 2 <= 100;
+    const wrappedAsyncParams =
+      (shared || step.kind === "when") &&
+      exceedsLine &&
+      bindingKey.length + " async (".length <= 100;
+    const hanging = exceedsLine && !wrappedThenParams && !wrappedAsyncParams;
     const bodyIndent = hanging ? "        " : "      ";
     const closeIndent = hanging ? "      " : "    ";
 
@@ -563,9 +572,13 @@ function renderRunnableRegistrar(
       lines.push(`      execution,`);
       lines.push(`      params,`);
       lines.push(`    ) => {`);
-    } else if (wrappedWhenParam) {
+    } else if (wrappedAsyncParams) {
       lines.push(`${bindingKey} async (`);
       lines.push(`      execution,`);
+      if (shared) {
+        lines.push(`      params,`);
+        lines.push(`      step,`);
+      }
       lines.push(`    ) => {`);
     } else {
       lines.push(hanging ? bindingKey : `${bindingKey} ${opening}`);
@@ -574,7 +587,13 @@ function renderRunnableRegistrar(
       }
     }
 
-    if (step.kind === "given") {
+    if (shared) {
+      lines.push(`${bodyIndent}if (step.kind === "when") {`);
+      lines.push(`${bodyIndent}  await invokeRunnableExample(execution);`);
+      lines.push(`${bodyIndent}} else if (step.kind === "then") {`);
+      lines.push(`${bodyIndent}  compareContractOutcome(execution, { ...step, params });`);
+      lines.push(`${bodyIndent}}`);
+    } else if (step.kind === "given") {
       lines.push(
         `${bodyIndent}// Given state is materialized by createWorld from the generated point.`,
       );
