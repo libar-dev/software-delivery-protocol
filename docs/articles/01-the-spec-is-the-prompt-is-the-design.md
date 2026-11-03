@@ -137,7 +137,7 @@ At commit `b5e0a8be`, its self-hosting graph reports:
 | Runnable recipes | 55 |
 <!-- /evidence:self-hosting-census -->
 
-The self-hosting validation run reports 0 errors and 3 intentional `honesty/gaps` warnings, each a ready Spec without a resolving verifier. Re-run the commands below rather than carrying these numbers to another commit.
+The [generated baseline metrics](./README.md#step-3-re-derive-corpus-metrics) report self-hosting validation errors and warnings by rule. A `honesty/gaps` warning names a ready Spec without a resolving verifier. Re-run the commands below rather than carrying these numbers to another commit.
 
 The first adopter has also used the Protocol to design a much larger platform ahead of implementation. That story, including context bundles in parts, design slices and corpus rules, belongs to Part 9.
 

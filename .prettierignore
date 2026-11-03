@@ -2,6 +2,9 @@ AGENTS.md
 CLAUDE.md
 CONTEXT.md
 docs/**
+!docs/articles/
+!docs/articles/sync-evidence.mjs
+!docs/articles/sync-evidence.d.mts
 jtbd-stories/**
 plans/**
 .sisyphus/**

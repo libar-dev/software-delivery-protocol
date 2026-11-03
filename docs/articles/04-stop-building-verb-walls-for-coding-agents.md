@@ -70,7 +70,7 @@ The body is code, and `sdp q` runs it with the local process's full authority. N
 
 ## Grow by recipe, not by verb
 
-A recurring question becomes a recipe in [`docs/agent-surface/recipes.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/agent-surface/recipes.md). Every recipe is executed as written by the test suite and shipped under `dist/recipes/`. The pinned commit carries 55.
+A recurring question becomes a recipe in [`docs/agent-surface/recipes.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/agent-surface/recipes.md). Every recipe is executed as written by the test suite and shipped under `dist/recipes/`. The [generated baseline metrics](./README.md#step-3-re-derive-corpus-metrics) carry the recipe count at the pin.
 
 A recipe takes documented parameters through `--params`. An unknown parameter returns `{ unknownParams, accepts }` rather than silently changing the question. A caller can also wrap a recipe in its own body and filter the answer, without editing the shipped body.
 
@@ -94,9 +94,9 @@ After [PR #30](https://github.com/libar-dev/software-delivery-protocol/pull/30),
 
 That is the useful feedback loop. The graph remains stable while the on-ramps and recipes improve from observed use.
 
-## Five skills teach the workflow
+## Repository-owned skills teach the workflow
 
-A capable surface still needs an on-ramp. The package ships five repository-owned skills under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/.agents/skills):
+A capable surface still needs an on-ramp. The package ships repository-owned skills, counted in the [generated baseline metrics](./README.md#step-3-re-derive-corpus-metrics), under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/.agents/skills):
 
 - `sdp-agent-surface` teaches graph reading and the task-to-recipe map.
 - `sdp-authoring` teaches the carriers, readiness floors, relations and bindings.

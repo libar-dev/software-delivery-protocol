@@ -23,7 +23,7 @@ Inside the Protocol's own checkout, run the CLI as `npm run --silent sdp -- <ver
 
 ## The worked example
 
-The example models Order Management with all eight Spec kinds and all four readiness rungs. At the pinned commit it contains 11 Specs, two Packs and five anchors:
+The example models Order Management with all eight Spec kinds and all four readiness rungs. The generated build output below carries its counts at the pin; the files are arranged as follows:
 
 ```text
 examples/checkout-v1/
@@ -93,7 +93,7 @@ npm run --silent sdp -- q "$(cat dist/recipes/02-the-drift-alarm.js)" \
 ```
 <!-- /evidence:example-drift -->
 
-Both Specs have implementation bindings and state only `defined`. Their structural floors reach `ready`, so they wait only for an author's readiness statement. Validation still reports 0 errors and 0 warnings. The drift alarm is a query, not a workflow gate.
+The Specs listed by the generated drift answer have implementation bindings and state only `defined`. Their structural floors reach `ready`, so they wait only for an author's readiness statement. The generated build output above carries the validation totals. The drift alarm is a query, not a workflow gate.
 
 ## Author the parent and its example space
 

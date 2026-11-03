@@ -60,7 +60,7 @@ The pre-code seed design in [`docs/lineage/v0-design/`](https://github.com/libar
 8. [`spec:model.core-model`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/model/core-model.sdp.md) and [`spec:consumers.projections-model`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/projections-model.sdp.md).
 9. [`spec:consumers.spec-studio`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/spec-studio.sdp.md), its lenses, sharing and intent-panel Specs in the same directory.
 10. [`spec:consumers.agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/agent-surface.sdp.md), [`spec:consumers.context-bundle`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/context-bundle.sdp.md) and [`spec:consumers.design-slice`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/design-slice.sdp.md).
-11. The five skills under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/.agents/skills) and the [recipe catalog](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/agent-surface/recipes.md).
+11. The repository-owned skills under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/.agents/skills) and the [recipe catalog](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/agent-surface/recipes.md).
 12. [`examples/checkout-v1`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/examples/checkout-v1), the worked engineering loop.
 
 For any corpus fact, query the graph before reading a carrier. The source list is reading material for prose and design context, not permission to bypass the graph for measurements.
@@ -160,7 +160,7 @@ BASE_SHA="b5e0a8bea1e3bedd48c616f96c9928e955792753"
 BASE_DIR="$(mktemp -d)/base"
 trap 'git worktree remove --force "$BASE_DIR" 2>/dev/null || true' EXIT
 git worktree add --detach "$BASE_DIR" "$BASE_SHA"
-ln -s "$PWD/node_modules" "$BASE_DIR/node_modules"
+npm --prefix "$BASE_DIR" ci --ignore-scripts
 npm --prefix "$BASE_DIR" run build
 node "$BASE_DIR/dist/cli/sdp.js" build "$BASE_DIR" \
   --exclude explorations --exclude examples --exclude test/fixtures/import/parity
@@ -218,8 +218,9 @@ Baseline measured at `b5e0a8be`:
 | Drift alarm | 0 |
 | Design backlog | 0 |
 | Open questions | 16 across 12 Specs: 10 blocking (6 deferrals, 4 holds), 6 non-blocking |
-| Validation | 0 errors and 3 intentional `honesty/gaps` warnings |
+| Validation | 0 errors and 3 intentional warnings (3 `honesty/gaps`, 0 `conformance/prose-mentions`) |
 | Shipped recipes | 55 |
+| Repository-owned skills | 5 |
 <!-- /evidence:baseline-metrics -->
 
 ### Step 4: Regenerate the article evidence
@@ -240,11 +241,11 @@ Mermaid stays live source. Markdown tables come from graph queries. Screenshots 
 
 ### Step 5: Check version-sensitive prose
 
-- Recount recipes and skills. The current counts are 55 and five.
+- Recount recipes and skills in the [generated baseline metrics](#step-3-re-derive-corpus-metrics).
 - Check `sdp q` bindings. The current sink injects `g`, `graph`, `report`, `params` and `recipes`.
 - Re-read the Studio's carrying Specs and publish a current page set. Check lenses, roadmap, registers, queue, diff, runs, export and composing panel rather than saying "phase 0" from memory.
 - Check context-bundle parameters and behavior. `part` now returns ordered parts; never restore the old blanket statement that partial member lists are refused.
-- Re-run the worked example. At this pin it reports 11 Specs, two Packs, five anchors, 18 nodes and 34 edges.
+- Re-run the worked example and refresh the [generated build output in Part 3](./03-walkthrough-intent-to-verified-code.md#the-worked-example).
 - Keep run evidence, `has-verifier` and `observed` distinct. Supplied CTRF results do not derive runtime observation.
 - Review command coverage. Any new reusable output belongs in a generated evidence block.
 - Check every sibling link after renumbering, every commit-pinned path, every code fence and every image.
