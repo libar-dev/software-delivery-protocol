@@ -104,7 +104,7 @@ For any corpus fact, query the graph before reading a carrier. The source list i
 - Lead with regex rot and with the deeper problem of tests verifying values that no longer match the authored example.
 - Explain carrier independence: Markdown and Gherkin can derive the same example space and contracts.
 - Focus on the authored/generated direction, point-per-example, bound points and the outcome union. Point back to Part 3 for registrar mechanics.
-- Explain the oracle's job and `unspecified`, including why an authored Then that lands on `unspecified` still fails rather than silently witnessing a gap.
+- Explain the oracle's job and `unspecified`, including why [`spec:extraction.runnable-modules`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/extraction/runnable-modules.sdp.md) makes a bound example whose oracle selects `unspecified` fail rather than silently witness a gap. The engine at the source baseline has one exception: it still passes such an example when its Then step's own contract key is `unspecified`, a gap the whole-repository review in [PR #38](https://github.com/libar-dev/software-delivery-protocol/pull/38) records as L1-02. Re-check the rule at the article's own pin before stating it without that exception.
 - Use the Protocol's own reader Spec in `.sdp.gherkin` as the self-hosting example.
 - Keep the boundary clear: `has-verifier` records a binding, supplied run evidence records results, and `observed` remains a separate deferred fact.
 
