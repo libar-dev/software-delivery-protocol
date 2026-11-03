@@ -5,6 +5,11 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import {
+  decodeHtmlReferences,
+  decodeMarkdownReferences,
+  referenceCounts,
+} from "./helpers/character-references.js";
 import { danglingLinks, linkedPath, markdownLinkTargets } from "./helpers/markdown-links.js";
 
 // Relative Markdown links in the documents an outsider reads must reach a file or directory of
@@ -12,7 +17,7 @@ import { danglingLinks, linkedPath, markdownLinkTargets } from "./helpers/markdo
 // dissolves, otherwise leaves links that dangle for every reader while the rest of the gate stays
 // green. Carriers are out of scope, because the graph checks what they cite, and so are the
 // restored lineage documents, which are verbatim historical exhibits. The reader in
-// `helpers/markdown-links.ts` finds the links as the forge's Markdown parser renders them.
+// `helpers/markdown-links.ts` finds the links as the forge renders them.
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -270,6 +275,35 @@ describe("relative Markdown links", () => {
     expect(danglingLinks(documents, (path) => present.has(path))).toEqual([
       "jtbd-stories/story.md:1 ../docs/concept/gone(v2).md",
     ]);
+  });
+
+  it("decodes character references in a destination before it resolves the path", () => {
+    const documents = new Map([
+      [
+        "jtbd-stories/story.md",
+        [
+          "[Kept](../docs/concept/kept&lpar;v2&rpar;.md), [Gone](../docs/concept/gone&lpar;v2&rpar;.md).",
+          "[Numeric](../docs/concept/kept&#40;v2&#x29;.md), [Unknown](../docs/concept/kept&nope;.md).",
+          '<a href="../docs/concept/kept&#40;v2&#41;.md">a</a> <a href="../docs/kept&lpar;.md">b</a>',
+        ].join("\n"),
+      ],
+    ]);
+    const present = new Set(["docs/concept/kept(v2).md", "docs/kept(.md"]);
+    expect(danglingLinks(documents, (path) => present.has(path))).toEqual([
+      "jtbd-stories/story.md:1 ../docs/concept/gone(v2).md",
+      "jtbd-stories/story.md:2 ../docs/concept/kept&nope;.md",
+      // The forge's HTML sanitizer knows only the HTML 4 names, so `&lpar;` stays as written.
+      "jtbd-stories/story.md:3 ../docs/kept&lpar;.md",
+    ]);
+  });
+
+  it("carries the HTML standard's named references and the sanitizer's HTML 4 names", () => {
+    expect(referenceCounts).toEqual({ markdown: 2125, html: 253 });
+    expect(
+      decodeMarkdownReferences("&AMP;&CounterClockwiseContourIntegral;&nvlt;&Afr;&#0;&#xD800;"),
+    ).toBe("&\u2233<\u20D2\u{1D504}\uFFFD\uFFFD");
+    expect(decodeMarkdownReferences("&amp &#000000040; &nope;")).toBe("&amp &#000000040; &nope;");
+    expect(decodeHtmlReferences("&eacute;&lang;&AMP;&#40&#x29")).toBe("\u00E9\u2329&AMP;()");
   });
 
   it("names each link whose target is missing, with its file and line", () => {

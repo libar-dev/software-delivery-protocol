@@ -1,5 +1,7 @@
 import { posix } from "node:path";
 
+import { decodeHtmlReferences, decodeMarkdownReferences } from "./character-references.js";
+
 /**
  * The reader behind the relative-link gate (`test/markdown-links.test.ts`): it finds the link
  * targets in a Markdown document as cmark-gfm, the parser the forge renders these documents with,
@@ -12,9 +14,8 @@ import { posix } from "node:path";
  * Where the reader departs from cmark-gfm, it reads more, never less, so a dangling link cannot
  * pass unseen. It reads every `](` that has a valid destination, with or without an opening `[`.
  * It reads indented code, HTML blocks and inline HTML, comments included, for HTML `href` and
- * `src` values and Markdown link destinations. It reads footnote definitions as paragraphs. In a
- * destination it resolves numeric character references and the five XML ones (`&amp;` and its
- * kin); any other named reference stays as written and fails to resolve.
+ * `src` values and Markdown link destinations. It reads footnote definitions as paragraphs. A
+ * destination decodes character references as `character-references.ts` says.
  */
 
 export interface LinkTarget {
@@ -272,28 +273,12 @@ interface Found {
   readonly target: string;
 }
 
-const namedEntities: Readonly<Record<string, string>> = {
-  amp: "&",
-  apos: "'",
-  gt: ">",
-  lt: "<",
-  quot: '"',
-};
-
 /**
- * A destination as written, with its character references resolved and, in Markdown rather than
- * an HTML attribute, its backslash escapes.
+ * A Markdown destination as cmark-gfm reads it: character references decoded first, then
+ * backslash escapes.
  */
-function unescape(text: string, markdown = true): string {
-  return text.replaceAll(
-    /\\([!-/:-@[-`{-~])|&(?:#(\d{1,7})|#[xX]([\da-fA-F]{1,6})|(amp|apos|gt|lt|quot));/gu,
-    (reference, escaped?: string, decimal?: string, hex?: string, name?: string) => {
-      if (escaped !== undefined) return markdown ? escaped : reference;
-      if (name !== undefined) return namedEntities[name] ?? reference;
-      const code = decimal === undefined ? Number.parseInt(hex ?? "", 16) : Number(decimal);
-      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : "\uFFFD";
-    },
-  );
+function markdownDestination(text: string): string {
+  return decodeMarkdownReferences(text).replaceAll(/\\([!-/:-@[-`{-~])/gu, "$1");
 }
 
 /** The offset after the spaces, tabs and line breaks at `start`. */
@@ -317,7 +302,7 @@ function destinationAt(
     for (let at = start + 1; at < text.length; at += 1) {
       const char = text.charAt(at);
       if (char === ">") {
-        const target = unescape(text.slice(start + 1, at));
+        const target = markdownDestination(text.slice(start + 1, at));
         return at + 1 < text.length ? { offset: start + 1, target, end: at + 1 } : undefined;
       }
       if (char === "\n" || char === "<") return undefined;
@@ -344,7 +329,7 @@ function destinationAt(
     }
   }
   if (at >= text.length || depth !== 0) return undefined;
-  return { offset: start, target: unescape(text.slice(start, at)), end: at };
+  return { offset: start, target: markdownDestination(text.slice(start, at)), end: at };
 }
 
 /** The offset after a link title in quotes or parentheses at `start`, if one is there. */
@@ -436,7 +421,7 @@ function rawTargets(text: string, start: number, end: number): readonly Found[] 
     const offset = match.indices?.[group]?.[0];
     const target = match[group];
     if (offset !== undefined && target !== undefined) {
-      found.push({ offset: start + offset, target: unescape(target, false) });
+      found.push({ offset: start + offset, target: decodeHtmlReferences(target) });
     }
   }
   for (let at = raw.indexOf("]("); at !== -1; at = raw.indexOf("](", at + 2)) {
