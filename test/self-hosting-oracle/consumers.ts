@@ -1850,6 +1850,7 @@ export const consumersSpecs = [
           "A composed intent names its scope by id or entry address, so the agent that receives it reads the same Spec, Pack, entry or question through the graph.",
           "The panel hands its gathered intents off as one change proposal, on the change-proposal contract, and as the memo recipe 49 renders for it: the person copies the memo or the proposal as text, or saves either as a file. The page opens no pull request, because a static page holds no credentials; any pull request comes from the agent's ordinary source edit.",
           "The memo the panel writes for a proposal is byte for byte the memo recipe 49 returns for the same proposal.",
+          "Whenever the panel offers the memo, it shows a closed, read-only preview of the same text `Copy memo` copies and `Save memo` saves, so the person can read the hand-off before it leaves.",
           "A proposal's base is the commit a present build stamp names, otherwise one the person supplies, and the person gives one reason for the whole proposal; without a base and a reason the panel exports its intents as scoped-intent text, and the agent that receives them writes the proposal against a commit it knows.",
           "A request scoped to a Pack records the members this page set renders for that Pack, and expands to them at hand-off only when the proposal's base is the commit the page set's stamp names; otherwise it stays scoped-intent text for an agent to resolve against the base. A request that changes a Pack's membership or framing, names an empty Pack or names a Pack with an unresolved member, stays scoped-intent text too, so the change-proposal contract keeps its Spec and entry scopes.",
           "The proposal holds only the intents its contract can carry; every intent that stays scoped-intent text is listed apart under `Not in the proposal`, and `Copy scoped intent` copies those intents, so the panel drops none. The copied text names each intent's action and recorded scope: the member Spec ids for a member change, with the Pack id as context, or the Pack id for a membership or framing change.",
@@ -1860,10 +1861,11 @@ export const consumersSpecs = [
           persist: "rules[3]",
           handOff: "rules[5]",
           sameMemo: "rules[6]",
-          proposalBase: "rules[7]",
-          packScope: "rules[8]",
-          textApart: "rules[9]",
-          noRequest: "rules[10]",
+          memoPreview: "rules[7]",
+          proposalBase: "rules[8]",
+          packScope: "rules[9]",
+          textApart: "rules[10]",
+          noRequest: "rules[11]",
         },
         exampleSpace: {
           given: ["the composing panel holds {gathered:number} gathered intents"],
@@ -1888,6 +1890,8 @@ export const consumersSpecs = [
           "the base as code when a stamp names it, otherwise a labelled text field for a commit, then a labelled text field for the proposal's reason.",
         panelActions:
           "`Copy memo`, `Copy proposal`, `Save memo`, `Save proposal` and `Discard all`, the copy and save actions shown only when a base and a reason are present; and `Copy scoped intent` whenever an intent stays scoped-intent text, every intent without a base and a reason, and otherwise those the proposal cannot hold.",
+        memoPreview:
+          "a closed disclosure headed `Preview memo`, before the copy and save actions and shown with them, holding the memo as preformatted text that the person reads and cannot edit.",
         composingActions:
           "the actions on other panels that compose intent: propose new text for a keyed entry, resolve an open question or promote it to a decision record, propose or edit an example, propose or change a constraint target, and propose examples for values no example binds.",
         composeDialog:

@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import { IntentPanel, pageRootPath } from "./intent-panel.js";
+import { IntentPanel, actionLabel, pageRootPath } from "./intent-panel.js";
 import type { GatheredIntent, IntentStorage } from "./intent-panel.js";
 import { button } from "./dom.js";
 import { copyText } from "./copy.js";
@@ -75,6 +75,7 @@ export function registerIntentPanel(): void {
       if (!this.model) return;
       const model = this.model;
       const open = this.querySelector("details")?.open ?? false;
+      let previewOpen = this.querySelector<HTMLDetailsElement>(".memo-preview")?.open ?? false;
       this.releaseUrls();
       this.replaceChildren();
       const doc = this.ownerDocument;
@@ -127,7 +128,7 @@ export function registerIntentPanel(): void {
         const row = doc.createElement("li");
         const scope = doc.createElement("code");
         scope.textContent = intent.pack ?? intent.scope.join(", ");
-        row.append(scope, ` ${intent.request} `);
+        row.append(scope, ` ${actionLabel(intent.action)}: ${intent.request} `);
         const discard = button(this, "Discard");
         discard.setAttribute("aria-label", `Discard intent ${String(index + 1)}`);
         discard.addEventListener("click", () => {
@@ -172,10 +173,21 @@ export function registerIntentPanel(): void {
       actions.className = "intent-actions";
       body.append(actions, output);
       const refreshActions = (): void => {
+        previewOpen =
+          actions.querySelector<HTMLDetailsElement>(".memo-preview")?.open ?? previewOpen;
         this.releaseUrls();
         actions.replaceChildren();
         const handoff = model.handoff(stamped ?? this.base, this.reason, stamped);
         if (handoff.proposal && handoff.memo !== null) {
+          const preview = doc.createElement("details");
+          preview.className = "memo-preview";
+          preview.open = previewOpen;
+          const summary = doc.createElement("summary");
+          summary.textContent = "Preview memo";
+          const memo = doc.createElement("pre");
+          memo.textContent = handoff.memo;
+          preview.append(summary, memo);
+          actions.append(preview);
           const documents = [
             ["memo", handoff.memo, "proposal.md", "text/markdown"],
             [
