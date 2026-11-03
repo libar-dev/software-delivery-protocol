@@ -1612,6 +1612,12 @@ const idPattern =
   /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"\u0027()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 const mentionPattern =
   /^spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*(?:#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*))?$/u;
+// A backward scan keeps a long run of interior punctuation linear, where `[.,;:!?*_~]+$` is not.
+const trimPunctuation = (rest) => {
+  let end = rest.length;
+  while (end > 0 && ".,;:!?*_~".includes(rest.charAt(end - 1))) end -= 1;
+  return rest.slice(0, end);
+};
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const declared = new Map();
 
@@ -1687,7 +1693,7 @@ for (const spec of g.specs()) {
 
   for (const { at, text, link } of texts) {
     const tokens = link ? [text] : [...text.replace(escapePattern, "$1").matchAll(idPattern)]
-      .map((match) => match[0].slice("spec:".length).replace(/[.,;:!?*_~]+$/u, ""))
+      .map((match) => trimPunctuation(match[0].slice("spec:".length)))
       .filter((rest) => rest !== "").map((rest) => `spec:${rest}`);
     for (const token of tokens) {
       if (token === spec.id) continue;
@@ -1817,7 +1823,7 @@ if (unknownParams.length > 0) return { unknownParams, accepts };
 const term = params.term ?? "suffix";
 const tokensOf = (text) =>
   text
-    .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2")
+    .replace(/(\p{Lu})(?=\p{Lu}\p{Ll})/gu, "$1 ")
     .replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2")
     .toLowerCase()
     .split(/[^\p{L}\p{N}]+/u)

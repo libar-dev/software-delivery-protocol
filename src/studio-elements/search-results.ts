@@ -34,9 +34,12 @@ export interface SearchHit {
   readonly entries: readonly SearchEntry[];
 }
 
+// The lookahead splits a capital run before its last capital, as `HTMLParser` becomes `HTML
+// Parser`; `(\p{Lu}+)(\p{Lu}\p{Ll})` did the same but rescanned the rest of a long capital run
+// from every start, so one such run made each keystroke's search quadratic in its length.
 const tokensOf = (text: string): readonly string[] =>
   text
-    .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2")
+    .replace(/(\p{Lu})(?=\p{Lu}\p{Ll})/gu, "$1 ")
     .replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2")
     .toLowerCase()
     .split(/[^\p{L}\p{N}]+/u)
