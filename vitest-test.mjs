@@ -8,10 +8,15 @@ import { parseCLI } from "vitest/node";
 
 import { contractDependentSuites } from "./contract-dependent-suites.mjs";
 
-// pnpm forwards a literal `--` to the script, as does `npm test -- -- ...`. Vitest ignores every
-// argument after `--`, the caller's filters and the exclusion the wrapper appends alike, so the
-// wrapper drops it and Vitest reads what follows as ordinary arguments.
-const argv = process.argv.slice(2).filter((argument) => argument !== "--");
+// The arguments are read here, once. pnpm forwards a literal `--` to the script, as does
+// `npm test -- -- ...`; that leading separator belongs to the package manager, so the wrapper drops
+// it. A further `--` is the caller's own Vitest delimiter, and Vitest ignores everything after it.
+// The wrapper therefore reads only what comes before it, for routing, help and the preflight alike,
+// and every spawn carries the ignored rest last, behind the wrapper's own exclusion and options.
+const callerArgv = process.argv[2] === "--" ? process.argv.slice(3) : process.argv.slice(2);
+const delimiter = callerArgv.indexOf("--");
+const argv = delimiter === -1 ? callerArgv : callerArgv.slice(0, delimiter);
+const ignoredByVitest = delimiter === -1 ? [] : callerArgv.slice(delimiter);
 const vitestArgs = argv.includes("--run") ? argv : ["--run", ...argv];
 const repositoryRoot = dirname(fileURLToPath(import.meta.url));
 
@@ -74,13 +79,18 @@ const matchesPathFilter = (testPath, filter) =>
   testPath.toLowerCase().includes(normalizePathFilter(filter));
 const cliFilters = pathFilters.filter((filter) => matchesPathFilter(cliTestPath, filter));
 const selectsCliTest = cliFilters.length > 0;
-const requiredContracts = hasPathFilter
-  ? contractDependencies.filter((dependency) =>
-      dependency.testPaths.some((testPath) =>
-        pathFilters.some((filter) => matchesPathFilter(testPath, filter)),
-      ),
-    )
-  : contractDependencies;
+// `bench` runs benchmark files, never test files, and the dependency rows list test files only, so
+// a benchmark run requires no contract tree.
+const requiredContracts =
+  command === "bench"
+    ? []
+    : hasPathFilter
+      ? contractDependencies.filter((dependency) =>
+          dependency.testPaths.some((testPath) =>
+            pathFilters.some((filter) => matchesPathFilter(testPath, filter)),
+          ),
+        )
+      : contractDependencies;
 const missingContracts = requiredContracts.filter(
   (dependency) => !existsSync(dependency.contracts),
 );
@@ -97,7 +107,7 @@ if (missingContracts.length > 0) {
 }
 
 function runVitest(args) {
-  const result = spawnSync("vitest", args, { stdio: "inherit" });
+  const result = spawnSync("vitest", [...args, ...ignoredByVitest], { stdio: "inherit" });
 
   if (result.error !== undefined) {
     throw result.error;
@@ -162,10 +172,11 @@ if (argv.some((argument) => forwardedOnce.has(argument))) {
   process.exit(runVitest(vitestArgs));
 }
 
-// A command that executes no test, such as `list`, is forwarded once as selected. Executing
+// A command that executes no test, such as `list`, is forwarded once as selected, and so is `bench`,
+// which executes benchmarks only: a dedicated pass after it would run the CLI unit suite. Executing
 // commands (`run`, `related`, and `watch` or `dev`, which the added `--run` makes single-pass)
 // keep the split, so test/cli.test.ts still runs only in its dedicated process.
-if (command === "list" || command === "init") {
+if (command === "list" || command === "init" || command === "bench") {
   process.exit(runPooledVitest(vitestArgs));
 }
 

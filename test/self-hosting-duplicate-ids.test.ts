@@ -410,6 +410,28 @@ describe("pooled root generated-state sentinel", () => {
     ],
     [["-h"], [["--run", "-h"]]],
     [["--version"], [["--run", "--version"]]],
+    // Help behind pnpm's separator is still help, forwarded once.
+    [["--", "--help"], [["--run", "--help"]]],
+    [["--", "-h"], [["--run", "-h"]]],
+    // A second `--` is the caller's own delimiter: Vitest ignores what follows it, so the wrapper
+    // reads nothing there, help included, and keeps it last, behind its own exclusion.
+    [
+      ["--", "--", "--help"],
+      [
+        ["--run", "--exclude", "test/cli.test.ts", "--", "--help"],
+        [
+          "--run",
+          "test/cli.test.ts",
+          "--pool",
+          "forks",
+          "--maxWorkers",
+          "1",
+          "--no-isolate",
+          "--",
+          "--help",
+        ],
+      ],
+    ],
   ])("routes %j without running test/cli.test.ts in the pool", (options, expected) => {
     const { root, environment } = shimmedPoolRoot(
       'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
@@ -467,6 +489,34 @@ describe("pooled root generated-state sentinel", () => {
         .split("\n")
         .map((line) => JSON.parse(line) as string[]);
       expect(spawns).toEqual([["--run", ...options]]);
+    },
+  );
+
+  it.each([
+    [["bench"], ["--run", "bench"]],
+    [
+      ["bench", "test/cli.test.ts"],
+      ["--run", "bench", "test/cli.test.ts"],
+    ],
+    [
+      ["--", "bench"],
+      ["--run", "bench"],
+    ],
+  ])(
+    "forwards the benchmark command %j once, with no CLI unit pass and no contract tree",
+    (options, expected) => {
+      const { root, environment } = shimmedPoolRoot(
+        'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+      );
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+        cwd: root,
+        encoding: "utf8",
+        env: environment,
+      });
+
+      expect(result.stderr).toBe("");
+      expect(result.status).toBe(0);
+      expect(recordedSpawns(root)).toEqual([expected]);
     },
   );
 
@@ -554,6 +604,11 @@ describe("the test wrapper over real Vitest", () => {
     [["--testNamePattern", "gamma"], ["other gamma"]],
     [["--", "test/other.test.ts"], ["other gamma"]],
     [["--", "-t", "beta"], ["cli beta"]],
+    // Vitest ignores a filter behind the caller's own delimiter, and so does the wrapper.
+    [
+      ["--", "--", "test/other.test.ts"],
+      ["cli alpha", "cli beta", "other gamma"],
+    ],
   ])(
     "runs %j as Vitest would select it, with the CLI suite only in its own pass",
     (options, ran) => {
@@ -569,6 +624,23 @@ describe("the test wrapper over real Vitest", () => {
       expect(existsSync(log) ? readFileSync(log, "utf8").trim().split("\n").sort() : []).toEqual(
         ran,
       );
+    },
+    120_000,
+  );
+
+  it.each([[["--", "--help"]], [["--", "-h"]]])(
+    "prints usage for %j and runs no test",
+    (options) => {
+      const { root, environment } = realVitestRoot();
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+        cwd: root,
+        encoding: "utf8",
+        env: environment,
+      });
+
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout).toContain("Usage:");
+      expect(existsSync(join(root, "ran.log"))).toBe(false);
     },
     120_000,
   );
