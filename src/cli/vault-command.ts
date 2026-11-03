@@ -39,7 +39,11 @@ const inside = (parent: string, child: string): boolean => {
   const path = relative(parent.toLowerCase(), child.toLowerCase());
   return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path));
 };
-export function checkVaultDirectory(parsed: BuildArgs, registrars: readonly string[] = []): void {
+/** Publication requires an existing, safe output parent; placement checks also accept absent roots. */
+function checkVaultPublicationDirectory(
+  parsed: BuildArgs,
+  registrars: readonly string[] = [],
+): void {
   assertOutputParent(parsed.root, join(parsed.root, "generated", "graph.json"));
   if (parsed.vault === undefined) {
     const out = vaultDirectory(parsed);
@@ -51,6 +55,9 @@ export function checkVaultDirectory(parsed: BuildArgs, registrars: readonly stri
     }
     assertOutputParent(parsed.root, join(out, "sdp"));
   }
+  checkVaultDirectory(parsed, registrars);
+}
+export function checkVaultDirectory(parsed: BuildArgs, registrars: readonly string[] = []): void {
   const out = vaultDirectory(parsed),
     resolvedOut = physical(out),
     root = physical(parsed.root);
@@ -103,7 +110,7 @@ export function reportVaultError(error: unknown, output: CliOutput): number {
 }
 export function prepareVault(parsed: BuildArgs, output: CliOutput): VaultState | undefined {
   try {
-    checkVaultDirectory(parsed);
+    checkVaultPublicationDirectory(parsed);
     return inspectVault(vaultDirectory(parsed));
   } catch (error) {
     reportVaultError(error, output);
@@ -124,7 +131,7 @@ export function prepareVaultBuild(
   try {
     assertVaultNoteNames(extracted.graph);
     const contracts = (hooks.generateContracts ?? generateContracts)(extracted.graph);
-    checkVaultDirectory(parsed, [...contracts.registrars.keys()]);
+    checkVaultPublicationDirectory(parsed, [...contracts.registrars.keys()]);
     return { ...hooks, extract: () => extracted, generateContracts: () => contracts };
   } catch (error) {
     reportVaultError(error, output);
@@ -153,7 +160,7 @@ export function publishFailedVault(
         )
         .join("\n") +
       "\n";
-    checkVaultDirectory(parsed);
+    checkVaultPublicationDirectory(parsed);
     summarize(
       parsed,
       synchronizeVault(
@@ -186,7 +193,7 @@ export function publishVault(
   findings?: Parameters<typeof renderVault>[1],
 ): number {
   try {
-    checkVaultDirectory(parsed);
+    checkVaultPublicationDirectory(parsed);
     summarize(
       parsed,
       synchronizeVault(
@@ -272,7 +279,7 @@ export function runVaultWatch(
     onWatchStop: () => {
       // Cycles are synchronous; SIGINT is delivered between them. Remove only recognized whole temporaries.
       try {
-        checkVaultDirectory(parsed);
+        checkVaultPublicationDirectory(parsed);
         const state = inspectVault(out);
         if (state.temporaries.length)
           synchronizeVault(
