@@ -390,6 +390,7 @@ export const extractionSpecs = [
           "A contract never holds two steps under one contract key. An example marker that disagrees with the key of its vocabulary step withholds the example's step contract with `contracts/conflicting-step-key`. A step or space contract whose steps would share a contract key, two skeletons under one key or a key equal to another step's skeleton, is withheld with `contracts/duplicate-step-key`, naming the key and both skeletons; a withheld space contract withholds every registrar of its children.",
           "Two contract paths differing only by letter case cannot coexist on a case-insensitive filesystem, so the contracts tree is withheld whole and the finding names the colliding pair.",
           "Every generation finding is a warning that describes what did not emit; gating belongs to graph validation alone, so a withheld contract never fails the build by itself.",
+          "A Then slot named `kind` withholds its space contract when declared in a vocabulary, or its step contract when carried by an example, with `contracts/reserved-then-slot` naming the reserved word; a withheld space contract also withholds its children's registrars. Outcome variants keep their flat shape, with `kind` as the discriminant and the other slots as sibling fields.",
         ],
         exampleSpace: {
           given: [
@@ -413,11 +414,12 @@ export const extractionSpecs = [
           outcomeIdentity: "rules[8]",
           keyConflicts: "rules[9]",
           caseCollision: "rules[10]",
+          reservedThenSlot: "rules[12]",
         },
       },
       design: {
         findingIds:
-          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key`, each at warning severity.",
+          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key` · `contracts/reserved-then-slot`, each at warning severity.",
         duplicateStepKey:
           '`contracts/duplicate-step-key` is a warning on the parent at `behavior.exampleSpace` for a space collision, or on the example at `behavior.examples` for a step-contract collision. Its message is `contract key "<key>" names both "<first skeleton>" and "<second skeleton>"; <space|step> contract withheld`, with the skeletons in first-occurrence order.',
         contractStep:

@@ -19,6 +19,7 @@ import {
   evaluateBody,
   contractsFindingIds,
   generateContracts,
+  validateGraph,
   refines,
   spec,
   specId,
@@ -946,4 +947,207 @@ describe("the contracts codegen stage", () => {
     // why it is nothing this build.
     expect(generated.files.size).toBe(0);
   });
+});
+
+describe("reserved Then slot kind", () => {
+  function carrierGraph(steps: string, vocabulary: boolean) {
+    const carrier = reifyMarkdownCarrier(
+      `---
+id: spec:probe.reserved-slot
+kind: ${vocabulary ? "behavior" : "example"}
+altitude: story
+readiness: idea
+relations: {}
+---
+# Reserved slot probe
+## Intent
+- outcome: Check the Then slot reservation.
+${vocabulary ? "## Example space\n```gwt-vocabulary" : "```gwt"}
+${steps}
+\`\`\`
+`,
+      "probe.sdp.md",
+    );
+    expect(carrier.findings).toEqual([]);
+    return deriveGraph(carrier.specs, [], []);
+  }
+
+  for (const vocabulary of [true, false]) {
+    for (const marker of ["", "[#result] "]) {
+      it.each(["{kind:string}", '{kind: "accepted"}', "{kind}", "{kind: maybe}"])(
+        `reports conformance for ${vocabulary ? "vocabulary" : "example"} ${marker}%s`,
+        (slot) => {
+          const graph = carrierGraph(
+            `Given ready\nWhen run\nThen ${marker}result ${slot}`,
+            vocabulary,
+          );
+          expect(
+            validateGraph(graph).findings.filter(
+              (finding) => finding.validatorId === "conformance/reserved-then-slot",
+            ),
+          ).toEqual([
+            expect.objectContaining({
+              family: "conformance",
+              severity: "error",
+              subjectId: "spec:probe.reserved-slot",
+              file: "probe.sdp.md",
+              path: vocabulary ? "behavior.exampleSpace.then[0]" : "behavior.examples[0].then[0]",
+              message: expect.stringContaining('Then slot "kind" is reserved') as unknown,
+            }),
+          ]);
+        },
+      );
+    }
+
+    it(`refuses the ${vocabulary ? "space" : "step"} contract and names kind`, () => {
+      const graph = carrierGraph(
+        `Given ready\nWhen run\nThen result ${vocabulary ? "{kind:string}" : '{kind: "accepted"}'}`,
+        vocabulary,
+      );
+      const generated = generateContracts(graph);
+      expect(generated.files.size).toBe(0);
+      expect(generated.findings).toEqual([
+        expect.objectContaining({
+          validatorId: "contracts/reserved-then-slot",
+          severity: "warning",
+          message: expect.stringContaining('Then slot "kind" is reserved') as unknown,
+        }),
+      ]);
+    });
+  }
+
+  it("checks later structured entries at their authored index", () => {
+    const graph = deriveFixtureGraph({ specs: [parent(), child(BOUND_GWT)] });
+    const changed: GraphSchema = {
+      ...graph,
+      nodes: graph.nodes.map((node) =>
+        node.nodeType === "Primitive" && node.specKind === "example"
+          ? {
+              ...node,
+              sections: {
+                ...node.sections,
+                behavior: {
+                  examples: [
+                    "A prose example",
+                    BOUND_GWT,
+                    { ...BOUND_GWT, then: ['result {kind: "accepted"}'] },
+                  ],
+                },
+              },
+            }
+          : node,
+      ),
+    };
+    expect(validateGraph(changed).findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "conformance/reserved-then-slot",
+        path: "behavior.examples[2].then[0]",
+      }),
+    );
+    expect(generateContracts(changed).files.has("orders.create-order.valid-cart.contract.ts")).toBe(
+      false,
+    );
+  });
+
+  it("withholds registrars even when the child does not use the reserved vocabulary step", () => {
+    const base = deriveFixtureGraph({
+      specs: [
+        parent({ ...VOCABULARY, then: [...VOCABULARY.then, "result {kind:string}"] }),
+        child(BOUND_GWT),
+      ],
+    });
+    const graph: GraphSchema = {
+      ...base,
+      nodes: [
+        ...base.nodes,
+        {
+          id: "test:probe.reserved-slot",
+          nodeType: "Anchor",
+          claim: "anchored",
+          file: "test/probe.test.ts",
+          line: 1,
+        },
+      ],
+      edges: [
+        ...base.edges,
+        {
+          from: "test:probe.reserved-slot",
+          to: "spec:orders.create-order.valid-cart",
+          type: "verifies",
+          claim: "anchored",
+        },
+      ],
+    };
+    const generated = generateContracts(graph);
+    expect(generated.files.has("orders.create-order.space.ts")).toBe(false);
+    expect(generated.files.has("orders.create-order.valid-cart.contract.ts")).toBe(true);
+    expect(generated.registrars.size).toBe(0);
+  });
+
+  it.each(["result", "Kind", "kindOf", "_kind"])(
+    "keeps the flat Outcome for lawful slot %s",
+    (name) => {
+      const generated = generateContracts(
+        carrierGraph(`Given ready\nWhen run\nThen result {${name}:string}`, true),
+      );
+      expect(generated.findings).toEqual([]);
+      expect(generated.files.get("probe.reserved-slot.space.ts")).toContain(
+        `{ readonly kind: "result {${name}}"; readonly ${name}: string }`,
+      );
+    },
+  );
+
+  it.each(["given", "when"] as const)(
+    "allows kind in %s and emits contracts that typecheck",
+    (phase) => {
+      const vocabulary = { given: ["ready"], when: ["run"], then: ["done"] };
+      const bound = { ...vocabulary, [phase]: ['input {kind: "accepted"}'] };
+      vocabulary[phase] = ["input {kind:string}"];
+      const graph = deriveFixtureGraph({ specs: [parent(vocabulary), child(bound)] });
+      expect(
+        validateGraph(graph).findings.filter(
+          (finding) => finding.validatorId === "conformance/reserved-then-slot",
+        ),
+      ).toEqual([]);
+      const generated = generateContracts(graph);
+      expect(generated.findings).toEqual([]);
+      expect(generated.files.size).toBe(2);
+      expect(generated.files.get("orders.create-order.space.ts")).toContain(
+        "readonly kind: string;",
+      );
+      expect(generated.files.get("orders.create-order.valid-cart.contract.ts")).toContain(
+        'params: { kind: "accepted" }',
+      );
+
+      const options: ts.CompilerOptions = {
+        noEmit: true,
+        strict: true,
+        skipLibCheck: true,
+        types: [],
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        moduleResolution: ts.ModuleResolutionKind.Bundler,
+        paths: {
+          "@libar-dev/software-delivery-protocol/runner": [process.cwd() + "/src/runner/index.ts"],
+        },
+      };
+      const sources = new Map(
+        [...generated.files].map(([path, text]) => [process.cwd() + "/generated/" + path, text]),
+      );
+      const host = ts.createCompilerHost(options);
+      const getSourceFile = host.getSourceFile.bind(host);
+      host.getSourceFile = (file, version, onError, shouldCreateNewSourceFile) => {
+        const text = sources.get(file);
+        return text === undefined
+          ? getSourceFile(file, version, onError, shouldCreateNewSourceFile)
+          : ts.createSourceFile(file, text, version, true);
+      };
+      const program = ts.createProgram([...sources.keys()], options, host);
+      expect(
+        ts
+          .getPreEmitDiagnostics(program)
+          .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+      ).toEqual([]);
+    },
+  );
 });

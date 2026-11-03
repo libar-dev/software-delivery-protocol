@@ -28,6 +28,7 @@ import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import { buildGraphIndex } from "./graph-index.js";
 import type { GraphIndex } from "./graph-index.js";
 import type { Finding, Severity, ValidationReport, ValidatorFamily } from "./contracts.js";
+import { reservedThenSlotsOf } from "../notation/example-space.js";
 import { evaluateReadinessFloor } from "./readiness-floor.js";
 
 /**
@@ -51,6 +52,7 @@ export const graphValidatorIds = {
   orphans: "conformance/orphans",
   proseMentions: "conformance/prose-mentions",
   ruleExercises: "conformance/rule-exercises",
+  reservedThenSlot: "conformance/reserved-then-slot",
   authoringShape: "honesty/authoring-shape",
   deliveryFacts: "honesty/delivery-facts",
   readinessFloor: "honesty/readiness-floor",
@@ -1899,6 +1901,26 @@ function checkSupersededDecisions(graph: GraphSchema, index: GraphIndex): readon
   return findings;
 }
 
+/* ----- conformance/reserved-then-slot ----- */
+
+function checkReservedThenSlots(graph: GraphSchema): readonly Finding[] {
+  return graph.nodes.flatMap((node) =>
+    node.nodeType !== "Primitive"
+      ? []
+      : reservedThenSlotsOf(node).map(({ text, path }) =>
+          createFinding({
+            validatorId: graphValidatorIds.reservedThenSlot,
+            family: "conformance",
+            severity: "error",
+            subjectId: node.id,
+            file: node.file,
+            path,
+            message: `Then slot "kind" is reserved for the Outcome discriminant in step "${text}"`,
+          }),
+        ),
+  );
+}
+
 /* ----- the aggregate ----- */
 
 function compareCodeUnits(left: string, right: string): number {
@@ -1947,6 +1969,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
     ...checkOrphans(graph, index),
     ...checkProseMentions(graph, index),
     ...checkRuleExercises(graph, index),
+    ...checkReservedThenSlots(graph),
     ...checkSupersededDecisions(graph, index),
     ...authoringShapeFindings,
     ...checkDeliveryFacts(graph, derivedFacts),

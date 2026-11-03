@@ -26,6 +26,7 @@ export const contractsFindingIds = {
   multipleRegistrarPaths: "contracts/multiple-registrar-paths",
   conflictingStepKey: "contracts/conflicting-step-key",
   duplicateStepKey: "contracts/duplicate-step-key",
+  reservedThenSlot: "contracts/reserved-then-slot",
 } as const;
 
 export function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -71,6 +72,28 @@ export function structuredEntriesOf(node: PrimitiveNode): readonly StructuredEnt
   }
 
   return structured;
+}
+
+/** Then payload fields share the flat Outcome object with its discriminant. */
+export function reservedThenSlotsOf(
+  node: PrimitiveNode,
+): readonly { readonly text: string; readonly path: string }[] {
+  const behavior = asRecord(node.sections?.behavior);
+  const space = asRecord(behavior?.exampleSpace);
+  const examples = Array.isArray(behavior?.examples) ? behavior.examples : [];
+  const steps = [
+    ...asStringArray(space?.then).map((text, index) => ({
+      text,
+      path: `behavior.exampleSpace.then[${String(index)}]`,
+    })),
+    ...examples.flatMap((entry, entryIndex) =>
+      asStringArray(asRecord(entry)?.then).map((text, stepIndex) => ({
+        text,
+        path: `behavior.examples[${String(entryIndex)}].then[${String(stepIndex)}]`,
+      })),
+    ),
+  ];
+  return steps.filter(({ text }) => parseSlots(text).some((slot) => slot.name === "kind"));
 }
 
 export interface VocabularyEntry {
