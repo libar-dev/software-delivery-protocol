@@ -1,7 +1,8 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { createRequire } from "node:module";
-import { readdirSync, statSync } from "node:fs";
+import { builtinModules, createRequire } from "node:module";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import {
+  chmod,
   copyFile,
   mkdir,
   mkdtemp,
@@ -150,8 +151,32 @@ async function npm11Selection(path: string): Promise<string[]> {
   return packlist(await new Arborist({ path }).loadActual(), { path });
 }
 
+// npm writes its cache even to pack, and `npm test` hands every script the user's cache through
+// npm_config_cache. A cache the suite owns keeps packing and installing working where that cache
+// is read-only. Installing the tarball still fetches its dependencies from the npm registry.
+const suiteNpmCache = join(tmpdir(), "sdp-package-smoke-npm-cache");
+
 function run(command: string, args: readonly string[], cwd: string): string {
-  return execFileSync(command, args, { cwd, encoding: "utf8" });
+  const env = command === "npm" ? { ...process.env, npm_config_cache: suiteNpmCache } : undefined;
+  return execFileSync(command, args, { cwd, encoding: "utf8", env });
+}
+
+const subpathExports = ["anchors", "concept-match", "runner", "vitest", "testing"] as const;
+
+// Node's own rule for a file's module format: the extension, then the nearest package.json.
+function moduleFormat(file: string): "commonjs" | "module" {
+  if (file.endsWith(".cjs")) return "commonjs";
+  if (file.endsWith(".mjs")) return "module";
+  for (let directory = dirname(file); ; directory = dirname(directory)) {
+    try {
+      const manifest = JSON.parse(readFileSync(join(directory, "package.json"), "utf8")) as {
+        readonly type?: string;
+      };
+      return manifest.type === "module" ? "module" : "commonjs";
+    } catch {
+      if (dirname(directory) === directory) return "commonjs";
+    }
+  }
 }
 
 interface PackedPackage {
@@ -297,6 +322,63 @@ const packageBinding = publicAnchor({ id: publicId("impl:probe.package") });
     }
   });
 
+  // The CommonJS root requires its dependencies as it loads. Node runs an ES module through
+  // require() by default only from 20.19 and 22.12, so while any of them is an ES module the
+  // declared engines must admit no older release.
+  it("keeps the CommonJS root loadable on every Node release its engines admit", async () => {
+    const entry = join(repositoryRoot, "dist/index.cjs");
+    const source = await readFile(entry, "utf8");
+    const specifiers = [
+      ...new Set(
+        [...source.matchAll(/\brequire\("([^"]+)"\)/gu)].map(([, specifier]) => specifier),
+      ),
+    ].filter(
+      (specifier): specifier is string =>
+        specifier !== undefined &&
+        !specifier.startsWith(".") &&
+        !specifier.startsWith("node:") &&
+        !builtinModules.includes(specifier),
+    );
+    expect(specifiers).toContain("ts-morph");
+    const requireFromEntry = createRequire(entry);
+    // Each resolves through the `require` condition, or the root fails as it loads.
+    const esModules = specifiers.filter(
+      (specifier) => moduleFormat(requireFromEntry.resolve(specifier)) === "module",
+    );
+    const manifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8")) as {
+      readonly engines: { readonly node: string };
+    };
+    if (esModules.length > 0) expect(manifest.engines.node).toBe("^20.19.0 || >=22.12.0");
+
+    const loaded = spawnSync(
+      process.execPath,
+      [
+        "-e",
+        `const m = require(${JSON.stringify(entry)}); if (typeof m.extract !== "function") process.exit(2);`,
+      ],
+      { encoding: "utf8" },
+    );
+    expect(loaded.status, loaded.stderr).toBe(0);
+  });
+
+  it("packs where the user's npm cache is read-only", async () => {
+    const destination = await mkdtemp(join(tmpdir(), "sdp-pack-read-only-cache-"));
+    const readOnlyCache = join(destination, "read-only-cache");
+    const userCache = process.env.npm_config_cache;
+    try {
+      await mkdir(readOnlyCache);
+      await chmod(readOnlyCache, 0o555);
+      process.env.npm_config_cache = readOnlyCache;
+      const packed = await packBuiltPackage(destination);
+      expect(packed.filename).toMatch(/\.tgz$/u);
+    } finally {
+      if (userCache === undefined) delete process.env.npm_config_cache;
+      else process.env.npm_config_cache = userCache;
+      await chmod(readOnlyCache, 0o755);
+      await rm(destination, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   it("packing leaves every repository dist file's inode, size and mtime untouched", async () => {
     const destination = await mkdtemp(join(tmpdir(), "sdp-pack-unchanged-"));
     try {
@@ -357,7 +439,14 @@ const packageBinding = publicAnchor({ id: publicId("impl:probe.package") });
 
     try {
       const packed = await packBuiltPackage(packageRoot);
+      // Vitest looks for a config in every ancestor directory, and the system temp directory may
+      // sit inside another Vitest project. This one would select no test in the consumer.
+      await writeFile(
+        join(packageRoot, "vitest.config.mjs"),
+        'export default { test: { include: ["no-such-directory/**"] } };\n',
+      );
       await mkdir(consumer);
+      await writeFile(join(consumer, "vitest.config.mjs"), "export default {};\n");
       await writeFile(
         join(consumer, "package.json"),
         JSON.stringify({ name: "sdp-vitest-smoke", private: true, type: "module" }),
@@ -529,9 +618,11 @@ console.log("node-free matcher available");`,
 import type { ${typeOnlyRootExports.join(", ")} } from "${packageName}";
 import { matchConcept as standaloneMatcher } from "${packageName}/concept-match";
 import type { ConceptRecord as StandaloneConceptRecord } from "${packageName}/concept-match";
+${subpathExports.map((subpath, index) => `import * as subpath${String(index)} from "${packageName}/${subpath}";`).join("\n")}
 const record: StandaloneConceptRecord = { id: "spec:smoke", nodeType: "Primitive" };
 standaloneMatcher([record], "smoke");
 void [${expectedRootExports.join(", ")}];
+void [${subpathExports.map((_, index) => `subpath${String(index)}`).join(", ")}];
 `,
       );
 
@@ -576,6 +667,36 @@ void [${expectedRootExports.join(", ")}];
         ],
         consumer,
       );
+      // The subpaths are ES modules only, and Node refuses to require them: TypeScript must
+      // refuse the same CommonJS import instead of typing it.
+      await writeFile(
+        join(consumer, "subpath-require.cts"),
+        `${subpathExports.map((subpath, index) => `import * as subpath${String(index)} from "${packageName}/${subpath}";`).join("\n")}
+void [${subpathExports.map((_, index) => `subpath${String(index)}`).join(", ")}];
+`,
+      );
+      const refused = spawnSync(
+        join(repositoryRoot, "node_modules", ".bin", "tsc"),
+        [
+          "--module",
+          "NodeNext",
+          "--moduleResolution",
+          "NodeNext",
+          "--target",
+          "ES2022",
+          "--strict",
+          "--skipLibCheck",
+          "--noEmit",
+          "subpath-require.cts",
+        ],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect(refused.status).not.toBe(0);
+      for (const subpath of subpathExports) {
+        expect(refused.stdout).toContain(
+          `error TS2307: Cannot find module '${packageName}/${subpath}'`,
+        );
+      }
 
       const sdpHelp = run(join(consumer, "node_modules", ".bin", "sdp"), ["--help"], consumer);
       for (const path of [...adopterAssets, "schemas/sdp-proposal-1.schema.json", "specs/"]) {

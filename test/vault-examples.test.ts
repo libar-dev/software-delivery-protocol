@@ -585,9 +585,12 @@ const iterationAdapters = (contract: Contract) => ({
       });
     const out = join(root, "generated/obsidian-vault/sdp");
     const stopped = new Promise<number | null>((resolve) => child.once("exit", resolve));
+    // Each finished cycle prints one summary line, after its last write.
+    const cycles = () => stdout.split("/obsidian-vault/sdp (").length - 1;
     try {
-      await waitFor(() => stdout.includes("/obsidian-vault/sdp ("));
+      await waitFor(() => cycles() > 0);
       const before = snapshot(out);
+      const cyclesBefore = cycles();
       if (w.point.edit === "a title change in its carrier")
         put(join(root, "member.sdp.md"), carrier("spec:probe.member", "Changed"));
       else
@@ -601,6 +604,8 @@ const iterationAdapters = (contract: Contract) => ({
           ? content.includes("# Changed")
           : content.includes("Implementation binding: present");
       });
+      // The note changes before the cycle rewrites its file list: compare once the cycle is done.
+      await waitFor(() => cycles() > cyclesBefore);
       const after = snapshot(out);
       const content = readFileSync(join(out, "specs/probe/spec.probe.member.md"), "utf8");
       const alive = child.exitCode === null;

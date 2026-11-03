@@ -66,6 +66,27 @@ describe("bootstrap package surface", () => {
       import: { types: "./dist/index.d.ts", default: "./dist/index.js" },
       require: { types: "./dist/index.d.cts", default: "./dist/index.cjs" },
     });
+    // The subpaths are ES modules only. Their types sit under that one condition, so TypeScript
+    // refuses a `require` of them exactly where Node refuses it.
+    for (const [subpath, module] of [
+      ["./anchors", "anchors"],
+      ["./concept-match", "reader/concept-match"],
+      ["./runner", "runner/index"],
+      ["./vitest", "adapters/vitest"],
+      ["./testing", "testing/index"],
+    ] as const) {
+      expect(packageJson.exports[subpath], subpath).toEqual({
+        import: { types: `./dist/${module}.d.ts`, default: `./dist/${module}.js` },
+      });
+    }
+    expect(Object.keys(packageJson.exports).sort()).toEqual([
+      ".",
+      "./anchors",
+      "./concept-match",
+      "./runner",
+      "./testing",
+      "./vitest",
+    ]);
     expect(packageJson.scripts["generate:self-hosting"]).toBe(
       "node ./projection-suite.mjs . --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
     );

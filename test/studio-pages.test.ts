@@ -174,10 +174,11 @@ const probe: GraphSchema = {
 };
 let data: Awaited<ReturnType<typeof createStudioData>>;
 let pages: ReturnType<typeof renderStudio>;
+// Budgets that hold when the whole suite runs in parallel on a loaded machine.
 beforeAll(async () => {
   data = await createStudioData(createReader(probe));
   pages = renderStudio(data);
-}, 30_000);
+}, 120_000);
 const html = (id: string): string => {
   const page = pages.find((p) => p.path === (pagePath(id) ?? id));
   if (!page) throw new Error(`Missing page ${id}`);
@@ -767,7 +768,7 @@ describe("Protocol Studio page set", () => {
       ),
     );
     rendered = renderStudio(protocol);
-  }, 30_000);
+  }, 120_000);
   it("resolves every page link and element fragment", () => {
     expect(
       rendered.find((p) => p.path === "specs/consumers.spec-studio.shell.html")?.content,

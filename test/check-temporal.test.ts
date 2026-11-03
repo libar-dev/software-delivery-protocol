@@ -118,6 +118,14 @@ describe("check:temporal", () => {
     });
   });
 
+  it("states the same law in its header: the registry is never a dated diary or a model for one", () => {
+    const source = readFileSync(join(repoRoot, guardName), "utf8");
+    const header = source.slice(0, source.indexOf("const pattern"));
+
+    expect(header).toContain("never the decision registry");
+    expect(header).not.toMatch(/DECISIONS|decision diary/u);
+  });
+
   it("accepts an in-repository directory symlink when its canonical files are tracked", () => {
     withRoot((root) => {
       mkdirSync(join(root, ".agents", "skills", "example"), { recursive: true });

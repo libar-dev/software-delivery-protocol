@@ -25,6 +25,10 @@ export files and a shipped recipe. The archive route exercises the build used by
 dependencies locally; it makes no request to GitHub. The check needs network access for
 dependencies and tests only committed work, so CI runs it after `npm run check`.
 
+`npm test`, and so `npm run check`, also needs the npm registry: the package smoke suite installs
+the packed package's dependencies into a scratch consumer. It keeps its own npm cache in the
+system temporary directory, so a read-only user cache does not stop it.
+
 Then query this repository's self-hosting graph with either supported script runner:
 
 ```sh
@@ -113,6 +117,16 @@ build permissions, then run `pnpm install`. See npm's
 
 The `./vitest` subpath needs Vitest 2 or later installed beside the package. Install it in the
 adopter with `npm install --save-dev vitest` or `pnpm add --save-dev vitest` when using that adapter.
+
+The package runs on Node.js 20.19 or later in the 20 line, and on 22.12 or later
+(`engines.node` is `^20.19.0 || >=22.12.0`). Those releases load an ES module through `require()`,
+which the CommonJS root entry needs: some of its dependencies ship only as ES modules.
+
+TypeScript reads the package's types with `moduleResolution` set to `node16`, `nodenext` or
+`bundler`. The root offers both `import` and `require`. The subpaths (`./anchors`,
+`./concept-match`, `./runner`, `./vitest`, `./testing`) are ES modules only, so a CommonJS file
+imports the root alone. The older `node10` resolution, the default under `module: commonjs`,
+reads no export map and cannot resolve the package.
 
 Verify either install through the linked binary:
 

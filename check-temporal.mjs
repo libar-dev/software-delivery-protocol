@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 // delivery artifact and never reaches the sweep: enumeration honours `.gitignore`, so no exemption
 // is written for one. Only temporal-by-genre artifacts are exempt, never the decision registry:
 // the per-session plan done-records, the archived reviews, the dated exploration records (verbatim
-// exhibits, diary-dated like DECISIONS), the restored lineage documents (verbatim historical
+// exhibits, dated by genre), the restored lineage documents (verbatim historical
 // exhibits), the tracked orchestration drafts/plans/evidence under `.omo/` — plus the
 // machine-generated lockfile (derived, not authored prose). A tracked `.omo/boulder.json` is not
 // that genre. `Slice N` / `Phase 0` (roadmap-relative capability names) and `MD-n` citations

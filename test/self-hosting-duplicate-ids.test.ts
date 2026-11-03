@@ -1,5 +1,13 @@
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -242,6 +250,27 @@ describe("generated contract preflight", () => {
     },
   );
 
+  it("matches a file:line filter by its file before collecting the self-hosting tracer", () => {
+    const result = runPreflight(preflightRoot([checkoutContracts]), [`${selfHostingTest}:200`]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toBe(
+      "Generated contracts required by the selected test suite are missing.\nRun `npm run build && npm run generate:self-hosting` first.\n",
+    );
+  });
+
+  it.each([[[checkoutContracts]], [[selfHostingContracts]]])(
+    "requires every contract tree for `related`, whose source paths name no test file (present: %j)",
+    (present) => {
+      const result = runPreflight(preflightRoot(present), ["related", "src/runner/index.ts"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toBe(
+        `Generated contracts required by the selected test suite are missing.\nRun \`npm run build && ${present[0] === checkoutContracts ? "npm run generate:self-hosting" : "npm run generate:example"}\` first.\n`,
+      );
+    },
+  );
+
   it("does not require contracts for an unrelated Vitest filter", () => {
     expect(runPreflight(preflightRoot([]), ["test/bootstrap.test.ts"]).status).toBe(0);
   });
@@ -274,6 +303,13 @@ function shimmedPoolRoot(
   };
 }
 
+function recordedSpawns(root: string): string[][] {
+  return readFileSync(join(root, "spawns.log"), "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as string[]);
+}
+
 function runPooledWrapper(root: string, environment: NodeJS.ProcessEnv) {
   return spawnSync(
     process.execPath,
@@ -295,26 +331,143 @@ describe("pooled root generated-state sentinel", () => {
     );
   });
 
-  it("keeps the dedicated CLI pass when an option carries a separate value", () => {
+  it("keeps the dedicated CLI pass when an option carries a separate value, and forwards it there", () => {
     const { root, environment } = shimmedPoolRoot(
       'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
       [selfHostingContracts, checkoutContracts],
     );
     const result = spawnSync(
       process.execPath,
-      [join(repoRoot, "vitest-test.mjs"), "--run", "--reporter", "verbose"],
+      [join(repoRoot, "vitest-test.mjs"), "--run", "--reporter", "verbose", "--maxWorkers", "4"],
       { cwd: root, encoding: "utf8", env: environment },
     );
 
     expect(result.status).toBe(0);
-    const spawns = readFileSync(join(root, "spawns.log"), "utf8")
-      .trim()
-      .split("\n")
-      .map((line) => JSON.parse(line) as string[]);
-    expect(spawns).toEqual([
-      ["--run", "--reporter", "verbose", "--exclude", "test/cli.test.ts"],
-      ["--run", "test/cli.test.ts", "--pool", "forks", "--maxWorkers", "1", "--no-isolate"],
+    expect(recordedSpawns(root)).toEqual([
+      ["--run", "--reporter", "verbose", "--maxWorkers", "4", "--exclude", "test/cli.test.ts"],
+      [
+        "--run",
+        "--reporter",
+        "verbose",
+        "test/cli.test.ts",
+        "--pool",
+        "forks",
+        "--maxWorkers",
+        "1",
+        "--no-isolate",
+        "--passWithNoTests",
+      ],
     ]);
+  });
+
+  it.each([
+    // pnpm forwards a literal `--`; Vitest would ignore the filter and the exclusion behind it.
+    [["--", "test/bootstrap.test.ts"], [["--run", "test/bootstrap.test.ts"]]],
+    [
+      ["--", "--reporter", "dot"],
+      [
+        ["--run", "--reporter", "dot", "--exclude", "test/cli.test.ts"],
+        [
+          "--run",
+          "--reporter",
+          "dot",
+          "test/cli.test.ts",
+          "--pool",
+          "forks",
+          "--maxWorkers",
+          "1",
+          "--no-isolate",
+          "--passWithNoTests",
+        ],
+      ],
+    ],
+    // `related` takes source files, so it splits whatever tests they reach.
+    [
+      ["related", "src/cli/validate-watch.ts"],
+      [
+        [
+          "--run",
+          "related",
+          "src/cli/validate-watch.ts",
+          "--exclude",
+          "test/cli.test.ts",
+          "--passWithNoTests",
+        ],
+        ["--run", "test/cli.test.ts", "--pool", "forks", "--maxWorkers", "1", "--no-isolate"],
+      ],
+    ],
+    // A file:line filter on the CLI suite goes to the dedicated pass alone.
+    [
+      ["test/cli.test.ts:120"],
+      [["--run", "test/cli.test.ts:120", "--pool", "forks", "--maxWorkers", "1", "--no-isolate"]],
+    ],
+    [
+      ["test/bootstrap.test.ts", "test/cli.test.ts:120:3"],
+      [
+        ["--run", "test/bootstrap.test.ts", "--exclude", "test/cli.test.ts", "--passWithNoTests"],
+        ["--run", "test/cli.test.ts:120:3", "--pool", "forks", "--maxWorkers", "1", "--no-isolate"],
+      ],
+    ],
+    [["-h"], [["--run", "-h"]]],
+    [["--version"], [["--run", "--version"]]],
+    // Help behind pnpm's separator is still help, forwarded once.
+    [["--", "--help"], [["--run", "--help"]]],
+    [["--", "-h"], [["--run", "-h"]]],
+    // A second `--` is the caller's own delimiter: Vitest ignores what follows it, so the wrapper
+    // reads nothing there, help included, and keeps it last, behind its own exclusion.
+    [
+      ["--", "--", "--help"],
+      [
+        ["--run", "--exclude", "test/cli.test.ts", "--", "--help"],
+        [
+          "--run",
+          "test/cli.test.ts",
+          "--pool",
+          "forks",
+          "--maxWorkers",
+          "1",
+          "--no-isolate",
+          "--",
+          "--help",
+        ],
+      ],
+    ],
+  ])("routes %j without running test/cli.test.ts in the pool", (options, expected) => {
+    const { root, environment } = shimmedPoolRoot(
+      'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+      [selfHostingContracts, checkoutContracts],
+    );
+    const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+      cwd: root,
+      encoding: "utf8",
+      env: environment,
+    });
+
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    expect(recordedSpawns(root)).toEqual(expected);
+  });
+
+  it.each([
+    [["--reporter=junit", "--outputFile=report.xml"]],
+    [["--coverage"]],
+    [["--reporter", "html"]],
+  ])("stops before a split run whose %j output one process would overwrite", (options) => {
+    const { root, environment } = shimmedPoolRoot(
+      'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+      [selfHostingContracts, checkoutContracts],
+    );
+    const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+      cwd: root,
+      encoding: "utf8",
+      env: environment,
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "This run executes test/cli.test.ts in its own Vitest process after the others, so one report file or coverage directory cannot hold both.",
+    );
+    expect(existsSync(join(root, "spawns.log"))).toBe(false);
   });
 
   it.each([[["list", "--filesOnly"]], [["--reporter", "verbose", "list", "test/cli.test.ts"]]])(
@@ -336,6 +489,34 @@ describe("pooled root generated-state sentinel", () => {
         .split("\n")
         .map((line) => JSON.parse(line) as string[]);
       expect(spawns).toEqual([["--run", ...options]]);
+    },
+  );
+
+  it.each([
+    [["bench"], ["--run", "bench"]],
+    [
+      ["bench", "test/cli.test.ts"],
+      ["--run", "bench", "test/cli.test.ts"],
+    ],
+    [
+      ["--", "bench"],
+      ["--run", "bench"],
+    ],
+  ])(
+    "forwards the benchmark command %j once, with no CLI unit pass and no contract tree",
+    (options, expected) => {
+      const { root, environment } = shimmedPoolRoot(
+        'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+      );
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+        cwd: root,
+        encoding: "utf8",
+        env: environment,
+      });
+
+      expect(result.stderr).toBe("");
+      expect(result.status).toBe(0);
+      expect(recordedSpawns(root)).toEqual([expected]);
     },
   );
 
@@ -386,6 +567,83 @@ describe("pooled root generated-state sentinel", () => {
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
   });
+});
+
+// A root the wrapper runs with the repository's own Vitest: a CLI suite of two tests and one other
+// suite, each recording the tests that ran. Globals spare the files an import Vitest would have to
+// resolve from the temporary root.
+function realVitestRoot(): { root: string; environment: NodeJS.ProcessEnv } {
+  const root = preflightRoot([selfHostingContracts, checkoutContracts]);
+  mkdirSync(join(root, "test"));
+  writeFileSync(
+    join(root, "vitest.config.mjs"),
+    'export default { test: { globals: true, include: ["test/**/*.test.ts"] } };\n',
+  );
+  const suite = (names: readonly string[]) =>
+    [
+      'import { appendFileSync } from "node:fs";',
+      ...names.map(
+        (name) => `it(${JSON.stringify(name)}, () => appendFileSync("ran.log", "${name}\\n"));`,
+      ),
+    ].join("\n");
+  writeFileSync(join(root, "test", "cli.test.ts"), suite(["cli alpha", "cli beta"]));
+  writeFileSync(join(root, "test", "other.test.ts"), suite(["other gamma"]));
+
+  return {
+    root,
+    environment: {
+      ...process.env,
+      PATH: `${join(repoRoot, "node_modules", ".bin")}:${process.env.PATH ?? ""}`,
+    },
+  };
+}
+
+describe("the test wrapper over real Vitest", () => {
+  it.each([
+    [["-t", "cli alpha"], ["cli alpha"]],
+    [["--testNamePattern", "gamma"], ["other gamma"]],
+    [["--", "test/other.test.ts"], ["other gamma"]],
+    [["--", "-t", "beta"], ["cli beta"]],
+    // Vitest ignores a filter behind the caller's own delimiter, and so does the wrapper.
+    [
+      ["--", "--", "test/other.test.ts"],
+      ["cli alpha", "cli beta", "other gamma"],
+    ],
+  ])(
+    "runs %j as Vitest would select it, with the CLI suite only in its own pass",
+    (options, ran) => {
+      const { root, environment } = realVitestRoot();
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+        cwd: root,
+        encoding: "utf8",
+        env: environment,
+      });
+
+      expect(result.status, result.stderr).toBe(0);
+      const log = join(root, "ran.log");
+      expect(existsSync(log) ? readFileSync(log, "utf8").trim().split("\n").sort() : []).toEqual(
+        ran,
+      );
+    },
+    120_000,
+  );
+
+  it.each([[["--", "--help"]], [["--", "-h"]]])(
+    "prints usage for %j and runs no test",
+    (options) => {
+      const { root, environment } = realVitestRoot();
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+        cwd: root,
+        encoding: "utf8",
+        env: environment,
+      });
+
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout).toContain("Usage:");
+      expect(existsSync(join(root, "ran.log"))).toBe(false);
+    },
+    120_000,
+  );
 });
 
 it("derives the duplicate-ID verifier facts from the bound executable example", () => {

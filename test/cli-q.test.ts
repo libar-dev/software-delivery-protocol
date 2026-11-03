@@ -778,6 +778,63 @@ describe("query body positions and merged parameters", () => {
     );
   });
 
+  // Node prints no caret once an error's range runs past its first line, so these columns come
+  // from the engine's own start position, never a column the stack lacks.
+  it.each([
+    [
+      "const s = { id: 1 };\nreturn `id: ${Object.keys(s ?? {",
+      2,
+      15,
+      "Missing } in template expression",
+    ],
+    ["return a; /* note", 1, 11, "Invalid or unexpected token"],
+    ["  const { id", 1, 9, "Missing initializer in destructuring declaration"],
+    ["const x = (a\n+ b) = 1;\nreturn x;", 1, 11, "Invalid left-hand side in assignment"],
+  ])("locates an error whose range runs past its line %j", async (body, line, column, message) => {
+    const capture = createCaptureOutput();
+    expect(await runQ([body, "--root", scratch], capture)).toBe(1);
+    expect(capture.readStderr()).toBe(
+      `sdp q: the body does not parse at line ${String(line)}, column ${String(column)}: ${message}\n`,
+    );
+  });
+
+  it.each([
+    ["CR", "\r"],
+    ["CRLF", "\r\n"],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+  ])("counts a %s as the line terminator the engine counts", async (_name, separator) => {
+    const concrete = createCaptureOutput();
+    expect(await runQ([`const a = 1;${separator}const b = ;`, "--root", scratch], concrete)).toBe(
+      1,
+    );
+    expect(concrete.readStderr()).toBe(
+      "sdp q: the body does not parse at line 2, column 11: Unexpected token ';'\n",
+    );
+    const template = createCaptureOutput();
+    expect(
+      await runQ([`const a = 1;${separator}return \`x\${a\``, "--root", scratch], template),
+    ).toBe(1);
+    expect(template.readStderr()).toBe(
+      "sdp q: the body does not parse at line 2, column 14: the body ends before it is complete\n",
+    );
+  });
+
+  it.each([
+    ["return 1;\n})\n;(function(){", 2, 1],
+    ["const a = 1;\r\n  return a; })\n(function(){", 2, 13],
+  ])(
+    "locates the brace of a body that closes its function early %j",
+    async (body, line, column) => {
+      const capture = createCaptureOutput();
+      expect(await runQ([body, "--root", scratch], capture)).toBe(1);
+      expect(capture.readStdout()).toBe("");
+      expect(capture.readStderr()).toBe(
+        `sdp q: the body does not parse at line ${String(line)}, column ${String(column)}: this brace closes the function the body runs in, before the body ends\n`,
+      );
+    },
+  );
+
   it("keeps runtime failures separate, including a thrown SyntaxError", async () => {
     const capture = createCaptureOutput();
     expect(

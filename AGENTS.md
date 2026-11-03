@@ -277,9 +277,10 @@ that reader brings. The standard, set by PR #19 (the universal-Spec arc) buildin
 ## Cursor Cloud specific instructions
 
 This repo is a self-contained TypeScript CLI (`sdp`) — no servers, databases, or external services
-to run. Development is terminal-driven. Node ≥ 20 (Node 22 is installed); dependencies install from
-the committed `package-lock.json` (npm is the lockfile-native package manager; `pnpm` scripts also
-work, but never a bare `sdp`).
+to run. Development is terminal-driven. Node `^20.19.0 || >=22.12.0`, the `engines` range (Node 22
+is installed); dependencies install from the committed `package-lock.json` (npm is the
+lockfile-native package manager; `pnpm` scripts also work, but never a bare `sdp`). `npm test`
+reaches the npm registry: the package smoke suite installs the packed package's dependencies.
 
 `npm ci` builds the package through its `prepare` script. CI installs with `--ignore-scripts`
 and builds in `npm run check`. `npm run check:git-install` checks installation from a commit.

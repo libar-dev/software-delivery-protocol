@@ -8,7 +8,15 @@ import { parseCLI } from "vitest/node";
 
 import { contractDependentSuites } from "./contract-dependent-suites.mjs";
 
-const argv = process.argv.slice(2);
+// The arguments are read here, once. pnpm forwards a literal `--` to the script, as does
+// `npm test -- -- ...`; that leading separator belongs to the package manager, so the wrapper drops
+// it. A further `--` is the caller's own Vitest delimiter, and Vitest ignores everything after it.
+// The wrapper therefore reads only what comes before it, for routing, help and the preflight alike,
+// and every spawn carries the ignored rest last, behind the wrapper's own exclusion and options.
+const callerArgv = process.argv[2] === "--" ? process.argv.slice(3) : process.argv.slice(2);
+const delimiter = callerArgv.indexOf("--");
+const argv = delimiter === -1 ? callerArgv : callerArgv.slice(0, delimiter);
+const ignoredByVitest = delimiter === -1 ? [] : callerArgv.slice(delimiter);
 const vitestArgs = argv.includes("--run") ? argv : ["--run", ...argv];
 const repositoryRoot = dirname(fileURLToPath(import.meta.url));
 
@@ -18,25 +26,43 @@ const repositoryRoot = dirname(fileURLToPath(import.meta.url));
 // too, so a new bound suite is named once and both surfaces follow.
 const contractDependencies = contractDependentSuites;
 
+// Help and the version execute no test, and parsing help prints usage, so they are forwarded once
+// and never parsed.
+const forwardedOnce = new Set(["--help", "-h", "--version", "-v"]);
+const parseVitest = (args) =>
+  parseCLI(["vitest", "run", ...args.filter((argument) => !forwardedOnce.has(argument))]);
+
 // Vitest's own parser separates file filters from option values, so `--reporter verbose` keeps
-// the dedicated CLI pass and the contract preflight. Parsing behind a fixed `run` keeps a selected
-// command such as `list` among the positionals instead of consuming it. Help is left out: parsing
-// it prints usage.
+// the dedicated CLI pass and the contract preflight. A bare argument is a filter only where that
+// parser counts one; otherwise it is the value of the option before it. Parsing behind a fixed
+// `run` keeps a selected command such as `list` among the positionals instead of consuming it.
+const { options } = parseVitest(argv);
+const positional = argv.map(() => false);
+let filtersSoFar = 0;
+for (const [index, argument] of argv.entries()) {
+  if (argument.startsWith("-")) continue;
+  const filters = parseVitest(argv.slice(0, index + 1)).filter.length;
+  positional[index] = filters > filtersSoFar;
+  filtersSoFar = filters;
+}
 const vitestCommands = new Set(["run", "watch", "dev", "related", "bench", "init", "list"]);
-const positionals = parseCLI([
-  "vitest",
-  "run",
-  ...argv.filter((argument) => argument !== "--help" && argument !== "-h"),
-]).filter;
+const positionals = argv.filter((_, index) => positional[index]);
 const command = vitestCommands.has(positionals[0]) ? positionals[0] : undefined;
-const pathFilters = command === undefined ? positionals : positionals.slice(1);
+// `related` takes source files, never test files: which tests they reach is Vitest's to resolve,
+// so the wrapper reads them as no file filter, requires every contract tree and splits the run.
+const pathFilters =
+  command === "related" ? [] : command === undefined ? positionals : positionals.slice(1);
 const hasPathFilter = pathFilters.length > 0;
 const cliTestPath = "test/cli.test.ts";
+
+// Vitest also takes `file:line` and `file:line:column` filters; the location is no part of the
+// path a filter names.
+const locationSuffix = /:\d+(?::\d+)?$/u;
 
 // Vitest accepts substring, ./-prefixed, and absolute file filters; dependency matching must
 // recognize every spelling of the same repository-relative test path.
 function normalizePathFilter(filter) {
-  let value = filter.replaceAll("\\", "/");
+  let value = filter.replace(locationSuffix, "").replaceAll("\\", "/");
 
   if (isAbsolute(value)) {
     value = relative(repositoryRoot, value).replaceAll("\\", "/");
@@ -51,14 +77,20 @@ function normalizePathFilter(filter) {
 
 const matchesPathFilter = (testPath, filter) =>
   testPath.toLowerCase().includes(normalizePathFilter(filter));
-const selectsCliTest = pathFilters.some((filter) => matchesPathFilter(cliTestPath, filter));
-const requiredContracts = hasPathFilter
-  ? contractDependencies.filter((dependency) =>
-      dependency.testPaths.some((testPath) =>
-        pathFilters.some((filter) => matchesPathFilter(testPath, filter)),
-      ),
-    )
-  : contractDependencies;
+const cliFilters = pathFilters.filter((filter) => matchesPathFilter(cliTestPath, filter));
+const selectsCliTest = cliFilters.length > 0;
+// `bench` runs benchmark files, never test files, and the dependency rows list test files only, so
+// a benchmark run requires no contract tree.
+const requiredContracts =
+  command === "bench"
+    ? []
+    : hasPathFilter
+      ? contractDependencies.filter((dependency) =>
+          dependency.testPaths.some((testPath) =>
+            pathFilters.some((filter) => matchesPathFilter(testPath, filter)),
+          ),
+        )
+      : contractDependencies;
 const missingContracts = requiredContracts.filter(
   (dependency) => !existsSync(dependency.contracts),
 );
@@ -75,7 +107,7 @@ if (missingContracts.length > 0) {
 }
 
 function runVitest(args) {
-  const result = spawnSync("vitest", args, { stdio: "inherit" });
+  const result = spawnSync("vitest", [...args, ...ignoredByVitest], { stdio: "inherit" });
 
   if (result.error !== undefined) {
     throw result.error;
@@ -136,14 +168,15 @@ function runPooledVitest(args) {
   return exitCode;
 }
 
-if (argv.includes("--help")) {
+if (argv.some((argument) => forwardedOnce.has(argument))) {
   process.exit(runVitest(vitestArgs));
 }
 
-// A command that executes no test, such as `list`, is forwarded once as selected. Executing
-// commands (`run`, and `watch` or `dev`, which the added `--run` makes single-pass) keep the split,
-// so test/cli.test.ts still runs only in its dedicated process.
-if (command === "list" || command === "init") {
+// A command that executes no test, such as `list`, is forwarded once as selected, and so is `bench`,
+// which executes benchmarks only: a dedicated pass after it would run the CLI unit suite. Executing
+// commands (`run`, `related`, and `watch` or `dev`, which the added `--run` makes single-pass)
+// keep the split, so test/cli.test.ts still runs only in its dedicated process.
+if (command === "list" || command === "init" || command === "bench") {
   process.exit(runPooledVitest(vitestArgs));
 }
 
@@ -151,31 +184,108 @@ if (hasPathFilter && !selectsCliTest) {
   process.exit(runPooledVitest(vitestArgs));
 }
 
-if (hasPathFilter) {
-  const parallelExitCode = runPooledVitest([
-    ...vitestArgs,
-    "--exclude",
-    cliTestPath,
-    "--passWithNoTests",
-  ]);
+// The dedicated pass runs with the caller's options too: a name pattern, a reporter, a bail
+// limit, a shard. The wrapper owns how that pass runs, so the caller's run, pool, worker and
+// isolation settings stay with the pooled pass.
+const ownedOptions = new Set([
+  "run",
+  "pool",
+  "maxWorkers",
+  "isolate",
+  "fileParallelism",
+  "passWithNoTests",
+]);
+const optionName = (argument) =>
+  argument
+    .replace(/^-+/u, "")
+    .split(/[=.]/u)[0]
+    .replace(/^no-/u, "")
+    .replace(/-([a-z])/gu, (_, letter) => letter.toUpperCase());
+const forwardedOptions = [];
+let forwarding = false;
+for (const [index, argument] of argv.entries()) {
+  if (positional[index]) continue;
+  if (argument.startsWith("-")) forwarding = !ownedOptions.has(optionName(argument));
+  if (forwarding) forwardedOptions.push(argument);
+}
 
-  if (parallelExitCode !== 0) {
-    process.exit(parallelExitCode);
+// A `file:line` filter names one file, so one that selects test/cli.test.ts goes to the dedicated
+// pass alone: the pooled pass cannot find that file once it is excluded. When every filter is
+// such a location, no pooled pass runs.
+const cliLocations = cliFilters.filter((filter) => locationSuffix.test(filter));
+const cliSelection =
+  cliLocations.length > 0 && cliLocations.length === cliFilters.length
+    ? cliLocations
+    : [cliTestPath];
+const runsPooledPass =
+  !hasPathFilter || pathFilters.some((filter) => !cliLocations.includes(filter));
+
+// A report file or a coverage directory belongs to one Vitest process: the dedicated pass would
+// replace what the pooled pass wrote, so the wrapper stops before either runs.
+const writesReportFiles =
+  options.outputFile !== undefined ||
+  options.coverage?.enabled === true ||
+  [options.reporter ?? []].flat().some((reporter) => reporter === "html" || reporter === "blob");
+
+if (runsPooledPass && writesReportFiles) {
+  console.error(
+    `This run executes ${cliTestPath} in its own Vitest process after the others, so one report file or coverage directory cannot hold both.\nSelect test files with a filter, or run the CLI suite alone with \`npx vitest run ${cliTestPath}\`.`,
+  );
+  process.exit(1);
+}
+
+const passWithNoTests = options.passWithNoTests === true ? [] : ["--passWithNoTests"];
+
+function runCliPass() {
+  // A forwarded option (a shard, a project, an exclusion) may leave the file nothing to run;
+  // that is the caller's selection, not a failure.
+  return runVitest([
+    "--run",
+    ...forwardedOptions,
+    ...cliSelection,
+    "--pool",
+    "forks",
+    "--maxWorkers",
+    "1",
+    "--no-isolate",
+    ...(forwardedOptions.length > 0 || options.passWithNoTests === true
+      ? ["--passWithNoTests"]
+      : []),
+  ]);
+}
+
+if (hasPathFilter) {
+  if (runsPooledPass) {
+    const pooledArgv = argv.filter(
+      (argument, index) => !(positional[index] && cliLocations.includes(argument)),
+    );
+    const parallelExitCode = runPooledVitest([
+      ...(pooledArgv.includes("--run") ? pooledArgv : ["--run", ...pooledArgv]),
+      "--exclude",
+      cliTestPath,
+      ...passWithNoTests,
+    ]);
+
+    if (parallelExitCode !== 0) {
+      process.exit(parallelExitCode);
+    }
   }
 
-  process.exit(
-    runVitest(["--run", cliTestPath, "--pool", "forks", "--maxWorkers", "1", "--no-isolate"]),
-  );
+  process.exit(runCliPass());
 }
 
 // The default-root CLI case owns repository-root generated/. Keep its whole file in a dedicated
-// process; every other test file remains in Vitest's normal parallel pool.
-const parallelExitCode = runPooledVitest([...vitestArgs, "--exclude", cliTestPath]);
+// process; every other test file remains in Vitest's normal parallel pool. `related` may reach
+// only test/cli.test.ts among its tests, so its pooled pass may find none.
+const parallelExitCode = runPooledVitest([
+  ...vitestArgs,
+  "--exclude",
+  cliTestPath,
+  ...(command === "related" ? passWithNoTests : []),
+]);
 
 if (parallelExitCode !== 0) {
   process.exit(parallelExitCode);
 }
 
-process.exit(
-  runVitest(["--run", cliTestPath, "--pool", "forks", "--maxWorkers", "1", "--no-isolate"]),
-);
+process.exit(runCliPass());
