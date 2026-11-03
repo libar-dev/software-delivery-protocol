@@ -58,16 +58,17 @@ export function compileBody(source: string): CompiledBody {
       });
     } catch (syntaxError) {
       const stack = syntaxError instanceof Error ? (syntaxError.stack ?? "") : "";
-      const position = /^sdp-q-body:(\d+)\n[^\n]*\n([^\n^]*)\^/u.exec(stack);
+      // The line and the caret are read apart: an unterminated template literal leaves the
+      // engine's stack without a caret, yet its line still marks where the body stopped.
+      const lineMatch = /^sdp-q-body:(\d+)/u.exec(stack);
+      const caret = /^sdp-q-body:\d+\n[^\n]*\n([^\n^]*)\^/u.exec(stack);
       const lines = source.split("\n");
-      const wrapperLine = Number(position?.[1] ?? 2);
+      const wrapperLine = Number(lineMatch?.[1] ?? 2);
       const line = Math.max(1, Math.min(lines.length, wrapperLine - 1));
       // An error on the wrapper's closing line means the body stopped short; the engine would
       // name the wrapper's own brace, a token the caller never wrote.
       const pastEnd = wrapperLine - 1 > lines.length;
-      const column = pastEnd
-        ? (lines[line - 1]?.length ?? 0) + 1
-        : (position?.[2]?.length ?? 0) + 1;
+      const column = pastEnd ? (lines[line - 1]?.length ?? 0) + 1 : (caret?.[1]?.length ?? 0) + 1;
       const message = pastEnd
         ? "the body ends before it is complete"
         : oneLine(errorMessage(syntaxError));

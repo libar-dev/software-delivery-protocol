@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 // (session/wave/fold handles, ISO dates, numbered plan-file refs) are banned from every delivery
 // artifact — tracked files and nonignored untracked files. An ignored agent workspace is not a
 // delivery artifact and never reaches the sweep: enumeration honours `.gitignore`, so no exemption
-// is written for one. Only the temporal-by-genre artifacts are exempt: the dated decision diary,
+// is written for one. Only temporal-by-genre artifacts are exempt, never the decision registry:
 // the per-session plan done-records, the archived reviews, the dated exploration records (verbatim
 // exhibits, diary-dated like DECISIONS), the restored lineage documents (verbatim historical
 // exhibits), the tracked orchestration drafts/plans/evidence under `.omo/` — plus the
@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 const pattern =
   "Session[ -][0-9]|Wave[- ][A-Z]|Fold-[A-Z]|deferredInSession|plans/[0-9]+|20[0-9]{2}-[0-9]{2}-[0-9]{2}";
 const expression = new RegExp(pattern, "u");
-const excludedFiles = ["docs/concept/DECISIONS.md", "package-lock.json"];
+const excludedFiles = ["package-lock.json"];
 const excludedDirectories = [
   "plans/",
   "reviews/",

@@ -767,6 +767,17 @@ describe("query body positions and merged parameters", () => {
     );
   });
 
+  it.each([
+    ["return `abc", 1, 12],
+    ["const a = 1;\nreturn `x${a`", 2, 14],
+  ])("names a body that stops inside a template literal %s", async (body, line, column) => {
+    const capture = createCaptureOutput();
+    expect(await runQ([body, "--root", scratch], capture)).toBe(1);
+    expect(capture.readStderr()).toBe(
+      `sdp q: the body does not parse at line ${String(line)}, column ${String(column)}: the body ends before it is complete\n`,
+    );
+  });
+
   it("keeps runtime failures separate, including a thrown SyntaxError", async () => {
     const capture = createCaptureOutput();
     expect(

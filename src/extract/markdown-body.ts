@@ -3,7 +3,12 @@ import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
 import type { Finding } from "../validate/contracts.js";
-import { addMarkdownFinding, capMarkdownFindings, markdownFinding } from "./markdown-support.js";
+import {
+  addMarkdownFinding,
+  asciiTrim,
+  capMarkdownFindings,
+  markdownFinding,
+} from "./markdown-support.js";
 import { mapOwner } from "./markdown-body-owners.js";
 import { isUnsupportedCommonMarkBlock, normalizeProse } from "./markdown-body-content.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
@@ -39,10 +44,6 @@ interface MarkdownOwner {
 
 function structure(file: string, line: number, message: string): Finding {
   return markdownFinding(file, line, message, extractFindingIds.invalidMarkdownStructure);
-}
-
-function asciiTrim(text: string): string {
-  return text.replace(/^[\t ]+|[\t ]+$/gu, "");
 }
 
 function levenshtein(left: string, right: string): number {

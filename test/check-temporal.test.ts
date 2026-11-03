@@ -107,6 +107,17 @@ describe("check:temporal", () => {
     });
   });
 
+  it("sweeps the decision registry, which holds current truth rather than a dated diary", () => {
+    withRoot((root) => {
+      writeExcludedFile(root, "docs/concept/DECISIONS.md");
+
+      const result = runGuard(root);
+
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain("docs/concept/DECISIONS.md:1");
+    });
+  });
+
   it("accepts an in-repository directory symlink when its canonical files are tracked", () => {
     withRoot((root) => {
       mkdirSync(join(root, ".agents", "skills", "example"), { recursive: true });
@@ -137,7 +148,6 @@ describe("check:temporal", () => {
 
   it("keeps each explicit temporal genre exclusion", () => {
     withRoot((root) => {
-      writeExcludedFile(root, "docs/concept/DECISIONS.md");
       writeExcludedFile(root, "plans/record.md");
       writeExcludedFile(root, "reviews/record.md");
       writeExcludedFile(root, "explorations/record.md");
