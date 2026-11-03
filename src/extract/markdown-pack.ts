@@ -4,7 +4,11 @@ import type { Finding } from "../validate/contracts.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { CarrierReification } from "./carrier.js";
-import { isUnsupportedCommonMarkBlock, normalizeProse } from "./markdown-body-content.js";
+import {
+  isMarkdownFenceOpener,
+  isUnsupportedCommonMarkBlock,
+  normalizeProse,
+} from "./markdown-body-content.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
 import { readMarkdownEnvelope } from "./markdown-envelope.js";
 import { parseMarkdownFrontmatter } from "./markdown-frontmatter.js";
@@ -84,6 +88,7 @@ function parseMarkdownPackBody(
     if (
       /^(?:-|```|\||>|<|#)/u.test(line.text) ||
       /^[\t ]/u.test(line.text) ||
+      isMarkdownFenceOpener(line.text) ||
       isUnsupportedCommonMarkBlock(line.text)
     )
       addMarkdownFinding(

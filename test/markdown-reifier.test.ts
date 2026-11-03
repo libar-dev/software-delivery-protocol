@@ -1126,6 +1126,15 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
     "___",
     "===",
     "<unclosed",
+    "=",
+    "==",
+    "--",
+    "# Title",
+    "### Notes",
+    "######",
+    "## Design",
+    "```js",
+    "~~~",
   ])("refuses block shapes in list text: %s", (text) => {
     const result = reify(carrierBody(`# Title\n## Rule\n- ${text}`, "rule"));
 
@@ -1139,10 +1148,27 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
       },
     ]);
 
-    const quoted = reify(carrierBody(`# Title\n## Rule\n- \`${text}\``, "rule"));
+    const quoted = reify(carrierBody(`# Title\n## Rule\n- \` ${text} \``, "rule"));
     expect(quoted.findings).toEqual([]);
     expect(quoted.specs).toHaveLength(1);
   });
+
+  it.each(["=", "==", "-", "--", "~~~", "~~~js", "~~~~", "```js"])(
+    "refuses short underlines and fences across prose owners: %s",
+    (text) => {
+      for (const body of [`# Title\nParagraph\n${text}`, `# Title\n## Rule\nParagraph\n${text}`]) {
+        const result = reify(carrierBody(body, "rule"));
+        expect(result.specs, body).toEqual([]);
+        expect(result.findings.some((f) => f.severity === "error")).toBe(true);
+      }
+      const pack = reifyMarkdownCarrier(
+        `---\nid: pack:probe.blocks\nspecs: []\n---\n# Pack\nParagraph\n${text}`,
+        "blocks.pack.sdp.md",
+      );
+      expect(pack.packs).toEqual([]);
+      expect(pack.findings.some((f) => f.severity === "error")).toBe(true);
+    },
+  );
 
   it.each([
     "implemented",
