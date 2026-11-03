@@ -144,7 +144,7 @@ A refresh measures both numbers and qualitative claims. A design diff alone cann
 
 ### Step 1: Install and build
 
-Use Node `^20.19.0 || >=22.12.0` for the installed test toolchain. This source-development requirement is separate from the CLI's declared Node `>=20` runtime floor.
+Use Node `^20.19.0 || ^22.12.0 || >=24.0.0`, where the ranges declared by the installed test toolchain (Vitest, Vite and Rolldown) overlap. This source-development requirement is separate from the CLI's declared Node `>=20` runtime floor.
 
 ```sh
 npm ci

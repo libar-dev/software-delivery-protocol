@@ -155,7 +155,7 @@ At the pinned commit, installation is from a reviewed git commit rather than an 
 
 ## Try it
 
-For this source checkout, use Node `^20.19.0 || >=22.12.0`, the installed test toolchain's declared requirement. The installed CLI separately declares Node `>=20`:
+For this source checkout, use Node `^20.19.0 || ^22.12.0 || >=24.0.0`, where the ranges declared by the installed test toolchain (Vitest, Vite and Rolldown) overlap. The installed CLI separately declares Node `>=20`:
 
 ```sh
 git clone https://github.com/libar-dev/software-delivery-protocol.git
