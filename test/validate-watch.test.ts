@@ -874,4 +874,68 @@ describe("validate watch symbolic links", () => {
       rmSync(workspace, { recursive: true, force: true });
     }
   });
+
+  // The vault's owned-output filter resolves a path through a link; a link outside the build's
+  // paths that points into them is still a link discovery warns about.
+  it.each([
+    ["shared.ts", "graph.json"],
+    ["shared.sdp.md", "registrars.json"],
+  ])(
+    "vault --watch reruns when the link %s pointing at the build output %s appears or disappears",
+    async (link, target) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-link-into-output-"));
+      const root = join(workspace, "root");
+      const specs = join(root, "specs");
+      const capture = createCaptureOutput();
+      const cycles = new CycleHarness();
+      const native = new NativeWatchHarness();
+      const stderrAtCycle: string[] = [];
+      const started: number[] = [];
+      const firstCycle = cycles.cycle(1);
+      const secondCycle = cycles.cycle(2);
+      const thirdCycle = cycles.cycle(3);
+      writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.watch-link-into-output");
+
+      try {
+        const running = Promise.resolve(
+          runSdpCli(["vault", root, "--watch"], capture.output, {
+            createNativeWatch: native.create,
+            watchCycleGate: (index) => {
+              started.push(index);
+              return undefined;
+            },
+            onWatchCycleComplete: (completed) => {
+              stderrAtCycle.push(capture.readStderr());
+              cycles.onComplete(completed);
+            },
+            abortSignal: cycles.abort.signal,
+          }),
+        );
+        const cycleStderr = (index: number): string =>
+          (stderrAtCycle[index - 1] ?? "").slice((stderrAtCycle[index - 2] ?? "").length);
+
+        await bounded(firstCycle, "link into output first cycle");
+        expect(existsSync(join(root, "generated", target))).toBe(true);
+
+        symlinkSync(join(root, "generated", target), join(specs, link));
+        await deliver(native.subscriptions.get(specs), "rename", link);
+        await bounded(secondCycle, "link into output creation rerun");
+        expect(cycleStderr(2)).toContain(linkWarning(`specs/${link}`));
+
+        unlinkSync(join(specs, link));
+        await deliver(native.subscriptions.get(specs), "rename", link);
+        await bounded(thirdCycle, "link into output removal rerun");
+        expect(cycleStderr(3)).not.toContain("symbolic-link-skipped");
+
+        await nextTicks();
+        expect(started).toEqual([1, 2, 3]);
+        cycles.abort.abort();
+        expect(await bounded(running, "link into output watch exit")).toBe(0);
+        expect(capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
 });

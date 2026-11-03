@@ -69,6 +69,10 @@ export interface ValidateWatchCycle {
 
 export interface ValidateWatchHooks {
   readonly watchSources?: boolean;
+  /**
+   * Drops events the cycle's own writes cause. It never sees a skipped-link event: it may resolve
+   * a link to its target, while the event concerns the link itself, which no cycle creates.
+   */
   readonly ignoreWatchPath?: (path: string) => boolean;
   readonly watchCommand?: string;
   readonly runWatchCycle?: () =>
@@ -833,7 +837,10 @@ export async function runValidateWatch(
   };
 
   const onEvent = (event: ValidateWatchEvent) => {
-    if (state.closed || watchHooks.ignoreWatchPath?.(resolve(parsed.root, event.path))) {
+    if (
+      state.closed ||
+      (event.skippedLink !== true && watchHooks.ignoreWatchPath?.(resolve(parsed.root, event.path)))
+    ) {
       return;
     }
 
