@@ -2,15 +2,18 @@ import { lstatSync, readdirSync, realpathSync, watch } from "node:fs";
 import type { Stats } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { isExcludedDiscoveryDirectory } from "../extract/discover.js";
+import {
+  isExcludedDiscoveryDirectory,
+  isSourceFileName,
+  isSpecFileName,
+  isWarnedSymbolicLink,
+} from "../extract/discover.js";
 import { parameterFiles } from "./params.js";
 import type { BuildArgs } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { writeStderr } from "./output.js";
 import { runValidate, runValidateRules } from "./validate-view-command.js";
 import type { ValidationViewHooks } from "./validate-view-command.js";
-
-const CARRIER_SUFFIXES = [".sdp.ts", ".sdp.md", ".sdp.gherkin"] as const;
 
 export interface ValidateWatchEvent {
   readonly type: "create" | "change" | "delete" | "rename";
@@ -26,6 +29,11 @@ export interface ValidateWatchEvent {
    * entry, so the event must schedule a rerun even though its path names a directory.
    */
   readonly unattributed?: boolean;
+  /**
+   * True when the event names a symbolic link discovery warns about, before or after the event:
+   * creating, removing or replacing one changes the warning list although no carrier changed.
+   */
+  readonly skippedLink?: boolean;
 }
 
 export interface ValidateWatchEventSource {
@@ -169,16 +177,19 @@ function isWatchableDirectoryPath(
   return !isExcludedPrefix(relativePath, exclude);
 }
 
-export function isWatchedCarrierPath(
+/**
+ * The root-relative path of an entry discovery reaches, or `undefined` for an entry outside the
+ * root, under a directory discovery skips, or under a configured exclusion.
+ */
+function reachedEntryPath(
   root: string,
   eventPath: string,
   exclude: readonly string[],
-  sources = false,
-): boolean {
+): string | undefined {
   const relativePath = toPosixRelative(root, eventPath);
 
   if (relativePath === "" || relativePath === "." || relativePath.startsWith("../")) {
-    return false;
+    return undefined;
   }
 
   // Discovery skips dot-directories, never dot-files: a basename like `..cache.sdp.ts` is a
@@ -186,17 +197,31 @@ export function isWatchedCarrierPath(
   const segments = relativePath.split("/").filter((segment) => segment !== "");
 
   if (segments.slice(0, -1).some((segment) => isExcludedDiscoveryDirectory(segment))) {
+    return undefined;
+  }
+
+  return isExcludedPrefix(relativePath, exclude) ? undefined : relativePath;
+}
+
+function entryName(relativePath: string): string {
+  return relativePath.slice(relativePath.lastIndexOf("/") + 1);
+}
+
+export function isWatchedCarrierPath(
+  root: string,
+  eventPath: string,
+  exclude: readonly string[],
+  sources = false,
+): boolean {
+  const relativePath = reachedEntryPath(root, eventPath, exclude);
+
+  if (relativePath === undefined) {
     return false;
   }
 
-  if (isExcludedPrefix(relativePath, exclude)) {
-    return false;
-  }
+  const name = entryName(relativePath);
 
-  return (
-    CARRIER_SUFFIXES.some((suffix) => relativePath.endsWith(suffix)) ||
-    (sources && /\.tsx?$/u.test(relativePath) && !relativePath.endsWith(".d.ts"))
-  );
+  return isSpecFileName(name) || (sources && isSourceFileName(name));
 }
 
 function defaultNativeWatch(
@@ -232,10 +257,16 @@ function createFilesystemWatchSource(input: {
     input.lstatWatchPath ??
     ((path: string) => lstatSync(path === input.root ? realpathSync.native(path) : path));
   const watchers = new Map<string, NativeWatchHandle>();
+  // The links discovery warns about, by absolute path, so removing one still schedules a run.
+  const skippedLinks = new Set<string>();
   let eventListener: ((event: ValidateWatchEvent) => void) | undefined;
   let errorListener: ((error: unknown) => void) | undefined;
   let pendingError: unknown;
   let closed = false;
+
+  const isSkippedLink = (absolutePath: string, relativePath: string): boolean =>
+    reachedEntryPath(input.root, relativePath, input.exclude) !== undefined &&
+    isWarnedSymbolicLink(absolutePath, entryName(relativePath));
 
   const fail = (error: unknown): void => {
     if (closed) {
@@ -260,6 +291,39 @@ function createFilesystemWatchSource(input: {
       watchers.delete(candidate);
       handle?.close();
     }
+
+    for (const link of [...skippedLinks]) {
+      if (isDescendantPath(absoluteDirectory, link)) {
+        skippedLinks.delete(link);
+      }
+    }
+  };
+
+  // A callback names its entries by path. Once a watched directory on the way up from it is gone
+  // or was replaced by a link or a file, those paths resolve through the replacement, perhaps
+  // outside the root. Returns the highest such directory below the root, whose subtree is dropped.
+  const replacedDirectory = (absoluteDirectory: string): string | undefined => {
+    let replaced: string | undefined;
+
+    for (
+      let directory = absoluteDirectory;
+      isDescendantPath(input.root, directory);
+      directory = dirname(directory)
+    ) {
+      try {
+        if (!lstatWatchPath(directory).isDirectory()) {
+          replaced = directory;
+        }
+      } catch (error) {
+        if (!isNotFoundError(error)) {
+          throw error;
+        }
+
+        replaced = directory;
+      }
+    }
+
+    return replaced;
   };
 
   // A directory whose subtree loses its watchers recovers through its parent's deletion event —
@@ -358,11 +422,32 @@ function createFilesystemWatchSource(input: {
       return;
     }
 
-    let handle: NativeWatchHandle;
+    let handle: NativeWatchHandle | undefined;
 
     try {
       handle = createNativeWatch(absoluteDirectory, (eventType, filename) => {
-        if (closed) {
+        // A closed or retired subscription may still deliver a queued event; only the handle
+        // registered for this directory speaks for it.
+        if (closed || handle === undefined || watchers.get(absoluteDirectory) !== handle) {
+          return;
+        }
+
+        let replaced: string | undefined;
+
+        try {
+          replaced = replacedDirectory(absoluteDirectory);
+        } catch (error) {
+          fail(error);
+          return;
+        }
+
+        if (replaced !== undefined) {
+          unwatchTree(replaced);
+          eventListener?.({
+            type: "delete",
+            path: toPosixRelative(input.root, replaced),
+            subtreeRemoved: true,
+          });
           return;
         }
 
@@ -389,12 +474,31 @@ function createFilesystemWatchSource(input: {
 
           const removedWatchedDirectory = watchers.has(absolutePath);
           unwatchTree(absolutePath);
+          const removedSkippedLink = skippedLinks.delete(absolutePath);
           eventListener?.({
             type: "delete",
             path: relativePath,
             ...(removedWatchedDirectory ? { subtreeRemoved: true } : {}),
+            ...(removedSkippedLink ? { skippedLink: true } : {}),
           });
           return;
+        }
+
+        // A watched directory replaced by a link or a file loses its carriers without per-file
+        // events, and its retained watchers would resolve their entries through the replacement.
+        const replacedWatchedDirectory = !stats.isDirectory() && watchers.has(absolutePath);
+
+        if (replacedWatchedDirectory) {
+          unwatchTree(absolutePath);
+        }
+
+        const wasSkippedLink = skippedLinks.has(absolutePath);
+        const skippedLink = stats.isSymbolicLink() && isSkippedLink(absolutePath, relativePath);
+
+        if (skippedLink) {
+          skippedLinks.add(absolutePath);
+        } else {
+          skippedLinks.delete(absolutePath);
         }
 
         if (stats.isDirectory()) {
@@ -404,6 +508,8 @@ function createFilesystemWatchSource(input: {
         eventListener?.({
           type: eventType === "rename" ? "rename" : "change",
           path: relativePath,
+          ...(replacedWatchedDirectory ? { subtreeRemoved: true } : {}),
+          ...(skippedLink || wasSkippedLink ? { skippedLink: true } : {}),
         });
       });
     } catch (error) {
@@ -443,6 +549,20 @@ function createFilesystemWatchSource(input: {
 
       if (entry.isDirectory()) {
         subscribeTree(join(absoluteDirectory, entry.name), relativePath, emitExistingCarriers);
+        continue;
+      }
+
+      if (entry.isSymbolicLink()) {
+        const absolutePath = join(absoluteDirectory, entry.name);
+
+        if (isSkippedLink(absolutePath, relativePath)) {
+          skippedLinks.add(absolutePath);
+
+          if (emitExistingCarriers) {
+            eventListener?.({ type: "create", path: relativePath, skippedLink: true });
+          }
+        }
+
         continue;
       }
 
@@ -687,6 +807,7 @@ export async function runValidateWatch(
     if (
       event.subtreeRemoved !== true &&
       event.unattributed !== true &&
+      event.skippedLink !== true &&
       !files.includes(resolve(parsed.root, event.path)) &&
       !isWatchedCarrierPath(parsed.root, event.path, parsed.exclude, watchHooks.watchSources)
     ) {
