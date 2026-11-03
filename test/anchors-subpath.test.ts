@@ -114,12 +114,12 @@ describe("the anchors subpath", () => {
 
   it("is published as an ESM subpath with its own types", () => {
     const manifest = JSON.parse(readFileSync(resolve(repositoryRoot, "package.json"), "utf8")) as {
-      readonly exports: Record<string, Record<string, string>>;
+      readonly exports: Record<string, unknown>;
     };
 
+    // The types sit under the only condition, so TypeScript refuses the `require` Node refuses.
     expect(manifest.exports["./anchors"]).toEqual({
-      types: "./dist/anchors.d.ts",
-      import: "./dist/anchors.js",
+      import: { types: "./dist/anchors.d.ts", default: "./dist/anchors.js" },
     });
   });
 });
