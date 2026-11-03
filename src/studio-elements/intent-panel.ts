@@ -36,6 +36,20 @@ function validIntent(value: unknown): value is GatheredIntent {
     )
   );
 }
+export const composeLabels: Readonly<Record<string, string>> = {
+  "resolve-question": "Resolve question",
+  "promote-question": "Propose decision record",
+  "edit-example": "Edit example",
+  "propose-example": "Propose example",
+  "change-target": "Change target",
+  "propose-target": "Propose target",
+  "propose-values": "Propose examples for uncovered values",
+  "change-entry": "Propose new text",
+};
+export function actionLabel(action: string): string {
+  if (action === "change-pack") return "Change Pack membership or framing";
+  return composeLabels[action] ?? action;
+}
 export function pageRootPath(root: string, page: string): string {
   return new URL(root || "./", page).pathname;
 }
