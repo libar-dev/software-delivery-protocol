@@ -10,7 +10,8 @@ import { fileURLToPath } from "node:url";
 // is written for one. Only the temporal-by-genre artifacts are exempt: the dated decision diary,
 // the per-session plan done-records, the archived reviews, the dated exploration records (verbatim
 // exhibits, diary-dated like DECISIONS), the restored lineage documents (verbatim historical
-// exhibits), the tracked orchestration drafts/plans/evidence under `.omo/` — plus the
+// exhibits), the tracked orchestration drafts/plans/evidence under `.omo/`, an arc's evidence under
+// `evidence/` (committed on its branch and removed before merge) — plus the
 // machine-generated lockfile (derived, not authored prose). A tracked `.omo/boulder.json` is not
 // that genre. `Slice N` / `Phase 0` (roadmap-relative capability names) and `MD-n` citations
 // are allowed.
@@ -23,6 +24,7 @@ const excludedDirectories = [
   "reviews/",
   "explorations/",
   "docs/lineage/",
+  "evidence/",
   ".omo/drafts/",
   ".omo/plans/",
   ".omo/evidence/",

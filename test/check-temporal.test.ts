@@ -141,6 +141,7 @@ describe("check:temporal", () => {
       writeExcludedFile(root, "plans/record.md");
       writeExcludedFile(root, "reviews/record.md");
       writeExcludedFile(root, "explorations/record.md");
+      writeExcludedFile(root, "evidence/pr1/record.md");
       writeExcludedFile(root, "package-lock.json");
 
       expect(runGuard(root).status).toBe(0);
