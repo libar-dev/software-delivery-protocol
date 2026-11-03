@@ -2582,7 +2582,7 @@ export const consumersSpecs = [
           "The engine decodes each Spec's example space into its typed slots, and each example child's steps into its bound point, once, through the notation module that writes the space contracts, and the reader carries both on the Spec context; no recipe or projection parses slot notation a second time.",
           "Slot-value coverage is a catalog recipe, recipe 44, over the decoded reader values, listing each literal-union value with the example children that bind it and each value no child binds.",
           "The recipe enumerates slots typed as closed unions of quoted literals. It reports every other slot type, a boolean included, as not enumerable by this recipe, never as covered or as missing a value.",
-          "Coverage is reported per slot value; the recipe reports no combination of two or more slots until a design pass asks which combinations no example exercises.",
+          "Coverage is reported per slot value; the recipe reports no combination of two or more slots.",
           "The examples counted are the children its space contract collects.",
           "An example that binds no value for a slot is listed under that slot as unbound, never as covering a value of it.",
           "Slot-value coverage reports and confers nothing: it moves no readiness, records no verdict and emits no validation finding.",
@@ -8352,5 +8352,70 @@ export const consumersSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.ai-assisted-reading",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/ai-assisted-reading.sdp.md",
+    title: "A boundary for assistant-written presentation",
+    narrative:
+      "Every reading the Protocol ships is a deterministic function of the graph and the inputs a caller names, as founding principle P3, deterministic derivation, requires. An assistant that only selects one of those readings keeps that property; one that writes explanations or arrangements of its own does not, so its output needs a contract before it reaches a reader.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a reader ask for a useful existing reading and inspect why it was selected and what scope it omits.",
+        openQuestions: [
+          {
+            question:
+              "If an assistant generates explanations or arrangements beyond selecting deterministic readings, what contract keeps its output distinct from graph claims and makes the exact reading reviewable, including how the exact output is retained with its model, prompt and inputs?",
+            blocking: true,
+            key: "aiPresentationBoundary",
+            decider: "owner",
+            provisional:
+              "Select existing deterministic readings only; any generated text stays outside the Studio and the frozen projections, labelled as assistant output with its source commit and scope, and adds no claim, fact or validator.",
+            links: [
+              "spec:consumers.projections-model",
+              "spec:extraction.claim-taxonomy",
+              "spec:decisions.shipped-projections-frozen",
+              "spec:consumers.spec-studio#rule.namedInputs",
+            ],
+            trigger:
+              "the UX design pass measures that assistant selection or a generated explanation helps a named review task",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.agent-surface.combination-coverage",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/agent-surface.combination-coverage.sdp.md",
+    title: "Which slot-value combinations example-space coverage reports",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Report the combinations of slot values no example exercises, once a design pass needs them.",
+        openQuestions: [
+          {
+            question: "Which combinations of slot values should coverage enumerate and report?",
+            blocking: true,
+            key: "combinationCoverage",
+            decider: "owner",
+            provisional: "keep recipe 44 limited to individual slot values",
+            links: ["spec:consumers.agent-surface.example-space-coverage#rule.perSlotOnly"],
+            trigger: "a design pass asks which combinations no example exercises",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
   },
 ] as const;

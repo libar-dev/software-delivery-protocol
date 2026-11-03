@@ -4872,4 +4872,38 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.spec-studio.diagram-kinds.requirement-trace",
     "the Design view reads the selected set and claims the requirement drawing defines",
   ],
+  [
+    "spec:observation.run-evidence.bound-file-freshness",
+    "refines",
+    "spec:observation.run-evidence",
+  ],
+  [
+    "spec:consumers.agent-surface.combination-coverage",
+    "refines",
+    "spec:consumers.agent-surface.example-space-coverage",
+  ],
+  [
+    "spec:consumers.ai-assisted-reading",
+    "refines",
+    "spec:consumers.projections-model",
+    "the boundary is drawn against the projection law, a pure function of the graph",
+  ],
+  [
+    "spec:consumers.ai-assisted-reading",
+    "dependsOn",
+    "spec:extraction.claim-taxonomy",
+    "each graph claim carries one of the three claim categories",
+  ],
+  [
+    "spec:consumers.ai-assisted-reading",
+    "dependsOn",
+    "spec:consumers.spec-studio",
+    "the Studio reads only the graph and its named inputs",
+  ],
+  [
+    "spec:consumers.ai-assisted-reading",
+    "dependsOn",
+    "spec:decisions.shipped-projections-frozen",
+    "the shipped projections stay frozen",
+  ],
 ] as const;
