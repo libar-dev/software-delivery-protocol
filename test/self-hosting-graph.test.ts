@@ -336,17 +336,8 @@ describe("the self-hosting corpus", () => {
   });
 
   // Then: the frozen corpus enters one graph with exact descriptors and its direct bindings.
-  it("names the root corpus's skipped symbolic link", () => {
-    expect(result.report.findings).toEqual([
-      {
-        validatorId: "extract/symbolic-link-skipped",
-        family: "conformance",
-        severity: "warning",
-        file: "CLAUDE.md",
-        message:
-          'symbolic link "CLAUDE.md" is skipped; discovery never follows links below the root',
-      },
-    ]);
+  it("extracts the root corpus without diagnostics", () => {
+    expect(result.report.findings).toEqual([]);
   });
 
   it("reports exactly the retained verifier gaps and no unbacked prose mention", () => {
@@ -372,10 +363,6 @@ describe("the self-hosting corpus", () => {
     expect([...firstSentence.matchAll(/`([a-z]+\/[a-z-]+)`/gu)].map((match) => match[1])).toEqual([
       ...new Set(expectedWarnings.map(({ validatorId }) => validatorId)),
     ]);
-    // The extraction warnings print on the same step's build line, so the paragraph names them too.
-    for (const { validatorId, file } of result.report.findings) {
-      expect(paragraph).toContain(`\`${validatorId}\` names the \`${file ?? ""}\` link`);
-    }
   });
 
   // The registry's preamble: a decision that narrows another refines it, and the narrowed row

@@ -52,7 +52,6 @@ async function runRecipe<T>(
   ordinal: number,
   params: Record<string, unknown>,
   derived: ExtractionResult,
-  expectedStderr = "",
 ): Promise<T> {
   const capture = createCaptureOutput();
   const exitCode = await runSdpCli(
@@ -64,7 +63,7 @@ async function runRecipe<T>(
   );
   expect({ exitCode, stderr: capture.readStderr() }).toEqual({
     exitCode: 0,
-    stderr: expectedStderr,
+    stderr: "",
   });
   return JSON.parse(capture.readStdout()) as T;
 }
@@ -415,12 +414,7 @@ describe("iteration loop: design diff", () => {
       const head = extract({ root: repoRoot, exclude: excludes });
       expect(base.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
       expect(head.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
-      const result = await runRecipe<Diff>(
-        35,
-        { base: base.graph, detail: true },
-        head,
-        'CLAUDE.md — [warning] extract/symbolic-link-skipped — symbolic link "CLAUDE.md" is skipped; discovery never follows links below the root\n',
-      );
+      const result = await runRecipe<Diff>(35, { base: base.graph, detail: true }, head);
       expect(result.base.specs).toBe(
         base.graph.nodes.filter((node) => node.nodeType === "Primitive").length,
       );

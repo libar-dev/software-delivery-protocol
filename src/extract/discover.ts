@@ -1,4 +1,4 @@
-import { readdirSync, realpathSync } from "node:fs";
+import { readdirSync, realpathSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
@@ -103,6 +103,20 @@ function byRelativePath(left: DiscoveredSourceFile, right: DiscoveredSourceFile)
   return compareCodeUnits(left.relativePath, right.relativePath);
 }
 
+function isSpecFileName(name: string): boolean {
+  return SPEC_FILE_SUFFIXES.some((suffix) => name.endsWith(suffix));
+}
+
+function isDirectoryLink(path: string): boolean {
+  try {
+    // Inspect only the target type; discovery never reads or traverses the target.
+    return statSync(path).isDirectory();
+  } catch {
+    // An unresolved target has no directory type; candidate filenames still warn.
+    return false;
+  }
+}
+
 function isSourceFileName(name: string): boolean {
   return (
     SOURCE_FILE_SUFFIXES.some((suffix) => name.endsWith(suffix)) &&
@@ -130,7 +144,14 @@ function walkDirectory(
     }
 
     if (entry.isSymbolicLink()) {
-      if (!isExcludedDiscoveryDirectory(entry.name)) state.skippedLinks.push(relativePath);
+      if (
+        !isExcludedDiscoveryDirectory(entry.name) &&
+        (isSpecFileName(entry.name) ||
+          isSourceFileName(entry.name) ||
+          isDirectoryLink(join(absoluteDirectory, entry.name)))
+      ) {
+        state.skippedLinks.push(relativePath);
+      }
       continue;
     }
 
@@ -149,7 +170,7 @@ function walkDirectory(
       continue;
     }
 
-    if (SPEC_FILE_SUFFIXES.some((suffix) => entry.name.endsWith(suffix))) {
+    if (isSpecFileName(entry.name)) {
       state.specFiles.push({ absolutePath: join(absoluteDirectory, entry.name), relativePath });
       continue;
     }
