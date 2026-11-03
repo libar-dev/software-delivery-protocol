@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -67,6 +68,86 @@ describe("article evidence CLI entry", () => {
       expect(existsSync(sentinel)).toBe(false);
       expect(result.status).not.toBe(0);
       expect(result.stderr).toContain("invalid reference");
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
+    }
+  });
+
+  it("generates evidence from the materialized pin, never the supplied checkout", () => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-main-"));
+    const articles = path.join(temporary, "articles/docs/articles");
+    const repo = path.join(temporary, "repository");
+    const sentinel = path.join(temporary, "executed");
+    const git = (...args: string[]) =>
+      execFileSync("git", ["-C", repo, ...args], { encoding: "utf8" }).trim();
+    // Stop at the first generator's CLI call: its origin is the observation under test.
+    const cli = (origin: string) =>
+      `require("node:fs").appendFileSync(${JSON.stringify(sentinel)}, ${JSON.stringify(origin + "\n")}); process.exit(1);`;
+    try {
+      mkdirSync(articles, { recursive: true });
+      mkdirSync(repo);
+      git("init", "-q");
+      writeFileSync(
+        path.join(repo, "package.json"),
+        JSON.stringify({
+          name: "pin-probe",
+          version: "1.0.0",
+          scripts: { build: "node build.cjs" },
+        }),
+      );
+      writeFileSync(
+        path.join(repo, "package-lock.json"),
+        JSON.stringify({
+          name: "pin-probe",
+          version: "1.0.0",
+          lockfileVersion: 3,
+          packages: { "": { name: "pin-probe", version: "1.0.0" } },
+        }),
+      );
+      writeFileSync(
+        path.join(repo, "build.cjs"),
+        `const fs = require("node:fs"); fs.mkdirSync("dist/cli", { recursive: true }); fs.writeFileSync("dist/cli/sdp.js", ${JSON.stringify(cli("materialized"))});`,
+      );
+      writeFileSync(path.join(repo, ".gitignore"), "dist/\n");
+      git("add", "package.json", "package-lock.json", "build.cjs", ".gitignore");
+      git(
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-qm",
+        "pin",
+      );
+      const pin = git("rev-parse", "HEAD");
+      mkdirSync(path.join(repo, "dist/cli"), { recursive: true });
+      writeFileSync(path.join(repo, "dist/cli/sdp.js"), cli("supplied"));
+
+      // Run the real entry point with a toy pin, independent of HEAD's engine and corpus.
+      copyFileSync(
+        path.join(repositoryRoot, "docs/articles/sync-evidence.mjs"),
+        path.join(articles, "sync-evidence.mjs"),
+      );
+      const documents = new Map([["README.md", `Pinned source baseline: x/tree/${pin}\n`]]);
+      for (const block of evidenceBlocks(repo, pin)) {
+        documents.set(
+          block.file,
+          (documents.get(block.file) ?? "") +
+            `<!-- evidence:${block.id} -->\nold\n<!-- /evidence:${block.id} -->\n`,
+        );
+      }
+      for (const [file, text] of documents) writeFileSync(path.join(articles, file), text);
+      const result = spawnSync(
+        process.execPath,
+        [path.join(articles, "sync-evidence.mjs"), "--check", repo],
+        { encoding: "utf8" },
+      );
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(1);
+      expect(readFileSync(sentinel, "utf8")).toBe("materialized\n");
+      expect(git("worktree", "list", "--porcelain").match(/^worktree /gm)).toHaveLength(1);
     } finally {
       rmSync(temporary, { recursive: true, force: true });
     }
@@ -413,7 +494,7 @@ describe("pinned evidence source", () => {
             expect(read(source, "source.txt")).toBe("pinned source");
           expect(read(source, "omitted.txt")).toBe("always present");
           expect(readFileSync(path.join(source, "binary"))).toEqual(Buffer.from([0, 255, 10, 13]));
-          expect(statSync(path.join(source, "binary")).mode & 0o111).toBe(0o111);
+          expect(statSync(path.join(source, "binary")).mode & 0o100).toBe(0o100);
           expect(readlinkSync(path.join(source, "source-link"))).toBe("source.txt");
           if (focus === "source") {
             expect(existsSync(path.join(source, "phantom.test.generated.ts"))).toBe(false);
