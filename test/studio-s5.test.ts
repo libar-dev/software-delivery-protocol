@@ -1581,3 +1581,20 @@ it("hides phone scroll advice and closed source in print while keeping opened so
     });
   }
 });
+
+it.each(["unknown-action", "constructor", "toString", "valueOf", "hasOwnProperty", "__proto__"])(
+  "shows the raw unknown action %s and offers no compose control for it",
+  (action) => {
+    const dom = studioDom(assets.script, "https://studio.test/index.html", storage());
+    const panel = dom.mount("sdp-intent-panel", { "page-root": "./" });
+    panel.gather?.({ scope: ["spec:probe.s1"], request: "Read this", action });
+    expect(
+      panel
+        .querySelector("ol")
+        ?.querySelectorAll("li")
+        .map((row) => row.textContent),
+    ).toEqual([`spec:probe.s1 ${action}: Read this Discard`]);
+    const compose = dom.mount("sdp-compose", { action, scope: "spec:probe.s1" });
+    expect(compose.querySelector("button")).toBeNull();
+  },
+);

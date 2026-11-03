@@ -64,7 +64,9 @@ export function createRunnableExample<W, C, O extends RunnableOutcome>(
   adapters: RunnableExampleAdapters<W, C, O>,
   thenSteps: readonly ContractStep<string, ParamShape>[],
 ): RunnableExampleWorld<W, C, O> {
-  const missing = requiredConditions.filter((name) => point[name] === undefined);
+  const missing = requiredConditions.filter(
+    (name) => !Object.hasOwn(point, name) || point[name] === undefined,
+  );
 
   return {
     spec,
@@ -208,10 +210,10 @@ function firstDifference(
   const keys = [...new Set([...Object.keys(expectedRecord), ...Object.keys(actualRecord)])].sort();
 
   for (const key of keys) {
-    if (!(key in actualRecord)) {
+    if (!Object.hasOwn(actualRecord, key)) {
       return `${path}.${key}: missing; expected ${renderValue(expectedRecord[key])}`;
     }
-    if (!(key in expectedRecord)) {
+    if (!Object.hasOwn(expectedRecord, key)) {
       return `${path}.${key}: extra; actual ${renderValue(actualRecord[key])}`;
     }
     const difference = firstDifference(

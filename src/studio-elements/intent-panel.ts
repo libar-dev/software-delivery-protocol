@@ -48,7 +48,7 @@ export const composeLabels: Readonly<Record<string, string>> = {
 };
 export function actionLabel(action: string): string {
   if (action === "change-pack") return "Change Pack membership or framing";
-  return composeLabels[action] ?? action;
+  return Object.hasOwn(composeLabels, action) ? (composeLabels[action] ?? action) : action;
 }
 export function pageRootPath(root: string, page: string): string {
   return new URL(root || "./", page).pathname;

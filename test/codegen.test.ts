@@ -1151,3 +1151,17 @@ ${steps}
     },
   );
 });
+
+describe("own generated handler data", () => {
+  it("emits an own handler for a prototype-named generated step", async () => {
+    const observe = vi.fn(() => ({ kind: "__proto__" }));
+    const run = generatedProbe("Given ready\nWhen run\nThen __proto__", {
+      createWorld: () => ({}),
+      invoke: () => undefined,
+      observe,
+      expected: () => ({ kind: "__proto__" }),
+    });
+    await run();
+    expect(observe).toHaveBeenCalledOnce();
+  });
+});

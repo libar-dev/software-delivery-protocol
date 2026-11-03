@@ -544,7 +544,10 @@ function renderRunnableRegistrar(
       continue;
     }
     renderedBindings.add(step.key);
-    const bindingKey = `    ${JSON.stringify(step.key)}:`;
+    // A literal __proto__ property sets the prototype instead of creating a handler.
+    const property =
+      step.key === "__proto__" ? `[${JSON.stringify(step.key)}]` : JSON.stringify(step.key);
+    const bindingKey = `    ${property}:`;
     // One key may occur in several phases; its handler must read the current occurrence.
     const phases = new Set(
       steps.filter((entry) => entry.key === step.key).map((entry) => entry.kind),
