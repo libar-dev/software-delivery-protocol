@@ -21,6 +21,22 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.markdown-body-grammar-regressions",
+    nodeType: "Anchor",
+    label: "checks Markdown body grammar refusals",
+    file: "test/markdown-reifier.test.ts",
+    constant: "markdownBodyGrammarTestAnchor",
+    site: 'describe("Markdown frontmatter reifier",',
+  },
+  {
+    id: "test:protocol.structural-anchor-regressions",
+    nodeType: "Anchor",
+    label: "checks structural anchor refusals and binding contradictions",
+    file: "test/structural-anchors.test.ts",
+    constant: "structuralAnchorsTestAnchor",
+    site: 'describe("structural code anchors",',
+  },
+  {
     id: "test:protocol.vault-priority",
     nodeType: "Anchor",
     file: "test/vault.test.ts",
@@ -6015,6 +6031,12 @@ export const expectedBindingEdges = [
   ["impl:protocol.gherkin-authoring", "satisfies", "spec:carrier.gherkin-authoring"],
   ["impl:protocol.markdown-parser", "satisfies", "spec:carrier.markdown-parser"],
   ["test:protocol.markdown-parser", "verifies", "spec:carrier.markdown-parser"],
+  [
+    "test:protocol.markdown-body-grammar-regressions",
+    "verifies",
+    "spec:carrier.markdown-body-grammar",
+  ],
+  ["test:protocol.structural-anchor-regressions", "verifies", "spec:model.anchors"],
   ["impl:protocol.envelope-contract", "satisfies", "spec:carrier.envelope-contract"],
   ["test:protocol.envelope-contract", "verifies", "spec:carrier.envelope-contract"],
   ["impl:protocol.markdown-body-grammar", "satisfies", "spec:carrier.prose-ownership-rule"],

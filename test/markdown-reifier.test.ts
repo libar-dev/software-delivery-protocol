@@ -99,7 +99,17 @@ const envelopeContractTestAnchor = specTest({
   label: "frontmatter contract tests verify the Markdown envelope",
   verifies: ref("spec:carrier.envelope-contract"),
 });
-void [proseOwnershipTestAnchor, markdownParserTestAnchor, envelopeContractTestAnchor];
+const markdownBodyGrammarTestAnchor = specTest({
+  id: testAnchorId("test:protocol.markdown-body-grammar-regressions"),
+  label: "checks Markdown body grammar refusals",
+  verifies: ref("spec:carrier.markdown-body-grammar"),
+});
+void [
+  proseOwnershipTestAnchor,
+  markdownParserTestAnchor,
+  envelopeContractTestAnchor,
+  markdownBodyGrammarTestAnchor,
+];
 
 describe("Markdown frontmatter reifier", () => {
   const lawfulPack = `---
