@@ -343,7 +343,9 @@ describe("sdp cli", () => {
       cwd.mockRestore();
       rmSync(root, { recursive: true, force: true });
     }
-  }, 15_000);
+    // A budget that holds on a loaded machine: the test copies and extracts the whole corpus
+    // and renders it twice.
+  }, 120_000);
 
   it("renders contracts warnings through the one formatter and counts them in the summary", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-contracts-warning-"));

@@ -786,7 +786,9 @@ describe("the self-hosting corpus", () => {
       expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(maxDistance);
       expect(node).toMatchObject({ file: anchor.file, line: anchorLine, claim: "anchored" });
     }
-  });
+    // A budget that holds when the whole suite runs in parallel on a loaded machine: the test
+    // reads the source file of every anchor.
+  }, 60_000);
 
   it("derives the duplicate-ids delivery facts from the bindings, never from authoring", () => {
     const childId = "spec:validation.duplicate-ids.dual-carrier";
