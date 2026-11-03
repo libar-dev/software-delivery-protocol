@@ -17,7 +17,11 @@ import type { DiscoveredSourceFile } from "./discover.js";
 import { reifyMarkdownCarrier } from "./markdown.js";
 import { extractFindingIds } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
-import { hasProtocolBuilderImport, protocolBindingScopeFor } from "./protocol-bindings.js";
+import {
+  hasProtocolBuilderImport,
+  protocolBindingScopeFor,
+  trustedBuilderModulesForRoot,
+} from "./protocol-bindings.js";
 import type { ProtocolBindingScope } from "./protocol-bindings.js";
 
 export {
@@ -220,6 +224,7 @@ export const extractAnchor = codeAnchor({
 
 export function extract(options: ExtractOptions): ExtractionResult {
   const files = discoverFiles(options.root, options.exclude);
+  const trustedBuilderModules = trustedBuilderModulesForRoot(options.root);
   const specs: ReifiedSpec[] = [];
   const packs: ReifiedPack[] = [];
   const anchors: ReifiedAnchor[] = [];
@@ -241,7 +246,7 @@ export function extract(options: ExtractOptions): ExtractionResult {
         : reifyTypeScriptCarrier(
             sourceText,
             file.relativePath,
-            protocolBindingScopeFor(file.absolutePath),
+            protocolBindingScopeFor(file.absolutePath, trustedBuilderModules),
           );
     specs.push(...reified.specs);
     packs.push(...reified.packs);
@@ -255,13 +260,12 @@ export function extract(options: ExtractOptions): ExtractionResult {
 
   for (const file of files.anchorCandidateFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
-    const bindingScope = protocolBindingScopeFor(file.absolutePath);
+    const bindingScope = protocolBindingScopeFor(file.absolutePath, trustedBuilderModules);
 
     // Anchors are recognized by import binding; the contract takes the specifier written
     // verbatim. This raw text test gates AST work: it passes on a package-specifier hit, or on
-    // any relative import when this runtime's trusted builder modules are known (Protocol source
-    // checkout) — there it skips little; in consumer repos it still skips the bulk of source
-    // files. Escape-spelled specifier, require, and re-aliased locals sit outside the binding
+    // any relative import when runtime or extraction-root builder modules are known — there
+    // it skips little; in consumer repos it still skips the bulk of source files. Escape-spelled specifier, require, and re-aliased locals sit outside the binding
     // contract.
     if (!hasProtocolBuilderImport(sourceText, bindingScope)) {
       continue;

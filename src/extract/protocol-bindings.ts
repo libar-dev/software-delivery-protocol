@@ -1,4 +1,4 @@
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -65,8 +65,8 @@ function canonicalPath(path: string): string | undefined {
 function trustedBuilderModules(): ReadonlySet<string> {
   const moduleUrl = import.meta.url;
 
-  // tsup's CommonJS barrel has no import.meta URL. Relative bindings are a source/ESM
-  // self-hosting affordance, so that surface fails closed while package imports stay trusted.
+  // tsup's CommonJS barrel has no import.meta URL. It can still trust an explicitly
+  // identified extraction root, but cannot locate the runtime's own source modules.
   if (typeof moduleUrl !== "string") {
     return new Set<string>();
   }
@@ -77,8 +77,10 @@ function trustedBuilderModules(): ReadonlySet<string> {
     return new Set<string>();
   }
 
-  // The tsup bundle ships no per-module dist files, so only the source-checkout modules
-  // can ever canonicalize here; relative trust is a source/ESM self-hosting affordance.
+  return sourceBuilderModules(packageRoot);
+}
+
+function sourceBuilderModules(packageRoot: string): ReadonlySet<string> {
   const candidates = [
     join(packageRoot, "src", "ids.ts"),
     join(packageRoot, "src", "model", "code-anchor.ts"),
@@ -90,6 +92,24 @@ function trustedBuilderModules(): ReadonlySet<string> {
 
 const runtimeBuilderModules = trustedBuilderModules();
 
+/** Read once per extraction, so watch cycles see package identity changes. */
+export function trustedBuilderModulesForRoot(root: string): ReadonlySet<string> {
+  try {
+    const manifest: unknown = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    if (
+      typeof manifest === "object" &&
+      manifest !== null &&
+      "name" in manifest &&
+      manifest.name === PROTOCOL_MODULE_SPECIFIER
+    ) {
+      return new Set([...runtimeBuilderModules, ...sourceBuilderModules(root)]);
+    }
+  } catch {
+    // Missing or unreadable package identity grants no additional builder trust.
+  }
+  return runtimeBuilderModules;
+}
+
 const protocolBindingsAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.protocol-bindings"),
   label: "Protocol builder-import trust (protocolBindingScopeFor / collectProtocolBindings)",
@@ -99,10 +119,13 @@ const protocolBindingsAnchor = codeAnchor({
 });
 void protocolBindingsAnchor;
 
-export function protocolBindingScopeFor(importerPath: string): ProtocolBindingScope {
+export function protocolBindingScopeFor(
+  importerPath: string,
+  trustedRelativeBuilderModules: ReadonlySet<string> = runtimeBuilderModules,
+): ProtocolBindingScope {
   return {
     importerPath,
-    trustedRelativeBuilderModules: runtimeBuilderModules,
+    trustedRelativeBuilderModules,
   };
 }
 

@@ -1,4 +1,5 @@
 import { execFileSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   copyFileSync,
   cpSync,
@@ -92,25 +93,7 @@ function materializeSelfHostingCopy(): string {
     });
   }
 
-  // Copied relative builder modules are outside the Protocol's trusted source checkout. Use
-  // the public anchors import in this isolated corpus so both forms retain their bindings.
-  for (const surface of ["src", "test"]) {
-    for (const entry of readdirSync(join(root, surface), {
-      recursive: true,
-      withFileTypes: true,
-    })) {
-      if (!entry.isFile() || !entry.name.endsWith(".ts")) continue;
-      const path = join(entry.parentPath, entry.name);
-      const source = readFileSync(path, "utf8");
-      writeFileSync(
-        path,
-        source.replace(
-          /from "(?:\.\.?\/)+(?:src\/)?(?:model\/)?(?:ids|anchors|code-anchor)\.js"/gu,
-          'from "@libar-dev/software-delivery-protocol/anchors"',
-        ),
-      );
-    }
-  }
+  copyFileSync(join(repoRoot, "package.json"), join(root, "package.json"));
 
   return root;
 }
@@ -2367,6 +2350,39 @@ it("clean-repo determinism: the full pipeline at a different absolute path is by
     rmSync(secondRoot, { recursive: true, force: true });
   }
 });
+
+it("clean-repo determinism: an untouched Protocol copy has the same graph with external and local engines", () => {
+  const root = materializeSelfHostingCopy();
+
+  try {
+    // Both runs read the same unmodified corpus and execute byte-identical engine files.
+    cpSync(join(repoRoot, "dist"), join(root, "dist"), { recursive: true });
+    symlinkSync(join(repoRoot, "node_modules"), join(root, "node_modules"), "dir");
+    const args = [
+      "build",
+      root,
+      "--exclude",
+      "explorations",
+      "--exclude",
+      "examples",
+      "--exclude",
+      "test/fixtures/import/parity",
+    ];
+    execFileSync(process.execPath, [join(repoRoot, "dist/cli/sdp.js"), ...args]);
+    const externalGraph = readFileSync(join(root, "generated/graph.json"), "utf8");
+    execFileSync(process.execPath, [join(root, "dist/cli/sdp.js"), ...args]);
+    const localGraph = readFileSync(join(root, "generated/graph.json"), "utf8");
+
+    expect((JSON.parse(localGraph) as { nodes: unknown[] }).nodes).toContainEqual(
+      expect.objectContaining({ id: "component:protocol.extract", nodeType: "CodeNode" }),
+    );
+    expect(createHash("sha256").update(externalGraph).digest("hex")).toBe(
+      createHash("sha256").update(localGraph).digest("hex"),
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);
 
 const engineProvenanceTestAnchor = specTest({
   id: testAnchorId("test:protocol.engine-provenance"),
