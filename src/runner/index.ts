@@ -91,7 +91,7 @@ export function renderContractStep(step: {
 /** Re-binds the skeleton's `{name}` groups with the step's params for natural rendering. */
 function substituteParams(skeleton: string, params: ParamShape): string {
   return skeleton.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/gu, (group, name: string) =>
-    name in params ? String(params[name]) : group,
+    Object.hasOwn(params, name) ? String(params[name]) : group,
   );
 }
 
@@ -142,7 +142,13 @@ export function planExample<W, S extends string, PM extends Record<S, ParamShape
       key: step.key,
       text: step.text,
       label: renderContractStep(step),
-      run: (world: W) => bindings[step.key](world, step.params, step),
+      run: (world: W) => {
+        const handler = Object.hasOwn(bindings, step.key) ? bindings[step.key] : undefined;
+        if (typeof handler !== "function") {
+          throw new Error(`no handler bound for step key "${step.key}"`);
+        }
+        return handler(world, step.params, step);
+      },
     })),
   };
 }

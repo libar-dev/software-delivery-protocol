@@ -15,7 +15,7 @@ export function registerCompose(): void {
     connectedCallback(): void {
       if (this.control) return;
       const action = this.getAttribute("action") ?? "";
-      const label = labels[action];
+      const label = Object.hasOwn(labels, action) ? labels[action] : undefined;
       if (!label) return;
       this.control = button(this, label);
       this.control.addEventListener("click", () => {

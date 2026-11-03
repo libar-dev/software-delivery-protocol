@@ -33,6 +33,8 @@ relations:
 - rule: Every generation finding is a warning that describes what did not emit; gating belongs to graph validation alone, so a withheld contract never fails the build by itself.
 - rule: [#reservedThenSlot] A Then slot named `kind` withholds its space contract when declared in a vocabulary, or its step contract when carried by an example, with `contracts/reserved-then-slot` naming the reserved word; a withheld space contract also withholds its children's registrars. Outcome variants keep their flat shape, with `kind` as the discriminant and the other slots as sibling fields.
 
+- rule: [#reservedThenKey] The contract key `unspecified` is reserved for the coverage-gap outcome, whether written as a step key or as unkeyed Then text. A Then using it is a `conformance/reserved-then-key` error. Generation withholds its space contract when declared in a vocabulary, or its step contract when carried by an example, with `contracts/reserved-then-key` naming the reserved key; a withheld space contract also withholds its children's registrars. Given and When keys remain unrestricted.
+
 ## Example space
 ```gwt-vocabulary
 Given a parent spec whose example space declares the slot {dimension:string}
@@ -47,7 +49,7 @@ Then the findings name {findingId:string}
 ```
 
 ## Design
-- findingIds: `contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key` · `contracts/reserved-then-slot`, each at warning severity.
+- findingIds: `contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key` · `contracts/reserved-then-slot` · `contracts/reserved-then-key`, each at warning severity.
 - duplicateStepKey: `contracts/duplicate-step-key` is a warning on the parent at `behavior.exampleSpace` for a space collision, or on the example at `behavior.examples` for a step-contract collision. Its message is `contract key "<key>" names both "<first skeleton>" and "<second skeleton>"; <space|step> contract withheld`, with the skeletons in first-occurrence order.
 - contractStep: `export interface ContractStep<K extends string, P extends ParamShape> { readonly kind: StepKind; readonly key: K; readonly text: string; readonly params: P; }` is the step shape the runner exports, where `key` is the contract key and `text` the skeleton the natural reading renders.
 - stepContractModule: `export type Step = "<contract key>" | …;` is the union of the example's contract keys in first-occurrence order, `StepParams` maps each contract key to its parameters, and `export const <camel>Contract: ExampleContract<Step, StepParams>` lists every step as `{ kind, key, text, params }` in authored order.

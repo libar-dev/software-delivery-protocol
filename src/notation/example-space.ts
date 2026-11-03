@@ -1,5 +1,6 @@
 import type { GraphSchema, PrimitiveNode } from "../graph/schema.js";
 import type { Finding } from "../validate/contracts.js";
+import type { GraphIndex } from "../validate/graph-index.js";
 import { parseSlots, stepSkeleton } from "./slots.js";
 import type { SlotDeclaredType, SlotScalar } from "./slots.js";
 export const contractsFindingIds = {
@@ -27,6 +28,7 @@ export const contractsFindingIds = {
   conflictingStepKey: "contracts/conflicting-step-key",
   duplicateStepKey: "contracts/duplicate-step-key",
   reservedThenSlot: "contracts/reserved-then-slot",
+  reservedThenKey: "contracts/reserved-then-key",
 } as const;
 
 export function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -74,8 +76,8 @@ export function structuredEntriesOf(node: PrimitiveNode): readonly StructuredEnt
   return structured;
 }
 
-/** Then payload fields share the flat Outcome object with its discriminant. */
-export function reservedThenSlotsOf(
+/** Locate Then occurrences without losing their authored indexes. */
+function thenStepsOf(
   node: PrimitiveNode,
 ): readonly { readonly text: string; readonly path: string }[] {
   const behavior = asRecord(node.sections?.behavior);
@@ -93,7 +95,48 @@ export function reservedThenSlotsOf(
       })),
     ),
   ];
-  return steps.filter(({ text }) => parseSlots(text).some((slot) => slot.name === "kind"));
+  return steps;
+}
+
+/** Then payload fields share the flat Outcome object with its discriminant. */
+export function reservedThenSlotsOf(
+  node: PrimitiveNode,
+): readonly { readonly text: string; readonly path: string }[] {
+  return thenStepsOf(node).filter(({ text }) =>
+    parseSlots(text).some((slot) => slot.name === "kind"),
+  );
+}
+
+/** The coverage-gap outcome cannot also identify an authored Then. */
+export function reservedThenKeysOf(
+  node: PrimitiveNode,
+  index: GraphIndex,
+): readonly { readonly text: string; readonly path: string }[] {
+  const steps = thenStepsOf(node);
+  if (steps.length === 0) return [];
+
+  // Both callers already index the graph. Inspect only this Spec's declared parents, in the
+  // same code-unit order codegen uses to resolve a step against multiple vocabularies.
+  const parents = (index.edgesByFrom.get(node.id) ?? [])
+    .filter((edge) => edge.type === "refines" && edge.claim === "declared")
+    .map((edge) => edge.to)
+    .sort()
+    .flatMap((id) => {
+      const parent = index.primitivesById.get(id);
+      return parent === undefined ? [] : [vocabularyOf(parent, []) ?? []];
+    });
+  return steps.filter(({ text, path }) => {
+    const skeleton = stepSkeleton(text);
+    const ownKey = authoredStepKey(node, skeleton);
+    if (ownKey !== undefined) return ownKey === "unspecified";
+    if (path.startsWith("behavior.examples[")) {
+      for (const vocabulary of parents) {
+        const entry = vocabulary.find((entry) => entry.skeleton === skeleton);
+        if (entry !== undefined) return entry.key === "unspecified";
+      }
+    }
+    return skeleton === "unspecified";
+  });
 }
 
 export interface VocabularyEntry {

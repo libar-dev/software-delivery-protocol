@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   planExample,
@@ -7,7 +7,7 @@ import {
   stepKindLabel,
   unspecified,
 } from "../src/runner/index.js";
-import type { ExampleContract } from "../src/runner/index.js";
+import type { ExampleContract, ParamShape, StepFn } from "../src/runner/index.js";
 
 /**
  * The runner core, pinned framework-free: the plan (order, dedupe-to-one-handler, per-occurrence
@@ -175,5 +175,34 @@ describe("the runner core — plan, renderer, execution loop", () => {
 
   it("contributes the one outcome no spec ever states", () => {
     expect(unspecified).toEqual({ kind: "unspecified" });
+  });
+});
+
+describe("own step data", () => {
+  const names = [
+    "constructor",
+    "toString",
+    "valueOf",
+    "hasOwnProperty",
+    "isPrototypeOf",
+    "toLocaleString",
+    "propertyIsEnumerable",
+    "__proto__",
+  ];
+  it.each(names)("refuses a missing own handler for %s and accepts an own handler", async (key) => {
+    const step = { kind: "then" as const, key, text: key, params: {} };
+    const contract = { spec: "spec:probe.own", title: "Own handlers", steps: [step] };
+    await expect(runExamplePlan(planExample(contract, {}), {})).rejects.toThrow(
+      `at step: Then ${key}\nno handler bound for step key "${key}"`,
+    );
+    const handler = vi.fn<StepFn<object, ParamShape>>();
+    const world = {};
+    await runExamplePlan(planExample(contract, { [key]: handler }), world);
+    expect(handler).toHaveBeenCalledExactlyOnceWith(world, step.params, step);
+  });
+  it.each(names)("keeps missing %s parameters visible and renders own values", (key) => {
+    const step = { kind: "then" as const, text: `result {${key}}`, params: {} };
+    expect(renderContractStep(step)).toBe(`Then result {${key}}`);
+    expect(renderContractStep({ ...step, params: { [key]: 3 } })).toBe("Then result 3");
   });
 });

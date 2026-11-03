@@ -28,7 +28,7 @@ import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import { buildGraphIndex } from "./graph-index.js";
 import type { GraphIndex } from "./graph-index.js";
 import type { Finding, Severity, ValidationReport, ValidatorFamily } from "./contracts.js";
-import { reservedThenSlotsOf } from "../notation/example-space.js";
+import { reservedThenSlotsOf, reservedThenKeysOf } from "../notation/example-space.js";
 import { evaluateReadinessFloor } from "./readiness-floor.js";
 
 /**
@@ -53,6 +53,7 @@ export const graphValidatorIds = {
   proseMentions: "conformance/prose-mentions",
   ruleExercises: "conformance/rule-exercises",
   reservedThenSlot: "conformance/reserved-then-slot",
+  reservedThenKey: "conformance/reserved-then-key",
   authoringShape: "honesty/authoring-shape",
   deliveryFacts: "honesty/delivery-facts",
   readinessFloor: "honesty/readiness-floor",
@@ -1931,6 +1932,24 @@ function checkReservedThenSlots(graph: GraphSchema): readonly Finding[] {
   );
 }
 
+function checkReservedThenKeys(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
+  return graph.nodes.flatMap((node) =>
+    node.nodeType !== "Primitive"
+      ? []
+      : reservedThenKeysOf(node, index).map(({ text, path }) =>
+          createFinding({
+            validatorId: graphValidatorIds.reservedThenKey,
+            family: "conformance",
+            severity: "error",
+            subjectId: node.id,
+            file: node.file,
+            path,
+            message: `Then contract key "unspecified" is reserved for the coverage gap in step "${text}"`,
+          }),
+        ),
+  );
+}
+
 /* ----- the aggregate ----- */
 
 function compareCodeUnits(left: string, right: string): number {
@@ -1980,6 +1999,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
     ...checkProseMentions(graph, index),
     ...checkRuleExercises(graph, index),
     ...checkReservedThenSlots(graph),
+    ...checkReservedThenKeys(graph, index),
     ...checkSupersededDecisions(graph, index),
     ...authoringShapeFindings,
     ...checkDeliveryFacts(graph, derivedFacts),

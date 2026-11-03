@@ -391,6 +391,7 @@ export const extractionSpecs = [
           "Two contract paths differing only by letter case cannot coexist on a case-insensitive filesystem, so the contracts tree is withheld whole and the finding names the colliding pair.",
           "Every generation finding is a warning that describes what did not emit; gating belongs to graph validation alone, so a withheld contract never fails the build by itself.",
           "A Then slot named `kind` withholds its space contract when declared in a vocabulary, or its step contract when carried by an example, with `contracts/reserved-then-slot` naming the reserved word; a withheld space contract also withholds its children's registrars. Outcome variants keep their flat shape, with `kind` as the discriminant and the other slots as sibling fields.",
+          "The contract key `unspecified` is reserved for the coverage-gap outcome, whether written as a step key or as unkeyed Then text. A Then using it is a `conformance/reserved-then-key` error. Generation withholds its space contract when declared in a vocabulary, or its step contract when carried by an example, with `contracts/reserved-then-key` naming the reserved key; a withheld space contract also withholds its children's registrars. Given and When keys remain unrestricted.",
         ],
         exampleSpace: {
           given: [
@@ -415,11 +416,12 @@ export const extractionSpecs = [
           keyConflicts: "rules[9]",
           caseCollision: "rules[10]",
           reservedThenSlot: "rules[12]",
+          reservedThenKey: "rules[13]",
         },
       },
       design: {
         findingIds:
-          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key` · `contracts/reserved-then-slot`, each at warning severity.",
+          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key` · `contracts/reserved-then-slot` · `contracts/reserved-then-key`, each at warning severity.",
         duplicateStepKey:
           '`contracts/duplicate-step-key` is a warning on the parent at `behavior.exampleSpace` for a space collision, or on the example at `behavior.examples` for a step-contract collision. Its message is `contract key "<key>" names both "<first skeleton>" and "<second skeleton>"; <space|step> contract withheld`, with the skeletons in first-occurrence order.',
         contractStep:
@@ -558,13 +560,14 @@ export const extractionSpecs = [
           "Scenario-level invocation — the five-adapter interface carries one product `invoke` per example, so the first `When` occurrence invokes it and later `When` occurrences in the same lawful scenario do not repeat side effects.",
           "At the first Then, the comparator refuses an incomplete point before calling the oracle and otherwise evaluates and caches `expected(point)`. It finds the authored Then whose contract key equals `expected.kind`, compares that step's authored parameters with the oracle payload, reads `observe(world)`, compares observed and oracle outcomes, and runs additional assertions separately. Actual-equals-oracle alone is insufficient: a Spec parameter mutation must fail. The oracle accepts `Partial<Conditions>`; the registrar never casts a partial point to Conditions.",
           "Oracle payload versus Spec Then parameters and observed versus oracle outcomes use deep structural equality on the authored shape. Diagnostics name missing, extra or changed values by path and show expected and actual values. The comparator quotes authored Then parameters and skeleton text without rephrasing them.",
-          "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When the oracle selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and the contract keys of the available Then steps; preserve the original assertion as `cause`.",
-          "Bound unspecified outcome — `unspecified` names a coverage gap in the example space, but a bound executable example selecting it reddens because no authored Then may silently witness that gap.",
+          "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When a specified oracle outcome selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and the contract keys of the available Then steps; preserve the original assertion as `cause`.",
+          "The Then contract key `unspecified` is reserved under spec:extraction.executable-contracts#rule.reservedThenKey. An oracle returning `unspecified` names a coverage gap; a bound executable example selecting it reddens with a distinct coverage-gap diagnostic because no authored Then may witness that gap.",
           "The authored top-level `specTest` carries a non-empty `verifies` target naming the example. It remains the source of `has-verifier`; generated execution confers no delivery fact and records no pass state.",
           "Additive assertions — optional `assertions` may add domain checks the Outcome union cannot express; they never replace steps (3) or (5) of the three-way comparator and never silence a Spec-param or oracle mismatch.",
           "Case mapping and outlines — outline rows map one deterministic case per row in carrier order when a multi-row table sugar expands statically into sibling examples (point-per-example). Scenario Outlines and inline Examples tables stay refused as executable carrier constructs inside a single example; one example remains one point and earns exactly one generated registration.",
           "Registrars use no environment, global or module side channel, mutable global registry or singleton world shared across examples. Generated siblings export the registrar and never self-register. Generation derives no domain observation; the engine never loads or executes adopter code. Registrars do not become generated test harnesses. Scenario Outlines stay refused. The interface changes neither the claim taxonomy, anchor bindings nor the contract-key identity of steps.",
         ],
+        ruleKeys: { reservedThenKey: "rules[11]" },
       },
       design: {
         registrar:
@@ -579,6 +582,8 @@ export const extractionSpecs = [
           "`generated/registrars.json` carries the versioned, sorted extraction-root-relative registrar paths owed by the build.",
         thenBinding:
           '`compareContractOutcome(execution, { kind: "then", key, text, params })` is the generated binding of a Then step; it compares only the step whose `key` equals the oracle\'s `kind`.',
+        unspecifiedCoverageGap:
+          '`scenario <spec>: oracle selected "unspecified"; coverage gap cannot witness a bound example` is the diagnostic for an unspecified oracle outcome, with `oracle outcome "unspecified" names a coverage gap` as its cause.',
         noMatchingThen:
           '`scenario <spec>: oracle selected "<kind>"; available Then steps: "<key>", …` is the diagnostic when no authored Then matches, listing each Then step\'s contract key in contract order, with the original assertion as `cause`.',
       },
