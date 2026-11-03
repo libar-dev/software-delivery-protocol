@@ -1,7 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { Script } from "node:vm";
+import ts from "typescript";
+import { format } from "prettier";
+import { describe, expect, it, vi } from "vitest";
+import { planExample, runExamplePlan } from "../src/runner/index.js";
+import type { ExampleContract, ParamShape, StepBindings } from "../src/runner/index.js";
+import {
+  compareContractOutcome,
+  completeRunnableExample,
+  createRunnableExample,
+  invokeRunnableExample,
+} from "../src/testing/index.js";
+import type { RunnableExampleAdapters, RunnableExampleWorld } from "../src/testing/index.js";
 
 import {
   createReader,
+  deriveGraph,
+  reifyMarkdownCarrier,
   evaluateBody,
   contractsFindingIds,
   generateContracts,
@@ -74,7 +88,236 @@ const BOUND_GWT = {
   then: ["an order is created with total {total: 100}"],
 };
 
+type ProbeAdapters = RunnableExampleAdapters<object, Record<string, never>, { kind: string }>;
+type ProbeExecution = RunnableExampleWorld<object, Record<string, never>, { kind: string }>;
+
+// Evaluate only this test's generated modules, in the same realm as the runtime comparator.
+function loadGeneratedModule(
+  source: string,
+  require: (name: string) => unknown = () => {
+    throw new Error("unexpected generated import");
+  },
+): Record<string, unknown> {
+  const js = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const exports: Record<string, unknown> = {};
+  const evaluate = new Script(`(function(exports, require) { ${js}\n })`).runInThisContext() as (
+    exports: Record<string, unknown>,
+    require: (name: string) => unknown,
+  ) => void;
+  evaluate(exports, require);
+  return exports;
+}
+
+function generateProbe(steps: string) {
+  const parent = reifyMarkdownCarrier(
+    `---
+id: spec:probe.runtime
+kind: behavior
+altitude: story
+readiness: scoped
+relations: {}
+---
+# Runtime probe
+## Intent
+- outcome: Exercise generated step dispatch.
+## Example space
+\`\`\`gwt-vocabulary
+${steps}
+\`\`\`
+`,
+    "parent.sdp.md",
+  );
+  const child = reifyMarkdownCarrier(
+    `---
+id: spec:probe.runtime.shared
+kind: example
+altitude: story
+readiness: scoped
+relations:
+  refines: spec:probe.runtime
+  verifies: spec:probe.runtime
+---
+# Shared step
+## Intent
+- outcome: Exercise generated step dispatch.
+\`\`\`gwt
+${steps}
+\`\`\`
+`,
+    "child.sdp.md",
+  );
+  expect([...parent.findings, ...child.findings]).toEqual([]);
+  const base = deriveGraph([...parent.specs, ...child.specs], [], []);
+  const generated = generateContracts({
+    ...base,
+    nodes: [
+      ...base.nodes,
+      {
+        id: "test:probe.runtime",
+        nodeType: "Anchor",
+        claim: "anchored",
+        file: "test/probe.test.ts",
+        line: 1,
+      },
+    ],
+    edges: [
+      ...base.edges,
+      {
+        from: "test:probe.runtime",
+        type: "verifies",
+        to: "spec:probe.runtime.shared",
+        claim: "anchored",
+      },
+    ],
+  });
+  expect(generated.findings).toEqual([]);
+  return generated;
+}
+
+function generatedProbe(steps: string, adapters: ProbeAdapters): () => Promise<void> {
+  const generated = generateProbe(steps);
+  const contractModule = loadGeneratedModule(
+    generated.files.get("probe.runtime.shared.contract.ts") ?? "",
+  );
+  let run: (() => Promise<void>) | undefined;
+  const registrar = loadGeneratedModule(
+    generated.registrars.get("test/probe.runtime.shared.test.generated.ts") ?? "",
+    (name) => {
+      if (name.endsWith(".contract.js")) return contractModule;
+      if (name !== "@libar-dev/software-delivery-protocol/testing") throw new Error(name);
+      return {
+        compareContractOutcome,
+        invokeRunnableExample,
+        registerRunnableExample(
+          contract: ExampleContract<string, Record<string, ParamShape>>,
+          point: Record<string, never>,
+          required: readonly string[],
+          supplied: ProbeAdapters,
+          bindings: StepBindings<ProbeExecution, string, Record<string, ParamShape>>,
+        ) {
+          run = async () => {
+            const execution = createRunnableExample(
+              contract.spec,
+              point,
+              required,
+              supplied,
+              contract.steps.filter((step) => step.kind === "then"),
+            );
+            await runExamplePlan(planExample(contract, bindings), execution);
+            await completeRunnableExample(execution);
+          };
+        },
+      };
+    },
+  );
+  const register = registrar.registerShared as (adapters: ProbeAdapters) => void;
+  register(adapters);
+  if (!run) throw new Error("the generated registrar did not register its example");
+  return run;
+}
+
 describe("the contracts codegen stage", () => {
+  it.each(["ready", "[#readyKey] ready"])(
+    "invokes a throwing product when Given and When share %s",
+    async (shared) => {
+      const invoke = vi.fn(() => {
+        throw new Error("product invoked");
+      });
+      const observe = vi.fn(() => ({ kind: "done" }));
+      const run = generatedProbe(`Given ${shared}\nWhen ${shared}\nThen done`, {
+        createWorld: () => ({}),
+        invoke,
+        observe,
+        expected: () => ({ kind: "done" }),
+      });
+      await expect(run()).rejects.toThrow("at step: When ready\nproduct invoked");
+      expect(invoke).toHaveBeenCalledTimes(1);
+      expect(observe).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ["Given ready\nWhen ready\nThen ready", "ready"],
+    ["Given ready\nWhen run\nThen ready", "ready"],
+    ["Given start\nWhen ready\nThen ready", "ready"],
+  ])("dispatches every phase of a shared key: %s", async (steps, outcome) => {
+    const trace: string[] = [];
+    const run = generatedProbe(steps, {
+      createWorld: () => {
+        trace.push("given");
+        return {};
+      },
+      invoke: () => {
+        trace.push("when");
+      },
+      observe: () => {
+        trace.push("then");
+        return { kind: outcome };
+      },
+      expected: () => ({ kind: outcome }),
+      assertions: () => {
+        trace.push("assertions");
+      },
+    });
+    await run();
+    expect(trace).toEqual(["given", "when", "then", "assertions"]);
+  });
+
+  it.each([40, 60, 85, 110])(
+    "formats shared-key handlers with %i-character keys for adoption",
+    async (length) => {
+      const shared = "a shared step ".padEnd(length, "x");
+      const generated = generateProbe(`Given ${shared}\nWhen ${shared}\nThen all done`);
+      const registrar = generated.registrars.get("test/probe.runtime.shared.test.generated.ts");
+      expect(registrar).toBeDefined();
+      const bindings = (source: string) =>
+        source.split("  const bindings = {")[1]?.split("  } satisfies StepBindings")[0];
+      expect(bindings(registrar ?? "")).toBe(
+        bindings(await format(registrar ?? "", { parser: "typescript", printWidth: 100 })),
+      );
+    },
+  );
+
+  it("preserves the noMatchingThen diagnostic and cause for an unspecified oracle", async () => {
+    const observe = vi.fn(() => ({ kind: "unspecified" }));
+    const assertions = vi.fn();
+    const run = generatedProbe("Given ready\nWhen run\nThen done", {
+      createWorld: () => ({}),
+      invoke: () => undefined,
+      observe,
+      expected: () => ({ kind: "unspecified" }),
+      assertions,
+    });
+
+    await expect(run()).rejects.toMatchObject({
+      message:
+        'scenario spec:probe.runtime.shared: oracle selected "unspecified"; available Then steps: "done"',
+      cause: new Error('oracle kind "unspecified" has no matching Then'),
+    });
+    expect(observe).not.toHaveBeenCalled();
+    expect(assertions).not.toHaveBeenCalled();
+  });
+
+  it.each(["unspecified", "[#unspecified] a coverage gap"])(
+    "refuses an oracle coverage gap even when Then is %s",
+    async (then) => {
+      const observe = vi.fn(() => ({ kind: "unspecified" }));
+      const assertions = vi.fn();
+      const run = generatedProbe(`Given ready\nWhen run\nThen ${then}`, {
+        createWorld: () => ({}),
+        invoke: () => undefined,
+        observe,
+        expected: () => ({ kind: "unspecified" }),
+        assertions,
+      });
+      await expect(run()).rejects.toThrow('oracle selected "unspecified"');
+      expect(observe).not.toHaveBeenCalled();
+      expect(assertions).not.toHaveBeenCalled();
+    },
+  );
+
   it("emits a space contract per example-space parent and a step contract per bindable example", () => {
     const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), child(BOUND_GWT)] });
     const generated = generateContracts(graph);

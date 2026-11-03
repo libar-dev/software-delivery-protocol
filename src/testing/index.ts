@@ -109,7 +109,7 @@ export function compareContractOutcome<W, C, O extends RunnableOutcome>(
 ): void {
   const oracle = oracleForComparison(execution);
 
-  if (step.key !== oracle.kind) {
+  if (oracle.kind === "unspecified" || step.key !== oracle.kind) {
     return;
   }
 
