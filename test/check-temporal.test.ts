@@ -176,6 +176,36 @@ describe("check:temporal", () => {
     });
   });
 
+  it("exempts each genre at the repository root only, never a nested or look-alike path", () => {
+    withRoot((root) => {
+      const sweptPaths = [
+        "docs/evidence/record.md",
+        "test/fixtures/sample/evidence/record.md",
+        "evidence-notes/record.md",
+        "nested/plans/record.md",
+        "nested/reviews/record.md",
+        "nested/explorations/record.md",
+        "nested/docs/lineage/record.md",
+        "nested/.omo/drafts/record.md",
+        "nested/.omo/plans/record.md",
+        "nested/.omo/evidence/record.md",
+        "nested/package-lock.json",
+      ];
+
+      for (const path of sweptPaths) {
+        writeExcludedFile(root, path);
+      }
+
+      const result = runGuard(root);
+
+      expect(result.status).not.toBe(0);
+
+      for (const path of sweptPaths) {
+        expect(result.stderr).toContain(`${path}:1:`);
+      }
+    });
+  });
+
   it("fails closed when file enumeration fails", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-temporal-no-git-"));
 
