@@ -32,6 +32,95 @@ import {
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
+describe("article evidence delimiter scans", () => {
+  const pin = "a".repeat(40);
+  const cases = [
+    {
+      id: "pin",
+      file: "README.md",
+      prefix: "Pinned source baseline:x",
+      complete: `> **Pinned source baseline:** commit [pin](https://example.test/tree/${pin}).\n`,
+      expected: pin,
+      error: "The publication plan does not name a full pinned source commit.",
+    },
+    {
+      id: "constant-anchor",
+      file: "examples/checkout-v1/src/orders/create-order.use-case.ts",
+      prefix: "export const createOrderUseCaseAnchor = codeAnchor({",
+      complete:
+        'import { codeAnchor } from "./anchors";\n// earlier delimiter\n});\n' +
+        'export const createOrderUseCaseAnchor = codeAnchor({\n  id: "impl:probe",\n});\ntrailing text',
+      expected:
+        'import { codeAnchor } from "./anchors";\n\n// …\n\n' +
+        'export const createOrderUseCaseAnchor = codeAnchor({\n  id: "impl:probe",\n});',
+      error: "Could not locate the create-order constant anchor.",
+    },
+    {
+      id: "roadmap-mermaid",
+      file: "examples/checkout-v1/generated/mermaid/pack/checkout-roadmap.md",
+      prefix: "```mermaid\nx",
+      complete: "Earlier fence\n```\n\n```mermaid\ngraph TD\n  A --> B\n```\ntrailing text",
+      expected: "graph TD\n  A --> B",
+      error: "Could not read the generated checkout-roadmap Mermaid block.",
+    },
+  ];
+
+  for (const probe of cases) {
+    it.each(["complete", "missing opening", "missing closing", "adversarial"])(
+      `${probe.id}: handles %s input within the subprocess deadline`,
+      (scenario) => {
+        const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-scan-"));
+        try {
+          const input =
+            scenario === "complete"
+              ? probe.complete
+              : scenario === "missing opening"
+                ? "unrelated text\n});\n```\n"
+                : scenario === "missing closing"
+                  ? probe.prefix
+                  : probe.prefix.repeat(100_000) +
+                    (probe.id === "pin" ? `\n${probe.complete}` : "");
+          const file = path.join(temporary, probe.file);
+          mkdirSync(path.dirname(file), { recursive: true });
+          writeFileSync(file, input);
+          // The Mermaid generator runs the CLI first. Keep this probe about parsing its
+          // generated page, without invoking a full graph build on adversarial text.
+          mkdirSync(path.join(temporary, "dist/cli"), { recursive: true });
+          writeFileSync(path.join(temporary, "dist/cli/sdp.js"), "");
+          const script = path.join(repositoryRoot, "docs/articles/sync-evidence.mjs");
+          const copiedScript = path.join(temporary, "sync-evidence.mjs");
+          copyFileSync(script, copiedScript);
+          const args =
+            probe.id === "pin"
+              ? [copiedScript, "--print-pin"]
+              : [
+                  "--input-type=module",
+                  "--eval",
+                  `import { evidenceBlocks } from ${JSON.stringify(copiedScript)};
+                   console.log(evidenceBlocks(${JSON.stringify(temporary)}, "pin")
+                     .find((block) => block.id === ${JSON.stringify(probe.id)}).generate());`,
+                ];
+          // Synchronous regex work cannot be interrupted by Vitest's own timeout. A
+          // generous child deadline catches polynomial scans without a tight benchmark.
+          const result = spawnSync(process.execPath, args, {
+            encoding: "utf8",
+            timeout: 5_000,
+          });
+          expect(result.error, `${probe.id}: ${scenario}`).toBeUndefined();
+          const succeeds =
+            scenario === "complete" || (scenario === "adversarial" && probe.id === "pin");
+          expect(result.status).toBe(succeeds ? 0 : 1);
+          if (succeeds) expect(result.stdout.trim()).toBe(probe.expected);
+          else expect(result.stderr).toContain(probe.error);
+        } finally {
+          rmSync(temporary, { recursive: true, force: true });
+        }
+      },
+      15_000,
+    );
+  }
+});
+
 describe("article evidence CLI entry", () => {
   it("runs when invoked through a symlinked checkout path", () => {
     const linkParent = mkdtempSync(path.join(tmpdir(), "sdp-article-link-"));

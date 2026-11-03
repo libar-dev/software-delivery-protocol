@@ -330,10 +330,12 @@ export function evidenceBlocks(sourceRoot, pinnedCommit) {
   function constantAnchor() {
     const source = sourceText("examples/checkout-v1/src/orders/create-order.use-case.ts");
     const importLine = source.split("\n")[0];
-    const anchor = source.match(
-      /export const createOrderUseCaseAnchor = codeAnchor\(\{[\s\S]*?\n\}\);/,
-    )?.[0];
-    if (!anchor) throw new Error("Could not locate the create-order constant anchor.");
+    const opening = "export const createOrderUseCaseAnchor = codeAnchor({";
+    const closing = "\n});";
+    const start = source.indexOf(opening);
+    const end = start < 0 ? -1 : source.indexOf(closing, start + opening.length);
+    if (end < 0) throw new Error("Could not locate the create-order constant anchor.");
+    const anchor = source.slice(start, end + closing.length);
     return `${importLine}\n\n// …\n\n${anchor}`;
   }
 
@@ -362,9 +364,11 @@ export function evidenceBlocks(sourceRoot, pinnedCommit) {
   function roadmapMermaid() {
     runCli(["mermaid", "examples/checkout-v1"]);
     const page = sourceText("examples/checkout-v1/generated/mermaid/pack/checkout-roadmap.md");
-    const match = page.match(/```mermaid\n([\s\S]*?)\n```/);
-    if (!match) throw new Error("Could not read the generated checkout-roadmap Mermaid block.");
-    return match[1];
+    const opening = "```mermaid\n";
+    const start = page.indexOf(opening);
+    const end = start < 0 ? -1 : page.indexOf("\n```", start + opening.length);
+    if (end < 0) throw new Error("Could not read the generated checkout-roadmap Mermaid block.");
+    return page.slice(start + opening.length, end);
   }
 
   const blocks = [
@@ -445,7 +449,17 @@ function main() {
   const articlesDir = path.dirname(fileURLToPath(import.meta.url));
   const repositoryRoot = path.resolve(articlesDir, "../..");
   const playbook = readFileSync(path.join(articlesDir, "README.md"), "utf8");
-  const pinnedCommit = playbook.match(/Pinned source baseline:.*tree\/([0-9a-f]{40})/)?.[1];
+  // Bound the link search on each candidate line; repeated incomplete labels must not
+  // cause rescans of the rest of the playbook. Accept the playbook's quoted bold label
+  // and the plain label used by small source fixtures.
+  const pinnedCommit = playbook
+    .split("\n")
+    .map((line) =>
+      /^(?:> \*\*)?Pinned source baseline:[^\r\n]{0,200}tree\/([0-9a-f]{40})(?![0-9a-f])/.exec(
+        line,
+      ),
+    )
+    .find((match) => match)?.[1];
 
   if (!pinnedCommit) {
     throw new Error("The publication plan does not name a full pinned source commit.");
