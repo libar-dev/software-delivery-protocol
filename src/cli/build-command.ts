@@ -4,7 +4,6 @@ import {
   mkdirSync,
   readFileSync,
   realpathSync,
-  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -18,7 +17,7 @@ import type { GraphSchema } from "../graph/schema.js";
 import type { ValidationReport } from "../validate/contracts.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
-import { assertOutputParent, removeArtifact, removeArtifacts } from "./artifacts.js";
+import { guardedOutput, removeArtifact, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
@@ -267,13 +266,20 @@ export function runBuild(
   command: string,
   hooks: BuildHooks,
 ): BuildOutcome {
+  const {
+    rmSync: remove,
+    mkdirSync: mkdir,
+    writeFileSync: writeOutput,
+    renameSync: rename,
+    check,
+  } = guardedOutput(parsed.root, hooks);
   void [cliComponentAnchor, buildPipelineEmitAnchor];
   const { root: resolvedRoot, exclude, checkClean } = parsed;
   const extractionOptions = { root: resolvedRoot, exclude };
   const runExtract = hooks.extract ?? extract;
   const runGenerateContracts = hooks.generateContracts ?? generateContracts;
-  const recoveryRm = hooks.rmSync ?? rmSync;
-  const write = hooks.writeFileSync ?? writeFileSync;
+  const recoveryRm = remove;
+  const write = writeOutput;
   const graphPath = join(resolvedRoot, buildOutputs.graph);
   const importsPath = join(resolvedRoot, buildOutputs.imports);
   const contractsPath = join(resolvedRoot, buildOutputs.contracts);
@@ -285,7 +291,7 @@ export function runBuild(
 
   const outputParentIsSafe = (): boolean => {
     try {
-      assertOutputParent(resolvedRoot, graphPath);
+      check(graphPath);
       return true;
     } catch (error) {
       writeStderr(
@@ -298,9 +304,9 @@ export function runBuild(
   if (!outputParentIsSafe()) return { exitCode: 1 };
 
   const stageFile = (path: string, content: string): void => {
-    assertOutputParent(resolvedRoot, path);
+    check(path);
     // Unlink stale entries first; exclusive creation also refuses a link planted after removal.
-    rmSync(path, { force: true });
+    remove(path, { force: true });
     write(path, content, { encoding: "utf8", flag: "wx" });
   };
 
@@ -470,20 +476,20 @@ export function runBuild(
     }
 
     const temporaryPath = `${graphPath}.tmp`;
-    assertOutputParent(resolvedRoot, graphPath);
-    mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
+    check(graphPath);
+    mkdir(join(resolvedRoot, "generated"), { recursive: true });
     stageFile(temporaryPath, serialized);
     if (imports !== undefined) stageFile(`${importsPath}.tmp`, imports);
 
     const contractsTemporaryPath = `${contractsPath}.tmp`;
-    rmSync(contractsTemporaryPath, { recursive: true, force: true });
+    remove(contractsTemporaryPath, { recursive: true, force: true });
 
     if (contracts.files.size > 0) {
-      mkdirSync(contractsTemporaryPath, { recursive: true });
+      mkdir(contractsTemporaryPath, { recursive: true });
 
       for (const [relativePath, content] of contracts.files) {
         const target = join(contractsTemporaryPath, relativePath);
-        mkdirSync(join(target, ".."), { recursive: true });
+        mkdir(join(target, ".."), { recursive: true });
         stageFile(target, content);
       }
     }
@@ -501,7 +507,7 @@ export function runBuild(
         throw new Error(`unsafe registrar sibling path "${relativePath}"`);
       }
 
-      rmSync(`${createdRegistrarPath}.tmp`, { force: true });
+      remove(`${createdRegistrarPath}.tmp`, { force: true });
       const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, relativePath);
 
       if (registrarPath === undefined) {
@@ -519,10 +525,10 @@ export function runBuild(
     // Changed bytes now exist in temporary locations. Publish, reconcile, and remove stale
     // siblings; any later failure falls through failBuild, which removes the whole known set so
     // partially current output cannot survive.
-    renameSync(temporaryPath, graphPath);
-    rmSync(contractsPath, { recursive: true, force: true });
+    rename(temporaryPath, graphPath);
+    remove(contractsPath, { recursive: true, force: true });
     if (contracts.files.size > 0) {
-      renameSync(contractsTemporaryPath, contractsPath);
+      rename(contractsTemporaryPath, contractsPath);
     }
     for (const stalePath of priorRegistrarPaths.filter(
       (path) => !nextRegistrarPaths.includes(path),
@@ -530,7 +536,7 @@ export function runBuild(
       const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, stalePath);
 
       if (registrarPath !== undefined) {
-        rmSync(registrarPath, { force: true });
+        remove(registrarPath, { force: true });
       }
     }
     for (const relativePath of changedRegistrarPaths) {
@@ -540,11 +546,12 @@ export function runBuild(
         throw new Error(`unsafe registrar sibling path "${relativePath}"`);
       }
 
-      renameSync(`${registrarPath}.tmp`, registrarPath);
+      rename(`${registrarPath}.tmp`, registrarPath);
     }
-    renameSync(registrarManifestTemporaryPath, registrarManifestPath);
-    if (imports !== undefined) renameSync(`${importsPath}.tmp`, importsPath);
+    rename(registrarManifestTemporaryPath, registrarManifestPath);
+    if (imports !== undefined) rename(`${importsPath}.tmp`, importsPath);
 
+    check(graphPath);
     writeStdout(output, summary);
     writeStdout(output, `Wrote ${graphPath}\n`);
     if (imports !== undefined)

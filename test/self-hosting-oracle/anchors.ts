@@ -21,6 +21,12 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.cli-write-boundaries",
+    nodeType: "Anchor",
+    file: "test/cli-write-boundaries.test.ts",
+    site: 'describe("publication boundary regressions",',
+  },
+  {
     id: "test:protocol.markdown-body-grammar-regressions",
     nodeType: "Anchor",
     label: "checks Markdown body grammar refusals",
@@ -4832,6 +4838,12 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:extraction.build-pipeline"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.projections-model"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.wholesale-view-rewrite"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.design-review"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.mermaid-view"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.gherkin-view"],
   [
     "impl:protocol.studio-capability-diagrams",
     "satisfies",
@@ -6826,6 +6838,7 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "test:protocol.cli-write-boundaries",
   "impl:protocol.studio-capabilities-page",
   "impl:protocol.studio-capability-diagrams",
   "impl:protocol.studio-roadmap-page",

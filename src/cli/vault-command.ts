@@ -1,5 +1,5 @@
 import { physicalPath as physical, pathWithin } from "./path-identity.js";
-import { readFileSync } from "node:fs";
+import { lstatSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { generateContracts } from "../codegen/contracts.js";
 import { extract } from "../extract/index.js";
@@ -19,6 +19,7 @@ import {
   VaultGuardError,
 } from "../projections/vault/sync.js";
 import type { SyncResult, VaultFile, VaultState } from "../projections/vault/sync.js";
+import { assertOutputParent } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import { buildOwnedPaths, buildOwnedRegistrarPaths } from "./build-command.js";
 import type { CliOutput } from "./output.js";
@@ -39,6 +40,17 @@ const inside = (parent: string, child: string): boolean => {
   return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path));
 };
 export function checkVaultDirectory(parsed: BuildArgs, registrars: readonly string[] = []): void {
+  assertOutputParent(parsed.root, join(parsed.root, "generated", "graph.json"));
+  if (parsed.vault === undefined) {
+    const out = vaultDirectory(parsed);
+    try {
+      if (lstatSync(out).isSymbolicLink())
+        throw new Error(`default vault ${out} is a link; choose an explicit --out instead`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    assertOutputParent(parsed.root, join(out, "sdp"));
+  }
   const out = vaultDirectory(parsed),
     resolvedOut = physical(out),
     root = physical(parsed.root);
@@ -141,6 +153,7 @@ export function publishFailedVault(
         )
         .join("\n") +
       "\n";
+    checkVaultDirectory(parsed);
     summarize(
       parsed,
       synchronizeVault(
@@ -173,6 +186,7 @@ export function publishVault(
   findings?: Parameters<typeof renderVault>[1],
 ): number {
   try {
+    checkVaultDirectory(parsed);
     summarize(
       parsed,
       synchronizeVault(
@@ -258,6 +272,7 @@ export function runVaultWatch(
     onWatchStop: () => {
       // Cycles are synchronous; SIGINT is delivered between them. Remove only recognized whole temporaries.
       try {
+        checkVaultDirectory(parsed);
         const state = inspectVault(out);
         if (state.temporaries.length)
           synchronizeVault(

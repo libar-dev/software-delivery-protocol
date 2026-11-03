@@ -1,12 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  renameSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
@@ -14,7 +6,7 @@ import { codeAnchor } from "../model/code-anchor.js";
 import { renderCensus } from "../projections/census.js";
 import type { CensusPage } from "../projections/census.js";
 import { createReader } from "../reader/reader.js";
-import { removeArtifacts } from "./artifacts.js";
+import { guardedOutput, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import type { BuildOutcome } from "./build-command.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
@@ -79,8 +71,15 @@ export function prepareCensusPublication(
   hooks: CensusHooks,
   command = "census",
 ): ((validated: BuildOutcome) => number) | undefined {
+  const {
+    rmSync: remove,
+    mkdirSync: mkdir,
+    writeFileSync: writeOutput,
+    renameSync: rename,
+    check,
+  } = guardedOutput(parsed.root, hooks);
   const render = hooks.renderCensus ?? renderCensus;
-  const recoveryRm = hooks.rmSync ?? rmSync;
+  const recoveryRm = remove;
   const censusPath = join(parsed.root, "generated", "census");
   const temporaryPath = `${censusPath}.tmp`;
   let publishedBeforeBuild: readonly CensusPage[] | undefined;
@@ -128,16 +127,17 @@ export function prepareCensusPublication(
         }
       }
 
-      rmSync(temporaryPath, { recursive: true, force: true });
+      remove(temporaryPath, { recursive: true, force: true });
 
       for (const page of pages) {
         const target = join(temporaryPath, page.path);
-        mkdirSync(dirname(target), { recursive: true });
-        writeFileSync(target, page.content, "utf8");
+        mkdir(dirname(target), { recursive: true });
+        writeOutput(target, page.content, { encoding: "utf8", flag: "wx" });
       }
 
-      rmSync(censusPath, { recursive: true, force: true });
-      renameSync(temporaryPath, censusPath);
+      remove(censusPath, { recursive: true, force: true });
+      rename(temporaryPath, censusPath);
+      check(join(parsed.root, "generated", ".boundary"));
       writeStdout(output, `Wrote ${censusPath} (${String(pages.length)} pages)\n`);
       return validate.exitCode;
     } catch (error) {

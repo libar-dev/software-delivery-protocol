@@ -131,10 +131,12 @@ export const consumersSpecs = [
           "Disconnected neighborhoods and foreign edge types remain visible when they appear in the selected one-hop or Pack slice; absence of a neighbor is honest silence, not a synthetic hub.",
           "Hard bounds are exact: `maxNodesPerDiagram = 64` and `maxEdgesPerDiagram = 128`. A token collision or an overflow of either bound refuses the affected diagram with a deterministic refusal that names the bound, while every in-bound diagram still publishes and the command exits 0. The projection never silently truncates, shards partially, drops edges to fit, or aborts the whole page set because one diagram overflowed.",
           "After the shared build, publication owns only `generated/mermaid/` and uses the explicit `sdp mermaid` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
-          "A Mermaid run writes its complete page set to `generated/mermaid.tmp/`, removes the prior Mermaid root, and renames the temporary root into place. The shared build invalidates this root and all sibling projection roots before extraction, as `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` states, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Mermaid root it cannot certify.",
+          "A Mermaid run writes its complete page set to `generated/mermaid.tmp/`, removes the prior Mermaid root, and renames the temporary root into place. The shared build invalidates this root and all sibling projection roots before extraction, as `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` states, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Mermaid root it cannot certify when its output parent remains safe.",
           "`sdp mermaid --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
           "When extraction succeeds but graph validation reports errors, Mermaid still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
           "The projection adds no Mermaid-specific Reader accessors, maintains no projection-owned taxonomy list, and confers nothing back into the graph.",
+          "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
+          "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
         ],
         exampleSpace: {
           given: [
@@ -156,6 +158,10 @@ export const consumersSpecs = [
             "validation errors label the index as a diagnostic projection",
             "no whole-graph diagram is emitted",
           ],
+        },
+        ruleKeys: {
+          portablePublication: "rules[14]",
+          safeCleanup: "rules[15]",
         },
       },
     },
@@ -182,10 +188,12 @@ export const consumersSpecs = [
           "Description prose lands only on the narrative and keyed description bullets under the prose-ownership decision, `spec:decisions.prose-ownership`; the projection never emits DocStrings, DataTables, Scenario Outlines, Examples tables, backgrounds, star steps or leading conjunctions.",
           "Every emitted record is ordered by deterministic code-unit order independent of graph input order. Hostile characters are escaped so they cannot close a fence or invent a DocString.",
           "After the shared build, publication owns only `generated/gherkin/` and uses the explicit `sdp gherkin` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
-          "A Gherkin-view run writes its complete page set to `generated/gherkin.tmp/`, removes the prior Gherkin-view root, and renames the temporary root into place. The shared build invalidates this root and all sibling projection roots before extraction, as `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` states, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Gherkin-view root it cannot certify.",
+          "A Gherkin-view run writes its complete page set to `generated/gherkin.tmp/`, removes the prior Gherkin-view root, and renames the temporary root into place. The shared build invalidates this root and all sibling projection roots before extraction, as `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` states, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Gherkin-view root it cannot certify when its output parent remains safe.",
           "`sdp gherkin --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
           "When extraction succeeds but graph validation reports errors, the Gherkin view still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
           "The projection adds no Gherkin-specific Reader accessors and confers nothing back into the graph.",
+          "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
+          "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
         ],
         exampleSpace: {
           given: [
@@ -203,6 +211,10 @@ export const consumersSpecs = [
             "validation errors label the index as a diagnostic projection",
             "no page uses the .sdp.gherkin suffix",
           ],
+        },
+        ruleKeys: {
+          portablePublication: "rules[10]",
+          safeCleanup: "rules[11]",
         },
       },
     },
@@ -223,18 +235,18 @@ export const consumersSpecs = [
       },
       model: {
         terms: {
-          "curated graph":
-            "The part of the one derived graph that carries declared intent and anchored bindings, kept sparse by curation; the impact graph's inferred structure remains distinct.",
-          curation:
-            "The deliberate difference between the sparse curated graph and the exhaustive code-structure surface `spec:consumers.impact-graph` designs; it is not drift.",
-          "diagnostic publication posture":
-            "After extraction succeeds, a projection publishes its honestly labelled graph view even when validation reports errors, and returns the validation exit code so findings remain both visible and nonzero.",
-          discipline:
-            "A filter that selects or groups Specs by kind or section; it is not a phase to pass through.",
           projection:
             "A pure, disposable, regenerable function of the graph that produces a consumer artifact without becoming a second source of truth.",
+          "diagnostic publication posture":
+            "After extraction succeeds, a projection publishes its honestly labelled graph view even when validation reports errors, and returns the validation exit code so findings remain both visible and nonzero. Publication failures remain separate: an unsafe output parent refuses writes and cleanup through it; Design Review, Mermaid and Gherkin publishers refuse their whole page set on a case-insensitive page-path collision, name both ids and paths, remove stale roots only through safe parents, and exit 1. Renderers retain their page names and bytes.",
+          "curated graph":
+            "The part of the one derived graph that carries declared intent and anchored bindings, kept sparse by curation; the impact graph's inferred structure remains distinct.",
           reader:
             "The thin typed front door that decodes graph joins and taxonomy once, returns composable data, and persists nothing.",
+          curation:
+            "The deliberate difference between the sparse curated graph and the exhaustive code-structure surface `spec:consumers.impact-graph` designs; it is not drift.",
+          discipline:
+            "A filter that selects or groups Specs by kind or section; it is not a phase to pass through.",
         },
       },
     },
@@ -320,6 +332,8 @@ export const consumersSpecs = [
           "An open question that carries a key opens with the key as inline code, `#<key>`, before its text.",
           "A Spec page lists the code units that realize the Spec and, apart, the units that reference it, each with its file and line, its role and, for a component, its layer and context; a reference confers no implementation binding.",
           "The renderer reads the reader and returns pages; writing them is the caller's job.",
+          "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
+          "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
         ],
         exampleSpace: {
           given: [
@@ -339,6 +353,8 @@ export const consumersSpecs = [
           fieldEscaping: "rules[6]",
           openSectionList: "rules[7]",
           inlineCode: "rules[8]",
+          portablePublication: "rules[12]",
+          safeCleanup: "rules[13]",
         },
       },
       ui: {
@@ -713,10 +729,12 @@ export const consumersSpecs = [
         rules: [
           "A view run rewrites the view wholesale: no page written by an earlier run survives a later one, so a Spec that left the corpus leaves no page behind.",
           "Pages are written to a temporary sibling of the view directory, the previous directory is removed, and the temporary is renamed into place — one rename, so no half-written view is ever readable and no temporary survives a completed run.",
-          "A run that cannot produce a current view removes the stale one instead of leaving it readable as current: an absent view is honest, a stale view is not.",
+          "A run that cannot produce a current view removes the stale one when its output parent remains safe instead of leaving it readable as current: an absent view is honest, a stale view is not.",
           "Before extraction, the shared build removes `generated/design-review/`, `generated/census/`, `generated/mermaid/` and `generated/gherkin/`, each with its temporary sibling, so a run that fails before rendering leaves no view behind; a removal failure refuses the build before extraction. Every command that enters this build, including validate and its watch runs and every publisher, has this invalidation effect, so a sibling root the command does not publish stays absent until a later publication. The Studio's root is removed beside these four, as `spec:consumers.spec-studio.publisher#rule.buildInvalidates` states.",
           "Under `--check-clean` the view is rendered twice from the same graph and the run refuses when the two renders diverge, removing the view it could not certify.",
-          "Findings never withhold the view. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.",
+          "Validation findings never withhold the view; publication refusals remain separate. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.",
+          "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
+          "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
         ],
         exampleSpace: {
           given: [
@@ -734,6 +752,8 @@ export const consumersSpecs = [
         },
         ruleKeys: {
           buildInvalidates: "rules[3]",
+          portablePublication: "rules[6]",
+          safeCleanup: "rules[7]",
         },
       },
     },
