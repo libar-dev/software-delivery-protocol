@@ -6,6 +6,7 @@ import type {
   VerifierBinding,
 } from "../reader/reader.js";
 import type { Finding } from "../validate/contracts.js";
+import { FLOOR_NOT_EVALUATED_LABEL } from "./floor-not-evaluated.js";
 import { escapeRenderedField } from "./owned-prose.js";
 import {
   pageHref,
@@ -24,6 +25,11 @@ import {
  */
 
 export function renderReadiness(context: SpecContext): readonly string[] {
+  if (context.floorNotEvaluated !== undefined) {
+    // No floor is evaluated over an unratified kind or altitude: nothing is reached or unmet.
+    return [`**Readiness:** stated \`${context.statedReadiness}\` · ${FLOOR_NOT_EVALUATED_LABEL}`];
+  }
+
   const derived = context.derivedReadiness;
   const lines = [
     `**Readiness:** stated \`${context.statedReadiness}\` · structural floor reached: ${

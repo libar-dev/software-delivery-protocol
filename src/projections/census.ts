@@ -10,6 +10,7 @@ import {
 import type { Reader, SpecSummary } from "../reader/reader.js";
 import type { Finding } from "../validate/contracts.js";
 import { renderDiagnosticBanner } from "./diagnostic-banner.js";
+import { FLOOR_NOT_EVALUATED_LABEL } from "./floor-not-evaluated.js";
 import { escapeRenderedField } from "./owned-prose.js";
 
 export interface CensusPage {
@@ -84,7 +85,11 @@ function renderTaxonomy(
 }
 
 function renderDerivedReadiness(specs: readonly SpecSummary[]): readonly string[] {
-  const observed = specs.flatMap((spec) =>
+  // A Spec with an unratified kind or altitude has no floor evaluated, so it has reached no rung
+  // and failed none: it counts on its own row, present only when such a Spec exists.
+  const evaluated = specs.filter((spec) => spec.floorNotEvaluated === undefined);
+  const notEvaluated = specs.length - evaluated.length;
+  const observed = evaluated.flatMap((spec) =>
     spec.derivedReadiness === undefined ? [] : [spec.derivedReadiness],
   );
 
@@ -94,7 +99,8 @@ function renderDerivedReadiness(specs: readonly SpecSummary[]): readonly string[
     "| Value | Count |",
     "| --- | ---: |",
     ...taxonomyRows(SPEC_READINESS, observed),
-    `| not structurally reached | ${String(specs.filter((spec) => spec.derivedReadiness === undefined).length)} |`,
+    `| not structurally reached | ${String(evaluated.filter((spec) => spec.derivedReadiness === undefined).length)} |`,
+    ...(notEvaluated === 0 ? [] : [`| ${FLOOR_NOT_EVALUATED_LABEL} | ${String(notEvaluated)} |`]),
     "",
   ];
 }

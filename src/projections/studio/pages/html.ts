@@ -55,6 +55,15 @@ export const badge = (rung?: string): string =>
   rung === undefined
     ? "stated rung not recorded"
     : `<span class="badge rung-${escape(rung)}">${escape(rung)}</span>`;
+/**
+ * The floor reached in words: the derived rung, `none` when even `idea` is unmet, and
+ * `not evaluated` when the reader evaluated no floor over an unratified kind or altitude.
+ */
+export const floorWords = (spec: {
+  readonly derivedReadiness?: string;
+  readonly floorNotEvaluated?: readonly string[];
+}): string =>
+  spec.floorNotEvaluated === undefined ? (spec.derivedReadiness ?? "none") : "not evaluated";
 export const rungLine = (stated?: string, floor?: string): string =>
   `${badge(stated)} <span class="floor">floor ${escape(floor ?? "none")}</span>`;
 export const list = (rows: readonly string[], className = "plain-list"): string =>

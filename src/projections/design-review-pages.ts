@@ -7,6 +7,7 @@ import type {
 } from "../reader/reader.js";
 import { escapeRenderedField, renderNarrative } from "./owned-prose.js";
 import { renderDiagnosticBanner } from "./diagnostic-banner.js";
+import { floorReachedCell } from "./floor-not-evaluated.js";
 import {
   renderBoundarySection,
   renderCodeSection,
@@ -101,7 +102,7 @@ function renderMemberRow(member: PackMemberSummary, number: number, page: string
     member.specKind ?? "—",
     member.altitude ?? "—",
     member.statedReadiness ?? "—",
-    member.derivedReadiness ?? "none",
+    floorReachedCell(member),
     renderStatedNextRungCell(member),
     String(design?.entries ?? 0),
     String(design?.declarations ?? 0),
@@ -227,7 +228,7 @@ export function renderIndexPage(reader: Reader, specs: readonly SpecSummary[]): 
     const present = (fact: "implemented" | "has-verifier"): string =>
       spec.deliveryFacts.includes(fact) ? "present" : "none";
     lines.push(
-      `| ${link} ${tableCell(spec.title ?? "")} | ${spec.specKind} | ${spec.altitude} | ${spec.statedReadiness} | ${spec.derivedReadiness ?? "none"} | ${present("implemented")} | ${present("has-verifier")} |`,
+      `| ${link} ${tableCell(spec.title ?? "")} | ${spec.specKind} | ${spec.altitude} | ${spec.statedReadiness} | ${floorReachedCell(spec)} | ${present("implemented")} | ${present("has-verifier")} |`,
     );
   }
 

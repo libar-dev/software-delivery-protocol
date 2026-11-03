@@ -280,7 +280,7 @@ const alarms = g
     return {
       id: spec.id,
       statedReadiness: spec.statedReadiness,
-      floorReached: spec.derivedReadiness ?? "none",
+      floorReached: spec.floorNotEvaluated === undefined ? spec.derivedReadiness ?? "none" : "not evaluated",
       firstUnmetClause: unmet.length === 0 ? null : unmet[0].clauseId,
       implementationBindings: context === undefined ? 0 : context.implementations.length,
     };
@@ -290,7 +290,8 @@ const alarms = g
 return { total: alarms.length, alarms };
 ```
 
-`floorReached` is derived readiness — the highest rung whose floor clauses pass. A hit with no
+`floorReached` is derived readiness — the highest rung whose floor clauses pass, or
+`"not evaluated"` for a Spec whose kind or altitude is unratified. A hit with no
 unmet clause is the cheap case: the structure is already there and the author has not stated the
 rung. A hit *with* an unmet clause is the expensive one.
 
@@ -339,7 +340,7 @@ return {
   kind: context.specKind,
   altitude: context.altitude,
   statedReadiness: context.statedReadiness,
-  floorReached: context.derivedReadiness ?? "none",
+  floorReached: context.floorNotEvaluated === undefined ? context.derivedReadiness ?? "none" : "not evaluated",
   unmetFloorClauses: context.floorFailures.map((failure) => failure.clauseId),
   sections: context.sections ?? {},
   designColumns: context.designColumns,
@@ -560,7 +561,7 @@ const rank = (rung) => (rung === undefined ? -1 : rungs.indexOf(rung));
 
 return g
   .specs()
-  .filter((spec) => rank(spec.derivedReadiness) < rank(spec.statedReadiness))
+  .filter((spec) => spec.floorNotEvaluated === undefined && rank(spec.derivedReadiness) < rank(spec.statedReadiness))
   .map((spec) => {
     const context = g.specContext(spec.id);
     const unmet = context === undefined ? [] : context.floorFailures;
@@ -579,7 +580,10 @@ An empty array is the healthy answer and the expected one on a green corpus: the
 already a check, so a divergence here is also a finding in recipe 8. A non-empty answer means an
 author stated a rung the structure has not reached — repair the structure or restate the rung, and
 never the other way round. Divergence in the *other* direction — the floor reached standing above
-the stated rung — is information, not a problem: a floor is a floor, never a quota to fill.
+the stated rung — is information, not a problem: a floor is a floor, never a quota to fill. A Spec
+whose kind or altitude is unratified is left out: no floor is evaluated over it, so the recipe
+draws no readiness conclusion, and its descriptor conformance error is in the report recipe 8
+counts.
 
 ## 8. Orphans and gaps
 
@@ -639,6 +643,11 @@ if (context === undefined) {
   return { id, found: false };
 }
 
+if (context.floorNotEvaluated !== undefined) {
+  return { id, found: true, statedReadiness: context.statedReadiness, floorReached: "not evaluated", aboveStated: null,
+    aboveFloor: null, currentFloorFailures: null, firstUnmetClause: null, promotionRequiresHumanStatement: true };
+}
+
 const rungs = ["idea", "scoped", "defined", "ready"];
 const reached = context.derivedReadiness ?? "none";
 const reachedIndex = reached === "none" ? -1 : rungs.indexOf(reached);
@@ -674,7 +683,10 @@ An empty `currentFloorFailures` list says the stated rung is honest. It does not
 rung, and `floorReached` above the stated rung is information rather than an automatic edit.
 `aboveStated` reports the rung above the stated rung; `aboveFloor` reports the rung above the
 floor reached. Each carries its unmet clauses and first unmet clause, with `rung: null` at ready.
-A typed-dependency failure lists its `targets`; neither answer confers a rung.
+A typed-dependency failure lists its `targets`; neither answer confers a rung. A Spec whose kind or
+altitude is unratified answers `floorReached: "not evaluated"`, with `aboveStated`, `aboveFloor`,
+`currentFloorFailures` and `firstUnmetClause` null: no floor is evaluated over it, so nothing
+passes or fails.
 
 ## 10. Declared versus enabled verifiers
 
@@ -733,7 +745,7 @@ for (const spec of lower) {
   byFamily[family].push({
     id: spec.id,
     statedReadiness: spec.statedReadiness,
-    floorReached: spec.derivedReadiness ?? "none",
+    floorReached: spec.floorNotEvaluated === undefined ? spec.derivedReadiness ?? "none" : "not evaluated",
     statedNextRung: context?.statedNextRung ?? null,
     nextUnmetClause: context?.statedNextRungFailures[0]?.clauseId ?? null,
   });
@@ -742,8 +754,11 @@ for (const spec of lower) {
 return { total: lower.length, byFamily };
 ```
 
-`statedNextRung` is the rung above the author's statement. `nextUnmetClause: null` means nothing
-blocks that rung. The author still decides whether to state it; the recipe never promotes a Spec.
+`statedNextRung` is the rung above the author's statement. When it names a rung,
+`nextUnmetClause: null` means nothing blocks that rung. The author still decides whether to state
+it; the recipe never promotes a Spec. A Spec whose kind or altitude is unratified reads
+`floorReached: "not evaluated"` with `statedNextRung` and `nextUnmetClause` null: no floor is
+evaluated over it.
 
 ## 12. Component membership
 
@@ -1543,7 +1558,7 @@ const footing = context.relationsOut
       resolved: end.resolved,
       ...(end.reason === undefined ? {} : { reason: end.reason }),
       statedReadiness: target?.statedReadiness ?? null,
-      floorReached: target === undefined ? null : (target.derivedReadiness ?? "none"),
+      floorReached: target === undefined ? null : target.floorNotEvaluated === undefined ? target.derivedReadiness ?? "none" : "not evaluated",
     };
   })
   .sort(
@@ -1551,12 +1566,13 @@ const footing = context.relationsOut
       types.indexOf(left.type) - types.indexOf(right.type) || compare(left.id, right.id),
   );
 const count = (key, value) => footing.filter((row) => row[key] === value).length;
+const notEvaluated = count("floorReached", "not evaluated");
 
 return {
   id,
   found: true,
   statedReadiness: context.statedReadiness,
-  floorReached: context.derivedReadiness ?? "none",
+  floorReached: context.floorNotEvaluated === undefined ? context.derivedReadiness ?? "none" : "not evaluated",
   totals: {
     relations: footing.length,
     byType: Object.fromEntries(types.map((type) => [type, count("type", type)])),
@@ -1567,6 +1583,7 @@ return {
     ]),
     byFloorReached: Object.fromEntries([
       ...[...rungs, "none"].map((rung) => [rung, count("floorReached", rung)]),
+      ...(notEvaluated === 0 ? [] : [["not evaluated", notEvaluated]]),
     ]),
   },
   footing,
@@ -1577,7 +1594,9 @@ return {
 `constrainedBy`, or `decidedBy`, in that order and then by target id, with `reason` when the
 relation states one. The reach is one hop; run
 the recipe on a target to see what that target rests on. `floorReached` is the target's derived
-readiness, read beside the rung its author stated. A target that does not resolve keeps its row
+readiness, read beside the rung its author stated; `not evaluated` marks a target whose kind or
+altitude is unratified, counted under `totals.byFloorReached["not evaluated"]`, a key present
+only when such a target exists. A target that does not resolve keeps its row
 with `resolved: false` and null readiness, and counts under `totals.byStatedReadiness.unresolved`.
 Resolved targets that are not Specs have null readiness and count under
 `totals.byStatedReadiness.nonSpec`. The recipe reports readiness and applies no threshold: which rung a target must state before this
@@ -2459,7 +2478,7 @@ const members = pack.members.map((member) => {
     title: member.title ?? null,
     specKind: member.specKind,
     statedReadiness: member.statedReadiness,
-    floorReached: member.derivedReadiness ?? "none",
+    floorReached: member.floorNotEvaluated === undefined ? member.derivedReadiness ?? "none" : "not evaluated",
     statedNextRung: member.statedNextRung ?? null,
     statedNextRungFailures: member.statedNextRungFailures.map((failure) => ({
       clauseId: failure.clauseId,
@@ -2568,8 +2587,9 @@ lists keep ids per direction, and `leftOut` names the omitted details. Selecting
 `detail` keeps those full rows beside the summaries and reports unknown ids in `diagnostics`.
 Totals always count the whole Pack. With `detail: true`, the body pre-shapes the Pack design the reader assembles on the Pack context and computes nothing
 of its own. Members keep the manifest's order. Each resolved member carries its stated rung, the
-floor reached (`"none"` when no rung derives), and its stated next rung, the rung above the stated
-one, `null` at `ready`. `statedNextRungFailures` lists the floor clauses that hold the member below
+floor reached (`"none"` when no rung derives, `"not evaluated"` when its kind or altitude is
+unratified), and its stated next rung, the rung above the stated one, `null` at `ready` and when
+no floor is evaluated. `statedNextRungFailures` lists the floor clauses that hold the member below
 that rung, each with its `targets` when it names dependencies. An empty list beside the stated next rung
 means the floor already holds that rung: the rung waits for its author, and
 `totals.waitingForAuthor` counts those members. It is never a promotion. Promotion preflight
@@ -2901,7 +2921,7 @@ const rows = backlog.map((spec) => {
     id: spec.id,
     specKind: spec.specKind,
     altitude: spec.altitude,
-    floorReached: spec.derivedReadiness ?? "none",
+    floorReached: spec.floorNotEvaluated === undefined ? spec.derivedReadiness ?? "none" : "not evaluated",
     statedNextRungFailures: context.statedNextRungFailures.map((failure) => failure.clauseId),
     design: {
       entries: context.designColumns.entries,
@@ -3369,7 +3389,7 @@ const members = ids.map((id) => {
     const target = summaries.get(end.otherId);
     return { type: end.type, id: end.otherId, claim: end.claim, resolved: end.resolved,
       ...(end.reason === undefined ? {} : { reason: end.reason }),
-      statedReadiness: target?.statedReadiness ?? null, floorReached: target === undefined ? null : target.derivedReadiness ?? "none" };
+      statedReadiness: target?.statedReadiness ?? null, floorReached: target === undefined ? null : target.floorNotEvaluated === undefined ? target.derivedReadiness ?? "none" : "not evaluated" };
   }).sort((a, b) => types.indexOf(a.type) - types.indexOf(b.type) || byCodeUnit(a.id, b.id));
   // One copy: each pinned value stays in sections.design; `declarations` names its key.
   const declarations = Object.entries(sections.design ?? {}).flatMap(([key, value]) =>
@@ -3383,7 +3403,7 @@ const members = ids.map((id) => {
       steps: member ? null : JSON.parse(JSON.stringify(example.sections?.behavior?.examples ?? [])) };
   });
   return { id, file: context.file, title: context.title ?? null, specKind: context.specKind, altitude: context.altitude,
-    statedReadiness: context.statedReadiness, floorReached: context.derivedReadiness ?? "none", statedNextRung: context.statedNextRung ?? null,
+    statedReadiness: context.statedReadiness, floorReached: context.floorNotEvaluated === undefined ? context.derivedReadiness ?? "none" : "not evaluated", statedNextRung: context.statedNextRung ?? null,
     holds: context.statedNextRungFailures, narrative: context.narrative ?? null, sections, questions, footing, declarations, examples,
     design: { entries: context.designColumns.entries, declarations: context.designColumns.declarations,
       openQuestions: questions.length, blockingQuestions: context.designColumns.blockingQuestions },
@@ -5197,6 +5217,8 @@ or false) keeps every total, each epic's title, direct epic parents and rollup, 
 cycles and damage. `leftOut` names what `detail: true` adds: node rows, edges, descendant ids
 and unreached roots. A parameter refusal returns `diagnostics` without a map; unknown names
 return `unknownParams` and `accepts`. Inspect `damage` and `cycles` on a returned map.
+Each count keeps every ratified value at zero. A value outside them, such as an unratified kind
+or altitude or the floor `not evaluated`, gets its own key only when a counted Spec carries it.
 The contract is `spec:consumers.capability-map#design.mapRecipe` through its keyed answer entries.
 
 ```js
@@ -5256,7 +5278,7 @@ const nodes = specs.filter((spec) => selected.has(spec.id)).map((spec) => ({
   specKind: spec.specKind,
   altitude: spec.altitude,
   statedReadiness: spec.statedReadiness,
-  floorReached: spec.derivedReadiness ?? "none",
+  floorReached: spec.floorNotEvaluated === undefined ? spec.derivedReadiness ?? "none" : "not evaluated",
   deliveryFacts: spec.deliveryFacts,
   questions: g.specContext(spec.id).designColumns.openQuestions.map((question) => ({
     index: question.index,
@@ -5270,13 +5292,22 @@ const nodes = specs.filter((spec) => selected.has(spec.id)).map((spec) => ({
 }));
 const nodeById = new Map(nodes.map((node) => [node.id, node]));
 const count = (ids) => {
-  const zeroes = (keys) => Object.fromEntries(keys.map((key) => [key, 0]));
+  // Ratified values keep a key at zero. Any other value, such as an unratified kind or altitude or
+  // a floor not evaluated, gets its own key when a counted Spec carries it.
+  const tally = (keys, field) => {
+    const tallies = new Map(keys.map((key) => [key, 0]));
+    for (const id of ids) {
+      const value = nodeById.get(id)[field];
+      tallies.set(value, (tallies.get(value) ?? 0) + 1);
+    }
+    return Object.fromEntries(tallies);
+  };
   const counts = {
     specs: ids.length,
-    byStatedReadiness: zeroes(["idea", "scoped", "defined", "ready"]),
-    byFloorReached: zeroes(["none", "idea", "scoped", "defined", "ready"]),
-    byKind: zeroes(["behavior", "workflow", "example", "rule", "constraint", "model", "decision", "contract"]),
-    byAltitude: zeroes(["epic", "feature", "story"]),
+    byStatedReadiness: tally(["idea", "scoped", "defined", "ready"], "statedReadiness"),
+    byFloorReached: tally(["none", "idea", "scoped", "defined", "ready"], "floorReached"),
+    byKind: tally(["behavior", "workflow", "example", "rule", "constraint", "model", "decision", "contract"], "specKind"),
+    byAltitude: tally(["epic", "feature", "story"], "altitude"),
     withImplementationBinding: 0,
     withVerifierBinding: 0,
     openQuestions: 0,
@@ -5284,10 +5315,6 @@ const count = (ids) => {
   };
   for (const id of ids) {
     const node = nodeById.get(id);
-    counts.byStatedReadiness[node.statedReadiness]++;
-    counts.byFloorReached[node.floorReached]++;
-    counts.byKind[node.specKind]++;
-    counts.byAltitude[node.altitude]++;
     counts.withImplementationBinding += Number(node.deliveryFacts.includes("implemented"));
     counts.withVerifierBinding += Number(node.deliveryFacts.includes("has-verifier"));
     counts.openQuestions += node.questions.length;
@@ -5440,6 +5467,7 @@ const needOf = (spec) => spec.statedReadiness !== "ready" ? (spec.derivedReadine
 const open = (need) => need === "to design" || need === "to state" || need === "to build";
 const waits = (spec) => rungs.indexOf(spec.derivedReadiness) > rungs.indexOf(spec.statedReadiness);
 const drifts = (spec) => spec.statedReadiness !== "ready" && spec.deliveryFacts.includes("implemented");
+const floorOf = (spec) => spec.floorNotEvaluated === undefined ? spec.derivedReadiness ?? null : "not evaluated";
 const holds = (spec) => spec.statedNextRungFailures.map((failure) => ({ clause: failure.clauseId, targets: (failure.targets ?? []).map((target) => target.id) }));
 const questionRow = (spec, question) => ({ address: question.key === undefined ? null : `${spec.id}#question.${question.key}`, spec: spec.id,
   index: question.index, question: question.question, blocking: question.blocking, decider: question.decider ?? null, provisional: question.provisional ?? null });
@@ -5522,12 +5550,12 @@ const roadmaps = selected.map((pack) => {
     const byIdThenVia = (a, b) => compare(a.id, b.id) || compare(a.via, b.via);
     entries.push({
       place, id, title: spec.title ?? null, specKind: spec.specKind, altitude: spec.altitude, need,
-      statedReadiness: spec.statedReadiness, floorReached: spec.derivedReadiness ?? null,
+      statedReadiness: spec.statedReadiness, floorReached: floorOf(spec),
       statedNextRung: spec.statedNextRung ?? null, holdsNextRung: holds(spec),
       work: { specs: work.length, toDesign: needs.filter((value) => value === "to design").length, toState: needs.filter((value) => value === "to state").length, toBuild: needs.filter((value) => value === "to build").length,
         built: needs.filter((value) => value === "built").length, drift: work.filter((member) => drifts(contexts.get(member))).length },
       workRows: work.map((member) => { const context = contexts.get(member); return { id: member, need: needOf(context), statedReadiness: context.statedReadiness,
-        floorReached: context.derivedReadiness ?? null, statedNextRung: context.statedNextRung ?? null, holdsNextRung: holds(context), drift: drifts(context) }; }),
+        floorReached: floorOf(context), statedNextRung: context.statedNextRung ?? null, holdsNextRung: holds(context), drift: drifts(context) }; }),
       buildNow: work.filter((member) => needOf(contexts.get(member)) === "to build"),
       blockingQuestions, decisions,
       restsOn: [...restsOn.values()].sort(byIdThenVia), restedOnBy: [...restedOnBy.values()].sort(byIdThenVia),
@@ -5657,7 +5685,6 @@ if (diagnostics.length) return { diagnostics };
 const inSlice = new Set(ids);
 const position = new Map(ids.map((id, index) => [id, index]));
 const context = new Map(ids.map((id) => [id, g.specContext(id)]));
-const rungs = ["idea", "scoped", "defined", "ready"];
 const typed = ["refines", "dependsOn", "constrainedBy", "decidedBy"];
 
 // Keep the unresolvable outgoing ends apart from the resolved boundary.
@@ -5789,8 +5816,7 @@ const questionsOf = new Map(questionRegister.specs.map((row) => [row.id, row.que
 // Member rows.
 const members = ids.map((id) => {
   const spec = context.get(id);
-  const at = rungs.indexOf(spec.statedReadiness);
-  const statedNextRung = at >= 0 && at < rungs.length - 1 ? rungs[at + 1] : null;
+  const statedNextRung = spec.statedNextRung ?? null;
   const components = new Set();
   for (const unit of [...spec.implementations, ...spec.references]) {
     const componentId = componentOfUnit(unit.codeId);
@@ -5804,7 +5830,7 @@ const members = ids.map((id) => {
     specKind: spec.specKind,
     altitude: spec.altitude,
     statedReadiness: spec.statedReadiness,
-    floorReached: spec.derivedReadiness ?? "none",
+    floorReached: spec.floorNotEvaluated === undefined ? spec.derivedReadiness ?? "none" : "not evaluated",
     statedNextRung,
     holds: spec.statedNextRungFailures.map((failure) => ({ clauseId: failure.clauseId, description: failure.description,
       targets: (failure.targets ?? []).map((target) => ({ type: target.type, id: target.id, statedReadiness: target.statedReadiness ?? null })) })),
@@ -5860,7 +5886,7 @@ const boundaryRows = (direction) => [...directions[direction]].sort(([a], [b]) =
     title: other.title ?? null,
     specKind: other.specKind,
     statedReadiness: other.statedReadiness,
-    floorReached: other.derivedReadiness ?? "none",
+    floorReached: other.floorNotEvaluated === undefined ? other.derivedReadiness ?? "none" : "not evaluated",
     implemented: other.deliveryFacts.includes("implemented"),
     via: [...byType].sort(([a], [b]) => relationOrder.indexOf(a) - relationOrder.indexOf(b))
       .map(([type, list]) => { const reasons = list.flatMap((member) => {
@@ -5993,7 +6019,7 @@ const decisions = [...decisionIds].sort(compare).map((decisionId) => {
     id: decisionId,
     title: spec.title ?? null,
     statedReadiness: spec.statedReadiness,
-    floorReached: spec.derivedReadiness ?? "none",
+    floorReached: spec.floorNotEvaluated === undefined ? spec.derivedReadiness ?? "none" : "not evaluated",
     member: inSlice.has(decisionId),
     shapes: (row?.shapes ?? []).filter((id) => inSlice.has(id)).sort((a, b) => position.get(a) - position.get(b)),
     refines: row?.refines ?? [],
@@ -6208,7 +6234,10 @@ else {
     // Put the entry before its descendants, then truncate.
     const parts = entry.workRows.filter((row) => row.need === "to design");
     const shown = [...parts.filter((row) => row.id === entry.id), ...parts.filter((row) => row.id !== entry.id)].slice(0, 3);
-    for (const row of shown) next.push(`${row.id === entry.id ? "itself" : span(row.id)} ${span(row.statedReadiness)} → ${span(row.statedNextRung)}, ${holdText(row.holdsNextRung)}`);
+    for (const row of shown) {
+      const who = `${row.id === entry.id ? "itself" : span(row.id)} ${span(row.statedReadiness)}`;
+      next.push(row.floorReached === "not evaluated" ? `${who}, floor not evaluated` : `${who} → ${span(row.statedNextRung)}, ${holdText(row.holdsNextRung)}`);
+    }
     if (parts.length > shown.length) next.push(`and ${parts.length - shown.length} more parts to design`);
     const blocked = entry.blockingQuestions.map((question) => question.address === null ? span(question.spec) : span(question.address));
     if (blocked.length > 0) next.push(`blocked by ${blocked.join(", ")}`);

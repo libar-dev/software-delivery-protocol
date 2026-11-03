@@ -1,12 +1,13 @@
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
-import { SPEC_ALTITUDES, SPEC_KINDS, SPEC_READINESS } from "../model/descriptors.js";
+import { SPEC_READINESS } from "../model/descriptors.js";
 import type { SpecKind, SpecReadiness } from "../model/descriptors.js";
 import type { SpecSectionName } from "../model/sections.js";
 import { exampleMatchesParentVocabulary } from "../graph/example-space.js";
 import { authoredEdgeTypes } from "../graph/schema.js";
 import type { GraphEdge, PrimitiveNode } from "../graph/schema.js";
 import { hasUnboundSlot } from "../notation/slots.js";
+import { unratifiedFloorDescriptors } from "./floor-descriptors.js";
 import type { GraphIndex } from "./graph-index.js";
 
 /**
@@ -577,8 +578,6 @@ export interface ReadinessFloorFailure {
 /** A clause row of the table, read with its literal id. */
 type ReadinessTableClause = ReadinessClause & { readonly id: ReadinessClauseId };
 
-const ratifiedAltitudes: ReadonlySet<string> = new Set(SPEC_ALTITUDES);
-const ratifiedKinds: ReadonlySet<string> = new Set(SPEC_KINDS);
 const ratifiedReadiness: ReadonlySet<string> = new Set(SPEC_READINESS);
 
 /**
@@ -628,11 +627,7 @@ export function evaluateReadinessFloor(
   // Foreign graph data can carry unratified strings in the typed descriptor slots; those are the
   // descriptor conformance errors (`spec:validation.claim-separation` — validateGraph fails closed), and the
   // evaluator stays total: over an unratified kind, altitude or target rung it evaluates no clauses.
-  if (
-    !ratifiedKinds.has(node.specKind) ||
-    !ratifiedAltitudes.has(node.altitude) ||
-    !ratifiedReadiness.has(target)
-  ) {
+  if (unratifiedFloorDescriptors(node).length > 0 || !ratifiedReadiness.has(target)) {
     return [];
   }
 
@@ -666,14 +661,15 @@ export function evaluateReadinessFloor(
  * floor (MD-13). The subject's stated rung does not limit which floors are evaluated. The target
  * clause reads each target's stated readiness, including when the subject is its own target.
  * Returns `undefined` when even the `idea`
- * clauses fail. Total over foreign data: no rung derives over an unratified kind or altitude —
- * the descriptor conformance error owns that finding, exactly as in
+ * clauses fail. Total over foreign data: no rung derives over an unratified kind or altitude, so
+ * there `undefined` means not evaluated, never below `idea`; the reader names that state
+ * (`floorNotEvaluated`) and the descriptor conformance error owns the finding, exactly as in
  * the evaluator. The divergence reading: derived *below* stated is the honesty signal the floor
  * check fails on; derived at-or-above stated is ordinary information — the floor is never a
  * quota, and a spec may honestly state less than it clears.
  */
 export function deriveReadiness(node: PrimitiveNode, index: GraphIndex): SpecReadiness | undefined {
-  if (!ratifiedKinds.has(node.specKind) || !ratifiedAltitudes.has(node.altitude)) {
+  if (unratifiedFloorDescriptors(node).length > 0) {
     return undefined;
   }
 
