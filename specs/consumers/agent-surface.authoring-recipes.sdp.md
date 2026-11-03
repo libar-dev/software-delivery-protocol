@@ -12,6 +12,6 @@ relations:
 - outcome: Answer recurring maturity and verifier questions by scripting the graph rather than adding query verbs.
 
 ## Behavior
-- rule: Promotion preflight reports the Spec's stated rung, floor reached, current floor failures, and both next rungs as `aboveStated` and `aboveFloor`, each with `rung`, `failures` and `firstUnmetClause`; `rung` is null at `ready`, and a typed-dependency failure carries its targets.
+- rule: Promotion preflight reports the Spec's stated rung, floor reached, current floor failures, and both next rungs as `aboveStated` and `aboveFloor`, each with `rung`, `failures` and `firstUnmetClause`; `rung` is null at `ready`, and a typed-dependency failure carries its targets. A Spec whose floor is not evaluated reports its floor reached as `not evaluated` and null for both next rungs and its current floor failures.
 - rule: Declared versus enabled verifiers keeps declared example relations distinct from enabled verifier bindings.
-- rule: The lower ladder groups non-ready Specs by family and reports stated readiness, floor reached, stated next rung and its first unmet clause; null means nothing blocks that rung, never automatic promotion.
+- rule: The lower ladder groups non-ready Specs by family and reports stated readiness, floor reached, stated next rung and its first unmet clause; beside a named next rung, a null clause means nothing blocks that rung, never automatic promotion. A Spec whose floor is not evaluated reports its floor reached as `not evaluated` with no next rung and no clause.

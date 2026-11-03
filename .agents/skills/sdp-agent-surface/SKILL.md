@@ -371,7 +371,8 @@ An empty list or a zero is an answer, and some read as more than they say:
   binding from source, `inferred` is machine-derived structure. Carry the claim into your answer.
 - **Do not treat stated readiness as derived readiness.** `statedReadiness` is the author's
   statement; `derivedReadiness` is the highest rung whose floor clauses pass. Report both when they
-  disagree.
+  disagree. A Spec carrying `floorNotEvaluated` has an unratified kind or altitude and no floor was
+  evaluated: report it as not evaluated, never as below `idea` or as a rung nothing blocks.
 - **Do not read narrowing from a field name.** Whether a refinement narrows a decision is that
   decision's own text or its relation's reason.
 - **Do not author a delivery fact or a derived edge.** They are computed; writing one by hand is an

@@ -36,6 +36,7 @@ import type { SpecSections } from "../model/sections.js";
 import type { Finding, ValidationReport } from "../validate/contracts.js";
 import { buildGraphIndex } from "../validate/graph-index.js";
 import type { GraphIndex } from "../validate/graph-index.js";
+import { unratifiedFloorDescriptors } from "../validate/floor-descriptors.js";
 import { deriveReadiness, evaluateReadinessFloor } from "../validate/readiness-floor.js";
 import type { ReadinessFloorFailure } from "../validate/readiness-floor.js";
 import { validateGraph } from "../validate/validators.js";
@@ -54,8 +55,21 @@ export interface SpecSummary {
   readonly altitude: SpecAltitude;
   /** The author's statement (the envelope's `readiness`) — stated, never "claimed". */
   readonly statedReadiness: SpecReadiness;
-  /** The highest structurally-cleared rung (`spec:validation.readiness-floor`); `undefined` when even `idea`'s clauses fail. */
+  /**
+   * The highest structurally-cleared rung (`spec:validation.readiness-floor`). `undefined` when
+   * even `idea`'s clauses fail, and also when no floor is evaluated: then `floorNotEvaluated` is
+   * present, and the absence means not evaluated, never below `idea`.
+   */
   readonly derivedReadiness?: SpecReadiness;
+  /**
+   * Present only when no readiness floor is evaluated over the Spec because its kind or altitude
+   * is unratified (`spec:validation.next-rung-floor`); it names those descriptors, `specKind`
+   * before `altitude`. Such a Spec has no derived readiness and no stated next rung, and its
+   * failure lists are empty because nothing was evaluated: a consumer reads it as not evaluated,
+   * never as below `idea` and never as a rung nothing blocks. Descriptor conformance reports the
+   * values (`spec:validation.claim-separation`).
+   */
+  readonly floorNotEvaluated?: readonly ("specKind" | "altitude")[];
   /** Recomputed by the one derivation rule — identical to the node's stated facts on extractor output, fail-closed otherwise. */
   readonly deliveryFacts: readonly DeliveryFactName[];
   readonly file: string;
@@ -157,14 +171,15 @@ export interface SpecContext extends SpecSummary {
   readonly sections?: SpecSections;
   /** Derived design counts and lists, shared with the Pack member's design. */
   readonly designColumns: PackMemberDesign;
+  /** The unmet clauses of the stated rung's floor; empty, and no pass, when `floorNotEvaluated`. */
   readonly floorFailures: readonly ReadinessFloorFailure[];
   /**
    * The unmet clauses of the rung above derived readiness (`idea` when no rung derives), by the
-   * same evaluator; empty when derived readiness is `ready`. A report, never a promotion
-   * (`spec:validation.next-rung-floor`).
+   * same evaluator; empty when derived readiness is `ready`, and when `floorNotEvaluated`, which
+   * has no floor's next rung. A report, never a promotion (`spec:validation.next-rung-floor`).
    */
   readonly nextRungFailures: readonly ReadinessFloorFailure[];
-  /** The rung above stated readiness; absent when the Spec states `ready`. */
+  /** The rung above stated readiness; absent when the Spec states `ready` or `floorNotEvaluated`. */
   readonly statedNextRung?: SpecReadiness;
   /** The unmet clauses at the stated next rung, empty when it passes or there is no next rung. */
   readonly statedNextRungFailures: readonly ReadinessFloorFailure[];
@@ -244,9 +259,11 @@ export interface PackMemberSummary {
   readonly altitude?: SpecAltitude;
   readonly statedReadiness?: SpecReadiness;
   readonly derivedReadiness?: SpecReadiness;
+  /** As on `SpecSummary`: present only when no readiness floor is evaluated over the member. */
+  readonly floorNotEvaluated?: readonly ("specKind" | "altitude")[];
   readonly deliveryFacts: readonly DeliveryFactName[];
   readonly file?: string;
-  /** The rung above the stated rung; absent when the member states `ready`. */
+  /** The rung above the stated rung; absent when the member states `ready` or `floorNotEvaluated`. */
   readonly statedNextRung?: SpecReadiness;
   /**
    * The floor's unmet clauses with the stated next rung as target, by the one evaluator. Empty
@@ -489,9 +506,16 @@ function keyedEntries(content: unknown): readonly (readonly [string, unknown])[]
   return Object.entries(asPlainRecord(content) ?? {}).filter(([key]) => key !== "description");
 }
 
-/** The rung above a stated rung; none above `ready`, and none for an unratified statement. */
-function statedNextRungOf(stated: SpecReadiness): SpecReadiness | undefined {
-  const position = SPEC_READINESS.indexOf(stated);
+/**
+ * The rung above a Spec's stated rung: none above `ready`, none for an unratified statement, and
+ * none when no floor is evaluated over the Spec, whose next rung has no unmet clauses to report.
+ */
+function statedNextRungOf(node: PrimitiveNode): SpecReadiness | undefined {
+  if (unratifiedFloorDescriptors(node).length > 0) {
+    return undefined;
+  }
+
+  const position = SPEC_READINESS.indexOf(node.readiness);
 
   return position < 0 ? undefined : SPEC_READINESS[position + 1];
 }
@@ -847,6 +871,7 @@ export function createReader(graph: GraphSchema, report?: ValidationReport): Rea
   const summarize = (node: PrimitiveNode): SpecSummary => {
     const derived = deriveReadiness(node, index);
     const displayLabel = kindDisplayLabelOf(node.specKind);
+    const unratified = unratifiedFloorDescriptors(node);
 
     return {
       id: node.id,
@@ -857,6 +882,7 @@ export function createReader(graph: GraphSchema, report?: ValidationReport): Rea
       altitude: node.altitude,
       statedReadiness: node.readiness,
       ...(derived === undefined ? {} : { derivedReadiness: derived }),
+      ...(unratified.length === 0 ? {} : { floorNotEvaluated: unratified }),
       deliveryFacts: factsOf(node.id),
       file: node.file,
       packs: packsOf(node.id),
@@ -929,12 +955,15 @@ export function createReader(graph: GraphSchema, report?: ValidationReport): Rea
 
     const summary = summarize(node);
     const exampleSpace = exampleSpaces.get(id);
+    // No floor is evaluated over an unratified kind or altitude, so it has no floor's next rung.
     const nextRung =
-      summary.derivedReadiness === undefined
-        ? SPEC_READINESS[0]
-        : SPEC_READINESS[SPEC_READINESS.indexOf(summary.derivedReadiness) + 1];
+      summary.floorNotEvaluated !== undefined
+        ? undefined
+        : summary.derivedReadiness === undefined
+          ? SPEC_READINESS[0]
+          : SPEC_READINESS[SPEC_READINESS.indexOf(summary.derivedReadiness) + 1];
 
-    const statedNextRung = statedNextRungOf(node.readiness);
+    const statedNextRung = statedNextRungOf(node);
 
     return {
       ...summary,
@@ -973,7 +1002,7 @@ export function createReader(graph: GraphSchema, report?: ValidationReport): Rea
       }
 
       const summary = summarize(member);
-      const statedNextRung = statedNextRungOf(member.readiness);
+      const statedNextRung = statedNextRungOf(member);
       const verifiers = verifierBindingsTo(member.id);
 
       return {
@@ -986,6 +1015,9 @@ export function createReader(graph: GraphSchema, report?: ValidationReport): Rea
         ...(summary.derivedReadiness === undefined
           ? {}
           : { derivedReadiness: summary.derivedReadiness }),
+        ...(summary.floorNotEvaluated === undefined
+          ? {}
+          : { floorNotEvaluated: summary.floorNotEvaluated }),
         deliveryFacts: summary.deliveryFacts,
         file: summary.file,
         ...(statedNextRung === undefined ? {} : { statedNextRung }),

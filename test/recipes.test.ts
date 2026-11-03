@@ -8470,3 +8470,152 @@ No entry is ready to build.
 `,
   });
 });
+
+// spec:validation.next-rung-floor#rule.notEvaluated
+// spec:consumers.agent-surface.answer-shapes#rule.floorNotEvaluated
+describe("a floor the reader does not evaluate", () => {
+  // A foreign producer's graph: the worked example with one unratified kind and two unratified
+  // altitudes. Carriers cannot state these values; only a graph handed to the reader can.
+  const example = extract({ root: join(repoRoot, "examples/checkout-v1") });
+  const unratified: Readonly<Record<string, Partial<Record<"specKind" | "altitude", string>>>> = {
+    "spec:orders.order-placement-flow": { altitude: "planet" },
+    "spec:orders.order-model": { specKind: "saga" },
+    "spec:orders.create-order": { altitude: "planet" },
+  };
+  const flagged = Object.keys(unratified);
+  const foreign: ExtractionResult = {
+    ...example,
+    graph: {
+      ...example.graph,
+      nodes: example.graph.nodes.map((node) =>
+        node.id in unratified ? ({ ...node, ...unratified[node.id] } as GraphNode) : node,
+      ),
+    },
+  };
+  const rowsFor = (rows: readonly unknown[]) =>
+    rows.map(asRecord).filter((row) => flagged.includes(stringAt(row, "id")));
+
+  it("is left out of readiness divergence rather than read as below idea", async () => {
+    // Each flagged Spec states a rung, so reading its absent derived rung as below idea would list it.
+    expect(asArray(await runRecipe(recipeByOrdinal(7), undefined, foreign))).toEqual([]);
+  });
+
+  it("answers promotion preflight as not evaluated, with no floor reading to pass or fail", async () => {
+    for (const id of flagged) {
+      const result = asRecord(await runRecipe(recipeByOrdinal(9), { spec: id }, foreign));
+      expect(Object.keys(result)).toEqual([
+        "id",
+        "found",
+        "statedReadiness",
+        "floorReached",
+        "aboveStated",
+        "aboveFloor",
+        "currentFloorFailures",
+        "firstUnmetClause",
+        "promotionRequiresHumanStatement",
+      ]);
+      expect(result).toMatchObject({
+        id,
+        found: true,
+        floorReached: "not evaluated",
+        aboveStated: null,
+        aboveFloor: null,
+        currentFloorFailures: null,
+        firstUnmetClause: null,
+        promotionRequiresHumanStatement: true,
+      });
+    }
+  });
+
+  it("labels the lower ladder and names no next rung nothing blocks", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(11), undefined, foreign));
+    const rows = rowsFor(asArray(asRecord(result.byFamily).orders));
+    expect(rows.map((row) => row.id).sort()).toEqual([...flagged].sort());
+    for (const row of rows) {
+      expect(row).toMatchObject({
+        floorReached: "not evaluated",
+        statedNextRung: null,
+        nextUnmetClause: null,
+      });
+    }
+  });
+
+  it("reads as not evaluated in every recipe row that reports the floor reached", async () => {
+    const floors = (rows: readonly unknown[]) =>
+      rowsFor(rows).map((row) => [row.id, row.floorReached]);
+    const notEvaluated = (...ids: string[]) => ids.map((id) => [id, "not evaluated"]);
+
+    const drift = asRecord(await runRecipe(recipeByOrdinal(2), undefined, foreign));
+    expect(floors(asArray(drift.alarms))).toEqual(notEvaluated("spec:orders.create-order"));
+    for (const id of flagged) {
+      const guarantees = asRecord(await runRecipe(recipeByOrdinal(3), { spec: id }, foreign));
+      expect(guarantees.floorReached).toBe("not evaluated");
+      const footing = asRecord(await runRecipe(recipeByOrdinal(21), { spec: id }, foreign));
+      expect(footing.floorReached).toBe("not evaluated");
+    }
+    const resting = asRecord(
+      await runRecipe(recipeByOrdinal(21), { spec: "spec:orders.order-placement-flow" }, foreign),
+    );
+    expect(floors(asArray(resting.footing))).toEqual(notEvaluated("spec:orders.create-order"));
+    const design = asRecord(
+      await runRecipe(recipeByOrdinal(29), { pack: "pack:checkout-v1", detail: true }, foreign),
+    );
+    const designRows = rowsFor(asArray(design.members));
+    expect(designRows).toHaveLength(flagged.length);
+    for (const row of designRows) {
+      expect(row).toMatchObject({
+        floorReached: "not evaluated",
+        statedNextRung: null,
+        statedNextRungFailures: [],
+      });
+    }
+    const backlog = asRecord(await runRecipe(recipeByOrdinal(33), undefined, foreign));
+    expect(floors(asArray(backlog.rows))).toEqual(notEvaluated("spec:orders.order-model"));
+    const bundle = asRecord(
+      await runRecipe(recipeByOrdinal(36), { specs: flagged, budget: 1_000_000 }, foreign),
+    );
+    for (const row of rowsFor(asArray(bundle.members))) {
+      expect(row).toMatchObject({ floorReached: "not evaluated", statedNextRung: null, holds: [] });
+    }
+    const map = asRecord(await runRecipe(recipeByOrdinal(52), { detail: true }, foreign));
+    expect(floors(asArray(map.nodes)).sort()).toEqual(notEvaluated(...flagged).sort());
+    const slice = asRecord(
+      await runRecipe(
+        recipeByOrdinal(54),
+        { pack: "pack:checkout-roadmap", detail: true },
+        foreign,
+      ),
+    );
+    for (const row of rowsFor(asArray(slice.members))) {
+      expect(row).toMatchObject({ floorReached: "not evaluated", statedNextRung: null, holds: [] });
+    }
+    expect(asRecord(slice.totals).waitingForAuthor).toBe(0);
+  });
+
+  it("puts the roadmap entries to design and renders their memo rows as not evaluated", async () => {
+    const params = { pack: "pack:checkout-roadmap" };
+    const answer = asRecord(await runRecipe(recipeByOrdinal(53), params, foreign));
+    const entries = asArray(asRecord(asArray(answer.roadmaps)[0]).entries).map(asRecord);
+    expect(
+      entries.map((row) => [
+        row.id,
+        row.need,
+        row.floorReached,
+        row.statedNextRung,
+        row.holdsNextRung,
+      ]),
+    ).toEqual([
+      ["spec:orders.order-placement-flow", "to design", "not evaluated", null, []],
+      ["spec:orders.order-model", "to design", "not evaluated", null, []],
+    ]);
+    const memo = stringAt(asRecord(await runRecipe(recipeByOrdinal(55), params, foreign)), "memo");
+    expect(memo).toContain(
+      "| 1 | Order placement flow `spec:orders.order-placement-flow` | itself `scoped`, floor not evaluated |",
+    );
+    expect(memo).toContain(
+      "| 2 | Order-management domain vocabulary `spec:orders.order-model` | itself `defined`, floor not evaluated |",
+    );
+    expect(memo).not.toContain("nothing holds it");
+    expect(memo).not.toContain("`null`");
+  });
+});

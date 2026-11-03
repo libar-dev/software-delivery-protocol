@@ -23,7 +23,10 @@ export function maturityMap(pack: PackContext): string {
       id: `${prefix}.cell.${stated}.${floor}`,
       members: pack.members.filter(
         (m) =>
-          m.resolved && m.statedReadiness === stated && (m.derivedReadiness ?? "none") === floor,
+          m.resolved &&
+          m.floorNotEvaluated === undefined &&
+          m.statedReadiness === stated &&
+          (m.derivedReadiness ?? "none") === floor,
       ),
     })),
   );
@@ -62,10 +65,12 @@ export function maturityMap(pack: PackContext): string {
   const lists = populated
     .map(
       (c) =>
-        `<details id="${escape(c.id)}"><summary>stated ${c.stated}, floor ${c.floor} · ${count(c.members.length, "member", "members", false)}</summary><ul>${c.members.map((m) => `<li><a href="#${escape(m.id)}">${codeSpans(m.title ?? m.id)}</a> · ${code(m.id)} · ${rungLine(m.statedReadiness, m.derivedReadiness)}</li>`).join("")}</ul></details>`,
+        `<details id="${escape(c.id)}"><summary>stated ${c.stated}, floor ${c.floor} · ${count(c.members.length, "member", "members", false)}</summary><ul>${c.members.map((m) => `<li><a href="#${escape(m.id)}">${codeSpans(m.title ?? m.id)}</a> · ${code(m.id)} · ${rungLine(m.statedReadiness, m.derivedReadiness ?? "none")}</li>`).join("")}</ul></details>`,
     )
     .join("");
   const unresolved = pack.members.filter((m) => !m.resolved);
+  // No floor is evaluated over an unratified kind or altitude, so no cell can place the member.
+  const notEvaluated = pack.members.filter((m) => m.resolved && m.floorNotEvaluated !== undefined);
   const sourceId = `${prefix}.source-text`;
   const source = [
     "block-beta",
@@ -86,5 +91,5 @@ export function maturityMap(pack: PackContext): string {
     ]),
     `  %% Accessible count table: ${prefix}.text`,
   ].join("\n");
-  return `<sdp-maturity-map pack-id="${escape(pack.id)}"><h2>Maturity map</h2>${sentence}${uniform ? `<details class="maturity-grid"><summary>Stated readiness by floor reached</summary>${grid}</details>` : grid}<details id="${escape(prefix)}.text"><summary>Maturity map as text</summary>${table}</details>${lists}${unresolved.length ? `<section><h3>Unresolved members</h3><ul>${unresolved.map((m) => `<li><a href="#${escape(m.id)}">${code(m.id)}</a></li>`).join("")}</ul></section>` : ""}<details id="${escape(prefix)}.source"><summary>Mermaid source</summary><p>Preferred syntax: block. Fixed categorical cells; membership appears in comments.</p><label for="${escape(sourceId)}">Mermaid source for maturity map</label><textarea readonly id="${escape(sourceId)}" rows="8">${escape(source)}</textarea><sdp-copy for="${escape(sourceId)}"></sdp-copy></details></sdp-maturity-map>`;
+  return `<sdp-maturity-map pack-id="${escape(pack.id)}"><h2>Maturity map</h2>${sentence}${uniform ? `<details class="maturity-grid"><summary>Stated readiness by floor reached</summary>${grid}</details>` : grid}<details id="${escape(prefix)}.text"><summary>Maturity map as text</summary>${table}</details>${lists}${unresolved.length ? `<section><h3>Unresolved members</h3><ul>${unresolved.map((m) => `<li><a href="#${escape(m.id)}">${code(m.id)}</a></li>`).join("")}</ul></section>` : ""}${notEvaluated.length ? `<section><h3>Members whose floor is not evaluated</h3><ul>${notEvaluated.map((m) => `<li><a href="#${escape(m.id)}">${codeSpans(m.title ?? m.id)}</a> · ${code(m.id)} · ${rungLine(m.statedReadiness, "not evaluated")}</li>`).join("")}</ul></section>` : ""}<details id="${escape(prefix)}.source"><summary>Mermaid source</summary><p>Preferred syntax: block. Fixed categorical cells; membership appears in comments.</p><label for="${escape(sourceId)}">Mermaid source for maturity map</label><textarea readonly id="${escape(sourceId)}" rows="8">${escape(source)}</textarea><sdp-copy for="${escape(sourceId)}"></sdp-copy></details></sdp-maturity-map>`;
 }

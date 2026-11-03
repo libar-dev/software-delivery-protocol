@@ -241,7 +241,10 @@ export function searchIndex(reader: Reader): SearchIndex {
               : { sections: node.sections as Record<string, unknown> }),
             specKind: node.specKind,
             statedReadiness: node.readiness,
-            floorReached: spec?.derivedReadiness ?? null,
+            floorReached:
+              spec?.floorNotEvaluated === undefined
+                ? (spec?.derivedReadiness ?? null)
+                : "not evaluated",
             bindings: [],
             entries: searchEntries(specContext(reader, node.id)),
           };
