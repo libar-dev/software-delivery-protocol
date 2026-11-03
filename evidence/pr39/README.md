@@ -66,8 +66,9 @@ implemented it, and Claude asked for changes once, then approved.
 
 ## Out of scope
 
-- **The inventory's record findings** wait for the owner's review and the delivery-record
-  cleanup. Nothing in `plans/` or `reviews/` is deleted here.
+- **The inventory's record findings** are accepted with the owner's row rulings and await the
+  delivery-record cleanup, which lands the inventory in its first commit. Nothing in `plans/` or
+  `reviews/` is deleted here.
 - **The concept-document drift** (L6-2, D1, L6-5) belongs to the cleanup, which dissolves those
   documents.
 - **The article corrections** are in PR #34.
