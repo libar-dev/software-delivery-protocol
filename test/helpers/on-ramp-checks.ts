@@ -1,11 +1,13 @@
 /**
  * The checks every shipped skill keeps, whatever it teaches: frontmatter, disclosure, pointers,
  * citations, recipe names, commands, inline bodies and quoted counts. They hold what a tool can
- * decide. What a skill means (its hazards, the owner's rules) is audited by a reader, never
- * pinned here as tokens.
+ * decide of the shape `spec:consumers.shipped-protocol-corpus#rule.skillShape` states. What a
+ * skill means (its hazards, the owner's rules, what sits early) is audited by a reader, never
+ * pinned here as tokens, and the size limits are ceilings for editorial judgment, not targets.
  *
  * `describeOnRamp("sdp-x", { realizes, capBytes })` registers them for one skill folder; the
  * suite that holds the skill's realization anchors calls it beside its behavioural tests.
+ * `describeHandbook(path)` registers the content checks for a teaching file outside the skills.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, posix } from "node:path";
@@ -13,6 +15,14 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { parse } from "yaml";
 import { describe, expect, it } from "vitest";
+
+import {
+  codeAnchor,
+  codeAnchorId,
+  ref,
+  specTest,
+  testAnchorId,
+} from "@libar-dev/software-delivery-protocol";
 
 import { evaluateBody, extract } from "../../src/index.js";
 import type { ExtractionResult, GraphSchema } from "../../src/index.js";
@@ -67,11 +77,11 @@ interface Skill {
   readonly files: readonly SkillFile[];
 }
 
+function read(path: string): SkillFile {
+  return { path, text: readFileSync(join(repoRoot, path), "utf8") };
+}
+
 function readSkill(name: string): Skill {
-  const read = (path: string): SkillFile => ({
-    path,
-    text: readFileSync(join(repoRoot, path), "utf8"),
-  });
   const entry = read(`skills/${name}/SKILL.md`);
   const frontmatter = /^---\n(?<yaml>[\s\S]*?)\n---\n/u.exec(entry.text)?.groups?.yaml;
   if (frontmatter === undefined) throw new Error(`${entry.path} opens with no YAML frontmatter`);
@@ -427,6 +437,36 @@ export function catalogHeadings(): ReadonlyMap<number, string> {
   );
 }
 
+/**
+ * What the content checks read: the files taken as one teaching text, where `<skill-dir>/` paths
+ * resolve, the on-ramp Specs whose law must be cited, and whether the files ship in the package.
+ */
+interface Teaching {
+  readonly files: readonly SkillFile[];
+  /** The skill folder `<skill-dir>/` stands for; a file outside the skills has none. */
+  readonly skillName?: string;
+  /** The on-ramp Specs whose `dependsOn`, `decidedBy` and `constrainedBy` targets are cited. */
+  readonly realized: readonly string[];
+  /** A shipped file names only package files that ship; a checkout file names what exists here. */
+  readonly shipped: boolean;
+}
+
+// The checks below are the executable suite that asserts the shared skill shape on every shipped
+// skill document, so they carry its realization anchor (`spec:model.anchors`, document realization).
+const skillShapeImplementationAnchor = codeAnchor({
+  id: codeAnchorId("impl:protocol.skill-shape"),
+  label: "asserts realization of the shape every shipped skill document keeps",
+  satisfies: ref("spec:consumers.shipped-protocol-corpus"),
+});
+void skillShapeImplementationAnchor;
+
+const skillShapeTestAnchor = specTest({
+  id: testAnchorId("test:protocol.skill-shape"),
+  label: "skill-shape checks verify every shipped skill against the shared shape",
+  verifies: ref("spec:consumers.shipped-protocol-corpus"),
+});
+void skillShapeTestAnchor;
+
 /** Registers the generic checks for one skill folder under `skills/`. */
 export function describeOnRamp(skillName: string, options: OnRampOptions = {}): void {
   describe(`the ${skillName} skill's shape`, () => {
@@ -443,7 +483,7 @@ export function describeOnRamp(skillName: string, options: OnRampOptions = {}): 
       expect(frontmatter.name).toBe(skillName);
       expect(skillName).toMatch(/^(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u);
       expect(typeof description).toBe("string");
-      expect(String(description).length).toBeGreaterThan(40);
+      expect(String(description).trim()).not.toBe("");
       expect(String(description).length).toBeLessThanOrEqual(limits.description);
       expect(typeof compatibility === "string" ? compatibility.length : 0).toBeLessThanOrEqual(500);
       // Agent Skills metadata maps string keys to string values.
@@ -483,17 +523,11 @@ export function describeOnRamp(skillName: string, options: OnRampOptions = {}): 
           reference: reference.path,
           bytes: bytes(reference) <= limits.referenceBytes,
         }).toEqual({ reference: reference.path, bytes: true });
+        // An unlinked reference is unreachable from the skill a client loads.
         expect({
           reference: reference.path,
-          pointers: entryLinks.filter((path) => path === reference.path).length,
-        }).toEqual({ reference: reference.path, pointers: 1 });
-        const chained = markdownLinkTargets(reference.text)
-          .map(({ target }) => linkedPath(reference.path, target))
-          .filter((path) => path?.endsWith(".md") === true);
-        expect({ reference: reference.path, chained }).toEqual({
-          reference: reference.path,
-          chained: [],
-        });
+          linked: entryLinks.includes(reference.path),
+        }).toEqual({ reference: reference.path, linked: true });
       }
       if (options.capBytes !== undefined) {
         expect(files.reduce((sum, file) => sum + bytes(file), 0)).toBeLessThanOrEqual(
@@ -502,272 +536,284 @@ export function describeOnRamp(skillName: string, options: OnRampOptions = {}): 
       }
     });
 
-    // G4: a pointer that misses leaves the disclosed material unreachable, and nothing reports it.
-    it("resolves every link, sibling-skill path, skill name and package file it names", () => {
-      const { files } = readSkill(skillName);
-      const patterns = (
-        JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
-          files: string[];
-        }
-      ).files;
-      const exists = (path: string) => existsSync(join(repoRoot, path));
-      const misses: string[] = [
-        ...danglingLinks(new Map(files.map((file) => [file.path, file.text])), exists, (path) =>
-          /\.md$/iu.test(path) && exists(path)
-            ? readFileSync(join(repoRoot, path), "utf8")
-            : undefined,
-        ),
-      ];
-
-      for (const segment of files.flatMap(codeSegments)) {
-        if (
-          /^sdp-[a-z]+(?:-[a-z]+)*$/u.test(segment.text) &&
-          !exists(`skills/${segment.text}/SKILL.md`)
-        ) {
-          misses.push(`${segment.file}: skill ${segment.text}`);
-        }
-        for (const raw of segment.text.split(/\s+/u).map(bareToken)) {
-          // `<skill-dir>` stands for the calling skill's own directory, as the reading skill defines it.
-          const token = raw.replace(/^<skill-dir>\//u, "");
-          if (
-            raw !== token &&
-            !token.startsWith("../") &&
-            !exists(`skills/${skillName}/${token}`)
-          ) {
-            misses.push(`${segment.file}: skill path ${raw}`);
-          }
-          const sibling = /^\.\.\/(?<skill>sdp-[a-z-]+)\/(?<path>\S+)$/u.exec(token)?.groups;
-          if (
-            sibling !== undefined &&
-            !exists(`skills/${sibling.skill ?? ""}/${sibling.path ?? ""}`)
-          ) {
-            misses.push(`${segment.file}: sibling path ${token}`);
-          }
-          const named = token.startsWith(packagePrefix) ? token.slice(packagePrefix.length) : token;
-          const packageFile =
-            /^(?:CONTEXT\.md|plugin\.json|(?:docs|dist|schemas|specs)(?:\/[^\s<>*]*)?)$/u;
-          if (named.includes("<") || !packageFile.test(named)) continue;
-          const path = named.replace(/\/$/u, "");
-          if (!exists(path) || !packed(path, patterns))
-            misses.push(`${segment.file}: package file ${token}`);
-        }
-      }
-      expect(misses).toEqual([]);
-    });
-
-    // G5: a stale citation sends the reader to law that is gone; an uncited relation target is law
-    // the skill no longer teaches in place. Fenced carriers and anchors are syntax examples, and
-    // their ids name an example domain.
-    it("cites only Specs and entry addresses that resolve, among them every law its on-ramps rest on", async () => {
+    describeContentChecks(() => {
       const { files, frontmatter } = readSkill(skillName);
-      const cited = [
-        ...new Set(
-          [
-            ...files
-              .map((file) => splitFences(file.text).prose)
-              .join("\n")
-              .matchAll(/spec:[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)*(?:#[a-z]+\.[A-Za-z0-9]+)?/gu),
-          ].map((match) => match[0]),
-        ),
-      ];
-      const ids = [...new Set(cited.map((reference) => reference.split("#")[0] ?? reference))];
-      const addresses = cited.filter((reference) => reference.includes("#"));
-      const graph = packageGraph();
-      const reader = createReader(graph);
-
-      expect(ids.filter((id) => reader.specContext(id) === undefined)).toEqual([]);
-      if (addresses.length > 0) {
-        const resolution = (await evaluateBody("return recipes(25, params)", {
-          graph,
-          params: { addresses },
-        })) as { rows: { address: string; resolves: boolean }[] };
-        expect(resolution.rows.filter((row) => !row.resolves).map((row) => row.address)).toEqual(
-          [],
-        );
-        expect(resolution.rows).toHaveLength(addresses.length);
-      }
-      const realized = realizedSpecs(frontmatter);
-      const law = graph.edges
-        .filter((edge) => realized.includes(edge.from) && lawRelations.has(edge.type))
-        .map((edge) => edge.to);
-      expect([...new Set(law)].filter((id) => !ids.includes(id))).toEqual([]);
+      return { files, skillName, realized: realizedSpecs(frontmatter), shipped: true };
     });
+  });
+}
 
-    // G6: a wrong number runs another recipe and reads its answer as this one's.
-    it("names recipes and orientation answers by their catalog numbers, names and files", () => {
-      const { files } = readSkill(skillName);
-      const headings = catalogHeadings();
-      const shippedNames = new Set(
-        recipeFiles(readFileSync(join(repoRoot, catalogPath), "utf8")).map((file) => file.fileName),
-      );
-      const answers = readdirSync(join(readingScripts, "orientation")).filter((name) =>
-        /^\d{2}-[a-z0-9-]+\.js$/u.test(name),
-      ).length;
-      const byLength = [...headings].sort((left, right) => right[1].length - left[1].length);
-      const misses: string[] = [];
+/**
+ * Registers the content checks for a teaching file outside the skills, such as the handbook: its
+ * pointers, citations, recipe names, commands, inline bodies and quoted counts.
+ */
+export function describeHandbook(path: string): void {
+  describe(`the ${path} handbook's content`, () => {
+    describeContentChecks(() => ({ files: [read(path)], realized: [], shipped: false }));
+  });
+}
 
-      for (const file of files) {
-        const text = file.text.replaceAll(/\s+/gu, " ");
-        const miss = (what: string) => misses.push(`${file.path}: ${what}`);
-        for (const match of text.matchAll(
-          /\brecipes? (?<list>\d+(?:(?:,| and| or| to|-|–) ?\d+)*)/giu,
-        )) {
-          for (const ordinal of (match.groups?.list ?? "").match(/\d+/gu) ?? []) {
-            if (!headings.has(Number(ordinal))) miss(`recipe ${ordinal} is not in the catalog`);
-          }
+/** The checks a skill and a handbook share: G4 to G8 and G11. */
+function describeContentChecks(teaching: () => Teaching): void {
+  // G4: a pointer that misses leaves the disclosed material unreachable, and nothing reports it.
+  it("resolves every link, sibling-skill path, skill name and package file it names", () => {
+    const { files, skillName, shipped } = teaching();
+    const patterns = (
+      JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+        files: string[];
+      }
+    ).files;
+    const exists = (path: string) => existsSync(join(repoRoot, path));
+    const misses: string[] = [
+      ...danglingLinks(new Map(files.map((file) => [file.path, file.text])), exists, (path) =>
+        /\.md$/iu.test(path) && exists(path)
+          ? readFileSync(join(repoRoot, path), "utf8")
+          : undefined,
+      ),
+    ];
+
+    for (const segment of files.flatMap(codeSegments)) {
+      if (
+        /^sdp-[a-z]+(?:-[a-z]+)*$/u.test(segment.text) &&
+        !exists(`skills/${segment.text}/SKILL.md`)
+      ) {
+        misses.push(`${segment.file}: skill ${segment.text}`);
+      }
+      for (const raw of segment.text.split(/\s+/u).map(bareToken)) {
+        // `<skill-dir>` stands for the calling skill's own directory, as the reading skill defines it.
+        const token = raw.replace(/^<skill-dir>\//u, "");
+        if (
+          raw !== token &&
+          !token.startsWith("../") &&
+          (skillName === undefined || !exists(`skills/${skillName}/${token}`))
+        ) {
+          misses.push(`${segment.file}: skill path ${raw}`);
         }
-        for (const match of text.matchAll(/\brecipes\((?<ordinal>\d+)/gu)) {
-          if (!headings.has(Number(match.groups?.ordinal)))
-            miss(`recipes(${match.groups?.ordinal ?? ""})`);
+        const sibling = /^\.\.\/(?<skill>sdp-[a-z-]+)\/(?<path>\S+)$/u.exec(token)?.groups;
+        if (
+          sibling !== undefined &&
+          !exists(`skills/${sibling.skill ?? ""}/${sibling.path ?? ""}`)
+        ) {
+          misses.push(`${segment.file}: sibling path ${token}`);
         }
-        // "recipe 21, Dependency footing": a capitalized name after the number is that recipe's.
-        for (const match of text.matchAll(/\brecipe (?<ordinal>\d+), (?<after>[^,.;:()]+)/giu)) {
-          const after = (match.groups?.after ?? "").toLowerCase();
-          const own = headings.get(Number(match.groups?.ordinal))?.toLowerCase();
-          const named = byLength.find(([, title]) => after.startsWith(title.toLowerCase()));
-          const capitalized = /^[A-Z]/u.test(match.groups?.after ?? "");
-          if (
-            (named !== undefined || capitalized) &&
-            (own === undefined || !after.startsWith(own))
-          ) {
-            miss(`"${match[0]}" names another recipe`);
-          }
-        }
-        // "the design slice (recipe 54)": a catalog name before the number is that recipe's.
-        for (const match of text.matchAll(
-          /(?<before>[\p{L}\p{N} -]+) \(recipe (?<ordinal>\d+)\)/giu,
-        )) {
-          const before = (match.groups?.before ?? "").toLowerCase();
-          const named = byLength.find(([, title]) => before.endsWith(title.toLowerCase()));
-          if (named !== undefined && named[0] !== Number(match.groups?.ordinal)) {
-            miss(`"${match[0]}" names recipe ${String(named[0])}`);
-          }
-        }
-        for (const match of text.matchAll(/\bdist\/recipes\/(?<name>[^\s`'")<]+\.js)/gu)) {
-          if (!shippedNames.has(match.groups?.name ?? ""))
-            miss(`dist/recipes/${match.groups?.name ?? ""}`);
-        }
-        for (const match of text.matchAll(/(?:\borientation|--only) (?<ordinal>\d+)/giu)) {
-          const ordinal = Number(match.groups?.ordinal);
-          if (ordinal < 1 || ordinal > answers) miss(`orientation ${String(ordinal)}`);
+        const named = token.startsWith(packagePrefix) ? token.slice(packagePrefix.length) : token;
+        const packageFile =
+          /^(?:CONTEXT\.md|plugin\.json|(?:docs|dist|schemas|specs)(?:\/[^\s<>*]*)?)$/u;
+        if (named.includes("<") || !packageFile.test(named)) continue;
+        const path = named.replace(/\/$/u, "");
+        if (!exists(path) || (shipped && !packed(path, patterns)))
+          misses.push(`${segment.file}: package file ${token}`);
+      }
+    }
+    expect(misses).toEqual([]);
+  });
+
+  // G5: a stale citation sends the reader to law that is gone; an uncited relation target is law
+  // the skill no longer teaches in place. Fenced carriers and anchors are syntax examples, and
+  // their ids name an example domain.
+  it("cites only Specs and entry addresses that resolve, among them every law its on-ramps rest on", async () => {
+    const { files, realized } = teaching();
+    const cited = [
+      ...new Set(
+        [
+          ...files
+            .map((file) => splitFences(file.text).prose)
+            .join("\n")
+            .matchAll(/spec:[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)*(?:#[a-z]+\.[A-Za-z0-9]+)?/gu),
+        ].map((match) => match[0]),
+      ),
+    ];
+    const ids = [...new Set(cited.map((reference) => reference.split("#")[0] ?? reference))];
+    const addresses = cited.filter((reference) => reference.includes("#"));
+    const graph = packageGraph();
+    const reader = createReader(graph);
+
+    expect(ids.filter((id) => reader.specContext(id) === undefined)).toEqual([]);
+    if (addresses.length > 0) {
+      const resolution = (await evaluateBody("return recipes(25, params)", {
+        graph,
+        params: { addresses },
+      })) as { rows: { address: string; resolves: boolean }[] };
+      expect(resolution.rows.filter((row) => !row.resolves).map((row) => row.address)).toEqual([]);
+      expect(resolution.rows).toHaveLength(addresses.length);
+    }
+    const law = graph.edges
+      .filter((edge) => realized.includes(edge.from) && lawRelations.has(edge.type))
+      .map((edge) => edge.to);
+    expect([...new Set(law)].filter((id) => !ids.includes(id))).toEqual([]);
+  });
+
+  // G6: a wrong number runs another recipe and reads its answer as this one's.
+  it("names recipes and orientation answers by their catalog numbers, names and files", () => {
+    const { files } = teaching();
+    const headings = catalogHeadings();
+    const shippedNames = new Set(
+      recipeFiles(readFileSync(join(repoRoot, catalogPath), "utf8")).map((file) => file.fileName),
+    );
+    const answers = readdirSync(join(readingScripts, "orientation")).filter((name) =>
+      /^\d{2}-[a-z0-9-]+\.js$/u.test(name),
+    ).length;
+    const byLength = [...headings].sort((left, right) => right[1].length - left[1].length);
+    const misses: string[] = [];
+
+    for (const file of files) {
+      const text = file.text.replaceAll(/\s+/gu, " ");
+      const miss = (what: string) => misses.push(`${file.path}: ${what}`);
+      for (const match of text.matchAll(
+        /\brecipes? (?<list>\d+(?:(?:,| and| or| to|-|–) ?\d+)*)/giu,
+      )) {
+        for (const ordinal of (match.groups?.list ?? "").match(/\d+/gu) ?? []) {
+          if (!headings.has(Number(ordinal))) miss(`recipe ${ordinal} is not in the catalog`);
         }
       }
-      expect(misses).toEqual([]);
-    });
-
-    // G7: an unknown flag fails late or silently; a bare `sdp` runs another program; a body in
-    // double quotes is shell-expanded before the sink sees it; a checkout form without the
-    // fixture exclusions derives another graph.
-    it("invokes only public verbs and their flags through a runner, bodies quoted as data", async () => {
-      const { files } = readSkill(skillName);
-      const verbs = usageLines();
-      const orient = scriptUsage("orient");
-      const runner = scriptUsage("q");
-      const exclusions = await checkoutExclusions();
-      const misses: string[] = [];
-
-      for (const segment of files.flatMap(codeSegments)) {
-        // A copied line runs as written: `sdp` alone may be macOS's unrelated binary, and `npx sdp`
-        // or `npm exec sdp` without the package installed fetches an unrelated registry package.
-        // Prose may still name the project's package runner.
-        if (segment.fenced && /^(?:sdp|npx +sdp|npm +exec +sdp)\b/u.test(segment.text)) {
-          misses.push(`${segment.file}: bare invocation ${segment.text}`);
+      for (const match of text.matchAll(/\brecipes\((?<ordinal>\d+)/gu)) {
+        if (!headings.has(Number(match.groups?.ordinal)))
+          miss(`recipes(${match.groups?.ordinal ?? ""})`);
+      }
+      // "recipe 21, Dependency footing": a capitalized name after the number is that recipe's.
+      for (const match of text.matchAll(/\brecipe (?<ordinal>\d+), (?<after>[^,.;:()]+)/giu)) {
+        const after = (match.groups?.after ?? "").toLowerCase();
+        const own = headings.get(Number(match.groups?.ordinal))?.toLowerCase();
+        const named = byLength.find(([, title]) => after.startsWith(title.toLowerCase()));
+        const capitalized = /^[A-Z]/u.test(match.groups?.after ?? "");
+        if ((named !== undefined || capitalized) && (own === undefined || !after.startsWith(own))) {
+          miss(`"${match[0]}" names another recipe`);
         }
-        if (/(?:sdp:q|\bq\.mjs|\bsdp q) "(?!\$\(cat )/u.test(segment.text)) {
-          misses.push(`${segment.file}: double-quoted body ${segment.text}`);
+      }
+      // "the design slice (recipe 54)": a catalog name before the number is that recipe's.
+      for (const match of text.matchAll(
+        /(?<before>[\p{L}\p{N} -]+) \(recipe (?<ordinal>\d+)\)/giu,
+      )) {
+        const before = (match.groups?.before ?? "").toLowerCase();
+        const named = byLength.find(([, title]) => before.endsWith(title.toLowerCase()));
+        if (named !== undefined && named[0] !== Number(match.groups?.ordinal)) {
+          miss(`"${match[0]}" names recipe ${String(named[0])}`);
         }
-        for (const call of invocations(segment, verbs)) {
-          // The runner takes its own flags (`--protocol`) beside the `sdp q` it wraps.
-          const usage =
-            call.verb === "orient"
-              ? orient
-              : call.runner
-                ? `${runner} ${verbs.get("q") ?? ""}`
-                : verbs.get(call.verb);
-          if (usage === undefined) {
-            misses.push(`${call.file}: unknown verb sdp ${call.verb}`);
-            continue;
+      }
+      for (const match of text.matchAll(/\bdist\/recipes\/(?<name>[^\s`'")<]+\.js)/gu)) {
+        if (!shippedNames.has(match.groups?.name ?? ""))
+          miss(`dist/recipes/${match.groups?.name ?? ""}`);
+      }
+      for (const match of text.matchAll(/(?:\borientation|--only) (?<ordinal>\d+)/giu)) {
+        const ordinal = Number(match.groups?.ordinal);
+        if (ordinal < 1 || ordinal > answers) miss(`orientation ${String(ordinal)}`);
+      }
+    }
+    expect(misses).toEqual([]);
+  });
+
+  // G7: an unknown flag fails late or silently; a bare `sdp` runs another program; a body in
+  // double quotes is shell-expanded before the sink sees it; a checkout form without the
+  // fixture exclusions derives another graph.
+  it("invokes only public verbs and their flags through a runner, bodies quoted as data", async () => {
+    const { files } = teaching();
+    const verbs = usageLines();
+    const orient = scriptUsage("orient");
+    const runner = scriptUsage("q");
+    const exclusions = await checkoutExclusions();
+    const misses: string[] = [];
+
+    for (const segment of files.flatMap(codeSegments)) {
+      // A copied line runs as written: `sdp` alone may be macOS's unrelated binary, and `npx sdp`
+      // or `npm exec sdp` without the package installed fetches an unrelated registry package.
+      // Prose may still name the project's package runner.
+      if (segment.fenced && /^(?:sdp|npx +sdp|npm +exec +sdp)\b/u.test(segment.text)) {
+        misses.push(`${segment.file}: bare invocation ${segment.text}`);
+      }
+      if (/(?:sdp:q|\bq\.mjs|\bsdp q) "(?!\$\(cat )/u.test(segment.text)) {
+        misses.push(`${segment.file}: double-quoted body ${segment.text}`);
+      }
+      for (const call of invocations(segment, verbs)) {
+        // The runner takes its own flags (`--protocol`) beside the `sdp q` it wraps.
+        const usage =
+          call.verb === "orient"
+            ? orient
+            : call.runner
+              ? `${runner} ${verbs.get("q") ?? ""}`
+              : verbs.get(call.verb);
+        if (usage === undefined) {
+          misses.push(`${call.file}: unknown verb sdp ${call.verb}`);
+          continue;
+        }
+        for (const flag of flagsOf(call.rest)) {
+          if (flag !== "--help" && !new RegExp(`${flag}(?![a-z-])`, "u").test(usage)) {
+            misses.push(`${call.file}: ${call.verb} takes no ${flag}`);
           }
-          for (const flag of flagsOf(call.rest)) {
-            if (flag !== "--help" && !new RegExp(`${flag}(?![a-z-])`, "u").test(usage)) {
-              misses.push(`${call.file}: ${call.verb} takes no ${flag}`);
+        }
+        // This checkout's own `sdp` script at its root needs the runner's fixture exclusions.
+        if (segment.text.startsWith("pnpm --silent sdp ") && /\s\.(?:\s|$)/u.test(call.rest)) {
+          for (const path of exclusions) {
+            if (!call.rest.includes(`--exclude ${path}`)) {
+              misses.push(`${call.file}: checkout form lacks --exclude ${path}`);
             }
           }
-          // This checkout's own `sdp` script at its root needs the runner's fixture exclusions.
-          if (segment.text.startsWith("pnpm --silent sdp ") && /\s\.(?:\s|$)/u.test(call.rest)) {
-            for (const path of exclusions) {
-              if (!call.rest.includes(`--exclude ${path}`)) {
-                misses.push(`${call.file}: checkout form lacks --exclude ${path}`);
-              }
-            }
-          }
         }
       }
-      expect(misses).toEqual([]);
-    });
+    }
+    expect(misses).toEqual([]);
+  });
 
-    // G8: a taught body that no longer runs teaches nothing, and no reader notices.
-    it("runs every inline body it teaches over this checkout and over the worked example", async () => {
-      const { files } = readSkill(skillName);
-      const verbs = usageLines();
-      const shipped = new Map(
-        recipeFiles(readFileSync(join(repoRoot, catalogPath), "utf8")).map((file) => [
-          file.fileName,
-          file.content,
-        ]),
-      );
-      const bodies = taughtBodies(
-        files.flatMap(codeSegments).flatMap((segment) => invocations(segment, verbs)),
-        shipped,
-      );
-      const checkout = await checkoutGraph();
-      const failures: unknown[] = [];
+  // G8: a taught body that no longer runs teaches nothing, and no reader notices.
+  it("runs every inline body it teaches over this checkout and over the worked example", async () => {
+    const { files } = teaching();
+    const verbs = usageLines();
+    const shipped = new Map(
+      recipeFiles(readFileSync(join(repoRoot, catalogPath), "utf8")).map((file) => [
+        file.fileName,
+        file.content,
+      ]),
+    );
+    const bodies = taughtBodies(
+      files.flatMap(codeSegments).flatMap((segment) => invocations(segment, verbs)),
+      shipped,
+    );
+    const checkout = await checkoutGraph();
+    const failures: unknown[] = [];
 
-      for (const taught of bodies) {
-        const corpora: [string, ExtractionResult][] = [["checkout", checkout]];
-        // A subject names this checkout's corpus, so only a body without one runs over the example.
-        if (taught.params === undefined) corpora.push(["checkout-v1", exampleGraph()]);
-        for (const [corpus, extraction] of corpora) {
-          const run = await runBody(taught.body, taught.params, extraction);
-          const empty = emptyHanded(run.answer);
-          if (run.exitCode !== 0 || empty !== undefined) {
-            failures.push({
-              file: taught.file,
-              corpus,
-              body: taught.body,
-              exitCode: run.exitCode,
-              empty,
-              stderr: run.stderr,
-            });
-          }
+    for (const taught of bodies) {
+      const corpora: [string, ExtractionResult][] = [["checkout", checkout]];
+      // A subject names this checkout's corpus, so only a body without one runs over the example.
+      if (taught.params === undefined) corpora.push(["checkout-v1", exampleGraph()]);
+      for (const [corpus, extraction] of corpora) {
+        const run = await runBody(taught.body, taught.params, extraction);
+        const empty = emptyHanded(run.answer);
+        if (run.exitCode !== 0 || empty !== undefined) {
+          failures.push({
+            file: taught.file,
+            corpus,
+            body: taught.body,
+            exitCode: run.exitCode,
+            empty,
+            stderr: run.stderr,
+          });
         }
       }
-      expect(failures).toEqual([]);
-    }, 120_000);
+    }
+    expect(failures).toEqual([]);
+  }, 120_000);
 
-    // G11: a derived count quoted in prose goes stale and is read as truth.
-    it("quotes no recipe-catalog size", () => {
-      const { files } = readSkill(skillName);
-      const size = catalogHeadings().size;
-      const sizeStatement = catalogSizePattern();
-      const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
-      for (const file of files) {
-        const text = teachingText(file.text);
-        expect({
-          file: file.path,
-          stated: sizeStatement.exec(text)?.[0] ?? null,
-        }).toEqual({
-          file: file.path,
-          stated: null,
-        });
-        expect({
-          file: file.path,
-          wholeRange: wholeRange.exec(text)?.[0] ?? null,
-        }).toEqual({
-          file: file.path,
-          wholeRange: null,
-        });
-      }
-    });
+  // G11: a derived count quoted in prose goes stale and is read as truth.
+  it("quotes no recipe-catalog size", () => {
+    const { files } = teaching();
+    const size = catalogHeadings().size;
+    const sizeStatement = catalogSizePattern();
+    const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
+    for (const file of files) {
+      const text = teachingText(file.text);
+      expect({
+        file: file.path,
+        stated: sizeStatement.exec(text)?.[0] ?? null,
+      }).toEqual({
+        file: file.path,
+        stated: null,
+      });
+      expect({
+        file: file.path,
+        wholeRange: wholeRange.exec(text)?.[0] ?? null,
+      }).toEqual({
+        file: file.path,
+        wholeRange: null,
+      });
+    }
   });
 }

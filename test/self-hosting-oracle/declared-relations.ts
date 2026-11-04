@@ -1117,7 +1117,12 @@ export const expectedDeclaredRelations: readonly (readonly [
   ["spec:validation.typed-dependency-floor", "dependsOn", "spec:model.relations"],
   ["spec:validation.unbound-example-posture", "refines", "spec:validation.verification-linkage"],
   ["spec:consumers.agent-surface.register-recipes", "refines", "spec:consumers.agent-surface"],
-  ["spec:consumers.shipped-protocol-corpus", "refines", "spec:consumers.authoring-on-ramp"],
+  [
+    "spec:consumers.shipped-protocol-corpus",
+    "refines",
+    "spec:consumers.authoring-on-ramp",
+    "the shipped corpus is where the on-ramps' Spec citations lead an adopter",
+  ],
   ["spec:decisions.checked-mentions", "refines", "spec:model.stable-ids"],
   ["spec:decisions.checked-mentions", "dependsOn", "spec:decisions.content-only-sections"],
   ["spec:validation.prose-mentions", "refines", "spec:validation.referential-integrity"],
@@ -5101,7 +5106,12 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:decisions.shipped-projections-frozen",
     "the shipped projections stay frozen",
   ],
-  ["spec:consumers.shipped-protocol-corpus", "decidedBy", "spec:decisions.agent-plugin-package"],
+  [
+    "spec:consumers.shipped-protocol-corpus",
+    "decidedBy",
+    "spec:decisions.agent-plugin-package",
+    "the package ships its skills as the Agent Plugin this ruling defines",
+  ],
   [
     "spec:decisions.agent-plugin-package",
     "refines",

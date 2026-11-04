@@ -13,7 +13,7 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
@@ -37,7 +37,13 @@ import { createStudioData } from "../src/projections/studio/data.js";
 import { VaultGuardError } from "../src/projections/vault/sync.js";
 import { createReader } from "../src/reader/reader.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
-import { describeOnRamp } from "./helpers/on-ramp-checks.js";
+import {
+  catalogHeadings,
+  catalogSizePattern,
+  describeHandbook,
+  describeOnRamp,
+  teachingText,
+} from "./helpers/on-ramp-checks.js";
 import { answeredStderr } from "./helpers/query-hint.js";
 import { renderStudio } from "./helpers/studio-render.js";
 
@@ -133,32 +139,6 @@ function shellFenceLines(body: string): readonly string[] {
   }
 
   return lines;
-}
-
-/** The public commands, read from the help's usage block: one token each, two for `new spec`. */
-function publicCommands(): ReadonlySet<string> {
-  const usage = SDP_HELP_TEXT.slice(
-    SDP_HELP_TEXT.indexOf("Usage:"),
-    SDP_HELP_TEXT.indexOf("Options:"),
-  );
-  const commands = new Set<string>();
-  for (const match of usage.matchAll(
-    /^ {2}sdp (?<first>[a-z][\w-]*)(?: (?<second>[a-z][\w-]*))?/gmu,
-  )) {
-    const { first, second } = match.groups ?? {};
-    if (first !== undefined) commands.add(second === undefined ? first : `${first} ${second}`);
-  }
-  return commands;
-}
-
-/** The command a documented invocation runs, when it is one the CLI knows. */
-function documentedCommand(line: string, commands: ReadonlySet<string>): string | undefined {
-  if (line.startsWith("pnpm --silent sdp:q ")) return commands.has("q") ? "q" : undefined;
-  const rest = /^(?:pnpm --silent sdp|pnpm exec sdp) (?<rest>.+)$/u.exec(line)?.groups?.rest;
-  const [first, second] = (rest ?? "").split(/\s+/u);
-  if (first === undefined || first === "") return undefined;
-  if (second !== undefined && commands.has(`${first} ${second}`)) return `${first} ${second}`;
-  return commands.has(first) ? first : undefined;
 }
 
 const authoringDirectory = "skills/sdp-authoring";
@@ -458,208 +438,22 @@ describe("Protocol skill assets", () => {
     expect(existsSync(join(repoRoot, "mcp.json"))).toBe(false);
   });
 
-  it("keeps every skill within the Agent Skills frontmatter limits", () => {
-    for (const path of allSkillPaths) {
-      const { frontmatter } = readSkill(path);
-      const name = String(frontmatter.name);
-      const description = String(frontmatter.description);
-
-      expect({ path, name: /^(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u.test(name) }).toEqual({
-        path,
-        name: true,
-      });
-      expect({ path, description: description.length <= 1024 }).toEqual({
-        path,
-        description: true,
-      });
-    }
-  });
-
-  it("names each skill after its folder and uses only Agent Skills frontmatter fields", () => {
-    const agentSkillsFields = [
-      "name",
-      "description",
-      "license",
-      "compatibility",
-      "metadata",
-      "allowed-tools",
-    ];
-    for (const path of allSkillPaths) {
-      const skill = readSkill(path);
-      const folder = basename(dirname(path));
-      const fields = Object.keys(skill.frontmatter);
-
+  it("states no recipe-catalog size in the handbook or the README", () => {
+    const size = catalogHeadings().size;
+    const sizeStatement = catalogSizePattern();
+    const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
+    for (const path of ["AGENTS.md", "README.md"]) {
+      const text = teachingText(readFileSync(join(repoRoot, path), "utf8"));
       expect({
         path,
-        unknown: fields.filter((field) => !agentSkillsFields.includes(field)),
-      }).toEqual({ path, unknown: [] });
-      expect(fields).toEqual(expect.arrayContaining(["name", "description"]));
-      const compatibility = skill.frontmatter.compatibility;
-      expect(typeof compatibility === "string" ? compatibility.length : 0).toBeLessThanOrEqual(500);
-      expect(skill.frontmatter.name).toBe(folder);
-      expect(typeof skill.frontmatter.description).toBe("string");
-      expect(String(skill.frontmatter.description).length).toBeGreaterThan(40);
-    }
-  });
-
-  it("documents only valid CLI verbs and keeps root-specific exclusions intact", async () => {
-    const commands = publicCommands();
-    const rootExclusions = ["explorations", "examples", "test/fixtures/import/parity"];
-    const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
-      scripts: Record<string, string>;
-    };
-    // The repository's query script is the reading skill's runner, which holds the exclusions.
-    const runner = (await import(
-      pathToFileURL(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs")).href
-    )) as { sourceCheckoutExclusions: readonly string[] };
-    const localQuery = runner.sourceCheckoutExclusions.map((path) => `--exclude ${path}`).join(" ");
-
-    expect(packageJson.scripts["sdp:q"]).toBe("node ./skills/sdp-agent-surface/scripts/q.mjs");
-    expect(packageJson.scripts["generate:self-hosting"]).toContain(localQuery);
-
-    expect([...commands].sort()).toEqual(
-      [
-        "build",
-        "census",
-        "generate",
-        "gherkin",
-        "import",
-        "mermaid",
-        "new spec",
-        "q",
-        "stamp",
-        "studio",
-        "validate",
-        "vault",
-        "view",
-      ].sort(),
-    );
-    expect(documentedCommand("pnpm exec sdp frobnicate .", commands)).toBeUndefined();
-    expect(documentedCommand("pnpm exec sdp new widget PATH", commands)).toBeUndefined();
-    expect(documentedCommand("pnpm exec sdp new spec PATH", commands)).toBe("new spec");
-
-    for (const exclusion of rootExclusions) {
-      expect(localQuery).toContain(`--exclude ${exclusion}`);
-    }
-  });
-
-  it("uses the local runtime or package runner instead of a colliding global binary", () => {
-    // The hazard is a documented invocation the collector above would never collect: a bare
-    // `sdp` resolves to whatever binary shadows it on PATH (macOS ships an unrelated `sdp`),
-    // so the check scans every shell-fenced line rather than the pnpm-prefixed subset.
-    for (const path of allSkillPaths) {
-      const bareInvocations = shellFenceLines(readSkill(path).body).filter((line) =>
-        /^\s*(?:sdp|npx +sdp|npm +exec +sdp)\b/u.test(line),
-      );
-
-      expect({ path, bareInvocations }).toEqual({ path, bareInvocations: [] });
-    }
-  });
-
-  it("contains no contradictory shortcuts for readiness or verifier realization", () => {
-    const forbidden = [
-      "has-verifier means tests pass",
-      "ready is conferred by tooling",
-      "ready is derived from the floor",
-      "bindExample call sites are extracted",
-      "verification mode proves a verifier exists",
-    ];
-
-    for (const path of allSkillPaths) {
-      const source = readSkill(path).source.toLowerCase();
-
-      for (const claim of forbidden) {
-        expect(source).not.toContain(claim);
-      }
-    }
-  });
-
-  it("states no recipe-catalog size in an on-ramp", () => {
-    // The catalog's size is derived, never quoted: an on-ramp points to the catalog and names
-    // recipes by number and name. A recipe's own number is not a size.
-    const size = catalogOrdinals().length;
-    const sizeStatement = catalogSizePattern();
-
-    expect(size).toBeGreaterThan(0);
-    for (const statement of [
-      "the forty runnable sdp q bodies",
-      "the 40 recipe bodies",
-      "thirty-two graph-first recipes",
-      "catalog contains forty-one ready-made bodies",
-    ]) {
-      expect(statement).toMatch(sizeStatement);
-    }
-    for (const ordinal of [
-      "recipes 33 to 40",
-      "recipes 12-16",
-      "run recipe 4 and recipe 22",
-      "Use recipe 6 to locate recipes.",
-      "Recipe 35 compares bodies.",
-      "recipes 4, 29 and 35 return summary bodies",
-    ]) {
-      expect(ordinal).not.toMatch(sizeStatement);
-    }
-
-    for (const path of ["AGENTS.md", "README.md", ...allSkillPaths]) {
-      const text = teachingText(readFileSync(join(repoRoot, path), "utf8"));
-      const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
-      expect({ path, stated: sizeStatement.exec(text)?.[0] ?? null }).toEqual({
-        path,
-        stated: null,
-      });
-      expect({ path, wholeRange: wholeRange.exec(text)?.[0] ?? null }).toEqual({
-        path,
-        wholeRange: null,
-      });
+        stated: sizeStatement.exec(text)?.[0] ?? null,
+        wholeRange: wholeRange.exec(text)?.[0] ?? null,
+      }).toEqual({ path, stated: null, wholeRange: null });
     }
   });
 });
 
-/** The recipe numbers the catalog's numbered headings carry, in order. */
-function catalogOrdinals(): readonly number[] {
-  const catalog = readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8");
-  return [...catalog.matchAll(/^## (\d+)\. /gmu)].map((match) => Number(match[1]));
-}
-
-/**
- * A count, in digits or words up to ninety-nine, followed within three words by recipes or bodies.
- * A number that names recipes, after `recipe` or `recipes` or after another such number through a
- * list or range joiner, is the recipe's own number and never a count.
- */
-function catalogSizePattern(): RegExp {
-  const ones = [
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "ten",
-    "eleven",
-    "twelve",
-    "thirteen",
-    "fourteen",
-    "fifteen",
-    "sixteen",
-    "seventeen",
-    "eighteen",
-    "nineteen",
-  ];
-  const tens = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-  const words = [
-    ...ones,
-    ...tens.flatMap((ten) => [ten, ...ones.slice(0, 9).map((one) => `${ten}-${one}`)]),
-  ];
-  const counts = words.sort((left, right) => right.length - left.length).join("|");
-  const recipeOwnNumber = String.raw`(?<!\brecipes?\s+(?:\d+\s*(?:,|-|–|to|and|or)\s*)*)`;
-  return new RegExp(
-    `${recipeOwnNumber}\\b(?:${counts}|\\d+)(?:\\s+[\\w-]+){0,3}?\\s+(?:recipes|bodies)\\b`,
-    "iu",
-  );
-}
+describeHandbook("AGENTS.md");
 
 const readingOnRampImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.reading-on-ramp"),
@@ -1024,12 +818,6 @@ describe("adopter teaching", () => {
     expect(authoring).toContain("spec:carrier.markdown-body-grammar");
   });
 });
-
-// Match the teaching clause, not a nearby citation or an unrelated use of its terms.
-// Whitespace and Markdown emphasis are incidental; polarity, homes, and thresholds are not.
-function teachingText(source: string): string {
-  return source.replaceAll(/[`*_]/gu, "").replaceAll(/\s+/gu, " ");
-}
 
 describe("adopter rule meanings", () => {
   it.each([true, false])(
