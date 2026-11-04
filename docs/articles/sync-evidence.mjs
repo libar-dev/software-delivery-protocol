@@ -565,13 +565,15 @@ async function supervise(repository, repositoryRoot) {
   try {
     temporary = realpathSync(mkdtempSync(path.join(scratchRoot, "article-evidence-")));
     let code;
+    // These startup guards cover synchronous signal emits from instrumentation.
+    // Real OS signal callbacks run on the event loop, never inside mkdtempSync or fork.
     if (!interrupted) {
       child = fork(fileURLToPath(import.meta.url), process.argv.slice(2), {
         detached: process.platform !== "win32",
         stdio: ["inherit", "inherit", "inherit", "ipc"],
         env: { ...process.env, SDP_ARTICLE_WORKER_ROOT: temporary },
       });
-      // A signal during fork is remembered until the worker's pid is available.
+      // A synchronous emit during fork is remembered until its pid is available.
       if (interrupted) stopChild();
       code = await new Promise((resolve, reject) => {
         child.once("error", reject);

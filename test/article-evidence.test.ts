@@ -247,23 +247,28 @@ describe("article evidence CLI entry", () => {
         import fs from "node:fs";
         import cp from "node:child_process";
         import {syncBuiltinESMExports} from "node:module";
-        if (!process.send) {
+        if (process.send) {
+          // Keep the worker alive without running evidence commands. Only a kill
+          // may stop it; an invalid fixture must not make this test pass by exiting.
+          await new Promise(() => { setInterval(() => {}, 1000); });
+        } else {
           const interrupt = () => {
-            // Model delivery at the exact startup boundary, including the default action.
+            // A synchronous emit exercises the defensive startup boundaries;
+            // real OS signal callbacks cannot interrupt synchronous calls.
             if (!process.emit(${JSON.stringify(signal)})) process.exit(${signal === "SIGINT" ? "130" : "143"});
           };
           if (${JSON.stringify(stage)} === "temporary directory creation") {
             const mkdtemp = fs.mkdtempSync;
             fs.mkdtempSync = (...args) => { const dir = mkdtemp(...args); interrupt(); return dir; };
-          } else {
-            const fork = cp.fork;
-            cp.fork = (...args) => {
-              const child = fork(...args);
-              fs.writeFileSync(${JSON.stringify(workerPid)}, String(child.pid));
-              interrupt();
-              return child;
-            };
           }
+          const fork = cp.fork;
+          cp.fork = (module, args, options) => {
+            // A leaked worker must not hold spawnSync's output pipes open on timeout.
+            const child = fork(module, args, {...options, stdio: ["ignore", "ignore", "ignore", "ipc"]});
+            fs.writeFileSync(${JSON.stringify(workerPid)}, String(child.pid));
+            if (${JSON.stringify(stage)} === "worker fork") interrupt();
+            return child;
+          };
           syncBuiltinESMExports();
         }
       `,
@@ -281,8 +286,16 @@ describe("article evidence CLI entry", () => {
           encoding: "utf8",
           env: { ...process.env, TMPDIR: scratch, TEMP: scratch, TMP: scratch },
           timeout: 5_000,
+          killSignal: "SIGKILL",
         },
       );
+      if (stage === "temporary directory creation") expect(existsSync(workerPid)).toBe(false);
+      else {
+        expect(existsSync(workerPid)).toBe(true);
+        const pid = Number(readFileSync(workerPid, "utf8"));
+        expect(() => process.kill(pid, 0)).toThrowError(expect.objectContaining({ code: "ESRCH" }));
+      }
+      expect(result.error).toBeUndefined();
       expect(result.status, result.stderr).toBe(signal === "SIGINT" ? 130 : 143);
       expect(readdirSync(scratch)).toEqual([]);
     } finally {
