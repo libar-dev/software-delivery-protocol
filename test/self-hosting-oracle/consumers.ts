@@ -4284,10 +4284,10 @@ export const consumersSpecs = [
         rules: [
           "The Studio is taught in its own shipped skill, beside the reading, authoring and session skills, and the reading skill points to it.",
           "The skill starts from what the agent holds: a repository to publish from, a page set or a link to read, composed intent to apply, or a CI workflow to set up; a reader holding only a link reads the pages without building a graph.",
-          "The skill teaches `sdp studio` for a page set with a base graph or run records and `sdp generate` for every root without them; that every command entering the shared build removes the page set; that supplied inputs lie outside every path the build writes or removes; and that the watch rebuilds on carrier edits with no server.",
-          "The skill teaches stamping after the final build with the commit the build read, that a later build removes the stamp, that source links need a stamp served over http or https, and the reusable preview workflow's inputs, permissions, artifact, deployment and fork behavior.",
+          "The skill teaches `sdp studio` for a page set with a base graph or run records and `sdp generate` for every root without them; that every command entering the shared build removes the page set; and that supplied inputs lie outside every path the build writes or removes.",
+          "The skill teaches stamping after the final build with the commit the build read, that a later build removes the stamp, and that source links need a stamp served over http or https, and cites `spec:consumers.spec-studio.sharing` for the preview workflow.",
           "The skill maps a reviewer's task to the page that answers it, and states what a page does not: it shows values the build computed, its order sets no priority, a run row is no verdict, and a Pack export carries no stamp or composing panel.",
-          "The skill teaches receiving the composing panel's hand-off: the proposal and its memo, and the scoped-intent text the proposal cannot carry. The agent writes the graph at the proposal's base, runs the proposal check, sends a moved or uncheckable change to a person, applies the rest through the authoring skill, and writes scoped-intent text into a proposal against a known base before checking it.",
+          "The skill teaches what the composing panel hands off, the proposal with its memo and the scoped-intent text a proposal cannot carry, confirms a preview's base, and applies the hand-off through `spec:consumers.delivery-session-on-ramp#rule.receiveProposal`.",
           "The skill cites the Studio's Specs for law and each verb's `--help` for its flags, and restates neither.",
         ],
         ruleKeys: {

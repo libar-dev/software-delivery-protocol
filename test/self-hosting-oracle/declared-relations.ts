@@ -1935,7 +1935,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.studio-on-ramp",
     "dependsOn",
     "spec:consumers.spec-studio.publisher",
-    "the skill teaches the verb, its watch and what each shared build removes",
+    "the skill teaches the verb and what each shared build removes",
   ],
   [
     "spec:consumers.studio-on-ramp",
@@ -1947,7 +1947,7 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:consumers.studio-on-ramp",
     "dependsOn",
     "spec:consumers.spec-studio.sharing",
-    "the skill teaches the stamp, its lifetime and the pull-request preview workflow",
+    "the skill teaches the stamp and its lifetime, and cites this Spec for the pull-request preview workflow",
   ],
   [
     "spec:consumers.studio-on-ramp",
@@ -1964,8 +1964,14 @@ export const expectedDeclaredRelations: readonly (readonly [
   [
     "spec:consumers.studio-on-ramp",
     "dependsOn",
-    "spec:consumers.intent-composition",
-    "a received proposal is checked and applied as the hand-off law states",
+    "spec:consumers.spec-studio.runs-page",
+    "the skill reads a run as evidence only for its own commit, set against the stamp's",
+  ],
+  [
+    "spec:consumers.studio-on-ramp",
+    "dependsOn",
+    "spec:consumers.delivery-session-on-ramp",
+    "the skill applies composed intent through the session skill's one receive procedure",
   ],
   [
     "spec:consumers.vault-on-ramp",

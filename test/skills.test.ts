@@ -517,7 +517,11 @@ describe("Protocol skill assets", () => {
 
   it("keeps every skill graph-first and the authoring law linked to carrying Specs", () => {
     for (const path of allSkillPaths.filter(
-      (path) => path !== skillPaths[0] && path !== skillPaths[1] && path !== skillPaths[2],
+      (path) =>
+        path !== skillPaths[0] &&
+        path !== skillPaths[1] &&
+        path !== skillPaths[2] &&
+        path !== studioSkillPath,
     )) {
       const { source } = readSkill(path);
 
@@ -571,7 +575,11 @@ describe("Protocol skill assets", () => {
     }
 
     for (const path of allSkillPaths.filter(
-      (path) => path !== skillPaths[0] && path !== skillPaths[1] && path !== skillPaths[2],
+      (path) =>
+        path !== skillPaths[0] &&
+        path !== skillPaths[1] &&
+        path !== skillPaths[2] &&
+        path !== studioSkillPath,
     )) {
       const documented = documentedCommands(readSkill(path).body);
       expect(documented.length).toBeGreaterThan(0);
@@ -1619,66 +1627,27 @@ void studioOnRampTestAnchor;
 
 describe("the Studio on-ramp", () => {
   const studio = () => readSkill(studioSkillPath);
-  const section = (heading: string) => flat(skillSection(studioSkillPath, heading));
+  const pagesPath = "skills/sdp-studio/references/pages.md";
+  const previewsPath = "skills/sdp-studio/references/previews.md";
+  const read = (path: string) => readFileSync(join(repoRoot, path), "utf8");
+  const workflowText = () => read(".github/workflows/studio-preview.yml");
+  const studioAssets = {
+    script: join(repoRoot, "dist", "studio", "studio.js"),
+    stylesheet: join(repoRoot, "dist", "studio", "studio.css"),
+  };
+
+  describeOnRamp("sdp-studio", { realizes: ["spec:consumers.studio-on-ramp"], capBytes: 7_000 });
 
   it("is its own shipped skill, which the reading skill points to", () => {
-    const { frontmatter } = studio();
-    expect(frontmatter.name).toBe("sdp-studio");
-    const description = String(frontmatter.description);
-    expect(description.startsWith("Publish, share and read the Spec Studio")).toBe(true);
-    for (const trigger of ["pull-request previews", "Studio link", "composing panel"]) {
-      expect(description).toContain(trigger);
-    }
-    for (const path of skillPaths.filter(
-      (path) => path !== skillPaths[1] && path !== skillPaths[2],
-    )) {
-      expect(readSkill(path).source).toContain("`sdp-studio`");
-    }
-  });
-
-  it("starts from what the agent holds", () => {
-    const start = section("## Start from what you hold");
-    for (const holding of [
-      "**A repository**",
-      "**A page set or a link**",
-      "**Composed intent**",
-      "**A CI workflow to set up**",
-    ]) {
-      expect(start).toContain(holding);
-    }
-    expect(start).toContain("navigating them needs no local graph");
+    expect(studio().frontmatter.name).toBe("sdp-studio");
+    expect(readSkill(skillPaths[0]).source).toContain("`sdp-studio`");
   });
 
   it("teaches the publishing run as the studio and generate verbs take it", async () => {
-    const publish = skillSection(studioSkillPath, "## Publish the page set");
-    const taughtFlags = new Set(
-      shellFenceLines(publish)
-        .filter((line) => line.includes(" studio "))
-        .flatMap((line) =>
-          [...line.slice(line.indexOf(" studio ")).matchAll(/(--[a-z-]+)/gu)].map(
-            (match) => match[1],
-          ),
-        ),
-    );
-    expect([...taughtFlags].sort()).toEqual(
-      ["--base", "--base-label", "--exclude", "--runs", "--watch"].sort(),
-    );
-    for (const flag of taughtFlags) {
-      expect(usageLine("studio")).toMatch(new RegExp(`${flag ?? ""}(?![a-z-])`, "u"));
-    }
-    for (const flag of ["--base", "--runs"]) expect(usageLine("generate")).not.toContain(flag);
-
-    const text = flat(publish);
-    for (const clause of [
-      "`sdp generate` writes the Studio beside the other four page roots, with no optional input.",
-      "Build the Studio last.",
-      "`spec:consumers.spec-studio.publisher#rule.buildInvalidates`",
-      "Keep every input outside `generated/`.",
-      "The run refuses an input at a path the build writes or removes, `generated/graph.json` or a file beneath a page root among them, or at a link resolving to one, before it changes a file",
-      "Another file under `generated/` is read as given.",
-      "nothing serves or reloads the page",
-    ]) {
-      expect(text).toContain(clause);
+    // `sdp generate` takes neither optional input; `sdp studio` takes both.
+    for (const flag of ["--base", "--runs"]) {
+      expect(usageLine("studio")).toContain(flag);
+      expect(usageLine("generate")).not.toContain(flag);
     }
 
     const root = mkdtempSync(join(tmpdir(), "sdp-studio-skill-"));
@@ -1687,11 +1656,12 @@ describe("the Studio on-ramp", () => {
       mkdirSync(join(root, "generated"));
       writeFileSync(join(root, "generated", "graph.json"), "{}");
       const refused = createCaptureOutput();
-      const exitCode = await runSdpCli(
-        ["studio", root, "--base", join(root, "generated", "graph.json")],
-        refused.output,
-      );
-      expect(exitCode).toBe(1);
+      expect(
+        await runSdpCli(
+          ["studio", root, "--base", join(root, "generated", "graph.json")],
+          refused.output,
+        ),
+      ).toBe(1);
       expect(refused.readStderr()).toContain("--base");
       mkdirSync(join(root, "generated", "census"));
       writeFileSync(join(root, "generated", "census", "base.json"), "{}");
@@ -1704,60 +1674,58 @@ describe("the Studio on-ramp", () => {
       ).toBe(1);
       expect(beneathPageRoot.readStderr()).toContain("writes or removes");
 
-      // A base graph the build does not own is read as given, even under generated/.
+      // A base graph the build does not own is read as given and adds the diff page.
       expect(await runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
       writeFileSync(
         join(root, "generated", "mybase.json"),
         readFileSync(join(root, "generated", "graph.json"), "utf8"),
       );
-      const accepted = createCaptureOutput();
       await runSdpCli(
         ["studio", root, "--base", join(root, "generated", "mybase.json")],
-        accepted.output,
-        {
-          studioAssets: {
-            script: join(repoRoot, "dist", "studio", "studio.js"),
-            stylesheet: join(repoRoot, "dist", "studio", "studio.css"),
-          },
-        },
+        createCaptureOutput().output,
+        { studioAssets },
       );
-      expect(accepted.readStderr()).not.toContain("writes or removes");
       expect(existsSync(join(root, "generated", "spec-studio", "diff.html"))).toBe(true);
-      const generate = createCaptureOutput();
       expect(
-        await runSdpCli(["generate", root, "--runs", join(root, "x.json")], generate.output),
+        await runSdpCli(
+          ["generate", root, "--runs", join(root, "x.json")],
+          createCaptureOutput().output,
+        ),
       ).toBe(1);
+
+      // Build, then stamp, last: a later validate removes the page set and its stamp.
+      expect(
+        await runSdpCli(["stamp", root, "--commit", "abc1234"], createCaptureOutput().output),
+      ).toBe(0);
+      expect(existsSync(join(root, "generated", "spec-studio", "stamp.json"))).toBe(true);
+      await runSdpCli(["validate", root], createCaptureOutput().output);
+      expect(existsSync(join(root, "generated", "spec-studio"))).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
   it("teaches stamping and the preview workflow as the workflow declares them", () => {
-    const share = skillSection(studioSkillPath, "## Stamp and share");
-    const text = flat(share);
-    for (const clause of [
-      "Stamp after the final build",
-      "a later build removes it with the page set",
-      "`spec:consumers.spec-studio.sharing#rule.stampLifetime`",
-      "Build from a clean checkout of the commit you stamp.",
-      "through `file://` they stay text",
-      "a pull request from a fork never deploys",
-    ]) {
-      expect(text).toContain(clause);
-    }
-    for (const flag of ["--commit", "--source"]) expect(usageLine("stamp")).toContain(flag);
-
-    const fence = /```yaml\n([\s\S]*?)\n```/u.exec(share)?.[1];
-    if (fence === undefined) throw new Error("the Studio skill must show the preview job");
-    const job = (parse(fence) as { jobs: Record<string, Record<string, unknown>> }).jobs[
-      "studio-preview"
-    ];
-    const workflow = parse(
-      readFileSync(join(repoRoot, ".github/workflows/studio-preview.yml"), "utf8"),
-    ) as {
-      on: { workflow_call: { inputs: Record<string, unknown> } };
-      jobs: Record<string, { if?: string; permissions?: unknown; steps?: { with?: unknown }[] }>;
+    const text = read(previewsPath);
+    const fence = /```yaml\n([\s\S]*?)\n```/u.exec(text)?.[1];
+    if (fence === undefined) throw new Error("the previews reference must show the preview job");
+    const caller = parse(fence) as {
+      on: unknown;
+      jobs: Record<string, Record<string, unknown>>;
     };
+    const job = caller.jobs["studio-preview"];
+    const workflow = parse(workflowText()) as {
+      on: { workflow_call: { inputs: Record<string, unknown> } };
+      jobs: Record<
+        string,
+        {
+          if?: string;
+          permissions?: unknown;
+          steps?: { uses?: string; "continue-on-error"?: boolean; with?: unknown }[];
+        }
+      >;
+    };
+
     expect(String(job?.uses)).toMatch(
       /^libar-dev\/software-delivery-protocol\/\.github\/workflows\/studio-preview\.yml@/u,
     );
@@ -1765,38 +1733,43 @@ describe("the Studio on-ramp", () => {
       expect(Object.keys(workflow.on.workflow_call.inputs)).toContain(input);
     }
     expect(job?.permissions).toEqual(workflow.jobs.deploy?.permissions);
+
+    // The silent preview hazards the reference states, held to the workflow.
+    expect(caller.on).toBe("pull_request");
+    expect(workflow.jobs.build?.if).toContain("github.event_name == 'pull_request'");
     expect(workflow.jobs.deploy?.if).toContain(
       "github.event.pull_request.head.repo.full_name == github.repository",
     );
+    expect(JSON.stringify(workflow.jobs.deploy?.steps)).toContain("gh-pages");
+    const download = workflow.jobs.build?.steps?.find((step) =>
+      step.uses?.startsWith("actions/download-artifact"),
+    );
+    expect(download?.["continue-on-error"]).toBe(true);
     expect(JSON.stringify(workflow.jobs.build?.steps)).toContain(
       "spec-studio-pr-${{ github.event.pull_request.number }}",
     );
     expect(text).toContain("`spec-studio-pr-<number>`");
+    expect(workflowText()).toContain('destination="preview/$PR_NUMBER"');
     expect(text).toContain("`preview/<number>/`");
   });
 
   it("has the preview's run evidence checked against the stamp, never assumed to match it", async () => {
-    const text = flat(skillSection(studioSkillPath, "## Stamp and share"));
-    for (const clause of [
-      "The workflow builds and stamps GitHub's pull-request merge commit, not the branch head.",
-      "Run evidence keeps the commit each CTRF report records in `results.environment.commit`, which may name another commit or none",
-      "a report uploaded in the same workflow run does not establish that they match.",
-      "Compare each run's commit on `runs.html` with the stamp's before you treat its results as evidence for the preview commit",
-      "`spec:consumers.spec-studio.runs-page#rule.commitShown`",
-      "recipe 45 with `params.commit` set to the stamp's `corpusCommit` answers `sameCommit` per report, `null` when the report records no commit.",
-    ]) {
-      expect(text).toContain(clause);
-    }
-    expect(text).not.toContain("its stamp and its run evidence name that commit");
-    expect(readFileSync(join(repoRoot, "src/cli/stamp-command.ts"), "utf8")).toContain(
-      "corpusCommit",
-    );
-
-    // The workflow hands each downloaded report to the Studio as it is, its recorded commit included.
-    const workflow = readFileSync(join(repoRoot, ".github/workflows/studio-preview.yml"), "utf8");
+    // The preview stamps the commit it builds, GitHub's merge commit on a pull request.
+    const workflow = workflowText();
+    expect(workflow).toContain("CORPUS_COMMIT: ${{ github.sha }}");
+    expect(workflow).toContain('--commit "$CORPUS_COMMIT"');
+    // Reports reach the Studio as they are, their recorded commit included.
     expect(workflow).toContain('inputs+=(--runs "$report")');
     expect(workflow).not.toContain("environment.commit");
+    expect(read("src/cli/stamp-command.ts")).toContain("corpusCommit");
 
+    // The body the skill teaches, run as written.
+    const line = shellFenceLines(studio().body).find((entry) => entry.includes("recipes(45"));
+    const body = /q\.mjs '([^']+)'/u.exec(line ?? "")?.[1];
+    if (body === undefined) throw new Error("the Studio skill must teach one run-evidence body");
+    // A shipped skill runs it through the reading runner, from the project root.
+    expect(line).toContain("../sdp-agent-surface/scripts/q.mjs '");
+    expect(line).toContain("--params runs=@");
     const report = (environment?: Record<string, unknown>) => ({
       reportFormat: "CTRF",
       specVersion: "0.0.0",
@@ -1808,27 +1781,33 @@ describe("the Studio on-ramp", () => {
       },
     });
     const preview = "aaaaaaa";
-    const evidence = (await evaluateBody("return recipes(45, params)", {
-      graph: probeGraph({}).graph,
-      params: {
-        runs: [report({ commit: "bbbbbbb" }), report(), report({ commit: preview })],
-        commit: preview,
-      },
-    })) as { inputs: { commit: string | null; sameCommit: boolean | null }[] };
-    expect(evidence.inputs.map(({ commit, sameCommit }) => ({ commit, sameCommit }))).toEqual([
+    expect(
+      await evaluateBody(body, {
+        graph: probeGraph({}).graph,
+        params: {
+          runs: [report({ commit: "bbbbbbb" }), report(), report({ commit: preview })],
+          commit: preview,
+        },
+      }),
+    ).toEqual([
       { commit: "bbbbbbb", sameCommit: false },
       { commit: null, sameCommit: null },
       { commit: preview, sameCommit: true },
     ]);
   });
 
-  it("maps each task to a page the Studio writes, and states what a page does not", async () => {
-    const reading = skillSection(studioSkillPath, "## Read the pages by task");
-    const taught = [...reading.matchAll(/`([a-z/<>]+\.html)`/gu)].map((match) => match[1] ?? "");
+  it("maps each task to a page the Studio writes", async () => {
+    const taught = [...read(pagesPath).matchAll(/`([a-z/<>]+\.html)`/gu)].map(
+      (match) => match[1] ?? "",
+    );
     const { graph } = probeGraph({
-      "a.sdp.md": probeCarrier("spec:probe.a", "behavior", "## Behavior\n- rule: One rule."),
+      "a.sdp.md": probeCarrier(
+        "spec:probe.camelCase",
+        "behavior",
+        "## Behavior\n- rule: One rule.",
+      ),
       "probe.pack.sdp.md":
-        "---\nid: pack:probe.review\nspecs:\n  - spec:probe.a\n---\n# Probe review\n\nFraming.\n",
+        "---\nid: pack:probe.review\nspecs:\n  - spec:probe.camelCase\n---\n# Probe review\n\nFraming.\n",
     });
     const run = {
       results: {
@@ -1870,41 +1849,25 @@ describe("the Studio on-ramp", () => {
       expect(taught).toContain(page);
       expect(without).not.toContain(page);
     }
+    // `<name>` is the id after its namespace, an uppercase letter written `_` and its lowercase.
+    expect(withInputs).toContain("specs/probe.camel_case.html");
     expect(withInputs).toContain("exports/probe.review.html");
-
-    const limits = flat(reading);
-    for (const clause of [
-      "The queue's order sets no priority",
-      "never a verdict on a verifier",
-      "`spec:consumers.spec-studio.diagrams#rule.textEquivalent`",
-      "It carries no stamp, date, commit or composing panel",
-    ]) {
-      expect(limits).toContain(clause);
-    }
   });
 
   it("receives the composing panel's hand-off through the proposal check", async () => {
-    const receive = section("## Receive composed intent");
-    for (const clause of [
-      "The memo ends with the exact proposal under `## The proposal`",
-      "`Not in the proposal`",
-      "`Copy scoped intent`",
-      "`git fetch origin pull/<number>/merge`",
-      "`schemas/sdp-proposal-1.schema.json`",
-      "render its memo with recipe 49",
-    ]) {
-      expect(receive).toContain(clause);
-    }
-    const panel = readFileSync(
-      join(repoRoot, "src/studio-elements/intent-panel-element.ts"),
-      "utf8",
-    );
-    expect(panel).toContain("Not in the proposal");
-    expect(panel).toContain("Copy scoped intent");
-    expect(readFileSync(join(repoRoot, "schemas/sdp-proposal-1.schema.json"), "utf8")).toContain(
-      "sdp-proposal/1",
-    );
+    const receive = skillSection(studioSkillPath, "## Receive composed intent");
 
+    // Every panel label the skill quotes is one the panel shows.
+    const panel = read("src/studio-elements/intent-panel-element.ts");
+    const labels = [...receive.matchAll(/`([A-Z][a-z]+(?: [a-z]+)+)`/gu)].map((m) => m[1] ?? "");
+    expect(labels.length).toBeGreaterThan(0);
+    for (const label of labels)
+      expect({ label, shown: panel.includes(label) }).toEqual({
+        label,
+        shown: true,
+      });
+
+    // The memo ends with the exact proposal under `## The proposal`.
     const proposal = {
       schema: "sdp-proposal/1",
       base: "0123456",
@@ -1915,24 +1878,14 @@ describe("the Studio on-ramp", () => {
       graph: probeGraph({}).graph,
       params: { proposal },
     })) as { memo: string };
+    expect(receive).toContain("`## The proposal`");
     const saved = /## The proposal\n\n```json\n([\s\S]*?)\n```/u.exec(memo)?.[1];
     expect(JSON.parse(saved ?? "null")).toEqual(proposal);
 
-    await assertTaughtRouting(studioSkillPath);
-  });
-
-  it("cites resolving Studio Specs for law and leaves flags to each verb's help", async () => {
-    expect(flat(studio().body)).toContain("each verb's `--help` owns its flags");
-    await assertCitationsResolve(studioSkillPath, [
-      "spec:consumers.studio-on-ramp",
-      "spec:consumers.spec-studio",
-      "spec:consumers.spec-studio.publisher",
-      "spec:consumers.spec-studio.data.inputs",
-      "spec:consumers.spec-studio.sharing",
-      "spec:consumers.spec-studio.export",
-      "spec:consumers.spec-studio.intent-panel",
-      "spec:consumers.intent-composition",
-    ]);
+    // Applying goes through the one receive procedure, in the sessions skill.
+    const target = "../sdp-sessions/references/proposals.md";
+    expect(receive).toContain(`](${target})`);
+    expect(existsSync(join(repoRoot, "skills/sdp-studio", target))).toBe(true);
   });
 });
 
