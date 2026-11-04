@@ -1155,6 +1155,38 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
     }
   });
 
+  it.each(["*", "+", "1.", "1)"])("refuses lone list markers across prose owners: %s", (marker) => {
+    for (const [body, line] of [
+      [`# Title\nParagraph.\n\n${marker}`, 11],
+      [`# Title\n## Rule\nParagraph.\n\n${marker}`, 12],
+      [`# Title\n## Rule\n- ${marker}`, 10],
+    ] as const) {
+      const result = reify(carrierBody(body, "rule"));
+      expect(result.specs).toEqual([]);
+      expect(result.findings).toEqual([
+        expect.objectContaining({
+          validatorId: "extract/invalid-markdown-structure",
+          line,
+        }),
+      ]);
+      const quoted = reify(carrierBody(body.replace(marker, `\`${marker}\``), "rule"));
+      expect(quoted.findings).toEqual([]);
+      expect(quoted.specs).toHaveLength(1);
+    }
+    const source = `---\nid: pack:probe.blocks\nspecs: []\n---\n# Pack\nParagraph.\n\n${marker}`;
+    const pack = reifyMarkdownCarrier(source, "blocks.pack.sdp.md");
+    expect(pack.packs).toEqual([]);
+    expect(pack.findings).toEqual([
+      expect.objectContaining({
+        validatorId: "extract/invalid-markdown-structure",
+        line: 8,
+      }),
+    ]);
+    expect(
+      reifyMarkdownCarrier(source.replace(marker, `\`${marker}\``), "blocks.pack.sdp.md").findings,
+    ).toEqual([]);
+  });
+
   it.each(["=", "==", "-", "--", "~~~", "~~~js", "~~~~", "```js"])(
     "refuses short underlines and fences across prose owners: %s",
     (text) => {
@@ -1240,6 +1272,25 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
       message: "fences must be exact gwt or gwt-vocabulary fences",
     });
   });
+
+  it.each(["has-verifier", "Has-Verifier", "some-label", "has_verifier"])(
+    "distinguishes reserved and ordinary plain-bullet names: %s",
+    (name) => {
+      const result = reify(carrierBody(`# Title\n## Rule\n- ${name}: the suite`, "rule"));
+      if (name.toLowerCase() === "has-verifier") {
+        expect(result.specs).toEqual([]);
+        expect(result.findings).toEqual([
+          expect.objectContaining({
+            validatorId: "extract/reserved-property",
+            line: 10,
+          }),
+        ]);
+      } else {
+        expect(result.findings).toEqual([]);
+        expect(result.specs[0]?.data.behavior).toMatchObject({ rules: [`${name}: the suite`] });
+      }
+    },
+  );
 
   it.each([
     "implemented",

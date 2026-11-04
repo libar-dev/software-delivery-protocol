@@ -886,7 +886,7 @@ export const validationSpecs = [
       behavior: {
         ruleKeys: { reservedProperties: "rules[0]" },
         rules: [
-          "Specs and Packs author no derived edge or delivery fact. Carrier-level properties reserve `implemented`, `has-verifier`, `hasVerifier`, `observed` and `deliveryFacts`, compared case-insensitively, and `claim`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo` and `models`. Underscore forms are not delivery-fact names. Nested content may name these concepts without authoring graph truth.",
+          "Specs and Packs author no derived edge or delivery fact. Spec and Pack envelope properties, top-level properties of each section record and each entry in a section array, and keyed Markdown entries reserve `implemented`, `has-verifier`, `hasVerifier`, `observed` and `deliveryFacts`, compared case-insensitively, and `claim`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo` and `models`. Underscore forms are not delivery-fact names. Gherkin tags refuse delivery-fact names and authored claim or lifecycle lookalikes. Nested content, such as a Model term named `implemented` or a key inside a Design value, may name these concepts without authoring graph truth.",
           "A Primitive node's `deliveryFacts` equals the facts the one derivation recomputes from the graph.",
         ],
         exampleSpace: {
