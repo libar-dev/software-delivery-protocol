@@ -461,6 +461,7 @@ specs:
   - spec:decisions.roadmap-over-plans
   - spec:decisions.epics-of-any-kind
   - spec:decisions.agent-plugin-package
+  - spec:decisions.session-start-hook
 modelRefs:
   - spec:model.core-model
 ---

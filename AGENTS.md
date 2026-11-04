@@ -50,8 +50,9 @@ arrived with (a word, a file, a Spec) as `--subjects`; read each answer with its
 node skills/sdp-agent-surface/scripts/orient.mjs
 ```
 
-Skip answers 1 and 5 only when a session-start hook's output, the plugin's or this
-repository's, is already in your context; then run the others.
+Skip answers 1 and 5 only when the session-start hook's answers, from the plugin or this
+repository's temporary wiring (`spec:decisions.session-start-hook`), are already in your context;
+then run the others.
 
 Answer 5 is the next work: recipe 53, `dist/recipes/53-the-roadmap.js`, over `pack:roadmap`. Follow
 each entry to its Packs and carrying Specs; the open arc's record is its draft pull request. A

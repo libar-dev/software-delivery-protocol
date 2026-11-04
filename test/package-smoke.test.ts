@@ -525,8 +525,11 @@ bindExample({
         "docs/agent-surface/architecture.md",
       ];
 
+      // The plugin's session-start hook ships whole: its hooks file and the script it runs.
+      const hookAssets = ["hooks/hooks.json", "hooks/session-start.mjs"];
       const packedAssets = [
         ...adopterAssets,
+        ...hookAssets,
         "schemas/sdp-proposal-1.schema.json",
         "docs/concept/DECISIONS.md",
       ];
@@ -541,6 +544,7 @@ bindExample({
             !path.startsWith("skills/"),
         ),
       ).toEqual([]);
+      expect(packedPaths.filter((path) => path.startsWith("hooks/")).sort()).toEqual(hookAssets);
       // Each skill ships whole, its references and scripts beside its SKILL.md, and nothing else.
       const skillPaths: string[] = [];
       const walkSkills = async (directory: string): Promise<void> => {
@@ -834,6 +838,41 @@ relations: {}
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
       ]);
       expect(orientation.filter((answer) => answer.error !== undefined)).toEqual([]);
+      // The installed plugin's session-start hook, run as a client runs its hooks file: the
+      // command through a shell with the plugin root in the environment, the session's working
+      // directory on standard input. It orients the consumer's corpus, never the package's.
+      const installedPackage = join(
+        consumer,
+        "node_modules",
+        "@libar-dev",
+        "software-delivery-protocol",
+      );
+      const hooksFile = JSON.parse(
+        await readFile(join(installedPackage, "hooks", "hooks.json"), "utf8"),
+      ) as { hooks: { SessionStart: { hooks: { command: string }[] }[] } };
+      const hookCommands = hooksFile.hooks.SessionStart.flatMap((group) =>
+        group.hooks.map((handler) => handler.command),
+      );
+      expect(hookCommands).toHaveLength(1);
+      const sessionStart = spawnSync(hookCommands[0] ?? "", {
+        cwd: consumer,
+        encoding: "utf8",
+        env: { ...process.env, CLAUDE_PLUGIN_ROOT: installedPackage },
+        input: JSON.stringify({
+          cwd: consumer,
+          hook_event_name: "SessionStart",
+          source: "startup",
+        }),
+        shell: true,
+      });
+      expect({ status: sessionStart.status, stderr: sessionStart.stderr }).toEqual({
+        status: 0,
+        stderr: "",
+      });
+      expect(sessionStart.stdout).toMatch(/^Orientation answers 1 and 5 for the project at /u);
+      expect(sessionStart.stdout).toContain(`at ${consumer},`);
+      expect(sessionStart.stdout).toContain("specs: 1,");
+      expect(sessionStart.stdout).toContain("## 5. Next work");
       await rm(join(consumer, "own.sdp.md"));
       await copyFile(importFixture, join(consumer, "behavior.sdp.ts"));
       const sdpImportDryRun = run(

@@ -1,0 +1,17 @@
+{
+  "description": "Temporary: runs the plugin's session-start hook in the Protocol checkout, which Codex does not load as a plugin (spec:decisions.session-start-hook).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/hooks/session-start.mjs\"",
+            "timeout": 30,
+            "statusMessage": "Deriving orientation answers"
+          }
+        ]
+      }
+    ]
+  }
+}

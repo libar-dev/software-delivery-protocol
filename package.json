@@ -19,7 +19,8 @@
     "schemas/sdp-proposal-1.schema.json",
     "docs/agent-surface/architecture.md",
     "plugin.json",
-    "skills/**"
+    "skills/**",
+    "hooks/**"
   ],
   "bin": {
     "sdp": "./dist/cli/sdp.js"

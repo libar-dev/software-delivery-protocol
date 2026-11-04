@@ -399,6 +399,7 @@ describe("Protocol skill assets", () => {
     expect(folders).toEqual([...allSkillPaths].sort());
     expect(packageJson.files).toContain("plugin.json");
     expect(packageJson.files).toContain("skills/**");
+    expect(packageJson.files).toContain("hooks/**");
     expect(SDP_HELP_TEXT).toContain("plugin.json");
     for (const path of folders) {
       expect(SDP_HELP_TEXT).toContain(path);
@@ -434,8 +435,40 @@ describe("Protocol skill assets", () => {
     expect(manifest.name).toBe(packageJson.name.split("/").pop());
     expect(manifest.version).toBe(packageJson.version);
     expect(manifest.license).toBe(packageJson.license);
-    expect(existsSync(join(repoRoot, ".claude-plugin"))).toBe(false);
-    expect(existsSync(join(repoRoot, "mcp.json"))).toBe(false);
+    for (const clientOnly of [".claude-plugin", ".codex-plugin", "mcp.json"]) {
+      expect({ clientOnly, present: existsSync(join(repoRoot, clientOnly)) }).toEqual({
+        clientOnly,
+        present: false,
+      });
+    }
+    // No reverse-domain client extension directory sits at the plugin root.
+    expect(
+      readdirSync(repoRoot, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && /^[a-z0-9-]+\.[a-z0-9.-]+$/u.test(entry.name))
+        .map((entry) => entry.name),
+    ).toEqual([]);
+    // The one hooks file is shared: Claude Code and Codex both read `hooks/hooks.json` at the plugin
+    // root, so it holds one SessionStart handler whose every field both read, in shell form through
+    // the plugin-root variable both set, running a script inside the plugin.
+    const hooksFile = JSON.parse(readFileSync(join(repoRoot, "hooks/hooks.json"), "utf8")) as {
+      description: string;
+      hooks: Record<string, { matcher?: string; hooks: Record<string, unknown>[] }[]>;
+    };
+    expect(Object.keys(hooksFile).sort()).toEqual(["description", "hooks"]);
+    expect(Object.keys(hooksFile.hooks)).toEqual(["SessionStart"]);
+    expect(hooksFile.hooks.SessionStart).toEqual([
+      {
+        hooks: [
+          {
+            type: "command",
+            command: 'node "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.mjs"',
+            timeout: 30,
+            statusMessage: "Deriving orientation answers",
+          },
+        ],
+      },
+    ]);
+    expect(existsSync(join(repoRoot, "hooks/session-start.mjs"))).toBe(true);
   });
 
   it("states no recipe-catalog size in the handbook or the README", () => {

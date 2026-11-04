@@ -5124,4 +5124,22 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:decisions.mcp-deferred",
     "the plugin declares no MCP server while MCP integration stays deferred",
   ],
+  [
+    "spec:decisions.session-start-hook",
+    "refines",
+    "spec:decisions.agent-plugin-package",
+    "narrows the plugin's contents to one hooks file that both clients read and the session-start script it runs",
+  ],
+  [
+    "spec:decisions.session-start-hook",
+    "dependsOn",
+    "spec:consumers.reading-on-ramp",
+    "the hook runs the reading skill's orientation runner from the session's project and prints its answers",
+  ],
+  [
+    "spec:decisions.session-start-hook",
+    "dependsOn",
+    "spec:protocol.roadmap-replaces-plans",
+    "the handbook keeps the roadmap pointer the self-hosting gate reads, whatever a hook prints",
+  ],
 ] as const;

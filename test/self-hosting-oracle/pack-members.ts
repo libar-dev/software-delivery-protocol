@@ -462,6 +462,7 @@ export const expectedPackMembers = [
   "spec:decisions.roadmap-over-plans",
   "spec:decisions.epics-of-any-kind",
   "spec:decisions.agent-plugin-package",
+  "spec:decisions.session-start-hook",
 ] as const;
 
 export const expectedStudioPackMembers = [
