@@ -3,7 +3,7 @@
 For an example's bound point, contracts and runner, in this order.
 
 1. The parent carries the typed `gwt-vocabulary` example space, each example child one concrete
-   `gwt` bound point (`spec:decisions.point-per-example`).
+   `gwt` bound point, the fence that closes its Intent (`spec:decisions.point-per-example`).
 2. A step key goes on the vocabulary step, `Given [#cartSize] a cart with {items:number} items`;
    the child's step inherits it, and a key on the child alone withholds its contract. A new key
    changes the contract key: update hand-written handlers and a Then step's oracle outcome `kind`

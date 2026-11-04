@@ -17,9 +17,10 @@ pnpm exec sdp generate . --exclude PATH
 ## The Protocol's own Specs
 
 Your project's graph does not hold them. Query them with the runner's `--protocol`, which selects
-the installed package's `specs/`, or open the carrier there. That graph is intent only: the package
-ships no source anchors, so its delivery facts read empty and its gap warnings say nothing about
-what the Protocol built (`spec:consumers.shipped-protocol-corpus`).
+the installed package's `specs/`, or open the carrier there: a `--protocol` answer's `file` is
+relative to that `specs/`. That graph is intent only: the package ships no source anchors, so its
+delivery facts read empty and its gap warnings say nothing about what the Protocol built
+(`spec:consumers.shipped-protocol-corpus`).
 
 ## Skills that match the CLI
 

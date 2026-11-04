@@ -1782,6 +1782,25 @@ describe("the vault on-ramp", () => {
     ]);
   });
 
+  it("resolves both links of its example in the graph the example's call selects", async () => {
+    const call = /^ *node <skill-dir>\/\.\.\/sdp-agent-surface\/scripts\/q\.mjs .+$/mu.exec(
+      vault(),
+    )?.[0];
+    expect(call?.endsWith(" --protocol")).toBe(true);
+    const params = JSON.parse(/--params '([^']+)'/u.exec(call ?? "")?.[1] ?? "{}") as {
+      refs: string[];
+    };
+    // `--protocol` selects the Protocol's own Specs, in a project as the package ships them.
+    const { graph } = extract({ root: join(repoRoot, "specs") });
+    const rows = (await evaluateBody(taughtBody(), { graph, params })) as string[];
+    expect(rows).toEqual([
+      "spec:model.rule-keys: found",
+      expect.stringMatching(
+        /^spec:consumers\.obsidian-vault#rule\.guard: consumers\/obsidian-vault\.sdp\.md:\d+$/u,
+      ),
+    ]);
+  });
+
   it("holds the base hazard it states: a newer graph reports a moved entry as unmoved", async () => {
     // The person read the vault at one graph; under --watch it then synchronized to another.
     const limitGraph = (limit: string) =>

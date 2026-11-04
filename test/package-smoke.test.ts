@@ -846,6 +846,25 @@ relations: {}
         unknownParams: workedAnswer.unknownParams,
         law: Array.isArray(workedAnswer.law) && workedAnswer.law.length > 0,
       }).toEqual({ found: true, unknownParams: undefined, law: true });
+      // The vault skill's example, copied as printed, resolves both of its links, which name
+      // the Protocol's own Specs.
+      const vaultSkill = join(installedSkill, "..", "sdp-vault");
+      const vaultCall =
+        /^ *(?<call>node <skill-dir>\/\.\.\/sdp-agent-surface\/scripts\/q\.mjs .+)$/mu.exec(
+          await readFile(join(vaultSkill, "SKILL.md"), "utf8"),
+        )?.groups?.call ?? "";
+      const vaultCheck = spawnSync(
+        vaultCall.replaceAll("<skill-dir>", JSON.stringify(vaultSkill)),
+        { cwd: consumer, encoding: "utf8", shell: true },
+      );
+      expect({ status: vaultCheck.status, stderr: vaultCheck.stderr }).toEqual({
+        status: 0,
+        stderr: answeredStderr,
+      });
+      expect(vaultCheck.stdout).toContain("'spec:model.rule-keys: found'");
+      expect(vaultCheck.stdout).toMatch(
+        /'spec:consumers\.obsidian-vault#rule\.guard: consumers\/obsidian-vault\.sdp\.md:\d+'/u,
+      );
       const skillOrientation = spawnSync(
         process.execPath,
         [join(installedSkill, "scripts", "orient.mjs"), "--json"],

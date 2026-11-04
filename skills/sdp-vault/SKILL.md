@@ -53,10 +53,11 @@ The vault writes no carrier and no proposal
    note is `spec:<id>#<section>.<key>`.
 3. Check them from the project root, `<skill-dir>` being this skill's directory. Recipe 25,
    Address resolution (`dist/recipes/25-address-resolution.js`), calls a bare id malformed, so
-   this body looks ids up apart:
+   this body looks ids up apart. The example's two links are the Protocol's own, which
+   `--protocol` selects; check your converted links without it:
 
    ```sh
-   node <skill-dir>/../sdp-agent-surface/scripts/q.mjs 'const ids = new Set(graph.nodes.map((n) => n.id)); const { rows } = await recipes(25, { addresses: params.refs.filter((r) => r.includes("#")) }); return [...params.refs.filter((r) => !r.includes("#")).map((r) => `${r}: ${ids.has(r) ? "found" : "unknown"}`), ...rows.map((r) => `${r.address}: ${r.resolves ? `${r.file}:${r.line}` : r.reason}`)]' --params '{"refs":["spec:model.rule-keys","spec:consumers.obsidian-vault#rule.guard"]}'
+   node <skill-dir>/../sdp-agent-surface/scripts/q.mjs 'const ids = new Set(graph.nodes.map((n) => n.id)); const { rows } = await recipes(25, { addresses: params.refs.filter((r) => r.includes("#")) }); return [...params.refs.filter((r) => !r.includes("#")).map((r) => `${r}: ${ids.has(r) ? "found" : "unknown"}`), ...rows.map((r) => `${r.address}: ${r.resolves ? `${r.file}:${r.line}` : r.reason}`)]' --params '{"refs":["spec:model.rule-keys","spec:consumers.obsidian-vault#rule.guard"]}' --protocol
    ```
 
 4. Write the proposal against the base, with its memo for the person to confirm, then check and

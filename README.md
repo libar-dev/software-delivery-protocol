@@ -329,7 +329,9 @@ To point every agent session in your project at the skills, add this to your own
 
 ```markdown
 This project keeps its delivery intent as Specs under the Libar Software Delivery Protocol. Before
-corpus work, load the `sdp-agent-surface` skill and run its orientation; read findings through
+corpus work, and again on resuming it after a break or compaction, load the `sdp-agent-surface`
+skill and run its orientation. On resuming, re-measure what the work touched (`git status`, then
+the graph) before the next edit: the files, not a summary, say what exists. Read findings through
 `sdp q`'s `report`, because `sdp validate`, `sdp build`, `sdp vault` and every publisher remove
 the generated pages.
 ```

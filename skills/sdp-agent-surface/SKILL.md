@@ -27,7 +27,8 @@ the project root: the runner derives the graph at the working directory.
   root: the Protocol checkout's root, or `node_modules/@libar-dev/software-delivery-protocol/` in
   a project. Never reach them by `../../` from a skill directory.
 - **Orient** with `node <skill-dir>/scripts/orient.mjs`, passing what you arrive with as
-  `--subjects`. Read each answer with its note in [orientation.md](references/orientation.md).
+  `--subjects`, keyed by answer number: `--subjects '{"8":{"terms":["vault"]}}'`. Read each
+  answer with its note in [orientation.md](references/orientation.md).
 - **Answer with a recipe.** The runner with no body lists them by category; the index atop
   `docs/agent-surface/recipes.md` maps each task to one, shipped as `dist/recipes/<NN>-<slug>.js`.
   Call `await recipes(N, params)` in a body, or run the file with `--params`. Recipe 56, The law
@@ -48,7 +49,9 @@ node <skill-dir>/scripts/q.mjs 'return await recipes(56, params)' --params '{"sp
   JSON; `recipes(N, params)`, async.
 - Pass subjects as `--params` data; `{ "?": 1 }` makes a recipe list what it `accepts`.
 - A `g.specs()` row carries no sections, relations or bindings (a silent `undefined`): read
-  them through `g.specContext(id)`, and a Pack's members through `g.packContext(id)`.
+  them through `g.specContext(id)` as `sections`, `relationsOut`, `relationsIn`,
+  `implementations`, `verifiers` and `references`, and a Pack's members through
+  `g.packContext(id)`.
 - A body runs with the process's full authority: run the shipped recipe files, and read a body
   you were handed before you run it.
 

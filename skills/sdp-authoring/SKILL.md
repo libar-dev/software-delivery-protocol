@@ -28,8 +28,12 @@ does not name sit in the catalog's categories, such as
    intent needing two kinds is two Specs. An edit: orientation 10 on the Spec, then the law it
    rests on (recipe 56, `dist/recipes/56-the-law-a-spec-rests-on.js`). A design round: the
    design slice (recipe 54, `dist/recipes/54-the-design-slice.js`), read as
-   [design.md](references/design.md) says.
-2. **Edit the carrier.** Hand-written forms and refusals: [carrier.md](references/carrier.md).
+   [design.md](references/design.md) says. Resuming after a break or compaction, first run step
+   3's check over every file the work touched: the files, not a summary, say what exists.
+2. **Edit the carrier** faithfully: the person's meaning, in their terms. A choice their request
+   leaves open, such as a value, a mechanism or an output's shape, stays open: unstated, or an
+   open question with their lean as its `provisional` reading; an example that needs it uses that
+   reading. Hand-written forms and refusals: [carrier.md](references/carrier.md).
 3. **Check** with this body, passing every file you touched as `--params '{"files":[…]}'`:
 
 ```js
@@ -71,7 +75,8 @@ statement and gates nothing. Reviews and hand-offs: load `sdp-sessions`.
 Each truth has one home the floor and recipes read; no tag, status or side table.
 
 - Open question: Intent's `### Open questions`; `[blocking]` holds the Spec below `defined`
-  (`spec:validation.readiness-floor#rule.definedFloor`).
+  (`spec:validation.readiness-floor#rule.definedFloor`), for a design that waits on the answer;
+  `[non-blocking]` when the work proceeds on the provisional reading.
 - Deferral: a `[blocking]` question with `trigger:`, plus `dependsOn` for a true precondition
   (`spec:decisions.planning-truths-placement`).
 - Unsettled fact: a `constraint` Spec whose blocking question names the settling check; Specs it
