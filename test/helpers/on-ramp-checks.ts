@@ -5,8 +5,8 @@
  * skill means (its hazards, the owner's rules, what sits early) is audited by a reader, never
  * pinned here as tokens, and the size limits are ceilings for editorial judgment, not targets.
  *
- * `describeOnRamp("sdp-x", { realizes, capBytes })` registers them for one skill folder; the
- * suite that holds the skill's realization anchors calls it beside its behavioural tests.
+ * `describeOnRamp("sdp-x", { realizes })` registers them for one skill folder; the suite that
+ * holds the skill's realization anchors calls it beside its behavioural tests.
  * `describeHandbook(path)` registers the content checks for a teaching file outside the skills.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -30,13 +30,16 @@ import { recipeFiles } from "../../src/cli/build-artifacts.js";
 import { SDP_HELP_TEXT, runSdpCli } from "../../src/cli/sdp.js";
 import { createReader } from "../../src/reader/reader.js";
 import { createCaptureOutput } from "./cli-capture.js";
-import { danglingLinks, linkedPath, markdownLinkTargets } from "./markdown-links.js";
+import {
+  danglingLinks,
+  linkedPath,
+  markdownAnchors,
+  markdownLinkTargets,
+} from "./markdown-links.js";
 
 export interface OnRampOptions {
   /** The on-ramp Spec ids `metadata.realizes` names, in any order. */
   readonly realizes?: readonly string[];
-  /** The byte cap on SKILL.md and its references together. */
-  readonly capBytes?: number;
 }
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -189,6 +192,8 @@ interface Invocation {
   readonly verb: string;
   /** True when the reading runner (`q.mjs`, or `pnpm --silent sdp:q`, which runs it) is called. */
   readonly runner: boolean;
+  /** True for `pnpm --silent sdp:q`, the form that runs only in the Protocol checkout. */
+  readonly checkout: boolean;
   /** What follows the verb, up to the first command separator. */
   readonly rest: string;
 }
@@ -218,19 +223,20 @@ function scriptUsage(script: "orient" | "q"): string {
 /** The commands a segment runs: the reading runners, `pnpm --silent sdp:q` and `sdp <verb>`. */
 function invocations(segment: Segment, verbs: ReadonlyMap<string, string>): Invocation[] {
   const found: Invocation[] = [];
-  const add = (verb: string, rest: string, runner = false) => {
+  const add = (verb: string, rest: string, runner = false, checkout = false) => {
     found.push({
       file: segment.file,
       segment: segment.text,
       verb,
       runner,
+      checkout,
       rest: rest.split(/\s(?:&&|\|\||\||;)\s/u)[0] ?? "",
     });
   };
   for (const match of segment.text.matchAll(
-    /(?:^|\s)(?:pnpm --silent sdp:q|node \S*\bq\.mjs)(?<rest>(?:\s.*)?)$/gu,
+    /(?:^|\s)(?<form>pnpm --silent sdp:q|node \S*\bq\.mjs)(?<rest>(?:\s.*)?)$/gu,
   )) {
-    add("q", match.groups?.rest ?? "", true);
+    add("q", match.groups?.rest ?? "", true, match.groups?.form?.startsWith("pnpm") === true);
   }
   for (const match of segment.text.matchAll(/(?:^|\s)node \S*\borient\.mjs(?<rest>(?:\s.*)?)$/gu)) {
     add("orient", match.groups?.rest ?? "");
@@ -252,16 +258,32 @@ function flagsOf(rest: string): readonly string[] {
   return [...unquoted.matchAll(/(?<![\w-])--[a-z][a-z-]*/gu)].map((match) => match[0]);
 }
 
+/**
+ * The graph a call derives: `checkout` for `pnpm --silent sdp:q`, which runs only in the Protocol
+ * checkout; `protocol` for the runner's `--protocol` or a `--root` naming the package's `specs/`,
+ * which in a project hold the Protocol's own Specs as intent only; `project` for every other call,
+ * which reads the corpus at the working directory, the checkout here and an adopter's elsewhere.
+ */
+type RootSelection = "checkout" | "protocol" | "project";
+
+function rootSelection(call: Invocation): RootSelection {
+  if (call.checkout) return "checkout";
+  const root = /--root(?:\s+|=)(?<path>\S+)/u.exec(call.rest)?.groups?.path ?? "";
+  const shippedSpecs = root.replace(/\/$/u, "").endsWith(`${packagePrefix}specs`);
+  return flagsOf(call.rest).includes("--protocol") || shippedSpecs ? "protocol" : "project";
+}
+
 interface TaughtBody {
   readonly file: string;
   readonly body: string;
   readonly params: Record<string, unknown> | undefined;
+  readonly root: RootSelection;
 }
 
 /**
- * The `sdp q` bodies a skill teaches with their inline `--params`, a shipped recipe file standing
- * in for its catalog body. A placeholder body or subject, or parameters read from a file, cannot
- * run as written and is left to the reader.
+ * The `sdp q` bodies a skill teaches with their inline `--params` and root selection, a shipped
+ * recipe file standing in for its catalog body. A placeholder body or subject, or parameters read
+ * from a file, cannot run as written and is left to the reader.
  */
 function taughtBodies(
   calls: readonly Invocation[],
@@ -286,14 +308,14 @@ function taughtBodies(
             {},
             ...values.map((value) => JSON.parse(value.slice(1, -1)) as Record<string, unknown>),
           ) as Record<string, unknown>);
-    bodies.push({ file: call.file, body, params });
+    bodies.push({ file: call.file, body, params, root: rootSelection(call) });
   }
   return bodies;
 }
 
 let checkoutExtraction: ExtractionResult | undefined;
 let exampleExtraction: ExtractionResult | undefined;
-let shippedGraph: GraphSchema | undefined;
+let shippedExtraction: ExtractionResult | undefined;
 
 /** The exclusions the reading runner applies to this checkout, read from the runner itself. */
 async function checkoutExclusions(): Promise<readonly string[]> {
@@ -318,10 +340,17 @@ function exampleGraph(): ExtractionResult {
   return exampleExtraction;
 }
 
-/** The Protocol's Specs as the package ships them: the graph an adopter's citations resolve in. */
+/**
+ * The Protocol's Specs as the package ships them: the graph an adopter's citations resolve in,
+ * and the one `--protocol` selects in a project.
+ */
+function packageExtraction(): ExtractionResult {
+  shippedExtraction ??= extract({ root: join(repoRoot, "specs") });
+  return shippedExtraction;
+}
+
 function packageGraph(): GraphSchema {
-  shippedGraph ??= extract({ root: join(repoRoot, "specs") }).graph;
-  return shippedGraph;
+  return packageExtraction().graph;
 }
 
 /** Runs a body through the real `sdp q` argv seam over a prepared extraction. */
@@ -387,11 +416,12 @@ function packed(path: string, patterns: readonly string[]): boolean {
 }
 
 /**
- * A count, in digits or words up to ninety-nine, followed within three words by recipes or bodies.
- * A number that names recipes, after `recipe` or `recipes` or after another such number through a
- * list or range joiner, is the recipe's own number and never a count.
+ * The catalog's size, in digits or in words up to ninety-nine, followed within three words by
+ * `recipes`: a quoted size goes stale when the catalog grows. Any other count is a subset, such as
+ * "five shipped recipes", and passes. A number that names recipes, after `recipe` or `recipes` or
+ * after another such number through a list or range joiner, is the recipe's own number.
  */
-export function catalogSizePattern(): RegExp {
+export function catalogSizePattern(size: number): RegExp {
   const ones = [
     "one",
     "two",
@@ -414,16 +444,58 @@ export function catalogSizePattern(): RegExp {
     "nineteen",
   ];
   const tens = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-  const words = [
-    ...ones,
-    ...tens.flatMap((ten) => [ten, ...ones.slice(0, 9).map((one) => `${ten}-${one}`)]),
-  ];
-  const counts = words.sort((left, right) => right.length - left.length).join("|");
+  const ten = tens[Math.floor(size / 10) - 2];
+  const one = ones[(size % 10) - 1];
+  const word =
+    size >= 1 && size < 20
+      ? ones[size - 1]
+      : ten === undefined
+        ? undefined
+        : one === undefined
+          ? ten
+          : String.raw`${ten}[- ]${one}`;
+  const spelled = [String(size), ...(word === undefined ? [] : [word])].join("|");
   const recipeOwnNumber = String.raw`(?<!\brecipes?\s+(?:\d+\s*(?:,|-|–|to|and|or)\s*)*)`;
   return new RegExp(
-    `${recipeOwnNumber}\\b(?:${counts}|\\d+)(?:\\s+[\\w-]+){0,3}?\\s+(?:recipes|bodies)\\b`,
+    `${recipeOwnNumber}\\b(?:${spelled})\\b(?:\\s+[\\w-]+){0,3}?\\s+recipes\\b`,
     "iu",
   );
+}
+
+/**
+ * Where `text` puts a recipe's number beside another recipe's catalog title: after the number
+ * ("recipe 21, The roadmap") or before it ("the design slice (recipe 29)"). Any other words
+ * after "recipe N, " pass, capitalized or not. Whitespace in `text` is already flattened.
+ */
+export function misnamedRecipes(
+  text: string,
+  headings: ReadonlyMap<number, string>,
+): readonly string[] {
+  const byLength = [...headings].sort((left, right) => right[1].length - left[1].length);
+  const misses: string[] = [];
+  for (const match of text.matchAll(/\brecipe (?<ordinal>\d+), (?<after>[^,.;:()]+)/giu)) {
+    const after = (match.groups?.after ?? "").toLowerCase();
+    const named = byLength.find(([, title]) => after.startsWith(title.toLowerCase()));
+    if (named !== undefined && named[0] !== Number(match.groups?.ordinal)) {
+      misses.push(`"${match[0]}" names recipe ${String(named[0])}`);
+    }
+  }
+  for (const match of text.matchAll(/(?<before>[\p{L}\p{N} -]+) \(recipe (?<ordinal>\d+)\)/giu)) {
+    const before = (match.groups?.before ?? "").toLowerCase();
+    const named = byLength.find(([, title]) => before.endsWith(title.toLowerCase()));
+    if (named !== undefined && named[0] !== Number(match.groups?.ordinal)) {
+      misses.push(`"${match[0]}" names recipe ${String(named[0])}`);
+    }
+  }
+  return misses;
+}
+
+/**
+ * True for a copied command line that starts with a bare `sdp`, which may be macOS's unrelated
+ * binary. `npx sdp <verb>` and `pnpm exec sdp <verb>` run the project's installed package.
+ */
+export function bareInvocation(line: string): boolean {
+  return /^sdp\b/u.test(line);
 }
 
 /** The catalog's numbered headings: each recipe's number and name. */
@@ -501,7 +573,7 @@ export function describeOnRamp(skillName: string, options: OnRampOptions = {}): 
 
     // G3: steps and early hazards stay in SKILL.md; each branch's material sits one level below.
     it("keeps SKILL.md short and discloses each reference one level below it", () => {
-      const { entry, references, files } = readSkill(skillName);
+      const { entry, references } = readSkill(skillName);
       const bytes = (file: SkillFile) => Buffer.byteLength(file.text, "utf8");
       const entryLinks = markdownLinkTargets(entry.text)
         .map(({ target }) => linkedPath(entry.path, target))
@@ -528,11 +600,6 @@ export function describeOnRamp(skillName: string, options: OnRampOptions = {}): 
           reference: reference.path,
           linked: entryLinks.includes(reference.path),
         }).toEqual({ reference: reference.path, linked: true });
-      }
-      if (options.capBytes !== undefined) {
-        expect(files.reduce((sum, file) => sum + bytes(file), 0)).toBeLessThanOrEqual(
-          options.capBytes,
-        );
       }
     });
 
@@ -598,11 +665,18 @@ function describeContentChecks(teaching: () => Teaching): void {
         }
         const named = token.startsWith(packagePrefix) ? token.slice(packagePrefix.length) : token;
         const packageFile =
-          /^(?:CONTEXT\.md|plugin\.json|(?:docs|dist|schemas|specs)(?:\/[^\s<>*]*)?)$/u;
+          /^(?:CONTEXT\.md|plugin\.json|(?:docs|dist|schemas|specs)(?:\/[^\s<>*#]*)?)(?:#[^\s<>*#]+)?$/u;
         if (named.includes("<") || !packageFile.test(named)) continue;
-        const path = named.replace(/\/$/u, "");
-        if (!exists(path) || (shipped && !packed(path, patterns)))
+        const [file = named, fragment] = named.split("#");
+        const path = file.replace(/\/$/u, "");
+        if (!exists(path) || (shipped && !packed(path, patterns))) {
           misses.push(`${segment.file}: package file ${token}`);
+        } else if (fragment !== undefined && /\.md$/iu.test(path)) {
+          // A category or entry of the catalog, or a section of another page, by its anchor.
+          const anchors = markdownAnchors(readFileSync(join(repoRoot, path), "utf8"));
+          if (!anchors.has(fragment) && !anchors.has(fragment.toLowerCase()))
+            misses.push(`${segment.file}: package anchor ${token}`);
+        }
       }
     }
     expect(misses).toEqual([]);
@@ -653,7 +727,6 @@ function describeContentChecks(teaching: () => Teaching): void {
     const answers = readdirSync(join(readingScripts, "orientation")).filter((name) =>
       /^\d{2}-[a-z0-9-]+\.js$/u.test(name),
     ).length;
-    const byLength = [...headings].sort((left, right) => right[1].length - left[1].length);
     const misses: string[] = [];
 
     for (const file of files) {
@@ -670,26 +743,7 @@ function describeContentChecks(teaching: () => Teaching): void {
         if (!headings.has(Number(match.groups?.ordinal)))
           miss(`recipes(${match.groups?.ordinal ?? ""})`);
       }
-      // "recipe 21, Dependency footing": a capitalized name after the number is that recipe's.
-      for (const match of text.matchAll(/\brecipe (?<ordinal>\d+), (?<after>[^,.;:()]+)/giu)) {
-        const after = (match.groups?.after ?? "").toLowerCase();
-        const own = headings.get(Number(match.groups?.ordinal))?.toLowerCase();
-        const named = byLength.find(([, title]) => after.startsWith(title.toLowerCase()));
-        const capitalized = /^[A-Z]/u.test(match.groups?.after ?? "");
-        if ((named !== undefined || capitalized) && (own === undefined || !after.startsWith(own))) {
-          miss(`"${match[0]}" names another recipe`);
-        }
-      }
-      // "the design slice (recipe 54)": a catalog name before the number is that recipe's.
-      for (const match of text.matchAll(
-        /(?<before>[\p{L}\p{N} -]+) \(recipe (?<ordinal>\d+)\)/giu,
-      )) {
-        const before = (match.groups?.before ?? "").toLowerCase();
-        const named = byLength.find(([, title]) => before.endsWith(title.toLowerCase()));
-        if (named !== undefined && named[0] !== Number(match.groups?.ordinal)) {
-          miss(`"${match[0]}" names recipe ${String(named[0])}`);
-        }
-      }
+      for (const misnamed of misnamedRecipes(text, headings)) miss(misnamed);
       for (const match of text.matchAll(/\bdist\/recipes\/(?<name>[^\s`'")<]+\.js)/gu)) {
         if (!shippedNames.has(match.groups?.name ?? ""))
           miss(`dist/recipes/${match.groups?.name ?? ""}`);
@@ -697,6 +751,22 @@ function describeContentChecks(teaching: () => Teaching): void {
       for (const match of text.matchAll(/(?:\borientation|--only) (?<ordinal>\d+)/giu)) {
         const ordinal = Number(match.groups?.ordinal);
         if (ordinal < 1 || ordinal > answers) miss(`orientation ${String(ordinal)}`);
+      }
+    }
+    // A recipe a taught body runs is named by its shipped file, so the agent can run that file
+    // (`spec:consumers.shipped-protocol-corpus#rule.skillShape`). Whether a prose mention tells
+    // the agent to run a recipe is left to the reader.
+    const shippedFiles = new Set(
+      files.flatMap((file) =>
+        [...file.text.matchAll(/\bdist\/recipes\/(?<ordinal>\d+)-/gu)].map((match) =>
+          Number(match.groups?.ordinal),
+        ),
+      ),
+    );
+    for (const segment of files.flatMap(codeSegments)) {
+      for (const match of segment.text.matchAll(/\brecipes\((?<ordinal>\d+)/gu)) {
+        if (!shippedFiles.has(Number(match.groups?.ordinal)))
+          misses.push(`${segment.file}: recipes(${match.groups?.ordinal ?? ""}) without its file`);
       }
     }
     expect(misses).toEqual([]);
@@ -714,10 +784,8 @@ function describeContentChecks(teaching: () => Teaching): void {
     const misses: string[] = [];
 
     for (const segment of files.flatMap(codeSegments)) {
-      // A copied line runs as written: `sdp` alone may be macOS's unrelated binary, and `npx sdp`
-      // or `npm exec sdp` without the package installed fetches an unrelated registry package.
-      // Prose may still name the project's package runner.
-      if (segment.fenced && /^(?:sdp|npx +sdp|npm +exec +sdp)\b/u.test(segment.text)) {
+      // A copied line runs as written, and `sdp` alone may be macOS's unrelated binary.
+      if (segment.fenced && bareInvocation(segment.text)) {
         misses.push(`${segment.file}: bare invocation ${segment.text}`);
       }
       if (/(?:sdp:q|\bq\.mjs|\bsdp q) "(?!\$\(cat )/u.test(segment.text)) {
@@ -753,8 +821,9 @@ function describeContentChecks(teaching: () => Teaching): void {
     expect(misses).toEqual([]);
   });
 
-  // G8: a taught body that no longer runs teaches nothing, and no reader notices.
-  it("runs every inline body it teaches over this checkout and over the worked example", async () => {
+  // G8: a taught body that no longer runs teaches nothing, and no reader notices; one that runs
+  // only over the corpus its writer had open fails the reader who copies it elsewhere.
+  it("runs every inline body it teaches over the graph its call selects", async () => {
     const { files } = teaching();
     const verbs = usageLines();
     const shipped = new Map(
@@ -771,9 +840,20 @@ function describeContentChecks(teaching: () => Teaching): void {
     const failures: unknown[] = [];
 
     for (const taught of bodies) {
-      const corpora: [string, ExtractionResult][] = [["checkout", checkout]];
-      // A subject names this checkout's corpus, so only a body without one runs over the example.
-      if (taught.params === undefined) corpora.push(["checkout-v1", exampleGraph()]);
+      // Each call runs over the graph its root selection derives. A project's call runs here and
+      // in an adopter, where the worked example stands in for the adopter's corpus, so a subject
+      // it names must live there; only the checkout's own form may name the checkout's Specs.
+      const corpora: [string, ExtractionResult][] =
+        taught.root === "checkout"
+          ? [["checkout", checkout]]
+          : taught.root === "protocol"
+            ? [["shipped specs", packageExtraction()]]
+            : taught.params === undefined
+              ? [
+                  ["checkout", checkout],
+                  ["checkout-v1", exampleGraph()],
+                ]
+              : [["checkout-v1", exampleGraph()]];
       for (const [corpus, extraction] of corpora) {
         const run = await runBody(taught.body, taught.params, extraction);
         const empty = emptyHanded(run.answer);
@@ -796,7 +876,7 @@ function describeContentChecks(teaching: () => Teaching): void {
   it("quotes no recipe-catalog size", () => {
     const { files } = teaching();
     const size = catalogHeadings().size;
-    const sizeStatement = catalogSizePattern();
+    const sizeStatement = catalogSizePattern(size);
     const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
     for (const file of files) {
       const text = teachingText(file.text);

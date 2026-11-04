@@ -13,10 +13,13 @@ project they ship with the package (`spec:consumers.shipped-protocol-corpus`): a
 `--protocol` to query them.
 
 Run every command from the project root, since the runner reads the corpus at the working
-directory: bodies through `../sdp-agent-surface/scripts/q.mjs` (from this skill's directory),
-other verbs through the project's package runner. Recipe N ships as
-`dist/recipes/<NN>-<slug>.js` under the installed package root; upgrading a corpus follows
-`docs/agent-surface/upgrade-guide.md` there.
+directory: bodies through `<skill-dir>/../sdp-agent-surface/scripts/q.mjs`, where `<skill-dir>`
+is this skill's directory, and other verbs through the project's package runner. Under the
+installed package root, recipe N ships as `dist/recipes/<NN>-<slug>.js`; the recipes this skill
+does not name sit in the catalog's categories, such as
+`docs/agent-surface/recipes.md#readiness-and-honesty` and
+`docs/agent-surface/recipes.md#citations-and-checks`; and upgrading a corpus follows
+`docs/agent-surface/upgrade-guide.md`.
 
 ## The loop
 
@@ -24,7 +27,8 @@ other verbs through the project's package runner. Recipe N ships as
    `dist/recipes/06-where-is-this-concept.js`), then `sdp new spec` in the family it finds;
    intent needing two kinds is two Specs. An edit: orientation 10 on the Spec, then the law it
    rests on (recipe 56, `dist/recipes/56-the-law-a-spec-rests-on.js`). A design round: the
-   design slice (recipe 54), read as [design.md](references/design.md) says.
+   design slice (recipe 54, `dist/recipes/54-the-design-slice.js`), read as
+   [design.md](references/design.md) says.
 2. **Edit the carrier.** Hand-written forms and refusals: [carrier.md](references/carrier.md).
 3. **Check** with this body, passing every file you touched as `--params '{"files":[…]}'`:
 

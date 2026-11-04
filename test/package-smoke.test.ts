@@ -821,6 +821,31 @@ relations: {}
         status: 0,
         stdout: "[]",
       });
+      // The reading skill's worked call, copied from the installed SKILL.md as printed, answers
+      // in a project whose own corpus lacks its subject, one of the Protocol's own Specs.
+      const workedCalls = [
+        ...(await readFile(join(installedSkill, "SKILL.md"), "utf8")).matchAll(
+          /^```sh\n(?<call>[\s\S]*?)\n```$/gmu,
+        ),
+      ].map((match) =>
+        (match.groups?.call ?? "").replaceAll("<skill-dir>", JSON.stringify(installedSkill)),
+      );
+      expect(workedCalls).toHaveLength(1);
+      const workedCall = spawnSync(workedCalls[0] ?? "", {
+        cwd: consumer,
+        encoding: "utf8",
+        shell: true,
+      });
+      expect({ status: workedCall.status, stderr: workedCall.stderr }).toEqual({
+        status: 0,
+        stderr: answeredStderr,
+      });
+      const workedAnswer = JSON.parse(workedCall.stdout) as Record<string, unknown>;
+      expect({
+        found: workedAnswer.found,
+        unknownParams: workedAnswer.unknownParams,
+        law: Array.isArray(workedAnswer.law) && workedAnswer.law.length > 0,
+      }).toEqual({ found: true, unknownParams: undefined, law: true });
       const skillOrientation = spawnSync(
         process.execPath,
         [join(installedSkill, "scripts", "orient.mjs"), "--json"],

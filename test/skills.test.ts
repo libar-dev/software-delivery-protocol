@@ -38,10 +38,12 @@ import { VaultGuardError } from "../src/projections/vault/sync.js";
 import { createReader } from "../src/reader/reader.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import {
+  bareInvocation,
   catalogHeadings,
   catalogSizePattern,
   describeHandbook,
   describeOnRamp,
+  misnamedRecipes,
   teachingText,
 } from "./helpers/on-ramp-checks.js";
 import { answeredStderr } from "./helpers/query-hint.js";
@@ -197,7 +199,6 @@ void authoringOnRampTestAnchor;
 
 describeOnRamp("sdp-authoring", {
   realizes: ["spec:consumers.authoring-on-ramp", "spec:consumers.adopter-on-ramp"],
-  capBytes: 17_000,
 });
 
 describe("the authoring on-ramp", () => {
@@ -473,7 +474,7 @@ describe("Protocol skill assets", () => {
 
   it("states no recipe-catalog size in the handbook or the README", () => {
     const size = catalogHeadings().size;
-    const sizeStatement = catalogSizePattern();
+    const sizeStatement = catalogSizePattern(size);
     const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
     for (const path of ["AGENTS.md", "README.md"]) {
       const text = teachingText(readFileSync(join(repoRoot, path), "utf8"));
@@ -487,6 +488,42 @@ describe("Protocol skill assets", () => {
 });
 
 describeHandbook("AGENTS.md");
+
+// The skill-shape checks flag what goes stale or runs another recipe or program, never a
+// wording a reader can judge: a subset count, a capital after a recipe's number, `npx sdp`.
+describe("the skill-shape checks' detectors", () => {
+  it("flags only the catalog's own size quoted before recipes", () => {
+    const sizeStatement = catalogSizePattern(56);
+    const flagged = (text: string) => sizeStatement.exec(text)?.[0] ?? null;
+
+    expect(flagged("Five shipped recipes run unchanged as a rules file.")).toBeNull();
+    expect(flagged("The 12 bodies above run as written.")).toBeNull();
+    expect(flagged("Recipe 56 and the other recipes compose it.")).toBeNull();
+    expect(flagged("The catalog holds 56 recipes.")).toBe("56 recipes");
+    expect(flagged("all fifty-six shipped recipes")).toBe("fifty-six shipped recipes");
+    expect(flagged("Fifty six recipes ship.")).toBe("Fifty six recipes");
+    expect(catalogSizePattern(13).exec("thirteen recipes")?.[0]).toBe("thirteen recipes");
+  });
+
+  it("flags a recipe's number only beside another recipe's name", () => {
+    const headings = catalogHeadings();
+    const title = (ordinal: number) => headings.get(ordinal) ?? "";
+
+    expect(misnamedRecipes(`recipe 21, ${title(21)}, reads footing`, headings)).toEqual([]);
+    expect(misnamedRecipes("run recipe 9, Then state the rung", headings)).toEqual([]);
+    expect(misnamedRecipes(`recipe 21, ${title(53)}, reads`, headings)).toEqual([
+      `"recipe 21, ${title(53)}" names recipe 53`,
+    ]);
+    expect(misnamedRecipes(`${title(54).toLowerCase()} (recipe 29)`, headings)).toHaveLength(1);
+  });
+
+  it("refuses only a copied line that starts with a bare sdp", () => {
+    expect(bareInvocation("sdp validate .")).toBe(true);
+    expect(bareInvocation("npx sdp validate .")).toBe(false);
+    expect(bareInvocation("pnpm exec sdp q 'return g.specs().length'")).toBe(false);
+    expect(bareInvocation("sdp q 'return g.specs().length'")).toBe(true);
+  });
+});
 
 const readingOnRampImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.reading-on-ramp"),
@@ -514,10 +551,7 @@ void readingOnRampTestAnchor;
 // - `#taskIndex`: G4 (the catalog index path resolves and ships);
 // - `#pairing` and `#stateAndLaw`: meaning, audited by a reader; no token pin.
 describe("the graph-reading on-ramp", () => {
-  describeOnRamp("sdp-agent-surface", {
-    realizes: ["spec:consumers.reading-on-ramp"],
-    capBytes: 16_000,
-  });
+  describeOnRamp("sdp-agent-surface", { realizes: ["spec:consumers.reading-on-ramp"] });
 
   // The runner and the scripts that derive this checkout's graph share one exclusion list.
   it("passes the runner's exclusions wherever this checkout derives its own graph", async () => {
@@ -1275,7 +1309,7 @@ describe("the Studio on-ramp", () => {
     stylesheet: join(repoRoot, "dist", "studio", "studio.css"),
   };
 
-  describeOnRamp("sdp-studio", { realizes: ["spec:consumers.studio-on-ramp"], capBytes: 7_000 });
+  describeOnRamp("sdp-studio", { realizes: ["spec:consumers.studio-on-ramp"] });
 
   it("is its own shipped skill, which the reading skill points to", () => {
     expect(studio().frontmatter.name).toBe("sdp-studio");
@@ -1542,7 +1576,7 @@ const vaultOnRampTestAnchor = specTest({
 });
 void vaultOnRampTestAnchor;
 
-describeOnRamp("sdp-vault", { realizes: ["spec:consumers.vault-on-ramp"], capBytes: 4_000 });
+describeOnRamp("sdp-vault", { realizes: ["spec:consumers.vault-on-ramp"] });
 
 describe("the vault on-ramp", () => {
   const vault = () => readSkill(vaultSkillPath).source;
@@ -1659,7 +1693,6 @@ describe("the vault on-ramp", () => {
 
 describeOnRamp("sdp-sessions", {
   realizes: ["spec:consumers.delivery-session-on-ramp", "spec:consumers.graph-first-planning"],
-  capBytes: 6500,
 });
 
 describe("the delivery-session on-ramp", () => {
@@ -1751,7 +1784,7 @@ describe("the delivery-session on-ramp", () => {
   it("re-measures a hand-off with the one orientation run it teaches", () => {
     const skill = read("SKILL.md").replaceAll(/\s+/gu, " ");
     const taught =
-      /`node <reading skill>\/scripts\/orient\.mjs --only ([\d,]+) --subjects '([^']+)'`/u.exec(
+      /`node <skill-dir>\/\.\.\/sdp-agent-surface\/scripts\/orient\.mjs --only ([\d,]+) --subjects '([^']+)'`/u.exec(
         skill,
       );
     if (taught?.[1] === undefined || taught[2] === undefined) {

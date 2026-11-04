@@ -9,7 +9,7 @@ metadata:
 
 The Studio (`spec:consumers.spec-studio`) is a projection: static pages of values the build
 computed from the one graph; a person's change leaves it as scoped intent for a carrier. Run
-commands from the project root.
+commands from the project root; `<skill-dir>` is this skill's directory.
 
 ## Hazards
 
@@ -24,16 +24,16 @@ commands from the project root.
   (`dist/recipes/45-run-evidence.js`):
 
   ```sh
-  node <this skill's directory>/../sdp-agent-surface/scripts/q.mjs 'return (await recipes(45, params)).inputs.map(({ commit, sameCommit }) => ({ commit, sameCommit }))' --params runs=@ctrf.json --params '{"commit":"<corpusCommit>"}'
+  node <skill-dir>/../sdp-agent-surface/scripts/q.mjs 'return (await recipes(45, params)).inputs.map(({ commit, sameCommit }) => ({ commit, sameCommit }))' --params runs=@ctrf.json --params '{"commit":"<corpusCommit>"}'
   ```
 
 ## Start from what you hold
 
 - **A repository: publish.** `sdp generate` writes every page root; `sdp studio` writes the
   Studio alone, with a base graph or run reports. A base graph is the `generated/graph.json` a
-  worktree at the base commit builds with its own engine (recipe 35's entry in
-  `docs/agent-surface/recipes.md`). Pass inputs from outside this checkout's `generated/`
-  (`spec:consumers.spec-studio.data.inputs#rule.inputPlacement`).
+  worktree at the base commit builds with its own engine (recipe 35, The design diff:
+  `docs/agent-surface/recipes.md#35-the-design-diff`). Pass inputs from outside this checkout's
+  `generated/` (`spec:consumers.spec-studio.data.inputs#rule.inputPlacement`).
 - **A final build: stamp it** with the commit it read (`sdp stamp --commit`), then upload
   `generated/spec-studio/`. Source links need the stamp's `--source` template and pages served
   over http(s); otherwise file and line stay text (`spec:consumers.spec-studio.sharing#rule.sourceLinks`).
@@ -45,7 +45,7 @@ commands from the project root.
   Pack export carries no stamp or composing panel, so name its commit when you send one.
   To ask past the pages, check out `stamp.json`'s `corpusCommit` in a worktree and, from its root,
   run orientation 10 on the page's ids
-  (`<this skill's directory>/../sdp-agent-surface/scripts/orient.mjs`).
+  (`<skill-dir>/../sdp-agent-surface/scripts/orient.mjs`).
 - **Composed intent: receive it**, below.
 
 ## Receive composed intent

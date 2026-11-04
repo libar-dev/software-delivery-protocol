@@ -47,8 +47,9 @@ constraints alike (`g.specContext(id)`), then:
 
 A component and its members are one set. A reference runs one way, code to design: a new design
 on existing code declares `dependsOn` or `refines` to the Spec that code satisfies. After a
-design change, read the design diff (recipe 35) and test again. Before merging or dropping an
-identity, list each promise its targets carry and the units that still realize it.
+design change, read the design diff (recipe 35, `dist/recipes/35-the-design-diff.js`) and test
+again. Before merging or dropping an identity, list each promise its targets carry and the units
+that still realize it.
 
 ## Architecture
 
@@ -56,11 +57,12 @@ identity, list each promise its targets carry and the units that still realize i
 pattern; `layer` (`edge`, `application`, `domain`, `adapter`, `infrastructure`) and `context`
 go on a `component:` anchor only. None confers intent, a fact or a rung
 (`spec:decisions.architectural-annotation`). Reuse values from roles, layers and contexts
-(recipe 28). A component no code realizes yet is a Spec, never an invented anchor.
+(recipe 28, `dist/recipes/28-roles-layers-and-contexts.js`). A component no code realizes yet is
+a Spec, never an invented anchor.
 
 ## Citations and documents
 
-Entry citations (recipe 51) lists addresses cited in anchored files, and as a rules file
-reports unresolved ones (`spec:extraction.entry-citations`). A Markdown deliverable cannot carry
-an anchor: the suite asserting that it ships carries one labelled for it, and the document stays
-coverage-unknown in blast radius.
+Entry citations (recipe 51, `dist/recipes/51-entry-citations.js`) lists addresses cited in
+anchored files, and as a rules file reports unresolved ones (`spec:extraction.entry-citations`).
+A Markdown deliverable cannot carry an anchor: the suite asserting that it ships carries one
+labelled for it, and the document stays coverage-unknown in blast radius.

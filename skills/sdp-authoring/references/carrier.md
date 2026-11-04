@@ -57,7 +57,8 @@ or under Example space, never both.
   fields are `decider:`, `links:`, `provisional:` and, on a blocking question only, `trigger:`;
   none moves a floor (`spec:model.open-question-fields`).
 - Key a rule that something outside the Spec cites, as `spec:<id>#rule.<key>`; the rule-key
-  proposal (recipe 48) drafts keys. An example names the rules it exercises on its target:
+  proposal (recipe 48, `dist/recipes/48-the-rule-key-proposal.js`) drafts keys. An example names
+  the rules it exercises on its target:
   `verifies: { target: spec:<parent>, exercises: [onePerCart] }` (`spec:model.rule-keys`).
 - A relation reason confers nothing (`spec:model.relation-reasons`). A decision `refines` the
   Spec whose question it settles, and that Spec names it through `decidedBy`.

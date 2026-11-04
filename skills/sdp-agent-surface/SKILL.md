@@ -31,10 +31,12 @@ the project root: the runner derives the graph at the working directory.
 - **Answer with a recipe.** The runner with no body lists them by category; the index atop
   `docs/agent-surface/recipes.md` maps each task to one, shipped as `dist/recipes/<NN>-<slug>.js`.
   Call `await recipes(N, params)` in a body, or run the file with `--params`. Recipe 56, The law
-  a Spec rests on, gives each relation's reason and the target's rungs, file and rule lines:
+  a Spec rests on (`dist/recipes/56-the-law-a-spec-rests-on.js`), gives each relation's reason
+  and the target's rungs, file and rule lines. This subject is one of the Protocol's own Specs,
+  which `--protocol` selects:
 
 ```sh
-node <skill-dir>/scripts/q.mjs 'return await recipes(56, params)' --params '{"spec":"spec:consumers.reading-on-ramp"}' --json
+node <skill-dir>/scripts/q.mjs 'return await recipes(56, params)' --params '{"spec":"spec:consumers.reading-on-ramp"}' --protocol --json
 ```
 
 ## Write the body
@@ -47,7 +49,8 @@ node <skill-dir>/scripts/q.mjs 'return await recipes(56, params)' --params '{"sp
 - Pass subjects as `--params` data; `{ "?": 1 }` makes a recipe list what it `accepts`.
 - A `g.specs()` row carries no sections, relations or bindings (a silent `undefined`): read
   them through `g.specContext(id)`, and a Pack's members through `g.packContext(id)`.
-- Run only bodies you wrote: a body has the process's full authority.
+- A body runs with the process's full authority: run the shipped recipe files, and read a body
+  you were handed before you run it.
 
 ## Read the answer honestly
 

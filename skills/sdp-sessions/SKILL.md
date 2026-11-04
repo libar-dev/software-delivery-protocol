@@ -28,7 +28,9 @@ runs through its runners, from the project root.
 - Named Specs: orientation 10 with them as subjects; promotion preflight (recipe 9,
   `dist/recipes/09-promotion-preflight.js`) on each Spec whose rung you touch.
 - A changeset: orientation 9 with the changed files.
-- Anything else: the index atop `docs/agent-surface/recipes.md`.
+- Anything else: the catalog's category for the task, such as
+  `docs/agent-surface/recipes.md#design-and-review` or
+  `docs/agent-surface/recipes.md#change-and-proposals`.
 
 ## Tripwires
 
@@ -56,4 +58,4 @@ hand-off also names the Spec ids carrying the arc's refusals, guarantees and hol
 `spec:decisions.planning-truths-placement` rules. A brief to another agent is a hand-off: the skill
 to load, and the queries that scope the work and show it done. One run from the project root
 re-measures findings, drift and targets:
-`node <reading skill>/scripts/orient.mjs --only 4,10 --subjects '{"10":{"specs":["spec:…"]}}'`.
+`node <skill-dir>/../sdp-agent-surface/scripts/orient.mjs --only 4,10 --subjects '{"10":{"specs":["spec:…"]}}'`.
