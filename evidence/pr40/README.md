@@ -7,15 +7,15 @@ confirms. This directory is arc evidence and is removed before merge.
 
 ## How the review ran
 
-- **Find.** Fifteen lanes, each read independently by a Claude and a GPT reviewer in its own
-  experiment worktree: 120 findings.
+- **Find.** Fifteen lanes, each in its own experiment worktree. Twelve were read independently by
+  a Claude and a GPT reviewer; two (a re-measurement of the proof tests and the merge simulation)
+  by Claude alone, and one (the other half of the proof tests) by GPT alone: 120 findings.
 - **Verify.** Merged within each lane, grouped across lanes into 76 distinct defects, and every
   defect verified by the model family that did not find it: 70 confirmed, 6 refuted.
 - **Sweep.** Two sweeps re-read every raw report, verifier report and critic gap for anything
   said but not recorded: 35 more confirmed in the first, 9 in the second. A conflation audit
   checked every merge.
-- **Rulings.** The owner ruled on nine questions the review raised (listed in the pull
-  request).
+- **Rulings.** The owner ruled on ten questions the review raised (listed in the pull request).
 
 ## Lanes
 
@@ -53,3 +53,22 @@ The final pull request description must carry these rows in its delegated-ruling
 | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | Reserved properties and nested content (F-sweep1-9)       | Clarifies existing validator behavior on a ready Spec: reserved properties are checked at the named envelope and section sites; a Model term or a key inside a Design value remains content. This repairs wording drift and changes no runtime allowance.                                                                                                                                                                                                                  | [Machine truth is never authored](../../specs/validation/authored-honesty.sdp.md)        |
 | One line-ending law across the carriers (F-pr40-claude-3) | No title, prose line, entry or step of a Spec or Pack holds a lone CR, U+2028 or U+2029 in any carrier; LF and CRLF are the only line endings. The Markdown carrier, which refused only a lone CR, now also refuses U+2028 and U+2029, at the physical line; the TypeScript carrier refuses a Spec or Pack whose title, narrative, framing or section string holds one; the Gherkin view folds every line terminator to one space. This tightens what two carriers accept. | [Markdown authoring enters the one graph](../../specs/carrier/markdown-authoring.sdp.md) |
+
+## Results
+
+All lanes above were approved by the reviewing family. Two more review rounds followed the lanes,
+and each confirmed finding went to a fix lane with the same split between implementing and
+reviewing families:
+
+- **Final verification.** A holistic cross-family review of the integrated branches, an audit of
+  every finding against its commit and proof test, and a sweep of the lanes' own reports: 54
+  items, 42 confirmed. Five lanes fixed them, four here and one on PR #34's branch.
+- **Closing review.** The same review over the third round's diffs alone: 16 items, all
+  confirmed. Four lanes fixed them, three here and one on PR #34's branch.
+
+PR #38's branch was then merged in (`merge: the whole-repository review from PR #38`), so this
+pull request carries the whole-repository review, the execution of its findings (PR #39's
+branch) and this second pass. PR #34 stays separate.
+
+Every finding, its verdict, where it was handled and the commits that name it:
+[`findings.md`](findings.md).
