@@ -632,3 +632,134 @@ it("creates missing parents through the held directory when its path is swapped 
     rmSync(workspace, { recursive: true, force: true });
   }
 });
+
+// spec:consumers.authoring-on-ramp#rule.scaffoldWriteBoundary: each recheck refuses at its own
+// checkpoint. The checks overlap, so without one the next refuses later, after a creation or
+// with another message; each test below fails when its own check is removed.
+describe("sdp new spec containment checkpoints", () => {
+  interface Workspace {
+    readonly root: string;
+    readonly outside: string;
+    readonly moved: string;
+  }
+
+  function scaffoldIn(
+    path: string,
+    hooks: (workspace: Workspace) => Parameters<typeof executeNewSpec>[2],
+    arrange: (workspace: Workspace) => void = () => undefined,
+  ): Workspace & { readonly exitCode: number; readonly stderr: string } {
+    const original = process.cwd();
+    // The physical path, so the paths a test swaps match the ones the command holds.
+    const base = realpathSync(mkdtempSync(join(tmpdir(), "sdp-new-spec-checkpoint-")));
+    const workspace = {
+      root: join(base, "root"),
+      outside: join(base, "outside"),
+      moved: join(base, "moved"),
+    };
+    mkdirSync(workspace.root);
+    mkdirSync(workspace.outside);
+    arrange(workspace);
+    process.chdir(workspace.root);
+    const capture = createCaptureOutput();
+    try {
+      const parsed = parseNewSpecArgs(requiredFlags({ path }), capture.output);
+      if (parsed === undefined) throw new Error(capture.readStderr());
+      const exitCode = executeNewSpec(parsed, capture.output, hooks(workspace));
+      return { exitCode, stderr: capture.readStderr(), ...workspace };
+    } finally {
+      process.chdir(original);
+    }
+  }
+
+  function cleanup(workspace: Workspace): void {
+    rmSync(dirname(workspace.root), { recursive: true, force: true });
+  }
+
+  it("refuses a statically planted escaping parent before attempting any parent creation", () => {
+    const created: string[] = [];
+    const result = scaffoldIn(
+      "linked/nested/probe.sdp.md",
+      () => ({
+        mkdirSync: (target, options) => {
+          created.push(String(target));
+          return mkdirSync(target, options);
+        },
+      }),
+      ({ root, outside }) => {
+        symlinkSync(outside, join(root, "linked"));
+      },
+    );
+    try {
+      expect(result.exitCode).toBe(1);
+      expect(created).toEqual([]);
+      expect(result.stderr).toBe(
+        "sdp new spec: PATH escapes the current working directory through a parent symlink.\n",
+      );
+      expect(existsSync(join(result.outside, "nested"))).toBe(false);
+    } finally {
+      cleanup(result);
+    }
+  });
+
+  it("refuses before creating a parent when the directory that would hold it moved out", () => {
+    const result = scaffoldIn("specs/nested/probe.sdp.md", ({ root, moved }) => ({
+      onScaffoldCheckpoint: (checkpoint, name) => {
+        if (checkpoint === "create" && name === "nested") renameSync(join(root, "specs"), moved);
+      },
+    }));
+    try {
+      expect(result.exitCode).toBe(1);
+      expect(existsSync(join(result.moved, "nested"))).toBe(false);
+      expect(result.stderr).toBe(
+        "sdp new spec: PATH cannot be resolved inside the current working directory: the directory that holds nested lies outside it before nested is created\n",
+      );
+    } finally {
+      cleanup(result);
+    }
+  });
+
+  it("refuses right after entering a parent swapped for an escaping link", () => {
+    const result = scaffoldIn("specs/nested/probe.sdp.md", ({ root, outside }) => ({
+      mkdirSync: (target, options) => {
+        const created = mkdirSync(target, options);
+        if (String(target) === "specs") {
+          rmSync(join(root, "specs"), { recursive: true });
+          symlinkSync(outside, join(root, "specs"));
+        }
+        return created;
+      },
+    }));
+    try {
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toBe(
+        "sdp new spec: PATH cannot be resolved inside the current working directory: specs lies outside it once entered\n",
+      );
+      expect(existsSync(join(result.outside, "nested"))).toBe(false);
+      expect(existsSync(join(result.outside, "probe.sdp.md"))).toBe(false);
+    } finally {
+      cleanup(result);
+    }
+  });
+
+  it("refuses before the write when the held parent moved out after the last parent check", () => {
+    let reachedWrite = false;
+    const result = scaffoldIn("specs/probe.sdp.md", ({ root, moved }) => ({
+      onScaffoldCheckpoint: (checkpoint) => {
+        if (checkpoint === "hold") renameSync(join(root, "specs"), moved);
+      },
+      onBeforeScaffoldWrite: () => {
+        reachedWrite = true;
+      },
+    }));
+    try {
+      expect(result.exitCode).toBe(1);
+      expect(reachedWrite).toBe(false);
+      expect(result.stderr).toBe(
+        "sdp new spec: PATH escapes the current working directory: the scaffold's directory lies outside it before the write.\n",
+      );
+      expect(existsSync(join(result.moved, "probe.sdp.md"))).toBe(false);
+    } finally {
+      cleanup(result);
+    }
+  });
+});
