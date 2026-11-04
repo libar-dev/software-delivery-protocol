@@ -2,7 +2,8 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, isAbsolute, join, relative } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { parseCLI, resolveConfig } from "vitest/node";
@@ -231,28 +232,56 @@ const runsPooledPass =
   !hasPathFilter || pathFilters.some((filter) => !cliLocations.includes(filter));
 
 /**
- * The reporters, output file and coverage a split run's passes would resolve. A configuration
- * file can set each of them, so they are read as Vitest reads them: the file found from the root,
- * with the caller's options over it. A configuration Vitest cannot load fails each pass with
- * Vitest's own message; the wrapper then reads the caller's options alone. A configuration can read
- * the environment, so the wrapper first sets the variables Vitest sets before it loads one: TEST
- * and VITEST, and NODE_ENV when the caller left it unset. Otherwise Vite would load it with
- * NODE_ENV set to `development`. Loading also sets variables such as MODE in this process, and the
- * passes inherit its environment, so the caller's environment is restored afterwards.
+ * The configuration file a pass loads for a `--config` value. Vitest looks the value up as a module
+ * from the root first, so a configuration can come from a package, and only then as a path under
+ * the root. Vitest's public resolveConfig skips the module lookup, so the wrapper does it here,
+ * with Node's resolver.
+ */
+function configurationFile(value, root) {
+  try {
+    return createRequire(join(root, "package.json")).resolve(value);
+  } catch {
+    return resolve(root, value);
+  }
+}
+
+/**
+ * The reporters, output file, coverage and root a split run's passes would resolve. A
+ * configuration file can set each of them, so they are read as Vitest reads them: the file the
+ * passes load, with the caller's options over it. The passes load it with the loader the caller
+ * selects with `--configLoader`, which Vitest's public resolveConfig ignores unless it is given
+ * again here. When the wrapper still cannot load the configuration, it reads the caller's options
+ * alone. A configuration that fails here fails each pass with Vitest's own message too, unless the
+ * passes find a file the wrapper does not: Node's resolver reads a package's exports for require,
+ * where Vitest reads them for import. A report file such a configuration names then holds the last
+ * pass alone. A configuration can read the environment, so the wrapper first sets the variables
+ * Vitest sets before it loads one: TEST and VITEST, and NODE_ENV when the caller left it unset.
+ * Otherwise Vite would load it with NODE_ENV set to `development`. Loading also sets variables such
+ * as MODE in this process, and the passes inherit its environment, so the caller's environment is
+ * restored afterwards.
  */
 async function resolveReporting() {
   const callerEnvironment = { ...process.env };
   process.env.TEST = "true";
   process.env.VITEST = "true";
   process.env.NODE_ENV ??= "test";
+  const root = resolve(options.root ?? process.cwd());
   try {
-    const { vitestConfig } = await resolveConfig(parseVitest(argv).options, { logLevel: "silent" });
+    const passOptions = parseVitest(argv).options;
+    if (typeof passOptions.config === "string") {
+      passOptions.config = configurationFile(passOptions.config, root);
+    }
+    const { vitestConfig } = await resolveConfig(passOptions, {
+      logLevel: "silent",
+      configLoader: passOptions.configLoader,
+    });
     return vitestConfig;
   } catch {
     return {
       reporters: [options.reporter ?? []].flat(),
       outputFile: options.outputFile,
       coverage: options.coverage,
+      root,
     };
   } finally {
     for (const name of Object.keys(process.env)) {
@@ -304,6 +333,27 @@ if (mergesReports && reporters.some(([name]) => name === "blob")) {
   console.error(
     `This run executes ${cliTestPath} in its own Vitest process after the others, and Vitest cannot merge two runs into one blob report.\nSelect test files with a filter, or run the CLI suite alone with \`npx vitest run ${cliTestPath}\`.`,
   );
+  process.exit(1);
+}
+
+// The merge step alone loads the caller's reporters, after both passes, so a reporter it cannot
+// load fails the run only once every test has run. The html reporter needs @vitest/ui, which
+// Vitest looks for from the root and from its own folder, so the wrapper looks in the same places
+// before any pass. A custom reporter module is loaded the way Vite loads modules, which the
+// wrapper does not repeat, so a module that fails to load still fails at the merge step.
+const installedFrom = (name, directory) => {
+  for (let folder = directory; ; folder = dirname(folder)) {
+    if (existsSync(join(folder, "node_modules", name, "package.json"))) return true;
+    if (dirname(folder) === folder) return false;
+  }
+};
+const vitestFolder = dirname(fileURLToPath(import.meta.resolve("vitest/node")));
+if (
+  mergesReports &&
+  reporters.some(([name]) => name === "html") &&
+  ![resolvedReporting.root, vitestFolder].some((folder) => installedFrom("@vitest/ui", folder))
+) {
+  console.error("The html reporter needs @vitest/ui, and it is not installed.");
   process.exit(1);
 }
 
