@@ -144,7 +144,7 @@ A refresh measures both numbers and qualitative claims. A design diff alone cann
 
 ### Step 1: Install and build
 
-Use Node `^20.19.0 || ^22.12.0 || >=24.0.0`, where the ranges declared by the installed test toolchain (Vitest, Vite and Rolldown) overlap. This source-development requirement is separate from the CLI's declared Node `>=20` runtime floor.
+Use Node `^20.19.0 || ^22.12.0 || >=24.0.0`, where the ranges declared by the installed test toolchain (Vitest, Vite and Rolldown) overlap. This source-development requirement is separate from the CLI's runtime range, declared in the checkout's `package.json` under `engines.node`.
 
 ```sh
 npm ci
@@ -237,7 +237,7 @@ node docs/articles/sync-evidence.mjs "$SOURCE_DIR"
 node docs/articles/sync-evidence.mjs --check "$SOURCE_DIR"
 ```
 
-Both commands create a temporary worktree under the article checkout's `.scratch/`, install dependencies, build `dist/`, and regenerate `generated/`, test registrars and the example's generated outputs there. They temporarily register the worktree in `$SOURCE_DIR`'s Git metadata and remove it on success or failure; they do not overwrite outputs in `$SOURCE_DIR`. Installing dependencies may populate npm's cache and needs registry access or a populated cache. Sync mode also writes the marked manuscript blocks. Check mode writes no manuscript.
+Both commands create a worktree in the system temporary directory (they refuse a `TMPDIR` inside either checkout), install dependencies, build `dist/`, and regenerate `generated/`, test registrars and the example's generated outputs there. They temporarily register the worktree in `$SOURCE_DIR`'s Git metadata and remove only their own directory and registration on success, failure, SIGINT or SIGTERM; they do not overwrite outputs in `$SOURCE_DIR`. Installing dependencies may populate npm's cache and needs registry access or a populated cache. Sync mode also writes the marked manuscript blocks. Check mode writes no manuscript. On interruption, the supervising process stops the worker and its child processes before removing the worktree. SIGKILL of the supervisor leaves the detached worker running: it finishes and cleans up its own worktree, and sync mode can still write manuscript blocks. Wait for that worker to stop before removing anything. After it stops, or after a machine failure, remove any surviving worktree with `git worktree remove --force <path>` from the source repository.
 
 Always pass the source repository explicitly. Add a marked block and its generator whenever a manuscript gains a reusable output excerpt. Missing, duplicate, unknown, nested or fenced markers fail the check. Keep elision explicit, as in the constant-anchor excerpt. Do not paste a modified version of source or command output and call it an example.
 
@@ -245,6 +245,7 @@ Mermaid stays live source. Markdown tables come from graph queries. Screenshots 
 
 ### Step 5: Check version-sensitive prose
 
+- Recheck runtime and engines statements outside evidence blocks, including Step 1 and Part 1, against the new pin's `package.json` and installed toolchain.
 - Recount recipes and skills in the [generated baseline metrics](#step-3-re-derive-corpus-metrics).
 - Check `sdp q` bindings. The current sink injects `g`, `graph`, `report`, `params` and `recipes`.
 - Re-read the Studio's carrying Specs and publish a current page set. Check lenses, roadmap, registers, queue, diff, runs, export and composing panel rather than saying "phase 0" from memory.
@@ -257,4 +258,4 @@ Mermaid stays live source. Markdown tables come from graph queries. Screenshots 
 
 ### Step 6: Verify
 
-Run `npm run check:articles -- "$SOURCE_DIR"` and `npm run check` after staging new article files so preflight can see them. CI runs the same article check with full git history, using its disposable build of the pinned source, so a manuscript branch behind the pin cannot merge stale evidence green. Then manually inspect the rendered Markdown, relative links and commit-pinned links. The main gate does not check those links or all Markdown fence structure.
+Run `npm run check:articles -- "$SOURCE_DIR"` and `npm run check` after staging new article files so preflight can see them. CI runs the same article check with full git history, using its disposable build of the pinned source, so a manuscript branch behind the pin cannot merge stale evidence green. On checkouts with `test/markdown-links.test.ts`, `npm run check` runs that Markdown link gate: it checks that relative link target paths exist, including article paths under `docs/`. Manually inspect the rendered Markdown, link fragments, commit-pinned URLs and code fence structure, which a repository-path check does not establish.

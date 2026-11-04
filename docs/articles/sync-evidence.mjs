@@ -1,15 +1,20 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, fork, spawnSync } from "node:child_process";
 import {
+  closeSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
+  openSync,
   readFileSync,
+  readSync,
   readdirSync,
   realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
+  writeSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,7 +45,8 @@ export function evidenceMarkers(original, file) {
       const run = delimiter[1];
       const rest = line.slice(delimiter[0].length);
       if (!fence) fence = run;
-      else if (run[0] === fence[0] && run.length >= fence.length && !rest.trim()) fence = undefined;
+      else if (run[0] === fence[0] && run.length >= fence.length && /^[ \t]*\r?$/.test(rest))
+        fence = undefined;
     }
     offset += line.length + 1;
   }
@@ -85,7 +91,7 @@ export function parseArguments(args) {
     if (argument === "--" && !separator) separator = true;
     else if (argument === "--check" && !separator && !check) check = true;
     else if (argument === "--print-pin" && !separator && !printPin) printPin = true;
-    else if (argument.startsWith("-"))
+    else if (!separator && argument.startsWith("-"))
       throw new Error(`Unknown or repeated option: ${argument}\n${usage}`);
     else if (source !== undefined)
       throw new Error(`Only one source repository is allowed.\n${usage}`);
@@ -97,7 +103,7 @@ export function parseArguments(args) {
 
 // Read raw blobs rather than checking out files: sparse patterns, attributes and filter
 // drivers belong to the supplied repository, not the pin. Preserve binary bytes and modes.
-function materializeTree(git, commit, source) {
+export function materializeTree(git, commit, source) {
   const entries = git(["ls-tree", "-r", "-z", commit])
     .toString("utf8")
     .split("\0")
@@ -110,30 +116,110 @@ function materializeTree(git, commit, source) {
         throw new Error(`Unsupported pinned tree entry: ${mode} ${file}`);
       return { mode, oid, file };
     });
-  const blobs = git(["cat-file", "--batch"], entries.map(({ oid }) => oid + "\n").join(""));
-  let offset = 0;
-  for (const { mode, oid, file } of entries) {
-    const newline = blobs.indexOf(10, offset);
-    const [actualOid, type, sizeText] = blobs.subarray(offset, newline).toString("utf8").split(" ");
-    const size = Number(sizeText);
-    const start = newline + 1;
-    const end = start + size;
-    if (
-      newline < offset ||
-      actualOid !== oid ||
-      type !== "blob" ||
-      !Number.isSafeInteger(size) ||
-      size < 0 ||
-      end >= blobs.length ||
-      blobs[end] !== 10
-    )
-      throw new Error(`Could not read pinned blob: ${file}`);
-    const target = path.join(source, file);
-    mkdirSync(path.dirname(target), { recursive: true });
-    const content = blobs.subarray(start, end);
-    if (mode === "120000") symlinkSync(content, target);
-    else writeFileSync(target, content, { mode: mode === "100755" ? 0o755 : 0o644 });
-    offset = end + 1;
+  // Spool one batch outside the source tree; neither total nor individual blob size
+  // is bounded by execFileSync's output buffer. Read bodies in bounded chunks.
+  const batchPath = path.join(path.dirname(source), "blobs.batch");
+  const batch = openSync(batchPath, "w+");
+  try {
+    git(["cat-file", "--batch"], entries.map(({ oid }) => `${oid}\n`).join(""), batch);
+    let offset = 0;
+    const buffer = Buffer.alloc(64 * 1024);
+    const read = (length) => {
+      const count = readSync(batch, buffer, 0, length, offset);
+      if (count === 0) throw new Error("Truncated pinned blob batch.");
+      offset += count;
+      return buffer.subarray(0, count);
+    };
+    for (const { mode, oid, file } of entries) {
+      const count = readSync(batch, buffer, 0, 256, offset);
+      const newline = buffer.subarray(0, count).indexOf(10);
+      if (newline < 0) throw new Error(`Invalid pinned blob header: ${file}`);
+      const header = buffer.subarray(0, newline).toString("ascii");
+      const match = /^([0-9a-f]+) blob (0|[1-9][0-9]*)$/.exec(header);
+      const size = Number(match?.[2]);
+      if (match?.[1] !== oid || !Number.isSafeInteger(size))
+        throw new Error(`Invalid pinned blob header: ${file}`);
+      offset += newline + 1;
+      const target = path.join(source, file);
+      mkdirSync(path.dirname(target), { recursive: true });
+      const link = mode === "120000" ? Buffer.alloc(size) : undefined;
+      const output = link ? undefined : openSync(target, "w", mode === "100755" ? 0o755 : 0o644);
+      try {
+        let copied = 0;
+        while (copied < size) {
+          const chunk = read(Math.min(buffer.length, size - copied));
+          if (link) chunk.copy(link, copied);
+          else {
+            let written = 0;
+            while (written < chunk.length)
+              written += writeSync(output, chunk, written, chunk.length - written);
+          }
+          copied += chunk.length;
+        }
+      } finally {
+        if (output !== undefined) closeSync(output);
+      }
+      if (read(1)[0] !== 10) throw new Error(`Invalid pinned blob terminator: ${file}`);
+      if (link) symlinkSync(link, target);
+    }
+    if (readSync(batch, buffer, 0, 1, offset) !== 0)
+      throw new Error("Unexpected trailing pinned blob data.");
+  } finally {
+    closeSync(batch);
+    rmSync(batchPath, { force: true });
+  }
+}
+
+// Resolve aliases even when an interrupted cleanup already removed the leaf.
+function realpathWithMissingTail(file) {
+  try {
+    return realpathSync(file);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return path.join(realpathWithMissingTail(path.dirname(file)), path.basename(file));
+  }
+}
+
+// An interrupt can leave a locked registration or remove its .git file first.
+// Never prune the repository: other missing worktrees may still be recoverable.
+export function cleanupPinnedSource(repository, temporary) {
+  const source = realpathWithMissingTail(path.resolve(temporary, "source"));
+  const removed = spawnSync(
+    "git",
+    ["-C", repository, "worktree", "remove", "--force", "--force", source],
+    {
+      stdio: "ignore",
+    },
+  );
+  try {
+    rmSync(temporary, { recursive: true, force: true });
+  } catch (error) {
+    console.error(`Could not remove temporary evidence directory ${temporary}: ${error.message}`);
+  }
+  if (removed.status !== 0) {
+    try {
+      const common = execFileSync(
+        "git",
+        ["-C", repository, "rev-parse", "--path-format=absolute", "--git-common-dir"],
+        { encoding: "utf8", stdio: "pipe" },
+      ).trim();
+      const registrations = path.join(common, "worktrees");
+      if (existsSync(registrations)) {
+        for (const name of readdirSync(registrations)) {
+          const entry = path.join(registrations, name);
+          try {
+            const gitdir = readFileSync(path.join(entry, "gitdir"), "utf8").trim();
+            if (realpathWithMissingTail(gitdir) === path.join(source, ".git"))
+              rmSync(entry, { recursive: true, force: true });
+          } catch (error) {
+            // A concurrent worktree removal may have already removed this entry.
+            if (error.code !== "ENOENT") throw error;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Could not remove evidence worktree registration ${source}: ${error.message}`);
+    }
   }
 }
 
@@ -142,11 +228,11 @@ function materializeTree(git, commit, source) {
 export function withPinnedSource(repository, commit, scratchRoot, action) {
   const root = realpathSync(repository);
   const env = { ...process.env, GIT_NO_REPLACE_OBJECTS: "1" };
-  const git = (args, input) =>
+  const git = (args, input, output = "pipe") =>
     execFileSync("git", ["--no-replace-objects", "-C", root, ...args], {
       env,
       input,
-      stdio: "pipe",
+      stdio: ["pipe", output, "pipe"],
       maxBuffer: 128 * 1024 * 1024,
     });
   const top = git(["rev-parse", "--show-toplevel"]).toString("utf8").trim();
@@ -155,10 +241,8 @@ export function withPinnedSource(repository, commit, scratchRoot, action) {
   mkdirSync(scratchRoot, { recursive: true });
   const temporary = mkdtempSync(path.join(scratchRoot, "article-evidence-"));
   const source = path.join(temporary, "source");
-  let added = false;
   try {
     git(["worktree", "add", "--detach", "--no-checkout", source, commit]);
-    added = true;
     materializeTree(git, commit, source);
     execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
       cwd: source,
@@ -168,11 +252,7 @@ export function withPinnedSource(repository, commit, scratchRoot, action) {
     execFileSync("npm", ["run", "build"], { cwd: source, env, stdio: "pipe" });
     return action(source);
   } finally {
-    try {
-      if (added) git(["worktree", "remove", "--force", source]);
-    } finally {
-      rmSync(temporary, { recursive: true, force: true });
-    }
+    cleanupPinnedSource(root, temporary);
   }
 }
 
@@ -445,7 +525,75 @@ export function evidenceBlocks(sourceRoot, pinnedCommit) {
   return blocks;
 }
 
-function main() {
+// Keep cancellation in a responsive parent while the worker runs synchronous git,
+// npm and evidence commands. A separate process group includes npm's descendants.
+async function supervise(repository, repositoryRoot) {
+  const scratchRoot = realpathSync(tmpdir());
+  for (const root of [repository, repositoryRoot]) {
+    const relative = path.relative(realpathSync(root), scratchRoot);
+    if (relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative))
+      throw new Error("TMPDIR must be outside the article checkout and the source repository.");
+  }
+  let temporary;
+  let child;
+  let interrupted;
+  const stopChild = () => {
+    if (!child?.pid) return;
+    if (process.platform === "win32") {
+      spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+    } else {
+      try {
+        process.kill(-child.pid, "SIGKILL");
+      } catch (error) {
+        if (error.code !== "ESRCH" && error.code !== "EPERM")
+          console.error(`Could not stop evidence worker: ${error.message}`);
+      }
+    }
+  };
+  const stop = (signal) => {
+    if (interrupted) return;
+    interrupted = signal;
+    stopChild();
+  };
+  const onInterrupt = () => stop("SIGINT");
+  const onTerminate = () => stop("SIGTERM");
+  process.on("SIGINT", onInterrupt);
+  process.on("SIGTERM", onTerminate);
+  try {
+    temporary = realpathSync(mkdtempSync(path.join(scratchRoot, "article-evidence-")));
+    let code;
+    if (!interrupted) {
+      child = fork(fileURLToPath(import.meta.url), process.argv.slice(2), {
+        detached: process.platform !== "win32",
+        stdio: ["inherit", "inherit", "inherit", "ipc"],
+        env: { ...process.env, SDP_ARTICLE_WORKER_ROOT: temporary },
+      });
+      // A signal during fork is remembered until the worker's pid is available.
+      if (interrupted) stopChild();
+      code = await new Promise((resolve, reject) => {
+        child.once("error", reject);
+        child.once("close", (code) => resolve(code));
+      });
+    }
+    process.exitCode =
+      interrupted === "SIGINT" ? 130 : interrupted === "SIGTERM" ? 143 : (code ?? 1);
+  } finally {
+    try {
+      // A killed worker cannot run its finally. Remove only this invocation's
+      // registrations, after its process group has stopped writing.
+      if (temporary) {
+        for (const name of readdirSync(temporary))
+          cleanupPinnedSource(repository, path.join(temporary, name));
+        rmSync(temporary, { recursive: true, force: true });
+      }
+    } finally {
+      process.off("SIGINT", onInterrupt);
+      process.off("SIGTERM", onTerminate);
+    }
+  }
+}
+
+async function main() {
   const { check, printPin, source: sourceArgument } = parseArguments(process.argv.slice(2));
   const articlesDir = path.dirname(fileURLToPath(import.meta.url));
   const repositoryRoot = path.resolve(articlesDir, "../..");
@@ -477,10 +625,13 @@ function main() {
       .map((name) => [name, readFileSync(path.join(articlesDir, name), "utf8")]),
   );
   validateEvidenceMarkers(documents, evidenceBlocks(repositoryRoot, pinnedCommit));
+  if (!process.send || !process.env.SDP_ARTICLE_WORKER_ROOT) {
+    return supervise(sourceArgument, repositoryRoot);
+  }
   return withPinnedSource(
     sourceArgument,
     pinnedCommit,
-    path.join(repositoryRoot, ".scratch"),
+    process.env.SDP_ARTICLE_WORKER_ROOT,
     (sourceRoot) => {
       const blocks = evidenceBlocks(sourceRoot, pinnedCommit);
       const drift = [];
@@ -515,5 +666,5 @@ if (
   process.argv[1] &&
   realpathSync(path.resolve(process.argv[1])) === realpathSync(fileURLToPath(import.meta.url))
 ) {
-  main();
+  await main();
 }
