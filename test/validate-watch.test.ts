@@ -1000,6 +1000,38 @@ function graphText(root: string): string {
   return readFileSync(join(root, "generated", "graph.json"), "utf8");
 }
 
+/** The stats with some fields replaced, as a filesystem would report them. */
+function withStats(
+  stats: Stats,
+  fields: Partial<Pick<Stats, "dev" | "ino" | "birthtimeMs">>,
+): Stats {
+  return Object.assign(
+    Object.create(Object.getPrototypeOf(stats) as object) as Stats,
+    stats,
+    fields,
+  );
+}
+
+/**
+ * An lstat that gives each directory a birth time, `bornAgain` for the directories it names and 1
+ * for the rest, or 0 for every directory when the filesystem reports none. A directory's birth time
+ * is all the watcher compares, and only at its own path, so the values need not be real.
+ */
+function birthTimes(
+  reported: boolean,
+  bornAgain: (path: string) => boolean = () => false,
+): (path: string) => Stats {
+  return (path) => {
+    const stats = lstatSync(path);
+
+    if (!stats.isDirectory()) {
+      return stats;
+    }
+
+    return withStats(stats, { birthtimeMs: reported ? (bornAgain(path) ? 2 : 1) : 0 });
+  };
+}
+
 // spec:consumers.validate-watch: a directory that replaces a watched one is watched in its place.
 describe("validate watch directory replacement", () => {
   // A watcher such as inotify follows the inode it was opened on, so after `mv specs/sub away &&
@@ -1357,6 +1389,86 @@ describe("validate watch root replacement", () => {
     }
   });
 
+  // A directory deleted and recreated can get the deleted one's inode number back, but it is born
+  // again: a filesystem that reports birth times gives it a new one, and one that reports none gives
+  // 0 for both. The new directory may already hold an entry with its own name when the dead handle's
+  // report of the deletion is read, and the old one may have held one too, whose deletion inotify
+  // reports first under the same name.
+  it.each([
+    ["the root", false, true, ""],
+    ["the root", true, true, ""],
+    ["the root", false, false, ""],
+    ["the root", true, false, ""],
+    ["a watched directory", false, true, "sub"],
+    ["a watched directory", true, false, "sub"],
+  ])(
+    "watches %s deleted and recreated with its inode reused that holds an entry with its own name (one before: %s, birth time reported: %s)",
+    async (_label, heldBefore, reported, directoryPath) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-own-name-reuse-"));
+      const root = join(workspace, "docs");
+      const directory = directoryPath === "" ? root : join(root, directoryPath);
+      const name = basename(directory);
+      writeCarrier(
+        join(directory, "specs", "before.sdp.md"),
+        "spec:tmp.watch-own-name-reuse-before",
+      );
+
+      if (heldBefore) {
+        writeFileSync(join(directory, name), "notes\n", "utf8");
+      }
+
+      const opened = lstatSync(directory);
+      let reuse = false;
+      const recreated = (path: string) => reuse && path === directory;
+      const lstatWithBirthTimes = birthTimes(reported, recreated);
+      const watch = watchRoot(root, (path) => {
+        const stats = lstatWithBirthTimes(path);
+
+        return recreated(path) ? withStats(stats, { dev: opened.dev, ino: opened.ino }) : stats;
+      });
+
+      try {
+        await bounded(watch.cycles.cycle(1), "own name reuse first cycle");
+        const dead = watch.native.subscriptions.get(directory);
+        expect(dead).toBeDefined();
+
+        rmSync(directory, { recursive: true });
+        writeCarrier(
+          join(directory, "specs", "after.sdp.md"),
+          "spec:tmp.watch-own-name-reuse-after",
+        );
+        writeFileSync(join(directory, name), "new notes\n", "utf8");
+        reuse = true;
+
+        if (heldBefore) {
+          await deliver(dead, "rename", name);
+        }
+
+        await deliver(dead, "rename", name);
+        await bounded(watch.cycles.cycle(2), "own name reuse rerun");
+        expect(dead?.closeCount).toBe(1);
+        const fresh = watch.native.subscriptions.get(directory);
+        expect(fresh).toBeDefined();
+        expect(fresh).not.toBe(dead);
+        expect(graphText(root)).toContain("spec:tmp.watch-own-name-reuse-after");
+        expect(graphText(root)).not.toContain("spec:tmp.watch-own-name-reuse-before");
+
+        // The new directory is watched: a carrier created in it joins the graph.
+        writeCarrier(join(directory, "late.sdp.md"), "spec:tmp.watch-own-name-reuse-late");
+        await deliver(fresh, "rename", "late.sdp.md");
+        await bounded(watch.cycles.cycle(3), "own name reuse carrier rerun");
+        expect(graphText(root)).toContain("spec:tmp.watch-own-name-reuse-late");
+
+        watch.cycles.abort.abort();
+        expect(await bounded(watch.running, "own name reuse watch exit")).toBe(0);
+        expect(watch.capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        watch.cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
   it.each([
     ["moves away and the root's handle reports its own move", "nothing", "rename", "self"],
     ["moves away and the root's handle reports an entry of it", "nothing", "change", "specs"],
@@ -1395,7 +1507,8 @@ describe("validate watch root replacement", () => {
 
 // spec:consumers.validate-watch: the watcher ignores every non-carrier path, and only a watched
 // directory removed or replaced schedules a run. These events change no carrier and replace no
-// watched directory, so they must open or close no handle and start no run.
+// watched directory, so they must open or close no handle and start no run, but for the one cost
+// the Spec states: an entry with its directory's own name, where no birth time tells it apart.
 describe("validate watch handle cost", () => {
   it.each([
     ["the root", ""],
@@ -1412,7 +1525,8 @@ describe("validate watch handle cost", () => {
       writeCarrier(join(root, "specs", "probe.sdp.md"), "spec:tmp.watch-own-name-cost");
       mkdirSync(directory, { recursive: true });
       writeFileSync(entry, "notes\n", "utf8");
-      const watch = watchRoot(root);
+      // On a filesystem that reports birth times, as APFS, ext4, XFS, btrfs and recent tmpfs do.
+      const watch = watchRoot(root, birthTimes(true));
 
       try {
         await bounded(watch.cycles.cycle(1), "own name cost first cycle");
@@ -1442,6 +1556,44 @@ describe("validate watch handle cost", () => {
       }
     },
   );
+
+  it("rebuilds the root once and starts one run when an entry named after it appears where the filesystem reports no birth time", async () => {
+    // The entry's event and the root's own report of a deletion look the same, and without a birth
+    // time the watcher cannot tell them apart, so it rebuilds. Once the entry is known, its other
+    // events cost nothing.
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-own-name-no-birth-time-"));
+    const root = join(workspace, "docs");
+    const entry = join(root, "docs");
+    writeCarrier(join(root, "specs", "probe.sdp.md"), "spec:tmp.watch-own-name-no-birth-time");
+    const watch = watchRoot(root, birthTimes(false));
+
+    try {
+      await bounded(watch.cycles.cycle(1), "no birth time first cycle");
+      const handle = watch.native.subscriptions.get(root);
+      const before = watch.native.counts();
+
+      writeFileSync(entry, "notes\n", "utf8");
+      await deliver(handle, "rename", "docs");
+      await bounded(watch.cycles.cycle(2), "no birth time rebuild");
+      expect(watch.native.counts()).toEqual({ opens: before.opens * 2, closes: before.opens });
+
+      const rebuilt = watch.native.counts();
+      const fresh = watch.native.subscriptions.get(root);
+      writeFileSync(entry, "more notes\n", "utf8");
+      await deliver(fresh, "change", "docs");
+      rmSync(entry);
+      await deliver(fresh, "rename", "docs");
+
+      expect(watch.native.counts()).toEqual(rebuilt);
+      expect(watch.started).toEqual([1, 2]);
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "no birth time watch exit")).toBe(0);
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
 
   it.each(["rename", "change"])(
     "keeps a watched directory's handles when a %s event names it while it is still the directory they watch",

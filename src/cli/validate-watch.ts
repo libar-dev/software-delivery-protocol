@@ -269,12 +269,15 @@ function createFilesystemWatchSource(input: {
   const watchers = new Map<string, NativeWatchHandle>();
   // The identity of the directory each handle was opened on. A watcher may follow the inode it
   // was opened on (inotify does) rather than the path, so a path that now holds another
-  // directory needs a new handle.
-  const identities = new Map<string, { readonly dev: number; readonly ino: number }>();
+  // directory needs a new handle. The birth time is 0 where the filesystem reports none.
+  const identities = new Map<
+    string,
+    { readonly dev: number; readonly ino: number; readonly birthtimeMs: number }
+  >();
   // The watched directories that, when last read, held an entry with their own name, such as
   // `docs/docs`. inotify reports a directory's own move or deletion on its handle under that name,
-  // so an event naming the entry is told apart from the directory's own by whether the entry was
-  // there.
+  // so once nothing stands at that name, an event naming the entry is told apart from the
+  // directory's own by whether the entry was there.
   const holdOwnName = new Set<string>();
   // The links discovery warns about, by absolute path, so removing one still schedules a run.
   const skippedLinks = new Set<string>();
@@ -345,6 +348,27 @@ function createFilesystemWatchSource(input: {
       return !again.isDirectory() || (again.dev === stats.dev && again.ino === stats.ino);
     } catch {
       return true;
+    }
+  };
+
+  // True when a watched directory still has the birth time it had when its handle was opened, so it
+  // is that directory and the handle lives. A directory deleted and recreated can get the deleted
+  // one's inode number back, but it is born again. Only the directory's own reports need this: the
+  // birth time is compared nowhere else, because a platform without birth times may report the
+  // change time in their place, and that changes with every entry.
+  const keepsBirthTime = (absoluteDirectory: string): boolean => {
+    const opened = identities.get(absoluteDirectory);
+
+    if (opened === undefined || !(opened.birthtimeMs > 0)) {
+      return false;
+    }
+
+    try {
+      const stats = lstatWatchPath(absoluteDirectory);
+
+      return stats.isDirectory() && stats.birthtimeMs === opened.birthtimeMs;
+    } catch {
+      return false;
     }
   };
 
@@ -598,8 +622,7 @@ function createFilesystemWatchSource(input: {
           // in place. inotify reports a change to the directory's own attributes, such as its
           // times, the same way, so such a change also rebuilds its handles and schedules a run.
           // So does an entry with the directory's name that comes and goes before its first event
-          // is read. A directory recreated with its inode reused that already holds an entry with
-          // its own name when the event is read is the one case this misses.
+          // is read.
           const heldOwnName = namesOwnDirectory && holdOwnName.delete(absoluteDirectory);
 
           if (namesOwnDirectory && eventType === "rename" && !heldOwnName) {
@@ -619,7 +642,17 @@ function createFilesystemWatchSource(input: {
           return;
         }
 
+        // With an entry of the directory's own name standing there, the entry's event and the
+        // directory's own report look the same, whether or not the entry was there before: a
+        // directory deleted and recreated with its inode reused may hold such an entry again. The
+        // directory's birth time tells them apart. Where the filesystem reports none, the event
+        // rebuilds the directory's handles and schedules a run.
         if (namesOwnDirectory) {
+          if (eventType === "rename" && !keepsBirthTime(absoluteDirectory)) {
+            reconcileDirectory(absoluteDirectory, relativeDirectory);
+            return;
+          }
+
           holdOwnName.add(absoluteDirectory);
         }
 
@@ -667,7 +700,11 @@ function createFilesystemWatchSource(input: {
       fail(error);
     });
     watchers.set(absoluteDirectory, handle);
-    identities.set(absoluteDirectory, { dev: directoryStats.dev, ino: directoryStats.ino });
+    identities.set(absoluteDirectory, {
+      dev: directoryStats.dev,
+      ino: directoryStats.ino,
+      birthtimeMs: directoryStats.birthtimeMs,
+    });
   };
 
   const subscribeTree = (
