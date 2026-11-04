@@ -30,3 +30,10 @@ export function evidenceBlocks(
   sourceRoot: string,
   pinnedCommit: string,
 ): { id: string; file: string; language: string | null; generate: () => string }[];
+
+export function cleanupPinnedSource(repository: string, temporary: string): void;
+export function materializeTree(
+  git: (args: string[], input?: string, output?: number) => Buffer,
+  commit: string,
+  source: string,
+): void;

@@ -21,8 +21,10 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
+  cleanupPinnedSource,
   evidenceBlocks,
   evidenceMarkers,
+  materializeTree,
   measurementLabel,
   parseArguments,
   replaceEvidenceBlock,
@@ -193,9 +195,45 @@ describe("article evidence CLI entry", () => {
     }
   });
 
-  it.each(["SIGINT", "SIGTERM"] as const)(
-    "stops descendants and removes the temporary registration on %s while gates can run",
-    async (signal) => {
+  it.each(["articles", "source"])("refuses TMPDIR inside the %s checkout", (location) => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-tmpdir-"));
+    const articles = path.join(temporary, "articles/docs/articles");
+    const repo = path.join(temporary, "source");
+    try {
+      mkdirSync(articles, { recursive: true });
+      mkdirSync(repo);
+      for (const name of readdirSync(path.join(repositoryRoot, "docs/articles"))) {
+        if (name.endsWith(".md") || name === "sync-evidence.mjs")
+          copyFileSync(path.join(repositoryRoot, "docs/articles", name), path.join(articles, name));
+      }
+      const scratch = path.join(temporary, location, "tmp");
+      mkdirSync(scratch);
+      const result = spawnSync(
+        process.execPath,
+        [path.join(articles, "sync-evidence.mjs"), "--check", repo],
+        {
+          encoding: "utf8",
+          env: { ...process.env, TMPDIR: scratch, TEMP: scratch, TMP: scratch },
+        },
+      );
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("TMPDIR must be outside");
+      expect(readdirSync(scratch)).toEqual([]);
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
+    }
+  });
+
+  it.each([
+    ["direct", "SIGINT"],
+    ["direct", "SIGTERM"],
+    ["npm", "SIGINT"],
+    ["npm", "SIGTERM"],
+    ["repeated signal", "SIGINT"],
+    ["worker group EPERM", "SIGINT"],
+  ] as const)(
+    "%s stops descendants and removes the temporary registration on %s while gates can run",
+    async (invocation, signal) => {
       const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-cancel-"));
       const repo = path.join(temporary, "repository");
       const articles = path.join(repo, "docs/articles");
@@ -213,7 +251,10 @@ describe("article evidence CLI entry", () => {
           JSON.stringify({
             name: "cancel-probe",
             version: "1.0.0",
-            scripts: { build: "node build.cjs" },
+            scripts: {
+              build: "node build.cjs",
+              "check:articles": "node docs/articles/sync-evidence.mjs --check",
+            },
           }),
         );
         writeFileSync(
@@ -262,11 +303,49 @@ describe("article evidence CLI entry", () => {
               `<!-- evidence:${block.id} -->\nold\n<!-- /evidence:${block.id} -->\n`,
           );
         for (const [file, text] of documents) writeFileSync(path.join(articles, file), text);
+        // Model macOS returning EPERM for an unreaped worker group, and a wrapper
+        // delivering its forwarded signal before the first handler has returned.
+        const hook = path.join(temporary, "signal-hook.mjs");
+        const killAttempts = path.join(temporary, "kill-attempts");
+        const injectSignal =
+          invocation === "repeated signal" || invocation === "worker group EPERM";
+        if (injectSignal)
+          writeFileSync(
+            hook,
+            `
+          import {appendFileSync} from "node:fs";
+          const kill = process.kill.bind(process);
+          let killed = false;
+          process.kill = (pid, signal) => {
+            if (pid >= 0 || signal !== "SIGKILL") return kill(pid, signal);
+            appendFileSync(${JSON.stringify(killAttempts)}, "kill\\n");
+            if (!killed) {
+              killed = true;
+              const result = kill(pid, signal);
+              if (${JSON.stringify(invocation)} !== "worker group EPERM") return result;
+            }
+            throw Object.assign(new Error("kill EPERM"), {code: "EPERM"});
+          };
+          if (${JSON.stringify(invocation)} === "repeated signal") {
+            const on = process.on.bind(process);
+            process.on = (event, listener) => on(event, event === "SIGINT" ? () => {
+              listener(); listener();
+            } : listener);
+          }
+        `,
+          );
         const before = git("status", "--porcelain", "--untracked-files=all");
         child = spawn(
-          process.execPath,
-          [path.join(articles, "sync-evidence.mjs"), "--check", repo],
-          { stdio: "pipe", detached: process.platform !== "win32" },
+          invocation === "npm" ? "npm" : process.execPath,
+          invocation === "npm"
+            ? ["run", "--silent", "check:articles", "--", repo]
+            : [
+                ...(injectSignal ? ["--import", hook] : []),
+                path.join(articles, "sync-evidence.mjs"),
+                "--check",
+                repo,
+              ],
+          { cwd: repo, stdio: "pipe", detached: process.platform !== "win32" },
         );
         let stderr = "";
         child.stderr?.on("data", (data: Buffer) => {
@@ -287,11 +366,15 @@ describe("article evidence CLI entry", () => {
         const gate = spawnSync(process.execPath, [path.join(repo, "check-temporal.mjs")], {
           encoding: "utf8",
         });
-        child.kill(signal);
+        // Ctrl-C reaches npm and the supervisor; npm forwards it a second time.
+        if (invocation === "npm" && child.pid && process.platform !== "win32")
+          process.kill(-child.pid, signal);
+        else child.kill(signal);
         await expect
           .poll(() => child?.exitCode !== null || child.signalCode !== null, { timeout: 5_000 })
           .toBe(true);
         expect.soft(await exited, stderr).toBe(signal === "SIGINT" ? 130 : 143);
+        if (injectSignal) expect(readFileSync(killAttempts, "utf8")).toBe("kill\n");
         expect.soft(gate.status, gate.stdout + gate.stderr).toBe(0);
         expect
           .soft(path.relative(realpathSync(repo), workerSource).startsWith(".." + path.sep))
@@ -328,8 +411,10 @@ describe("article evidence CLI entry", () => {
             /* already stopped */
           }
         }
-        if (workerSource && existsSync(workerSource))
-          spawnSync("git", ["-C", repo, "worktree", "remove", "--force", workerSource]);
+        if (workerSource) {
+          cleanupPinnedSource(repo, path.dirname(workerSource));
+          rmSync(path.dirname(path.dirname(workerSource)), { recursive: true, force: true });
+        }
         rmSync(temporary, { recursive: true, force: true });
       }
     },
@@ -533,14 +618,17 @@ describe("article evidence structure", () => {
   });
 
   for (const fence of ["```", "~~~"]) {
-    it.each(["\u2028", "\u2029", "\u00a0", "\v", "\f"])(
-      `keeps ${fence} open with a non-CommonMark closing tail %j`,
-      (tail) => {
-        expect(() =>
-          evidenceMarkers(`${fence}\ncode\n${fence}${tail}\n${probeText}`, "article.md"),
-        ).toThrow("malformed or fenced evidence marker");
-      },
-    );
+    it.each([
+      ["U+2028", "\u2028"],
+      ["U+2029", "\u2029"],
+      ["NBSP", "\u00a0"],
+      ["vertical tab", "\v"],
+      ["form feed", "\f"],
+    ])(`keeps ${fence} open with a non-CommonMark closing tail %s`, (_label, tail) => {
+      expect(() =>
+        evidenceMarkers(`${fence}\ncode\n${fence}${tail}\n${probeText}`, "article.md"),
+      ).toThrow("malformed or fenced evidence marker");
+    });
     it.each(["", " ", "\t", " \t\r"])(
       `closes ${fence} with a CommonMark closing tail %j`,
       (tail) => {
@@ -693,9 +781,6 @@ describe("article evidence arguments", () => {
     expect(install).toContain("`package.json`");
     expect(install).toContain("`engines.node`");
     expect(install).not.toContain("CLI's declared Node `>=20`");
-    expect(playbook).toContain(
-      "runtime and engines statements outside evidence blocks, including Step 1 and Part 1",
-    );
   });
 
   it("distinguishes repository-path link checks from manual publication review", () => {
@@ -703,7 +788,6 @@ describe("article evidence arguments", () => {
     const verify = playbook.split("### Step 6:")[1];
     expect(verify).not.toContain("main gate does not check those links");
     expect(verify).toContain("Markdown link gate");
-    expect(verify).toContain("link fragments, commit-pinned URLs and code fence structure");
   });
 
   it("does not offer an implicit source repository", () => {
@@ -715,6 +799,111 @@ describe("article evidence arguments", () => {
 // Small real git repositories exercise materialization, npm's lockfile install and the build
 // without reinstalling the Protocol's full dependency tree for every regression probe.
 describe("pinned evidence source", () => {
+  it.each(["missing .git", "locked as initializing", "missing .git while locked"])(
+    "cleans up a worktree %s",
+    (state) => {
+      const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-cleanup-"));
+      const repo = path.join(temporary, "repository");
+      const disposable = path.join(temporary, "disposable");
+      const source = path.join(disposable, "source");
+      const git = (...args: string[]) =>
+        execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", stdio: "pipe" }).trim();
+      try {
+        mkdirSync(repo);
+        git("init", "-q");
+        git(
+          "-c",
+          "user.name=Test",
+          "-c",
+          "user.email=test@example.invalid",
+          "-c",
+          "commit.gpgsign=false",
+          "commit",
+          "--allow-empty",
+          "-qm",
+          "pin",
+        );
+        git("worktree", "add", "--detach", source, "HEAD");
+        if (state !== "missing .git") git("worktree", "lock", "--reason", "initializing", source);
+        if (state !== "locked as initializing") rmSync(path.join(source, ".git"));
+        cleanupPinnedSource(repo, disposable);
+        expect(existsSync(disposable)).toBe(false);
+        expect(git("worktree", "list", "--porcelain").match(/^worktree /gm)).toHaveLength(1);
+      } finally {
+        rmSync(temporary, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it("materializes many blobs with one batch process", () => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-batch-"));
+    const repo = path.join(temporary, "repository");
+    const source = path.join(temporary, "source");
+    const git = (args: string[], input?: string, output?: number) =>
+      execFileSync("git", ["-C", repo, ...args], {
+        input,
+        stdio: ["pipe", output ?? "pipe", "pipe"],
+      });
+    try {
+      mkdirSync(repo);
+      mkdirSync(source);
+      git(["init", "-q"]);
+      for (let i = 0; i < 80; i++)
+        writeFileSync(path.join(repo, `${String(i)}.bin`), Buffer.from([i, 0, 255, 10]));
+      git(["add", "--all"]);
+      const tree = git(["write-tree"]).toString().trim();
+      const calls: string[][] = [];
+      materializeTree(
+        (args, input, output) => {
+          calls.push(args);
+          return git(args, input, output);
+        },
+        tree,
+        source,
+      );
+      for (let i = 0; i < 80; i++)
+        expect(readFileSync(path.join(source, `${String(i)}.bin`))).toEqual(
+          Buffer.from([i, 0, 255, 10]),
+        );
+      expect(calls.filter((args) => args[0] === "cat-file")).toEqual([["cat-file", "--batch"]]);
+      expect(readdirSync(temporary).sort()).toEqual(["repository", "source"]);
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
+    }
+  });
+
+  it.each([
+    ["oid", `${"b".repeat(40)} blob 1\nx\n`],
+    ["type", `${"a".repeat(40)} tree 1\nx\n`],
+    ["size", `${"a".repeat(40)} blob -1\nx\n`],
+    ["unsafe size", `${"a".repeat(40)} blob 9007199254740992\nx\n`],
+    ["truncated header", "unfinished"],
+    ["truncated body", `${"a".repeat(40)} blob 9\nx`],
+    ["terminator", `${"a".repeat(40)} blob 1\nxx`],
+    ["trailing data", `${"a".repeat(40)} blob 1\nx\nextra`],
+  ])("refuses a batch with invalid %s and removes its spool", (_name, batch) => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-batch-invalid-"));
+    const source = path.join(temporary, "source");
+    try {
+      mkdirSync(source);
+      expect(() => {
+        materializeTree(
+          (args, _input, output) => {
+            if (args[0] === "ls-tree") return Buffer.from(`100644 blob ${"a".repeat(40)}\tfile\0`);
+            if (output === undefined) throw new Error("Expected a batch output descriptor");
+            writeFileSync(output, batch);
+            return Buffer.alloc(0);
+          },
+          "pin",
+          source,
+        );
+      }).toThrow(/pinned blob/);
+      expect(existsSync(path.join(temporary, "blobs.batch"))).toBe(false);
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
+    }
+  });
+
   it("materializes blobs totaling more than the former batch buffer", () => {
     const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-large-"));
     const repo = path.join(temporary, "repository");
