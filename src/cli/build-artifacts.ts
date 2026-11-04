@@ -11,12 +11,10 @@ import {
 import { join } from "node:path";
 
 import { BUILD_INFO_FILE, UNKNOWN_COMMIT, isFullCommit, serializeBuildInfo } from "./build-info.js";
+import { RECIPE_CATALOG } from "./recipe-catalog.js";
 
 // The build step that runs after the bundle succeeds (`tsup.config.ts` calls it). It is build
 // tooling, never part of the shipped CLI: no entry imports it.
-
-/** The catalog the recipe files derive from, relative to the package root. */
-export const RECIPE_CATALOG = "docs/agent-surface/recipes.md";
 
 /** The recipe files' directory, relative to the build output directory. */
 export const RECIPES_DIRECTORY = "recipes";

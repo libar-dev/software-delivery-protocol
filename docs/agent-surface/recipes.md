@@ -1,63 +1,109 @@
 # Agent-surface recipes
 
+## Recipes by category
+
+Each recipe sits in one category. A row gives the recipe's number, name, parameters and use; the
+numbered entry below holds its contract, and the build ships its body as
+`dist/recipes/<NN>-<slug>.js`. `sdp q` run with no body lists every category with its first four
+rows.
+
+### Orient and plan
+
 | No. | Recipe | Parameters | Use |
 | --- | --- | --- | --- |
-| 1 | The build backlog | none | Pick ready implementation work |
+| 53 | The roadmap | pack, decider | Read upcoming work in authored order and what each entry needs |
+| 52 | The capability map | epic, detail | Read capability epics, distinct descendants and direct binding evidence |
+| 1 | The build backlog | none | Pick ready implementation work; recipe 33 for designed, unbuilt Specs |
+| 20 | Open-question register | none | List open questions |
+| 46 | The statement queue | decider | Order waiting readiness statements and questions |
+| 33 | The design backlog | none | Pick defined design work |
+| 55 | The roadmap memo | pack, decider | Render a roadmap as a description's forward section |
+| 47 | Capability adoption | detail, perspectives | Measure capability use and possible places |
+
+### Readiness and honesty
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 9 | Promotion preflight | spec | Check both next rungs before a readiness edit; recipe 11 across the corpus |
 | 2 | The drift alarm | none | Find implementation ahead of intent |
-| 3 | What does this Spec guarantee, and who verifies it | spec | Read guarantees and bindings |
-| 4 | What breaks if I change these files | files, detail | Review changed-file reach |
-| 5 | The Pack review backbone | pack | Review Pack readiness and gaps |
-| 6 | Where is this concept | term | Locate a concept |
 | 7 | Readiness divergence | none | Compare stated readiness to its floor |
-| 8 | Orphans and gaps | none | Read warnings and exemptions |
-| 9 | Promotion preflight | spec | Check both next rungs |
-| 10 | Declared versus enabled verifiers | none | Compare verifier declarations and bindings |
+| 8 | Orphans and gaps | none | Read warnings and exemptions; recipe 10 for verifier health |
 | 11 | The lower ladder | none | Read non-ready Specs |
+
+### Find and read
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 6 | Where is this concept | term | Locate a concept; recipe 23 for the entry and its line |
+| 3 | What does this Spec guarantee, and who verifies it | spec | Read guarantees and bindings |
+| 56 | The law a Spec rests on | spec | Open the law a Spec rests on: files, rule lines, addresses |
+| 21 | Dependency footing | spec | Read dependency footing; recipe 26 for cycles |
+| 23 | Entry search | term | Find entries by term |
+| 19 | Planning slice | spec | Read a planning slice |
+
+### Design and review
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 54 | The design slice | pack or specs, members, detail | Read a set of Specs as one design |
+| 29 | Pack design | pack, detail | Review Pack design; recipe 27 for the code answering to it |
+| 5 | The Pack review backbone | pack | Review Pack readiness and gaps |
+| 36 | The context bundle | pack or specs, members, budget, declarations, part | Compose one pass within a budget; recipe 37 narrows it to a perspective |
+| 37 | The perspective filter | pack, perspective | Select and order Pack members |
+| 24 | Pinned declarations | none | List pinned declarations |
+| 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
+| 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
+
+### Change and proposals
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 4 | What breaks if I change these files | files, detail | Review changed-file reach; then recipe 22 over its scope |
+| 30 | Design-change impact | specs | Follow a design change; recipe 19 for its neighborhood |
+| 35 | The design diff | base, pack, detail | Compare design at entry grain |
+| 38 | The proposal check | proposal, base | Resolve proposal scopes and compare intent |
+| 49 | The proposal memo | proposal | Render a proposal as the memo the composing panel hands off |
+| 48 | The rule-key proposal | commit, pack or specs | Propose keys for unkeyed rules and flows; check them with recipe 38 |
+
+### Architecture and decisions
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 17 | Architecture map | none | Read the architecture map; compose it, since its whole answer floods |
+| 32 | Architecture crossings | none | Read architecture crossings |
+| 18 | Decision map | none | Rank shaping decisions |
+| 31 | Decision register | none | Read decision relations |
 | 12 | Component membership | none | List component members |
 | 13 | Uses fan-in and fan-out | none | Count uses reach |
 | 14 | Structural neighborhood | component | Read a structural neighborhood |
-| 15 | Census structural coverage | none | Measure structural coverage |
-| 16 | Projection coverage upper bound | none | Bound projection coverage |
-| 17 | Architecture map | none | Read the architecture map |
-| 18 | Decision map | none | Rank shaping decisions |
-| 19 | Planning slice | spec | Read a planning slice |
-| 20 | Open-question register | none | List open questions |
-| 21 | Dependency footing | spec | Read dependency footing |
-| 22 | Mention audit | scope, intended | Audit prose mentions |
-| 23 | Entry search | term | Find entries by term |
-| 24 | Pinned declarations | none | List pinned declarations |
-| 25 | Address resolution | addresses, severity | Resolve entry addresses |
-| 26 | Dependency cycles | severity | Find dependency cycles |
-| 27 | References into a design | pack | Read code references into a Pack |
 | 28 | Roles, layers and contexts | none | List architecture vocabulary |
-| 29 | Pack design | pack, detail | Review Pack design |
-| 30 | Design-change impact | specs | Follow a design change |
-| 31 | Decision register | none | Read decision relations |
-| 32 | Architecture crossings | none | Read architecture crossings |
-| 33 | The design backlog | none | Pick defined design work |
-| 34 | Rule coverage | spec or pack | Find keyed rules no example exercises |
-| 35 | The design diff | base, pack, detail | Compare design at entry grain |
-| 36 | The context bundle | pack or specs, members, budget, declarations, part | Compose one pass within a budget |
-| 37 | The perspective filter | pack, perspective | Select and order Pack members |
-| 38 | The proposal check | proposal, base | Resolve proposal scopes and compare intent |
-| 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
-| 40 | Curation report | imports, limit | Find curation gaps from file imports |
-| 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
 | 42 | The architecture walk | forbidden, isolated, severity | Check anchored architecture rules |
 | 43 | Planned against realized components | none | Compare component designs with anchors |
+| 40 | Curation report | imports, limit | Find curation gaps from file imports |
+
+### Evidence and coverage
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 27 | References into a design | pack | Read code references into a Pack |
+| 10 | Declared versus enabled verifiers | none | Compare verifier declarations and bindings |
+| 34 | Rule coverage | spec or pack | Find keyed rules no example exercises |
 | 44 | Example-space coverage | spec or pack | Report covered and uncovered slot values from decoded example spaces |
 | 45 | Run evidence | runs, commit, spec | Join external CTRF results at test-file grain |
-| 46 | The statement queue | decider | Order waiting readiness statements and questions |
-| 47 | Capability adoption | detail, perspectives | Measure capability use and possible places |
-| 48 | The rule-key proposal | commit, pack or specs | Propose keys for unkeyed rules and flows |
-| 49 | The proposal memo | proposal | Render a proposal as the memo the composing panel hands off |
-| 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
+| 15 | Census structural coverage | none | Measure structural coverage |
+| 16 | Projection coverage upper bound | none | Bound projection coverage |
+
+### Citations and checks
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 25 | Address resolution | addresses, severity | Resolve entry addresses before citing one |
+| 22 | Mention audit | scope, intended | Audit prose mentions |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
-| 52 | The capability map | epic, detail | Read capability epics, distinct descendants and direct binding evidence |
-| 53 | The roadmap | pack, decider | Read upcoming work in authored order and what each entry needs |
-| 54 | The design slice | pack or specs, members, detail | Read a set of Specs as one design |
-| 55 | The roadmap memo | pack, decider | Render a roadmap as a description's forward section |
-| 56 | The law a Spec rests on | spec | Open the law a Spec rests on: files, rule lines, addresses |
+| 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
+| 26 | Dependency cycles | severity | Find dependency cycles |
+
+## Running a recipe
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:

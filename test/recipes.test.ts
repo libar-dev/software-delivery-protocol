@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { recipeFiles, writeBuildArtifacts, writeRecipeFiles } from "../src/cli/build-artifacts.js";
+import { recipeCategories } from "../src/cli/recipe-catalog.js";
 import { compileBody } from "../src/cli/q-command.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import {
@@ -6479,16 +6480,23 @@ describe("answers that fit", () => {
     ]);
   });
 
-  it("indexes exactly the present recipes with names, parameters and uses", () => {
-    const index = source.slice(0, source.indexOf("Runnable bodies"));
-    const indexed = [...index.matchAll(/^\| (\d+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|$/gmu)];
-    expect(indexed.map((row) => ({ number: Number(row[1]), name: row[2]?.trim() }))).toEqual(
-      recipes.map((recipe) => ({ number: recipe.ordinal, name: recipe.title })),
-    );
-    expect(indexed.every((row) => row[3]?.trim() && row[4]?.trim())).toBe(true);
+  it("sorts every recipe into exactly one category of the index, with its name, parameters and use", () => {
+    const categories = recipeCategories(source);
+    const indexed = categories.flatMap((category) => category.recipes);
+    // A row outside every category heading would be read by no listing.
+    const rows = source.slice(0, source.indexOf("Runnable bodies")).match(/^\| \d+ \|/gmu) ?? [];
+    expect(indexed).toHaveLength(rows.length);
+    expect(
+      [...indexed]
+        .sort((left, right) => left.number - right.number)
+        .map((row) => ({ number: row.number, name: row.name })),
+    ).toEqual(recipes.map((recipe) => ({ number: recipe.ordinal, name: recipe.title })));
+    expect(new Set(categories.map((category) => category.name)).size).toBe(categories.length);
+    expect(categories.every((category) => category.recipes.length > 0)).toBe(true);
+    expect(indexed.every((row) => row.parameters !== "" && row.use !== "")).toBe(true);
     for (const row of indexed) {
-      const recipe = recipeByOrdinal(Number(row[1]));
-      const listed = (row[3]?.trim() ?? "")
+      const recipe = recipeByOrdinal(row.number);
+      const listed = row.parameters
         .split(/, | or /u)
         .filter((name) => name !== "none")
         .sort();
