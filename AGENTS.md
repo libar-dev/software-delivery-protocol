@@ -44,7 +44,8 @@ behavior into intent and never invent a third behavior.
 ## Start
 
 Load the `sdp-agent-surface` skill and run orientation from the repository root, passing what you
-arrived with (a word, a file, a Spec) as `--subjects`; read each answer with its notes in the skill:
+arrived with (a word, a file, a Spec) as `--subjects`, keyed by answer number
+(`'{"8":{"terms":["vault"]}}'`); read each answer with its notes in the skill:
 
 ```bash
 node skills/sdp-agent-surface/scripts/orient.mjs
@@ -92,8 +93,9 @@ commercial.
   `sdp vault` and every publisher remove the five generated page roots first
   (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`); `npm run generate:self-hosting`
   publishes all five again.
-- Re-measure: a count, a rung, a finding or a "verified" row belongs to the commit it was measured
-  at. Re-run it at yours rather than inherit it.
+- Re-measure: a count, a rung, a finding, a "verified" row or a summary's word on what exists
+  belongs to the commit it was measured at. Re-run it at yours (`git rev-parse --short HEAD`),
+  first on resuming after a break or compaction, rather than inherit it.
 - Implemented and not `ready` is the drift alarm (recipe 2, `dist/recipes/02-the-drift-alarm.js`).
 - `explorations/` and a sibling `architect` clone are evidence, never template:
   rebuild from the ruled Spec.
@@ -111,11 +113,11 @@ commercial.
 - A design session edits carriers and leaves the code its Specs will change alone.
 - A change proves itself with a test that fails without it.
 - Commits are recovery boundaries, not workflow gates. The owner's instruction that opens an arc
-  authorizes its commits and push; without one, ask before committing. Commit each coherent unit
-  after its gate, from a safe baseline, with only its own changes: never an empty or per-todo
-  commit, never unrelated or pre-existing changes. Before stopping without a clean boundary, commit
-  the work in progress saying what is incomplete; git cannot recover uncommitted work. Push only on
-  the user's explicit request; never use `git stash`.
+  authorizes its commits and push; without one, ask before committing. With it, commit each
+  coherent unit after its gate, from a safe baseline, with only its own changes: never an empty or
+  per-todo commit, never unrelated or pre-existing changes; and before stopping without a clean
+  boundary, commit the work in progress saying what is incomplete, since git cannot recover
+  uncommitted work. Push only on the user's explicit request; never use `git stash`.
 - Reviews travel as change proposals (`sdp-sessions`). Briefs and prompts stay in the session.
 - `docs/concept/DECISIONS.md` admits an entry only past the ADR three-part test: hard to reverse,
   surprising without context, a real trade-off. A Why the base already forced is drift repair, kept
