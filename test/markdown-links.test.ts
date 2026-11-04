@@ -346,7 +346,7 @@ describe("relative Markdown links", () => {
           "    [example](not-present.md)",
           "",
           "<!-- [hidden](comment-only.md) -->",
-          "Text <!-- [inline](inline-comment.md) --> and \\[escaped](escaped.md). Text <!-- legacy --!> [inline abrupt](inline-abrupt-gone.md) -->.",
+          "Text <!-- [inline](inline-comment.md) --> and \\[escaped](escaped.md). Text <!-- legacy --!> [inline abrupt](inline-abrupt-gone.md) -->. Text <!--c1--> [between comments](between-comments-gone.md) middle <!--c2--> more.",
           "",
           "<pre>",
           "[pre](pre-example.md)",
@@ -379,6 +379,7 @@ describe("relative Markdown links", () => {
     ]);
     expect(danglingLinks(documents, () => false)).toEqual([
       "jtbd-stories/story.md:6 inline-abrupt-gone.md",
+      "jtbd-stories/story.md:6 between-comments-gone.md",
       "jtbd-stories/story.md:13 details-gone.md",
       "jtbd-stories/story.md:24 image-gone.png",
       "jtbd-stories/story.md:25 inner-gone.md",
@@ -585,7 +586,7 @@ describe("relative Markdown links", () => {
         "café-a_b-and-emphasis--linked---bold-x",
         "snake_case-stays-and-init-is-strong",
         "ref-text-and-missingnope",
-        "table-text",
+        "table-textt",
         "closing-hashes",
         "twolines",
         "repeat",
