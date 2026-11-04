@@ -16,8 +16,10 @@ export const carrierSpecs = [
         outcome: "Author new Protocol Specs in Markdown without creating a second truth path.",
       },
       behavior: {
+        ruleKeys: { lineEndings: "rules[1]" },
         rules: [
           "Markdown and TypeScript carriers feed the same reification and graph-derivation path.",
+          "Whichever carrier writes them, the title, prose, entries and steps of a Spec or Pack hold no lone CR, U+2028 or U+2029, because a renderer that breaks a line there would show a line the carrier does not state; LF and CRLF are the only line endings. A Markdown carrier holding one anywhere is refused whole at that line, as `spec:carrier.envelope-contract` states, a Gherkin carrier as `spec:carrier.gherkin-authoring#rule.physicalLines` states, and a TypeScript Spec or Pack whose title, narrative, framing or section string holds one is not extracted.",
         ],
       },
     },
@@ -507,7 +509,7 @@ export const carrierSpecs = [
           "A derived name is never authorable in the envelope: a delivery-fact or graph-field key (`implemented`, `has-verifier`, `hasVerifier`, `observed`, `claim`, `deliveryFacts`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo` or `models`) is refused as `extract/reserved-property`, because delivery facts are derived and never authored; `title` is refused as `extract/invalid-frontmatter`, and any other unknown envelope key as `extract/unrecognized-property`. Delivery-fact names and `deliveryFacts` are compared case-insensitively; underscore forms are not delivery-fact names.",
           "The Protocol owns the envelope grammar and the parser policy while the pinned YAML library stays a swappable representation behind that contract, so an unsupported YAML construct is refused within explicit byte bounds on the carrier and its frontmatter rather than silently becoming carrier semantics.",
           "The bounds are 256 KiB per carrier, 32 KiB of frontmatter, 16 KiB per scalar, 2,000 YAML nodes, and a nesting depth of 16; YAML anchor (`&name`) and alias (`*name`) syntax and explicit YAML tags (`!tag`) are refused at any size.",
-          "The frontmatter opens at byte zero with an exact `---` line and closes at the next exact `---` line; a byte-order mark, a `...` line in the frontmatter, a further exact `---` line in the body, a lone CR, or mixed LF and CRLF newlines refuses the carrier.",
+          "The frontmatter opens at byte zero with an exact `---` line and closes at the next exact `---` line; a byte-order mark, a `...` line in the frontmatter, a further exact `---` line in the body, or mixed LF and CRLF newlines refuses the carrier. A lone CR, U+2028 or U+2029 anywhere in the carrier refuses it at that physical line, under `spec:carrier.markdown-authoring#rule.lineEndings`.",
         ],
       },
     },

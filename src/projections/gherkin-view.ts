@@ -31,15 +31,17 @@ function compareCodeUnits(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
 }
 
-/** Escapes authored text so a generated Gherkin-shaped page cannot invent structure. */
+/**
+ * Escapes authored text so a generated Gherkin-shaped page cannot invent structure. Every line
+ * terminator, CRLF, CR, LF, U+2028 or U+2029, folds to one space, so the page never shows a line
+ * the graph does not state, even in an editor that breaks lines at U+2028 or U+2029.
+ */
 export function escapeGherkinViewText(value: string): string {
   return value
     .replaceAll("\\", "\\\\")
     .replaceAll("```", "'''")
     .replaceAll('"""', "'''")
-    .replaceAll("\r\n", "\n")
-    .replaceAll("\r", "\n")
-    .replaceAll("\n", " ");
+    .replace(/\r\n|[\n\r\u2028\u2029]/gu, " ");
 }
 
 function pagePathOf(id: string): string {
@@ -136,9 +138,10 @@ function keyedVerification(verification: VerificationSection | undefined): reado
 
 function narrativeLines(narrative: string | undefined): readonly string[] {
   if (narrative === undefined || narrative.trim().length === 0) return [];
+  // A blank line, LF or CRLF, ends a paragraph; the escape folds every other line terminator.
   return narrative
-    .split(/\n\n/u)
-    .map((paragraph) => `  ${escapeGherkinViewText(paragraph.replaceAll("\n", " "))}`);
+    .split(/(?:\r\n|\n){2}/u)
+    .map((paragraph) => `  ${escapeGherkinViewText(paragraph)}`);
 }
 
 function stepLines(phase: "Given" | "When" | "Then", steps: readonly string[]): readonly string[] {

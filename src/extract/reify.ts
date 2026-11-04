@@ -390,6 +390,41 @@ export function reifyStaticString(node: Node, path: string): StaticResult {
   return staticFailure(unwrapped, path, describeNonStatic(unwrapped));
 }
 
+/**
+ * A lone CR, U+2028 or U+2029 ends a line for some renderers, while the Markdown and Gherkin
+ * carriers end a line only at LF or CRLF, so a title, prose line or entry holding one could show a
+ * line the carrier does not state. A TypeScript string has no physical lines of its own, so every
+ * string literal under a title, narrative, framing or section is read whole: LF and CRLF stay
+ * lawful, and anything else refuses the Spec or Pack the way a relation reason that is not one
+ * line does.
+ */
+const UNSUPPORTED_LINE_BREAK = /\r(?!\n)|[\u2028\u2029]/u;
+
+function lineBreakRefusals(
+  node: Node,
+  path: string,
+  file: string,
+  subjectId: string | undefined,
+): Finding[] {
+  return [node, ...node.getDescendants()]
+    .filter(
+      (literal) =>
+        (Node.isStringLiteral(literal) || Node.isNoSubstitutionTemplateLiteral(literal)) &&
+        UNSUPPORTED_LINE_BREAK.test(literal.getLiteralValue()),
+    )
+    .map((literal) =>
+      createExtractFinding(
+        extractFindingIds.nonStaticEnvelope,
+        "error",
+        `property "${path}" holds a string with a lone CR, U+2028 or U+2029; a title, prose line or entry ends a line only at LF or CRLF`,
+        file,
+        nodeLine(literal),
+        subjectId,
+        path,
+      ),
+    );
+}
+
 export type IdReification =
   | { readonly ok: true; readonly id: string }
   | {
@@ -1608,6 +1643,14 @@ function reifySpecCall(
       continue;
     }
 
+    if (name === "title" || name === "narrative" || SPEC_SECTION_NAME_SET.has(name)) {
+      const refusals = lineBreakRefusals(initializer, name, file, subjectId);
+      if (refusals.length > 0) {
+        findings.push(...refusals);
+        envelopeOk = false;
+      }
+    }
+
     if (name === "id") {
       const idResult = reifyStaticIdExpression(initializer, ["spec"], bindings, "id");
 
@@ -2018,6 +2061,12 @@ function reifyPackCall(
     }
 
     if (name === "title" || name === "framing") {
+      const refusals = lineBreakRefusals(initializer, name, file, subjectId);
+      if (refusals.length > 0) {
+        findings.push(...refusals);
+        envelopeOk = false;
+        continue;
+      }
       const result = reifyStaticString(initializer, name);
 
       if (!result.ok) {

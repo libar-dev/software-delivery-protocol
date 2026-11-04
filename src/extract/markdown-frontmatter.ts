@@ -26,8 +26,8 @@ const specKinds = new Set<string>(SPEC_KINDS);
 const specAltitudes = new Set<string>(SPEC_ALTITUDES);
 const specReadiness = new Set<string>(SPEC_READINESS);
 
-function refusal(file: string, message: string): MarkdownFrontmatterResult {
-  return { ok: false, findings: [markdownFinding(file, 1, message)] };
+function refusal(file: string, message: string, line = 1): MarkdownFrontmatterResult {
+  return { ok: false, findings: [markdownFinding(file, line, message)] };
 }
 
 /**
@@ -42,7 +42,7 @@ export function parseMarkdownFrontmatter(
   file: string,
 ): MarkdownFrontmatterResult {
   const envelope = readMarkdownEnvelope(sourceText);
-  if (typeof envelope === "string") return refusal(file, envelope);
+  if ("reason" in envelope) return refusal(file, envelope.reason, envelope.line);
   try {
     const lineCounter = new LineCounter();
     lineCounter.addNewLine(0);

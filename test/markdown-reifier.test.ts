@@ -573,11 +573,6 @@ relations:
       "carrier requires one exact closing --- line",
     ],
     [
-      "a lone CR after a valid LF carrier",
-      `${validFrontmatter}\r`,
-      "carrier contains a lone CR newline",
-    ],
-    [
       "mixed CRLF and LF newlines",
       `---\r\nid: spec:carrier.crlf\r\nkind: behavior\r\naltitude: story\r\nreadiness: idea\r\nrelations: {}\r\n---\r\n# title\n`,
       "carrier mixes LF and CRLF newlines",
@@ -588,6 +583,88 @@ relations:
       line: 1,
       message,
     });
+  });
+
+  describe.each([
+    ["a lone CR", "\r"],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+  ])("a carrier line holding %s", (_name, separator) => {
+    const held = "carrier line holds a lone CR, U+2028 or U+2029; a line ends only at LF or CRLF";
+
+    it.each([
+      ["the H1 title", "# Title@@SEP@@@implemented injected\n## Rule\n- A rule.", 8],
+      ["the narrative", "# Title\nSome prose@@SEP@@and more.\n## Rule\n- A rule.", 9],
+      ["section prose", "# Title\n## Rule\nLeading@@SEP@@prose.\n- A rule.", 10],
+      ["a plain entry", "# Title\n## Rule\n- First rule.\n- A rule@@SEP@@Then hidden text", 11],
+      ["a keyed entry", "# Title\n## Intent\n- outcome: An outcome@@SEP@@- risk: hidden", 10],
+      [
+        "an open question field",
+        "# Title\n## Intent\n- outcome: An outcome.\n\n### Open questions\n- [blocking] Is it?\n  - provisional: Yes@@SEP@@no",
+        14,
+      ],
+      ["an end of line", "# Title\n## Rule\n- A rule.@@SEP@@", 10],
+    ])("refuses the carrier at its physical line in %s", (_site, body, line) => {
+      for (const ending of ["\n", "\r\n"]) {
+        const source = carrierBody(body.replace("@@SEP@@", separator), "rule").replaceAll(
+          "\n",
+          ending,
+        );
+        const result = reify(source);
+        expect(result.specs).toEqual([]);
+        expect(result.findings).toEqual([
+          {
+            validatorId: "extract/invalid-frontmatter",
+            family: "conformance",
+            severity: "error",
+            file: "carrier.sdp.md",
+            line,
+            message: held,
+          },
+        ]);
+      }
+    });
+
+    it("refuses a fence step, a frontmatter value and a Pack manifest at their physical lines", () => {
+      const example = carrierBody(
+        `# Example\n## Intent\n- outcome: Bind one point.\n\`\`\`gwt\nGiven a value@@SEP@@Then hidden\nWhen it runs\nThen it holds\n\`\`\``.replace(
+          "@@SEP@@",
+          separator,
+        ),
+        "example",
+      );
+      expect(reify(example).findings).toMatchObject([{ line: 12, message: held }]);
+
+      const relation = validFrontmatter.replace(
+        "relations: {}",
+        `relations:\n  dependsOn:\n    target: spec:carrier.shared\n    reason: One${separator}two`,
+      );
+      expect(reify(relation).findings).toMatchObject([{ line: 9, message: held }]);
+
+      for (const [pack, line] of [
+        [`---\nid: pack:probe.lines\nspecs: []\n---\n# Pack${separator}title`, 5],
+        [`---\nid: pack:probe.lines\nspecs: []\n---\n# Pack\nFraming${separator}prose.`, 6],
+      ] as const) {
+        const result = reifyMarkdownCarrier(pack, "lines.pack.sdp.md");
+        expect(result.packs).toEqual([]);
+        expect(result.findings).toEqual([
+          expect.objectContaining({
+            validatorId: "extract/invalid-frontmatter",
+            line,
+            message: held,
+          }),
+        ]);
+      }
+    });
+  });
+
+  it("keeps LF and CRLF line endings lawful beside the refused separators", () => {
+    const body = "# Title\nSome prose\nand more.\n## Rule\n- A rule.";
+    for (const ending of ["\n", "\r\n"]) {
+      const result = reify(carrierBody(body, "rule").replaceAll("\n", ending));
+      expect(result.findings).toEqual([]);
+      expect(result.specs).toHaveLength(1);
+    }
   });
 
   it("maps the ruled title, intent, and behavior lists from the body", () => {

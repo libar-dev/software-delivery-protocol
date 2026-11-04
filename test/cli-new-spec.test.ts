@@ -283,7 +283,22 @@ describe("sdp new spec", () => {
       requiredFlags({ title: "Probe\nExtra", path: "probe.sdp.md" }),
       /--title/u,
     ],
+    [
+      "a title holding U+2028",
+      requiredFlags({ title: "Probe\u2028@implemented injected", path: "probe.sdp.md" }),
+      /--title must be a single line/u,
+    ],
+    [
+      "a title holding a lone CR",
+      requiredFlags({ title: "Probe\rExtra", path: "probe.sdp.md" }),
+      /--title must be a single line/u,
+    ],
     ["a missing outcome", requiredFlags({ outcome: "", path: "probe.sdp.md" }), /--outcome/u],
+    [
+      "an outcome holding U+2029",
+      requiredFlags({ outcome: "Probe\u2029Extra", path: "probe.sdp.md" }),
+      /--outcome must be a single line/u,
+    ],
     [
       "a multiline outcome",
       requiredFlags({ outcome: "Probe\nExtra", path: "probe.sdp.md" }),
