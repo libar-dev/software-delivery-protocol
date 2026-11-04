@@ -695,6 +695,62 @@ Feature: Probe feature
     expect(found?.line).toBe(line);
   });
 
+  // A Rule and the @example-space pseudo-scenario belong to the Feature's Spec, so every refusal
+  // inside them names that Spec, as the Feature's own refusals do.
+  it.each([
+    ["a tagged Rule", "  @wip\n  Rule: Tagged", "Rules are title-only"],
+    [
+      "a Rule with children",
+      "  Rule: Parent\n    Scenario: Nested\n      Given a value",
+      "children",
+    ],
+    ["a described Rule", "  Rule: Described\n\n    prose under rule", "Rules are title-only"],
+    [
+      "a repeated space marker",
+      "  @example-space @example-space\n  Scenario: Space\n    Given one",
+      "marker tags",
+    ],
+    [
+      "an authored fact on the space",
+      "  @example-space @implemented\n  Scenario: Space\n    Given one",
+      "never authored by the carrier",
+    ],
+    [
+      "a graph-aware tag on the space",
+      "  @example-space @spec.probe.other\n  Scenario: Space\n    Given one",
+      "graph-aware head",
+    ],
+    [
+      "a space outline",
+      "  @example-space\n  Scenario Outline: Space\n    Given <one>\n\n    Examples:\n      | one |\n      | 1   |",
+      "unsupported construct",
+    ],
+    ["a step-less space", "  @example-space\n  Scenario: Space", "at least one step"],
+    [
+      "a described space",
+      "  @example-space\n  Scenario: Space\n\n    prose under space\n    Given one",
+      "cannot carry a description",
+    ],
+    ["a star step in the space", "  @example-space\n  Scenario: Space\n    * one", "is refused"],
+    [
+      "a doc string in the space",
+      '  @example-space\n  Scenario: Space\n    Given one\n      """\n      text\n      """',
+      "doc string",
+    ],
+    [
+      "a data table in the space",
+      "  @example-space\n  Scenario: Space\n    Given one\n      | a |",
+      "data table",
+    ],
+  ])("names the Feature on the refusal of %s", (_name, body, message) => {
+    const result = reify(feature(`\n${body}`));
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings.length).toBeGreaterThan(0);
+    expect(result.findings.some((found) => found.message.includes(message))).toBe(true);
+    for (const found of result.findings) expect(found.subjectId).toBe("spec:probe.parent");
+  });
+
   describe.each([
     ["a lone CR", "\r"],
     ["U+2028", "\u2028"],
@@ -762,16 +818,18 @@ Feature: Probe feature
         "  Rule: Rule title",
       ].join("\n"),
     );
+    // Each refusal names the Spec that owns the line: the Scenario its own, and the Feature its
+    // title, its Rules and its @example-space pseudo-scenario.
     it.each([
-      ["Feature title", "Probe feature", 2],
-      ["Scenario title", "Probe scenario", 10],
-      ["Example title", "Probe example", 10],
-      ["space title", "Space title", 6],
-      ["Rule title", "Rule title", 14],
-      ["ordinary step", "ordinary text", 11],
-      ["conjunction step", "continued text", 12],
-      ["space step", "space text", 7],
-    ])("refuses %s at its physical line", (_site, text, line) => {
+      ["Feature title", "Probe feature", 2, "spec:probe.parent"],
+      ["Scenario title", "Probe scenario", 10, "spec:probe.child"],
+      ["Example title", "Probe example", 10, "spec:probe.child"],
+      ["space title", "Space title", 6, "spec:probe.parent"],
+      ["Rule title", "Rule title", 14, "spec:probe.parent"],
+      ["ordinary step", "ordinary text", 11, "spec:probe.child"],
+      ["conjunction step", "continued text", 12, "spec:probe.child"],
+      ["space step", "space text", 7, "spec:probe.parent"],
+    ])("refuses %s at its physical line", (_site, text, line, subjectId) => {
       const original =
         text === "Probe example"
           ? source.replace("Scenario: Probe scenario", "Example: Probe example")
@@ -787,6 +845,7 @@ Feature: Probe feature
           const found = refusal(input);
           expect(found?.line).toBe(line);
           expect(found?.message).toContain("line holds a lone CR, U+2028 or U+2029");
+          expect(found?.subjectId).toBe(subjectId);
         }
       }
     });

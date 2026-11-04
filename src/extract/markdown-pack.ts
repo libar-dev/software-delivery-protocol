@@ -32,8 +32,8 @@ function parseMarkdownPackBody(
   | { readonly ok: true; readonly data: Record<string, unknown> }
   | { readonly ok: false; readonly findings: readonly Finding[] } {
   const envelope = readMarkdownEnvelope(sourceText);
-  if (typeof envelope === "string")
-    return { ok: false, findings: [markdownFinding(file, 1, envelope)] };
+  if ("reason" in envelope)
+    return { ok: false, findings: [markdownFinding(file, envelope.line, envelope.reason)] };
 
   const lines: MarkdownLine[] = envelope.body
     .replaceAll("\r\n", "\n")

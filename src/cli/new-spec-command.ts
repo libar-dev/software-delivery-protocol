@@ -67,7 +67,9 @@ function requireSingleLine(flag: string, value: string, output: CliOutput): stri
     return undefined;
   }
 
-  if (value.includes("\n") || value.includes("\r")) {
+  // The extractor refuses a carrier line holding a lone CR, U+2028 or U+2029, so the scaffold
+  // never writes one.
+  if (/[\n\r\u2028\u2029]/u.test(value)) {
     refuse(output, `${flag} must be a single line.`);
     return undefined;
   }
