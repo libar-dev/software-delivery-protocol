@@ -8687,7 +8687,7 @@ describe("a floor the reader does not evaluate", () => {
 
 describe("dependency footing with unratified stated readiness", () => {
   it.each(["done", "__proto__", "constructor", "unresolved", "nonSpec"])(
-    "counts foreign readiness %s under its own key without losing a relation",
+    "counts foreign readiness %s as unratified without changing structural buckets",
     async (readiness) => {
       const example = extract({ root: join(repoRoot, "examples/checkout-v1") });
       const foreign = {
@@ -8712,10 +8712,53 @@ describe("dependency footing with unratified stated readiness", () => {
       );
       const totals = asRecord(result.totals);
       const counts = asRecord(totals.byStatedReadiness);
-      expect(counts[readiness]).toBe(1);
+      expect(counts.unratified).toBe(1);
+      expect(counts.unresolved).toBe(0);
+      expect(counts.nonSpec).toBe(0);
+      expect(asArray(result.footing).map(asRecord)).toContainEqual(
+        expect.objectContaining({
+          id: "spec:orders.create-order",
+          resolved: true,
+          statedReadiness: readiness,
+        }),
+      );
       expect(counts).toMatchObject({ idea: 0, scoped: 0, defined: 1, ready: 0 });
       expect(Object.values(counts).reduce<number>((sum, value) => sum + Number(value), 0)).toBe(
         totals.relations,
+      );
+    },
+  );
+});
+
+describe.each([5, 31])("recipe %i readiness tallies with foreign values", (ordinal) => {
+  it.each(["constructor", "__proto__", "done"])(
+    "counts foreign readiness %s without losing a member or decision",
+    async (readiness) => {
+      const example = extract({ root: join(repoRoot, "examples/checkout-v1") });
+      const foreign = {
+        ...example,
+        graph: {
+          ...example.graph,
+          nodes: example.graph.nodes.map((node) =>
+            node.id === "spec:orders.create-order" || node.id === "spec:decisions.order-lifecycle"
+              ? ({ ...node, readiness } as unknown as GraphNode)
+              : node,
+          ),
+        },
+      };
+      const result = asRecord(
+        await runRecipe(
+          recipeByOrdinal(ordinal),
+          ordinal === 5 ? { pack: "pack:checkout-v1" } : {},
+          foreign,
+        ),
+      );
+      const counts = asRecord(
+        ordinal === 5 ? result.byStatedReadiness : asRecord(result.totals).byRung,
+      );
+      expect(counts[readiness]).toBe(ordinal === 5 ? 2 : 1);
+      expect(Object.values(counts).reduce<number>((sum, value) => sum + Number(value), 0)).toBe(
+        ordinal === 5 ? result.memberCount : asRecord(result.totals).decisions,
       );
     },
   );

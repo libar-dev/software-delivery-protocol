@@ -431,7 +431,7 @@ export const extractionSpecs = [
         outcomeVariant:
           '`{ readonly kind: "<contract key>"; readonly <slot>: <type>; … }` is the Outcome variant of one Then step of the example space, one per Then step, beside `UnspecifiedOutcome`.',
         planDispatch:
-          "the runner's `planExample` runs each step through `bindings[step.key]`, carries `key` on each planned step beside `text` and `label`, and renders the label from `text` and `params`, so a red keyed step still names itself in the Spec's own words.",
+          "the runner's `planExample` dispatches each contract key to an own or inherited handler with the bindings as `this`, following the realm-independent prototype boundaries and refusals in `spec:extraction.example-runner#rule.handlerDispatch`. Built-in parent-class methods remain eligible before those boundaries; an inherited `constructor`, missing handler or non-function fails with `no handler bound for step key \"<key>\"`. Each planned step carries `key` beside `text` and `label`, and the label renders from `text` and `params`, so a red keyed step still names itself in the Spec's own words.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -619,7 +619,7 @@ export const extractionSpecs = [
           "Once the Vitest adapter creates a world, it awaits the optional `after` hook whether the steps pass or fail. A step failure stays the test's failure and an error from `after` is then discarded; when the steps pass, an error from `after` fails the test. A world factory that throws creates no world, so `after` does not run.",
           "Duplicate step text within one example binds one handler, and every occurrence runs it; an occurrence that binds a slot to a different value is a conflicting re-binding, named at generation, and every occurrence runs with the first binding, because an example is one point.",
           "A red step names itself before the assertion detail: the failure message leads with the step's natural reading — the Spec's own words with bound values inlined — and the original error is preserved, carried as `cause` when it cannot be re-messaged, and wrapped when the thrown value is not an error.",
-          "A missing or stale step handler is a compile-time refusal rather than a silent skip: the bindings type covers every step and only the steps, so spec-side drift fails the typecheck instead of the run.",
+          'The bindings type covers every step and only the steps, so missing or stale handlers fail typechecking. At execution, dispatch looks up the contract key on the bindings and then their prototype chain, calling the first function found with the bindings as `this` and the world, parameters and contract step as arguments. An inherited owner is excluded, and traversal stops before it, when its prototype is null or when it is callable and its prototype\'s prototype is null; these boundaries exclude Object.prototype and Function.prototype from any realm while preserving inherited instance and static class methods. Own handlers remain eligible even on null-prototype or callable bindings. Methods of built-in parent classes such as Map, Array and Promise remain eligible before those boundaries. An inherited `constructor`, a missing handler or a first value that is not a function fails at execution with `no handler bound for step key "<key>"`; dispatch never skips that value to find a later function.',
           "The core contributes `unspecified`, the one outcome no Spec ever states, so an uncovered region of an example space has an honest answer rather than a manufactured one.",
         ],
         exampleSpace: {
@@ -640,6 +640,7 @@ export const extractionSpecs = [
           worldCleanup: "rules[1]",
           oneHandlerPerStep: "rules[2]",
           redStepNamesItself: "rules[3]",
+          handlerDispatch: "rules[4]",
         },
       },
     },

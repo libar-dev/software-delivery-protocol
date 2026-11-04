@@ -1,3 +1,5 @@
+import { runInNewContext } from "node:vm";
+
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -332,5 +334,97 @@ describe("function-shaped step bindings", () => {
     const world = { total: 0 };
     await runExamplePlan(planExample(contract, Steps), world);
     expect(world.total).toBe(42);
+  });
+});
+
+describe("realm-independent handler dispatch", () => {
+  const contract = (key: string) => ({
+    spec: "spec:probe.realm-handlers",
+    title: "Realm-independent handlers",
+    steps: [{ kind: "then" as const, key, text: key, params: {} }],
+  });
+  const foreignBindings = (source: string) =>
+    runInNewContext(source) as Record<string, StepFn<object, ParamShape>>;
+
+  it.each([
+    ["({})", "toString"],
+    ["({})", "valueOf"],
+    ["(function Steps() {})", "bind"],
+    ["(function Steps() {})", "call"],
+    ["(function Steps() {})", "apply"],
+    ["new (class Steps {})()", "constructor"],
+  ])("refuses omitted foreign intrinsic handler %s / %s", async (source, key) => {
+    await expect(
+      runExamplePlan(planExample(contract(key), foreignBindings(source)), {}),
+    ).rejects.toThrow(`at step: Then ${key}\nno handler bound for step key "${key}"`);
+  });
+
+  it.each([
+    ["own", "({ amount: 42, toString(world) { world.total += this.amount; } })", "toString"],
+    [
+      "inherited instance",
+      `(() => {
+      class Base { submit(world) { world.total += this.amount; } }
+      class Steps extends Base { amount = 42; }
+      return new Steps();
+    })()`,
+      "submit",
+    ],
+    [
+      "inherited static",
+      `(() => {
+      class Base { static submit(world) { world.total += this.amount; } }
+      class Steps extends Base { static amount = 42; }
+      return Steps;
+    })()`,
+      "submit",
+    ],
+    [
+      "own null-prototype",
+      "({ __proto__: null, amount: 42, submit(world) { world.total += this.amount; } })",
+      "submit",
+    ],
+  ])("runs foreign %s handlers with the bindings as receiver", async (_name, source, key) => {
+    const world = { total: 0 };
+    await runExamplePlan(planExample(contract(key), foreignBindings(source)), world);
+    expect(world.total).toBe(42);
+  });
+
+  it("stops at an inherited null-prototype owner but accepts its handler as an own binding", async () => {
+    const handler = vi.fn<StepFn<object, ParamShape>>();
+    const owner = Object.assign(Object.create(null) as object, { submit: handler });
+    const bindings = Object.create(owner) as typeof owner;
+    await expect(runExamplePlan(planExample(contract("submit"), bindings), {})).rejects.toThrow(
+      'no handler bound for step key "submit"',
+    );
+    expect(handler).not.toHaveBeenCalled();
+    await runExamplePlan(planExample(contract("submit"), owner), {});
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it("runs a built-in parent class method with the bindings as receiver", async () => {
+    class Steps extends Map<string, number> {}
+    const bindings = new Steps([["item", 42]]);
+    await runExamplePlan(
+      planExample(
+        contract("clear"),
+        bindings as unknown as Record<string, StepFn<object, ParamShape>>,
+      ),
+      {},
+    );
+    expect(bindings.size).toBe(0);
+  });
+
+  it("refuses a non-function handler instead of looking past its owner", async () => {
+    const bindings = Object.assign(Object.create({ submit: pass }) as object, { submit: 42 });
+    await expect(
+      runExamplePlan(
+        planExample(
+          contract("submit"),
+          bindings as unknown as Record<string, StepFn<object, ParamShape>>,
+        ),
+        {},
+      ),
+    ).rejects.toThrow('no handler bound for step key "submit"');
   });
 });

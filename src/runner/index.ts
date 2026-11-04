@@ -143,22 +143,24 @@ export function planExample<W, S extends string, PM extends Record<S, ParamShape
       text: step.text,
       label: renderContractStep(step),
       run: (world: W) => {
-        // Class methods are bindings too; prototype constructors, Object.prototype and
-        // Function.prototype are not.
+        // Structural stops cover Object.prototype and Function.prototype from any realm.
+        // A callable parent class remains eligible; Function.prototype's parent is terminal.
         let owner: object | null = bindings;
-        while (
-          owner !== null &&
-          owner !== Object.prototype &&
-          owner !== Function.prototype &&
-          !Object.hasOwn(owner, step.key)
-        ) {
-          owner = Object.getPrototypeOf(owner) as object | null;
+        while (owner !== null) {
+          const parent = Object.getPrototypeOf(owner) as object | null;
+          if (
+            owner !== bindings &&
+            (parent === null ||
+              (typeof owner === "function" && Object.getPrototypeOf(parent) === null))
+          ) {
+            owner = null;
+            break;
+          }
+          if (Object.hasOwn(owner, step.key)) break;
+          owner = parent;
         }
         const handler =
-          owner !== null &&
-          owner !== Object.prototype &&
-          owner !== Function.prototype &&
-          (owner === bindings || step.key !== "constructor")
+          owner !== null && (owner === bindings || step.key !== "constructor")
             ? bindings[step.key]
             : undefined;
         if (typeof handler !== "function") {
