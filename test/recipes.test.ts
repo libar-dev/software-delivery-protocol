@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
@@ -406,14 +406,15 @@ describe("the agent-surface recipe corpus", () => {
     const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
     };
-    const localQuery = packageJson.scripts["sdp:q"] ?? "";
+    const runner = readFileSync(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs"), "utf8");
 
+    expect(packageJson.scripts["sdp:q"]).toBe("node ./skills/sdp-agent-surface/scripts/q.mjs");
     for (const path of standardExcludes) {
-      expect(localQuery).toContain(`--exclude ${path}`);
+      expect(runner).toContain(`"${path}"`);
     }
 
     for (const source of onRampSources) {
-      const lines = readFileSync(join(repoRoot, source), "utf8").split("\n");
+      const lines = readOnRamp(source).split("\n");
       const selfHostingLines = lines.filter((line) => line.startsWith("pnpm --silent sdp:q '"));
       const adopterLines = lines.filter((line) => line.startsWith("pnpm exec sdp q '"));
 
@@ -446,7 +447,7 @@ describe("the agent-surface recipe corpus", () => {
     const introProse = intro.replace(/\s+/gu, " ");
     const onRamps = {
       agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
-      agentSurface: readFileSync(join(repoRoot, "skills/sdp-agent-surface/SKILL.md"), "utf8"),
+      agentSurface: readOnRamp("skills/sdp-agent-surface/SKILL.md"),
       authoring: readFileSync(join(repoRoot, "skills/sdp-authoring/SKILL.md"), "utf8"),
       sessions: readFileSync(join(repoRoot, "skills/sdp-sessions/SKILL.md"), "utf8"),
     };
@@ -8760,3 +8761,16 @@ describe.each([5, 31])("recipe %i readiness tallies with foreign values", (ordin
     },
   );
 });
+
+/** An on-ramp as one text: a skill's SKILL.md followed by the references it discloses. */
+function readOnRamp(path: string): string {
+  const text = readFileSync(join(repoRoot, path), "utf8");
+  if (!path.endsWith("/SKILL.md")) return text;
+  const folder = join(repoRoot, dirname(path), "references");
+  if (!existsSync(folder)) return text;
+  const references = readdirSync(folder)
+    .filter((name) => name.endsWith(".md"))
+    .sort()
+    .map((name) => readFileSync(join(folder, name), "utf8"));
+  return [text, ...references].join("\n");
+}

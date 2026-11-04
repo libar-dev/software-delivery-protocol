@@ -27,6 +27,9 @@ export default tseslint.config(
       "node_modules/**",
       "explorations/**",
       "test/fixtures/import/parity/**",
+      // Orientation bodies are `sdp q` function bodies, not modules: a top-level `return` is their
+      // output contract. The skills tests run every one of them.
+      "skills/*/scripts/orientation/*.js",
     ],
   },
   js.configs.recommended,

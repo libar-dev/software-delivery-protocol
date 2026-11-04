@@ -78,7 +78,7 @@
     "check:git-install": "node ./check-git-install.mjs",
     "test:watch": "vitest",
     "sdp": "node ./dist/cli/sdp.js",
-    "sdp:q": "node ./dist/cli/sdp.js q --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
+    "sdp:q": "node ./skills/sdp-agent-surface/scripts/q.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

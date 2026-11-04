@@ -28,11 +28,16 @@ code behavior into intent.
 ## Orient before work
 
 **Before any work in this repository** (code, Specs, documents or a review), and before answering
-a question about the Protocol: read `CONTEXT.md`, load the `sdp-agent-surface` skill, and run the
-eleven queries in [its orientation file](skills/sdp-agent-surface/orientation.md) from the
-repository root, in order, reading each answer with the notes beside it. Re-run them in every
-session; never quote their numbers. When briefing another agent, name the skill and give it exact
-`sdp:q` bodies, not a description of the graph.
+a question about the Protocol: read `CONTEXT.md`, load the `sdp-agent-surface` skill, and run its
+eleven orientation queries from the repository root:
+
+```bash
+node skills/sdp-agent-surface/scripts/orient.mjs
+```
+
+Read each answer with [its notes](skills/sdp-agent-surface/references/orientation.md). Re-run them
+in every session; never quote their numbers. When briefing another agent, name the skill and give
+it exact `sdp:q` bodies or recipe calls, not a description of the graph.
 
 1. The corpus and its surface · 2. The capabilities · 3. The Packs · 4. Honest and built ·
 5. Next work · 6. Undecided · 7. Architecture and decisions · 8. Arrive with a word ·

@@ -154,7 +154,7 @@ for an engineering session; the owner marked the skills for the very next one.
   mandatory `sdp:q` queries that teach the practice and present the project. Eleven were drafted,
   ranked by what the research agents actually needed, and each ran twice with identical output. By the
   owner's choice, AGENTS.md carries a short "Orient before work" block, and the bodies live in
-  [`orientation.md`](../../skills/sdp-agent-surface/orientation.md) beside the skill, behind a
+  [`orientation.md`](../../skills/sdp-agent-surface/references/orientation.md) beside the skill, behind a
   one-line pointer. Two considerations remain: the recipe tests do not run these bodies, and the
   package's `files` list names each `SKILL.md` only, so the orientation file does not ship to
   adopters. Whether it should, and in what adopter-neutral form, is an engineering decision.

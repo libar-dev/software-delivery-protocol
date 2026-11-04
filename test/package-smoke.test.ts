@@ -780,6 +780,43 @@ relations: {}
       expect(
         JSON.parse(run(installedCli, ["q", "return g.specs().map(s => s.id)", "--json"], consumer)),
       ).toEqual(["spec:package.own"]);
+      // The reading skill's scripts, run from the installed plugin, select the project's own
+      // package and stay silent about version skew: skill and CLI are one copy.
+      const installedSkill = join(
+        consumer,
+        "node_modules",
+        "@libar-dev",
+        "software-delivery-protocol",
+        "skills",
+        "sdp-agent-surface",
+      );
+      const skillQuery = spawnSync(
+        process.execPath,
+        [join(installedSkill, "scripts", "q.mjs"), "return g.specs().map(s => s.id)", "--json"],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect({ status: skillQuery.status, stderr: skillQuery.stderr }).toEqual({
+        status: 0,
+        stderr: "",
+      });
+      expect(JSON.parse(skillQuery.stdout)).toEqual(["spec:package.own"]);
+      const skillOrientation = spawnSync(
+        process.execPath,
+        [join(installedSkill, "scripts", "orient.mjs"), "--json"],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect({ status: skillOrientation.status, stderr: skillOrientation.stderr }).toEqual({
+        status: 0,
+        stderr: "",
+      });
+      const orientation = JSON.parse(skillOrientation.stdout) as {
+        number: number;
+        error?: string;
+      }[];
+      expect(orientation.map((answer) => answer.number)).toEqual([
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+      ]);
+      expect(orientation.filter((answer) => answer.error !== undefined)).toEqual([]);
       await rm(join(consumer, "own.sdp.md"));
       await copyFile(importFixture, join(consumer, "behavior.sdp.ts"));
       const sdpImportDryRun = run(

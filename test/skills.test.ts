@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import {
   existsSync,
   lstatSync,
@@ -12,7 +13,7 @@ import {
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   buildGraphIndex,
@@ -89,17 +90,36 @@ const deliverySessionOnRampImplementationAnchor = codeAnchor({
 });
 void deliverySessionOnRampImplementationAnchor;
 
+/** A skill's disclosed reference files, beside its SKILL.md, in name order. */
+function skillReferences(path: string): readonly string[] {
+  const folder = join(repoRoot, dirname(path), "references");
+  if (!existsSync(folder)) return [];
+  return readdirSync(folder)
+    .filter((name) => name.endsWith(".md"))
+    .sort()
+    .map((name) => join(dirname(path), "references", name));
+}
+
+/**
+ * A skill as one teaching text: its SKILL.md followed by every reference it discloses, so a
+ * passage the skill moves behind a pointer is still checked. The frontmatter is SKILL.md's.
+ */
 function readSkill(path: string) {
-  const source = readFileSync(join(repoRoot, path), "utf8");
-  const match = /^---\n(?<frontmatter>[\s\S]*?)\n---\n(?<body>[\s\S]+)$/u.exec(source);
+  const entry = readFileSync(join(repoRoot, path), "utf8");
+  const match = /^---\n(?<frontmatter>[\s\S]*?)\n---\n(?<body>[\s\S]+)$/u.exec(entry);
 
   if (match?.groups?.frontmatter === undefined || match.groups.body === undefined) {
     throw new Error(`${path} does not carry one YAML frontmatter block`);
   }
 
+  const references = skillReferences(path).map((reference) =>
+    readFileSync(join(repoRoot, reference), "utf8"),
+  );
+
   return {
-    source,
-    body: match.groups.body,
+    source: [entry, ...references].join("\n"),
+    body: [match.groups.body, ...references].join("\n"),
+    entry,
     frontmatter: parse(match.groups.frontmatter) as Record<string, unknown>,
   };
 }
@@ -185,7 +205,7 @@ it("routes the next work and reviews through roadmap and proposal recipes", () =
     expect(sessions).toContain(clause);
   expect(sessions).not.toContain("plan pointers");
   expect(skillSection(skillPaths[2], "### Design").match(/recipe 53/gu)).toHaveLength(1);
-  const tasks = skillSection(skillPaths[0], "### Which recipe answers a task");
+  const tasks = skillSection(skillPaths[0], "# Which recipe answers a task");
   for (const number of [52, 53, 54, 55]) expect(tasks).toContain(`recipe ${String(number)}`);
   expect(sessions).toContain("a proposal composed in a preview names the stamp's merge commit");
   expect(sessions).toContain("Recipe 38 always reads the graph of the commit that was read");
@@ -410,12 +430,27 @@ describe("Protocol skill assets", () => {
     }
   });
 
-  it("uses the repository's two-field single-file convention", () => {
+  it("names each skill after its folder and uses only Agent Skills frontmatter fields", () => {
+    const agentSkillsFields = [
+      "name",
+      "description",
+      "license",
+      "compatibility",
+      "metadata",
+      "allowed-tools",
+    ];
     for (const path of allSkillPaths) {
       const skill = readSkill(path);
       const folder = basename(dirname(path));
+      const fields = Object.keys(skill.frontmatter);
 
-      expect(Object.keys(skill.frontmatter).sort()).toEqual(["description", "name"]);
+      expect({
+        path,
+        unknown: fields.filter((field) => !agentSkillsFields.includes(field)),
+      }).toEqual({ path, unknown: [] });
+      expect(fields).toEqual(expect.arrayContaining(["name", "description"]));
+      const compatibility = skill.frontmatter.compatibility;
+      expect(typeof compatibility === "string" ? compatibility.length : 0).toBeLessThanOrEqual(500);
       expect(skill.frontmatter.name).toBe(folder);
       expect(typeof skill.frontmatter.description).toBe("string");
       expect(String(skill.frontmatter.description).length).toBeGreaterThan(40);
@@ -545,13 +580,20 @@ describe("Protocol skill assets", () => {
     }
   });
 
-  it("documents only valid CLI verbs and keeps root-specific exclusions intact", () => {
+  it("documents only valid CLI verbs and keeps root-specific exclusions intact", async () => {
     const commands = publicCommands();
     const rootExclusions = ["explorations", "examples", "test/fixtures/import/parity"];
     const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
     };
-    const localQuery = packageJson.scripts["sdp:q"] ?? "";
+    // The repository's query script is the reading skill's runner, which holds the exclusions.
+    const runner = (await import(
+      pathToFileURL(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs")).href
+    )) as { sourceCheckoutExclusions: readonly string[] };
+    const localQuery = runner.sourceCheckoutExclusions.map((path) => `--exclude ${path}`).join(" ");
+
+    expect(packageJson.scripts["sdp:q"]).toBe("node ./skills/sdp-agent-surface/scripts/q.mjs");
+    expect(packageJson.scripts["generate:self-hosting"]).toContain(localQuery);
 
     expect([...commands].sort()).toEqual(
       [
@@ -737,7 +779,7 @@ void readingOnRampTestAnchor;
 describe("the graph-reading on-ramp", () => {
   it("maps a task to every catalog recipe in one sheet", () => {
     const surface = readSkill("skills/sdp-agent-surface/SKILL.md").source;
-    const heading = "### Which recipe answers a task";
+    const heading = "# Which recipe answers a task";
     const start = surface.indexOf(heading);
     expect(start).toBeGreaterThan(-1);
     const sheet = surface
@@ -766,6 +808,137 @@ describe("the graph-reading on-ramp", () => {
       "spec:consumers.agent-surface.evaluation-sink",
     ]) {
       expect(surface).toContain(`\`${owner}\``);
+    }
+  });
+
+  it("keeps its steps in a short SKILL.md and discloses each reference one level down", () => {
+    const skill = "skills/sdp-agent-surface";
+    const entry = readFileSync(join(repoRoot, skill, "SKILL.md"), "utf8");
+    const references = readdirSync(join(repoRoot, skill, "references")).filter((name) =>
+      name.endsWith(".md"),
+    );
+    const links = [...entry.matchAll(/\]\((?<target>[^)#\s]+)(?:#[^)]*)?\)/gu)].map(
+      (match) => match.groups?.target ?? "",
+    );
+
+    // The Agent Skills body budget is under 500 lines and 5,000 tokens; this skill keeps well
+    // inside it so its first steps are read, not skimmed.
+    expect(entry.length).toBeLessThanOrEqual(8000);
+    expect(entry.split("\n").length).toBeLessThanOrEqual(120);
+    expect(references.length).toBeGreaterThan(0);
+    for (const name of references) {
+      expect({
+        name,
+        linked: links.filter((target) => target === `references/${name}`).length,
+      }).toEqual({ name, linked: 1 });
+      const text = readFileSync(join(repoRoot, skill, "references", name), "utf8");
+      expect({ name, chained: /\]\((?!https?:)[^)]*\.md/u.test(text) }).toEqual({
+        name,
+        chained: false,
+      });
+    }
+    for (const target of links.filter((link) => !/^https?:/u.test(link))) {
+      expect({ target, inReferences: target.startsWith("references/") }).toEqual({
+        target,
+        inReferences: true,
+      });
+      expect({ target, exists: existsSync(join(repoRoot, skill, target)) }).toEqual({
+        target,
+        exists: true,
+      });
+    }
+  });
+
+  it("names the reader's methods and every field its answers carry", () => {
+    // Lockstep with the reader: a method or a row field added or removed must move this prose.
+    const graph = shippedCorpusGraph();
+    const reader = createReader(graph);
+    const entry = readSkill("skills/sdp-agent-surface/SKILL.md").entry.replaceAll(/\s+/gu, " ");
+    const methods = /`g`, the reader \(`(?<list>[^`]+)`\)/u.exec(entry)?.groups?.list?.split(" ");
+    expect(methods).toEqual(Object.keys(reader));
+
+    const fields = skillSection("skills/sdp-agent-surface/SKILL.md", "## Field names");
+    const keys = (rows: readonly object[]) => [...new Set(rows.flatMap((row) => Object.keys(row)))];
+    const spec = reader.specs()[0]?.id ?? "";
+    const pack = reader.packs()[0]?.id ?? "";
+    const named = [
+      ...Object.keys(graph),
+      ...keys(graph.nodes),
+      ...keys(graph.edges),
+      ...keys(reader.specs()),
+      ...keys(reader.packs()),
+      ...keys(reader.findByConcept("graph")),
+      ...Object.keys(reader.specContext(spec) ?? {}),
+      ...Object.keys(reader.packContext(pack) ?? {}),
+      ...Object.keys(reader.byFile(reader.specs()[0]?.file ?? "")),
+      ...Object.keys(reader.blastRadius([])),
+      ...Object.keys(reader.resolveEntryAddress(`${spec}#rule.absent`)),
+    ];
+    for (const field of new Set(named)) {
+      expect({ field, named: fields.includes(`\`${field}\``) }).toEqual({ field, named: true });
+    }
+  });
+
+  it("runs every orientation query over the Protocol and over a corpus with no subjects given", () => {
+    const skill = join(repoRoot, "skills/sdp-agent-surface");
+    const notes = readFileSync(join(skill, "references/orientation.md"), "utf8");
+    const headings = [...notes.matchAll(/^## (?<heading>\d+\. .+)$/gmu)].map(
+      (match) => match.groups?.heading ?? "",
+    );
+    const slug = (heading: string) =>
+      heading
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9 -]/gu, "")
+        .replaceAll(" ", "-");
+
+    for (const root of [[], ["--root", "examples/checkout-v1"]]) {
+      const run = spawnSync(
+        process.execPath,
+        [join(skill, "scripts/orient.mjs"), "--json", ...root],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+        },
+      );
+      expect({ root, status: run.status, stderr: run.stderr }).toEqual({
+        root,
+        status: 0,
+        stderr: "",
+      });
+      const answers = JSON.parse(run.stdout) as {
+        number: number;
+        title: string;
+        notes: string;
+        error?: string;
+      }[];
+      expect(answers.map((answer) => `${String(answer.number)}. ${answer.title}`)).toEqual(
+        headings,
+      );
+      for (const answer of answers) {
+        expect({ number: answer.number, error: answer.error }).toEqual({
+          number: answer.number,
+          error: undefined,
+        });
+        expect(answer.notes).toBe(
+          `references/orientation.md#${slug(`${String(answer.number)}. ${answer.title}`)}`,
+        );
+      }
+    }
+  }, 120_000);
+
+  it("refuses with a named remedy where no runtime is installed", () => {
+    const outside = mkdtempSync(join(tmpdir(), "sdp-runner-"));
+    try {
+      const run = spawnSync(
+        process.execPath,
+        [join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs"), "return 1"],
+        { cwd: outside, encoding: "utf8" },
+      );
+      expect(run.status).toBe(2);
+      expect(run.stderr).toContain("@libar-dev/software-delivery-protocol is not installed");
+      expect(run.stdout).toBe("");
+    } finally {
+      rmSync(outside, { force: true, recursive: true });
     }
   });
 });
@@ -1297,12 +1470,19 @@ describe("the taught question marker", () => {
 });
 
 /** The text from a heading up to the next heading of the same or a higher level. */
+/**
+ * The section under a heading, found by its text at whatever level the skill now gives it (a
+ * passage moved into a reference file can rise a level), ending at the next heading of the
+ * same or a higher level.
+ */
 function skillSection(path: string, heading: string): string {
   const { source } = readSkill(path);
-  const start = source.indexOf(`\n${heading}\n`);
-  if (start === -1) throw new Error(`${path} has no heading ${heading}`);
-  const level = /^#+/u.exec(heading)?.[0].length ?? 2;
-  const rest = source.slice(start + heading.length + 2);
+  const text = heading.replace(/^#+ /u, "");
+  const escaped = text.replaceAll(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const found = new RegExp(`^(?<hashes>#{1,6}) ${escaped}$`, "mu").exec(source);
+  if (found?.groups?.hashes === undefined) throw new Error(`${path} has no heading ${heading}`);
+  const level = found.groups.hashes.length;
+  const rest = source.slice(found.index + found[0].length + 1);
   const next = new RegExp(`^#{1,${String(level)}} `, "mu").exec(rest);
   return next === null ? rest : rest.slice(0, next.index);
 }
@@ -1593,16 +1773,11 @@ describe("the reviewed skill teaching", () => {
   });
 
   it("orders the reader as a task route and leaves recipe contracts to the catalog", () => {
-    const { source } = readSkill(surfacePath);
-    const order = [
-      "## Bootstrap discipline",
-      "## Answer a task with a recipe",
-      "## The contract",
-      "## Entry adapters and reader joins",
-      "## The shape of the graph",
-      "## How delivery state derives",
-      "## Empty answers that mislead",
-    ].map((heading) => source.indexOf(`\n${heading}\n`));
+    const { source, entry } = readSkill(surfacePath);
+    // The route is SKILL.md's own order: start, write the body, read the answer, then the rest.
+    const order = ["## Start", "## Write the body", "## Read the answer honestly", "## More"].map(
+      (heading) => entry.indexOf(`\n${heading}\n`),
+    );
     expect(order.every((index) => index > -1)).toBe(true);
     expect(order).toEqual([...order].sort((left, right) => left - right));
     expect(flat(source)).toContain("The catalog owns recipe contracts; carrying Specs own law.");
