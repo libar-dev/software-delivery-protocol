@@ -65,6 +65,36 @@ describe("build write boundaries", () => {
     }
   });
 
+  // BuildHooks: the filesystem hooks stand in for every guarded mutation, not recovery alone.
+  it("routes a successful build's ordinary removals and writes through the filesystem hooks", () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-build-hooks-"));
+    const removed: string[] = [];
+    const written: string[] = [];
+    writeCarrier(root, "probe.sdp.md", "spec:probe.hooks");
+    try {
+      const capture = createCaptureOutput();
+      expect(
+        runSdpCli(["build", root], capture.output, {
+          rmSync: (path, options) => {
+            removed.push(String(path));
+            rmSync(path, options);
+          },
+          writeFileSync: (path, data, options) => {
+            written.push(String(path));
+            writeFileSync(path, data, options);
+          },
+        }),
+        capture.readStderr(),
+      ).toBe(0);
+      expect(removed.some((path) => path.endsWith(join("generated", "design-review.tmp")))).toBe(
+        true,
+      );
+      expect(written.some((path) => path.endsWith(join("generated", "graph.json.tmp")))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("names an unresolvable output parent when generated is a dangling link", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-dangling-output-"));
     const parent = join(root, "generated");

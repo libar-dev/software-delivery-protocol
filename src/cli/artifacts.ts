@@ -84,6 +84,11 @@ export function outputBoundary(root: string): (path: string) => void {
   };
 }
 
+/**
+ * The filesystem calls a publisher makes, each rechecking the output boundary before and after
+ * it mutates. `hooks.rmSync` and `hooks.writeFileSync` stand in for the real calls in every one
+ * of these mutations, not only in recovery.
+ */
 export function guardedOutput(
   root: string,
   hooks: { rmSync?: typeof rmSync; writeFileSync?: typeof writeFileSync } = {},
