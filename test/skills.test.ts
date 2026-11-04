@@ -13,7 +13,7 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
@@ -31,11 +31,9 @@ import {
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
-import { checkVaultDirectory, reportVaultError, vaultDirectory } from "../src/cli/vault-command.js";
-import { isExcludedDiscoveryDirectory } from "../src/extract/discover.js";
+import { reportVaultError } from "../src/cli/vault-command.js";
 import { parseMarkdownBody } from "../src/extract/markdown-body.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { renderVault } from "../src/projections/vault/notes.js";
 import { VaultGuardError } from "../src/projections/vault/sync.js";
 import { createReader } from "../src/reader/reader.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
@@ -135,17 +133,6 @@ function shellFenceLines(body: string): readonly string[] {
   }
 
   return lines;
-}
-
-function documentedCommands(body: string): readonly string[] {
-  return shellFenceLines(body)
-    .map((line) => line.trim())
-    .filter(
-      (line) =>
-        line.startsWith("pnpm --silent sdp:q ") ||
-        line.startsWith("pnpm --silent sdp ") ||
-        line.startsWith("pnpm exec sdp "),
-    );
 }
 
 /** The public commands, read from the help's usage block: one token each, two for `new spec`. */
@@ -515,25 +502,6 @@ describe("Protocol skill assets", () => {
     }
   });
 
-  it("keeps every skill graph-first and the authoring law linked to carrying Specs", () => {
-    for (const path of allSkillPaths.filter(
-      (path) =>
-        path !== skillPaths[0] &&
-        path !== skillPaths[1] &&
-        path !== skillPaths[2] &&
-        path !== studioSkillPath,
-    )) {
-      const { source } = readSkill(path);
-
-      expect(source).toContain("sdp q");
-      expect(source).toContain("docs/agent-surface/recipes.md");
-      expect(source).toContain(
-        "node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md",
-      );
-      expect(source).toContain("spec:");
-    }
-  });
-
   it("documents only valid CLI verbs and keeps root-specific exclusions intact", async () => {
     const commands = publicCommands();
     const rootExclusions = ["explorations", "examples", "test/fixtures/import/parity"];
@@ -572,35 +540,6 @@ describe("Protocol skill assets", () => {
 
     for (const exclusion of rootExclusions) {
       expect(localQuery).toContain(`--exclude ${exclusion}`);
-    }
-
-    for (const path of allSkillPaths.filter(
-      (path) =>
-        path !== skillPaths[0] &&
-        path !== skillPaths[1] &&
-        path !== skillPaths[2] &&
-        path !== studioSkillPath,
-    )) {
-      const documented = documentedCommands(readSkill(path).body);
-      expect(documented.length).toBeGreaterThan(0);
-
-      for (const line of documented) {
-        expect({ path, line, known: documentedCommand(line, commands) !== undefined }).toEqual({
-          path,
-          line,
-          known: true,
-        });
-        // The repository's own `sdp` script at this root needs the three fixture exclusions.
-        if (line.startsWith("pnpm --silent sdp ") && / \.(?: |$)/u.test(line)) {
-          for (const exclusion of rootExclusions) {
-            expect({ path, line, exclusion: line.includes(`--exclude ${exclusion}`) }).toEqual({
-              path,
-              line,
-              exclusion: true,
-            });
-          }
-        }
-      }
     }
   });
 
@@ -1392,132 +1331,11 @@ describe("the reviewed skill teaching", () => {
   });
 });
 
-/** Every `spec:` id and entry address a skill cites, placeholders and probe ids left out. */
-function citedProtocolReferences(source: string): { ids: string[]; addresses: string[] } {
-  const cited = [
-    ...new Set(
-      [...source.matchAll(/spec:[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)*(?:#[a-z]+\.[A-Za-z0-9]+)?/gu)]
-        .map((match) => match[0])
-        .filter((reference) => !/[<>]/u.test(reference)),
-    ),
-  ];
-  return {
-    ids: [...new Set(cited.map((reference) => reference.split("#")[0] ?? reference))],
-    addresses: cited.filter((reference) => reference.includes("#")),
-  };
-}
-
 let shippedCorpus: ReturnType<typeof extract> | undefined;
 /** The Protocol's own Specs as the package ships them, extracted once for the citation checks. */
 function shippedCorpusGraph() {
   shippedCorpus ??= extract({ root: join(repoRoot, "specs") });
   return shippedCorpus.graph;
-}
-
-async function assertCitationsResolve(path: string, required: readonly string[]): Promise<void> {
-  const { ids, addresses } = citedProtocolReferences(readSkill(path).source);
-  for (const id of required) expect(ids).toContain(id);
-  const graph = shippedCorpusGraph();
-  const reader = createReader(graph);
-  for (const id of ids) {
-    expect({ path, id, resolves: reader.specContext(id) !== undefined }).toEqual({
-      path,
-      id,
-      resolves: true,
-    });
-  }
-  const resolution = (await evaluateBody("return recipes(25, params)", {
-    graph,
-    params: { addresses },
-  })) as { rows: { address: string; resolves: boolean }[] };
-  expect(resolution.rows.filter((row) => !row.resolves)).toEqual([]);
-  expect(resolution.rows).toHaveLength(addresses.length);
-}
-
-/** The body of the one documented `sdp q '…'` line that calls the proposal check. */
-function taughtProposalCheckBody(path: string): string {
-  const line = shellFenceLines(readSkill(path).body)
-    .map((entry) => entry.trim())
-    .find((entry) => entry.includes(" q '") && entry.includes("recipes(38"));
-  const body = /\bq '([^']+)'/u.exec(line ?? "")?.[1];
-  if (body === undefined) throw new Error(`${path} must teach one proposal-check invocation`);
-  expect(line).toContain("--params proposal=@proposal.json");
-  expect(line).toMatch(/--params base=@\S+/u);
-  return body;
-}
-
-/**
- * Runs the taught proposal check over a probe whose first change's scope moved since its base,
- * whose third names a Spec the head lacks, and whose fourth declares a relation to one.
- */
-async function assertTaughtRouting(path: string): Promise<void> {
-  const carrierWith = (limit: string) => ({
-    "a.sdp.md": probeCarrier("spec:probe.a", "behavior", `## Design\n- limit: ${limit}`),
-    "b.sdp.md": probeCarrier("spec:probe.b", "behavior", "## Behavior\n- rule: A second rule."),
-  });
-  const base = probeGraph(carrierWith("ten")).graph;
-  const head = probeGraph(carrierWith("twelve")).graph;
-  const proposal = {
-    schema: "sdp-proposal/1",
-    base: "0123456",
-    reason: "Tighten the limit.",
-    changes: [
-      { scope: ["spec:probe.a#design.limit"], request: "Lower the limit." },
-      { scope: ["spec:probe.b"], request: "Add an example." },
-      { scope: ["spec:probe.c"], request: "Name a Spec the head lacks." },
-      {
-        scope: ["spec:probe.b"],
-        request: "Depend on a Spec the head lacks.",
-        relation: {
-          action: "declare",
-          from: "spec:probe.b",
-          type: "dependsOn",
-          target: "spec:probe.missing-target",
-        },
-      },
-    ],
-  };
-  interface Row {
-    moved: boolean | null;
-    scope: { resolvesAtHead: boolean }[];
-    relationTarget: { ref: string; resolvesAtHead: boolean } | null;
-  }
-  const answer = (await evaluateBody(taughtProposalCheckBody(path), {
-    graph: head,
-    params: { proposal, base },
-  })) as { schemaProblems: unknown[]; totals: { unresolved: number }; changes: Row[] };
-  expect(answer.schemaProblems).toEqual([]);
-  expect(answer.changes.map((change) => change.moved)).toEqual([true, false, false, false]);
-  expect(answer.changes[2]?.scope.map((item) => item.resolvesAtHead)).toEqual([false]);
-  // The relation's target is reported apart from the scope, which resolves and has not moved.
-  expect(answer.changes[3]?.scope.map((item) => item.resolvesAtHead)).toEqual([true]);
-  expect(answer.changes[3]?.relationTarget).toEqual({
-    ref: "spec:probe.missing-target",
-    resolvesAtHead: false,
-  });
-  expect(answer.totals.unresolved).toBe(2);
-
-  const routing = flat(readSkill(path).source);
-  for (const clause of [
-    "If `schemaProblems` is non-empty, the answer has no change rows: return the proposal for correction.",
-    "Send a change to the person when its `moved` is `true` or `null`, which the check could not compare, when any `scope` item has `resolvesAtHead: false`, or when its `relationTarget` has `resolvesAtHead: false`.",
-    "Apply only the remaining `moved: false` changes, as ordinary carrier edits through `sdp-authoring`",
-    "`spec:consumers.intent-composition#rule.changedScope`",
-  ]) {
-    expect(routing).toContain(clause);
-  }
-
-  // The routing as taught: only the change whose scope stayed put and whose target resolves applies.
-  const toPerson = (row: Row) =>
-    row.moved !== false ||
-    row.scope.some((item) => !item.resolvesAtHead) ||
-    row.relationTarget?.resolvesAtHead === false;
-  expect(answer.changes.map((row) => (toPerson(row) ? "person" : "apply"))).toEqual([
-    "person",
-    "apply",
-    "person",
-    "person",
-  ]);
 }
 
 /**
@@ -1903,193 +1721,93 @@ const vaultOnRampTestAnchor = specTest({
 });
 void vaultOnRampTestAnchor;
 
+describeOnRamp("sdp-vault", { realizes: ["spec:consumers.vault-on-ramp"], capBytes: 4_000 });
+
 describe("the vault on-ramp", () => {
-  const vault = () => readSkill(vaultSkillPath);
-  const section = (heading: string) => flat(skillSection(vaultSkillPath, heading));
+  const vault = () => readSkill(vaultSkillPath).source;
+  /** The one body the skill teaches through the reading skill's runner. */
+  const taughtBody = () => {
+    const body = /scripts\/q\.mjs '([^']+)'/u.exec(vault())?.[1];
+    if (body === undefined) throw new Error("the vault skill must teach one runner body");
+    return body;
+  };
 
-  it("is its own shipped skill, which the reading skill points to", () => {
-    const { frontmatter } = vault();
-    expect(frontmatter.name).toBe("sdp-vault");
-    const description = String(frontmatter.description);
-    expect(description.startsWith("Keep the Protocol's Obsidian vault")).toBe(true);
-    for (const trigger of [
-      "vault directory",
-      "refused or failed synchronization",
-      "intent notes",
-    ]) {
-      expect(description).toContain(trigger);
-    }
-    for (const path of skillPaths.filter(
-      (path) => path !== skillPaths[1] && path !== skillPaths[2],
-    )) {
-      expect(readSkill(path).source).toContain("`sdp-vault`");
-    }
+  it("is its own skill, which the reading skill points to", () => {
+    expect(readSkill(skillPaths[0]).source).toContain("`sdp-vault`");
   });
 
-  it("places the vault where the command accepts it", () => {
-    const place = section("## Choose the vault directory");
+  it("defers placement and the watch to a help text that states them", () => {
+    expect(vault()).toContain("`sdp vault --help`");
+    const help = flat(SDP_HELP_TEXT.slice(SDP_HELP_TEXT.indexOf("  vault      ")));
     for (const clause of [
-      "`--out` resolves against the working directory, not the root.",
-      "`spec:consumers.obsidian-vault#design.buildOwnedPaths`",
-      "Open the vault directory itself in Obsidian, never its `sdp/` folder",
-    ]) {
-      expect(place).toContain(clause);
-    }
-    const skipped = /discovery skips \(([^)]+)\)/u.exec(place)?.[1] ?? "";
-    const names = [...skipped.matchAll(/`([a-z_-]+)\/`/gu)].map((match) => match[1] ?? "");
-    expect(names.sort()).toEqual(["coverage", "dist", "generated", "node_modules"]);
-    for (const name of names) expect(isExcludedDiscoveryDirectory(name)).toBe(true);
-    expect(skipped).toContain("a dot-directory");
-    expect(isExcludedDiscoveryDirectory(".notes")).toBe(true);
-    expect(isExcludedDiscoveryDirectory("specs")).toBe(false);
-
-    const root = mkdtempSync(join(tmpdir(), "sdp-vault-skill-"));
-    try {
-      const args = (vaultDir: string, exclude: readonly string[] = []) => ({
-        root,
-        exclude,
-        checkClean: false,
-        vault: vaultDir,
-      });
-      expect(vaultDirectory(args("design-vault"))).toBe(resolve("design-vault"));
-      expect(() => {
-        checkVaultDirectory(args(join(root, "notes")));
-      }).toThrow(/lies inside the root/u);
-      expect(() => {
-        checkVaultDirectory(args(join(root, "notes"), ["notes"]));
-      }).not.toThrow();
-      expect(() => {
-        checkVaultDirectory(args(join(root, "generated", "obsidian-vault")));
-      }).not.toThrow();
-      expect(() => {
-        checkVaultDirectory(args(join(root, "generated", "spec-studio")));
-      }).toThrow(/overlaps generated\/spec-studio/u);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  it("keeps the person's notes outside the folder the command owns", () => {
-    const apart = section("## Keep the person's notes apart");
-    for (const clause of [
-      "The command writes, moves and removes files only under `sdp/`.",
-      "by convention under `intent/`",
-      "`spec:decisions.vault-owned-folder`",
-      "An edit to a generated note never reaches the carrier",
-    ]) {
-      expect(apart).toContain(clause);
-    }
-    expect(SDP_HELP_TEXT.replaceAll(/\s+/gu, " ")).toContain(
+      "Open DIR itself as an Obsidian vault.",
       "Keep your notes outside sdp/, by convention in intent/.",
-    );
-  });
-
-  it("teaches synchronizing and watching as the verbs and the failed index state them", () => {
-    const sync = section("## Synchronize and watch");
-    for (const clause of [
-      "`sdp vault` enters the shared build, so it removes the five page roots.",
-      "run `sdp generate --vault DIR`",
-      "a `.ts` or `.tsx` source other than a `.d.ts`",
-      "`sdp validate --watch` follows no source files.",
+      "--out resolves against cwd; an in-root vault must be under a skipped directory or excluded prefix",
+      "--watch reruns on carriers and TypeScript sources",
     ]) {
-      expect(sync).toContain(clause);
+      expect(help).toContain(clause);
     }
-    expect(usageLine("generate")).toContain("[--vault DIR]");
-    expect(usageLine("vault")).toContain("[--watch]");
-    const warning = /`(The last regeneration failed[^`]+)`/u.exec(sync)?.[1];
-    expect(warning).toBeDefined();
-    expect(readFileSync(join(repoRoot, "src/cli/vault-command.ts"), "utf8")).toContain(
-      `> [!warning] ${warning ?? ""}`,
-    );
   });
 
-  it("names every refusal the guard prints and how to recover from it", () => {
-    const recover = skillSection(vaultSkillPath, "## Recover a refused run");
+  it("names every refusal reason the guard prints, and no other", () => {
+    // A reason added to the guard fails the type check here before it reaches the prose.
+    type Reason = VaultGuardError["refusals"][number]["reason"];
+    const all: Record<Reason, true> = {
+      unknown: true,
+      changed: true,
+      "not a file": true,
+      malformed: true,
+    };
+    const reasons = Object.keys(all) as Reason[];
     const capture = createCaptureOutput();
     reportVaultError(
-      new VaultGuardError([
-        { path: "sdp/a.md", reason: "changed" },
-        { path: "sdp/b.md", reason: "unknown" },
-        { path: "sdp/c", reason: "not a file" },
-        { path: "sdp/.sdp-vault.json", reason: "malformed" },
-      ]),
+      new VaultGuardError(
+        reasons.map((reason, index) => ({ path: `sdp/${String(index)}`, reason })),
+      ),
       capture.output,
     );
-    const printed = capture.readStderr().split("\n").filter(Boolean);
-    const reasons = [...recover.matchAll(/^\| `\(([a-z ]+)\)`/gmu)].map((match) => match[1]);
-    expect(reasons).toEqual(["changed", "unknown", "not a file", "malformed"]);
-    for (const reason of reasons) {
-      expect(printed.some((line) => line.endsWith(`(${reason ?? ""})`))).toBe(true);
-    }
-    expect(flat(recover)).toContain(`\`${printed.at(-1) ?? ""}\``);
-    expect(flat(recover)).toContain(
-      "`sdp vault: warning: sdp/<path> has changed; delete it to regenerate`",
-    );
+    const printed = capture
+      .readStderr()
+      .split("\n")
+      .flatMap((line) => /\(([a-z ]+)\)$/u.exec(line)?.[1] ?? []);
+    const taught = [...vault().matchAll(/^- `\(([a-z ]+)\)`:/gmu)].map((match) => match[1]);
+    expect([...taught].sort()).toEqual([...printed].sort());
+    expect([...printed].sort()).toEqual([...reasons].sort());
+  });
+
+  it("quotes the failed-index warning the command writes", () => {
+    const quoted = /"(The last regeneration failed)"/u.exec(vault())?.[1];
+    expect(quoted).toBeDefined();
     expect(readFileSync(join(repoRoot, "src/cli/vault-command.ts"), "utf8")).toContain(
-      "has changed; delete it to regenerate",
+      `> [!warning] ${quoted ?? ""}`,
     );
-    expect(flat(recover)).toContain("Save the person's words before you delete anything");
   });
 
-  it("converts a note's links back to the addresses the vault wrote, then checks the proposal", async () => {
-    const intent = section("## Turn intent notes into carrier edits");
-    for (const clause of [
-      "`spec.<path>.md#^design-limit` names `spec:<path>#design.limit`",
-      "A term note `term.<path>.<key>` names `spec:<path>#term.<key>`",
-      "`spec:consumers.obsidian-vault.notes#rule.addressRoundTrip`",
-      "render its memo with the proposal memo (recipe 49)",
-    ]) {
-      expect(intent).toContain(clause);
-    }
-
+  it("checks converted links with a body that looks bare ids up apart from entry addresses", async () => {
     const { graph } = probeGraph({
-      ...termCorpus,
       "limit.sdp.md": probeCarrier("spec:probe.limit", "behavior", "## Design\n- limit: ten"),
+      "probe.pack.sdp.md":
+        "---\nid: pack:probe.review\nspecs:\n  - spec:probe.limit\n---\n# Probe review\n\nThe framing.\n",
     });
-    const files = renderVault(graph);
-    const note = files.find((file) => file.path === "specs/probe/spec.probe.limit.md");
-    expect(note?.content).toMatch(/- limit: ten \^design-limit$/mu);
-    const term = files.find((file) => file.path === "terms/term.probe.terms.stepKey.md");
-    expect(term).toBeDefined();
-
-    // The conversion the skill teaches, applied to what the vault wrote.
-    const toId = (noteName: string) => noteName.replace(".", ":");
-    const toAddress = (noteName: string, block: string) =>
-      `${toId(noteName)}#${block.replace(/^\^/u, "").replace("-", ".")}`;
-    const termAddress = (termNote: string) =>
-      termNote.replace(/^term\.(.*)\.([A-Za-z0-9]+)$/u, "spec:$1#term.$2");
-    const resolution = (await evaluateBody("return recipes(25, params)", {
-      graph,
-      params: {
-        addresses: [
-          toAddress("spec.probe.limit", "^design-limit"),
-          termAddress("term.probe.terms.stepKey"),
-        ],
-      },
-    })) as { rows: { address: string; resolves: boolean }[] };
-    expect(resolution.rows).toEqual([
-      expect.objectContaining({ address: "spec:probe.limit#design.limit", resolves: true }),
-      expect.objectContaining({ address: "spec:probe.terms#term.stepKey", resolves: true }),
+    const refs = [
+      "spec:probe.limit",
+      "pack:probe.review",
+      "spec:probe.missing",
+      "spec:probe.limit#design.limit",
+      "spec:probe.limit#design.missing",
+    ];
+    const rows = (await evaluateBody(taughtBody(), { graph, params: { refs } })) as string[];
+    expect(rows).toEqual([
+      "spec:probe.limit: found",
+      "pack:probe.review: found",
+      "spec:probe.missing: unknown",
+      expect.stringMatching(/^spec:probe\.limit#design\.limit: limit\.sdp\.md:\d+$/u),
+      "spec:probe.limit#design.missing: entry",
     ]);
-
-    await assertTaughtRouting(vaultSkillPath);
   });
 
-  it("takes the proposal's base from the graph the person read, never from the latest synchronization", async () => {
-    const intent = section("## Turn intent notes into carrier edits");
-    for (const clause of [
-      "Establish the commit whose graph the person read; it is the proposal's base.",
-      "record that commit in a note under `intent/`",
-      "Otherwise write the graph with that commit's own engine, as the design diff's catalog entry (recipe 35) shows",
-      "A later synchronization does not change this base",
-      "Use the current graph only when the person confirms it is the version their intent addresses and its carriers match the named commit.",
-      "When the reading base cannot be established, ask the person to review the current design and restate the intent against a known commit before you write a proposal.",
-    ]) {
-      expect(intent).toContain(clause);
-    }
-    expect(intent).not.toContain("If no carrier changed since the last synchronization");
-
-    // The person read the vault at graph A; under --watch it then synchronized to graph B.
+  it("holds the base hazard it states: a newer graph reports a moved entry as unmoved", async () => {
+    // The person read the vault at one graph; under --watch it then synchronized to another.
     const limitGraph = (limit: string) =>
       probeGraph({
         "limit.sdp.md": probeCarrier(
@@ -2100,11 +1818,6 @@ describe("the vault on-ramp", () => {
       }).graph;
     const read = limitGraph("ten");
     const latestSync = limitGraph("twelve");
-    const syncedNote = renderVault(latestSync).find(
-      (file) => file.path === "specs/probe/spec.probe.limit.md",
-    );
-    expect(syncedNote?.content).toMatch(/- limit: twelve \^design-limit$/mu);
-
     const proposal = {
       schema: "sdp-proposal/1",
       base: "0123456",
@@ -2113,27 +1826,13 @@ describe("the vault on-ramp", () => {
     };
     const moved = async (base: typeof read) =>
       (
-        (await evaluateBody(taughtProposalCheckBody(vaultSkillPath), {
+        (await evaluateBody("return await recipes(38, params)", {
           graph: latestSync,
           params: { proposal, base },
         })) as { changes: { moved: boolean | null }[] }
       ).changes.map((change) => change.moved);
-    // Against the graph the person read, the change goes to the person; against the latest
-    // synchronization the same change would be applied over a limit the person never saw.
     expect(await moved(read)).toEqual([true]);
     expect(await moved(latestSync)).toEqual([false]);
-  });
-
-  it("cites resolving vault Specs for law and leaves flags to the verb's help", async () => {
-    expect(flat(vault().body)).toContain("`sdp vault --help` owns the flags");
-    await assertCitationsResolve(vaultSkillPath, [
-      "spec:consumers.vault-on-ramp",
-      "spec:consumers.obsidian-vault",
-      "spec:consumers.obsidian-vault.notes",
-      "spec:consumers.obsidian-vault.iteration",
-      "spec:decisions.vault-owned-folder",
-      "spec:consumers.intent-composition",
-    ]);
   });
 });
 

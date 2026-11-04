@@ -4320,11 +4320,11 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "The vault is taught in its own shipped skill, beside the reading, authoring, session and Studio skills, and the reading skill points to it.",
-          "The skill teaches choosing the vault directory: `--out` resolves against the working directory, a vault inside the root lies under a directory discovery skips or an excluded prefix and apart from every path the build writes or removes, and a person opens that directory itself as the vault.",
+          "The skill teaches choosing the vault directory with the person, outside `generated/` for notes worth keeping, and that a person opens that directory itself as the vault.",
           "The skill teaches that the command writes only the vault's `sdp/` folder, and that a person's notes, intent notes under `intent/` by convention, and Obsidian's settings lie outside it.",
-          "The skill teaches synchronizing and watching: `sdp vault` enters the shared build and removes the five page roots, `sdp generate --vault DIR` publishes those roots and the vault together, the watch follows carriers and TypeScript sources, and an index that opens with a failed-regeneration warning shows an older graph.",
+          "The skill teaches synchronizing: `sdp vault` enters the shared build and removes the five page roots, `sdp generate --vault DIR` publishes those roots and the vault together, and an index that opens with a failed-regeneration warning shows an older graph.",
           "The skill teaches recovering a refused run without losing a person's work: name what each refusal means, move the person's words out of `sdp/` before deleting a refused path, and keep or delete a changed Base on purpose.",
-          "The skill teaches turning an intent note into carrier edits: convert its links to ids and entry addresses, write a change proposal against the graph the person read, run the proposal check, send a moved or uncheckable change to a person, and apply the rest through the authoring skill.",
+          "The skill teaches turning an intent note into a change proposal against the graph the person read, converting each link back to the id or entry address it names, and applies it through `spec:consumers.delivery-session-on-ramp#rule.receiveProposal`.",
           "The skill cites the vault's Specs for law and the verb's `--help` for its flags, and restates neither.",
         ],
         ruleKeys: {

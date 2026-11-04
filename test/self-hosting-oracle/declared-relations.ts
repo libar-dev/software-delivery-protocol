@@ -2000,8 +2000,8 @@ export const expectedDeclaredRelations: readonly (readonly [
   [
     "spec:consumers.vault-on-ramp",
     "dependsOn",
-    "spec:consumers.intent-composition",
-    "intent written in the vault is applied through a checked change proposal",
+    "spec:consumers.delivery-session-on-ramp",
+    "the skill applies an intent note's proposal through the session skill's one receive procedure",
   ],
   [
     "spec:consumers.vault-on-ramp",
