@@ -499,6 +499,9 @@ Feature: Multiple findings
 
   it.each([
     ["@implemented", "delivery-fact lookalike"],
+    ["@deliveryFacts", "delivery-fact lookalike"],
+    ["@deliveryFacts.ready", "delivery-fact lookalike"],
+    ["@HasVerifier", "delivery-fact lookalike"],
     ["@claim.declared", "authored claim lookalike"],
     ["@status-ready", "authored lifecycle-status lookalike"],
     ["@architect-implemented", "retired architect-status lookalike"],
@@ -728,6 +731,54 @@ Feature: Probe feature
       expect(found?.line).toBe(line);
       expect(found?.message).toContain(construct);
       expect(found?.message).toContain(held);
+    });
+  });
+
+  describe.each([
+    ["CR", "\r"],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+  ])("embedded %s in Gherkin titles and steps", (_name, separator) => {
+    const source = feature(
+      [
+        "",
+        "  # A comment keeps physical locations visible.",
+        "  @example-space",
+        "  Scenario: Space title",
+        "    Given space text",
+        "",
+        scenario("    Given ordinary text\n    And continued text"),
+        "",
+        "  Rule: Rule title",
+      ].join("\n"),
+    );
+    it.each([
+      ["Feature title", "Probe feature", 2],
+      ["Scenario title", "Probe scenario", 10],
+      ["Example title", "Probe example", 10],
+      ["space title", "Space title", 6],
+      ["Rule title", "Rule title", 14],
+      ["ordinary step", "ordinary text", 11],
+      ["conjunction step", "continued text", 12],
+      ["space step", "space text", 7],
+    ])("refuses %s at its physical line", (_site, text, line) => {
+      const original =
+        text === "Probe example"
+          ? source.replace("Scenario: Probe scenario", "Example: Probe example")
+          : source;
+      for (const ending of ["\n", "\r\n"]) {
+        expect(reify(original.replaceAll("\n", ending)).findings).toEqual([]);
+        for (const suffix of ["Then hidden text", ""]) {
+          const input = original
+            .replaceAll("\n", ending)
+            .replace(text, `${text}${separator}${suffix}`);
+          // A CR immediately before LF is a lawful CRLF, not an embedded separator.
+          if (separator === "\r" && suffix === "" && ending === "\n") continue;
+          const found = refusal(input);
+          expect(found?.line).toBe(line);
+          expect(found?.message).toContain("line holds a lone CR, U+2028 or U+2029");
+        }
+      }
     });
   });
 

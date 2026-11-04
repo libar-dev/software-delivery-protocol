@@ -48,7 +48,7 @@ export const carrierSpecs = [
           "A tag whose head, compared case-insensitively, is `implemented`, `has-verifier`, `hasVerifier`, `observed`, `deliveryFacts`, `claim`, `status`, `lifecycle`, `workflow` or `architect`, followed by the end of the tag, `.` or `-`, is refused, so the carrier authors no delivery fact, claim, lifecycle state or workflow status.",
           "A tag whose head has a unique nearest reserved head, within one edit of a reserved head of at most five letters or two edits of a longer one, is refused, and the refusal suggests that head only when its suggested form is lawful; every other tag, `@wip` included, is decoration and authors no graph state.",
           "A keyed Feature or ordinary Scenario description line has the form `- <key>: <value>` with a nonempty value; `actor`, `problem`, `outcome`, `value` and `description` occur at most once and populate Intent, `risk` and `assumption` repeat in Intent, `criterion` repeats in Verification, and `verification-mode` occurs at most once with `manual`, `reviewed`, `contract` or `executable`.",
-          "An unknown description key, a heading-shaped description line, or a description line holding a lone CR, U+2028 or U+2029 is refused at its physical source line, despite blanks and comments; remaining non-heading prose is narrative, lawful only as free prose on the typed prose owners named by the prose-ownership decision, `spec:decisions.prose-ownership`, and never a new field or a parser within a parser.",
+          "Feature, Scenario, Example and Rule title lines, ordinary and example-space step lines, and description lines holding a lone CR, U+2028 or U+2029 are refused at their physical source lines; LF and CRLF remain lawful line endings. An unknown description key or a heading-shaped description line is also refused at its physical source line, despite blanks and comments; remaining non-heading prose is narrative, lawful only as free prose on the typed prose owners named by the prose-ownership decision, `spec:decisions.prose-ownership`, and never a new field or a parser within a parser.",
           "The carrier has no form for open questions, their fields, or a relation reason; a Spec that needs one is authored in Markdown.",
           "Trailing title-only Rule blocks populate behavior rules in source order, and a Rule title may open with a rule key marker, `[#key]` and a space; a Rule carrying tags, description, or positionally nested children is refused.",
           "At most one `@example-space` pseudo-scenario supplies the parent vocabulary without producing a Spec node, while each ordinary Scenario supplies exactly one bound example point.",
@@ -89,6 +89,7 @@ export const carrierSpecs = [
           relationTags: "rules[5]",
           decorationTags: "rules[8]",
           descriptionKeys: "rules[9]",
+          physicalLines: "rules[10]",
         },
       },
       design: {
