@@ -547,6 +547,59 @@ describe("article evidence arguments", () => {
 // Small real git repositories exercise materialization, npm's lockfile install and the build
 // without reinstalling the Protocol's full dependency tree for every regression probe.
 describe("pinned evidence source", () => {
+  it("materializes blobs totaling more than the former batch buffer", () => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-large-"));
+    const repo = path.join(temporary, "repository");
+    mkdirSync(repo);
+    const git = (...args: string[]) =>
+      execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", stdio: "pipe" }).trim();
+    try {
+      git("init", "-q");
+      writeFileSync(
+        path.join(repo, "package.json"),
+        JSON.stringify({ name: "large-probe", version: "1.0.0", scripts: { build: "node -e ''" } }),
+      );
+      writeFileSync(
+        path.join(repo, "package-lock.json"),
+        JSON.stringify({
+          name: "large-probe",
+          version: "1.0.0",
+          lockfileVersion: 3,
+          packages: { "": { name: "large-probe", version: "1.0.0" } },
+        }),
+      );
+      const size = 48 * 1024 * 1024;
+      for (const file of ["a.bin", "b.bin", "c.bin"])
+        writeFileSync(path.join(repo, file), Buffer.alloc(size, 42));
+      git("add", "package.json", "package-lock.json", "a.bin", "b.bin", "c.bin");
+      git(
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-qm",
+        "pin",
+      );
+      withPinnedSource(
+        repo,
+        git("rev-parse", "HEAD"),
+        path.join(temporary, "scratch"),
+        (source) => {
+          for (const file of ["a.bin", "b.bin", "c.bin"]) {
+            expect(statSync(path.join(source, file)).size).toBe(size);
+            expect(readFileSync(path.join(source, file)).equals(Buffer.alloc(size, 42))).toBe(true);
+          }
+        },
+      );
+      expect(git("worktree", "list", "--porcelain").match(/^worktree /gm)).toHaveLength(1);
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   it.each(["source", "build", "outputs", "sparse checkout", "replace ref", "smudge filter"])(
     "uses only the pin and isolates %s",
     (focus) => {

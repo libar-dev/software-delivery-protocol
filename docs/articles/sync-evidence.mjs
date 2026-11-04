@@ -1,8 +1,10 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import {
+  closeSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
+  openSync,
   readFileSync,
   readdirSync,
   realpathSync,
@@ -110,30 +112,20 @@ function materializeTree(git, commit, source) {
         throw new Error(`Unsupported pinned tree entry: ${mode} ${file}`);
       return { mode, oid, file };
     });
-  const blobs = git(["cat-file", "--batch"], entries.map(({ oid }) => oid + "\n").join(""));
-  let offset = 0;
   for (const { mode, oid, file } of entries) {
-    const newline = blobs.indexOf(10, offset);
-    const [actualOid, type, sizeText] = blobs.subarray(offset, newline).toString("utf8").split(" ");
-    const size = Number(sizeText);
-    const start = newline + 1;
-    const end = start + size;
-    if (
-      newline < offset ||
-      actualOid !== oid ||
-      type !== "blob" ||
-      !Number.isSafeInteger(size) ||
-      size < 0 ||
-      end >= blobs.length ||
-      blobs[end] !== 10
-    )
-      throw new Error(`Could not read pinned blob: ${file}`);
     const target = path.join(source, file);
     mkdirSync(path.dirname(target), { recursive: true });
-    const content = blobs.subarray(start, end);
-    if (mode === "120000") symlinkSync(content, target);
-    else writeFileSync(target, content, { mode: mode === "100755" ? 0o755 : 0o644 });
-    offset = end + 1;
+    if (mode === "120000") symlinkSync(git(["cat-file", "blob", oid]), target);
+    else {
+      // Direct stdout to the file: neither the tree nor a single large blob needs
+      // to fit in execFileSync's output buffer.
+      const output = openSync(target, "w", mode === "100755" ? 0o755 : 0o644);
+      try {
+        git(["cat-file", "blob", oid], undefined, output);
+      } finally {
+        closeSync(output);
+      }
+    }
   }
 }
 
@@ -142,11 +134,11 @@ function materializeTree(git, commit, source) {
 export function withPinnedSource(repository, commit, scratchRoot, action) {
   const root = realpathSync(repository);
   const env = { ...process.env, GIT_NO_REPLACE_OBJECTS: "1" };
-  const git = (args, input) =>
+  const git = (args, input, output = "pipe") =>
     execFileSync("git", ["--no-replace-objects", "-C", root, ...args], {
       env,
       input,
-      stdio: "pipe",
+      stdio: ["pipe", output, "pipe"],
       maxBuffer: 128 * 1024 * 1024,
     });
   const top = git(["rev-parse", "--show-toplevel"]).toString("utf8").trim();
