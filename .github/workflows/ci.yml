@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -27,6 +29,11 @@ jobs:
           SDP_CTRF_DIR: ${{ runner.temp }}/ctrf
           SDP_CORPUS_COMMIT: ${{ github.sha }}
         run: npm run check
+
+      - name: Check article evidence
+        shell: bash
+        run: |
+          npm run check:articles -- "$GITHUB_WORKSPACE"
 
       - name: Upload run evidence
         if: always()

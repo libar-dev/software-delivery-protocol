@@ -7,6 +7,26 @@ honesty.
 You write Specs as Markdown files (`*.sdp.md`) and group them into Packs. `sdp` derives one graph
 from those files and from anchors in your code, then checks it.
 
+## Read the product story
+
+The [article series and publication plan](docs/articles/README.md) are the guided introduction to
+the Protocol, its human review experience and its AI direction. The series opened in
+[PR #34](https://github.com/libar-dev/software-delivery-protocol/pull/34) and is maintained on
+`main` through focused refresh PRs.
+
+Start with [the spec is the prompt is the design](docs/articles/01-the-spec-is-the-prompt-is-the-design.md),
+then read [one graph, many views](docs/articles/02-one-graph-many-views.md) for the projection
+family and the decision boundaries around changing it.
+The [hands-on walkthrough](docs/articles/03-walkthrough-intent-to-verified-code.md) follows intent
+into verified code. [The agent-surface article](docs/articles/04-stop-building-verb-walls-for-coding-agents.md)
+explains `sdp q`, and [the AI direction](docs/articles/05-ai-can-shape-the-reading.md) separates
+current agent workflows from future presentation assistance.
+
+The [pre-code seed design](docs/lineage/v0-design/README.md) carries the original product
+experience. The [short annotation context](docs/lineage/annotation-context.md) explains why source
+bindings are critical to useful projections. For the first UX/UI design pass, use the compact
+article packet, its designer's brief and a Studio page set generated from the same source pin.
+
 Read the [concept](docs/concept/README.md), the [ubiquitous language](CONTEXT.md), and the
 [checkout-v1 walkthrough](examples/checkout-v1/README.md).
 
