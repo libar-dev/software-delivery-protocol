@@ -604,8 +604,8 @@ Unresolved source citations become corpus findings only when recipe 51 is select
    and placed beside the authored suite whose `specTest` anchor verifies that example; without
    that anchored suite no registrar is emitted. The Spec ID owns the filename, so one consolidated
    suite can bind many examples without collisions. The Gherkin read root is a published page
-   root, never an authored carrier. For publishing, follow `sdp-agent-surface`'s "Publish pages
-   and notes" (`references/publishing.md`) and `spec:consumers.command-line`.
+   root, never an authored carrier. To publish it, run `sdp generate`
+   (`spec:consumers.command-line`).
 
 4. Author the oracle for the space and bind it with a top-level `specOracle` anchor whose `models`
    names the parent. Eligibility follows example-space ownership, not kind: a missing target, a
@@ -710,8 +710,7 @@ For a large review, read the complete scope through the context bundle (recipe 3
 recipe 46 to order waiting statements and questions. Recipe 44 reports example-space coverage,
 recipe 45 reads external runs, and recipe 51 locates entry citations. Follow
 `spec:consumers.context-bundle` and `spec:consumers.readiness-planner`. To publish the Studio,
-stamp a preview or synchronize linked notes, follow `sdp-agent-surface`'s "Publish pages and
-notes" (`references/publishing.md`). To apply intent a person composed in the Studio or wrote in the vault, follow
+stamp a preview or synchronize linked notes, follow `sdp-studio` or `sdp-vault`. To apply intent a person composed in the Studio or wrote in the vault, follow
 `sdp-studio` or `sdp-vault`.
 
 The graph outranks this skill. If a recipe or instruction disagrees with current graph data or a

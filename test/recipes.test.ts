@@ -401,7 +401,6 @@ describe("the agent-surface recipe corpus", () => {
   it("keeps self-hosting and adopter invocation forms distinct", () => {
     const onRampSources = [
       recipesPath,
-      "skills/sdp-agent-surface/SKILL.md",
       "skills/sdp-authoring/SKILL.md",
       "skills/sdp-sessions/SKILL.md",
     ];
@@ -449,7 +448,6 @@ describe("the agent-surface recipe corpus", () => {
     const introProse = intro.replace(/\s+/gu, " ");
     const onRamps = {
       agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
-      agentSurface: readOnRamp("skills/sdp-agent-surface/SKILL.md"),
       authoring: readFileSync(join(repoRoot, "skills/sdp-authoring/SKILL.md"), "utf8"),
       sessions: readFileSync(join(repoRoot, "skills/sdp-sessions/SKILL.md"), "utf8"),
     };
@@ -474,33 +472,6 @@ describe("the agent-surface recipe corpus", () => {
     expect(onRamps.sessions).toContain("validate --watch");
     expect(onRamps.agents).toContain("new spec");
     expect(onRamps.agents).toContain("sdp validate --watch");
-
-    const agentSurfaceProse = onRamps.agentSurface.toLowerCase().replace(/\s+/gu, " ");
-    for (const phrase of [
-      "component membership",
-      "uses fan-in and fan-out",
-      "structural neighborhood",
-      "census structural coverage",
-      "projection-coverage upper bound",
-      "architecture map",
-      "decision map",
-      "planning slice",
-      "open-question register",
-      "dependency footing",
-      "mention audit",
-      "entry search",
-      "pinned declarations",
-      "address resolution",
-      "dependency cycles",
-      "references into a design",
-      "roles, layers and contexts",
-      "pack design",
-      "design-change impact",
-      "decision register",
-      "architecture crossings",
-    ]) {
-      expect(agentSurfaceProse).toContain(phrase);
-    }
 
     for (const { ordinal } of recipes.filter((recipe) => recipe.ordinal >= 12)) {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);

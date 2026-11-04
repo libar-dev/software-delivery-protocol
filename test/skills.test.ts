@@ -41,6 +41,7 @@ import { renderVault } from "../src/projections/vault/notes.js";
 import { VaultGuardError } from "../src/projections/vault/sync.js";
 import { createReader } from "../src/reader/reader.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { describeOnRamp } from "./helpers/on-ramp-checks.js";
 import { answeredStderr } from "./helpers/query-hint.js";
 import { renderStudio } from "./helpers/studio-render.js";
 
@@ -50,9 +51,6 @@ import { describe, expect, it } from "vitest";
 import {
   codeAnchor,
   codeAnchorId,
-  graphClaims,
-  graphEdgeTypes,
-  graphNodeTypes,
   ref,
   specTest,
   testAnchorId,
@@ -67,14 +65,6 @@ const skillPaths = [
 const studioSkillPath = "skills/sdp-studio/SKILL.md";
 const vaultSkillPath = "skills/sdp-vault/SKILL.md";
 
-it("discovers the design slice's summary and detail parameter", () => {
-  const { body } = readSkill("skills/sdp-agent-surface/SKILL.md");
-  const detail = body.slice(
-    body.indexOf("A recipe that takes `params.detail`"),
-    body.indexOf("To filter any shipped answer"),
-  );
-  expect(detail).toContain("the design slice, recipe 54");
-});
 /** Every shipped skill; the generic checks run over all of them. */
 const allSkillPaths = [...skillPaths, studioSkillPath, vaultSkillPath] as const;
 
@@ -207,15 +197,10 @@ it("routes the next work and reviews through roadmap and proposal recipes", () =
     expect(sessions).toContain(clause);
   expect(sessions).not.toContain("plan pointers");
   expect(skillSection(skillPaths[2], "### Design").match(/recipe 53/gu)).toHaveLength(1);
-  const tasks = skillSection(skillPaths[0], "# Which recipe answers a task");
-  for (const number of [52, 53, 54, 55]) expect(tasks).toContain(`recipe ${String(number)}`);
   expect(sessions).toContain("a proposal composed in a preview names the stamp's merge commit");
   expect(sessions).toContain("Recipe 38 always reads the graph of the commit that was read");
   expect(sessions).toContain("Report a Spec proposal as a numbered list");
   expect(sessions).not.toContain("Report a review as a numbered list");
-  const shape = flat(skillSection(skillPaths[0], "## The shape of the graph"));
-  expect(shape).toContain("optional `order`");
-  expect(shape).toContain("advisory priority");
 });
 
 // A fence inside a numbered step is indented, so fences are matched after trimming.
@@ -460,7 +445,7 @@ describe("Protocol skill assets", () => {
   });
 
   it("keeps every skill graph-first and the authoring law linked to carrying Specs", () => {
-    for (const path of allSkillPaths) {
+    for (const path of allSkillPaths.filter((path) => path !== skillPaths[0])) {
       const { source } = readSkill(path);
 
       expect(source).toContain("sdp q");
@@ -516,30 +501,6 @@ describe("Protocol skill assets", () => {
       "cannot detect",
     ]) {
       expect(authoring).toContain(required);
-    }
-
-    const surface = readSkill("skills/sdp-agent-surface/SKILL.md").source;
-    for (const required of [
-      "How delivery state derives",
-      "declared",
-      "anchored",
-      "inferred",
-      "verifies the Spec directly",
-      "enabled verifier",
-      "designed-and-deferred",
-    ]) {
-      expect(surface).toContain(required);
-    }
-  });
-
-  it("names the complete closed graph schema in the shape section", () => {
-    // Lockstep with the engine: adding or removing a node type, edge type, or claim must
-    // force this prose to move with it, as the task-sheet test does for the catalog.
-    const surface = readSkill("skills/sdp-agent-surface/SKILL.md").source;
-
-    expect(surface).toContain("The shape of the graph");
-    for (const name of [...graphNodeTypes, ...graphEdgeTypes, ...graphClaims]) {
-      expect(surface).toContain(`\`${name}\``);
     }
   });
 
@@ -622,7 +583,7 @@ describe("Protocol skill assets", () => {
       expect(localQuery).toContain(`--exclude ${exclusion}`);
     }
 
-    for (const path of allSkillPaths) {
+    for (const path of allSkillPaths.filter((path) => path !== skillPaths[0])) {
       const documented = documentedCommands(readSkill(path).body);
       expect(documented.length).toBeGreaterThan(0);
 
@@ -778,39 +739,74 @@ const readingOnRampTestAnchor = specTest({
 });
 void readingOnRampTestAnchor;
 
+// What holds each rule of `spec:consumers.reading-on-ramp`:
+// - `#schemaPointer`, `#factLimits` and the recipe-naming rule: G5 (every law target cited, among
+//   them `spec:extraction.derive-graph`, `spec:extraction.claim-taxonomy`,
+//   `spec:extraction.delivery-facts`) and G6 (recipe numbers, names and files);
+// - `#runner`: G7 and the runner tests below ("keeps the checkout's exclusions…", "refuses with a
+//   named remedy…", "passes the runner's exclusions…");
+// - `#protocolRoot`: "selects the Protocol's own Specs with --protocol, and only the root";
+// - `#orientation` and `#orientationOutput`: "runs every orientation query…", "prints what each
+//   query teaches…", "orients over a draft decision…";
+// - `#taskIndex`: G4 (the catalog index path resolves and ships);
+// - `#pairing` and `#stateAndLaw`: meaning, audited by a reader; no token pin.
 describe("the graph-reading on-ramp", () => {
-  it("maps a task to every catalog recipe in one sheet", () => {
-    const surface = readSkill("skills/sdp-agent-surface/SKILL.md").source;
-    const heading = "# Which recipe answers a task";
-    const start = surface.indexOf(heading);
-    expect(start).toBeGreaterThan(-1);
-    const sheet = surface
-      .slice(start + heading.length)
-      .trimStart()
-      .split("\n\n")[0];
-    const rows = (sheet ?? "").split("\n").filter((line) => /^\| [^-]/u.test(line));
-    const ordinals = rows.flatMap((row) =>
-      [...row.matchAll(/\(recipe (\d+)\)/gu)].map((match) => Number(match[1])),
-    );
-
-    expect(rows.length).toBeGreaterThan(1);
-    for (const row of rows.slice(1)) {
-      expect({ row, namesRecipe: /\(recipe \d+\)/u.test(row) }).toEqual({ row, namesRecipe: true });
-    }
-    expect([...new Set(ordinals)].sort((left, right) => left - right)).toEqual(catalogOrdinals());
+  describeOnRamp("sdp-agent-surface", {
+    realizes: ["spec:consumers.reading-on-ramp"],
+    capBytes: 16_000,
   });
 
-  it("links the Specs that own the graph contract, the claims and the sink", () => {
-    const surface = readSkill("skills/sdp-agent-surface/SKILL.md").source;
-    for (const owner of [
-      "spec:consumers.agent-surface",
-      "spec:decisions.agent-front-door",
-      "spec:extraction.derive-graph",
-      "spec:extraction.claim-taxonomy",
-      "spec:consumers.agent-surface.evaluation-sink",
-    ]) {
-      expect(surface).toContain(`\`${owner}\``);
+  // The runner and the scripts that derive this checkout's graph share one exclusion list.
+  it("passes the runner's exclusions wherever this checkout derives its own graph", async () => {
+    const runner = (await import(
+      pathToFileURL(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs")).href
+    )) as { sourceCheckoutExclusions: readonly string[] };
+    const { scripts } = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    const excludes = runner.sourceCheckoutExclusions.map((path) => `--exclude ${path}`).join(" ");
+
+    expect(scripts["sdp:q"]).toBe("node ./skills/sdp-agent-surface/scripts/q.mjs");
+    for (const script of ["generate:self-hosting", "check:self-hosting"]) {
+      expect({ script, excluded: scripts[script]?.includes(excludes) }).toEqual({
+        script,
+        excluded: true,
+      });
     }
+  });
+
+  // Lockstep with recipe 36: each field the large-scope reading names is one a refused, a whole
+  // or a diagnosed bundle carries, and a refused bundle carries no members.
+  it("names the context bundle's fields as recipe 36 answers them", async () => {
+    const section = flat(
+      skillSection("skills/sdp-agent-surface/SKILL.md", "## Read a large scope in parts"),
+    );
+    const named = [...section.matchAll(/`(?<path>[a-z][A-Za-z]*(?:\.[a-z][A-Za-z]*)?)`/gu)].map(
+      (match) => match.groups?.path ?? "",
+    );
+    const { graph } = probeGraph(termCorpus);
+    const answers = (await Promise.all(
+      [
+        { pack: "pack:probe.review", budget: 1, part: 1 },
+        { pack: "pack:probe.review", part: 1 },
+        { pack: "pack:probe.absent", part: 1 },
+      ].map((params) => evaluateBody("return recipes(36, params)", { graph, params })),
+    )) as Record<string, unknown>[];
+    const paths = new Set(
+      answers.flatMap((answer) =>
+        Object.entries(answer).flatMap(([key, value]) => [
+          key,
+          ...(typeof value === "object" && value !== null && !Array.isArray(value)
+            ? Object.keys(value).map((inner) => `${key}.${inner}`)
+            : []),
+        ]),
+      ),
+    );
+
+    expect(named.length).toBeGreaterThan(0);
+    expect(named.filter((path) => !paths.has(path))).toEqual([]);
+    expect(answers[0]?.budgetExceeded).toBe(true);
+    expect(answers[0]?.members).toBeUndefined();
   });
 
   it("resolves every pointer one skill makes into another skill's sections and files", () => {
@@ -858,74 +854,6 @@ describe("the graph-reading on-ramp", () => {
         existsSync(target) &&
         (pointer.heading === undefined || headingsOf(target).includes(pointer.heading));
       expect({ ...pointer, resolves }).toEqual({ ...pointer, resolves: true });
-    }
-  });
-
-  it("keeps its steps in a short SKILL.md and discloses each reference one level down", () => {
-    const skill = "skills/sdp-agent-surface";
-    const entry = readFileSync(join(repoRoot, skill, "SKILL.md"), "utf8");
-    const references = readdirSync(join(repoRoot, skill, "references")).filter((name) =>
-      name.endsWith(".md"),
-    );
-    const links = [...entry.matchAll(/\]\((?<target>[^)#\s]+)(?:#[^)]*)?\)/gu)].map(
-      (match) => match.groups?.target ?? "",
-    );
-
-    // The Agent Skills body budget is under 500 lines and 5,000 tokens; this skill keeps well
-    // inside it so its first steps are read, not skimmed.
-    expect(entry.length).toBeLessThanOrEqual(8000);
-    expect(entry.split("\n").length).toBeLessThanOrEqual(120);
-    expect(references.length).toBeGreaterThan(0);
-    for (const name of references) {
-      expect({
-        name,
-        linked: links.filter((target) => target === `references/${name}`).length,
-      }).toEqual({ name, linked: 1 });
-      const text = readFileSync(join(repoRoot, skill, "references", name), "utf8");
-      expect({ name, chained: /\]\((?!https?:)[^)]*\.md/u.test(text) }).toEqual({
-        name,
-        chained: false,
-      });
-    }
-    for (const target of links.filter((link) => !/^https?:/u.test(link))) {
-      expect({ target, inReferences: target.startsWith("references/") }).toEqual({
-        target,
-        inReferences: true,
-      });
-      expect({ target, exists: existsSync(join(repoRoot, skill, target)) }).toEqual({
-        target,
-        exists: true,
-      });
-    }
-  });
-
-  it("names the reader's methods and every field its answers carry", () => {
-    // Lockstep with the reader: a method or a row field added or removed must move this prose.
-    const graph = shippedCorpusGraph();
-    const reader = createReader(graph);
-    const entry = readSkill("skills/sdp-agent-surface/SKILL.md").entry.replaceAll(/\s+/gu, " ");
-    const methods = /`g`, the reader \(`(?<list>[^`]+)`\)/u.exec(entry)?.groups?.list?.split(" ");
-    expect(methods).toEqual(Object.keys(reader));
-
-    const fields = skillSection("skills/sdp-agent-surface/SKILL.md", "## Field names");
-    const keys = (rows: readonly object[]) => [...new Set(rows.flatMap((row) => Object.keys(row)))];
-    const spec = reader.specs()[0]?.id ?? "";
-    const pack = reader.packs()[0]?.id ?? "";
-    const named = [
-      ...Object.keys(graph),
-      ...keys(graph.nodes),
-      ...keys(graph.edges),
-      ...keys(reader.specs()),
-      ...keys(reader.packs()),
-      ...keys(reader.findByConcept("graph")),
-      ...Object.keys(reader.specContext(spec) ?? {}),
-      ...Object.keys(reader.packContext(pack) ?? {}),
-      ...Object.keys(reader.byFile(reader.specs()[0]?.file ?? "")),
-      ...Object.keys(reader.blastRadius([])),
-      ...Object.keys(reader.resolveEntryAddress(`${spec}#rule.absent`)),
-    ];
-    for (const field of new Set(named)) {
-      expect({ field, named: fields.includes(`\`${field}\``) }).toEqual({ field, named: true });
     }
   });
 
@@ -1424,12 +1352,6 @@ describe("adopter rule meanings", () => {
     expect((rows[0] ?? "").replaceAll("`", "").replaceAll(/\s+/gu, " ")).toMatch(pattern);
   });
 
-  it("keeps graph-reader verifier teaching about existence and CI outcomes", () => {
-    const surface = teachingText(readSkill("skills/sdp-agent-surface/SKILL.md").source);
-    expect(surface).toMatch(/It says a resolving verifier binding exists/u);
-    expect(surface).toMatch(/Pass, fail, skip, and quarantine are CI's/u);
-  });
-
   it("keeps session teaching advisory and separate from permission", () => {
     const sessions = teachingText(readSkill("skills/sdp-sessions/SKILL.md").source);
     expect(sessions).toMatch(/All preflights are advisory/u);
@@ -1846,64 +1768,7 @@ describe("the reviewed skill teaching", () => {
     }
   });
 
-  it("owns publishing in one reader section that agrees with each verb's flags", () => {
-    const section = skillSection(surfacePath, "## Publish pages and notes");
-    const publish = flat(section);
-    const studioBullet =
-      section.split("\n- ").find((bullet) => bullet.startsWith("Use `sdp studio`")) ?? "";
-    const studioFlags = [...studioBullet.matchAll(/`(--[a-z-]+)/gu)].map((match) => match[1]);
-    expect(studioFlags).toEqual(["--base", "--base-label", "--runs"]);
-    for (const flag of studioFlags) expect(usageLine("studio")).toContain(flag);
-
-    const neither = /takes neither `(--[a-z-]+)` nor `(--[a-z-]+)`/u.exec(publish);
-    expect(neither).not.toBeNull();
-    for (const flag of [neither?.[1], neither?.[2]]) {
-      expect(usageLine("studio")).toContain(flag);
-      expect(usageLine("generate")).not.toContain(`${flag ?? ""} `);
-    }
-    expect(publish).toContain("writes the Studio without optional inputs");
-    expect(publish).toContain(
-      "Keep supplied inputs outside `generated/`: the run refuses an input at a path the build writes or removes, such as `generated/graph.json` or a file beneath a page root",
-    );
-    expect(publish).not.toContain("`generated/` included");
-    expect(publish).toContain("run `sdp stamp` with the corpus commit, then upload");
-    expect(publish).toContain("A later build removes the stamp");
-
-    for (const path of [authoringPath, sessionsPath]) {
-      const text = flat(readSkill(path).source);
-      expect(text).toContain('"Publish pages and notes"');
-      expect(text).not.toContain("Use `sdp stamp` after publication");
-    }
-  });
-
-  it("names the vault's owned folder, the person's notes and the roots a vault run removes", () => {
-    const publish = flat(skillSection(surfacePath, "## Publish pages and notes"));
-    for (const clause of [
-      "the command owns its `sdp/` folder",
-      "Keep personal notes outside that folder, conventionally under `intent/`",
-      "`sdp vault` enters the shared build and invalidates the five page roots",
-      "use `sdp generate --vault DIR`",
-    ]) {
-      expect(publish).toContain(clause);
-    }
-    expect(usageLine("generate")).toContain("[--vault DIR]");
-    const vaultHelp = flat(SDP_HELP_TEXT.slice(SDP_HELP_TEXT.indexOf("  vault      ")));
-    expect(vaultHelp).toContain("Keep your notes outside sdp/, by convention in intent/.");
-  });
-
   it("teaches entry addresses, term addresses and anchored source citations as the engine derives them", async () => {
-    const addresses = flat(skillSection(surfacePath, "### Entry addresses"));
-    for (const clause of [
-      "`spec:<id>#term.<key>` a keyed Model term",
-      "An unresolved entry address mentioned in Spec prose is a Protocol prose-mentions error.",
-      "An entry address cited in source is recorded only when the source file carries a recognized anchor.",
-      "only when recipe 51 is selected through `validate --rules`; ordinary validation does not report them",
-      "a keyed rule or flow, or a keyed Model term",
-      'off-grammar keys such as `"01"`, return `address: null`',
-    ]) {
-      expect(addresses).toContain(clause);
-    }
-    expect(readSkill(surfacePath).source).not.toContain('a lawful `"01"` key included');
     const citing = flat(skillSection(authoringPath, "### Cite an entry from source"));
     expect(citing).toContain("recorded only when the source file carries a recognized anchor");
     expect(citing).toContain("only when recipe 51 is selected through `validate --rules`");
@@ -1928,45 +1793,9 @@ describe("the reviewed skill teaching", () => {
   });
 
   it("states what an empty or ready answer establishes and no more", () => {
-    const surface = flat(readSkill(surfacePath).source);
-    for (const clause of [
-      "Recipe 1 lists ready, unimplemented Specs excluding examples and decisions. Recipe 33 applies the same exclusions at `defined`. An empty answer establishes absence only within that recipe's selection.",
-      '`floorReached: "ready"`: the structural floor allows `ready`. Read `statedReadiness` separately to learn whether the author has stated it.',
-    ]) {
-      expect(surface).toContain(clause);
-    }
-    expect(surface).not.toContain("the author has not stated it");
-    expect(surface).not.toContain("nothing stated `ready` is unbuilt");
     const sessions = flat(readSkill(sessionsPath).source);
     expect(sessions).toContain("Specs carrying both `implemented` and `has-verifier`");
     expect(sessions).not.toMatch(/implemented, verified Specs?/u);
-  });
-
-  it("teaches a refused bundle as the end of pagination, as recipe 36 refuses", async () => {
-    const parts = flat(skillSection(surfacePath, "### Read a large scope in parts"));
-    for (const clause of [
-      "Check `diagnostics` and `budgetExceeded` before using `part.of`",
-      "with the same scope, budget and declaration mode",
-      "`budgetExceeded: true`, `part.of: null` and `oversized`",
-      "A refusal is not a partial bundle.",
-    ]) {
-      expect(parts).toContain(clause);
-    }
-    for (const path of [authoringPath, sessionsPath]) {
-      const text = flat(readSkill(path).source);
-      expect(text).toContain('"Read a large scope in parts"');
-      expect(text).not.toMatch(/from 1 through (?:the returned )?`part\.of`/u);
-    }
-
-    const { graph } = probeGraph(termCorpus);
-    const refused = (await evaluateBody(
-      'return recipes(36, { pack: "pack:probe.review", budget: 1, part: 1 })',
-      { graph },
-    )) as Record<string, unknown>;
-    expect(refused.budgetExceeded).toBe(true);
-    expect(refused.part).toEqual({ index: 1, of: null });
-    expect(refused.oversized).toBeDefined();
-    expect(refused.members).toBeUndefined();
   });
 
   it("keeps corpus rules in one section whose composed rules file runs as taught", async () => {
@@ -1995,7 +1824,7 @@ describe("the reviewed skill teaching", () => {
   });
 
   it("points every skill at the installed upgrade guide and triggers authoring on upgrades and rules", () => {
-    for (const path of skillPaths) {
+    for (const path of skillPaths.filter((path) => path !== surfacePath)) {
       expect(flat(readSkill(path).source)).toContain(
         "`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/upgrade-guide.md` in an adopter",
       );
@@ -2006,15 +1835,6 @@ describe("the reviewed skill teaching", () => {
   });
 
   it("orders the reader as a task route and leaves recipe contracts to the catalog", () => {
-    const { source, entry } = readSkill(surfacePath);
-    // The route is SKILL.md's own order: start, write the body, read the answer, then the rest.
-    const order = ["## Start", "## Write the body", "## Read the answer honestly", "## More"].map(
-      (heading) => entry.indexOf(`\n${heading}\n`),
-    );
-    expect(order.every((index) => index > -1)).toBe(true);
-    expect(order).toEqual([...order].sort((left, right) => left - right));
-    expect(flat(source)).toContain("The catalog owns recipe contracts; carrying Specs own law.");
-
     const description = String(readSkill(sessionsPath).frontmatter.description);
     expect(description.startsWith("Route delivery work")).toBe(true);
     for (const trigger of [
@@ -2024,56 +1844,6 @@ describe("the reviewed skill teaching", () => {
     ]) {
       expect(description).toContain(trigger);
     }
-  });
-
-  // The demand map rules the adapters by what an agent holds; a by-id join taught as an adapter
-  // would send agents looking up ids they do not have.
-  it("names as entry adapters exactly the ones the demand map rules, apart from the reader joins", () => {
-    const reader = createReader(shippedCorpusGraph());
-    const address = reader.resolveEntryAddress("spec:consumers.agent-surface#rule.entryAdapters");
-    const index = Number(/^rule\[(\d+)\]$/u.exec(String(address.entry))?.[1]);
-    const rule = reader.specContext("spec:consumers.agent-surface")?.sections?.behavior?.rules?.[
-      index
-    ];
-    const ruled = [...String(rule).matchAll(/`(\w+)`/gu)].map((match) => match[1]);
-    expect(ruled).toHaveLength(3);
-    const section = flat(skillSection(surfacePath, "## Entry adapters and reader joins"));
-    const adapters = /the entry adapters are (.+?) \(/u.exec(section)?.[1] ?? "";
-    expect([...adapters.matchAll(/`g\.(\w+)\(/gu)].map((match) => match[1])).toEqual(ruled);
-    expect(section).toContain(
-      "`g.specContext(id)`, `g.packContext(id)` and `g.resolveEntryAddress(address)` are joins frozen into the reader",
-    );
-  });
-
-  it("states the graph's flat topology and which node types carry lines, as the graph does", () => {
-    const shape = flat(skillSection(surfacePath, "## The shape of the graph"));
-    for (const clause of [
-      "The graph's topology is flat",
-      "Section content may contain nested values.",
-      "Primitive and Pack nodes carry no source lines; Anchor and CodeNode nodes carry their binding file and line.",
-    ]) {
-      expect(shape).toContain(clause);
-    }
-    expect(shape).not.toContain("nothing nested");
-    expect(shape).not.toContain("Nodes carry no lines");
-
-    const { graph } = probeGraph({
-      ...termCorpus,
-      ...exampleCarriers("a cart with {items:number} items", "a cart with {items: 2} items"),
-      "suites/probe.test.ts": anchoredSuite,
-    });
-    const lines = Object.fromEntries(
-      ["Primitive", "Pack", "Anchor", "CodeNode"].map((type) => [
-        type,
-        graph.nodes
-          .filter((node) => node.nodeType === type)
-          .map((node) => typeof (node as { line?: unknown }).line),
-      ]),
-    );
-    expect(new Set(lines.Primitive)).toEqual(new Set(["undefined"]));
-    expect(new Set(lines.Pack)).toEqual(new Set(["undefined"]));
-    expect(new Set(lines.Anchor)).toEqual(new Set(["number"]));
-    expect(new Set(lines.CodeNode)).toEqual(new Set(["number"]));
   });
 });
 
@@ -2231,10 +2001,7 @@ describe("the Studio on-ramp", () => {
     for (const trigger of ["pull-request previews", "Studio link", "composing panel"]) {
       expect(description).toContain(trigger);
     }
-    expect(flat(skillSection(skillPaths[0], "## Publish pages and notes"))).toContain(
-      "Follow `sdp-studio` for previews, page reading, exports and composing-panel hand-offs.",
-    );
-    for (const path of [skillPaths[1], skillPaths[2]]) {
+    for (const path of skillPaths) {
       expect(readSkill(path).source).toContain("`sdp-studio`");
     }
   });
@@ -2569,10 +2336,7 @@ describe("the vault on-ramp", () => {
     ]) {
       expect(description).toContain(trigger);
     }
-    expect(flat(skillSection(skillPaths[0], "## Publish pages and notes"))).toContain(
-      "For linked notes, use `sdp-vault`.",
-    );
-    for (const path of [skillPaths[1], skillPaths[2]]) {
+    for (const path of skillPaths) {
       expect(readSkill(path).source).toContain("`sdp-vault`");
     }
   });

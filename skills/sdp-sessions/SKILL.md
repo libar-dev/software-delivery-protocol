@@ -30,7 +30,7 @@ pnpm exec sdp q '<body>' --root PATH
 pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 ```
 
-Each recipe below is named by its number. Read its row in `sdp-agent-surface`'s task sheet (`references/tasks.md`) and its
+Each recipe below is named by its number. Read its row in the index atop `docs/agent-surface/recipes.md` and its
 numbered catalog entry for parameters and answer fields. Pass a parameterized recipe its subject
 as JSON data with `--params` (or `--params @PATH` for a file), never by editing the body; the build
 ships every body as `dist/recipes/<NN>-<slug>.js`. Bodies receive `g`, `graph`, `report`, `params`
@@ -38,9 +38,9 @@ and `recipes`; call a shipped body with `recipes(number, parameters?)`, followin
 `spec:consumers.agent-surface.evaluation-sink`. The recipe result informs the session; it never
 grants permission or records a verdict.
 
-For human-readable pages or linked notes, follow `sdp-agent-surface`'s "Publish pages and notes" (`references/publishing.md`):
-it says which publisher to run, what each run invalidates, when to stamp a preview, and where the
-vault keeps a person's notes. `sdp-studio` and `sdp-vault` turn intent a person composed there into
+For human-readable pages or linked notes, follow `sdp-studio` or `sdp-vault`: they say which
+publisher to run, what each run removes, when to stamp a preview, and where the vault keeps a
+person's notes. `sdp-studio` and `sdp-vault` turn intent a person composed there into
 a checked change proposal.
 
 For a corpus upgrade, follow the shipped upgrade guide: `docs/agent-surface/upgrade-guide.md` in

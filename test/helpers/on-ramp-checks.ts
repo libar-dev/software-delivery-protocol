@@ -1,0 +1,773 @@
+/**
+ * The checks every shipped skill keeps, whatever it teaches: frontmatter, disclosure, pointers,
+ * citations, recipe names, commands, inline bodies and quoted counts. They hold what a tool can
+ * decide. What a skill means (its hazards, the owner's rules) is audited by a reader, never
+ * pinned here as tokens.
+ *
+ * `describeOnRamp("sdp-x", { realizes, capBytes })` registers them for one skill folder; the
+ * suite that holds the skill's realization anchors calls it beside its behavioural tests.
+ */
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join, posix } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { parse } from "yaml";
+import { describe, expect, it } from "vitest";
+
+import { evaluateBody, extract } from "../../src/index.js";
+import type { ExtractionResult, GraphSchema } from "../../src/index.js";
+import { recipeFiles } from "../../src/cli/build-artifacts.js";
+import { SDP_HELP_TEXT, runSdpCli } from "../../src/cli/sdp.js";
+import { createReader } from "../../src/reader/reader.js";
+import { createCaptureOutput } from "./cli-capture.js";
+import { danglingLinks, linkedPath, markdownLinkTargets } from "./markdown-links.js";
+
+export interface OnRampOptions {
+  /** The on-ramp Spec ids `metadata.realizes` names, in any order. */
+  readonly realizes?: readonly string[];
+  /** The byte cap on SKILL.md and its references together. */
+  readonly capBytes?: number;
+}
+
+const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+const catalogPath = "docs/agent-surface/recipes.md";
+const readingScripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
+const packagePrefix = "node_modules/@libar-dev/software-delivery-protocol/";
+
+/** The Agent Skills specification's frontmatter fields. */
+const agentSkillsFields = [
+  "name",
+  "description",
+  "license",
+  "compatibility",
+  "metadata",
+  "allowed-tools",
+];
+const limits = {
+  entryBytes: 8000,
+  entryLines: 120,
+  referenceBytes: 6000,
+  description: 400,
+};
+/** The relations whose targets carry law a realized on-ramp rests on; each is cited in place. */
+const lawRelations = new Set(["dependsOn", "decidedBy", "constrainedBy"]);
+
+interface SkillFile {
+  /** Repository-relative, POSIX separators. */
+  readonly path: string;
+  readonly text: string;
+}
+
+interface Skill {
+  readonly name: string;
+  readonly frontmatter: Record<string, unknown>;
+  readonly entry: SkillFile;
+  /** Every entry of `references/`, Markdown or not, in name order. */
+  readonly references: readonly SkillFile[];
+  readonly files: readonly SkillFile[];
+}
+
+function readSkill(name: string): Skill {
+  const read = (path: string): SkillFile => ({
+    path,
+    text: readFileSync(join(repoRoot, path), "utf8"),
+  });
+  const entry = read(`skills/${name}/SKILL.md`);
+  const frontmatter = /^---\n(?<yaml>[\s\S]*?)\n---\n/u.exec(entry.text)?.groups?.yaml;
+  if (frontmatter === undefined) throw new Error(`${entry.path} opens with no YAML frontmatter`);
+  const folder = join(repoRoot, "skills", name, "references");
+  const references = existsSync(folder)
+    ? readdirSync(folder)
+        .sort()
+        .map((file) => read(`skills/${name}/references/${file}`))
+    : [];
+  return {
+    name,
+    frontmatter: parse(frontmatter) as Record<string, unknown>,
+    entry,
+    references,
+    files: [entry, ...references],
+  };
+}
+
+/** The Spec ids `metadata.realizes` names: one string, ids separated by spaces or commas. */
+function realizedSpecs(frontmatter: Record<string, unknown>): readonly string[] {
+  const metadata = frontmatter.metadata;
+  const value =
+    typeof metadata === "object" && metadata !== null
+      ? (metadata as Record<string, unknown>).realizes
+      : undefined;
+  return typeof value === "string" ? value.split(/[\s,]+/u).filter((id) => id !== "") : [];
+}
+
+/** A file's text with whitespace and Markdown emphasis flattened, so wrapped clauses match. */
+export function teachingText(source: string): string {
+  return source.replaceAll(/[`*_]/gu, "").replaceAll(/\s+/gu, " ");
+}
+
+interface Segment {
+  readonly file: string;
+  readonly text: string;
+  /** A line inside a fence, where a reader copies a command whole, rather than an inline span. */
+  readonly fenced: boolean;
+}
+
+/**
+ * A Markdown file split at its fences: the prose outside them, a fence standing as an empty line,
+ * and each line inside one.
+ */
+function splitFences(text: string): {
+  readonly prose: string;
+  readonly fenced: readonly string[];
+} {
+  const prose: string[] = [];
+  const fenced: string[] = [];
+  let fence: string | undefined;
+  for (const line of text.split("\n")) {
+    const marker = /^\s*(?<ticks>`{3,}|~{3,})(?<info>.*)$/u.exec(line)?.groups;
+    if (fence === undefined && marker?.ticks !== undefined) {
+      fence = marker.ticks;
+      prose.push("");
+      continue;
+    }
+    if (fence !== undefined) {
+      const closes =
+        marker?.ticks !== undefined &&
+        marker.ticks.startsWith(fence.charAt(0)) &&
+        marker.ticks.length >= fence.length &&
+        (marker.info ?? "").trim() === "";
+      if (closes) fence = undefined;
+      else fenced.push(line.trim());
+      continue;
+    }
+    prose.push(line);
+  }
+  return { prose: prose.join("\n"), fenced };
+}
+
+/**
+ * Every line inside a fence, and every inline code span with its wrapped lines joined: the places
+ * a skill writes a command, a path, a skill name or a body.
+ */
+function codeSegments(file: SkillFile): readonly Segment[] {
+  const { prose, fenced } = splitFences(file.text);
+  const segments: Segment[] = fenced.map((text) => ({
+    file: file.path,
+    text,
+    fenced: true,
+  }));
+  const flat = prose.replaceAll(/\s+/gu, " ");
+  for (const match of flat.matchAll(/(?<ticks>`+)(?<code>.+?)\k<ticks>/gu)) {
+    segments.push({
+      file: file.path,
+      text: (match.groups?.code ?? "").trim(),
+      fenced: false,
+    });
+  }
+  return segments;
+}
+
+/** A path-like token with the shell and prose punctuation around it removed. */
+function bareToken(token: string): string {
+  return token.replace(/^(?:\$\(cat\s*|["'(])+/u, "").replace(/[)"',.;:]+$/u, "");
+}
+
+interface Invocation {
+  readonly file: string;
+  readonly segment: string;
+  /** A public verb (`q`, `new spec`, …) or `orient`, the reading skill's orientation runner. */
+  readonly verb: string;
+  /** True when the reading runner (`q.mjs`, or `pnpm --silent sdp:q`, which runs it) is called. */
+  readonly runner: boolean;
+  /** What follows the verb, up to the first command separator. */
+  readonly rest: string;
+}
+
+/** The `sdp <verb>` usage line of every public verb, keyed by the verb. */
+function usageLines(): ReadonlyMap<string, string> {
+  const usage = SDP_HELP_TEXT.slice(
+    SDP_HELP_TEXT.indexOf("Usage:"),
+    SDP_HELP_TEXT.indexOf("Options:"),
+  );
+  const lines = new Map<string, string>();
+  for (const match of usage.matchAll(/^ {2}sdp (?<verb>[a-z][\w-]*(?: spec)?)(?<rest>.*)$/gmu)) {
+    const verb = match.groups?.verb;
+    if (verb !== undefined) lines.set(verb, match[0]);
+  }
+  return lines;
+}
+
+/** The usage line a reading script states in its header: `orient.mjs`, or `q.mjs`, the runner. */
+function scriptUsage(script: "orient" | "q"): string {
+  const header = readFileSync(join(readingScripts, `${script}.mjs`), "utf8");
+  return (
+    new RegExp(String.raw`^\/\/\s+node scripts\/${script}\.mjs .*$`, "mu").exec(header)?.[0] ?? ""
+  );
+}
+
+/** The commands a segment runs: the reading runners, `pnpm --silent sdp:q` and `sdp <verb>`. */
+function invocations(segment: Segment, verbs: ReadonlyMap<string, string>): Invocation[] {
+  const found: Invocation[] = [];
+  const add = (verb: string, rest: string, runner = false) => {
+    found.push({
+      file: segment.file,
+      segment: segment.text,
+      verb,
+      runner,
+      rest: rest.split(/\s(?:&&|\|\||\||;)\s/u)[0] ?? "",
+    });
+  };
+  for (const match of segment.text.matchAll(
+    /(?:^|\s)(?:pnpm --silent sdp:q|node \S*\bq\.mjs)(?<rest>(?:\s.*)?)$/gu,
+  )) {
+    add("q", match.groups?.rest ?? "", true);
+  }
+  for (const match of segment.text.matchAll(/(?:^|\s)node \S*\borient\.mjs(?<rest>(?:\s.*)?)$/gu)) {
+    add("orient", match.groups?.rest ?? "");
+  }
+  for (const match of segment.text.matchAll(
+    /(?:^|[\s(])sdp (?<first>[a-z][\w-]*)(?: (?<second>[a-z][\w-]*))?(?<rest>.*)$/gu,
+  )) {
+    const { first = "", second, rest = "" } = match.groups ?? {};
+    const two = second === undefined ? undefined : `${first} ${second}`;
+    if (two !== undefined && verbs.has(two)) add(two, rest);
+    else add(first, `${second === undefined ? "" : ` ${second}`}${rest}`);
+  }
+  return found;
+}
+
+/** The flags an invocation passes, quoted bodies and parameter values left out. */
+function flagsOf(rest: string): readonly string[] {
+  const unquoted = rest.replaceAll(/'[^']*'/gu, "''").replaceAll(/"[^"]*"/gu, '""');
+  return [...unquoted.matchAll(/(?<![\w-])--[a-z][a-z-]*/gu)].map((match) => match[0]);
+}
+
+interface TaughtBody {
+  readonly file: string;
+  readonly body: string;
+  readonly params: Record<string, unknown> | undefined;
+}
+
+/**
+ * The `sdp q` bodies a skill teaches with their inline `--params`, a shipped recipe file standing
+ * in for its catalog body. A placeholder body or subject, or parameters read from a file, cannot
+ * run as written and is left to the reader.
+ */
+function taughtBodies(
+  calls: readonly Invocation[],
+  shipped: ReadonlyMap<string, string>,
+): TaughtBody[] {
+  const bodies: TaughtBody[] = [];
+  for (const call of calls.filter((entry) => entry.verb === "q")) {
+    const rest = call.rest.trim();
+    const quoted = /^'(?<body>[^']*)'/u.exec(rest)?.groups?.body;
+    const file = /^"\$\(cat (?<path>[^)]+)\)"/u.exec(rest)?.groups?.path;
+    const body =
+      quoted ?? (file === undefined ? undefined : shipped.get(posix.basename(file))?.trimEnd());
+    if (body === undefined || /^<[\w -]+>$/u.test(body)) continue;
+    const values = [...rest.matchAll(/--params(?:\s+|=)(?<value>'[^']*'|\S+)/gu)].map(
+      (match) => match.groups?.value ?? "",
+    );
+    if (values.some((value) => !value.startsWith("'") || value.includes("<"))) continue;
+    const params =
+      values.length === 0
+        ? undefined
+        : (Object.assign(
+            {},
+            ...values.map((value) => JSON.parse(value.slice(1, -1)) as Record<string, unknown>),
+          ) as Record<string, unknown>);
+    bodies.push({ file: call.file, body, params });
+  }
+  return bodies;
+}
+
+let checkoutExtraction: ExtractionResult | undefined;
+let exampleExtraction: ExtractionResult | undefined;
+let shippedGraph: GraphSchema | undefined;
+
+/** The exclusions the reading runner applies to this checkout, read from the runner itself. */
+async function checkoutExclusions(): Promise<readonly string[]> {
+  const runner = (await import(pathToFileURL(join(readingScripts, "q.mjs")).href)) as {
+    sourceCheckoutExclusions: readonly string[];
+  };
+  return runner.sourceCheckoutExclusions;
+}
+
+async function checkoutGraph(): Promise<ExtractionResult> {
+  checkoutExtraction ??= extract({
+    root: repoRoot,
+    exclude: [...(await checkoutExclusions())],
+  });
+  return checkoutExtraction;
+}
+
+function exampleGraph(): ExtractionResult {
+  exampleExtraction ??= extract({
+    root: join(repoRoot, "examples/checkout-v1"),
+  });
+  return exampleExtraction;
+}
+
+/** The Protocol's Specs as the package ships them: the graph an adopter's citations resolve in. */
+function packageGraph(): GraphSchema {
+  shippedGraph ??= extract({ root: join(repoRoot, "specs") }).graph;
+  return shippedGraph;
+}
+
+/** Runs a body through the real `sdp q` argv seam over a prepared extraction. */
+async function runBody(
+  body: string,
+  params: Record<string, unknown> | undefined,
+  extraction: ExtractionResult,
+): Promise<{
+  readonly exitCode: number;
+  readonly stderr: string;
+  readonly answer: unknown;
+}> {
+  const capture = createCaptureOutput();
+  const exitCode = await runSdpCli(
+    [
+      "q",
+      body,
+      "--root",
+      repoRoot,
+      "--json",
+      ...(params === undefined ? [] : ["--params", JSON.stringify(params)]),
+    ],
+    capture.output,
+    {
+      query: {
+        extract: () => extraction,
+        isStdinTty: () => true,
+        readStdin: () => {
+          throw new Error("a taught body reaches the sink on argv");
+        },
+      },
+    },
+  );
+  const stdout = capture.readStdout();
+  return {
+    exitCode,
+    stderr: capture.readStderr(),
+    answer: stdout === "" ? undefined : (JSON.parse(stdout) as unknown),
+  };
+}
+
+/** A taught body's answer that is no answer: a refused parameter or a subject the graph lacks. */
+function emptyHanded(answer: unknown): string | undefined {
+  if (typeof answer !== "object" || answer === null || Array.isArray(answer)) return undefined;
+  const record = answer as Record<string, unknown>;
+  if ("unknownParams" in record) return "unknownParams";
+  if (record.found === false) return "found: false";
+  return undefined;
+}
+
+/** True when a `files` entry of package.json packs the path or something beneath it. */
+function packed(path: string, patterns: readonly string[]): boolean {
+  const directory =
+    existsSync(join(repoRoot, path)) && statSync(join(repoRoot, path)).isDirectory();
+  return patterns.some((pattern) => {
+    const base = pattern.replace(/\/\*\*(?:\/\*[^/]*)?$/u, "");
+    if (base === pattern) return pattern === path || (directory && pattern.startsWith(`${path}/`));
+    if (path === base || (directory && base.startsWith(`${path}/`))) return true;
+    if (!path.startsWith(`${base}/`)) return false;
+    const suffix = /\/\*\*\/\*(?<ext>\.[\w.]+)$/u.exec(pattern)?.groups?.ext;
+    return suffix === undefined || directory || path.endsWith(suffix);
+  });
+}
+
+/**
+ * A count, in digits or words up to ninety-nine, followed within three words by recipes or bodies.
+ * A number that names recipes, after `recipe` or `recipes` or after another such number through a
+ * list or range joiner, is the recipe's own number and never a count.
+ */
+export function catalogSizePattern(): RegExp {
+  const ones = [
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+  ];
+  const tens = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+  const words = [
+    ...ones,
+    ...tens.flatMap((ten) => [ten, ...ones.slice(0, 9).map((one) => `${ten}-${one}`)]),
+  ];
+  const counts = words.sort((left, right) => right.length - left.length).join("|");
+  const recipeOwnNumber = String.raw`(?<!\brecipes?\s+(?:\d+\s*(?:,|-|–|to|and|or)\s*)*)`;
+  return new RegExp(
+    `${recipeOwnNumber}\\b(?:${counts}|\\d+)(?:\\s+[\\w-]+){0,3}?\\s+(?:recipes|bodies)\\b`,
+    "iu",
+  );
+}
+
+/** The catalog's numbered headings: each recipe's number and name. */
+export function catalogHeadings(): ReadonlyMap<number, string> {
+  const catalog = readFileSync(join(repoRoot, catalogPath), "utf8");
+  return new Map(
+    [...catalog.matchAll(/^## (?<ordinal>\d+)\. (?<title>.+)$/gmu)].map((match) => [
+      Number(match.groups?.ordinal),
+      (match.groups?.title ?? "").trim(),
+    ]),
+  );
+}
+
+/** Registers the generic checks for one skill folder under `skills/`. */
+export function describeOnRamp(skillName: string, options: OnRampOptions = {}): void {
+  describe(`the ${skillName} skill's shape`, () => {
+    // G1: a client skips a skill whose frontmatter it cannot read.
+    it("carries Agent Skills frontmatter named for its folder and names the Specs it realizes", () => {
+      const { frontmatter } = readSkill(skillName);
+      const description = frontmatter.description;
+      const compatibility = frontmatter.compatibility;
+      const metadata = frontmatter.metadata;
+
+      expect(
+        Object.keys(frontmatter).filter((field) => !agentSkillsFields.includes(field)),
+      ).toEqual([]);
+      expect(frontmatter.name).toBe(skillName);
+      expect(skillName).toMatch(/^(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u);
+      expect(typeof description).toBe("string");
+      expect(String(description).length).toBeGreaterThan(40);
+      expect(String(description).length).toBeLessThanOrEqual(limits.description);
+      expect(typeof compatibility === "string" ? compatibility.length : 0).toBeLessThanOrEqual(500);
+      // Agent Skills metadata maps string keys to string values.
+      expect(
+        Object.values(typeof metadata === "object" && metadata !== null ? metadata : {}).every(
+          (value) => typeof value === "string",
+        ),
+      ).toBe(true);
+      const realized = realizedSpecs(frontmatter);
+      expect(realized.length).toBeGreaterThan(0);
+      if (options.realizes !== undefined) {
+        expect([...realized].sort()).toEqual([...options.realizes].sort());
+      }
+    });
+
+    // G3: steps and early hazards stay in SKILL.md; each branch's material sits one level below.
+    it("keeps SKILL.md short and discloses each reference one level below it", () => {
+      const { entry, references, files } = readSkill(skillName);
+      const bytes = (file: SkillFile) => Buffer.byteLength(file.text, "utf8");
+      const entryLinks = markdownLinkTargets(entry.text)
+        .map(({ target }) => linkedPath(entry.path, target))
+        .filter((path) => path !== undefined);
+
+      expect(bytes(entry)).toBeLessThanOrEqual(limits.entryBytes);
+      expect(entry.text.split("\n").length).toBeLessThanOrEqual(limits.entryLines);
+      // Links stay inside the plugin: this skill's references, or a sibling skill's files.
+      expect(entryLinks.filter((path) => !path.startsWith("skills/"))).toEqual([]);
+      for (const reference of references) {
+        expect({
+          reference: reference.path,
+          markdown: reference.path.endsWith(".md"),
+        }).toEqual({
+          reference: reference.path,
+          markdown: true,
+        });
+        expect({
+          reference: reference.path,
+          bytes: bytes(reference) <= limits.referenceBytes,
+        }).toEqual({ reference: reference.path, bytes: true });
+        expect({
+          reference: reference.path,
+          pointers: entryLinks.filter((path) => path === reference.path).length,
+        }).toEqual({ reference: reference.path, pointers: 1 });
+        const chained = markdownLinkTargets(reference.text)
+          .map(({ target }) => linkedPath(reference.path, target))
+          .filter((path) => path?.endsWith(".md") === true);
+        expect({ reference: reference.path, chained }).toEqual({
+          reference: reference.path,
+          chained: [],
+        });
+      }
+      if (options.capBytes !== undefined) {
+        expect(files.reduce((sum, file) => sum + bytes(file), 0)).toBeLessThanOrEqual(
+          options.capBytes,
+        );
+      }
+    });
+
+    // G4: a pointer that misses leaves the disclosed material unreachable, and nothing reports it.
+    it("resolves every link, sibling-skill path, skill name and package file it names", () => {
+      const { files } = readSkill(skillName);
+      const patterns = (
+        JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+          files: string[];
+        }
+      ).files;
+      const exists = (path: string) => existsSync(join(repoRoot, path));
+      const misses: string[] = [
+        ...danglingLinks(new Map(files.map((file) => [file.path, file.text])), exists, (path) =>
+          /\.md$/iu.test(path) && exists(path)
+            ? readFileSync(join(repoRoot, path), "utf8")
+            : undefined,
+        ),
+      ];
+
+      for (const segment of files.flatMap(codeSegments)) {
+        if (
+          /^sdp-[a-z]+(?:-[a-z]+)*$/u.test(segment.text) &&
+          !exists(`skills/${segment.text}/SKILL.md`)
+        ) {
+          misses.push(`${segment.file}: skill ${segment.text}`);
+        }
+        for (const raw of segment.text.split(/\s+/u).map(bareToken)) {
+          // `<skill-dir>` stands for the calling skill's own directory, as the reading skill defines it.
+          const token = raw.replace(/^<skill-dir>\//u, "");
+          if (
+            raw !== token &&
+            !token.startsWith("../") &&
+            !exists(`skills/${skillName}/${token}`)
+          ) {
+            misses.push(`${segment.file}: skill path ${raw}`);
+          }
+          const sibling = /^\.\.\/(?<skill>sdp-[a-z-]+)\/(?<path>\S+)$/u.exec(token)?.groups;
+          if (
+            sibling !== undefined &&
+            !exists(`skills/${sibling.skill ?? ""}/${sibling.path ?? ""}`)
+          ) {
+            misses.push(`${segment.file}: sibling path ${token}`);
+          }
+          const named = token.startsWith(packagePrefix) ? token.slice(packagePrefix.length) : token;
+          const packageFile =
+            /^(?:CONTEXT\.md|plugin\.json|(?:docs|dist|schemas|specs)(?:\/[^\s<>*]*)?)$/u;
+          if (named.includes("<") || !packageFile.test(named)) continue;
+          const path = named.replace(/\/$/u, "");
+          if (!exists(path) || !packed(path, patterns))
+            misses.push(`${segment.file}: package file ${token}`);
+        }
+      }
+      expect(misses).toEqual([]);
+    });
+
+    // G5: a stale citation sends the reader to law that is gone; an uncited relation target is law
+    // the skill no longer teaches in place. Fenced carriers and anchors are syntax examples, and
+    // their ids name an example domain.
+    it("cites only Specs and entry addresses that resolve, among them every law its on-ramps rest on", async () => {
+      const { files, frontmatter } = readSkill(skillName);
+      const cited = [
+        ...new Set(
+          [
+            ...files
+              .map((file) => splitFences(file.text).prose)
+              .join("\n")
+              .matchAll(/spec:[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)*(?:#[a-z]+\.[A-Za-z0-9]+)?/gu),
+          ].map((match) => match[0]),
+        ),
+      ];
+      const ids = [...new Set(cited.map((reference) => reference.split("#")[0] ?? reference))];
+      const addresses = cited.filter((reference) => reference.includes("#"));
+      const graph = packageGraph();
+      const reader = createReader(graph);
+
+      expect(ids.filter((id) => reader.specContext(id) === undefined)).toEqual([]);
+      if (addresses.length > 0) {
+        const resolution = (await evaluateBody("return recipes(25, params)", {
+          graph,
+          params: { addresses },
+        })) as { rows: { address: string; resolves: boolean }[] };
+        expect(resolution.rows.filter((row) => !row.resolves).map((row) => row.address)).toEqual(
+          [],
+        );
+        expect(resolution.rows).toHaveLength(addresses.length);
+      }
+      const realized = realizedSpecs(frontmatter);
+      const law = graph.edges
+        .filter((edge) => realized.includes(edge.from) && lawRelations.has(edge.type))
+        .map((edge) => edge.to);
+      expect([...new Set(law)].filter((id) => !ids.includes(id))).toEqual([]);
+    });
+
+    // G6: a wrong number runs another recipe and reads its answer as this one's.
+    it("names recipes and orientation answers by their catalog numbers, names and files", () => {
+      const { files } = readSkill(skillName);
+      const headings = catalogHeadings();
+      const shippedNames = new Set(
+        recipeFiles(readFileSync(join(repoRoot, catalogPath), "utf8")).map((file) => file.fileName),
+      );
+      const answers = readdirSync(join(readingScripts, "orientation")).filter((name) =>
+        /^\d{2}-[a-z0-9-]+\.js$/u.test(name),
+      ).length;
+      const byLength = [...headings].sort((left, right) => right[1].length - left[1].length);
+      const misses: string[] = [];
+
+      for (const file of files) {
+        const text = file.text.replaceAll(/\s+/gu, " ");
+        const miss = (what: string) => misses.push(`${file.path}: ${what}`);
+        for (const match of text.matchAll(
+          /\brecipes? (?<list>\d+(?:(?:,| and| or| to|-|–) ?\d+)*)/giu,
+        )) {
+          for (const ordinal of (match.groups?.list ?? "").match(/\d+/gu) ?? []) {
+            if (!headings.has(Number(ordinal))) miss(`recipe ${ordinal} is not in the catalog`);
+          }
+        }
+        for (const match of text.matchAll(/\brecipes\((?<ordinal>\d+)/gu)) {
+          if (!headings.has(Number(match.groups?.ordinal)))
+            miss(`recipes(${match.groups?.ordinal ?? ""})`);
+        }
+        // "recipe 21, Dependency footing": a capitalized name after the number is that recipe's.
+        for (const match of text.matchAll(/\brecipe (?<ordinal>\d+), (?<after>[^,.;:()]+)/giu)) {
+          const after = (match.groups?.after ?? "").toLowerCase();
+          const own = headings.get(Number(match.groups?.ordinal))?.toLowerCase();
+          const named = byLength.find(([, title]) => after.startsWith(title.toLowerCase()));
+          const capitalized = /^[A-Z]/u.test(match.groups?.after ?? "");
+          if (
+            (named !== undefined || capitalized) &&
+            (own === undefined || !after.startsWith(own))
+          ) {
+            miss(`"${match[0]}" names another recipe`);
+          }
+        }
+        // "the design slice (recipe 54)": a catalog name before the number is that recipe's.
+        for (const match of text.matchAll(
+          /(?<before>[\p{L}\p{N} -]+) \(recipe (?<ordinal>\d+)\)/giu,
+        )) {
+          const before = (match.groups?.before ?? "").toLowerCase();
+          const named = byLength.find(([, title]) => before.endsWith(title.toLowerCase()));
+          if (named !== undefined && named[0] !== Number(match.groups?.ordinal)) {
+            miss(`"${match[0]}" names recipe ${String(named[0])}`);
+          }
+        }
+        for (const match of text.matchAll(/\bdist\/recipes\/(?<name>[^\s`'")<]+\.js)/gu)) {
+          if (!shippedNames.has(match.groups?.name ?? ""))
+            miss(`dist/recipes/${match.groups?.name ?? ""}`);
+        }
+        for (const match of text.matchAll(/(?:\borientation|--only) (?<ordinal>\d+)/giu)) {
+          const ordinal = Number(match.groups?.ordinal);
+          if (ordinal < 1 || ordinal > answers) miss(`orientation ${String(ordinal)}`);
+        }
+      }
+      expect(misses).toEqual([]);
+    });
+
+    // G7: an unknown flag fails late or silently; a bare `sdp` runs another program; a body in
+    // double quotes is shell-expanded before the sink sees it; a checkout form without the
+    // fixture exclusions derives another graph.
+    it("invokes only public verbs and their flags through a runner, bodies quoted as data", async () => {
+      const { files } = readSkill(skillName);
+      const verbs = usageLines();
+      const orient = scriptUsage("orient");
+      const runner = scriptUsage("q");
+      const exclusions = await checkoutExclusions();
+      const misses: string[] = [];
+
+      for (const segment of files.flatMap(codeSegments)) {
+        // A copied line runs as written: `sdp` alone may be macOS's unrelated binary, and `npx sdp`
+        // or `npm exec sdp` without the package installed fetches an unrelated registry package.
+        // Prose may still name the project's package runner.
+        if (segment.fenced && /^(?:sdp|npx +sdp|npm +exec +sdp)\b/u.test(segment.text)) {
+          misses.push(`${segment.file}: bare invocation ${segment.text}`);
+        }
+        if (/(?:sdp:q|\bq\.mjs|\bsdp q) "(?!\$\(cat )/u.test(segment.text)) {
+          misses.push(`${segment.file}: double-quoted body ${segment.text}`);
+        }
+        for (const call of invocations(segment, verbs)) {
+          // The runner takes its own flags (`--protocol`) beside the `sdp q` it wraps.
+          const usage =
+            call.verb === "orient"
+              ? orient
+              : call.runner
+                ? `${runner} ${verbs.get("q") ?? ""}`
+                : verbs.get(call.verb);
+          if (usage === undefined) {
+            misses.push(`${call.file}: unknown verb sdp ${call.verb}`);
+            continue;
+          }
+          for (const flag of flagsOf(call.rest)) {
+            if (flag !== "--help" && !new RegExp(`${flag}(?![a-z-])`, "u").test(usage)) {
+              misses.push(`${call.file}: ${call.verb} takes no ${flag}`);
+            }
+          }
+          // This checkout's own `sdp` script at its root needs the runner's fixture exclusions.
+          if (segment.text.startsWith("pnpm --silent sdp ") && /\s\.(?:\s|$)/u.test(call.rest)) {
+            for (const path of exclusions) {
+              if (!call.rest.includes(`--exclude ${path}`)) {
+                misses.push(`${call.file}: checkout form lacks --exclude ${path}`);
+              }
+            }
+          }
+        }
+      }
+      expect(misses).toEqual([]);
+    });
+
+    // G8: a taught body that no longer runs teaches nothing, and no reader notices.
+    it("runs every inline body it teaches over this checkout and over the worked example", async () => {
+      const { files } = readSkill(skillName);
+      const verbs = usageLines();
+      const shipped = new Map(
+        recipeFiles(readFileSync(join(repoRoot, catalogPath), "utf8")).map((file) => [
+          file.fileName,
+          file.content,
+        ]),
+      );
+      const bodies = taughtBodies(
+        files.flatMap(codeSegments).flatMap((segment) => invocations(segment, verbs)),
+        shipped,
+      );
+      const checkout = await checkoutGraph();
+      const failures: unknown[] = [];
+
+      for (const taught of bodies) {
+        const corpora: [string, ExtractionResult][] = [["checkout", checkout]];
+        // A subject names this checkout's corpus, so only a body without one runs over the example.
+        if (taught.params === undefined) corpora.push(["checkout-v1", exampleGraph()]);
+        for (const [corpus, extraction] of corpora) {
+          const run = await runBody(taught.body, taught.params, extraction);
+          const empty = emptyHanded(run.answer);
+          if (run.exitCode !== 0 || empty !== undefined) {
+            failures.push({
+              file: taught.file,
+              corpus,
+              body: taught.body,
+              exitCode: run.exitCode,
+              empty,
+              stderr: run.stderr,
+            });
+          }
+        }
+      }
+      expect(failures).toEqual([]);
+    }, 120_000);
+
+    // G11: a derived count quoted in prose goes stale and is read as truth.
+    it("quotes no recipe-catalog size", () => {
+      const { files } = readSkill(skillName);
+      const size = catalogHeadings().size;
+      const sizeStatement = catalogSizePattern();
+      const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
+      for (const file of files) {
+        const text = teachingText(file.text);
+        expect({
+          file: file.path,
+          stated: sizeStatement.exec(text)?.[0] ?? null,
+        }).toEqual({
+          file: file.path,
+          stated: null,
+        });
+        expect({
+          file: file.path,
+          wholeRange: wholeRange.exec(text)?.[0] ?? null,
+        }).toEqual({
+          file: file.path,
+          wholeRange: null,
+        });
+      }
+    });
+  });
+}
