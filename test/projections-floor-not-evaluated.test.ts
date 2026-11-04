@@ -6,7 +6,14 @@ import { describe, expect, it } from "vitest";
 // The Design Review and the census are read through the package's public root exports, the seam
 // a foreign producer's graph reaches them by. The vault has no root export: its public surface is
 // `sdp vault`, which extracts carriers that cannot state these values, so its renderer is the seam.
-import { createReader, extract, renderCensus, renderDesignReview } from "../src/index.js";
+import {
+  createReader,
+  extract,
+  gherkinKindLieReason,
+  renderCensus,
+  renderDesignReview,
+  renderGherkinView,
+} from "../src/index.js";
 import type { GraphNode, GraphSchema } from "../src/index.js";
 import { renderVault } from "../src/projections/vault/notes.js";
 import { createStudioData } from "../src/projections/studio/data.js";
@@ -146,6 +153,16 @@ describe("foreign kinds named after Object.prototype properties", () => {
       );
       expect(studio).toContain(specKind);
       expect(studio).toContain("floor not evaluated");
+      expect(gherkinKindLieReason(specKind)).toBeUndefined();
+      const gherkin = renderGherkinView(reader);
+      expect(pageAt(gherkin, "spec/orders.order-model.feature.md")).toContain(
+        `unrecognized kind ${specKind} cannot be carried honestly`,
+      );
+      const indexEntry = pageAt(gherkin, "index.md")
+        .split("\n")
+        .find((line) => line.includes(id));
+      expect(indexEntry).toBeDefined();
+      expect(indexEntry).not.toContain("LOSSY");
     },
   );
 });

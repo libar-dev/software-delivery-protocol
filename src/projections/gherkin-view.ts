@@ -1,4 +1,4 @@
-import { GHERKIN_KIND_LIE_REASONS } from "../extract/gherkin-kind-honesty.js";
+import { gherkinKindLieReason } from "../extract/gherkin-kind-honesty.js";
 import type { SpecKind } from "../model/descriptors.js";
 import type {
   BehaviorSection,
@@ -298,7 +298,7 @@ function renderUnrepresentedSections(
 
 function renderSpecPage(context: SpecContext): GherkinViewPage {
   const kind = context.specKind;
-  const lieReason = (GHERKIN_KIND_LIE_REASONS as Readonly<Record<string, string>>)[kind];
+  const lieReason = gherkinKindLieReason(kind);
   const title = escapeGherkinViewText(context.title ?? context.id);
   const keyword = kind === "example" ? "Scenario" : "Feature";
   const lines = [
@@ -346,7 +346,7 @@ function renderIndex(specs: readonly SpecContext[], reader: Reader): GherkinView
     ...(specs.length === 0
       ? ["No Specs."]
       : specs.map((spec) => {
-          const lie = (GHERKIN_KIND_LIE_REASONS as Readonly<Record<string, string>>)[spec.specKind];
+          const lie = gherkinKindLieReason(spec.specKind);
           const marker = lie === undefined ? "" : " — LOSSY";
           return `- [\`${spec.id}\`](${pagePathOf(spec.id)})${marker}`;
         })),
