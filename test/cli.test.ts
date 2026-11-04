@@ -52,6 +52,7 @@ import {
   materializeGherkinCorpus,
   removeMaterializedCorpus,
 } from "./helpers/extract-corpus.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const regenerationTestAnchor = specTest({
   id: testAnchorId("test:protocol.regenerability"),
@@ -105,7 +106,7 @@ function readGeneratedTree(root: string): ReadonlyMap<string, string> {
   const generatedRoot = join(root, "generated");
 
   for (const entry of readdirSync(generatedRoot, { recursive: true, withFileTypes: true })) {
-    if (entry.isFile()) {
+    if (entry.isFile() && !isOsMetadataFile(entry)) {
       const absolute = join(entry.parentPath, entry.name);
       tree.set(absolute.slice(generatedRoot.length + 1), readFileSync(absolute, "utf8"));
     }

@@ -81,6 +81,7 @@ import { materializeExtractCorpus } from "./helpers/extract-corpus.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 import { registerComposedLocation } from "./validation.diagnostic-rendering.composed-location.test.generated.js";
 import { registerTableCellLocation } from "./validation.diagnostic-rendering.table-cell-location.test.generated.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 /**
  * The bound executable points of the projection family: what the one read-only view renders, and
@@ -128,6 +129,7 @@ function fingerprintTree(root: string): string {
     for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
       left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
     )) {
+      if (isOsMetadataFile(entry)) continue;
       const path = join(directory, entry.name);
       hash.update(path);
       hash.update("\0");

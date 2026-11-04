@@ -17,6 +17,7 @@ import { extract } from "../src/extract/index.js";
 import { MAX_MERMAID_NODES_PER_DIAGRAM } from "../src/projections/mermaid.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const pages = [
   { path: "domains/orders.md", content: "# Orders\n" },
@@ -28,7 +29,7 @@ function publishedTree(root: string): ReadonlyMap<string, string> {
   const tree = new Map<string, string>();
 
   for (const entry of readdirSync(projectionRoot, { recursive: true, withFileTypes: true })) {
-    if (entry.isFile()) {
+    if (entry.isFile() && !isOsMetadataFile(entry)) {
       const absolute = join(entry.parentPath, entry.name);
       tree.set(absolute.slice(projectionRoot.length + 1), readFileSync(absolute, "utf8"));
     }

@@ -26,6 +26,7 @@ import {
   specTest,
   testAnchorId,
 } from "@libar-dev/software-delivery-protocol";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const packageName = "@libar-dev/software-delivery-protocol";
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -217,7 +218,7 @@ async function packBuiltPackage(destination: string): Promise<PackedPackage> {
 function distFiles(): Record<string, { inode: string; size: string; mtime: string }> {
   return Object.fromEntries(
     readdirSync(join(repositoryRoot, "dist"), { recursive: true, withFileTypes: true })
-      .filter((entry) => entry.isFile())
+      .filter((entry) => entry.isFile() && !isOsMetadataFile(entry))
       .map((entry) => {
         const path = join(entry.parentPath, entry.name);
         const stats = statSync(path, { bigint: true });

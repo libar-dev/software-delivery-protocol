@@ -166,8 +166,14 @@ for an engineering session; the owner marked the skills for the very next one.
   `.DS_Store` into a `generated/` folder that is open in a window. `--check-clean` reads every file in
   a published root as a page, so `npm run check` failed with "generated Mermaid differs" and then
   "generated Studio differs", and each failing check removed its root. The same tree passed in a
-  clean worktree. Ignoring such files when reading a published root is one option for an
-  engineering session.
+  clean worktree. The engineering session that followed took the option of ignoring such files:
+  `spec:consumers.wholesale-view-rewrite#rule.osMetadata` leaves every file the `junk` package
+  lists out of each read of a published root and retries tree removals, the gate's
+  `projection-suite.mjs` stages prior roots by rename rather than copy (a copy failed with
+  `ENOENT` while a folder gained a file), and the tests plant such files in every published
+  folder. Follow-ups: the vault still ignores only `.DS_Store`, as its ruled decision
+  `spec:decisions.vault-owned-folder` states, so widening it to the same list is the owner's
+  call; and why Node 24's unfiltered `cpSync` failed was never reduced to a minimal case.
 - **Pending evaluation: map research output to the graph.** The owner's intended check is to take the
   research run's findings and ask, for each, what the graph could have fetched directly. The
   transcript mining above answers a neighbouring question (what agents needed while researching);

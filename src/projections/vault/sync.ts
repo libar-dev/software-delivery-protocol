@@ -11,6 +11,8 @@ import {
 } from "node:fs";
 import { basename, dirname, join } from "node:path";
 
+import { OS_METADATA_FILE } from "../published-tree.js";
+
 export interface VaultFile {
   readonly path: string;
   readonly content: string;
@@ -124,7 +126,7 @@ export function inspectVault(out: string): VaultState {
       for (const name of readdirSync(absolute).sort(compare))
         walk(join(absolute, name), path ? `${path}/${name}` : name);
     } else if (path === "") refusals.push({ path: "sdp", reason: "not a file" });
-    else if (basename(path) !== ".DS_Store") files.set(path, readFileSync(absolute));
+    else if (basename(path) !== OS_METADATA_FILE) files.set(path, readFileSync(absolute));
   };
   walk(folder, "");
   const listBytes = files.get(LIST);
@@ -241,7 +243,7 @@ export function synchronizeVault(
     const remaining = readdirSync(directory, { withFileTypes: true });
     if (
       directory !== folder &&
-      remaining.every((entry) => entry.isFile() && entry.name === ".DS_Store")
+      remaining.every((entry) => entry.isFile() && entry.name === OS_METADATA_FILE)
     ) {
       for (const entry of remaining) rmSync(join(directory, entry.name));
       rmdirSync(directory);

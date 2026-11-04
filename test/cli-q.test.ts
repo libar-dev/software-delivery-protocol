@@ -12,6 +12,7 @@ import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protoc
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -33,6 +34,7 @@ function fingerprintTree(root: string): string {
     );
 
     for (const entry of entries) {
+      if (isOsMetadataFile(entry)) continue;
       const path = join(directory, entry.name);
 
       if (entry.isDirectory()) {

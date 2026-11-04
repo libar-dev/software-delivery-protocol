@@ -740,6 +740,7 @@ export const consumersSpecs = [
           "Validation findings never withhold the view; publication refusals remain separate. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.",
           "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
           "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
+          "A file an operating system or a tool writes for its own use anywhere under a projection root, one whose name the `junk` package lists, such as Finder's `.DS_Store` or Windows's `Thumbs.db`, is never a page: `--check-clean` leaves it out when it reads the published root, so a root a file browser has shown still certifies, while any other file the run did not write, a file inside a directory of such a name included, still fails the check. Removing a root retries a bounded number of times when a folder gains such a file during the removal.",
         ],
         exampleSpace: {
           given: [
@@ -759,6 +760,7 @@ export const consumersSpecs = [
           buildInvalidates: "rules[3]",
           portablePublication: "rules[6]",
           safeCleanup: "rules[7]",
+          osMetadata: "rules[8]",
         },
       },
     },

@@ -22,6 +22,7 @@ import { createReader } from "../src/reader/reader.js";
 import { extract } from "../src/extract/index.js";
 import type { Finding } from "../src/validate/contracts.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const anchor = specTest({
   id: testAnchorId("test:protocol.studio-publisher"),
@@ -69,6 +70,7 @@ function files(root: string): Record<string, string> {
   const result: Record<string, string> = {};
   const visit = (dir: string, prefix: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (isOsMetadataFile(entry)) continue;
       const path = join(dir, entry.name);
       const key = `${prefix}${entry.name}`;
       if (entry.isDirectory()) visit(path, `${key}/`);

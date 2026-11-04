@@ -1,14 +1,7 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  renameSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { dirname, join, posix, relative, win32 } from "node:path";
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, posix, win32 } from "node:path";
 
+import { readPublishedTree, TREE_REMOVAL_RETRIES } from "../published-tree.js";
 import type { StudioPage } from "./pages/index.js";
 
 export interface StudioAssets {
@@ -52,24 +45,13 @@ export function studioFiles(
 }
 
 export function readPublishedStudio(root: string): readonly StudioFile[] | undefined {
-  if (!existsSync(root)) return undefined;
-  const files: StudioFile[] = [];
-  const walk = (directory: string): void => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      const path = join(directory, entry.name);
-      // The publishing stamp is written apart and is not part of the deterministic render.
-      if (path === join(root, "stamp.json")) continue;
-      if (entry.isDirectory()) walk(path);
-      else if (entry.isFile())
-        files.push({
-          path: relative(root, path).replaceAll("\\", "/"),
-          content: readFileSync(path),
-        });
-      else throw new Error(`generated Studio contains a non-file entry: ${entry.name}`);
-    }
-  };
-  walk(root);
-  return files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  return readPublishedTree(root, (path) => readFileSync(path), {
+    // The publishing stamp is written apart and is not part of the deterministic render.
+    skip: (path) => path === join(root, "stamp.json"),
+    onOther: (entry) => {
+      throw new Error(`generated Studio contains a non-file entry: ${entry.name}`);
+    },
+  });
 }
 
 export function studioFilesEqual(
@@ -93,12 +75,12 @@ export function publishStudio(
   fs = { rmSync, mkdirSync, writeFileSync, renameSync },
 ): void {
   const temporary = `${root}.tmp`;
-  fs.rmSync(temporary, { recursive: true, force: true });
+  fs.rmSync(temporary, { recursive: true, force: true, ...TREE_REMOVAL_RETRIES });
   for (const file of files) {
     const target = join(temporary, file.path);
     fs.mkdirSync(dirname(target), { recursive: true });
     fs.writeFileSync(target, file.content, { flag: "wx" });
   }
-  fs.rmSync(root, { recursive: true, force: true });
+  fs.rmSync(root, { recursive: true, force: true, ...TREE_REMOVAL_RETRIES });
   fs.renameSync(temporary, root);
 }

@@ -32,6 +32,7 @@ import {
   specTest as projectionTest,
   testAnchorId as projectionTestId,
 } from "@libar-dev/software-delivery-protocol";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const projectionsModelTestAnchor = projectionTest({
   id: projectionTestId("test:protocol.projections-model.rendering"),
@@ -65,6 +66,7 @@ function readGoldenPages(directory: string, prefix = ""): Map<string, string> {
   const pages = new Map<string, string>();
 
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (isOsMetadataFile(entry)) continue;
     const path = prefix === "" ? entry.name : `${prefix}/${entry.name}`;
 
     if (entry.isDirectory()) {
