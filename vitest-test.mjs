@@ -234,12 +234,17 @@ const runsPooledPass =
  * The reporters, output file and coverage a split run's passes would resolve. A configuration
  * file can set each of them, so they are read as Vitest reads them: the file found from the root,
  * with the caller's options over it. A configuration Vitest cannot load fails each pass with
- * Vitest's own message; the wrapper then reads the caller's options alone. Loading the
- * configuration sets variables such as NODE_ENV and MODE in this process, and the passes inherit
- * its environment, so the caller's environment is restored afterwards.
+ * Vitest's own message; the wrapper then reads the caller's options alone. A configuration can read
+ * the environment, so the wrapper first sets the variables Vitest sets before it loads one: TEST
+ * and VITEST, and NODE_ENV when the caller left it unset. Otherwise Vite would load it with
+ * NODE_ENV set to `development`. Loading also sets variables such as MODE in this process, and the
+ * passes inherit its environment, so the caller's environment is restored afterwards.
  */
 async function resolveReporting() {
   const callerEnvironment = { ...process.env };
+  process.env.TEST = "true";
+  process.env.VITEST = "true";
+  process.env.NODE_ENV ??= "test";
   try {
     const { vitestConfig } = await resolveConfig(parseVitest(argv).options, { logLevel: "silent" });
     return vitestConfig;

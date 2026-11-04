@@ -624,8 +624,9 @@ describe("pooled root generated-state sentinel", () => {
   });
 
   it("hands each pass the caller's environment, untouched by reading the configuration", () => {
-    // Vite sets these while it loads a configuration; Vitest gives NODE_ENV its own default.
-    const viteVariables = ["NODE_ENV", "MODE", "DEV", "PROD", "BASE_URL"];
+    // The wrapper sets the first three as Vitest does before it loads a configuration, and Vite
+    // sets the rest while it loads one.
+    const viteVariables = ["NODE_ENV", "VITEST", "TEST", "MODE", "DEV", "PROD", "BASE_URL"];
     const { root, environment } = shimmedPoolRoot(
       `require("node:fs").appendFileSync("spawns.log", JSON.stringify(${JSON.stringify(viteVariables)}.map((name) => process.env[name] ?? null)) + "\\n");`,
       [selfHostingContracts, checkoutContracts],
@@ -917,6 +918,43 @@ describe("the test wrapper over real Vitest", () => {
         [...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort(),
       ).toEqual(ran);
       expect(readdirSync(temporary)).toEqual([]);
+    },
+    120_000,
+  );
+
+  it.each([
+    ['process.env.NODE_ENV === "test"', {}],
+    ['process.env.VITEST === "true"', {}],
+    ['process.env.TEST === "true"', {}],
+    ['process.env.NODE_ENV === "production"', { NODE_ENV: "production" }],
+  ])(
+    "reads a configuration that asks for a report file when %s as the passes read it",
+    (condition, callerVariables) => {
+      // Vitest sets these before it loads a configuration. A run started from a shell seldom has
+      // them, so the caller's environment leaves them unset, or sets the one the case names.
+      const testVariables = ["NODE_ENV", "VITEST", "TEST"];
+      const { root, environment } = realVitestRoot();
+      writeFileSync(
+        join(root, "vitest.config.mjs"),
+        `export default { test: { globals: true, include: ["test/**/*.test.ts"], ...(${condition} ? { reporters: ["junit"], outputFile: "report.xml" } : {}) } };\n`,
+      );
+      const callerEnvironment = {
+        ...Object.fromEntries(
+          Object.entries(environment).filter(([name]) => !testVariables.includes(name)),
+        ),
+        ...callerVariables,
+      };
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs")], {
+        cwd: root,
+        encoding: "utf8",
+        env: callerEnvironment,
+      });
+
+      expect(result.status, result.stderr).toBe(0);
+      const report = readFileSync(join(root, "report.xml"), "utf8");
+      expect(
+        [...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort(),
+      ).toEqual(["cli alpha", "cli beta", "other gamma"]);
     },
     120_000,
   );
