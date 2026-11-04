@@ -170,10 +170,20 @@ export function materializeTree(git, commit, source) {
   }
 }
 
+// Resolve aliases even when an interrupted cleanup already removed the leaf.
+function realpathWithMissingTail(file) {
+  try {
+    return realpathSync(file);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return path.join(realpathWithMissingTail(path.dirname(file)), path.basename(file));
+  }
+}
+
 // An interrupt can leave a locked registration or remove its .git file first.
-// Attempt every cleanup step, including pruning after the directory is gone.
+// Never prune the repository: other missing worktrees may still be recoverable.
 export function cleanupPinnedSource(repository, temporary) {
-  const source = path.join(temporary, "source");
+  const source = realpathWithMissingTail(path.resolve(temporary, "source"));
   const removed = spawnSync(
     "git",
     ["-C", repository, "worktree", "remove", "--force", "--force", source],
@@ -181,18 +191,35 @@ export function cleanupPinnedSource(repository, temporary) {
       stdio: "ignore",
     },
   );
-  // An initializing registration can be locked even before .git exists. Unlock
-  // this invocation's entry so pruning can remove it after the fallback deletion.
-  if (removed.status !== 0)
-    spawnSync("git", ["-C", repository, "worktree", "unlock", source], { stdio: "ignore" });
   try {
     rmSync(temporary, { recursive: true, force: true });
   } catch (error) {
     console.error(`Could not remove temporary evidence directory ${temporary}: ${error.message}`);
-  } finally {
-    spawnSync("git", ["-C", repository, "worktree", "prune", "--expire", "now"], {
-      stdio: "ignore",
-    });
+  }
+  if (removed.status !== 0) {
+    try {
+      const common = execFileSync(
+        "git",
+        ["-C", repository, "rev-parse", "--path-format=absolute", "--git-common-dir"],
+        { encoding: "utf8", stdio: "pipe" },
+      ).trim();
+      const registrations = path.join(common, "worktrees");
+      if (existsSync(registrations)) {
+        for (const name of readdirSync(registrations)) {
+          const entry = path.join(registrations, name);
+          try {
+            const gitdir = readFileSync(path.join(entry, "gitdir"), "utf8").trim();
+            if (realpathWithMissingTail(gitdir) === path.join(source, ".git"))
+              rmSync(entry, { recursive: true, force: true });
+          } catch (error) {
+            // A concurrent worktree removal may have already removed this entry.
+            if (error.code !== "ENOENT") throw error;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Could not remove evidence worktree registration ${source}: ${error.message}`);
+    }
   }
 }
 
@@ -507,17 +534,11 @@ async function supervise(repository, repositoryRoot) {
     if (relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative))
       throw new Error("TMPDIR must be outside the article checkout and the source repository.");
   }
-  const temporary = realpathSync(mkdtempSync(path.join(scratchRoot, "article-evidence-")));
+  let temporary;
+  let child;
   let interrupted;
-  const child = fork(fileURLToPath(import.meta.url), process.argv.slice(2), {
-    detached: process.platform !== "win32",
-    stdio: ["inherit", "inherit", "inherit", "ipc"],
-    env: { ...process.env, SDP_ARTICLE_WORKER_ROOT: temporary },
-  });
-  const stop = (signal) => {
-    if (interrupted) return;
-    interrupted = signal;
-    if (!child.pid) return;
+  const stopChild = () => {
+    if (!child?.pid) return;
     if (process.platform === "win32") {
       spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
     } else {
@@ -529,24 +550,42 @@ async function supervise(repository, repositoryRoot) {
       }
     }
   };
+  const stop = (signal) => {
+    if (interrupted) return;
+    interrupted = signal;
+    stopChild();
+  };
   const onInterrupt = () => stop("SIGINT");
   const onTerminate = () => stop("SIGTERM");
   process.on("SIGINT", onInterrupt);
   process.on("SIGTERM", onTerminate);
   try {
-    const code = await new Promise((resolve, reject) => {
-      child.once("error", reject);
-      child.once("close", (code) => resolve(code));
-    });
+    temporary = realpathSync(mkdtempSync(path.join(scratchRoot, "article-evidence-")));
+    let code;
+    if (!interrupted) {
+      child = fork(fileURLToPath(import.meta.url), process.argv.slice(2), {
+        detached: process.platform !== "win32",
+        stdio: ["inherit", "inherit", "inherit", "ipc"],
+        env: { ...process.env, SDP_ARTICLE_WORKER_ROOT: temporary },
+      });
+      // A signal during fork is remembered until the worker's pid is available.
+      if (interrupted) stopChild();
+      code = await new Promise((resolve, reject) => {
+        child.once("error", reject);
+        child.once("close", (code) => resolve(code));
+      });
+    }
     process.exitCode =
       interrupted === "SIGINT" ? 130 : interrupted === "SIGTERM" ? 143 : (code ?? 1);
   } finally {
     try {
       // A killed worker cannot run its finally. Remove only this invocation's
       // registrations, after its process group has stopped writing.
-      for (const name of readdirSync(temporary))
-        cleanupPinnedSource(repository, path.join(temporary, name));
-      rmSync(temporary, { recursive: true, force: true });
+      if (temporary) {
+        for (const name of readdirSync(temporary))
+          cleanupPinnedSource(repository, path.join(temporary, name));
+        rmSync(temporary, { recursive: true, force: true });
+      }
     } finally {
       process.off("SIGINT", onInterrupt);
       process.off("SIGTERM", onTerminate);

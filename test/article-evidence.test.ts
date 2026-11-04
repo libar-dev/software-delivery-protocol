@@ -9,6 +9,7 @@ import {
   readdirSync,
   readlinkSync,
   realpathSync,
+  renameSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -224,6 +225,81 @@ describe("article evidence CLI entry", () => {
     }
   });
 
+  it.each([
+    ["temporary directory creation", "SIGINT"],
+    ["worker fork", "SIGTERM"],
+  ] as const)("cleans up an interrupt during %s", (stage, signal) => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-startup-"));
+    const articles = path.join(temporary, "articles/docs/articles");
+    const scratch = path.join(temporary, "scratch");
+    const workerPid = path.join(temporary, "worker-pid");
+    try {
+      mkdirSync(articles, { recursive: true });
+      mkdirSync(scratch);
+      for (const name of readdirSync(path.join(repositoryRoot, "docs/articles"))) {
+        if (name.endsWith(".md") || name === "sync-evidence.mjs")
+          copyFileSync(path.join(repositoryRoot, "docs/articles", name), path.join(articles, name));
+      }
+      const hook = path.join(temporary, "startup-hook.mjs");
+      writeFileSync(
+        hook,
+        `
+        import fs from "node:fs";
+        import cp from "node:child_process";
+        import {syncBuiltinESMExports} from "node:module";
+        if (!process.send) {
+          const interrupt = () => {
+            // Model delivery at the exact startup boundary, including the default action.
+            if (!process.emit(${JSON.stringify(signal)})) process.exit(${signal === "SIGINT" ? "130" : "143"});
+          };
+          if (${JSON.stringify(stage)} === "temporary directory creation") {
+            const mkdtemp = fs.mkdtempSync;
+            fs.mkdtempSync = (...args) => { const dir = mkdtemp(...args); interrupt(); return dir; };
+          } else {
+            const fork = cp.fork;
+            cp.fork = (...args) => {
+              const child = fork(...args);
+              fs.writeFileSync(${JSON.stringify(workerPid)}, String(child.pid));
+              interrupt();
+              return child;
+            };
+          }
+          syncBuiltinESMExports();
+        }
+      `,
+      );
+      const result = spawnSync(
+        process.execPath,
+        [
+          "--import",
+          hook,
+          path.join(articles, "sync-evidence.mjs"),
+          "--check",
+          path.join(temporary, "articles"),
+        ],
+        {
+          encoding: "utf8",
+          env: { ...process.env, TMPDIR: scratch, TEMP: scratch, TMP: scratch },
+          timeout: 5_000,
+        },
+      );
+      expect(result.status, result.stderr).toBe(signal === "SIGINT" ? 130 : 143);
+      expect(readdirSync(scratch)).toEqual([]);
+    } finally {
+      if (existsSync(workerPid)) {
+        try {
+          const pid = Number(readFileSync(workerPid, "utf8"));
+          process.kill(process.platform === "win32" ? pid : -pid, "SIGKILL");
+        } catch {
+          /* already stopped */
+        }
+      }
+      rmSync(temporary, { recursive: true, force: true });
+    }
+  });
+
+  // The npm cases exercise actual forwarding. The hook cases deterministically
+  // reproduce the repeated-signal and EPERM regressions that npm may not trigger.
   it.each([
     ["direct", "SIGINT"],
     ["direct", "SIGTERM"],
@@ -799,41 +875,69 @@ describe("article evidence arguments", () => {
 // Small real git repositories exercise materialization, npm's lockfile install and the build
 // without reinstalling the Protocol's full dependency tree for every regression probe.
 describe("pinned evidence source", () => {
-  it.each(["missing .git", "locked as initializing", "missing .git while locked"])(
-    "cleans up a worktree %s",
-    (state) => {
-      const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-cleanup-"));
-      const repo = path.join(temporary, "repository");
-      const disposable = path.join(temporary, "disposable");
-      const source = path.join(disposable, "source");
-      const git = (...args: string[]) =>
-        execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", stdio: "pipe" }).trim();
-      try {
-        mkdirSync(repo);
-        git("init", "-q");
-        git(
-          "-c",
-          "user.name=Test",
-          "-c",
-          "user.email=test@example.invalid",
-          "-c",
-          "commit.gpgsign=false",
-          "commit",
-          "--allow-empty",
-          "-qm",
-          "pin",
-        );
+  it.each([
+    "healthy",
+    "missing .git",
+    "locked as initializing",
+    "missing .git while locked",
+    "missing directory",
+    "never registered",
+  ])("cleans up a worktree %s without pruning unrelated registrations", (state) => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-cleanup-"));
+    const repo = path.join(temporary, "repository");
+    const disposable = path.join(temporary, "disposable");
+    const source = path.join(disposable, "source");
+    const git = (...args: string[]) =>
+      execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", stdio: "pipe" }).trim();
+    try {
+      mkdirSync(repo);
+      git("init", "-q");
+      git(
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "--allow-empty",
+        "-qm",
+        "pin",
+      );
+      // A moved worktree is prunable until repaired, but its index still owns staged work.
+      const original = path.join(temporary, "other");
+      const moved = path.join(temporary, "moved");
+      git("worktree", "add", "-b", "other", original, "HEAD");
+      writeFileSync(path.join(original, "staged.txt"), "keep staged contents\n");
+      git("-C", original, "add", "staged.txt");
+      renameSync(original, moved);
+      const before = git("worktree", "list", "--porcelain");
+      expect(before).toContain("prunable");
+      // Exercise --git-common-dir from a linked checkout through a path alias.
+      const caller = path.join(temporary, "caller");
+      const alias = path.join(temporary, "alias");
+      git("worktree", "add", "--detach", caller, "HEAD");
+      symlinkSync(temporary, alias, "dir");
+      if (state !== "never registered") {
         git("worktree", "add", "--detach", source, "HEAD");
-        if (state !== "missing .git") git("worktree", "lock", "--reason", "initializing", source);
-        if (state !== "locked as initializing") rmSync(path.join(source, ".git"));
-        cleanupPinnedSource(repo, disposable);
-        expect(existsSync(disposable)).toBe(false);
-        expect(git("worktree", "list", "--porcelain").match(/^worktree /gm)).toHaveLength(1);
-      } finally {
-        rmSync(temporary, { recursive: true, force: true });
+        if (state.includes("locked")) git("worktree", "lock", "--reason", "initializing", source);
+        if (state.startsWith("missing .git")) rmSync(path.join(source, ".git"));
+        if (state === "missing directory") rmSync(source, { recursive: true });
       }
-    },
-  );
+      cleanupPinnedSource(caller, path.join(alias, "disposable"));
+      expect(existsSync(disposable)).toBe(false);
+      const after = git("worktree", "list", "--porcelain");
+      expect(after.split("\n\n")).toContain(
+        before.split("\n\n").find((entry) => entry.includes("branch refs/heads/other")),
+      );
+      expect(after.match(/^worktree /gm)).toHaveLength(3);
+      git("worktree", "repair", moved);
+      expect(git("-C", moved, "status", "--short")).toBe("A  staged.txt");
+      expect(git("-C", moved, "show", ":staged.txt")).toBe("keep staged contents");
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
+    }
+  });
 
   it("materializes many blobs with one batch process", () => {
     const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-batch-"));
