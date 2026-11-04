@@ -1187,6 +1187,32 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
     ).toEqual([]);
   });
 
+  // #blockShapes: a star, a plus sign or an ordered-list prefix is refused before whitespace as
+  // well as at the end of the line, and a hyphen before a tab is refused in every prose owner.
+  it.each([
+    ["* item", "*item"],
+    ["+ item", "+item"],
+    ["1. item", "1.5 items"],
+    ["1)\titem", "1)item"],
+    ["-\titem", "-item"],
+  ])("refuses the block opener %j wherever prose is read", (opener, ordinary) => {
+    for (const [body, line] of [
+      [`# Title\nParagraph.\n\n${opener}`, 11],
+      [`# Title\n## Rule\nParagraph.\n\n${opener}`, 12],
+      [`# Title\n## Rule\n- ${opener}`, 10],
+    ] as const) {
+      const result = reify(carrierBody(body, "rule"));
+      expect(result.specs, body).toEqual([]);
+      expect(result.findings, body).toEqual([
+        expect.objectContaining({ validatorId: "extract/invalid-markdown-structure", line }),
+      ]);
+    }
+    if (ordinary === "-item") return;
+    const accepted = reify(carrierBody(`# Title\n## Rule\nParagraph.\n${ordinary}`, "rule"));
+    expect(accepted.findings).toEqual([]);
+    expect(accepted.specs).toHaveLength(1);
+  });
+
   it.each(["=", "==", "-", "--", "~~~", "~~~js", "~~~~", "```js"])(
     "refuses short underlines and fences across prose owners: %s",
     (text) => {
@@ -1289,6 +1315,32 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
         expect(result.findings).toEqual([]);
         expect(result.specs[0]?.data.behavior).toMatchObject({ rules: [`${name}: the suite`] });
       }
+    },
+  );
+
+  // #keyedEntryShape: a key is one ASCII letter followed by zero or more letters or digits.
+  it.each([
+    ["a: note", "a"],
+    ["Z: note", "Z"],
+    ["x1: note", "x1"],
+  ])("reads the single-letter-led word in %j as a key in a plain-bullet section", (text, key) => {
+    const result = reify(carrierBody(`# Title\n## Rule\n- ${text}`, "rule"));
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        validatorId: "extract/unrecognized-property",
+        line: 10,
+        message: `property "${key}" is not accepted`,
+      }),
+    ]);
+  });
+
+  it.each(["a:note", "1: note", "a : note", "`a: note`"])(
+    "keeps the bullet %j plain text in a plain-bullet section",
+    (text) => {
+      const result = reify(carrierBody(`# Title\n## Rule\n- ${text}`, "rule"));
+      expect(result.findings).toEqual([]);
+      expect(result.specs[0]?.data.behavior).toMatchObject({ rules: [text] });
     },
   );
 
