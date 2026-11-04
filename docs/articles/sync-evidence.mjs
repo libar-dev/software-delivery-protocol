@@ -207,14 +207,17 @@ export function cleanupPinnedSource(repository, temporary) {
       if (existsSync(registrations)) {
         for (const name of readdirSync(registrations)) {
           const entry = path.join(registrations, name);
+          let gitdir;
           try {
-            const gitdir = readFileSync(path.join(entry, "gitdir"), "utf8").trim();
-            if (realpathWithMissingTail(gitdir) === path.join(source, ".git"))
-              rmSync(entry, { recursive: true, force: true });
-          } catch (error) {
-            // A concurrent worktree removal may have already removed this entry.
-            if (error.code !== "ENOENT") throw error;
+            // Git's relative paths are based at the registration, not our cwd.
+            const recorded = readFileSync(path.join(entry, "gitdir"), "utf8").trim();
+            gitdir = realpathWithMissingTail(path.resolve(entry, recorded));
+          } catch {
+            // An unreadable or concurrently removed entry cannot be identified as
+            // ours. Leave it alone and continue looking for our registration.
+            continue;
           }
+          if (gitdir === path.join(source, ".git")) rmSync(entry, { recursive: true, force: true });
         }
       }
     } catch (error) {
@@ -562,13 +565,15 @@ async function supervise(repository, repositoryRoot) {
   try {
     temporary = realpathSync(mkdtempSync(path.join(scratchRoot, "article-evidence-")));
     let code;
+    // These startup guards cover synchronous signal emits from instrumentation.
+    // Real OS signal callbacks run on the event loop, never inside mkdtempSync or fork.
     if (!interrupted) {
       child = fork(fileURLToPath(import.meta.url), process.argv.slice(2), {
         detached: process.platform !== "win32",
         stdio: ["inherit", "inherit", "inherit", "ipc"],
         env: { ...process.env, SDP_ARTICLE_WORKER_ROOT: temporary },
       });
-      // A signal during fork is remembered until the worker's pid is available.
+      // A synchronous emit during fork is remembered until its pid is available.
       if (interrupted) stopChild();
       code = await new Promise((resolve, reject) => {
         child.once("error", reject);

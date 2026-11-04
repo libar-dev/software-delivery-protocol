@@ -247,23 +247,28 @@ describe("article evidence CLI entry", () => {
         import fs from "node:fs";
         import cp from "node:child_process";
         import {syncBuiltinESMExports} from "node:module";
-        if (!process.send) {
+        if (process.send) {
+          // Stay alive past spawnSync's 5 s deadline, so a missing stop fails.
+          // Bound the lifetime in case the runner dies before its cleanup runs.
+          await new Promise(() => { setTimeout(() => process.exit(0), 60_000); });
+        } else {
           const interrupt = () => {
-            // Model delivery at the exact startup boundary, including the default action.
+            // A synchronous emit exercises the defensive startup boundaries;
+            // real OS signal callbacks cannot interrupt synchronous calls.
             if (!process.emit(${JSON.stringify(signal)})) process.exit(${signal === "SIGINT" ? "130" : "143"});
           };
           if (${JSON.stringify(stage)} === "temporary directory creation") {
             const mkdtemp = fs.mkdtempSync;
             fs.mkdtempSync = (...args) => { const dir = mkdtemp(...args); interrupt(); return dir; };
-          } else {
-            const fork = cp.fork;
-            cp.fork = (...args) => {
-              const child = fork(...args);
-              fs.writeFileSync(${JSON.stringify(workerPid)}, String(child.pid));
-              interrupt();
-              return child;
-            };
           }
+          const fork = cp.fork;
+          cp.fork = (module, args, options) => {
+            // A leaked worker must not hold spawnSync's output pipes open on timeout.
+            const child = fork(module, args, {...options, stdio: ["ignore", "ignore", "ignore", "ipc"]});
+            fs.writeFileSync(${JSON.stringify(workerPid)}, String(child.pid));
+            if (${JSON.stringify(stage)} === "worker fork") interrupt();
+            return child;
+          };
           syncBuiltinESMExports();
         }
       `,
@@ -281,8 +286,16 @@ describe("article evidence CLI entry", () => {
           encoding: "utf8",
           env: { ...process.env, TMPDIR: scratch, TEMP: scratch, TMP: scratch },
           timeout: 5_000,
+          killSignal: "SIGKILL",
         },
       );
+      if (stage === "temporary directory creation") expect(existsSync(workerPid)).toBe(false);
+      else {
+        expect(existsSync(workerPid)).toBe(true);
+        const pid = Number(readFileSync(workerPid, "utf8"));
+        expect(() => process.kill(pid, 0)).toThrow(expect.objectContaining({ code: "ESRCH" }));
+      }
+      expect(result.error).toBeUndefined();
       expect(result.status, result.stderr).toBe(signal === "SIGINT" ? 130 : 143);
       expect(readdirSync(scratch)).toEqual([]);
     } finally {
@@ -875,11 +888,24 @@ describe("article evidence arguments", () => {
     expect(install).not.toContain("CLI's declared Node `>=20`");
   });
 
-  it("distinguishes repository-path link checks from manual publication review", () => {
+  it("distinguishes path and Markdown fragment checks from manual publication review", () => {
     const playbook = readFileSync(path.join(repositoryRoot, "docs/articles/README.md"), "utf8");
     const verify = playbook.split("### Step 6:")[1];
     expect(verify).not.toContain("main gate does not check those links");
     expect(verify).toContain("Markdown link gate");
+    expect(verify).toContain("relative link target paths exist");
+    expect(verify).toContain("fragments on links to Markdown pages and same-page links");
+    expect(verify).toContain("match a heading or an HTML anchor");
+    const manual = verify?.split("Manually inspect")[1];
+    expect(manual).toBeDefined();
+    expect(manual).not.toContain("link fragments");
+    for (const check of [
+      "rendered Markdown",
+      "external and commit-pinned URLs",
+      "line anchors on non-Markdown source files",
+      "code fence structure",
+    ])
+      expect(manual).toContain(check);
   });
 
   it("does not offer an implicit source repository", () => {
@@ -891,14 +917,16 @@ describe("article evidence arguments", () => {
 // Small real git repositories exercise materialization, npm's lockfile install and the build
 // without reinstalling the Protocol's full dependency tree for every regression probe.
 describe("pinned evidence source", () => {
-  it.each([
+  it.for([
     "healthy",
     "missing .git",
     "locked as initializing",
     "missing .git while locked",
+    "missing .git with relative registration",
+    "missing .git after an unrelated ENOTDIR entry",
     "missing directory",
     "never registered",
-  ])("cleans up a worktree %s without pruning unrelated registrations", (state) => {
+  ])("cleans up a worktree %s without pruning unrelated registrations", (state, ctx) => {
     const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-cleanup-"));
     const repo = path.join(temporary, "repository");
     const disposable = path.join(temporary, "disposable");
@@ -908,6 +936,7 @@ describe("pinned evidence source", () => {
     try {
       mkdirSync(repo);
       git("init", "-q");
+      git("config", "worktree.useRelativePaths", String(state.includes("relative")));
       git(
         "-c",
         "user.name=Test",
@@ -921,12 +950,25 @@ describe("pinned evidence source", () => {
         "pin",
       );
       // A moved worktree is prunable until repaired, but its index still owns staged work.
-      const original = path.join(temporary, "other");
+      const obstructed = state.includes("ENOTDIR");
+      const parent = path.join(temporary, "broken");
+      const original = obstructed ? path.join(parent, "aaa") : path.join(temporary, "other");
       const moved = path.join(temporary, "moved");
       git("worktree", "add", "-b", "other", original, "HEAD");
+      // Git before 2.48 ignores useRelativePaths. Probe its actual output once
+      // before damaging any worktree; the relative fixture must really be relative.
+      if (
+        state.includes("relative") &&
+        path.isAbsolute(readFileSync(path.join(repo, ".git/worktrees/other/gitdir"), "utf8").trim())
+      )
+        ctx.skip("Git does not write relative worktree paths (requires Git 2.48 or later)");
       writeFileSync(path.join(original, "staged.txt"), "keep staged contents\n");
       git("-C", original, "add", "staged.txt");
       renameSync(original, moved);
+      if (obstructed) {
+        rmSync(parent, { recursive: true });
+        writeFileSync(parent, "unrelated obstruction\n");
+      }
       const before = git("worktree", "list", "--porcelain");
       expect(before).toContain("prunable");
       // Exercise --git-common-dir from a linked checkout through a path alias.
@@ -936,6 +978,13 @@ describe("pinned evidence source", () => {
       symlinkSync(temporary, alias, "dir");
       if (state !== "never registered") {
         git("worktree", "add", "--detach", source, "HEAD");
+        if (state.includes("relative")) {
+          const gitdir = readFileSync(
+            path.join(repo, ".git/worktrees/source/gitdir"),
+            "utf8",
+          ).trim();
+          expect(path.isAbsolute(gitdir)).toBe(false);
+        }
         if (state.includes("locked")) git("worktree", "lock", "--reason", "initializing", source);
         if (state.startsWith("missing .git")) rmSync(path.join(source, ".git"));
         if (state === "missing directory") rmSync(source, { recursive: true });
@@ -947,6 +996,7 @@ describe("pinned evidence source", () => {
         before.split("\n\n").find((entry) => entry.includes("branch refs/heads/other")),
       );
       expect(after.match(/^worktree /gm)).toHaveLength(3);
+      if (obstructed) expect(readFileSync(parent, "utf8")).toBe("unrelated obstruction\n");
       git("worktree", "repair", moved);
       expect(git("-C", moved, "status", "--short")).toBe("A  staged.txt");
       expect(git("-C", moved, "show", ":staged.txt")).toBe("keep staged contents");
