@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { parseCLI } from "vitest/node";
+import { parseCLI, resolveConfig } from "vitest/node";
 
 import { contractDependentSuites } from "./contract-dependent-suites.mjs";
 
@@ -230,6 +230,34 @@ const cliSelection =
 const runsPooledPass =
   !hasPathFilter || pathFilters.some((filter) => !cliLocations.includes(filter));
 
+/**
+ * The reporters, output file and coverage a split run's passes would resolve. A configuration
+ * file can set each of them, so they are read as Vitest reads them: the file found from the root,
+ * with the caller's options over it. A configuration Vitest cannot load fails each pass with
+ * Vitest's own message; the wrapper then reads the caller's options alone. Loading the
+ * configuration sets variables such as NODE_ENV and MODE in this process, and the passes inherit
+ * its environment, so the caller's environment is restored afterwards.
+ */
+async function resolveReporting() {
+  const callerEnvironment = { ...process.env };
+  try {
+    const { vitestConfig } = await resolveConfig(parseVitest(argv).options, { logLevel: "silent" });
+    return vitestConfig;
+  } catch {
+    return {
+      reporters: [options.reporter ?? []].flat(),
+      outputFile: options.outputFile,
+      coverage: options.coverage,
+    };
+  } finally {
+    for (const name of Object.keys(process.env)) {
+      if (!Object.hasOwn(callerEnvironment, name)) delete process.env[name];
+    }
+    Object.assign(process.env, callerEnvironment);
+  }
+}
+const resolvedReporting = runsPooledPass ? await resolveReporting() : undefined;
+
 // Coverage would need the same merge across the two processes. Vitest's coverage provider is a
 // separate package, and while none is installed the refusal says so.
 const resolves = (specifier) => {
@@ -240,7 +268,7 @@ const resolves = (specifier) => {
     return false;
   }
 };
-if (runsPooledPass && options.coverage?.enabled === true) {
+if (resolvedReporting?.coverage?.enabled === true) {
   const providers = ["@vitest/coverage-v8", "@vitest/coverage-istanbul"];
   console.error(
     providers.some(resolves)
@@ -251,15 +279,23 @@ if (runsPooledPass && options.coverage?.enabled === true) {
 }
 
 // A report file belongs to one Vitest process, so a split run that writes one records each pass
-// as a blob report in a folder of its own and merges them into the caller's reporters and files.
-// Vitest merges into any reporter but the blob reporter.
-const reporters = [options.reporter ?? []].flat();
+// as a blob report in a folder of its own and merges them into the reporters and files the run
+// asks for, on the command line or in its configuration. A run writes one when it has an output
+// file, or a reporter with its own output file, or the html or blob reporter, which write to a
+// default path. Vitest merges into any reporter but the blob reporter. A reporter given inline or
+// by path is not known to write a file; when nothing else asks for one, it runs in each pass.
+const reporters = (resolvedReporting?.reporters ?? []).map((reporter) =>
+  Array.isArray(reporter) ? reporter : [reporter, {}],
+);
 const mergesReports =
-  runsPooledPass &&
-  (options.outputFile !== undefined ||
-    reporters.some((reporter) => reporter === "html" || reporter === "blob"));
+  resolvedReporting !== undefined &&
+  (resolvedReporting.outputFile !== undefined ||
+    reporters.some(
+      ([name, reporterOptions]) =>
+        name === "html" || name === "blob" || reporterOptions?.outputFile !== undefined,
+    ));
 
-if (mergesReports && reporters.includes("blob")) {
+if (mergesReports && reporters.some(([name]) => name === "blob")) {
   console.error(
     `This run executes ${cliTestPath} in its own Vitest process after the others, and Vitest cannot merge two runs into one blob report.\nSelect test files with a filter, or run the CLI suite alone with \`npx vitest run ${cliTestPath}\`.`,
   );
