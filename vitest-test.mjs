@@ -2,10 +2,10 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { createRequire } from "node:module";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { resolvePathSync } from "mlly";
 import { parseCLI, resolveConfig } from "vitest/node";
 
 import { contractDependentSuites } from "./contract-dependent-suites.mjs";
@@ -234,12 +234,13 @@ const runsPooledPass =
 /**
  * The configuration file a pass loads for a `--config` value. Vitest looks the value up as a module
  * from the root first, so a configuration can come from a package, and only then as a path under
- * the root. Vitest's public resolveConfig skips the module lookup, so the wrapper does it here,
- * with Node's resolver.
+ * the root. It looks it up with the resolver it bundles from the mlly package, which reads a
+ * package's exports as an import does, where Node's require would read them for require. Vitest's
+ * public resolveConfig skips the module lookup, so the wrapper makes the same call here.
  */
 function configurationFile(value, root) {
   try {
-    return createRequire(join(root, "package.json")).resolve(value);
+    return resolvePathSync(value, { url: [root] });
   } catch {
     return resolve(root, value);
   }
@@ -251,14 +252,12 @@ function configurationFile(value, root) {
  * passes load, with the caller's options over it. The passes load it with the loader the caller
  * selects with `--configLoader`, which Vitest's public resolveConfig ignores unless it is given
  * again here. When the wrapper still cannot load the configuration, it reads the caller's options
- * alone. A configuration that fails here fails each pass with Vitest's own message too, unless the
- * passes find a file the wrapper does not: Node's resolver reads a package's exports for require,
- * where Vitest reads them for import. A report file such a configuration names then holds the last
- * pass alone. A configuration can read the environment, so the wrapper first sets the variables
- * Vitest sets before it loads one: TEST and VITEST, and NODE_ENV when the caller left it unset.
- * Otherwise Vite would load it with NODE_ENV set to `development`. Loading also sets variables such
- * as MODE in this process, and the passes inherit its environment, so the caller's environment is
- * restored afterwards.
+ * alone; the passes load the same file the same way, so such a configuration fails each pass with
+ * Vitest's own message too. A configuration can read the environment, so the wrapper first sets
+ * the variables Vitest sets before it loads one: TEST and VITEST, and NODE_ENV when the caller left
+ * it unset. Otherwise Vite would load it with NODE_ENV set to `development`. Loading also sets
+ * variables such as MODE in this process, and the passes inherit its environment, so the caller's
+ * environment is restored afterwards.
  */
 async function resolveReporting() {
   const callerEnvironment = { ...process.env };

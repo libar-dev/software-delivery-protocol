@@ -950,9 +950,12 @@ describe("the test wrapper over real Vitest", () => {
 
   it("merges both passes into the report file a configuration names when it loads with the runner loader alone", () => {
     // The configuration imports its reporting settings by a relative path at run time. The default
-    // loader bundles the configuration into node_modules/.vite-temp, where that path finds nothing;
-    // `--configLoader runner` loads the file where it is.
+    // loader bundles the configuration into the nearest node_modules/.vite-temp, where that path
+    // finds nothing; `--configLoader runner` loads the file where it is. Without a node_modules
+    // folder above it, Vite bundles beside the configuration and the path resolves, so the root
+    // has its own.
     const { root, environment } = realVitestRoot();
+    mkdirSync(join(root, "node_modules"));
     writeFileSync(
       join(root, "settings.mjs"),
       'export default { reporters: ["junit"], outputFile: "report.xml" };\n',
@@ -979,37 +982,54 @@ describe("the test wrapper over real Vitest", () => {
     );
   }, 120_000);
 
-  it("merges both passes into the report file a configuration from a package names", () => {
-    // Vitest looks a `--config` value up as a module from the root before it reads it as a path.
-    const { root, environment } = realVitestRoot();
-    rmSync(join(root, "vitest.config.mjs"));
-    const configurationPackage = join(root, "node_modules", "shared-test-config");
-    mkdirSync(configurationPackage, { recursive: true });
-    writeFileSync(
-      join(configurationPackage, "package.json"),
-      '{ "name": "shared-test-config", "version": "1.0.0", "main": "index.mjs" }\n',
-    );
-    writeFileSync(
-      join(configurationPackage, "index.mjs"),
-      'export default { test: { globals: true, include: ["test/**/*.test.ts"], reporters: ["junit"], outputFile: "report.xml" } };\n',
-    );
-    const result = spawnSync(
-      process.execPath,
-      [join(repoRoot, "vitest-test.mjs"), "--config", "shared-test-config"],
-      { cwd: root, encoding: "utf8", env: environment },
-    );
+  it.each([
+    ["its main file", { main: "index.mjs" }],
+    ["its exports for import alone", { exports: { ".": { import: "./index.mjs" } } }],
+    [
+      "its exports for import, where require names another file",
+      { exports: { ".": { require: "./plain.cjs", import: "./index.mjs" } } },
+    ],
+  ])(
+    "merges both passes into the report file a configuration from a package names through %s",
+    (_shape, entry) => {
+      // Vitest looks a `--config` value up as a module from the root before it reads it as a path,
+      // and it resolves a package's exports as an import does. The file required from the package
+      // asks for no report.
+      const { root, environment } = realVitestRoot();
+      rmSync(join(root, "vitest.config.mjs"));
+      const configurationPackage = join(root, "node_modules", "shared-test-config");
+      mkdirSync(configurationPackage, { recursive: true });
+      writeFileSync(
+        join(configurationPackage, "package.json"),
+        `${JSON.stringify({ name: "shared-test-config", version: "1.0.0", ...entry })}\n`,
+      );
+      writeFileSync(
+        join(configurationPackage, "index.mjs"),
+        'export default { test: { globals: true, include: ["test/**/*.test.ts"], reporters: ["junit"], outputFile: "report.xml" } };\n',
+      );
+      writeFileSync(
+        join(configurationPackage, "plain.cjs"),
+        'module.exports = { test: { globals: true, include: ["test/**/*.test.ts"] } };\n',
+      );
+      const result = spawnSync(
+        process.execPath,
+        [join(repoRoot, "vitest-test.mjs"), "--config", "shared-test-config"],
+        { cwd: root, encoding: "utf8", env: environment },
+      );
 
-    expect(result.status, result.stderr).toBe(0);
-    expect(readFileSync(join(root, "ran.log"), "utf8").trim().split("\n").sort()).toEqual([
-      "cli alpha",
-      "cli beta",
-      "other gamma",
-    ]);
-    const report = readFileSync(join(root, "report.xml"), "utf8");
-    expect([...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort()).toEqual(
-      ["cli alpha", "cli beta", "other gamma"],
-    );
-  }, 120_000);
+      expect(result.status, result.stderr).toBe(0);
+      expect(readFileSync(join(root, "ran.log"), "utf8").trim().split("\n").sort()).toEqual([
+        "cli alpha",
+        "cli beta",
+        "other gamma",
+      ]);
+      const report = readFileSync(join(root, "report.xml"), "utf8");
+      expect(
+        [...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort(),
+      ).toEqual(["cli alpha", "cli beta", "other gamma"]);
+    },
+    120_000,
+  );
 
   it.each([
     ['process.env.NODE_ENV === "test"', {}],
