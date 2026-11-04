@@ -293,4 +293,129 @@ describe("one line-ending law across the carriers", () => {
       expect(result.specs[0]?.data.narrative).toBe(narrative);
     }
   });
+
+  // Only the strings the carrier keeps are read. A type in an assertion is erased, so a separator
+  // there is in no title or entry; a value the reader drops never reaches the graph.
+  describe.each(separators)(
+    "a TypeScript separator outside the kept strings (%s)",
+    (_name, sep) => {
+      const typeOnly = `string | ${literal(sep)}`;
+
+      it.each([
+        [
+          "a title assertion",
+          [`title: ("Probe title" as ${typeOnly})`],
+          "behavior",
+          { title: "Probe title" },
+        ],
+        [
+          "a narrative assertion",
+          [`narrative: ("A narrative." as ${typeOnly})`],
+          "behavior",
+          { narrative: "A narrative." },
+        ],
+        [
+          "a rule entry assertion",
+          ["behavior: {", `    rules: ["A rule." as ${typeOnly}],`, "  }"],
+          "behavior",
+          { behavior: { rules: ["A rule."] } },
+        ],
+        [
+          "a Design value assertion",
+          ["design: {", `    shape: ("A shape." as ${typeOnly}),`, "  }"],
+          "behavior",
+          { design: { shape: "A shape." } },
+        ],
+        [
+          "a whole-section assertion",
+          [`intent: ({ outcome: "An outcome." } as { outcome: ${typeOnly} })`],
+          "behavior",
+          { intent: { outcome: "An outcome." } },
+        ],
+        [
+          "a Model terms assertion",
+          [
+            "model: {",
+            `    terms: { Order: "A definition." } as { ${literal(`Order${sep}`)}?: string; Order: string },`,
+            "  }",
+          ],
+          "model",
+          { model: { terms: { Order: "A definition." } } },
+        ],
+      ])("keeps the Spec when %s names one only as a type", (_site, lines, kind, expected) => {
+        const result = reifyTypeScriptCarrier(
+          typeScriptSpec([lines.join("\n")], kind),
+          "probe.sdp.ts",
+        );
+
+        expect(result.findings).toEqual([]);
+        expect(result.specs).toHaveLength(1);
+        expect(result.specs[0]?.data).toMatchObject(expected);
+      });
+
+      it.each(["title", "framing"])("keeps a Pack whose %s names one only as a type", (field) => {
+        const result = reifyTypeScriptCarrier(
+          [
+            'import { pack, packId } from "@libar-dev/software-delivery-protocol";',
+            "",
+            "export const probe = pack({",
+            '  id: packId("pack:probe.lines"),',
+            "  specs: [],",
+            `  ${field}: ("Pack text" as ${typeOnly}),`,
+            "});",
+            "",
+          ].join("\n"),
+          "probe.sdp.ts",
+        );
+
+        expect(result.findings).toEqual([]);
+        expect(result.packs[0]?.data).toMatchObject({ [field]: "Pack text" });
+      });
+
+      it("still refuses one inside the asserted value", () => {
+        const result = reifyTypeScriptCarrier(
+          typeScriptSpec([`title: (${literal(`Probe${sep}title`)} as string)`]),
+          "probe.sdp.ts",
+        );
+
+        expect(result.specs).toEqual([]);
+        expect(result.findings).toEqual([
+          expect.objectContaining({
+            validatorId: "extract/non-static-envelope",
+            line: 8,
+            path: "title",
+          }),
+        ]);
+      });
+
+      it.each([
+        [
+          "a repeated Design key",
+          ["design: {", '    shape: "A shape.",', `    shape: ${literal(`Hidden${sep}`)},`, "  }"],
+          { shape: "A shape." },
+        ],
+        [
+          "a non-static Design value",
+          ["design: {", `    shape: String(${literal(sep)}),`, "  }"],
+          {},
+        ],
+        [
+          "a Design value beside a non-static sibling in its array",
+          ["design: {", `    shape: [${literal(`Hidden${sep}`)}, String("x")],`, "  }"],
+          {},
+        ],
+      ])("drops %s alone, with its own warning", (_site, lines, design) => {
+        const result = reifyTypeScriptCarrier(typeScriptSpec([lines.join("\n")]), "probe.sdp.ts");
+
+        expect(result.specs).toHaveLength(1);
+        expect(result.specs[0]?.data.design).toEqual(design);
+        expect(result.findings).toEqual([
+          expect.objectContaining({
+            validatorId: "extract/non-static-section",
+            severity: "warning",
+          }),
+        ]);
+      });
+    },
+  );
 });

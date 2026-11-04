@@ -394,35 +394,81 @@ export function reifyStaticString(node: Node, path: string): StaticResult {
  * A lone CR, U+2028 or U+2029 ends a line for some renderers, while the Markdown and Gherkin
  * carriers end a line only at LF or CRLF, so a title, prose line or entry holding one could show a
  * line the carrier does not state. A TypeScript string has no physical lines of its own, so every
- * string literal under a title, narrative, framing or section is read whole: LF and CRLF stay
- * lawful, and anything else refuses the Spec or Pack the way a relation reason that is not one
- * line does.
+ * string a title, narrative, framing or section keeps is read whole: LF and CRLF stay lawful, and
+ * anything else refuses the Spec or Pack the way a relation reason that is not one line does.
+ *
+ * Only what the carrier keeps is read. The walk follows the reified value beside its syntax, as
+ * `sanitizeSectionValue` does, so a type in an assertion, which is erased, and a value dropped as
+ * non-static, repeated or unrecognized, which never reaches the graph, refuse nothing.
  */
 const UNSUPPORTED_LINE_BREAK = /\r(?!\n)|[\u2028\u2029]/u;
 
+function lineBreakLiterals(node: Node, value: unknown): Node[] {
+  const unwrapped = unwrapTransparent(node);
+
+  if (typeof value === "string") {
+    return UNSUPPORTED_LINE_BREAK.test(value) ? [unwrapped] : [];
+  }
+
+  if (Array.isArray(value) && Node.isArrayLiteralExpression(unwrapped)) {
+    return unwrapped
+      .getElements()
+      .flatMap((element, index) => lineBreakLiterals(element, value[index]));
+  }
+
+  if (!isUnknownRecord(value) || !Node.isObjectLiteralExpression(unwrapped)) {
+    return [];
+  }
+
+  // The first plain assignment of a name is the one kept; a repeat drops.
+  const literals: Node[] = [];
+  const seenNames = new Set<string>();
+
+  for (const property of unwrapped.getProperties()) {
+    if (!Node.isPropertyAssignment(property)) {
+      continue;
+    }
+
+    const name = readPropertyName(property);
+
+    if (name === undefined || seenNames.has(name) || !Object.hasOwn(value, name)) {
+      continue;
+    }
+
+    seenNames.add(name);
+
+    if (UNSUPPORTED_LINE_BREAK.test(name)) {
+      literals.push(property.getNameNode());
+    }
+
+    const initializer = property.getInitializer();
+
+    if (initializer !== undefined) {
+      literals.push(...lineBreakLiterals(initializer, value[name]));
+    }
+  }
+
+  return literals;
+}
+
 function lineBreakRefusals(
   node: Node,
+  value: unknown,
   path: string,
   file: string,
   subjectId: string | undefined,
 ): Finding[] {
-  return [node, ...node.getDescendants()]
-    .filter(
-      (literal) =>
-        (Node.isStringLiteral(literal) || Node.isNoSubstitutionTemplateLiteral(literal)) &&
-        UNSUPPORTED_LINE_BREAK.test(literal.getLiteralValue()),
-    )
-    .map((literal) =>
-      createExtractFinding(
-        extractFindingIds.nonStaticEnvelope,
-        "error",
-        `property "${path}" holds a string with a lone CR, U+2028 or U+2029; a title, prose line or entry ends a line only at LF or CRLF`,
-        file,
-        nodeLine(literal),
-        subjectId,
-        path,
-      ),
-    );
+  return lineBreakLiterals(node, value).map((literal) =>
+    createExtractFinding(
+      extractFindingIds.nonStaticEnvelope,
+      "error",
+      `property "${path}" holds a string with a lone CR, U+2028 or U+2029; a title, prose line or entry ends a line only at LF or CRLF`,
+      file,
+      nodeLine(literal),
+      subjectId,
+      path,
+    ),
+  );
 }
 
 export type IdReification =
@@ -1588,6 +1634,7 @@ function reifySpecCall(
   const authoredNames = new Set<string>();
   let sawOpaqueEntry = false;
   let envelopeOk = true;
+  const lineBearing: [name: string, initializer: Node][] = [];
 
   const failEnvelope = (line: number, message: string, path?: string): void => {
     findings.push(
@@ -1644,11 +1691,7 @@ function reifySpecCall(
     }
 
     if (name === "title" || name === "narrative" || SPEC_SECTION_NAME_SET.has(name)) {
-      const refusals = lineBreakRefusals(initializer, name, file, subjectId);
-      if (refusals.length > 0) {
-        findings.push(...refusals);
-        envelopeOk = false;
-      }
+      lineBearing.push([name, initializer]);
     }
 
     if (name === "id") {
@@ -1859,6 +1902,16 @@ function reifySpecCall(
     );
   }
 
+  // Read once the loop has reified every field, so only what the Spec keeps is read.
+  for (const [name, initializer] of lineBearing) {
+    const refusals = lineBreakRefusals(initializer, data[name], name, file, subjectId);
+
+    if (refusals.length > 0) {
+      findings.push(...refusals);
+      envelopeOk = false;
+    }
+  }
+
   // Absence is judged on authored names, never on reified values: every genuinely missing field
   // is reported in one pass, and a field that was authored but failed to reify already carries
   // its own finding. An opaque entry (spread, accessor, computed name) could carry any field, so
@@ -2061,12 +2114,6 @@ function reifyPackCall(
     }
 
     if (name === "title" || name === "framing") {
-      const refusals = lineBreakRefusals(initializer, name, file, subjectId);
-      if (refusals.length > 0) {
-        findings.push(...refusals);
-        envelopeOk = false;
-        continue;
-      }
       const result = reifyStaticString(initializer, name);
 
       if (!result.ok) {
@@ -2083,6 +2130,14 @@ function reifyPackCall(
           subjectId,
           findings,
         );
+        continue;
+      }
+
+      const refusals = lineBreakRefusals(initializer, result.value, name, file, subjectId);
+
+      if (refusals.length > 0) {
+        findings.push(...refusals);
+        envelopeOk = false;
         continue;
       }
 
