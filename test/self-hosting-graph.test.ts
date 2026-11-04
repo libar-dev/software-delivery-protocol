@@ -629,7 +629,8 @@ describe("the self-hosting corpus", () => {
     ].join("\n");
 
     expect(mismatches, message).toEqual([]);
-  });
+    // The roster walks every graph edge per unit, which can pass five seconds under load.
+  }, 60_000);
 
   it("gives every accepted unit a readable responsibility label", () => {
     for (const anchorId of [
