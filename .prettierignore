@@ -39,3 +39,7 @@ generated/
 
 # Refusal-parity carriers are intentionally malformed inputs read as text by the reifiers.
 test/fixtures/import/parity/
+
+# Agent worktrees are whole checkouts of their own; a person's working notes are not product files.
+.claude/worktrees/
+*.tmp.md
