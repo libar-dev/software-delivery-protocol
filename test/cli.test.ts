@@ -8,6 +8,8 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -869,6 +871,41 @@ export const probe = spec({
       expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
     } finally {
       removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("refuses a swapped registrar ancestor before creating outside parent directories", () => {
+    const root = materializeExampleCopy();
+    const outside = mkdtempSync(join(tmpdir(), "sdp-registrar-outside-"));
+    const ancestor = join(root, "test");
+    const native = realpathSync.native;
+    let visits = 0;
+    let swapped = false;
+    const spy = vi.spyOn(realpathSync, "native").mockImplementation((path) => {
+      const result = native(path);
+      if (path === ancestor && ++visits === 2) {
+        renameSync(ancestor, `${ancestor}-original`);
+        symlinkSync(outside, ancestor, "dir");
+        swapped = true;
+      }
+      return result;
+    });
+    try {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root], capture.output, {
+        generateContracts: (graph) => ({
+          ...generateContracts(graph),
+          registrars: new Map([["test/a/b/c/probe.test.generated.ts", "// registrar\n"]]),
+        }),
+      });
+      expect(swapped).toBe(true);
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("escapes the extraction root");
+      expect(readdirSync(outside)).toEqual([]);
+    } finally {
+      spy.mockRestore();
+      rmSync(root, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
     }
   });
 
