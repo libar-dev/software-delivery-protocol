@@ -2579,7 +2579,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "test:protocol.delivery-session-on-ramp",
     nodeType: "Anchor",
-    label: "skill-asset checks verify advisory delivery-session routing",
+    label: "skill-asset checks verify the advisory delivery-session skill",
     file: "test/skills.test.ts",
     constant: "deliverySessionOnRampTestAnchor",
     site: 'describe("Protocol skill assets"',

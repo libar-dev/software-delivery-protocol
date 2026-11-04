@@ -1150,28 +1150,28 @@ export const consumersSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/consumers/delivery-session-on-ramp.sdp.md",
-    title: "Delivery sessions route work from current graph state",
+    title: "Delivery sessions do the requested work on current graph evidence",
     narrative:
       "A handoff names the Specs that carry the work, so the next session re-measures them from the graph instead of inheriting register state or a verification verdict from the handoff.",
     sections: {
       intent: {
         outcome:
-          "Let an agent enter capture, design, implementation, review, or close work from current graph evidence without inventing workflow state or gates.",
+          "Let an agent do the requested delivery work (capture, design, implement, fix, refactor, test, review, close, hand off) on current graph evidence, without inventing workflow state or gates.",
       },
       behavior: {
         rules: [
-          "Work shapes are advisory entries over the same current graph; they are neither phases nor a required sequence, and a session may enter or revisit any shape.",
-          "Capture or refinement uses concept search, the lower ladder, and promotion preflight; design uses promotion preflight and readiness divergence. The listed recipes are starting points, not exhaustive recipe sets.",
+          "Work shapes are advisory entries over one current graph, never phases or a required sequence, and a session may enter or revisit any shape; no shape or preflight authorizes, blocks, scopes or advances delivery work.",
+          "The requested task selects the work shape. The roadmap's need and a Spec's promotion preflight are evidence about unfinished realization, never permission: a fix, a refactor, an added test or a change to a built Spec is ordinary work. The skill names the recipes a shape starts from and points into the catalog's index for the rest.",
           "The skill teaches an advisory Pack design loop: read the design diff from the last pass, compose a context bundle within a stated budget, narrow by perspective when needed, and return a change proposal for a base check before an agent applies it.",
-          "Implementation uses the build backlog and the target Spec context; review uses the Pack backbone and warn-level signals, or the target Spec context and warn-level signals when no Pack exists. The listed recipes are starting points, not exhaustive recipe sets.",
-          "The skill teaches a Spec proposal report as a numbered list ordered by severity, with each item naming one entry address or Spec section, stating the gap in one sentence, and proposing exact text with the address it replaces or follows. Findings against code or other files stay review comments on their lines; a review proposing no Spec edit has no proposal.",
+          "Findings against Specs leave as one change proposal in the shape `spec:consumers.intent-composition.proposal` states, most severe first, with its memo; findings against code or other files stay review comments on their lines, and a review proposing no Spec edit has no proposal.",
+          "The skill carries the one procedure for applying a received change proposal: it checks the proposal against the graph at its base and routes each change from that check, as `spec:consumers.intent-composition#rule.changedScope` states.",
           "Close uses the drift alarm and changed-file blast radius; slimming is optional and preserves durable law and one prose owner. For a Design entry, the skill teaches the distillation boundary stated by `spec:model.enrichment-lifecycle`, compares the entry with its bound artifact before removal, and keeps every explanation of why.",
-          "A handoff names targets, changed files, current readiness, findings or open questions, and commands or evidence locations to re-run; it never carries an inherited verification verdict.",
+          "A handoff, or a brief to another agent, names its targets, changed files, current readiness, findings or open questions, and the exact recipe files or bodies, with their parameters, that scope the work and re-measure it; it never carries an inherited verification verdict.",
           "An arc-scale handoff names the Spec ids that carry the arc's standing refusals, guarantees and holds in the homes ruled by `spec:decisions.planning-truths-placement`: tradeoff refusals in decision Specs, already-homed guarantees on their carrying Specs, and deferrals or holds in their blocking open questions.",
           "The skill names tripwires that ask a session to reconsider its chosen work shape; they are guidance and create no required sequence or authorization.",
-          "Every preflight informs human or agent judgment and never authorizes, blocks, scopes, or advances delivery work.",
         ],
         ruleKeys: {
+          receiveProposal: "rules[4]",
           arcHandoff: "rules[7]",
         },
       },
@@ -1216,11 +1216,10 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "`spec:consumers.delivery-session-on-ramp` owns per-session routing from graph state; this Spec owns how the next body of work's intent enters the corpus and is read back.",
-          "Planning remains advisory reading of the graph; no recipe, preflight, or plan document authorizes, blocks, or sequences delivery work.",
+          "`spec:consumers.delivery-session-on-ramp` owns how a session's requested task meets current graph evidence; this Spec owns how the next body of work's intent enters the corpus and is read back.",
+          "Planning remains advisory reading of the graph: heuristics for choosing work live as behavior rules here or as recipes, and no recipe, heuristic, preflight or plan document authorizes, blocks or sequences delivery work.",
           "Each planning truth lives in the home `spec:decisions.planning-truths-placement` rules for it; a deferred Spec carries its re-entry trigger in the `trigger:` field of its blocking open question, plus `dependsOn` when another Spec must hold first, as `spec:model.open-question-fields` states.",
           "A body of work is grouped in a Pack named for the capability it designs, never for a plan number, listing its Specs in reading order; membership confers no readiness, delivery fact or gate, and the Pack remains a review aggregate after the work ends.",
-          "Heuristics for choosing work remain advisory behavior rules here or recipes; they authorize, block and sequence nothing.",
           "Session law re-measures from the graph first; a session never inherits readiness, backlog, or placement state from a prior plan, register, or summary.",
           "A corpus that keeps plan documents lets each point to its Packs and carrying Specs for intended truth and derived state; a plan document confers nothing, and plan numbering, recorded work order and staleness never become graph structure or workflow authority. Advisory priority over the next work lives in a roadmap Pack.",
         ],
@@ -1306,7 +1305,7 @@ export const consumersSpecs = [
         rules: [
           "Every surface that composes scoped intent, including the Studio's composing panel, hands off on the one change-proposal contract, `spec:consumers.intent-composition.proposal`.",
           "A composing surface writes no source.",
-          "A composed proposal is applied after its proposal check: the applying caller sends a change whose scope changed since the base to a person instead of applying it and applies every other change as an ordinary edit, so one changed scope never holds back the whole proposal; the edit lands only from a worktree on which `sdp validate` reports no error, and the conformance and honesty checks stay the only gate.",
+          "A composed proposal is applied after its proposal check: the applying caller sends a change whose scope changed since the base to a person instead of applying it and applies every other change as an ordinary edit, so one changed scope never holds back the whole proposal; the edit lands only from a worktree whose validation report, read through `sdp q`'s `report` or `sdp validate`, holds no error, and the conformance and honesty checks stay the only gate.",
         ],
         ruleKeys: {
           changedScope: "rules[2]",

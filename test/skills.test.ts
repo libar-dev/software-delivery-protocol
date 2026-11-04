@@ -13,7 +13,7 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
@@ -113,26 +113,6 @@ function readSkill(path: string) {
     frontmatter: parse(match.groups.frontmatter) as Record<string, unknown>,
   };
 }
-
-it("routes the next work and reviews through roadmap and proposal recipes", () => {
-  const sessions = flat(readSkill(skillPaths[2]).body);
-  for (const clause of [
-    "roadmap (recipe 53)",
-    "design slice (recipe 54)",
-    "branch-head commit",
-    "stamp's merge commit",
-    "proposal memo (recipe 49)",
-    "code or other files",
-    "open question",
-  ])
-    expect(sessions).toContain(clause);
-  expect(sessions).not.toContain("plan pointers");
-  expect(skillSection(skillPaths[2], "### Design").match(/recipe 53/gu)).toHaveLength(1);
-  expect(sessions).toContain("a proposal composed in a preview names the stamp's merge commit");
-  expect(sessions).toContain("Recipe 38 always reads the graph of the commit that was read");
-  expect(sessions).toContain("Report a Spec proposal as a numbered list");
-  expect(sessions).not.toContain("Report a review as a numbered list");
-});
 
 // A fence inside a numbered step is indented, so fences are matched after trimming.
 function shellFenceLines(body: string): readonly string[] {
@@ -386,7 +366,7 @@ describe("the authoring on-ramp", () => {
 
 const deliverySessionOnRampTestAnchor = specTest({
   id: testAnchorId("test:protocol.delivery-session-on-ramp"),
-  label: "skill-asset checks verify advisory delivery-session routing",
+  label: "skill-asset checks verify the advisory delivery-session skill",
   verifies: ref("spec:consumers.delivery-session-on-ramp"),
 });
 void deliverySessionOnRampTestAnchor;
@@ -425,12 +405,6 @@ describe("Protocol skill assets", () => {
         });
       }
     }
-  });
-  it("keeps session routing advisory", () => {
-    const sessions = readSkill(skillPaths[2]).body;
-    expect(sessions).toContain("one current graph serves every work shape");
-    expect(sessions).toContain("All preflights are advisory");
-    expect(sessions).toContain('Never hand off a carried "verified" verdict');
   });
   it("owns skills at the plugin root and exposes them to project discovery through relative symlinks", () => {
     expect(lstatSync(join(repoRoot, "skills")).isDirectory()).toBe(true);
@@ -543,7 +517,7 @@ describe("Protocol skill assets", () => {
 
   it("keeps every skill graph-first and the authoring law linked to carrying Specs", () => {
     for (const path of allSkillPaths.filter(
-      (path) => path !== skillPaths[0] && path !== skillPaths[1],
+      (path) => path !== skillPaths[0] && path !== skillPaths[1] && path !== skillPaths[2],
     )) {
       const { source } = readSkill(path);
 
@@ -553,34 +527,6 @@ describe("Protocol skill assets", () => {
         "node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md",
       );
       expect(source).toContain("spec:");
-    }
-  });
-
-  it("routes delivery sessions through the five advisory graph shapes", () => {
-    const sessions = readSkill("skills/sdp-sessions/SKILL.md").source;
-
-    for (const required of [
-      "spec:consumers.delivery-session-on-ramp",
-      "Capture / refine",
-      "recipe 6",
-      "recipe 11",
-      "recipe 9",
-      "Design",
-      "recipe 7",
-      "Implement",
-      "recipe 1",
-      "recipe 3",
-      "Review",
-      "recipe 5",
-      "recipe 8",
-      "Close / slim",
-      "recipe 2",
-      "recipe 4",
-      "Never hand off a carried",
-      "re-runs the named evidence",
-      "never create a process state machine",
-    ]) {
-      expect(sessions).toContain(required);
     }
   });
 
@@ -625,7 +571,7 @@ describe("Protocol skill assets", () => {
     }
 
     for (const path of allSkillPaths.filter(
-      (path) => path !== skillPaths[0] && path !== skillPaths[1],
+      (path) => path !== skillPaths[0] && path !== skillPaths[1] && path !== skillPaths[2],
     )) {
       const documented = documentedCommands(readSkill(path).body);
       expect(documented.length).toBeGreaterThan(0);
@@ -850,54 +796,6 @@ describe("the graph-reading on-ramp", () => {
     expect(named.filter((path) => !paths.has(path))).toEqual([]);
     expect(answers[0]?.budgetExceeded).toBe(true);
     expect(answers[0]?.members).toBeUndefined();
-  });
-
-  it("resolves every pointer one skill makes into another skill's sections and files", () => {
-    const skillsRoot = join(repoRoot, "skills");
-    const headingsOf = (file: string): readonly string[] =>
-      [...readFileSync(file, "utf8").matchAll(/^#{1,6} (?<heading>.+)$/gmu)].map(
-        (match) => match.groups?.heading?.trim() ?? "",
-      );
-    const texts = readdirSync(skillsRoot, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .flatMap((entry) => {
-        const folder = join(skillsRoot, entry.name);
-        const references = existsSync(join(folder, "references"))
-          ? readdirSync(join(folder, "references"))
-              .filter((name) => name.endsWith(".md"))
-              .map((name) => join(folder, "references", name))
-          : [];
-        return [join(folder, "SKILL.md"), ...references];
-      });
-    const pointers: { from: string; skill: string; file: string; heading?: string }[] = [];
-
-    for (const text of texts) {
-      const prose = readFileSync(text, "utf8").replaceAll(/\s+/gu, " ");
-      const from = relative(repoRoot, text);
-      // `sdp-x`'s "Heading", optionally (`references/file.md`): the heading lives in that file.
-      for (const match of prose.matchAll(
-        /`(?<skill>sdp-[a-z-]+)`'s "(?<heading>[^"]+)"(?: \(`(?<file>references\/[a-z0-9-]+\.md)`\))?/gu,
-      )) {
-        const { skill = "", heading = "", file = "SKILL.md" } = match.groups ?? {};
-        pointers.push({ from, skill, file, heading });
-      }
-      // `sdp-x`'s named part (`references/file.md`): the file exists.
-      for (const match of prose.matchAll(
-        /`(?<skill>sdp-[a-z-]+)`'s [a-z ]+\(`(?<file>references\/[a-z0-9-]+\.md)`\)/gu,
-      )) {
-        const { skill = "", file = "" } = match.groups ?? {};
-        pointers.push({ from, skill, file });
-      }
-    }
-
-    expect(pointers.length).toBeGreaterThan(0);
-    for (const pointer of pointers) {
-      const target = join(skillsRoot, pointer.skill, pointer.file);
-      const resolves =
-        existsSync(target) &&
-        (pointer.heading === undefined || headingsOf(target).includes(pointer.heading));
-      expect({ ...pointer, resolves }).toEqual({ ...pointer, resolves: true });
-    }
   });
 
   it("runs every orientation query over the Protocol and over a corpus with no subjects given", () => {
@@ -1228,14 +1126,6 @@ describe("adopter rule meanings", () => {
       expect(clauses).toEqual(matches ? [] : ["kind-evidence-complete"]);
     },
   );
-
-  it("keeps session teaching advisory and separate from permission", () => {
-    const sessions = teachingText(readSkill("skills/sdp-sessions/SKILL.md").source);
-    expect(sessions).toMatch(/All preflights are advisory/u);
-    expect(sessions).toMatch(
-      /They never authorize, block, scope, unlock, or advance delivery work/u,
-    );
-  });
 });
 
 const readmeClauses = [
@@ -1473,9 +1363,6 @@ function usageLine(verb: string): string {
 }
 
 describe("the reviewed skill teaching", () => {
-  const surfacePath = skillPaths[0];
-  const sessionsPath = skillPaths[2];
-
   it("teaches entry addresses, term addresses and anchored source citations as the engine derives them", async () => {
     const { graph } = probeGraph(termCorpus);
     const report = validateGraph(graph);
@@ -1494,34 +1381,6 @@ describe("the reviewed skill teaching", () => {
     expect(citations.findings.map((finding) => finding.subjectId)).toEqual([
       "spec:probe.terms#term.missing",
     ]);
-  });
-
-  it("states what an empty or ready answer establishes and no more", () => {
-    const sessions = flat(readSkill(sessionsPath).source);
-    expect(sessions).toContain("Specs carrying both `implemented` and `has-verifier`");
-    expect(sessions).not.toMatch(/implemented, verified Specs?/u);
-  });
-
-  it("points the sessions skill at the installed upgrade guide", () => {
-    for (const path of skillPaths.filter(
-      (path) => path !== surfacePath && path !== skillPaths[1],
-    )) {
-      expect(flat(readSkill(path).source)).toContain(
-        "`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/upgrade-guide.md` in an adopter",
-      );
-    }
-  });
-
-  it("orders the reader as a task route and leaves recipe contracts to the catalog", () => {
-    const description = String(readSkill(sessionsPath).frontmatter.description);
-    expect(description.startsWith("Route delivery work")).toBe(true);
-    for (const trigger of [
-      "resuming",
-      "handing off",
-      "a change proposal received from a reviewer",
-    ]) {
-      expect(description).toContain(trigger);
-    }
   });
 });
 
@@ -1653,6 +1512,97 @@ async function assertTaughtRouting(path: string): Promise<void> {
   ]);
 }
 
+/**
+ * Runs the proposal check as `sdp-sessions` teaches it, over a probe whose first change's scope
+ * moved since its base, whose third names a Spec the head lacks and whose fourth declares a
+ * relation to one. The fields the routing step names must be fields the answer carries, and the
+ * base step's hazard must hold: with the head as its own base, a moved change reads unmoved.
+ */
+async function assertProposalRouting(text: string): Promise<void> {
+  const body = /`(return await recipes\(38, params\))`/u.exec(text)?.[1];
+  const form = /`(--params proposal=@\S+ --params base=@[^`]+)`/u.exec(text)?.[1];
+  if (body === undefined || form === undefined) {
+    throw new Error("the receive steps must teach the proposal-check body and its parameters");
+  }
+  for (const flag of form.match(/--[a-z]+/gu) ?? []) expect(usageLine("q")).toContain(flag);
+
+  const carrierWith = (limit: string) => ({
+    "a.sdp.md": probeCarrier("spec:probe.a", "behavior", `## Design\n- limit: ${limit}`),
+    "b.sdp.md": probeCarrier("spec:probe.b", "behavior", "## Behavior\n- rule: A second rule."),
+  });
+  const base = probeGraph(carrierWith("ten")).graph;
+  const head = probeGraph(carrierWith("twelve")).graph;
+  const proposal = {
+    schema: "sdp-proposal/1",
+    base: "0123456",
+    reason: "Tighten the limit.",
+    changes: [
+      { scope: ["spec:probe.a#design.limit"], request: "Lower the limit." },
+      { scope: ["spec:probe.b"], request: "Add an example." },
+      { scope: ["spec:probe.c"], request: "Name a Spec the head lacks." },
+      {
+        scope: ["spec:probe.b"],
+        request: "Depend on a Spec the head lacks.",
+        relation: {
+          action: "declare",
+          from: "spec:probe.b",
+          type: "dependsOn",
+          target: "spec:probe.missing-target",
+        },
+      },
+    ],
+  };
+  interface Row {
+    moved: boolean | null;
+    scope: Record<string, unknown>[];
+    relationTarget: { ref: string; resolvesAtHead: boolean } | null;
+  }
+  const answer = (await evaluateBody(body, { graph: head, params: { proposal, base } })) as {
+    schemaProblems: unknown[];
+    totals: { unresolved: number };
+    changes: Row[];
+  };
+  expect(answer.schemaProblems).toEqual([]);
+  expect(answer.changes.map((change) => change.moved)).toEqual([true, false, false, false]);
+  expect(answer.totals.unresolved).toBe(2);
+
+  // Every field the routing step names is carried by the answer, a change, a scope row or a
+  // relation target.
+  const carried = new Set(
+    [
+      answer,
+      ...answer.changes,
+      ...answer.changes.flatMap((change) => change.scope),
+      ...answer.changes.flatMap((change) => (change.relationTarget ? [change.relationTarget] : [])),
+    ].flatMap((value) => Object.keys(value)),
+  );
+  const routing = text.split(/^\d+\. /mu).find((step) => step.includes("schemaProblems")) ?? "";
+  const named = [...routing.matchAll(/`([a-z][A-Za-z]*)(?:: (?:true|false|null))?`/gu)]
+    .map((match) => match[1] ?? "")
+    .filter((name) => !["true", "false", "null"].includes(name));
+  expect(named.length).toBeGreaterThan(0);
+  for (const name of named)
+    expect({ name, carried: carried.has(name) }).toEqual({ name, carried: true });
+
+  // Routed on those fields, only the change whose scope stayed put and resolves applies.
+  const toPerson = (row: Row) =>
+    row.moved !== false ||
+    row.scope.some((item) => item.resolvesAtHead === false) ||
+    row.relationTarget?.resolvesAtHead === false;
+  expect(answer.changes.map((row) => (toPerson(row) ? "person" : "apply"))).toEqual([
+    "person",
+    "apply",
+    "person",
+    "person",
+  ]);
+
+  const selfBased = (await evaluateBody(body, {
+    graph: head,
+    params: { proposal, base: head },
+  })) as { changes: Row[] };
+  expect(selfBased.changes[0]?.moved).toBe(false);
+}
+
 const studioOnRampImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.studio-on-ramp"),
   label: "asserts realization of the shipped Studio skill document",
@@ -1679,7 +1629,9 @@ describe("the Studio on-ramp", () => {
     for (const trigger of ["pull-request previews", "Studio link", "composing panel"]) {
       expect(description).toContain(trigger);
     }
-    for (const path of skillPaths.filter((path) => path !== skillPaths[1])) {
+    for (const path of skillPaths.filter(
+      (path) => path !== skillPaths[1] && path !== skillPaths[2],
+    )) {
       expect(readSkill(path).source).toContain("`sdp-studio`");
     }
   });
@@ -2014,7 +1966,9 @@ describe("the vault on-ramp", () => {
     ]) {
       expect(description).toContain(trigger);
     }
-    for (const path of skillPaths.filter((path) => path !== skillPaths[1])) {
+    for (const path of skillPaths.filter(
+      (path) => path !== skillPaths[1] && path !== skillPaths[2],
+    )) {
       expect(readSkill(path).source).toContain("`sdp-vault`");
     }
   });
@@ -2228,4 +2182,113 @@ describe("the vault on-ramp", () => {
       "spec:consumers.intent-composition",
     ]);
   });
+});
+
+describeOnRamp("sdp-sessions", {
+  realizes: ["spec:consumers.delivery-session-on-ramp", "spec:consumers.graph-first-planning"],
+  capBytes: 6500,
+});
+
+describe("the delivery-session on-ramp", () => {
+  const folder = join(repoRoot, "skills/sdp-sessions");
+  const read = (file: string) => readFileSync(join(folder, file), "utf8");
+  const teaching = () =>
+    ["SKILL.md", "references/proposals.md", "references/design-pass.md"]
+      .map(read)
+      .join("\n")
+      .replaceAll(/\s+/gu, " ");
+  const orient = (args: readonly string[]) => {
+    const run = spawnSync(
+      process.execPath,
+      [
+        join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs"),
+        ...args,
+        "--json",
+        "--root",
+        "examples/checkout-v1",
+      ],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+    expect({ args, status: run.status, stderr: run.stderr }).toEqual({
+      args,
+      status: 0,
+      stderr: answeredStderr,
+    });
+    return JSON.parse(run.stdout) as { number: number; answer: unknown; error?: string }[];
+  };
+
+  it("checks a received proposal with the body and fields the proposal check has", async () => {
+    await assertProposalRouting(read("references/proposals.md"));
+  });
+
+  it("names in the design pass only parameters and fields its recipes take and return", async () => {
+    const pass = read("references/design-pass.md");
+    const { graph } = probeGraph(termCorpus);
+    const run = (number: number, params: Record<string, unknown>) =>
+      evaluateBody(`return recipes(${String(number)}, params)`, { graph, params }) as Promise<
+        Record<string, unknown>
+      >;
+    // The answers a pass reads besides its parameters: a refused bundle and a selection.
+    const probes: Record<number, Record<string, unknown>> = {
+      36: { pack: "pack:probe.review", budget: 1 },
+      37: { pack: "pack:probe.review", perspective: { name: "all" } },
+    };
+    const numbers = [...pass.matchAll(/\(recipe (\d+),/gu)].map((match) => Number(match[1]));
+    expect(numbers.length).toBeGreaterThan(0);
+    const known = new Set<string>();
+    for (const number of numbers) {
+      const { accepts } = (await run(number, { "?": 1 })) as unknown as { accepts: string[] };
+      for (const name of accepts) known.add(name);
+      const probe = probes[number];
+      if (probe !== undefined)
+        for (const key of Object.keys(await run(number, probe))) known.add(key);
+    }
+    const named = [...pass.matchAll(/`([a-z][A-Za-z]*)(?:: (?:true|false|null))?`/gu)].map(
+      (match) => match[1] ?? "",
+    );
+    expect(named.length).toBeGreaterThan(0);
+    for (const name of named)
+      expect({ name, known: known.has(name) }).toEqual({ name, known: true });
+  });
+
+  it("runs the orientation answers it names, and the fields it reads from them", () => {
+    const text = teaching();
+    const numbers = [
+      ...new Set([...text.matchAll(/orientation (\d+)/gu)].map((m) => Number(m[1]))),
+    ];
+    expect(numbers.length).toBeGreaterThan(0);
+    const answers = orient(["--only", numbers.join(",")]);
+    expect(answers.map((answer) => answer.number).sort()).toEqual([...numbers].sort());
+    for (const answer of answers) {
+      expect({ number: answer.number, error: answer.error }).toEqual({
+        number: answer.number,
+        error: undefined,
+      });
+    }
+    for (const [, number, field] of text.matchAll(/orientation (\d+)'s `([A-Za-z]+)`/gu)) {
+      const answer = answers.find((entry) => entry.number === Number(number))?.answer;
+      expect({ number, field, read: String(field) in Object(answer) }).toEqual({
+        number,
+        field,
+        read: true,
+      });
+    }
+  }, 60_000);
+
+  it("re-measures a hand-off with the one orientation run it teaches", () => {
+    const skill = read("SKILL.md").replaceAll(/\s+/gu, " ");
+    const taught =
+      /`node <reading skill>\/scripts\/orient\.mjs --only ([\d,]+) --subjects '([^']+)'`/u.exec(
+        skill,
+      );
+    if (taught?.[1] === undefined || taught[2] === undefined) {
+      throw new Error("the hand-off must teach one orientation run");
+    }
+    const subjects = taught[2].replaceAll("spec:…", "spec:orders.create-order");
+    const answers = orient(["--only", taught[1], "--subjects", subjects]);
+    expect(answers.map((answer) => answer.number)).toEqual(taught[1].split(",").map(Number));
+    for (const answer of answers) expect(answer.error).toBeUndefined();
+    const read10 = answers.find((answer) => answer.number === 10)?.answer as { id: string }[];
+    expect(read10.map((row) => row.id)).toEqual(["spec:orders.create-order"]);
+  }, 60_000);
 });

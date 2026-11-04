@@ -4052,8 +4052,8 @@ the parameters is a problem with no change rows.
 
 The rows carry facts about declared intent, with anchored changes excluded from scope movement.
 They confer no status or approval. A caller routes a moved change to a person and applies other
-changes through ordinary source edits on a worktree checked by `sdp validate`. This recipe does
-neither step. The check's law is `spec:consumers.intent-composition.proposal`; routing and applying
+changes through ordinary source edits on a worktree whose validation report, read through `sdp q`'s
+`report` or `sdp validate`, holds no error. This recipe does neither step. The check's law is `spec:consumers.intent-composition.proposal`; routing and applying
 are `spec:consumers.intent-composition`.
 
 ## 39. Slimming candidates

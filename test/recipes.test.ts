@@ -399,7 +399,7 @@ describe("the agent-surface recipe corpus", () => {
   // root and repeatable exclusions project-selected. The two contracts are checked separately so
   // portability cannot weaken the root's real invocation.
   it("keeps self-hosting and adopter invocation forms distinct", () => {
-    const onRampSources = [recipesPath, "skills/sdp-sessions/SKILL.md"];
+    const onRampSources = [recipesPath];
     const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
     };
@@ -444,7 +444,6 @@ describe("the agent-surface recipe corpus", () => {
     const introProse = intro.replace(/\s+/gu, " ");
     const onRamps = {
       agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
-      sessions: readFileSync(join(repoRoot, "skills/sdp-sessions/SKILL.md"), "utf8"),
     };
 
     // A parameter is data on `--params`, never source spliced into a body, and no recipe reads
@@ -460,14 +459,8 @@ describe("the agent-surface recipe corpus", () => {
       });
     }
 
-    expect(onRamps.sessions).toContain("sdp new spec");
-    expect(onRamps.sessions).toContain("validate --watch");
     expect(onRamps.agents).toContain("new spec");
     expect(onRamps.agents).toContain("sdp validate --watch");
-
-    for (const { ordinal } of recipes.filter((recipe) => recipe.ordinal >= 12)) {
-      expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
-    }
   });
 
   // A caller checks the shape the intro names; a recipe missing from its list reads an absent

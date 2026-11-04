@@ -207,7 +207,7 @@ Agent skills and reference:
   plugin.json                                 the Agent Plugin manifest: PKG loads as a plugin
   skills/sdp-agent-surface/SKILL.md           the skill for reading the graph through q
   skills/sdp-authoring/SKILL.md               the skill for authoring Specs, Packs, and anchors
-  skills/sdp-sessions/SKILL.md                the skill for routing a delivery session
+  skills/sdp-sessions/SKILL.md                the skill for delivery work on graph evidence
   skills/sdp-studio/SKILL.md                  the skill for publishing and reading the Studio
   skills/sdp-vault/SKILL.md                   the skill for keeping an Obsidian vault of the graph
   docs/agent-surface/recipes.md               the recipe catalog: runnable q bodies
