@@ -204,7 +204,7 @@ ${fenced(JSON.stringify(proposal, null, 2), "json")}`;
   };
   function actionLabel(action) {
     if (action === "change-pack") return "Change Pack membership or framing";
-    return composeLabels[action] ?? action;
+    return Object.hasOwn(composeLabels, action) ? composeLabels[action] ?? action : action;
   }
   function pageRootPath(root, page) {
     return new URL(root || "./", page).pathname;
@@ -617,7 +617,7 @@ ${i.text}`}
       connectedCallback() {
         if (this.control) return;
         const action = this.getAttribute("action") ?? "";
-        const label = composeLabels[action];
+        const label = Object.hasOwn(composeLabels, action) ? composeLabels[action] : void 0;
         if (!label) return;
         this.control = button(this, label);
         this.control.addEventListener("click", () => {
@@ -1254,7 +1254,7 @@ ${i.text}`}
   }
 
   // src/studio-elements/search-results.ts
-  var tokensOf = (text) => text.replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2").replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((token) => token.length > 0);
+  var tokensOf = (text) => text.replace(/(\p{Lu})(?=\p{Lu}\p{Ll})/gu, "$1 ").replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((token) => token.length > 0);
   function hasTokens(text, wanted) {
     const tokens = tokensOf(text);
     return wanted.length > 0 && tokens.some(
