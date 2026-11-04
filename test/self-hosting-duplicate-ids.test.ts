@@ -499,7 +499,7 @@ describe("pooled root generated-state sentinel", () => {
           "--passWithNoTests",
           ...blob("cli"),
         ],
-        ["--run", "--merge-reports", "<reports>", "--reporter", "html"],
+        ["--run", "--merge-reports", "<reports>", "--reporter", "html", "-t", "alpha"],
       ],
     ],
   ])(
@@ -759,6 +759,36 @@ describe("the test wrapper over real Vitest", () => {
       expect(readdirSync(temporary).filter((name) => name.startsWith("sdp-test-reports-"))).toEqual(
         [],
       );
+    },
+    120_000,
+  );
+
+  it.each([[["--config", "custom.config.mjs"]], [["-c", "custom.config.mjs"]]])(
+    "merges both passes with the configuration file %j they ran with",
+    (configuration) => {
+      // A configuration that names its project: the merge must read it to know the project.
+      const { root, environment } = realVitestRoot();
+      rmSync(join(root, "vitest.config.mjs"));
+      writeFileSync(
+        join(root, "custom.config.mjs"),
+        'export default { test: { name: "custom", globals: true, include: ["test/**/*.test.ts"] } };\n',
+      );
+      const result = spawnSync(
+        process.execPath,
+        [
+          join(repoRoot, "vitest-test.mjs"),
+          ...configuration,
+          "--reporter=junit",
+          "--outputFile=report.xml",
+        ],
+        { cwd: root, encoding: "utf8", env: environment },
+      );
+
+      expect(result.status, result.stderr).toBe(0);
+      const report = readFileSync(join(root, "report.xml"), "utf8");
+      expect(
+        [...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort(),
+      ).toEqual(["cli alpha", "cli beta", "other gamma"]);
     },
     120_000,
   );

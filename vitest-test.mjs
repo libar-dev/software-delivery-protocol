@@ -206,7 +206,6 @@ const optionName = (argument) =>
 // passes record blob reports instead, and the merge step takes these options.
 const reportOptions = new Set(["reporter", "outputFile"]);
 const forwardedOptions = [];
-const reportArguments = [];
 const isReportArgument = argv.map(() => false);
 let forwarding = false;
 let reporting = false;
@@ -217,10 +216,7 @@ for (const [index, argument] of argv.entries()) {
     reporting = reportOptions.has(optionName(argument));
   }
   if (forwarding) forwardedOptions.push({ argument, report: reporting });
-  if (reporting) {
-    reportArguments.push(argument);
-    isReportArgument[index] = true;
-  }
+  if (reporting) isReportArgument[index] = true;
 }
 
 // A `file:line` filter names one file, so one that selects test/cli.test.ts goes to the dedicated
@@ -276,17 +272,23 @@ const blobReport = (pass) =>
 const passArguments = (args, keep) =>
   args.filter((_, index) => keep(index) && !(mergesReports && isReportArgument[index]));
 
-/** Merges the passes' blob reports into the caller's reporters, then removes them. */
+/**
+ * Merges the passes' blob reports into the caller's reporters, then removes them. The merge runs
+ * with every option the caller gave, its file filters aside: Vitest resolves the configuration
+ * again to merge, and a configuration file, root or project the passes ran with must be the one
+ * it reads.
+ */
 function finishRun(exitCode) {
   if (!mergesReports) return exitCode;
   try {
     // A pass that stopped before reporting leaves nothing to merge; its exit code tells why.
     if (readdirSync(reportDirectory).length === 0) return exitCode;
+    const mergeOptions = argv.filter((_, index) => !positional[index]);
     const mergeExitCode = runVitest([
-      "--run",
+      ...(mergeOptions.includes("--run") ? [] : ["--run"]),
       "--merge-reports",
       reportDirectory,
-      ...reportArguments,
+      ...mergeOptions,
     ]);
     return exitCode === 0 ? mergeExitCode : exitCode;
   } finally {
