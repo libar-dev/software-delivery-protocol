@@ -293,7 +293,7 @@ describe("article evidence CLI entry", () => {
       else {
         expect(existsSync(workerPid)).toBe(true);
         const pid = Number(readFileSync(workerPid, "utf8"));
-        expect(() => process.kill(pid, 0)).toThrowError(expect.objectContaining({ code: "ESRCH" }));
+        expect(() => process.kill(pid, 0)).toThrow(expect.objectContaining({ code: "ESRCH" }));
       }
       expect(result.error).toBeUndefined();
       expect(result.status, result.stderr).toBe(signal === "SIGINT" ? 130 : 143);
