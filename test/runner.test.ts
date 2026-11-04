@@ -206,3 +206,47 @@ describe("own step data", () => {
     expect(renderContractStep({ ...step, params: { [key]: 3 } })).toBe("Then result 3");
   });
 });
+
+describe("class-instance step bindings", () => {
+  it("runs inherited class methods with the bindings instance as receiver", async () => {
+    class BaseSteps {
+      readonly amount = 42;
+      submit(world: { total: number }) {
+        world.total += this.amount;
+      }
+    }
+    class Steps extends BaseSteps {}
+    const bindings = new Steps();
+    const contract = {
+      spec: "spec:probe.class-handlers",
+      title: "Class handlers",
+      steps: [{ kind: "when" as const, key: "submit" as const, text: "submit", params: {} }],
+    };
+    const world = { total: 0 };
+    await runExamplePlan(planExample(contract, bindings), world);
+    expect(world.total).toBe(42);
+  });
+
+  it.each(["toString", "valueOf"])(
+    "refuses Object.prototype handler %s on a class instance",
+    async (key) => {
+      class Steps {
+        readonly submit = () => undefined;
+      }
+      const contract = {
+        spec: "spec:probe.class-missing",
+        title: "Missing class handler",
+        steps: [{ kind: "then" as const, key, text: key, params: {} }],
+      };
+      await expect(
+        runExamplePlan(
+          planExample(
+            contract,
+            new Steps() as unknown as Record<string, StepFn<object, ParamShape>>,
+          ),
+          {},
+        ),
+      ).rejects.toThrow(`no handler bound for step key "${key}"`);
+    },
+  );
+});
