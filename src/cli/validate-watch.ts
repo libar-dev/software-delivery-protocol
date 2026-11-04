@@ -659,10 +659,10 @@ function createFilesystemWatchSource(input: {
         // A watched directory replaced by a link, a file or another directory loses its carriers
         // without per-file events, and its retained watchers would resolve their entries through
         // the replacement or keep watching the moved directory. A directory that keeps its
-        // identity keeps its handles: macOS can report a rename for a directory that has not
-        // moved, and Linux reports a change to a directory's own times as a rename at its parent.
-        // When such a directory was deleted and recreated with its inode reused, its own handle
-        // reports the deletion.
+        // identity keeps its handles and is not read again: macOS can report a rename for a
+        // directory that has not moved, and Linux reports a change to a directory's own times as a
+        // rename at its parent. When such a directory was deleted and recreated with its inode
+        // reused, its own handle reports the deletion.
         const replacedWatchedDirectory =
           watchers.has(absolutePath) &&
           (!stats.isDirectory() || isOtherDirectory(absolutePath, stats));
@@ -707,11 +707,19 @@ function createFilesystemWatchSource(input: {
     });
   };
 
+  // Watches a directory the watch does not watch yet and every directory under it, reporting the
+  // carriers already there when asked. A directory already watched is not read again: its
+  // carriers are in the graph, and reporting them as created would start a run that changes
+  // nothing. A directory replaced or rebuilt loses its handles first, so it is read afresh.
   const subscribeTree = (
     absoluteDirectory: string,
     relativeDirectory: string,
     emitExistingCarriers: boolean,
   ): void => {
+    if (watchers.has(absoluteDirectory)) {
+      return;
+    }
+
     subscribeDirectory(absoluteDirectory, relativeDirectory);
 
     if (closed || !watchers.has(absoluteDirectory)) {

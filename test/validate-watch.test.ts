@@ -1522,8 +1522,8 @@ describe("validate watch handle cost", () => {
       const name = basename(directory);
       const entry = join(directory, name);
       const moved = join(directory, `${name}-old`);
-      writeCarrier(join(root, "specs", "probe.sdp.md"), "spec:tmp.watch-own-name-cost");
-      mkdirSync(directory, { recursive: true });
+      // The carrier sits inside the directory, so reading the directory again would report it.
+      writeCarrier(join(directory, "specs", "probe.sdp.md"), "spec:tmp.watch-own-name-cost");
       writeFileSync(entry, "notes\n", "utf8");
       // On a filesystem that reports birth times, as APFS, ext4, XFS, btrfs and recent tmpfs do.
       const watch = watchRoot(root, birthTimes(true));
@@ -1602,8 +1602,9 @@ describe("validate watch handle cost", () => {
       // directory's own times as a rename at its parent.
       const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-same-directory-cost-"));
       const root = join(workspace, "root");
-      writeCarrier(join(root, "specs", "probe.sdp.md"), "spec:tmp.watch-same-directory-cost");
-      mkdirSync(join(root, "a", "b", "c"), { recursive: true });
+      // The carrier sits inside every directory the events name, so reading one of them again
+      // would report it as created.
+      writeCarrier(join(root, "a", "b", "c", "probe.sdp.md"), "spec:tmp.watch-same-directory-cost");
       const watch = watchRoot(root);
 
       try {
@@ -1612,6 +1613,7 @@ describe("validate watch handle cost", () => {
 
         await deliver(watch.native.subscriptions.get(root), eventType, "a");
         await deliver(watch.native.subscriptions.get(join(root, "a")), eventType, "b");
+        await deliver(watch.native.subscriptions.get(join(root, "a", "b")), eventType, "c");
 
         expect(watch.native.counts()).toEqual(before);
         expect(watch.started).toEqual([1]);
@@ -1625,12 +1627,69 @@ describe("validate watch handle cost", () => {
     },
   );
 
+  // The other side of the cost: a directory the watch has not read yet is read in full, and the
+  // carriers already in it start a run.
+  it.each(["arrives", "replaces a watched one"])(
+    "reads a directory that %s and every directory under it",
+    async (arrival) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-new-directory-"));
+      const root = join(workspace, "root");
+      const parent = join(root, "a");
+      const directory = join(parent, "b");
+      writeCarrier(join(directory, "before.sdp.md"), "spec:tmp.watch-new-directory-before");
+      const watch = watchRoot(root);
+
+      try {
+        await bounded(watch.cycles.cycle(1), "new directory first cycle");
+        const retired = watch.native.subscriptions.get(directory);
+        expect(retired).toBeDefined();
+
+        if (arrival === "arrives") {
+          rmSync(directory, { recursive: true });
+          await deliver(watch.native.subscriptions.get(parent), "rename", "b");
+          await bounded(watch.cycles.cycle(2), "new directory removal rerun");
+          expect(watch.native.subscriptions.get(directory)).toBe(retired);
+          expect(retired?.closeCount).toBe(1);
+        } else {
+          renameSync(directory, join(workspace, "moved"));
+        }
+
+        writeCarrier(join(directory, "deep", "after.sdp.md"), "spec:tmp.watch-new-directory-after");
+        await deliver(watch.native.subscriptions.get(parent), "rename", "b");
+        const arrived = arrival === "arrives" ? 3 : 2;
+        await bounded(watch.cycles.cycle(arrived), "new directory rerun");
+
+        const fresh = watch.native.subscriptions.get(directory);
+        const deep = watch.native.subscriptions.get(join(directory, "deep"));
+        expect(fresh).toBeDefined();
+        expect(fresh).not.toBe(retired);
+        expect(deep).toBeDefined();
+        expect(graphText(root)).toContain("spec:tmp.watch-new-directory-after");
+        expect(graphText(root)).not.toContain("spec:tmp.watch-new-directory-before");
+
+        // The directory under it is watched too: a carrier created there joins the graph.
+        writeCarrier(join(directory, "deep", "late.sdp.md"), "spec:tmp.watch-new-directory-late");
+        await deliver(deep, "rename", "late.sdp.md");
+        await bounded(watch.cycles.cycle(arrived + 1), "new directory carrier rerun");
+        expect(graphText(root)).toContain("spec:tmp.watch-new-directory-late");
+        expect(watch.started).toEqual(arrival === "arrives" ? [1, 2, 3, 4] : [1, 2, 3]);
+
+        watch.cycles.abort.abort();
+        expect(await bounded(watch.running, "new directory watch exit")).toBe(0);
+        expect(watch.capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        watch.cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
   it("keeps every handle and starts no run for non-carrier events where inode numbers change on every read", async () => {
     const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-unstable-inode-cost-"));
     const root = join(workspace, "root");
     const nested = join(root, "a", "b");
-    writeCarrier(join(root, "specs", "probe.sdp.md"), "spec:tmp.watch-unstable-inode-cost");
-    mkdirSync(nested, { recursive: true });
+    // The carrier sits inside every directory the events name.
+    writeCarrier(join(nested, "probe.sdp.md"), "spec:tmp.watch-unstable-inode-cost");
     let nextInode = 1_000_000;
     // Some network and FUSE filesystems give a directory another inode number on each read.
     const watch = watchRoot(root, (path) => {
