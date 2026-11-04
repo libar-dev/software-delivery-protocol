@@ -44,3 +44,11 @@ The other three lanes land on their own pull requests' branches:
 | Z review evidence (PR #38)         | M38-c-2, M38-c-3, M38-c-6, M38-c-8, M38-c-9, GAP13-1                                                                        | Claude     | GPT     |
 
 Description-only corrections to PRs #34, #38 and #39 are made by the coordinating session.
+
+## Delegated clarification awaiting the owner's review
+
+The final pull request description must carry this row in its delegated-rulings table.
+
+| Clarification                                       | Meaning                                                                                                                                                                                                                                                   | Carrying Spec                                                                     |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Reserved properties and nested content (F-sweep1-9) | Clarifies existing validator behavior on a ready Spec: reserved properties are checked at the named envelope and section sites; a Model term or a key inside a Design value remains content. This repairs wording drift and changes no runtime allowance. | [Machine truth is never authored](../../specs/validation/authored-honesty.sdp.md) |

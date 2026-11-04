@@ -115,7 +115,7 @@ const KEYED_LINE = /^- ([^:]+):\s*(.*)$/su;
 // The header pattern `@cucumber/gherkin` reads, so the refusal lands on the line it read; its
 // pieces cannot overlap, where a trailing `.*$` made a long header-like comment quadratic.
 const LANGUAGE_HEADER = /^\s*#\s*language\s*:\s*([A-Za-z_-]+)\s*$/u;
-const DESCRIPTION_LINE_BREAK = /[\r\u2028\u2029]/u;
+const UNSUPPORTED_LINE_BREAK = /[\r\u2028\u2029]/u;
 const MAX_GHERKIN_FINDINGS = 100;
 
 interface DescriptionSections {
@@ -135,6 +135,7 @@ interface LocatedDescriptionLine {
 }
 
 interface GherkinSourceIndex {
+  readonly sourceLines: readonly string[];
   readonly descriptions: ReadonlyMap<DescriptionOwner, readonly LocatedDescriptionLine[]>;
   readonly languageHeaderLine: number;
 }
@@ -290,6 +291,7 @@ function buildGherkinSourceIndex(
   return {
     ok: true,
     value: {
+      sourceLines,
       descriptions,
       languageHeaderLine: languageHeaderIndex === -1 ? 1 : languageHeaderIndex + 1,
     },
@@ -737,7 +739,7 @@ function parseDescription(
 
     // The parser ends a line only at LF or CRLF. A lone CR, U+2028 or U+2029 left inside one would
     // let a keyed line pass as prose, or one Intent value span two visual lines, so it is refused.
-    if (DESCRIPTION_LINE_BREAK.test(descriptionLine.text)) {
+    if (UNSUPPORTED_LINE_BREAK.test(descriptionLine.text)) {
       appendFinding(
         collector,
         grammarFinding(
@@ -882,6 +884,7 @@ function stepSourceLines(
 
 function parseSteps(
   steps: readonly Step[],
+  sourceIndex: GherkinSourceIndex,
   file: string,
   construct: string,
   collector: GherkinFindingCollector,
@@ -892,6 +895,7 @@ function parseSteps(
   let previous: "given" | "when" | "then" | undefined;
 
   for (const step of steps) {
+    checkTitleOrStepLine(sourceIndex, step.location.line, "step", collector, file);
     let phase: "given" | "when" | "then" | undefined;
     switch (step.keywordType) {
       case StepKeywordType.CONTEXT:
@@ -971,6 +975,7 @@ function parseExampleSpaceScenario(
   collector: GherkinFindingCollector,
 ): { readonly given: string[]; readonly when: string[]; readonly then: string[] } | undefined {
   const findingCount = collector.findingCount;
+  checkTitleOrStepLine(sourceIndex, scenario.location.line, "Scenario title", collector, file);
   let markerCount = 0;
   for (const tag of scenario.tags) {
     if (tag.name === "@example-space") {
@@ -1045,7 +1050,13 @@ function parseExampleSpaceScenario(
     );
   }
 
-  const steps = parseSteps(scenario.steps, file, "@example-space pseudo-scenario", collector);
+  const steps = parseSteps(
+    scenario.steps,
+    sourceIndex,
+    file,
+    "@example-space pseudo-scenario",
+    collector,
+  );
   return collector.findingCount === findingCount ? steps : undefined;
 }
 
@@ -1056,6 +1067,7 @@ function parseRule(
   collector: GherkinFindingCollector,
 ): string | undefined {
   const findingCount = collector.findingCount;
+  checkTitleOrStepLine(sourceIndex, rule.location.line, "Rule title", collector, file);
   for (const tag of rule.tags) {
     appendFinding(
       collector,
@@ -1100,6 +1112,7 @@ function reifyOrdinaryScenario(
   collector: GherkinFindingCollector,
 ): ReifiedSpec | undefined {
   const findingCount = collector.findingCount;
+  checkTitleOrStepLine(sourceIndex, scenario.location.line, "Scenario title", collector, file);
   const metadata = parseMetadataTags(
     scenario.tags,
     file,
@@ -1142,6 +1155,7 @@ function reifyOrdinaryScenario(
   );
   const steps = parseSteps(
     scenario.steps,
+    sourceIndex,
     file,
     `Scenario "${scenario.name}"`,
     collector,
@@ -1212,6 +1226,26 @@ function reifyOrdinaryScenario(
   };
 }
 
+/** Read the physical line: the Gherkin parser trims trailing separators from names and steps. */
+function checkTitleOrStepLine(
+  sourceIndex: GherkinSourceIndex,
+  line: number,
+  construct: string,
+  collector: GherkinFindingCollector,
+  file: string,
+): void {
+  if (!UNSUPPORTED_LINE_BREAK.test(sourceIndex.sourceLines[line - 1] ?? "")) return;
+  appendFinding(
+    collector,
+    grammarFinding(
+      file,
+      line,
+      `${construct} line holds a lone CR, U+2028 or U+2029; use LF or CRLF between lines`,
+    ),
+    file,
+  );
+}
+
 function reifyFeature(
   feature: Feature,
   file: string,
@@ -1232,6 +1266,7 @@ function reifyFeature(
   }
 
   const collector: GherkinFindingCollector = { findings: [], findingCount: 0 };
+  checkTitleOrStepLine(sourceIndex, feature.location.line, "Feature title", collector, file);
   const metadata = parseMetadataTags(
     feature.tags,
     file,

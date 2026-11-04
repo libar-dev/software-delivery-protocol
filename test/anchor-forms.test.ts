@@ -1,3 +1,6 @@
+import { Project } from "ts-morph";
+import { reifyAnchorSourceFile } from "../src/extract/anchors.js";
+import { reifySourceFile } from "../src/extract/reify.js";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -491,5 +494,54 @@ export const gate = codeAnchor({
       [extractFindingIds.duplicateId, 7],
     ]);
     expect(result.graph.nodes.some((node) => node.id === "impl:fixture.gate")).toBe(false);
+  });
+});
+
+// Both reifiers read the same AST, as they do for a discovered TypeScript carrier.
+describe.each([
+  ["LF", "\n"],
+  ["CRLF", "\r\n"],
+  ["CR", "\r"],
+  ["U+2028", "\u2028"],
+  ["U+2029", "\u2029"],
+])("TypeScript source locations with %s", (_name, newline) => {
+  it("locates both anchor forms, carrier findings and entries on the compiler line map", () => {
+    const source = [
+      'import { codeAnchor, codeAnchorId, spec, specId } from "@libar-dev/software-delivery-protocol";',
+      "",
+      'const bound = codeAnchor({ id: codeAnchorId("impl:probe.constant") });',
+      "",
+      "/** @sdpAnchor impl:probe.comment */",
+      "const definition = spec({",
+      '  id: specId("spec:probe.lines"), kind: "behavior", altitude: "story", readiness: "idea", relations: [],',
+      '  behavior: { notes: "unknown", rules: ["Keep the entry location."] },',
+      '  design: { shape: "A located entry" },',
+      "});",
+      "const invalid = codeAnchor({",
+      '  id: codeAnchorId("impl:probe.invalid"),',
+      "  unknown: true,",
+      "});",
+    ].join(newline);
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile("probe.sdp.ts", source);
+    const anchors = reifyAnchorSourceFile(file, "probe.sdp.ts");
+    const carrier = reifySourceFile(file, "probe.sdp.ts");
+    expect(anchors.anchors.map(({ id, line }) => ({ id, line }))).toEqual([
+      { id: "impl:probe.comment", line: 5 },
+      { id: "impl:probe.constant", line: 3 },
+    ]);
+    expect(anchors.findings).toContainEqual(expect.objectContaining({ line: 13 }));
+    expect(carrier.findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "extract/unrecognized-property",
+        line: 8,
+      }),
+    );
+    expect(carrier.specs[0]?.entryLines).toEqual(
+      expect.arrayContaining([
+        { entry: "rule[0]", line: 8 },
+        { entry: "design.shape", line: 9 },
+      ]),
+    );
   });
 });

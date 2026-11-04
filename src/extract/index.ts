@@ -23,6 +23,7 @@ import {
   trustedBuilderModulesForRoot,
 } from "./protocol-bindings.js";
 import type { ProtocolBindingScope } from "./protocol-bindings.js";
+import { compilerLine } from "./typescript-lines.js";
 
 export {
   PROTOCOL_ANCHORS_MODULE_SPECIFIER,
@@ -169,7 +170,7 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
     severity: "error",
     message: `the file does not parse: ${typeof text === "string" ? text : text.getMessageText()} — the error-tolerant parse recovers by guessing, so the file cannot be reified faithfully and its content is excluded from the graph (ambiguity is loud, L2)`,
     file: source.file.relativePath,
-    line: firstDiagnostic.getLineNumber(),
+    line: compilerLine(source.sourceFile, firstDiagnostic.getStart()),
   });
 
   return false;

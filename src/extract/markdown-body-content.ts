@@ -72,7 +72,7 @@ export function isMarkdownFenceOpener(text: string): boolean {
 }
 
 export function isUnsupportedCommonMarkBlock(text: string): boolean {
-  if (/^(?:[*+][\t ]|\d+[.)][\t ]|-[\t]|<)/u.test(text)) return true;
+  if (/^(?:[*+](?:[\t ]|$)|\d+[.)](?:[\t ]|$)|-[\t]|<)/u.test(text)) return true;
   const marker = text[0];
   if (marker !== "=" && marker !== "-" && marker !== "*" && marker !== "_") return false;
   let count = 0;

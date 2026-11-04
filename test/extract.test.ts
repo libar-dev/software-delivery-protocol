@@ -1029,6 +1029,58 @@ relations: {}
     expect(JSON.stringify(result.graph)).not.toContain("spec:orders.swallowed");
   });
 
+  describe.each([
+    ["LF", "\n"],
+    ["CRLF", "\r\n"],
+    ["CR", "\r"],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+  ])("TypeScript parse-error locations with %s", (_name, newline) => {
+    it("locates a carrier syntax error on the compiler line map", () => {
+      const result = reifyTypeScriptCarrier(
+        ["const a = 1;", "const b = 2;", "const c = ;", ""].join(newline),
+        "specs/broken.sdp.ts",
+      );
+
+      expect(result.findings).toEqual([
+        expect.objectContaining({
+          validatorId: extractFindingIds.parseError,
+          file: "specs/broken.sdp.ts",
+          line: 3,
+        }),
+      ]);
+      expect(result.specs).toEqual([]);
+      expect(result.packs).toEqual([]);
+    });
+
+    it("locates an anchor source syntax error on the compiler line map", () => {
+      const root = temporaryCorpusRoot("parse-error-lines");
+      mkdirSync(join(root, "src"));
+      writeFileSync(
+        join(root, "src", "broken.ts"),
+        [
+          'import { codeAnchor, codeAnchorId } from "@libar-dev/software-delivery-protocol";',
+          'const bound = codeAnchor({ id: codeAnchorId("impl:probe.lines") });',
+          "const broken = ;",
+          "",
+        ].join(newline),
+        "utf8",
+      );
+
+      const result = extract({ root });
+
+      expect(result.report.findings).toEqual([
+        expect.objectContaining({
+          validatorId: extractFindingIds.parseError,
+          file: "src/broken.ts",
+          line: 3,
+        }),
+      ]);
+      expect(result.graph.nodes).toEqual([]);
+      expect(result.counts.anchors).toBe(0);
+    });
+  });
+
   it("invalid-missing-envelope-fields: every absent required field reports in one pass — spec, pack, and anchor carriers", () => {
     const result = extract({ root: corpusRoot("invalid-missing-envelope-fields") });
     const errors = result.report.findings.filter((finding) => finding.severity === "error");
