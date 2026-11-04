@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
@@ -808,6 +808,54 @@ describe("the graph-reading on-ramp", () => {
       "spec:consumers.agent-surface.evaluation-sink",
     ]) {
       expect(surface).toContain(`\`${owner}\``);
+    }
+  });
+
+  it("resolves every pointer one skill makes into another skill's sections and files", () => {
+    const skillsRoot = join(repoRoot, "skills");
+    const headingsOf = (file: string): readonly string[] =>
+      [...readFileSync(file, "utf8").matchAll(/^#{1,6} (?<heading>.+)$/gmu)].map(
+        (match) => match.groups?.heading?.trim() ?? "",
+      );
+    const texts = readdirSync(skillsRoot, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .flatMap((entry) => {
+        const folder = join(skillsRoot, entry.name);
+        const references = existsSync(join(folder, "references"))
+          ? readdirSync(join(folder, "references"))
+              .filter((name) => name.endsWith(".md"))
+              .map((name) => join(folder, "references", name))
+          : [];
+        return [join(folder, "SKILL.md"), ...references];
+      });
+    const pointers: { from: string; skill: string; file: string; heading?: string }[] = [];
+
+    for (const text of texts) {
+      const prose = readFileSync(text, "utf8").replaceAll(/\s+/gu, " ");
+      const from = relative(repoRoot, text);
+      // `sdp-x`'s "Heading", optionally (`references/file.md`): the heading lives in that file.
+      for (const match of prose.matchAll(
+        /`(?<skill>sdp-[a-z-]+)`'s "(?<heading>[^"]+)"(?: \(`(?<file>references\/[a-z0-9-]+\.md)`\))?/gu,
+      )) {
+        const { skill = "", heading = "", file = "SKILL.md" } = match.groups ?? {};
+        pointers.push({ from, skill, file, heading });
+      }
+      // `sdp-x`'s named part (`references/file.md`): the file exists.
+      for (const match of prose.matchAll(
+        /`(?<skill>sdp-[a-z-]+)`'s [a-z ]+\(`(?<file>references\/[a-z0-9-]+\.md)`\)/gu,
+      )) {
+        const { skill = "", file = "" } = match.groups ?? {};
+        pointers.push({ from, skill, file });
+      }
+    }
+
+    expect(pointers.length).toBeGreaterThan(0);
+    for (const pointer of pointers) {
+      const target = join(skillsRoot, pointer.skill, pointer.file);
+      const resolves =
+        existsSync(target) &&
+        (pointer.heading === undefined || headingsOf(target).includes(pointer.heading));
+      expect({ ...pointer, resolves }).toEqual({ ...pointer, resolves: true });
     }
   });
 

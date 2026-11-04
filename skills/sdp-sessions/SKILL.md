@@ -30,7 +30,7 @@ pnpm exec sdp q '<body>' --root PATH
 pnpm exec sdp q '<body>' --root PATH --exclude PATH --exclude PATH
 ```
 
-Each recipe below is named by its number. Read its row in `sdp-agent-surface`'s task sheet and its
+Each recipe below is named by its number. Read its row in `sdp-agent-surface`'s task sheet (`references/tasks.md`) and its
 numbered catalog entry for parameters and answer fields. Pass a parameterized recipe its subject
 as JSON data with `--params` (or `--params @PATH` for a file), never by editing the body; the build
 ships every body as `dist/recipes/<NN>-<slug>.js`. Bodies receive `g`, `graph`, `report`, `params`
@@ -38,7 +38,7 @@ and `recipes`; call a shipped body with `recipes(number, parameters?)`, followin
 `spec:consumers.agent-surface.evaluation-sink`. The recipe result informs the session; it never
 grants permission or records a verdict.
 
-For human-readable pages or linked notes, follow `sdp-agent-surface`'s "Publish pages and notes":
+For human-readable pages or linked notes, follow `sdp-agent-surface`'s "Publish pages and notes" (`references/publishing.md`):
 it says which publisher to run, what each run invalidates, when to stamp a preview, and where the
 vault keeps a person's notes. `sdp-studio` and `sdp-vault` turn intent a person composed there into
 a checked change proposal.
@@ -84,7 +84,7 @@ A design pass over a Pack runs in a loop:
    `sdp build` wrote at the commit that pass read.
 2. Compose the pass's reading with the context bundle (recipe 36) within a stated budget, reading
    a large scope in parts and handling a refusal as `sdp-agent-surface`'s "Read a large scope in
-   parts" teaches. Narrow it to one perspective's members with the perspective filter (recipe 37)
+   parts" (`references/contract.md`) teaches. Narrow it to one perspective's members with the perspective filter (recipe 37)
    when the pass reads for one concern.
 3. Hand findings back as a change proposal, the JSON document
    `spec:consumers.intent-composition.proposal` states, and render its memo with the proposal
