@@ -1,6 +1,6 @@
 import { lstatSync, readdirSync, realpathSync, watch } from "node:fs";
 import type { Stats } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 import {
   isExcludedDiscoveryDirectory,
@@ -356,6 +356,40 @@ function createFilesystemWatchSource(input: {
     return replaced;
   };
 
+  // The root has no parent watcher, so only the handles of its own tree can show it replaced, and
+  // every name they report resolves through whatever now stands at the root. inotify reports the
+  // root's own move or deletion on the root's handle as a rename under the root's basename. True
+  // when the root is gone, no longer a directory or another directory than the one its handle was
+  // opened on, and for that self rename even when the identity matches: a root deleted and
+  // recreated may reuse the inode while the old handle is dead.
+  const rootReplaced = (
+    absoluteDirectory: string,
+    eventType: string,
+    filename: string | null,
+  ): boolean => {
+    if (
+      absoluteDirectory === input.root &&
+      eventType === "rename" &&
+      filename === basename(input.root)
+    ) {
+      return true;
+    }
+
+    let stats: Stats;
+
+    try {
+      stats = lstatWatchPath(input.root);
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        throw error;
+      }
+
+      return true;
+    }
+
+    return !stats.isDirectory() || isOtherDirectory(input.root, stats);
+  };
+
   // A watched directory that is gone, or was replaced by a link, a file or another directory, loses
   // its carriers without per-file events, so its event schedules a run. A replacement link
   // discovery warns about is remembered like any other, so removing that link later schedules a
@@ -485,6 +519,22 @@ function createFilesystemWatchSource(input: {
         // A closed or retired subscription may still deliver a queued event; only the handle
         // registered for this directory speaks for it.
         if (closed || handle === undefined || watchers.get(absoluteDirectory) !== handle) {
+          return;
+        }
+
+        let replacedRoot: boolean;
+
+        try {
+          replacedRoot = rootReplaced(absoluteDirectory, eventType, filename);
+        } catch (error) {
+          fail(error);
+          return;
+        }
+
+        // Reconciling the root retires every handle, watches the directory that now stands at the
+        // root in its place and schedules a run, or fails typed when no directory stands there.
+        if (replacedRoot) {
+          reconcileDirectory(input.root, "");
           return;
         }
 
