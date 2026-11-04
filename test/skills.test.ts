@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -7,6 +8,7 @@ import {
   readdirSync,
   readFileSync,
   readlinkSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -700,6 +702,110 @@ describe("the graph-reading on-ramp", () => {
     expect(section(full.stdout, 10)).not.toContain("A shortened demonstration");
     expect(section(full.stdout, 10).match(/'line \d+ /gu)).toHaveLength(rules.length);
   }, 120_000);
+
+  it("refuses a malformed --subjects before deriving the graph, naming the form it takes", () => {
+    const script = join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs");
+    const form = `such as '{"8":{"terms":["vault"]}}'`;
+    const cases: [string[], string][] = [
+      [["--subjects", "vault"], "orient: --subjects is not readable JSON"],
+      [["--subjects", '["vault"]'], form],
+      [
+        ["--subjects", '{"terms":["vault"]}'],
+        'orient: --subjects key "terms" is no answer number.',
+      ],
+      [
+        ["--subjects", '{"10":{"specs":["spec:x"]}}'],
+        "orient: --subjects gives answer 10 a subject, but --only leaves it out.",
+      ],
+      [["--subjects", '{"8":["vault"]}'], "orient: answer 8 takes an object of parameters"],
+      [["--subjects", '{"8":{"word":"vault"}}'], "orient: answer 8 reads term or terms, not word."],
+      [["--only", "12"], "orient: --only names no answer 12"],
+    ];
+    for (const [args, message] of cases) {
+      const run = spawnSync(process.execPath, [script, "--only", "8", ...args], {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+      expect({
+        args,
+        status: run.status,
+        stdout: run.stdout,
+        refused: run.stderr.includes(message),
+        derived: run.stderr.includes("hint:"),
+      }).toEqual({ args, status: 2, stdout: "", refused: true, derived: false });
+    }
+  });
+
+  it("prints a full-answer call that reads the corpus this run read, runnable as printed", () => {
+    // The runner reached through a path with a space, as a client's cache may place it.
+    const place = mkdtempSync(join(tmpdir(), "sdp orient "));
+    const scripts = join(place, "my scripts");
+    symlinkSync(join(repoRoot, "skills/sdp-agent-surface/scripts"), scripts, "dir");
+    try {
+      const run = spawnSync(
+        process.execPath,
+        [join(scripts, "orient.mjs"), "--only", "10", "--root", "examples/checkout-v1"],
+        { cwd: repoRoot, encoding: "utf8" },
+      );
+      expect(run.status, run.stderr).toBe(0);
+      const printed = /^node .+$/mu.exec(run.stdout)?.[0] ?? "";
+      expect(printed).toMatch(/^node '[^']+\/my scripts\/orient\.mjs' --only 10 /u);
+      expect(printed.endsWith(" --root examples/checkout-v1")).toBe(true);
+
+      const copied = spawnSync(printed.replace("<a Spec id>", "spec:orders.create-order"), {
+        cwd: repoRoot,
+        encoding: "utf8",
+        shell: true,
+      });
+      expect(copied.status, copied.stderr).toBe(0);
+      expect(copied.stdout).toContain("id: 'spec:orders.create-order'");
+      expect(copied.stdout).not.toContain("found: false");
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  it("warns of skew only when the skill and the CLI come from different builds", async () => {
+    const place = mkdtempSync(join(tmpdir(), "sdp-skew-"));
+    try {
+      // Two copies of one package: the CLI's, and the skill's as a client caches it.
+      const packageRoot = (name: string, commit: string | undefined) => {
+        const root = join(place, name);
+        mkdirSync(join(root, "dist", "cli"), { recursive: true });
+        writeFileSync(
+          join(root, "package.json"),
+          JSON.stringify({ name: "@libar-dev/software-delivery-protocol", version: "1.2.3" }),
+        );
+        if (commit !== undefined)
+          writeFileSync(join(root, "dist", "cli", "build-info.json"), JSON.stringify({ commit }));
+        return realpathSync(root);
+      };
+      const cli = packageRoot("cli", "a".repeat(40));
+      const cached = packageRoot("cached", "a".repeat(40));
+      mkdirSync(join(cached, "skills/sdp-agent-surface/scripts"), { recursive: true });
+      copyFileSync(
+        join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs"),
+        join(cached, "skills/sdp-agent-surface/scripts/q.mjs"),
+      );
+      const runner = (await import(
+        pathToFileURL(join(cached, "skills/sdp-agent-surface/scripts/q.mjs")).href
+      )) as { skewWarning: (runtime: { packageRoot: string }) => string | undefined };
+      const buildInfo = join(cached, "dist", "cli", "build-info.json");
+
+      expect(runner.skewWarning({ packageRoot: cli })).toBeUndefined();
+      expect(runner.skewWarning({ packageRoot: cached })).toBeUndefined();
+      writeFileSync(buildInfo, JSON.stringify({ commit: "b".repeat(40) }));
+      expect(runner.skewWarning({ packageRoot: cli })).toContain(
+        `sdp q: this skill comes from ${cached} but the CLI from ${cli}`,
+      );
+      writeFileSync(buildInfo, JSON.stringify({ commit: "unknown" }));
+      expect(runner.skewWarning({ packageRoot: cli })).toContain("their teaching may differ");
+      rmSync(buildInfo);
+      expect(runner.skewWarning({ packageRoot: cli })).toContain("their teaching may differ");
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  });
 
   it("selects the Protocol's own Specs with --protocol, and only the root", async () => {
     const runner = (await import(

@@ -1,5 +1,14 @@
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { isatty } from "node:tty";
@@ -227,6 +236,26 @@ describe("sdp q — the agent front door", () => {
     expect(prefixed).toContain("node_modules/pkg/docs/agent-surface/recipes.md");
     expect(prefixed).toContain("  Probe: 7 One\n");
     expect(prefixed).toContain('"$(cat node_modules/pkg/dist/recipes/NN-slug.js)"');
+  });
+
+  it("quotes a package path a shell would split or expand in the recipe call form", () => {
+    const place = mkdtempSync(join(tmpdir(), "sdp-catalog-quote-"));
+    try {
+      const prefix = "My SDK/it's $HOME `x`/";
+      mkdirSync(join(place, prefix, "dist", "recipes"), { recursive: true });
+      writeFileSync(join(place, prefix, "dist", "recipes", "NN-slug.js"), "return 1;");
+      const form = /"\$\(cat .+?\)"/u.exec(recipeListing([], prefix))?.[0] ?? "";
+
+      expect(form).toBe(`"$(cat 'My SDK/it'\\''s $HOME \`x\`/dist/recipes/NN-slug.js')"`);
+      // Copied into a shell as printed, the substitution reads the one file.
+      const copied = spawnSync(`printf %s ${form}`, { cwd: place, encoding: "utf8", shell: true });
+      expect({ status: copied.status, stdout: copied.stdout }).toEqual({
+        status: 0,
+        stdout: "return 1;",
+      });
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
   });
 
   it("prints JSON for --json", async () => {

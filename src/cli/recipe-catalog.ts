@@ -90,6 +90,11 @@ export function queryHint(categories: readonly RecipeCategory[]): string {
     : `hint: run q with no body to list the ${String(count)} recipes by category; inside a body, await recipes(N, params) runs recipe N.`;
 }
 
+/** A shell word for `value`: as written when every character is safe, else single-quoted. */
+function shellWord(value: string): string {
+  return /^[\w@%+=:,./-]+$/u.test(value) ? value : `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
 /** How many of a category's recipes its listing line names before it counts the rest. */
 const namedPerCategory = 4;
 
@@ -118,7 +123,10 @@ export function recipeListing(categories: readonly RecipeCategory[], prefix: str
 
   const forms = [
     ["sdp q '<body>' [--params JSON] [--json]", "a body, as the argument or on stdin"],
-    [`sdp q "$(cat ${prefix}dist/recipes/NN-slug.js)" --params JSON`, "a recipe as shipped"],
+    [
+      `sdp q "$(cat ${shellWord(`${prefix}dist/recipes/NN-slug.js`)})" --params JSON`,
+      "a recipe as shipped",
+    ],
     ["sdp q 'const answer = await recipes(N, {}); return answer'", "a recipe inside your body"],
   ] as const;
   const width = Math.max(...forms.map(([form]) => form.length));

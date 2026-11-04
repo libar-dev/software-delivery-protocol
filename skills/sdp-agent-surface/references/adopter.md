@@ -27,4 +27,4 @@ The installed package is an Agent Plugin, declared by `plugin.json` at its root.
 plugin, or link all five `skills/sdp-*` folders into the project's skills folder: the skills reach
 each other as siblings. A client that caches a copy keeps the siblings together; package files stay
 under the installed package root. A copy from anywhere else can teach another version; the runner
-warns when the skill and the CLI come from different copies (`spec:decisions.agent-plugin-package`).
+warns when the skill and the CLI come from different builds (`spec:decisions.agent-plugin-package`).

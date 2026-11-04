@@ -140,7 +140,21 @@ export function queryArguments(runtime, args, cwd = process.cwd()) {
   return [runtime.cli, "q", ...args, ...exclusions];
 }
 
-/** Warns once when this skill was loaded from a different copy of the package than the CLI it runs. */
+/**
+ * The build a package root holds: its version and the full commit its CLI was built from, as the
+ * build recorded it beside the CLI; undefined when either is missing or the commit is unknown.
+ */
+export function buildIdentity(root) {
+  const version = readJson(join(root, "package.json"))?.version;
+  const commit = readJson(join(root, "dist", "cli", "build-info.json"))?.commit;
+  if (typeof version !== "string" || typeof commit !== "string") return undefined;
+  return /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u.test(commit) ? `${version} ${commit}` : undefined;
+}
+
+/**
+ * Warns when this skill comes from another build of the package than the CLI it runs. A client's
+ * cached copy of the same build stays silent; without a build on record, another copy warns.
+ */
 export function skewWarning(runtime) {
   const manifest = readJson(join(skillPackageRoot, "package.json"));
   if (manifest?.name !== packageName) return undefined;
@@ -152,7 +166,10 @@ export function skewWarning(runtime) {
     }
   };
   if (same(skillPackageRoot, runtime.packageRoot)) return undefined;
-  return `sdp q: this skill comes from ${skillPackageRoot} but the CLI from ${runtime.packageRoot}; their teaching may differ. Load the skill from the installed package.`;
+  const skillBuild = buildIdentity(skillPackageRoot);
+  if (skillBuild !== undefined && skillBuild === buildIdentity(runtime.packageRoot))
+    return undefined;
+  return `sdp q: this skill comes from ${skillPackageRoot} but the CLI from ${runtime.packageRoot}, another build or one with none on record; their teaching may differ. Load the skill from the installed package.`;
 }
 
 function main(args) {

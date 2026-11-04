@@ -8,6 +8,7 @@
 // graph when none is given, so the queries run in any corpus. In the Protocol source checkout,
 // orientation/protocol-checkout.json supplies the subjects the notes were written against.
 // `--subjects` replaces them, keyed by query number: '{"10":{"specs":["spec:example.id"]}}'.
+// A subject that names no selected query, or a parameter its body does not read, is refused.
 // A body with a `// Subject:` line takes what the agent arrives with; unless `--subjects` names
 // it, its answer prints shortened, as a demonstration, beside the call that runs it in full.
 // `--json` prints every answer in full. `--protocol` selects the root as the runner does.
@@ -48,11 +49,16 @@ export function orientationQueries() {
       const teaches = /^\/\/ Teaches: (?<line>.+)$/mu.exec(source)?.groups?.line;
       if (teaches === undefined) throw new Error(`orientation/${name} has no "// Teaches:" line`);
       const subject = /^\/\/ Subject: (?<json>.+)$/mu.exec(source)?.groups?.json;
+      // The parameters the body reads, which are the only ones a subject may give it.
+      const accepts = [
+        ...new Set([...source.matchAll(/\bparams\.(?<key>[A-Za-z_]\w*)/gu)].map((m) => m[1])),
+      ].sort();
       return {
         number,
         title: heading.title,
         teaches,
         subject,
+        accepts,
         notes: `references/orientation.md#${anchor}`,
         source,
       };
@@ -123,10 +129,51 @@ function parseArguments(args) {
   return options;
 }
 
-function readSubjects(value) {
-  if (value === undefined) return undefined;
-  const text = value.startsWith("@") ? readFileSync(value.slice(1), "utf8") : value;
-  return JSON.parse(text);
+/** A shell word for `value`: as written when every character is safe, else single-quoted. */
+export function shellWord(value) {
+  return /^[\w@%+=:,./-]+$/u.test(value) ? value : `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
+const subjectsUsage =
+  `--subjects takes a JSON object keyed by answer number, each value an object of the parameters ` +
+  `that answer reads, such as '{"8":{"terms":["vault"]}}'.`;
+
+/**
+ * The subjects `--subjects` gives, checked against the selected queries before the graph derives:
+ * `{ subjects }`, with `undefined` when none are given, or `{ error }`.
+ */
+export function readSubjects(value, queries, selected) {
+  if (value === undefined) return { subjects: undefined };
+  let parsed;
+  try {
+    parsed = JSON.parse(value.startsWith("@") ? readFileSync(value.slice(1), "utf8") : value);
+  } catch (error) {
+    return {
+      error: `orient: --subjects is not readable JSON (${String(error?.message ?? error)}). ${subjectsUsage}`,
+    };
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed))
+    return { error: `orient: ${subjectsUsage}` };
+  for (const [key, subject] of Object.entries(parsed)) {
+    const query = queries.find((candidate) => String(candidate.number) === key);
+    if (query === undefined)
+      return { error: `orient: --subjects key "${key}" is no answer number. ${subjectsUsage}` };
+    if (!selected.includes(query))
+      return {
+        error: `orient: --subjects gives answer ${key} a subject, but --only leaves it out.`,
+      };
+    const example = query.subject ?? "{}";
+    if (subject === null || typeof subject !== "object" || Array.isArray(subject))
+      return {
+        error: `orient: answer ${key} takes an object of parameters, such as '${example}'.`,
+      };
+    const unread = Object.keys(subject).filter((name) => !query.accepts.includes(name));
+    if (unread.length > 0)
+      return {
+        error: `orient: answer ${key} reads ${query.accepts.length === 0 ? "no parameters" : query.accepts.join(" or ")}, not ${unread.join(", ")}.`,
+      };
+  }
+  return { subjects: parsed };
 }
 
 function main(args) {
@@ -148,10 +195,25 @@ function main(args) {
     return 2;
   }
 
-  const queries = orientationQueries().filter(
+  const all = orientationQueries();
+  const unknown = (options.only ?? []).filter(
+    (number) => !all.some((query) => query.number === number),
+  );
+  if (unknown.length > 0) {
+    console.error(
+      `orient: --only names no answer ${unknown.join(", ")}; the answers are numbered ${String(all[0]?.number)} to ${String(all.at(-1)?.number)}.`,
+    );
+    return 2;
+  }
+  const queries = all.filter(
     (query) => options.only === undefined || options.only.includes(query.number),
   );
-  const given = readSubjects(options.subjects);
+  const read = readSubjects(options.subjects, all, queries);
+  if ("error" in read) {
+    console.error(read.error);
+    return 2;
+  }
+  const given = read.subjects;
   const subjects =
     given ??
     (runtime.mode === "source" && readsPackageRoot(runtime, selected.args)
@@ -188,6 +250,8 @@ function main(args) {
   const answers = JSON.parse(result.stdout);
   const failed = answers.filter((answer) => answer.error !== undefined);
   const script = relative(process.cwd(), process.argv[1] ?? fileURLToPath(import.meta.url));
+  // The corpus this run read, so the printed call answers over the same graph.
+  const corpus = options.pass.map((arg) => ` ${shellWord(arg)}`).join("");
 
   if (options.json) {
     const titled = answers.map((answer) => {
@@ -213,7 +277,7 @@ function main(args) {
       else
         process.stdout.write(
           `${render(compactAnswer(answer.answer))}\n\nA shortened demonstration. In full, on what you hold:\n` +
-            `node ${script} --only ${answer.number} --subjects '{"${answer.number}":${query.subject}}'\n`,
+            `node ${shellWord(script)} --only ${answer.number} --subjects ${shellWord(`{"${answer.number}":${query.subject}}`)}${corpus}\n`,
         );
       process.stdout.write(`\nRead it with ${query?.notes}\n\n`);
     }
