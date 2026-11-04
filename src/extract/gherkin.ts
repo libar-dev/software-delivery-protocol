@@ -895,7 +895,7 @@ function parseSteps(
   let previous: "given" | "when" | "then" | undefined;
 
   for (const step of steps) {
-    checkTitleOrStepLine(sourceIndex, step.location.line, "step", collector, file);
+    checkTitleOrStepLine(sourceIndex, step.location.line, "step", collector, file, subjectId);
     let phase: "given" | "when" | "then" | undefined;
     switch (step.keywordType) {
       case StepKeywordType.CONTEXT:
@@ -973,9 +973,17 @@ function parseExampleSpaceScenario(
   file: string,
   sourceIndex: GherkinSourceIndex,
   collector: GherkinFindingCollector,
+  subjectId: string | undefined,
 ): { readonly given: string[]; readonly when: string[]; readonly then: string[] } | undefined {
   const findingCount = collector.findingCount;
-  checkTitleOrStepLine(sourceIndex, scenario.location.line, "Scenario title", collector, file);
+  checkTitleOrStepLine(
+    sourceIndex,
+    scenario.location.line,
+    "Scenario title",
+    collector,
+    file,
+    subjectId,
+  );
   let markerCount = 0;
   for (const tag of scenario.tags) {
     if (tag.name === "@example-space") {
@@ -987,6 +995,7 @@ function parseExampleSpaceScenario(
             file,
             tag.location.line,
             `@example-space pseudo-scenario carries ${String(markerCount)} marker tags; exactly one is required`,
+            subjectId,
           ),
           file,
         );
@@ -996,7 +1005,7 @@ function parseExampleSpaceScenario(
 
     const refused = decorationTagFinding(tag, file);
     if (refused !== undefined) {
-      appendFinding(collector, refused, file);
+      appendFinding(collector, { ...refused, subjectId }, file);
       continue;
     }
     const head = tagHead(tag.name);
@@ -1010,6 +1019,7 @@ function parseExampleSpaceScenario(
           file,
           tag.location.line,
           `@example-space pseudo-scenario carries graph-aware tag "${tag.name}"; only @example-space is allowed`,
+          subjectId,
         ),
         file,
       );
@@ -1023,6 +1033,7 @@ function parseExampleSpaceScenario(
         file,
         scenario.location.line,
         `@example-space uses unsupported construct "${scenario.keyword}"; Scenario Outline and Examples are refused`,
+        subjectId,
       ),
       file,
     );
@@ -1034,6 +1045,7 @@ function parseExampleSpaceScenario(
         file,
         scenario.location.line,
         "@example-space pseudo-scenario must carry at least one step",
+        subjectId,
       ),
       file,
     );
@@ -1045,6 +1057,7 @@ function parseExampleSpaceScenario(
         file,
         firstProseLine(sourceIndex, scenario),
         "@example-space pseudo-scenario cannot carry a description",
+        subjectId,
       ),
       file,
     );
@@ -1056,6 +1069,7 @@ function parseExampleSpaceScenario(
     file,
     "@example-space pseudo-scenario",
     collector,
+    subjectId,
   );
   return collector.findingCount === findingCount ? steps : undefined;
 }
@@ -1065,9 +1079,10 @@ function parseRule(
   file: string,
   sourceIndex: GherkinSourceIndex,
   collector: GherkinFindingCollector,
+  subjectId: string | undefined,
 ): string | undefined {
   const findingCount = collector.findingCount;
-  checkTitleOrStepLine(sourceIndex, rule.location.line, "Rule title", collector, file);
+  checkTitleOrStepLine(sourceIndex, rule.location.line, "Rule title", collector, file, subjectId);
   for (const tag of rule.tags) {
     appendFinding(
       collector,
@@ -1075,6 +1090,7 @@ function parseRule(
         file,
         tag.location.line,
         `Rule "${rule.name}" carries tag "${tag.name}"; Rules are title-only`,
+        subjectId,
       ),
       file,
     );
@@ -1086,6 +1102,7 @@ function parseRule(
         file,
         rule.location.line,
         `Rule "${rule.name}" has children because Scenarios following a Rule nest under it positionally; place every Scenario before trailing title-only Rules`,
+        subjectId,
       ),
       file,
     );
@@ -1097,6 +1114,7 @@ function parseRule(
         file,
         firstProseLine(sourceIndex, rule),
         `Rule "${rule.name}" carries a description; Rules are title-only`,
+        subjectId,
       ),
       file,
     );
@@ -1112,13 +1130,20 @@ function reifyOrdinaryScenario(
   collector: GherkinFindingCollector,
 ): ReifiedSpec | undefined {
   const findingCount = collector.findingCount;
-  checkTitleOrStepLine(sourceIndex, scenario.location.line, "Scenario title", collector, file);
   const metadata = parseMetadataTags(
     scenario.tags,
     file,
     scenario.location.line,
     "Scenario",
     collector,
+  );
+  checkTitleOrStepLine(
+    sourceIndex,
+    scenario.location.line,
+    "Scenario title",
+    collector,
+    file,
+    metadata.id,
   );
 
   if (scenario.keyword === "Scenario Outline" || scenario.examples.length > 0) {
@@ -1226,13 +1251,18 @@ function reifyOrdinaryScenario(
   };
 }
 
-/** Read the physical line: the Gherkin parser trims trailing separators from names and steps. */
+/**
+ * Read the physical line: the Gherkin parser trims trailing separators from names and steps. The
+ * refusal names the Spec that owns the line, as its sibling refusals do: a Scenario's own id, or the
+ * Feature's id for the Feature, a Rule and the `@example-space` pseudo-scenario.
+ */
 function checkTitleOrStepLine(
   sourceIndex: GherkinSourceIndex,
   line: number,
   construct: string,
   collector: GherkinFindingCollector,
   file: string,
+  subjectId: string | undefined,
 ): void {
   if (!UNSUPPORTED_LINE_BREAK.test(sourceIndex.sourceLines[line - 1] ?? "")) return;
   appendFinding(
@@ -1241,6 +1271,7 @@ function checkTitleOrStepLine(
       file,
       line,
       `${construct} line holds a lone CR, U+2028 or U+2029; use LF or CRLF between lines`,
+      subjectId,
     ),
     file,
   );
@@ -1266,13 +1297,20 @@ function reifyFeature(
   }
 
   const collector: GherkinFindingCollector = { findings: [], findingCount: 0 };
-  checkTitleOrStepLine(sourceIndex, feature.location.line, "Feature title", collector, file);
   const metadata = parseMetadataTags(
     feature.tags,
     file,
     feature.location.line,
     "Feature",
     collector,
+  );
+  checkTitleOrStepLine(
+    sourceIndex,
+    feature.location.line,
+    "Feature title",
+    collector,
+    file,
+    metadata.id,
   );
   const description = parseDescription(
     indexedDescription(sourceIndex, feature),
@@ -1305,7 +1343,7 @@ function reifyFeature(
       );
     }
     if (child.rule !== undefined) {
-      const parsedRule = parseRule(child.rule, file, sourceIndex, collector);
+      const parsedRule = parseRule(child.rule, file, sourceIndex, collector, metadata.id);
       if (parsedRule !== undefined) {
         ruleLines.push({ entry: `rule[${String(rules.length)}]`, line: child.rule.location.line });
         rules.push(parsedRule);
@@ -1328,7 +1366,13 @@ function reifyFeature(
           file,
         );
       }
-      const parsedSpace = parseExampleSpaceScenario(child.scenario, file, sourceIndex, collector);
+      const parsedSpace = parseExampleSpaceScenario(
+        child.scenario,
+        file,
+        sourceIndex,
+        collector,
+        metadata.id,
+      );
       if (parsedSpace !== undefined && exampleSpace === undefined) {
         exampleSpace = parsedSpace;
         exampleSpaceLines.push(...stepSourceLines(child.scenario.steps, "behavior.exampleSpace"));
