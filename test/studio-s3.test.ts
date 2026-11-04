@@ -424,6 +424,29 @@ describe("Studio register pages", () => {
 });
 
 describe("Studio base comparison", () => {
+  it("states in its help the refusal the command applies: build-owned paths, not all of generated/", async () => {
+    const help = createCaptureOutput();
+    expect(await runSdpCli(["studio", "--help"], help.output)).toBe(0);
+    const text = help.readStdout().replace(/\s+/gu, " ");
+    expect(text).toContain(
+      "An input the build could write or remove, such as <root>/generated/graph.json or a file beneath a projection root, is refused",
+    );
+    expect(text).not.toContain("paths resolving inside it are refused");
+
+    const root = corpus({ "a.sdp.md": carrier("spec:probe.alpha", "", "{}", "idea") });
+    const build = createCaptureOutput();
+    expect(await runSdpCli(["build", root], build.output)).toBe(0);
+    const base = join(root, "generated/kept-base.json");
+    writeFileSync(base, readFileSync(join(root, "generated/graph.json")));
+    const assets = { script: join(root, "fixture.js"), stylesheet: join(root, "fixture.css") };
+    writeFileSync(assets.script, "");
+    writeFileSync(assets.stylesheet, "");
+    const accepted = createCaptureOutput();
+    expect(
+      await runSdpCli(["studio", root, "--base", base], accepted.output, { studioAssets: assets }),
+    ).toBe(0);
+    expect(accepted.readStderr()).not.toContain("--base");
+  });
   it.each(["graph", "nested", "file alias", "root alias", "input alias"])(
     "refuses a base in generated output before writing through %s",
     async (variant) => {

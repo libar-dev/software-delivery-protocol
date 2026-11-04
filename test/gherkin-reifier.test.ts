@@ -38,6 +38,16 @@ function refusal(sourceText: string, validatorId: string = extractFindingIds.ghe
 }
 
 describe("Gherkin carrier reifier", () => {
+  it.each(["constructor", "toString", "valueOf", "__proto__"])(
+    "refuses @kind.%s without inheriting a kind explanation",
+    (kind) => {
+      const found = refusal(feature("", `${FEATURE_TAGS} @kind.${kind}`));
+      expect(found?.message).toBe(
+        `Gherkin tag "@kind.${kind}" is refused: kind is structural (Feature → behavior, Scenario → example)`,
+      );
+    },
+  );
+
   it("reifies the closed accepted grammar into carrier-neutral Spec data", () => {
     const source = `@wip ${FEATURE_TAGS} @depends-on.spec:probe.dependency @constrained-by.spec:probe.constraint @decided-by.spec:probe.decision @refines.spec:probe.parent-parent @verifies.spec:probe.verification
 Feature: Complete carrier
@@ -222,6 +232,7 @@ Feature: Complete carrier
       "implemented",
       "has-verifier",
       "hasVerifier",
+      "deliveryFacts",
       "observed",
       "claim",
       "status",
@@ -240,6 +251,8 @@ Feature: Complete carrier
   });
 
   it.each([
+    "@has_verifier",
+    "@delivery_facts",
     "@wip",
     "@smoke",
     "@implementedness",
@@ -421,26 +434,6 @@ Feature: Multiple findings
       "outside the behavior/example carrier vocabulary",
     ],
     [
-      "an implemented lookalike",
-      feature("", `${FEATURE_TAGS} @implemented`),
-      "delivery-fact lookalike",
-    ],
-    [
-      "a claim lookalike",
-      feature("", `${FEATURE_TAGS} @claim.declared`),
-      "authored claim lookalike",
-    ],
-    [
-      "a lifecycle lookalike",
-      feature("", `${FEATURE_TAGS} @status-ready`),
-      "lifecycle-status lookalike",
-    ],
-    [
-      "an architect lookalike",
-      feature("", `${FEATURE_TAGS} @architect-implemented`),
-      "architect-status lookalike",
-    ],
-    [
       "a graph-aware near miss",
       feature("", `${FEATURE_TAGS} @readines.ready`),
       'did you mean "@readiness."',
@@ -513,6 +506,24 @@ Feature: Multiple findings
       expect(found?.line).toBeGreaterThan(0);
     },
   );
+
+  it.each([
+    ["@implemented", "delivery-fact lookalike"],
+    ["@deliveryFacts", "delivery-fact lookalike"],
+    ["@deliveryFacts.ready", "delivery-fact lookalike"],
+    ["@HasVerifier", "delivery-fact lookalike"],
+    ["@claim.declared", "authored claim lookalike"],
+    ["@status-ready", "authored lifecycle-status lookalike"],
+    ["@architect-implemented", "retired architect-status lookalike"],
+  ])("reports the full lookalike refusal for %s", (tag, reason) => {
+    const found = refusal(feature("", `${FEATURE_TAGS} ${tag}`));
+
+    expect(found?.message).toBe(
+      `Gherkin tag "${tag}" is refused: ${reason}; delivery facts, claims, and lifecycle state are never authored by the carrier`,
+    );
+    expect(found?.line).toBe(1);
+    expect(found?.subjectId).toBe("spec:probe.parent");
+  });
 
   it.each([
     [
@@ -683,6 +694,166 @@ Feature: Probe feature
 
     expect(found?.message).toContain(message);
     expect(found?.line).toBe(line);
+  });
+
+  // A Rule and the @example-space pseudo-scenario belong to the Feature's Spec, so every refusal
+  // inside them names that Spec, as the Feature's own refusals do.
+  it.each([
+    ["a tagged Rule", "  @wip\n  Rule: Tagged", "Rules are title-only"],
+    [
+      "a Rule with children",
+      "  Rule: Parent\n    Scenario: Nested\n      Given a value",
+      "children",
+    ],
+    ["a described Rule", "  Rule: Described\n\n    prose under rule", "Rules are title-only"],
+    [
+      "a repeated space marker",
+      "  @example-space @example-space\n  Scenario: Space\n    Given one",
+      "marker tags",
+    ],
+    [
+      "an authored fact on the space",
+      "  @example-space @implemented\n  Scenario: Space\n    Given one",
+      "never authored by the carrier",
+    ],
+    [
+      "a graph-aware tag on the space",
+      "  @example-space @spec.probe.other\n  Scenario: Space\n    Given one",
+      "graph-aware head",
+    ],
+    [
+      "a space outline",
+      "  @example-space\n  Scenario Outline: Space\n    Given <one>\n\n    Examples:\n      | one |\n      | 1   |",
+      "unsupported construct",
+    ],
+    ["a step-less space", "  @example-space\n  Scenario: Space", "at least one step"],
+    [
+      "a described space",
+      "  @example-space\n  Scenario: Space\n\n    prose under space\n    Given one",
+      "cannot carry a description",
+    ],
+    ["a star step in the space", "  @example-space\n  Scenario: Space\n    * one", "is refused"],
+    [
+      "a doc string in the space",
+      '  @example-space\n  Scenario: Space\n    Given one\n      """\n      text\n      """',
+      "doc string",
+    ],
+    [
+      "a data table in the space",
+      "  @example-space\n  Scenario: Space\n    Given one\n      | a |",
+      "data table",
+    ],
+  ])("names the Feature on the refusal of %s", (_name, body, message) => {
+    const result = reify(feature(`\n${body}`));
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings.length).toBeGreaterThan(0);
+    expect(result.findings.some((found) => found.message.includes(message))).toBe(true);
+    for (const found of result.findings) expect(found.subjectId).toBe("spec:probe.parent");
+  });
+
+  describe.each([
+    ["a lone CR", "\r"],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+  ])("a description line holding %s", (_name, separator) => {
+    const held = "description line holds a lone CR, U+2028 or U+2029";
+
+    it.each([
+      [
+        "an unknown key",
+        feature(`  - outcom: A misspelt key${separator}with more text.`),
+        3,
+        'Feature "Probe feature"',
+      ],
+      [
+        "a repeated singular key",
+        feature(`  - outcome: First\n  - outcome: A second${separator}outcome.`),
+        4,
+        'Feature "Probe feature"',
+      ],
+      [
+        "a sole outcome",
+        feature(`  - outcome: Turn a cart${separator}into an order.`),
+        3,
+        'Feature "Probe feature"',
+      ],
+      [
+        "narrative prose",
+        feature(`  Some prose${separator}and more prose.`),
+        3,
+        'Feature "Probe feature"',
+      ],
+      [
+        "a Scenario key",
+        feature(
+          `\n${scenario(`    - outcome: Turn a cart${separator}into an order.\n    Given a value`)}`,
+        ),
+        6,
+        'Scenario "Probe scenario"',
+      ],
+    ])("is refused at its physical line in %s", (_case, sourceText, line, construct) => {
+      const found = refusal(sourceText);
+
+      expect(found?.line).toBe(line);
+      expect(found?.message).toContain(construct);
+      expect(found?.message).toContain(held);
+    });
+  });
+
+  describe.each([
+    ["CR", "\r"],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+  ])("embedded %s in Gherkin titles and steps", (_name, separator) => {
+    const source = feature(
+      [
+        "",
+        "  # A comment keeps physical locations visible.",
+        "  @example-space",
+        "  Scenario: Space title",
+        "    Given space text",
+        "",
+        scenario("    Given ordinary text\n    And continued text"),
+        "",
+        "  Rule: Rule title",
+      ].join("\n"),
+    );
+    // Each refusal names the Spec that owns the line: the Scenario its own, and the Feature its
+    // title, its Rules and its @example-space pseudo-scenario.
+    it.each([
+      ["Feature title", "Probe feature", 2, "spec:probe.parent"],
+      ["Scenario title", "Probe scenario", 10, "spec:probe.child"],
+      ["Example title", "Probe example", 10, "spec:probe.child"],
+      ["space title", "Space title", 6, "spec:probe.parent"],
+      ["Rule title", "Rule title", 14, "spec:probe.parent"],
+      ["Feature tag", FEATURE_TAGS, 1, "spec:probe.parent"],
+      ["Scenario tag", SCENARIO_TAGS, 9, "spec:probe.child"],
+      ["space tag", "@example-space", 5, "spec:probe.parent"],
+      ["ordinary step", "ordinary text", 11, "spec:probe.child"],
+      ["conjunction step", "continued text", 12, "spec:probe.child"],
+      ["space step", "space text", 7, "spec:probe.parent"],
+    ])("refuses %s at its physical line", (_site, text, line, subjectId) => {
+      const original =
+        text === "Probe example"
+          ? source.replace("Scenario: Probe scenario", "Example: Probe example")
+          : source;
+      for (const ending of ["\n", "\r\n"]) {
+        expect(reify(original.replaceAll("\n", ending)).findings).toEqual([]);
+        const suffixes = _site.endsWith(" tag") ? [""] : ["Then hidden text", ""];
+        for (const suffix of suffixes) {
+          const input = original
+            .replaceAll("\n", ending)
+            .replace(text, `${text}${separator}${suffix}`);
+          // A CR immediately before LF is a lawful CRLF, not an embedded separator.
+          if (separator === "\r" && suffix === "" && ending === "\n") continue;
+          const found = refusal(input);
+          expect(found?.line).toBe(line);
+          expect(found?.message).toContain("line holds a lone CR, U+2028 or U+2029");
+          expect(found?.subjectId).toBe(subjectId);
+        }
+      }
+    });
   });
 
   it("reports Feature and Scenario bad description keys at the same physical lines under CRLF", () => {

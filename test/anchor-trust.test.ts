@@ -69,6 +69,69 @@ export const lookalike = spec({
     expect(result.graph.edges).toEqual([]);
   });
 
+  it.each(["src/ids.ts", "src/anchors.ts", "src/model/code-anchor.ts"])(
+    "trusts the extracted Protocol root's own %s and rereads its package identity",
+    (modulePath) => {
+      const root = temporaryRoot("protocol-copy");
+      mkdirSync(join(root, "src/model"), { recursive: true });
+      writeFileSync(join(root, modulePath), "export {};\n");
+      writeFileSync(
+        join(root, "binding.ts"),
+        `import { codeAnchor, codeAnchorId } from "./${modulePath.replace(/\.ts$/u, ".js")}";
+const binding = codeAnchor({ id: codeAnchorId("impl:probe.copied-builder") });
+void binding;
+`,
+      );
+      const manifest = join(root, "package.json");
+      // Missing, malformed, non-object and consumer manifests confer no relative trust.
+      for (const contents of [undefined, "{", "null", '"package"', '{"name":"consumer"}']) {
+        if (contents !== undefined) writeFileSync(manifest, contents);
+        expect(extract({ root }).counts.anchors).toBe(0);
+      }
+      writeFileSync(manifest, JSON.stringify({ name: "@libar-dev/software-delivery-protocol" }));
+      const result = extract({ root });
+      expect(result.counts.anchors).toBe(1);
+      expect(result.report.findings).toEqual([]);
+
+      writeFileSync(manifest, JSON.stringify({ name: "consumer" }));
+      expect(extract({ root }).counts.anchors).toBe(0);
+    },
+  );
+
+  it("refuses lookalike paths even inside a Protocol root and does not trust a nested package", () => {
+    const root = temporaryRoot("protocol-lookalike");
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({ name: "@libar-dev/software-delivery-protocol" }),
+    );
+    for (const directory of ["src", "nested/src"]) {
+      mkdirSync(join(root, directory), { recursive: true });
+      writeFileSync(join(root, directory, "code-anchor.ts"), "export {};\n");
+      writeFileSync(join(root, directory, "ids.ts"), "export {};\n");
+    }
+    writeFileSync(
+      join(root, "nested/package.json"),
+      JSON.stringify({ name: "@libar-dev/software-delivery-protocol" }),
+    );
+    writeFileSync(
+      join(root, "binding.ts"),
+      `
+import { codeAnchor, codeAnchorId } from "./src/code-anchor.js";
+const wrongPath = codeAnchor({ id: codeAnchorId("impl:probe.wrong-path") });
+`,
+    );
+    writeFileSync(
+      join(root, "nested/binding.ts"),
+      `
+import { codeAnchor, codeAnchorId } from "./src/ids.js";
+const nested = codeAnchor({ id: codeAnchorId("impl:probe.nested") });
+`,
+    );
+    const result = extract({ root });
+    expect(result.counts.anchors).toBe(0);
+    expect(result.report.findings).toEqual([]);
+  });
+
   it("recognizes deep relative imports only when they resolve to the Protocol builder modules", () => {
     const root = temporaryRoot("physical-identity");
     mkdirSync(join(root, "model"), { recursive: true });
@@ -93,7 +156,15 @@ void binding;
 
     const result = extract({ root });
 
-    expect(result.report.findings).toEqual([]);
+    expect(result.report.findings).toEqual(
+      ["ids.ts", "model/code-anchor.ts"].map((file) => ({
+        validatorId: "extract/symbolic-link-skipped",
+        family: "conformance",
+        severity: "warning",
+        file,
+        message: `symbolic link "${file}" is skipped; discovery never follows links below the root`,
+      })),
+    );
     expect(result.counts.anchors).toBe(1);
     expect(result.graph.nodes).toContainEqual(
       expect.objectContaining({ id: "impl:protocol.deep-binding", nodeType: "CodeNode" }),

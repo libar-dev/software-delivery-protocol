@@ -11,7 +11,7 @@ import {
   isRecord,
   keyed,
   propertyFinding,
-  reservedMarkdownProperties,
+  isReservedMarkdownProperty,
   single,
   structureFinding,
 } from "./markdown-body-owner-support.js";
@@ -236,7 +236,7 @@ export function mapBehavior(
   };
   for (const item of parsed.items) {
     const entry = keyed(item.text);
-    if (entry !== undefined && reservedMarkdownProperties.has(entry.key)) {
+    if (entry !== undefined && isReservedMarkdownProperty(entry.key)) {
       addMarkdownFinding(findings, propertyFinding(file, item.line, entry.key));
       continue;
     }

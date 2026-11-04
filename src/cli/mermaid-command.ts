@@ -1,12 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  renameSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
@@ -14,7 +6,7 @@ import { codeAnchor } from "../model/code-anchor.js";
 import { renderMermaid } from "../projections/mermaid.js";
 import { createReader } from "../reader/reader.js";
 import type { Reader } from "../reader/reader.js";
-import { removeArtifacts } from "./artifacts.js";
+import { guardedOutput, assertDistinctPagePaths, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import type { BuildOutcome } from "./build-command.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
@@ -95,8 +87,15 @@ export function prepareMermaidPublication(
   hooks: MermaidHooks,
   command = "mermaid",
 ): ((validated: BuildOutcome) => number) | undefined {
+  const {
+    rmSync: remove,
+    mkdirSync: mkdir,
+    writeFileSync: writeOutput,
+    renameSync: rename,
+    check,
+  } = guardedOutput(parsed.root, hooks);
   const render: MermaidRenderer = hooks.renderMermaid ?? renderMermaid;
-  const recoveryRm = hooks.rmSync ?? rmSync;
+  const recoveryRm = remove;
   const mermaidPath = join(parsed.root, "generated", "mermaid");
   const temporaryPath = `${mermaidPath}.tmp`;
   let publishedBeforeBuild: readonly MermaidPage[] | undefined;
@@ -127,6 +126,7 @@ export function prepareMermaidPublication(
 
     try {
       const pages = normalizePages(render(createReader(validate.graph)));
+      assertDistinctPagePaths(pages);
 
       if (parsed.checkClean) {
         const second = normalizePages(render(createReader(validate.graph)));
@@ -144,16 +144,17 @@ export function prepareMermaidPublication(
         }
       }
 
-      rmSync(temporaryPath, { recursive: true, force: true });
+      remove(temporaryPath, { recursive: true, force: true });
 
       for (const page of pages) {
         const target = join(temporaryPath, page.path);
-        mkdirSync(dirname(target), { recursive: true });
-        writeFileSync(target, page.content, "utf8");
+        mkdir(dirname(target), { recursive: true });
+        writeOutput(target, page.content, { encoding: "utf8", flag: "wx" });
       }
 
-      rmSync(mermaidPath, { recursive: true, force: true });
-      renameSync(temporaryPath, mermaidPath);
+      remove(mermaidPath, { recursive: true, force: true });
+      rename(temporaryPath, mermaidPath);
+      check(join(parsed.root, "generated", ".boundary"));
       writeStdout(output, `Wrote ${mermaidPath} (${String(pages.length)} pages)\n`);
       return validate.exitCode;
     } catch (error) {

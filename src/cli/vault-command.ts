@@ -19,6 +19,7 @@ import {
   VaultGuardError,
 } from "../projections/vault/sync.js";
 import type { SyncResult, VaultFile, VaultState } from "../projections/vault/sync.js";
+import { assertOutputParent } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import { buildOwnedPaths, buildOwnedRegistrarPaths } from "./build-command.js";
 import type { CliOutput } from "./output.js";
@@ -38,6 +39,27 @@ const inside = (parent: string, child: string): boolean => {
   const path = relative(parent.toLowerCase(), child.toLowerCase());
   return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path));
 };
+/** Publication requires an existing, safe output parent; placement checks also accept absent roots. */
+function checkVaultPublicationDirectory(
+  parsed: BuildArgs,
+  registrars: readonly string[] = [],
+): void {
+  assertOutputParent(parsed.root, join(parsed.root, "generated", "graph.json"));
+  if (parsed.vault === undefined) {
+    // spec:consumers.obsidian-vault#rule.defaultInsideRoot: a link at the default folder may move
+    // the vault inside the root, where the placement checks below apply, never out of it.
+    const out = vaultDirectory(parsed);
+    try {
+      assertOutputParent(parsed.root, join(out, "sdp"));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== undefined) throw error;
+      throw new Error(
+        `sdp vault: the default vault ${out} does not resolve inside the root; choose a vault directory explicitly to place it elsewhere`,
+      );
+    }
+  }
+  checkVaultDirectory(parsed, registrars);
+}
 export function checkVaultDirectory(parsed: BuildArgs, registrars: readonly string[] = []): void {
   const out = vaultDirectory(parsed),
     resolvedOut = physical(out),
@@ -91,7 +113,7 @@ export function reportVaultError(error: unknown, output: CliOutput): number {
 }
 export function prepareVault(parsed: BuildArgs, output: CliOutput): VaultState | undefined {
   try {
-    checkVaultDirectory(parsed);
+    checkVaultPublicationDirectory(parsed);
     return inspectVault(vaultDirectory(parsed));
   } catch (error) {
     reportVaultError(error, output);
@@ -112,7 +134,7 @@ export function prepareVaultBuild(
   try {
     assertVaultNoteNames(extracted.graph);
     const contracts = (hooks.generateContracts ?? generateContracts)(extracted.graph);
-    checkVaultDirectory(parsed, [...contracts.registrars.keys()]);
+    checkVaultPublicationDirectory(parsed, [...contracts.registrars.keys()]);
     return { ...hooks, extract: () => extracted, generateContracts: () => contracts };
   } catch (error) {
     reportVaultError(error, output);
@@ -141,6 +163,7 @@ export function publishFailedVault(
         )
         .join("\n") +
       "\n";
+    checkVaultPublicationDirectory(parsed);
     summarize(
       parsed,
       synchronizeVault(
@@ -173,6 +196,7 @@ export function publishVault(
   findings?: Parameters<typeof renderVault>[1],
 ): number {
   try {
+    checkVaultPublicationDirectory(parsed);
     summarize(
       parsed,
       synchronizeVault(
@@ -258,6 +282,7 @@ export function runVaultWatch(
     onWatchStop: () => {
       // Cycles are synchronous; SIGINT is delivered between them. Remove only recognized whole temporaries.
       try {
+        checkVaultPublicationDirectory(parsed);
         const state = inspectVault(out);
         if (state.temporaries.length)
           synchronizeVault(

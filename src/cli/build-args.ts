@@ -1,8 +1,9 @@
+import { assertOutputParent } from "./artifacts.js";
 import { readStudioBase, readStudioRuns } from "./studio-inputs.js";
 import type { StudioInputs } from "../projections/studio/inputs.js";
 import { mergeParams } from "./params.js";
 import { realpathSync, statSync } from "node:fs";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 
 import { InvalidExcludePathError, normalizeExcludes } from "../extract/discover.js";
 import type { CliOutput } from "./output.js";
@@ -290,6 +291,15 @@ export function parseBuildArgs(
 
   const resolvedRoot = resolveExtractionRoot(root, output, command);
   if (resolvedRoot === undefined) return undefined;
+  try {
+    assertOutputParent(resolvedRoot, join(resolvedRoot, "generated", "graph.json"));
+  } catch (error) {
+    writeStderr(
+      output,
+      `sdp ${command}: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
+    return undefined;
+  }
   const studioInputs =
     base === undefined ? undefined : readStudioBase(base, baseLabel ?? null, output, resolvedRoot);
   if (base !== undefined && studioInputs === undefined) return undefined;

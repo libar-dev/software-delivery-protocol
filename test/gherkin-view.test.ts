@@ -316,6 +316,42 @@ describe("the generated Gherkin-shaped READ projection", () => {
     expect(page.split("\n").some((line) => line.includes("quotes"))).toBe(true);
   });
 
+  it.each([
+    ["CR", "\r"],
+    ["CRLF", "\r\n"],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+  ])("folds %s to one space so no page line is invented", (_name, separator) => {
+    const hostile = `Probe title${separator}@implemented injected`;
+    const pages = renderGherkinView(
+      readerStub([
+        specContext({
+          id: "spec:probe.lines",
+          title: hostile,
+          narrative: hostile,
+          sections: {
+            intent: { outcome: hostile },
+            behavior: {
+              rules: [hostile],
+              exampleSpace: { given: [hostile], when: ["it runs"], then: ["it holds"] },
+            },
+          },
+        }),
+      ]),
+    );
+    const page = pageByPath(pages, "spec/probe.lines.feature.md");
+
+    expect(escapeGherkinViewText(hostile)).toBe("Probe title @implemented injected");
+    expect(page).not.toMatch(/[\r\u2028\u2029]/u);
+    expect(page.split("\n").filter((line) => line.includes("@implemented injected"))).toEqual([
+      "Feature: Probe title @implemented injected",
+      "  Probe title @implemented injected",
+      "  - outcome: Probe title @implemented injected",
+      "    Given Probe title @implemented injected",
+      "  Rule: Probe title @implemented injected",
+    ]);
+  });
+
   it("renders the checkout-v1 corpus as a disposable generated view", () => {
     const first = renderGherkinView(createReader(extract({ root: checkoutRoot }).graph));
     const second = renderGherkinView(createReader(extract({ root: checkoutRoot }).graph));

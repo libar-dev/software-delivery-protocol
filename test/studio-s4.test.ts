@@ -6,6 +6,8 @@ import {
   readdirSync,
   rmSync,
   chmodSync,
+  existsSync,
+  symlinkSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { schemaVersion } from "../src/graph/schema.js";
@@ -1235,3 +1237,68 @@ it("formats external run durations to at most two decimals on every page", async
     files: [{ results: durations.map((duration) => expect.objectContaining({ duration })) }],
   });
 });
+
+it.each(["malformed-runs", "escaping-parent", "fresh-findings"])(
+  "preview stamps only this invocation's page set: %s",
+  (kind) => {
+    const root = fixture(),
+      runner = fixture(),
+      outside = fixture();
+    const pageSet = join(kind === "escaping-parent" ? outside : root, "generated/spec-studio");
+    mkdirSync(pageSet, { recursive: true });
+    writeFileSync(join(pageSet, "index.html"), "old page");
+    writeFileSync(join(pageSet, "stamp.json"), "old stamp");
+    if (kind === "escaping-parent")
+      symlinkSync(join(outside, "generated"), join(root, "generated"));
+    if (kind === "malformed-runs") {
+      mkdirSync(join(runner, "studio-runs"));
+      writeFileSync(join(runner, "studio-runs/bad.json"), "{");
+    }
+    if (kind === "fresh-findings") {
+      const carrier = join(root, "page.sdp.md");
+      writeFileSync(
+        carrier,
+        readFileSync(carrier, "utf8").replace("readiness: idea", "readiness: ready"),
+      );
+    }
+    const build = stepNamed(
+      workflow("studio-preview").jobs.build,
+      "Build, stamp and measure the page set",
+    );
+    const result = spawnSync("bash", ["-e", "-o", "pipefail", "-c", required(build.run)], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        ROOT: root,
+        EXCLUDE: "",
+        SDP: `node ${JSON.stringify(join(process.cwd(), "dist/cli/sdp.js"))}`,
+        DIFF: "false",
+        CORPUS_COMMIT: "fresh",
+        SOURCE_SERVER: "https://github.com",
+        SOURCE_REPO: "owner/repo",
+        RUNS_ARTIFACT: "runs",
+        RUNNER_TEMP: runner,
+        GITHUB_STEP_SUMMARY: join(runner, "summary"),
+      },
+    });
+    if (kind === "fresh-findings") {
+      expect(result.status, result.stderr).toBe(0);
+      expect(readFileSync(join(pageSet, "stamp.json"), "utf8")).toContain('"corpusCommit":"fresh"');
+      expect(readFileSync(join(runner, "summary"), "utf8")).toContain(
+        "validation reported findings",
+      );
+    } else {
+      expect(result.status, result.stderr).not.toBe(0);
+      expect(
+        existsSync(join(pageSet, "stamp.json"))
+          ? readFileSync(join(pageSet, "stamp.json"), "utf8")
+          : "",
+      ).not.toContain('"corpusCommit":"fresh"');
+      expect(existsSync(join(runner, "summary"))).toBe(false);
+    }
+    if (kind === "escaping-parent")
+      expect(readFileSync(join(pageSet, "index.html"), "utf8")).toBe("old page");
+    const upload = stepNamed(workflow("studio-preview").jobs.build, "Upload the stamped page set");
+    expect(upload.if).toBeUndefined(); // GitHub's default success() gate prevents upload after the failed build step.
+  },
+);

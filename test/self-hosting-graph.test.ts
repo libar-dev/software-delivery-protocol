@@ -336,7 +336,7 @@ describe("the self-hosting corpus", () => {
   });
 
   // Then: the frozen corpus enters one graph with exact descriptors and its direct bindings.
-  it("reifies the root corpus without an extraction finding", () => {
+  it("extracts the root corpus without diagnostics", () => {
     expect(result.report.findings).toEqual([]);
   });
 
@@ -354,17 +354,53 @@ describe("the self-hosting corpus", () => {
     ).toEqual(expectedWarnings);
   });
 
+  // The handbook tells a session which warnings to expect; naming one the oracle refuses would
+  // teach a regression as the baseline.
+  it("names in the handbook exactly the warning kinds the oracle retains", () => {
+    const handbook = readFileSync(join(repoRoot, "AGENTS.md"), "utf8").replace(/\s+/gu, " ");
+    const paragraph = handbook.split("The `check:self-hosting` step emits ")[1] ?? "";
+    const firstSentence = paragraph.split(". ")[0] ?? "";
+    expect([...firstSentence.matchAll(/`([a-z]+\/[a-z-]+)`/gu)].map((match) => match[1])).toEqual([
+      ...new Set(expectedWarnings.map(({ validatorId }) => validatorId)),
+    ]);
+  });
+
+  // The registry's preamble: a decision that narrows another refines it, and the narrowed row
+  // names it, so a reader resolving the narrowed code by name never takes it as whole law.
+  it("names every narrowing decision on the narrowed decision's registry row", () => {
+    const rows = readFileSync(join(repoRoot, "docs/concept/DECISIONS.md"), "utf8")
+      .split("\n")
+      .filter((line) => /^\| MD-\d+ \|/u.test(line));
+    const pointer = (row: string) => row.split(" | ").at(-1) ?? "";
+    const unnamed = result.graph.edges
+      .filter(
+        (edge) =>
+          edge.type === "refines" &&
+          edge.from.startsWith("spec:decisions.") &&
+          edge.to.startsWith("spec:decisions."),
+      )
+      .flatMap((edge) => {
+        const row = rows.find((candidate) =>
+          pointer(candidate).split("; narrowed by")[0]?.includes(`\`${edge.to}\``),
+        );
+        return row === undefined || pointer(row).includes(`\`${edge.from}\``)
+          ? []
+          : [`${edge.to} narrowed by ${edge.from}`];
+      });
+    expect(unnamed).toEqual([]);
+  });
+
   it("holds the frozen corpus totals", () => {
     // The literals are the corpus checkpoint. The authored arrays are measured against the same
     // literals rather than standing in for them, so a transcription slip in an oracle module
     // cannot certify itself by moving both sides of a comparison at once.
-    expect(result.counts).toEqual({ specs: 456, packs: 9, anchors: 607 });
-    expect(expectedSpecs).toHaveLength(456);
-    expect(expectedPackMembers).toHaveLength(456);
-    expect(expectedAnchors).toHaveLength(607);
-    expect(expectedBindingEdges).toHaveLength(810);
-    expect(result.graph.nodes).toHaveLength(1072);
-    expect(result.graph.edges).toHaveLength(2978);
+    expect(result.counts).toEqual({ specs: 459, packs: 9, anchors: 611 });
+    expect(expectedSpecs).toHaveLength(459);
+    expect(expectedPackMembers).toHaveLength(459);
+    expect(expectedAnchors).toHaveLength(611);
+    expect(expectedBindingEdges).toHaveLength(819);
+    expect(result.graph.nodes).toHaveLength(1079);
+    expect(result.graph.edges).toHaveLength(2996);
   });
 
   it("permits a named second diagram view in the authored element-id contract", () => {
@@ -448,7 +484,7 @@ describe("the self-hosting corpus", () => {
         }),
         {},
       ),
-    ).toEqual({ idea: 5, ready: 447, scoped: 4 });
+    ).toEqual({ idea: 8, ready: 447, scoped: 4 });
   });
 
   it("derives the Pack membership edges from the manifest, in manifest order", () => {
@@ -593,7 +629,8 @@ describe("the self-hosting corpus", () => {
     ].join("\n");
 
     expect(mismatches, message).toEqual([]);
-  });
+    // The roster walks every graph edge per unit, which can pass five seconds under load.
+  }, 60_000);
 
   it("gives every accepted unit a readable responsibility label", () => {
     for (const anchorId of [
@@ -661,7 +698,7 @@ describe("the self-hosting corpus", () => {
 
   it("finds every converted comment anchor at its block's first line", () => {
     // Re-measured from the refreshed tree.
-    expect(expectedCommentAnchorIds).toHaveLength(118);
+    expect(expectedCommentAnchorIds).toHaveLength(120);
     expect(
       expectedAnchors
         .filter((anchor) => anchor.constant === undefined)
@@ -750,7 +787,9 @@ describe("the self-hosting corpus", () => {
       expect(Math.abs(anchorLine - siteLine), anchor.id).toBeLessThanOrEqual(maxDistance);
       expect(node).toMatchObject({ file: anchor.file, line: anchorLine, claim: "anchored" });
     }
-  });
+    // A budget that holds when the whole suite runs in parallel on a loaded machine: the test
+    // reads the source file of every anchor.
+  }, 60_000);
 
   it("derives the duplicate-ids delivery facts from the bindings, never from authoring", () => {
     const childId = "spec:validation.duplicate-ids.dual-carrier";

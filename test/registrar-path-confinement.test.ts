@@ -142,7 +142,9 @@ describe("registrar path confinement", () => {
       );
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("unsafe registrar sibling path");
+      // The guarded write detects the parent swap before registrar publication runs.
+      expect(result.stderr).toContain("unsafe output parent");
+      expect(result.stderr).toContain('probe.test.generated.ts.tmp" escapes the extraction root');
       expect(readFileSync(outsideRegistrar, "utf8")).toBe("outside sentinel\n");
       expect(existsSync(`${outsideRegistrar}.tmp`)).toBe(false);
     } finally {

@@ -1,3 +1,4 @@
+import { nodeLine } from "./typescript-lines.js";
 import { normalizeAuthoring, relationOptionsRefusal } from "./authoring-normalization.js";
 import { Node, SyntaxKind, VariableDeclarationKind } from "ts-morph";
 import type {
@@ -9,7 +10,7 @@ import type {
   SourceFile,
 } from "ts-morph";
 
-import { deliveryFactNames } from "../graph/schema.js";
+import { isReservedDerivedProperty } from "../graph/delivery-fact-spellings.js";
 import { CODE_ANCHOR_NAMESPACES, codeAnchorId, componentAnchorId, parseId, ref } from "../ids.js";
 import type { IdParts } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
@@ -56,6 +57,7 @@ import { setOwn } from "./set-own.js";
  * file's content stays out of the graph (ambiguity is loud, L2).
  */
 export const extractFindingIds = {
+  symbolicLinkSkipped: "extract/symbolic-link-skipped",
   parseError: "extract/parse-error",
   invalidMarkdownStructure: "extract/invalid-markdown-structure",
   unrecognizedHeading: "extract/unrecognized-heading",
@@ -97,28 +99,6 @@ const SPEC_KIND_VALUES = new Set<string>(SPEC_KINDS);
 const SPEC_ALTITUDE_VALUES = new Set<string>(SPEC_ALTITUDES);
 const SPEC_READINESS_VALUES = new Set<string>(SPEC_READINESS);
 const SPEC_SECTION_NAME_SET = new Set<string>(SPEC_SECTION_NAMES);
-
-/**
- * Derived graph vocabulary an authored carrier must never state: the delivery facts plus the
- * graph's own node and edge fields. Hand-authoring one impersonates machine truth, so it is an
- * envelope-tier hard error — the extraction-layer twin of authoring-shape honesty
- * (`spec:validation.authored-honesty`) on the top-level authored shape, exactly as raw `relations[]` entries and foreign
- * anchor fields are on theirs. In-section content stays the honesty checks' jurisdiction: it
- * reifies through and the `honesty/authoring-shape` validator sees it in the model.
- */
-const RESERVED_DERIVED_PROPERTIES = new Set<string>([
-  ...deliveryFactNames,
-  // camel `hasVerifier` joins the kebab delivery facts: every delivery-fact spelling is reserved in both carriers (R-6 parity).
-  "hasVerifier",
-  "deliveryFacts",
-  "claim",
-  "nodeType",
-  "specKind",
-  "satisfies",
-  "verifies",
-  "belongsTo",
-  "models",
-]);
 
 export interface ReifiedEntryLine {
   readonly entry: string;
@@ -184,7 +164,7 @@ export type StaticResult =
   | { readonly ok: false; readonly failure: StaticFailure };
 
 function staticFailure(node: Node, path: string, reason: string): StaticResult {
-  return { ok: false, failure: { path, line: node.getStartLineNumber(), reason } };
+  return { ok: false, failure: { path, line: nodeLine(node), reason } };
 }
 
 function describeNonStatic(node: Node): string {
@@ -410,6 +390,87 @@ export function reifyStaticString(node: Node, path: string): StaticResult {
   return staticFailure(unwrapped, path, describeNonStatic(unwrapped));
 }
 
+/**
+ * A lone CR, U+2028 or U+2029 ends a line for some renderers, while the Markdown and Gherkin
+ * carriers end a line only at LF or CRLF, so a title, prose line or entry holding one could show a
+ * line the carrier does not state. A TypeScript string has no physical lines of its own, so every
+ * string a title, narrative, framing or section keeps is read whole: LF and CRLF stay lawful, and
+ * anything else refuses the Spec or Pack the way a relation reason that is not one line does.
+ *
+ * Only what the carrier keeps is read. The walk follows the reified value beside its syntax, as
+ * `sanitizeSectionValue` does, so a type in an assertion, which is erased, and a value dropped as
+ * non-static, repeated or unrecognized, which never reaches the graph, refuse nothing.
+ */
+const UNSUPPORTED_LINE_BREAK = /\r(?!\n)|[\u2028\u2029]/u;
+
+function lineBreakLiterals(node: Node, value: unknown): Node[] {
+  const unwrapped = unwrapTransparent(node);
+
+  if (typeof value === "string") {
+    return UNSUPPORTED_LINE_BREAK.test(value) ? [unwrapped] : [];
+  }
+
+  if (Array.isArray(value) && Node.isArrayLiteralExpression(unwrapped)) {
+    return unwrapped
+      .getElements()
+      .flatMap((element, index) => lineBreakLiterals(element, value[index]));
+  }
+
+  if (!isUnknownRecord(value) || !Node.isObjectLiteralExpression(unwrapped)) {
+    return [];
+  }
+
+  // The first plain assignment of a name is the one kept; a repeat drops.
+  const literals: Node[] = [];
+  const seenNames = new Set<string>();
+
+  for (const property of unwrapped.getProperties()) {
+    if (!Node.isPropertyAssignment(property)) {
+      continue;
+    }
+
+    const name = readPropertyName(property);
+
+    if (name === undefined || seenNames.has(name) || !Object.hasOwn(value, name)) {
+      continue;
+    }
+
+    seenNames.add(name);
+
+    if (UNSUPPORTED_LINE_BREAK.test(name)) {
+      literals.push(property.getNameNode());
+    }
+
+    const initializer = property.getInitializer();
+
+    if (initializer !== undefined) {
+      literals.push(...lineBreakLiterals(initializer, value[name]));
+    }
+  }
+
+  return literals;
+}
+
+function lineBreakRefusals(
+  node: Node,
+  value: unknown,
+  path: string,
+  file: string,
+  subjectId: string | undefined,
+): Finding[] {
+  return lineBreakLiterals(node, value).map((literal) =>
+    createExtractFinding(
+      extractFindingIds.nonStaticEnvelope,
+      "error",
+      `property "${path}" holds a string with a lone CR, U+2028 or U+2029; a title, prose line or entry ends a line only at LF or CRLF`,
+      file,
+      nodeLine(literal),
+      subjectId,
+      path,
+    ),
+  );
+}
+
 export type IdReification =
   | { readonly ok: true; readonly id: string }
   | {
@@ -513,7 +574,7 @@ export function reifyStaticIdExpression(
   }
 
   const idText = stringResult.value as string;
-  const line = unwrapped.getStartLineNumber();
+  const line = nodeLine(unwrapped);
 
   // The wrapping builder's contract checks first: it is the narrower statement, and the one
   // evaluation would enforce (the builder throws on a foreign namespace).
@@ -812,6 +873,8 @@ const RECOGNIZED_SECTION_PROPERTIES: ReadonlyMap<string, ReadonlySet<string>> = 
   ],
   ["verification", new Set(["description", "mode", "criteria"])],
 ]);
+/** Reserved carrier keys survive sanitization for honesty/authoring-shape to refuse.
+ * Nested content is not a carrier key; envelope keys are refused during extraction. */
 const AUTHORING_SHAPE_PATHS = new Set([
   "intent",
   "behavior",
@@ -847,7 +910,7 @@ function reifyObjectLossy(
       drops.push({
         droppedPath: `${path}.${name}`,
         failurePath: `${path}.${name}`,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
         reason:
           "only plain property assignments are static (no spreads, shorthand, methods, or accessors)",
       });
@@ -860,7 +923,7 @@ function reifyObjectLossy(
       drops.push({
         droppedPath: path,
         failurePath: path,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
         reason: "computed property names are non-static",
       });
       continue;
@@ -874,7 +937,7 @@ function reifyObjectLossy(
       drops.push({
         droppedPath: propertyPath,
         failurePath: propertyPath,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
         reason: duplicatePropertyMessage(
           name,
           "so the repeat drops and the first authored value survives",
@@ -897,7 +960,7 @@ function reifyObjectLossy(
       drops.push({
         droppedPath: propertyPath,
         failurePath: propertyPath,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
         reason: "property carries no initializer",
       });
       continue;
@@ -978,7 +1041,7 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
         kind: "integer-like",
         name: memberName,
         path: `${path}.${memberName}`,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
       });
       continue;
     }
@@ -1003,7 +1066,7 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
         kind: "integer-like",
         name,
         path: propertyPath,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
       });
       continue;
     }
@@ -1017,13 +1080,13 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
     if (
       recognizedNames !== undefined &&
       !recognizedNames.has(name) &&
-      !(AUTHORING_SHAPE_PATHS.has(shapePath) && RESERVED_DERIVED_PROPERTIES.has(name))
+      !(AUTHORING_SHAPE_PATHS.has(shapePath) && isReservedDerivedProperty(name))
     ) {
       issues.push({
         kind: "unrecognized",
         name,
         path: propertyPath,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
       });
       continue;
     }
@@ -1077,7 +1140,7 @@ function typeScriptEntryLines(
       if (key === "description") continue;
       const property = firstPropertyNamed(initializer, key);
       if (property !== undefined) {
-        lines.push({ entry: `${sectionName}.${key}`, line: property.getStartLineNumber() });
+        lines.push({ entry: `${sectionName}.${key}`, line: nodeLine(property) });
       }
     }
   }
@@ -1098,7 +1161,7 @@ function typeScriptEntryLines(
       array.getElements().forEach((element, index) =>
         lines.push({
           entry: `${field === "rules" ? "rule" : "flow"}[${String(index)}]`,
-          line: element.getStartLineNumber(),
+          line: nodeLine(element),
         }),
       );
     }
@@ -1111,7 +1174,7 @@ function typeScriptEntryLines(
     Object.keys(model.terms).forEach((term, index) => {
       const property = firstPropertyNamed(termsNode, term);
       if (property !== undefined)
-        lines.push({ entry: `term[${String(index)}]`, line: property.getStartLineNumber() });
+        lines.push({ entry: `term[${String(index)}]`, line: nodeLine(property) });
     });
   }
   const stepLines = (node: Node | undefined, path: string): void => {
@@ -1123,7 +1186,7 @@ function typeScriptEntryLines(
         array.getElements().forEach((element, index) =>
           lines.push({
             entry: `${path}.${phase}[${String(index)}]`,
-            line: element.getStartLineNumber(),
+            line: nodeLine(element),
           }),
         );
     }
@@ -1149,7 +1212,7 @@ function typeScriptEntryLines(
       if (relation !== undefined)
         lines.push({
           entry: `relation.${String(relation.type)}.${String(relation.target)}`,
-          line: element.getStartLineNumber(),
+          line: nodeLine(element),
         });
     });
   }
@@ -1171,14 +1234,14 @@ function typeScriptEntryLines(
       const question = firstPropertyNamed(element, "question");
       lines.push({
         entry: `question[${String(index)}]`,
-        line: (question ?? element).getStartLineNumber(),
+        line: nodeLine(question ?? element),
       });
       for (const field of ["decider", "links", "provisional", "trigger"]) {
         const property = firstPropertyNamed(element, field);
         if (property !== undefined)
           lines.push({
             entry: `question[${String(index)}].${field}`,
-            line: property.getStartLineNumber(),
+            line: nodeLine(property),
           });
       }
     }
@@ -1188,7 +1251,7 @@ function typeScriptEntryLines(
 
 /** The line of `openQuestions[<index>].key` in an authored Intent, or the Intent's own line. */
 function openQuestionKeyLine(intentNode: Node, index: number): number {
-  const fallback = intentNode.getStartLineNumber();
+  const fallback = nodeLine(intentNode);
   const questions = firstPropertyNamed(intentNode, "openQuestions")?.getInitializer();
   const array = questions === undefined ? undefined : unwrapTransparent(questions);
 
@@ -1199,7 +1262,7 @@ function openQuestionKeyLine(intentNode: Node, index: number): number {
   const element = array.getElements()[index];
   const key = element === undefined ? undefined : firstPropertyNamed(element, "key");
 
-  return key?.getStartLineNumber() ?? fallback;
+  return key === undefined ? fallback : nodeLine(key);
 }
 
 /**
@@ -1346,7 +1409,7 @@ function requireSingleObjectArgument(
       "error",
       `${builderName}(…) must take exactly one fresh object literal argument`,
       file,
-      call.getStartLineNumber(),
+      nodeLine(call),
     ),
   );
 
@@ -1429,7 +1492,7 @@ function reifyRelations(
         "error",
         `envelope field "relations" must be an array literal`,
         file,
-        unwrapped.getStartLineNumber(),
+        nodeLine(unwrapped),
         subjectId,
         "relations",
       ),
@@ -1452,7 +1515,7 @@ function reifyRelations(
           "error",
           `"${entryPath}" is not one of the six relation builders (${SPEC_RELATION_TYPES.join(" · ")}) — a raw relation entry can smuggle a derived edge, so it is rejected at the envelope tier`,
           file,
-          element.getStartLineNumber(),
+          nodeLine(element),
           subjectId,
           entryPath,
         ),
@@ -1471,7 +1534,7 @@ function reifyRelations(
           "error",
           `"${entryPath}" must wrap one spec id target and optional relation options`,
           file,
-          builderCall.call.getStartLineNumber(),
+          nodeLine(builderCall.call),
           subjectId,
           entryPath,
         ),
@@ -1502,7 +1565,7 @@ function reifyRelations(
             "error",
             refusal,
             file,
-            optionsNode.getStartLineNumber(),
+            nodeLine(optionsNode),
             subjectId,
             entryPath,
           ),
@@ -1523,7 +1586,7 @@ function reifyRelations(
           "error",
           "duplicate target within one relation type",
           file,
-          element.getStartLineNumber(),
+          nodeLine(element),
           subjectId,
           entryPath,
         ),
@@ -1571,6 +1634,7 @@ function reifySpecCall(
   const authoredNames = new Set<string>();
   let sawOpaqueEntry = false;
   let envelopeOk = true;
+  const lineBearing: [name: string, initializer: Node][] = [];
 
   const failEnvelope = (line: number, message: string, path?: string): void => {
     findings.push(
@@ -1599,7 +1663,7 @@ function reifySpecCall(
       }
 
       failEnvelope(
-        property.getStartLineNumber(),
+        nodeLine(property),
         "the spec object literal must be fresh: only plain property assignments are static (a spread or shorthand entry could carry envelope fields opaquely)",
       );
       continue;
@@ -1609,12 +1673,12 @@ function reifySpecCall(
 
     if (name === undefined) {
       sawOpaqueEntry = true;
-      failEnvelope(property.getStartLineNumber(), "computed property names are non-static");
+      failEnvelope(nodeLine(property), "computed property names are non-static");
       continue;
     }
 
     if (authoredNames.has(name)) {
-      failEnvelope(property.getStartLineNumber(), duplicatePropertyMessage(name), name);
+      failEnvelope(nodeLine(property), duplicatePropertyMessage(name), name);
       continue;
     }
 
@@ -1622,12 +1686,12 @@ function reifySpecCall(
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
-      failEnvelope(
-        property.getStartLineNumber(),
-        `property "${name}" carries no initializer`,
-        name,
-      );
+      failEnvelope(nodeLine(property), `property "${name}" carries no initializer`, name);
       continue;
+    }
+
+    if (name === "title" || name === "narrative" || SPEC_SECTION_NAME_SET.has(name)) {
+      lineBearing.push([name, initializer]);
     }
 
     if (name === "id") {
@@ -1661,7 +1725,7 @@ function reifySpecCall(
 
       if (!enumField.values.has(text)) {
         failEnvelope(
-          property.getStartLineNumber(),
+          nodeLine(property),
           `envelope field "${name}" reified to "${text}", which is not one of ${enumField.label} — the typed envelope cannot carry it`,
           name,
         );
@@ -1739,7 +1803,7 @@ function reifySpecCall(
           "error",
           'prose field "description" has no owning section',
           file,
-          property.getStartLineNumber(),
+          nodeLine(property),
           subjectId,
           name,
         ),
@@ -1748,14 +1812,14 @@ function reifySpecCall(
       continue;
     }
 
-    if (RESERVED_DERIVED_PROPERTIES.has(name)) {
+    if (isReservedDerivedProperty(name)) {
       findings.push(
         createExtractFinding(
           extractFindingIds.reservedProperty,
           "error",
           `spec field "${name}" states derived graph vocabulary — delivery facts and derived edges are computed by the extractor, never authored, so the spec is not extracted`,
           file,
-          property.getStartLineNumber(),
+          nodeLine(property),
           subjectId,
           name,
         ),
@@ -1771,7 +1835,7 @@ function reifySpecCall(
           "warning",
           `property "${name}" is outside the spec shape (the envelope plus the sections ${SPEC_SECTION_NAMES.join(" · ")}) and is dropped — authored content must never silently fall out of the graph (L2)`,
           file,
-          property.getStartLineNumber(),
+          nodeLine(property),
           subjectId,
           name,
         ),
@@ -1805,7 +1869,7 @@ function reifySpecCall(
             "error",
             'prose field "description" is not owned by constraints',
             file,
-            property.getStartLineNumber(),
+            nodeLine(property),
             subjectId,
             name,
           ),
@@ -1838,6 +1902,16 @@ function reifySpecCall(
     );
   }
 
+  // Read once the loop has reified every field, so only what the Spec keeps is read.
+  for (const [name, initializer] of lineBearing) {
+    const refusals = lineBreakRefusals(initializer, data[name], name, file, subjectId);
+
+    if (refusals.length > 0) {
+      findings.push(...refusals);
+      envelopeOk = false;
+    }
+  }
+
   // Absence is judged on authored names, never on reified values: every genuinely missing field
   // is reported in one pass, and a field that was authored but failed to reify already carries
   // its own finding. An opaque entry (spread, accessor, computed name) could carry any field, so
@@ -1845,7 +1919,7 @@ function reifySpecCall(
   for (const required of ["id", "kind", "altitude", "readiness"]) {
     if (!authoredNames.has(required) && !sawOpaqueEntry) {
       failEnvelope(
-        call.getStartLineNumber(),
+        nodeLine(call),
         `envelope field "${required}" is missing — the typed envelope cannot be constructed without it`,
         required,
       );
@@ -1870,7 +1944,7 @@ function reifySpecCall(
       data,
       id: data.id as string,
       file,
-      line: call.getStartLineNumber(),
+      line: nodeLine(call),
       entryLines: typeScriptEntryLines(objectLiteral, data),
     },
     findings,
@@ -1894,7 +1968,7 @@ function reifyIdArray(
         "error",
         `envelope field "${fieldName}" must be an array literal`,
         file,
-        unwrapped.getStartLineNumber(),
+        nodeLine(unwrapped),
         subjectId,
         fieldName,
       ),
@@ -1966,7 +2040,7 @@ function reifyPackCall(
       }
 
       failEnvelope(
-        property.getStartLineNumber(),
+        nodeLine(property),
         "the pack object literal must be fresh: only plain property assignments are static (a spread or shorthand entry could carry envelope fields opaquely)",
       );
       continue;
@@ -1976,12 +2050,12 @@ function reifyPackCall(
 
     if (name === undefined) {
       sawOpaqueEntry = true;
-      failEnvelope(property.getStartLineNumber(), "computed property names are non-static");
+      failEnvelope(nodeLine(property), "computed property names are non-static");
       continue;
     }
 
     if (authoredNames.has(name)) {
-      failEnvelope(property.getStartLineNumber(), duplicatePropertyMessage(name), name);
+      failEnvelope(nodeLine(property), duplicatePropertyMessage(name), name);
       continue;
     }
 
@@ -1989,11 +2063,7 @@ function reifyPackCall(
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
-      failEnvelope(
-        property.getStartLineNumber(),
-        `property "${name}" carries no initializer`,
-        name,
-      );
+      failEnvelope(nodeLine(property), `property "${name}" carries no initializer`, name);
       continue;
     }
 
@@ -2031,7 +2101,7 @@ function reifyPackCall(
             "error",
             'order must be the static string "priority"',
             file,
-            property.getStartLineNumber(),
+            nodeLine(property),
             subjectId,
             name,
           ),
@@ -2063,18 +2133,26 @@ function reifyPackCall(
         continue;
       }
 
+      const refusals = lineBreakRefusals(initializer, result.value, name, file, subjectId);
+
+      if (refusals.length > 0) {
+        findings.push(...refusals);
+        envelopeOk = false;
+        continue;
+      }
+
       data[name] = result.value;
       continue;
     }
 
-    if (RESERVED_DERIVED_PROPERTIES.has(name)) {
+    if (isReservedDerivedProperty(name)) {
       findings.push(
         createExtractFinding(
           extractFindingIds.reservedProperty,
           "error",
           `pack field "${name}" states derived graph vocabulary — delivery facts and derived edges are computed by the extractor, never authored (a pack states no truth of its own), so the pack is not extracted`,
           file,
-          property.getStartLineNumber(),
+          nodeLine(property),
           subjectId,
           name,
         ),
@@ -2091,7 +2169,7 @@ function reifyPackCall(
         "warning",
         `property "${name}" is outside the pack manifest shape (id · specs · modelRefs · order · title · framing) and is dropped — authored content must never silently fall out of the graph (L2)`,
         file,
-        property.getStartLineNumber(),
+        nodeLine(property),
         subjectId,
         name,
       ),
@@ -2102,7 +2180,7 @@ function reifyPackCall(
   for (const required of ["id", "specs"]) {
     if (!authoredNames.has(required) && !sawOpaqueEntry) {
       failEnvelope(
-        call.getStartLineNumber(),
+        nodeLine(call),
         `envelope field "${required}" is missing — the pack manifest cannot be constructed without it`,
         required,
       );
@@ -2118,7 +2196,7 @@ function reifyPackCall(
       data,
       id: data.id as string,
       file,
-      line: call.getStartLineNumber(),
+      line: nodeLine(call),
     },
     findings,
   };
@@ -2175,7 +2253,7 @@ export function reifySourceFile(
       findings.push(
         unrecognizedStatement(
           relativePath,
-          statement.getStartLineNumber(),
+          nodeLine(statement),
           `import from "${statement.getModuleSpecifierValue()}" is not the protocol package — identifiers it binds are non-static wherever they appear`,
         ),
       );
@@ -2187,7 +2265,7 @@ export function reifySourceFile(
         findings.push(
           unrecognizedStatement(
             relativePath,
-            statement.getStartLineNumber(),
+            nodeLine(statement),
             "only const declarations are recognized",
           ),
         );
@@ -2224,7 +2302,7 @@ export function reifySourceFile(
         findings.push(
           unrecognizedStatement(
             relativePath,
-            declaration.getStartLineNumber(),
+            nodeLine(declaration),
             `const "${declaration.getName()}" is not initialized with a spec(…)/pack(…) call bound to the protocol package`,
           ),
         );
@@ -2236,7 +2314,7 @@ export function reifySourceFile(
     findings.push(
       unrecognizedStatement(
         relativePath,
-        statement.getStartLineNumber(),
+        nodeLine(statement),
         `${statement.getKindName()} is outside the authored grammar`,
       ),
     );

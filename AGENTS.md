@@ -277,9 +277,10 @@ that reader brings. The standard, set by PR #19 (the universal-Spec arc) buildin
 ## Cursor Cloud specific instructions
 
 This repo is a self-contained TypeScript CLI (`sdp`) — no servers, databases, or external services
-to run. Development is terminal-driven. Node ≥ 20 (Node 22 is installed); dependencies install from
-the committed `package-lock.json` (npm is the lockfile-native package manager; `pnpm` scripts also
-work, but never a bare `sdp`).
+to run. Development is terminal-driven. Node `^20.19.0 || >=22.12.0`, the `engines` range (Node 22
+is installed); dependencies install from the committed `package-lock.json` (npm is the
+lockfile-native package manager; `pnpm` scripts also work, but never a bare `sdp`). `npm test`
+reaches the npm registry: the package smoke suite installs the packed package's dependencies.
 
 `npm ci` builds the package through its `prepare` script. CI installs with `--ignore-scripts`
 and builds in `npm run check`. `npm run check:git-install` checks installation from a commit.
@@ -293,7 +294,8 @@ self-hosting/example checks → preflight correctly, so prefer it after engine e
 The `check:example` step reports 0 errors and 0 warnings. The unbound `defined` example stays
 visible in the Design Review verifier bindings and recipe 10, declared versus enabled verifiers.
 
-The `check:self-hosting` step emits two kinds of intentional warning: `honesty/gaps`, one per
-owner-ratified ready Spec without a resolving verifier binding, and `conformance/prose-mentions`,
-one per mentioning Spec and target pair with no declared relation either way (recipe 22 lists the
-pairs). The self-hosting oracle pins both sets; they are expected, not a regression.
+The `check:self-hosting` step emits one kind of intentional warning: `honesty/gaps`, one per
+owner-ratified ready Spec, decisions aside, without a resolving verifier binding. The self-hosting
+oracle pins that set and pins that no prose mention lacks a declared relation (recipe 22's
+`unbacked` stays empty), so a `conformance/prose-mentions` warning, like any other new warning, is
+a regression.

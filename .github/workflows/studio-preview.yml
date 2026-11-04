@@ -87,6 +87,20 @@ jobs:
           if [[ -n "$RUNS_ARTIFACT" && -d "$RUNNER_TEMP/studio-runs" ]]; then
             while IFS= read -r -d '' report; do inputs+=(--runs "$report"); done < <(find "$RUNNER_TEMP/studio-runs" -type f -name '*.json' -print0 | sort -z)
           fi
+          # Discard the prior page set before Studio can reject its inputs. A surviving index must be fresh.
+          node --input-type=module <<'JS'
+          import { lstatSync, realpathSync, rmSync } from 'node:fs';
+          import { join, resolve } from 'node:path';
+          const root = realpathSync(resolve(process.env.ROOT));
+          const generated = join(root, 'generated');
+          const state = lstatSync(generated, { throwIfNoEntry: false });
+          if (state && !state.isDirectory()) throw new Error('generated must be a real directory');
+          for (const name of ['spec-studio', 'spec-studio.tmp']) {
+            const current = lstatSync(generated, { throwIfNoEntry: false });
+            if (current && (!current.isDirectory() || current.dev !== state?.dev || current.ino !== state?.ino)) throw new Error('generated directory changed');
+            rmSync(join(generated, name), { recursive: true, force: true });
+          }
+          JS
           studio_status=0
           sdp studio "$ROOT" "${exclusions[@]}" "${inputs[@]}" || studio_status=$?
           if (( studio_status != 0 )); then

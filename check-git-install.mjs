@@ -91,8 +91,11 @@ try {
     const version = run(cli, ["--version"], consumer).trim();
     assert.ok(version.includes(commit), `${version} does not name ${commit}`);
     const manifest = JSON.parse(readFileSync(join(installed, "package.json"), "utf8"));
-    for (const surface of Object.values(manifest.exports)) {
-      for (const path of Object.values(surface)) assert.ok(existsSync(join(installed, path)), path);
+    // Conditions nest (the root export pairs each of import and require with its own types).
+    const exportedPaths = (target) =>
+      typeof target === "string" ? [target] : Object.values(target).flatMap(exportedPaths);
+    for (const path of exportedPaths(manifest.exports)) {
+      assert.ok(existsSync(join(installed, path)), path);
     }
     const recipe = readFileSync(join(installed, "dist/recipes/25-address-resolution.js"), "utf8");
     writeFileSync(

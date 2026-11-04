@@ -54,7 +54,9 @@ export type SlotGroup =
   | { readonly form: "malformed"; readonly name: string; readonly raw: string };
 
 const IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/u;
-const NUMBER_PATTERN = /^-?(?:\d+\.?\d*|\.\d+)$/u;
+// The fraction digits follow a mandatory point: with the point optional, `\d+` and `\d*` could
+// split one digit run at every place, so a long run before a non-digit was quadratic to refuse.
+const NUMBER_PATTERN = /^-?(?:\d+(?:\.\d*)?|\.\d+)$/u;
 
 interface RawGroup {
   readonly raw: string;

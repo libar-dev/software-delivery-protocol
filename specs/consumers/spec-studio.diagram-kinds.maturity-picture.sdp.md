@@ -12,9 +12,9 @@ relations:
 - outcome: See whether a Pack's statements match, lag or exceed its floors without a wall of member cards inside the picture.
 
 ## Behavior
-- rule: [#discreteCells] Draw one equal-sized cell per stated-rung and floor pair. A populated cell shows its exact count and one mark per member, up to `100` marks, beyond which it is filled solid, and links to that cell's full ordered member list; an empty cell is a faint outline with no number. `matches`, `floor above statement` and `statement above floor` are named once each in the legend, and the diagonal carries an outline. Floor none is distinct from idea, and unresolved members are listed apart.
+- rule: [#discreteCells] Draw one equal-sized cell per stated-rung and floor pair. A populated cell shows its exact count and one mark per member, up to `100` marks, beyond which it is filled solid, and links to that cell's full ordered member list; an empty cell is a faint outline with no number. `matches`, `floor above statement` and `statement above floor` are named once each in the legend, and the diagonal carries an outline. Floor none is distinct from idea, and unresolved members and members whose floor is not evaluated are listed apart.
 - rule: [#noScore] Use categorical cell position, never normalized coordinates, a quality score, area proportional to maturity, completion percentage or a recommendation to implement. Marks count members and score nothing.
-- rule: [#fullMembership] Every resolved member appears in exactly one cell list in authored order. The picture holds cell counts, not per-member cards. Without script every populated cell links to its already-built list and every member links to its card.
+- rule: [#fullMembership] Every resolved member whose floor is evaluated appears in exactly one cell list in authored order. The picture holds cell counts, not per-member cards. Without script every populated cell links to its already-built list and every member links to its card.
 - rule: [#oneCell] When every resolved member falls in one cell, one sentence before the grid names that cell's stated rung and floor with its count and links to the cell's member list, and the grid sits in a closed disclosure; when two or more cells hold members, the grid shows with no disclosure. The sentence scores nothing, and print opens the disclosure.
 
 ## Design

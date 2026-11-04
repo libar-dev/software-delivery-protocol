@@ -99,7 +99,17 @@ const envelopeContractTestAnchor = specTest({
   label: "frontmatter contract tests verify the Markdown envelope",
   verifies: ref("spec:carrier.envelope-contract"),
 });
-void [proseOwnershipTestAnchor, markdownParserTestAnchor, envelopeContractTestAnchor];
+const markdownBodyGrammarTestAnchor = specTest({
+  id: testAnchorId("test:protocol.markdown-body-grammar-regressions"),
+  label: "checks Markdown body grammar refusals",
+  verifies: ref("spec:carrier.markdown-body-grammar"),
+});
+void [
+  proseOwnershipTestAnchor,
+  markdownParserTestAnchor,
+  envelopeContractTestAnchor,
+  markdownBodyGrammarTestAnchor,
+];
 
 describe("Markdown frontmatter reifier", () => {
   const lawfulPack = `---
@@ -563,11 +573,6 @@ relations:
       "carrier requires one exact closing --- line",
     ],
     [
-      "a lone CR after a valid LF carrier",
-      `${validFrontmatter}\r`,
-      "carrier contains a lone CR newline",
-    ],
-    [
       "mixed CRLF and LF newlines",
       `---\r\nid: spec:carrier.crlf\r\nkind: behavior\r\naltitude: story\r\nreadiness: idea\r\nrelations: {}\r\n---\r\n# title\n`,
       "carrier mixes LF and CRLF newlines",
@@ -578,6 +583,88 @@ relations:
       line: 1,
       message,
     });
+  });
+
+  describe.each([
+    ["a lone CR", "\r"],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+  ])("a carrier line holding %s", (_name, separator) => {
+    const held = "carrier line holds a lone CR, U+2028 or U+2029; a line ends only at LF or CRLF";
+
+    it.each([
+      ["the H1 title", "# Title@@SEP@@@implemented injected\n## Rule\n- A rule.", 8],
+      ["the narrative", "# Title\nSome prose@@SEP@@and more.\n## Rule\n- A rule.", 9],
+      ["section prose", "# Title\n## Rule\nLeading@@SEP@@prose.\n- A rule.", 10],
+      ["a plain entry", "# Title\n## Rule\n- First rule.\n- A rule@@SEP@@Then hidden text", 11],
+      ["a keyed entry", "# Title\n## Intent\n- outcome: An outcome@@SEP@@- risk: hidden", 10],
+      [
+        "an open question field",
+        "# Title\n## Intent\n- outcome: An outcome.\n\n### Open questions\n- [blocking] Is it?\n  - provisional: Yes@@SEP@@no",
+        14,
+      ],
+      ["an end of line", "# Title\n## Rule\n- A rule.@@SEP@@", 10],
+    ])("refuses the carrier at its physical line in %s", (_site, body, line) => {
+      for (const ending of ["\n", "\r\n"]) {
+        const source = carrierBody(body.replace("@@SEP@@", separator), "rule").replaceAll(
+          "\n",
+          ending,
+        );
+        const result = reify(source);
+        expect(result.specs).toEqual([]);
+        expect(result.findings).toEqual([
+          {
+            validatorId: "extract/invalid-frontmatter",
+            family: "conformance",
+            severity: "error",
+            file: "carrier.sdp.md",
+            line,
+            message: held,
+          },
+        ]);
+      }
+    });
+
+    it("refuses a fence step, a frontmatter value and a Pack manifest at their physical lines", () => {
+      const example = carrierBody(
+        `# Example\n## Intent\n- outcome: Bind one point.\n\`\`\`gwt\nGiven a value@@SEP@@Then hidden\nWhen it runs\nThen it holds\n\`\`\``.replace(
+          "@@SEP@@",
+          separator,
+        ),
+        "example",
+      );
+      expect(reify(example).findings).toMatchObject([{ line: 12, message: held }]);
+
+      const relation = validFrontmatter.replace(
+        "relations: {}",
+        `relations:\n  dependsOn:\n    target: spec:carrier.shared\n    reason: One${separator}two`,
+      );
+      expect(reify(relation).findings).toMatchObject([{ line: 9, message: held }]);
+
+      for (const [pack, line] of [
+        [`---\nid: pack:probe.lines\nspecs: []\n---\n# Pack${separator}title`, 5],
+        [`---\nid: pack:probe.lines\nspecs: []\n---\n# Pack\nFraming${separator}prose.`, 6],
+      ] as const) {
+        const result = reifyMarkdownCarrier(pack, "lines.pack.sdp.md");
+        expect(result.packs).toEqual([]);
+        expect(result.findings).toEqual([
+          expect.objectContaining({
+            validatorId: "extract/invalid-frontmatter",
+            line,
+            message: held,
+          }),
+        ]);
+      }
+    });
+  });
+
+  it("keeps LF and CRLF line endings lawful beside the refused separators", () => {
+    const body = "# Title\nSome prose\nand more.\n## Rule\n- A rule.";
+    for (const ending of ["\n", "\r\n"]) {
+      const result = reify(carrierBody(body, "rule").replaceAll("\n", ending));
+      expect(result.findings).toEqual([]);
+      expect(result.specs).toHaveLength(1);
+    }
   });
 
   it("maps the ruled title, intent, and behavior lists from the body", () => {
@@ -1096,6 +1183,291 @@ export const invalid = spec({ id: specId("spec:carrier.invalid-prose"), title: "
     expect(result.specs).toEqual([]);
     expect(result.findings[0]?.validatorId).toBe("extract/invalid-markdown-structure");
   });
+
+  it.each([
+    "> quote",
+    "| table",
+    "* nested",
+    "+ nested",
+    "- nested",
+    "- - x",
+    "-",
+    "*",
+    "+",
+    "1.",
+    "1)",
+    "1. numbered",
+    "1) numbered",
+    "---",
+    "***",
+    "___",
+    "===",
+    "<unclosed",
+    "=",
+    "==",
+    "--",
+    "# Title",
+    "### Notes",
+    "######",
+    "## Design",
+    "```js",
+    "~~~",
+  ])("refuses block shapes in list text: %s", (text) => {
+    const result = reify(carrierBody(`# Title\n## Rule\n- ${text}`, "rule"));
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toMatchObject([
+      {
+        validatorId: "extract/invalid-markdown-structure",
+        severity: "error",
+        line: 10,
+        message: "nested or unsupported Markdown structure",
+      },
+    ]);
+
+    for (const quotedText of [`\`${text}\``, `\` ${text} \``]) {
+      const quoted = reify(carrierBody(`# Title\n## Rule\n- ${quotedText}`, "rule"));
+      expect(quoted.findings).toEqual([]);
+      expect(quoted.specs).toHaveLength(1);
+    }
+  });
+
+  it.each(["*", "+", "1.", "1)"])("refuses lone list markers across prose owners: %s", (marker) => {
+    for (const [body, line] of [
+      [`# Title\nParagraph.\n\n${marker}`, 11],
+      [`# Title\n## Rule\nParagraph.\n\n${marker}`, 12],
+      [`# Title\n## Rule\n- ${marker}`, 10],
+    ] as const) {
+      const result = reify(carrierBody(body, "rule"));
+      expect(result.specs).toEqual([]);
+      expect(result.findings).toEqual([
+        expect.objectContaining({
+          validatorId: "extract/invalid-markdown-structure",
+          line,
+        }),
+      ]);
+      const quoted = reify(carrierBody(body.replace(marker, `\`${marker}\``), "rule"));
+      expect(quoted.findings).toEqual([]);
+      expect(quoted.specs).toHaveLength(1);
+    }
+    const source = `---\nid: pack:probe.blocks\nspecs: []\n---\n# Pack\nParagraph.\n\n${marker}`;
+    const pack = reifyMarkdownCarrier(source, "blocks.pack.sdp.md");
+    expect(pack.packs).toEqual([]);
+    expect(pack.findings).toEqual([
+      expect.objectContaining({
+        validatorId: "extract/invalid-markdown-structure",
+        line: 8,
+      }),
+    ]);
+    expect(
+      reifyMarkdownCarrier(source.replace(marker, `\`${marker}\``), "blocks.pack.sdp.md").findings,
+    ).toEqual([]);
+  });
+
+  // #blockShapes: a star, a plus sign or an ordered-list prefix is refused before whitespace as
+  // well as at the end of the line, and a hyphen before a tab is refused in every prose owner.
+  it.each([
+    ["* item", "*item"],
+    ["+ item", "+item"],
+    ["1. item", "1.5 items"],
+    ["1)\titem", "1)item"],
+    ["-\titem", "-item"],
+  ])("refuses the block opener %j wherever prose is read", (opener, ordinary) => {
+    for (const [body, line] of [
+      [`# Title\nParagraph.\n\n${opener}`, 11],
+      [`# Title\n## Rule\nParagraph.\n\n${opener}`, 12],
+      [`# Title\n## Rule\n- ${opener}`, 10],
+    ] as const) {
+      const result = reify(carrierBody(body, "rule"));
+      expect(result.specs, body).toEqual([]);
+      expect(result.findings, body).toEqual([
+        expect.objectContaining({ validatorId: "extract/invalid-markdown-structure", line }),
+      ]);
+    }
+    if (ordinary === "-item") return;
+    const accepted = reify(carrierBody(`# Title\n## Rule\nParagraph.\n${ordinary}`, "rule"));
+    expect(accepted.findings).toEqual([]);
+    expect(accepted.specs).toHaveLength(1);
+  });
+
+  it.each(["=", "==", "-", "--", "~~~", "~~~js", "~~~~", "```js"])(
+    "refuses short underlines and fences across prose owners: %s",
+    (text) => {
+      for (const [body, line, message] of [
+        [`# Title\nParagraph\n${text}`, 10, "narrative accepts CommonMark paragraphs only"],
+        [
+          `# Title\n## Rule\nParagraph\n${text}`,
+          11,
+          text.startsWith("~~~") || text.startsWith("```")
+            ? "fences must be exact gwt or gwt-vocabulary fences"
+            : "nested or unsupported Markdown structure",
+        ],
+      ] as const) {
+        const result = reify(carrierBody(body, "rule"));
+        expect(result.specs, body).toEqual([]);
+        expect(result.findings, body).toEqual([
+          {
+            validatorId: "extract/invalid-markdown-structure",
+            family: "conformance",
+            severity: "error",
+            file: "carrier.sdp.md",
+            line,
+            message,
+          },
+        ]);
+      }
+      const pack = reifyMarkdownCarrier(
+        `---\nid: pack:probe.blocks\nspecs: []\n---\n# Pack\nParagraph\n${text}`,
+        "blocks.pack.sdp.md",
+      );
+      expect(pack.packs).toEqual([]);
+      expect(pack.findings).toEqual([
+        {
+          validatorId: "extract/invalid-markdown-structure",
+          family: "conformance",
+          severity: "error",
+          file: "blocks.pack.sdp.md",
+          line: 7,
+          message: "narrative accepts CommonMark paragraphs only",
+        },
+      ]);
+    },
+  );
+
+  it.each(["narrative", "section", "section with an H2 inside the block"])(
+    "reports each tilde fence line exactly once in %s",
+    (owner) => {
+      const section = owner !== "narrative";
+      const content = owner.includes("H2") ? "## Design\n- shape: plain" : "";
+      const body = `# Title\n${section ? "## Rule\n" : ""}~~~js\n${content}\n~~~`;
+      const firstLine = section ? 10 : 9;
+      const result = reify(carrierBody(body, "rule"));
+      expect(result.specs).toEqual([]);
+      expect(result.findings).toEqual(
+        [firstLine, firstLine + (content === "" ? 2 : 3)].map((line) => ({
+          validatorId: "extract/invalid-markdown-structure",
+          family: "conformance",
+          severity: "error",
+          file: "carrier.sdp.md",
+          line,
+          message: section
+            ? "fences must be exact gwt or gwt-vocabulary fences"
+            : "narrative accepts CommonMark paragraphs only",
+        })),
+      );
+    },
+  );
+
+  it("refuses a backtick-prefixed section line even with backticks in its info string", () => {
+    const result = reify(
+      carrierBody(
+        "# Title\n## Rule\nIntro text.\n``` `x` ```\n- keep it\n## Design\n- shape: plain",
+        "rule",
+      ),
+    );
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toContainEqual({
+      validatorId: "extract/invalid-markdown-structure",
+      family: "conformance",
+      severity: "error",
+      file: "carrier.sdp.md",
+      line: 11,
+      message: "fences must be exact gwt or gwt-vocabulary fences",
+    });
+  });
+
+  it.each(["has-verifier", "Has-Verifier", "some-label", "has_verifier"])(
+    "distinguishes reserved and ordinary plain-bullet names: %s",
+    (name) => {
+      const result = reify(carrierBody(`# Title\n## Rule\n- ${name}: the suite`, "rule"));
+      if (name.toLowerCase() === "has-verifier") {
+        expect(result.specs).toEqual([]);
+        expect(result.findings).toEqual([
+          expect.objectContaining({
+            validatorId: "extract/reserved-property",
+            line: 10,
+          }),
+        ]);
+      } else {
+        expect(result.findings).toEqual([]);
+        expect(result.specs[0]?.data.behavior).toMatchObject({ rules: [`${name}: the suite`] });
+      }
+    },
+  );
+
+  // #keyedEntryShape: a key is one ASCII letter followed by zero or more letters or digits.
+  it.each([
+    ["a: note", "a"],
+    ["Z: note", "Z"],
+    ["x1: note", "x1"],
+  ])("reads the single-letter-led word in %j as a key in a plain-bullet section", (text, key) => {
+    const result = reify(carrierBody(`# Title\n## Rule\n- ${text}`, "rule"));
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        validatorId: "extract/unrecognized-property",
+        line: 10,
+        message: `property "${key}" is not accepted`,
+      }),
+    ]);
+  });
+
+  it.each(["a:note", "1: note", "a : note", "`a: note`"])(
+    "keeps the bullet %j plain text in a plain-bullet section",
+    (text) => {
+      const result = reify(carrierBody(`# Title\n## Rule\n- ${text}`, "rule"));
+      expect(result.findings).toEqual([]);
+      expect(result.specs[0]?.data.behavior).toMatchObject({ rules: [text] });
+    },
+  );
+
+  it.each([
+    "implemented",
+    "IMPLEMENTED",
+    "hasverifier",
+    "HasVerifier",
+    "HAS-VERIFIER",
+    "Observed",
+    "deliveryFacts",
+  ])(
+    "refuses reserved delivery properties in Markdown envelopes and keyed sections: %s",
+    (name) => {
+      for (const owner of [
+        "Intent",
+        "Behavior",
+        "Rule",
+        "Workflow",
+        "Contract",
+        "Constraints",
+        "Decision",
+        "Design",
+        "UI",
+        "Verification — manual",
+      ]) {
+        const result = reify(carrierBody(`# Title\n## ${owner}\n- ${name}: yes`));
+        expect(result.specs).toEqual([]);
+        const nonCamelOpenKey =
+          (owner === "Design" || owner === "UI") && !/^[a-z][a-zA-Z0-9]*$/u.test(name);
+        expect(result.findings).toContainEqual(
+          expect.objectContaining({
+            validatorId: nonCamelOpenKey
+              ? "extract/invalid-markdown-structure"
+              : "extract/reserved-property",
+            severity: "error",
+          }),
+        );
+      }
+      for (const source of [
+        validFrontmatter.replace("relations: {}", `relations: {}\n${name}: yes`),
+        `---\nid: pack:probe.reserved\nspecs: []\n${name}: yes\n---\n# Pack`,
+      ]) {
+        const result = reifyMarkdownCarrier(source, "reserved.sdp.md");
+        expect(result.findings).toContainEqual(
+          expect.objectContaining({ validatorId: "extract/reserved-property", severity: "error" }),
+        );
+      }
+    },
+  );
 
   it.each([
     [

@@ -32,12 +32,20 @@ export function snapshot(root: string): Record<string, { content: string; mtime:
   const walk = (folder: string): void => {
     for (const entry of readdirSync(folder, { withFileTypes: true })) {
       const path = join(folder, entry.name);
-      if (entry.isDirectory()) walk(path);
-      else
+      if (entry.isDirectory()) {
+        walk(path);
+        continue;
+      }
+      // A running sync renames its staging files into place, so an entry listed a moment ago
+      // may be gone by the time it is read: the folder no longer holds it.
+      try {
         result[relative(root, path)] = {
           content: readFileSync(path, "utf8"),
           mtime: statSync(path).mtimeMs,
         };
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
     }
   };
   walk(root);

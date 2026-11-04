@@ -4,12 +4,15 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  renameSync,
   rmSync,
   symlinkSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
+import type { Stats } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -91,6 +94,16 @@ interface NativeSubscription {
 
 class NativeWatchHarness {
   readonly subscriptions = new Map<string, NativeSubscription>();
+  /** Every handle opened, retired ones included, in the order they were opened. */
+  readonly opened: NativeSubscription[] = [];
+
+  /** How many handles were opened and closed so far. */
+  counts(): { readonly opens: number; readonly closes: number } {
+    return {
+      opens: this.opened.length,
+      closes: this.opened.reduce((total, subscription) => total + subscription.closeCount, 0),
+    };
+  }
 
   readonly create = (
     directory: string,
@@ -98,6 +111,7 @@ class NativeWatchHarness {
   ): NativeWatchHandle => {
     const subscription: NativeSubscription = { listener, closeCount: 0 };
     this.subscriptions.set(directory, subscription);
+    this.opened.push(subscription);
 
     return {
       on(_event, errorListener) {
@@ -210,7 +224,10 @@ describe("validate watch filesystem source", () => {
         "spec:tmp.removed-directory",
       );
 
+      const removed = native.subscriptions.get(join(root, "specs"));
       rmSync(join(root, "specs"), { recursive: true });
+      removed?.errorListener?.(errno("EPERM"));
+      removed?.errorListener?.(errno("EIO"));
       native.subscriptions.get(root)?.listener("rename", "specs");
 
       expect(await bounded(secondCycle, "directory removal rerun")).toEqual({
@@ -438,9 +455,11 @@ describe("validate watch filesystem source", () => {
     }
   });
 
+  // Each event first checks the root, then a filename-less one reconciles it, then re-subscribes.
   it.each([
-    ["before reconciliation", 1],
-    ["between reconciliation and re-subscription", 2],
+    ["before the root check", 1],
+    ["before reconciliation", 2],
+    ["between reconciliation and re-subscription", 3],
   ])("fails typed when the watch root vanishes %s", async (_label, throwAtRootLstat) => {
     const root = mkdtempSync(join(tmpdir(), "sdp-watch-root-gone-"));
     const capture = createCaptureOutput();
@@ -594,4 +613,1125 @@ describe("validate watch filesystem source", () => {
       }
     },
   );
+});
+
+function linkWarning(path: string): string {
+  return `symbolic link "${path}" is skipped; discovery never follows links below the root`;
+}
+
+function nextTicks(): Promise<void> {
+  // The watch coalesces an event on setImmediate and starts the cycle in the microtasks after it.
+  return new Promise((resolveTicks) => {
+    setImmediate(() => {
+      setImmediate(() => {
+        resolveTicks();
+      });
+    });
+  });
+}
+
+async function deliver(
+  subscription: NativeSubscription | undefined,
+  eventType: string,
+  filename: string,
+): Promise<void> {
+  subscription?.listener(eventType, filename);
+  // The watch's coalescing immediate is unreferenced; a referenced one beside it keeps the event
+  // loop from idling in its poll phase until the next timer before the cycle starts.
+  await nextTicks();
+}
+
+describe("validate watch symbolic links", () => {
+  // spec:consumers.validate-watch: a link discovery warns about schedules a run in every watch verb.
+  it.each(["validate", "studio", "vault"])(
+    "%s --watch reruns when a directory link discovery warns about appears or disappears",
+    async (command) => {
+      const workspace = mkdtempSync(join(tmpdir(), `sdp-watch-link-${command}-`));
+      const root = join(workspace, "root");
+      const outside = join(workspace, "outside");
+      const specs = join(root, "specs");
+      const capture = createCaptureOutput();
+      const cycles = new CycleHarness();
+      const native = new NativeWatchHarness();
+      const stderrAtCycle: string[] = [];
+      const firstCycle = cycles.cycle(1);
+      const secondCycle = cycles.cycle(2);
+      const thirdCycle = cycles.cycle(3);
+      const fourthCycle = cycles.cycle(4);
+      writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.watch-link-probe");
+      writeCarrier(join(outside, "shared.sdp.md"), "spec:tmp.watch-link-outside");
+      symlinkSync(outside, join(specs, "before"), "dir");
+
+      try {
+        const running = Promise.resolve(
+          runSdpCli([command, root, "--watch"], capture.output, {
+            createNativeWatch: native.create,
+            onWatchCycleComplete: (completed) => {
+              stderrAtCycle.push(capture.readStderr());
+              cycles.onComplete(completed);
+
+              if (completed.index === 4) {
+                cycles.abort.abort();
+              }
+            },
+            abortSignal: cycles.abort.signal,
+          }),
+        );
+        const cycleStderr = (index: number): string =>
+          (stderrAtCycle[index - 1] ?? "").slice((stderrAtCycle[index - 2] ?? "").length);
+
+        await bounded(firstCycle, `${command} link first cycle`);
+        expect(cycleStderr(1)).toContain(linkWarning("specs/before"));
+        expect(cycleStderr(1)).not.toContain(linkWarning("specs/shared"));
+
+        // A new directory link names no carrier, yet the warning list changes.
+        symlinkSync(outside, join(specs, "shared"), "dir");
+        await deliver(native.subscriptions.get(specs), "rename", "shared");
+        await bounded(secondCycle, `${command} link creation rerun`);
+        expect(cycleStderr(2)).toContain(linkWarning("specs/shared"));
+
+        // Removing a link the watch found at start clears its warning.
+        unlinkSync(join(specs, "before"));
+        await deliver(native.subscriptions.get(specs), "rename", "before");
+        await bounded(thirdCycle, `${command} start link removal`);
+        expect(cycleStderr(3)).not.toContain(linkWarning("specs/before"));
+        expect(cycleStderr(3)).toContain(linkWarning("specs/shared"));
+
+        // Removing a link the watch saw created clears its warning too.
+        unlinkSync(join(specs, "shared"));
+        await deliver(native.subscriptions.get(specs), "rename", "shared");
+        await bounded(fourthCycle, `${command} link removal rerun`);
+        expect(cycleStderr(4)).not.toContain("symbolic-link-skipped");
+
+        expect(await bounded(running, `${command} link watch exit`)).toBe(0);
+        expect(cycles.completed.map((completed) => completed.index)).toEqual([1, 2, 3, 4]);
+        expect([...native.subscriptions.keys()].some((path) => path.startsWith(outside))).toBe(
+          false,
+        );
+        expect(capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it("reruns when a directory arrives holding only a link discovery warns about", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-link-arrival-"));
+    const root = join(workspace, "root");
+    const outside = join(workspace, "outside");
+    const capture = createCaptureOutput();
+    const cycles = new CycleHarness();
+    const native = new NativeWatchHarness();
+    const firstCycle = cycles.cycle(1);
+    const secondCycle = cycles.cycle(2);
+    writeCarrier(join(root, "probe.sdp.md"), "spec:tmp.watch-link-arrival");
+    mkdirSync(outside);
+
+    try {
+      const running = Promise.resolve(
+        runSdpCli(["validate", "--watch", root], capture.output, {
+          createNativeWatch: native.create,
+          onWatchCycleComplete: (completed) => {
+            cycles.onComplete(completed);
+
+            if (completed.index === 2) {
+              cycles.abort.abort();
+            }
+          },
+          abortSignal: cycles.abort.signal,
+        }),
+      );
+
+      await bounded(firstCycle, "link arrival first cycle");
+      mkdirSync(join(root, "arrived"));
+      symlinkSync(outside, join(root, "arrived", "shared"), "dir");
+      await deliver(native.subscriptions.get(root), "rename", "arrived");
+
+      await bounded(secondCycle, "link arrival rerun");
+      expect(await bounded(running, "link arrival watch exit")).toBe(0);
+      expect(capture.readStderr()).toContain(linkWarning("arrived/shared"));
+    } finally {
+      cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it.each(["link", "file"])(
+    "drops a watched directory replaced by a %s, and ignores its retired watcher",
+    async (replacement) => {
+      const workspace = mkdtempSync(join(tmpdir(), `sdp-watch-replaced-by-${replacement}-`));
+      const root = join(workspace, "root");
+      const outside = join(workspace, "outside");
+      const specs = join(root, "specs");
+      const capture = createCaptureOutput();
+      const cycles = new CycleHarness();
+      const native = new NativeWatchHarness();
+      const started: number[] = [];
+      const firstCycle = cycles.cycle(1);
+      const secondCycle = cycles.cycle(2);
+      writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.watch-replaced-directory");
+      mkdirSync(outside);
+
+      try {
+        const running = Promise.resolve(
+          runSdpCli(["validate", "--watch", root], capture.output, {
+            createNativeWatch: native.create,
+            watchCycleGate: (index) => {
+              started.push(index);
+              return undefined;
+            },
+            onWatchCycleComplete: cycles.onComplete,
+            abortSignal: cycles.abort.signal,
+          }),
+        );
+
+        await bounded(firstCycle, "replaced directory first cycle");
+        const retired = native.subscriptions.get(specs);
+        expect(retired).toBeDefined();
+
+        // Move the watched directory out and put a link to it, or a plain file, in its place.
+        renameSync(specs, join(outside, "moved"));
+        if (replacement === "link") {
+          symlinkSync(join(outside, "moved"), specs, "dir");
+        } else {
+          writeFileSync(specs, "no longer a directory\n", "utf8");
+        }
+        await deliver(native.subscriptions.get(root), "rename", "specs");
+
+        await bounded(secondCycle, "replaced directory rerun");
+        expect(retired?.closeCount).toBe(1);
+        expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).not.toContain(
+          "spec:tmp.watch-replaced-directory",
+        );
+        expect(capture.readStderr().includes(linkWarning("specs"))).toBe(replacement === "link");
+
+        // A queued event from the retired watcher must neither subscribe through the link nor rerun.
+        mkdirSync(join(outside, "moved", "child"));
+        await deliver(retired, "rename", "child");
+
+        expect(native.subscriptions.has(join(specs, "child"))).toBe(false);
+        expect(started).toEqual([1, 2]);
+        cycles.abort.abort();
+        expect(await bounded(running, "replaced directory watch exit")).toBe(0);
+        expect(capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it("drops the subtree when a watched ancestor was replaced by a link before its own event", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-replaced-ancestor-"));
+    const root = join(workspace, "root");
+    const outside = join(workspace, "outside");
+    const specs = join(root, "specs");
+    const nested = join(specs, "nested");
+    const capture = createCaptureOutput();
+    const cycles = new CycleHarness();
+    const native = new NativeWatchHarness();
+    const stderrAtCycle: string[] = [];
+    const firstCycle = cycles.cycle(1);
+    const secondCycle = cycles.cycle(2);
+    const thirdCycle = cycles.cycle(3);
+    writeCarrier(join(nested, "probe.sdp.md"), "spec:tmp.watch-replaced-ancestor");
+    mkdirSync(outside);
+
+    try {
+      const running = Promise.resolve(
+        runSdpCli(["validate", "--watch", root], capture.output, {
+          createNativeWatch: native.create,
+          onWatchCycleComplete: (completed) => {
+            stderrAtCycle.push(capture.readStderr());
+            cycles.onComplete(completed);
+
+            if (completed.index === 3) {
+              cycles.abort.abort();
+            }
+          },
+          abortSignal: cycles.abort.signal,
+        }),
+      );
+      const cycleStderr = (index: number): string =>
+        (stderrAtCycle[index - 1] ?? "").slice((stderrAtCycle[index - 2] ?? "").length);
+
+      await bounded(firstCycle, "replaced ancestor first cycle");
+      const specsSubscription = native.subscriptions.get(specs);
+      const nestedSubscription = native.subscriptions.get(nested);
+      expect(nestedSubscription).toBeDefined();
+
+      // The ancestor is replaced, but the first event to arrive comes from the nested watcher,
+      // whose entries now resolve through the link to a directory outside the root.
+      renameSync(specs, join(outside, "moved"));
+      symlinkSync(join(outside, "moved"), specs, "dir");
+      mkdirSync(join(outside, "moved", "nested", "child"));
+      await deliver(nestedSubscription, "rename", "child");
+
+      await bounded(secondCycle, "replaced ancestor rerun");
+      expect(native.subscriptions.has(join(nested, "child"))).toBe(false);
+      expect(specsSubscription?.closeCount).toBe(1);
+      expect(nestedSubscription?.closeCount).toBe(1);
+      expect(readFileSync(join(root, "generated", "graph.json"), "utf8")).not.toContain(
+        "spec:tmp.watch-replaced-ancestor",
+      );
+      expect(cycleStderr(2)).toContain(linkWarning("specs"));
+
+      // The replacement link goes before the root's own event arrives. The watch must still know
+      // the link it saw, or nothing would clear its warning.
+      unlinkSync(specs);
+      await deliver(native.subscriptions.get(root), "rename", "specs");
+
+      await bounded(thirdCycle, "replacement link removal rerun");
+      expect(await bounded(running, "replaced ancestor watch exit")).toBe(0);
+      expect(cycleStderr(3)).not.toContain("symbolic-link-skipped");
+      expect(capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  // The vault's owned-output filter resolves a path through a link; a link outside the build's
+  // paths that points into them is still a link discovery warns about.
+  it.each([
+    ["shared.ts", "graph.json"],
+    ["shared.sdp.md", "registrars.json"],
+  ])(
+    "vault --watch reruns when the link %s pointing at the build output %s appears or disappears",
+    async (link, target) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-link-into-output-"));
+      const root = join(workspace, "root");
+      const specs = join(root, "specs");
+      const capture = createCaptureOutput();
+      const cycles = new CycleHarness();
+      const native = new NativeWatchHarness();
+      const stderrAtCycle: string[] = [];
+      const started: number[] = [];
+      const firstCycle = cycles.cycle(1);
+      const secondCycle = cycles.cycle(2);
+      const thirdCycle = cycles.cycle(3);
+      writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.watch-link-into-output");
+
+      try {
+        const running = Promise.resolve(
+          runSdpCli(["vault", root, "--watch"], capture.output, {
+            createNativeWatch: native.create,
+            watchCycleGate: (index) => {
+              started.push(index);
+              return undefined;
+            },
+            onWatchCycleComplete: (completed) => {
+              stderrAtCycle.push(capture.readStderr());
+              cycles.onComplete(completed);
+            },
+            abortSignal: cycles.abort.signal,
+          }),
+        );
+        const cycleStderr = (index: number): string =>
+          (stderrAtCycle[index - 1] ?? "").slice((stderrAtCycle[index - 2] ?? "").length);
+
+        await bounded(firstCycle, "link into output first cycle");
+        expect(existsSync(join(root, "generated", target))).toBe(true);
+
+        symlinkSync(join(root, "generated", target), join(specs, link));
+        await deliver(native.subscriptions.get(specs), "rename", link);
+        await bounded(secondCycle, "link into output creation rerun");
+        expect(cycleStderr(2)).toContain(linkWarning(`specs/${link}`));
+
+        unlinkSync(join(specs, link));
+        await deliver(native.subscriptions.get(specs), "rename", link);
+        await bounded(thirdCycle, "link into output removal rerun");
+        expect(cycleStderr(3)).not.toContain("symbolic-link-skipped");
+
+        await nextTicks();
+        expect(started).toEqual([1, 2, 3]);
+        cycles.abort.abort();
+        expect(await bounded(running, "link into output watch exit")).toBe(0);
+        expect(capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+});
+
+interface WatchRun {
+  readonly capture: ReturnType<typeof createCaptureOutput>;
+  readonly cycles: CycleHarness;
+  readonly native: NativeWatchHarness;
+  readonly started: number[];
+  readonly running: Promise<number>;
+  readonly cycleStderr: (index: number) => string;
+}
+
+function watchRoot(root: string, lstatWatchPath?: (path: string) => Stats): WatchRun {
+  const capture = createCaptureOutput();
+  const cycles = new CycleHarness();
+  const native = new NativeWatchHarness();
+  const started: number[] = [];
+  const stderrAtCycle: string[] = [];
+  const running = Promise.resolve(
+    runSdpCli(["validate", "--watch", root], capture.output, {
+      createNativeWatch: native.create,
+      ...(lstatWatchPath === undefined ? {} : { lstatWatchPath }),
+      watchCycleGate: (index) => {
+        started.push(index);
+        return undefined;
+      },
+      onWatchCycleComplete: (completed) => {
+        stderrAtCycle.push(capture.readStderr());
+        cycles.onComplete(completed);
+      },
+      abortSignal: cycles.abort.signal,
+    }),
+  );
+
+  return {
+    capture,
+    cycles,
+    native,
+    started,
+    running,
+    cycleStderr: (index) =>
+      (stderrAtCycle[index - 1] ?? "").slice((stderrAtCycle[index - 2] ?? "").length),
+  };
+}
+
+function graphText(root: string): string {
+  return readFileSync(join(root, "generated", "graph.json"), "utf8");
+}
+
+/** The stats with some fields replaced, as a filesystem would report them. */
+function withStats(
+  stats: Stats,
+  fields: Partial<Pick<Stats, "dev" | "ino" | "birthtimeMs">>,
+): Stats {
+  return Object.assign(
+    Object.create(Object.getPrototypeOf(stats) as object) as Stats,
+    stats,
+    fields,
+  );
+}
+
+/**
+ * An lstat that gives each directory a birth time, `bornAgain` for the directories it names and 1
+ * for the rest, or 0 for every directory when the filesystem reports none. A directory's birth time
+ * is all the watcher compares, and only at its own path, so the values need not be real.
+ */
+function birthTimes(
+  reported: boolean,
+  bornAgain: (path: string) => boolean = () => false,
+): (path: string) => Stats {
+  return (path) => {
+    const stats = lstatSync(path);
+
+    if (!stats.isDirectory()) {
+      return stats;
+    }
+
+    return withStats(stats, { birthtimeMs: reported ? (bornAgain(path) ? 2 : 1) : 0 });
+  };
+}
+
+// spec:consumers.validate-watch: a directory that replaces a watched one is watched in its place.
+describe("validate watch directory replacement", () => {
+  // A watcher such as inotify follows the inode it was opened on, so after `mv specs/sub away &&
+  // mkdir specs/sub` the old handle reports the moved directory under the old path.
+  it.each(["rename", "change"])(
+    "retires the handle of a directory replaced by another directory on a %s event",
+    async (eventType) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-other-directory-"));
+      const root = join(workspace, "root");
+      const specs = join(root, "specs");
+      const sub = join(specs, "sub");
+      const moved = join(workspace, "moved");
+      writeCarrier(join(sub, "before.sdp.md"), "spec:tmp.watch-before-replacement");
+      const watch = watchRoot(root);
+
+      try {
+        await bounded(watch.cycles.cycle(1), "other directory first cycle");
+        const retired = watch.native.subscriptions.get(sub);
+        expect(retired).toBeDefined();
+
+        renameSync(sub, moved);
+        mkdirSync(sub);
+        await deliver(watch.native.subscriptions.get(specs), eventType, "sub");
+
+        await bounded(watch.cycles.cycle(2), "other directory rerun");
+        expect(retired?.closeCount).toBe(1);
+        const fresh = watch.native.subscriptions.get(sub);
+        expect(fresh).toBeDefined();
+        expect(fresh).not.toBe(retired);
+        expect(graphText(root)).not.toContain("spec:tmp.watch-before-replacement");
+
+        // The retired handle's own events, and edits in the moved directory, start no run.
+        await deliver(retired, "rename", "sub");
+        writeCarrier(join(moved, "before.sdp.md"), "spec:tmp.watch-moved-edit");
+        await deliver(retired, "change", "before.sdp.md");
+        expect(watch.started).toEqual([1, 2]);
+
+        // The new directory is watched: a carrier created in it joins the graph.
+        writeCarrier(join(sub, "after.sdp.md"), "spec:tmp.watch-after-replacement");
+        await deliver(fresh, "rename", "after.sdp.md");
+        await bounded(watch.cycles.cycle(3), "new directory carrier rerun");
+        expect(graphText(root)).toContain("spec:tmp.watch-after-replacement");
+
+        watch.cycles.abort.abort();
+        expect(await bounded(watch.running, "other directory watch exit")).toBe(0);
+        expect(watch.started).toEqual([1, 2, 3]);
+        expect(watch.capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        watch.cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it("retires the handle of a directory deleted and recreated with its inode reused", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-inode-reuse-"));
+    const root = join(workspace, "root");
+    const specs = join(root, "specs");
+    const sub = join(specs, "sub");
+    writeCarrier(join(sub, "before.sdp.md"), "spec:tmp.watch-before-recreation");
+    const opened = lstatSync(sub);
+    let reuse = false;
+    // The recreated directory reports the deleted one's identity, as a reused inode would.
+    const watch = watchRoot(root, (path) => (reuse && path === sub ? opened : lstatSync(path)));
+
+    try {
+      await bounded(watch.cycles.cycle(1), "inode reuse first cycle");
+      const dead = watch.native.subscriptions.get(sub);
+      expect(dead).toBeDefined();
+
+      rmSync(sub, { recursive: true });
+      writeCarrier(join(sub, "after.sdp.md"), "spec:tmp.watch-after-recreation");
+      reuse = true;
+      // inotify reports a watched directory's deletion on the directory's own handle, under the
+      // directory's own name, before the parent reports the entry.
+      await deliver(dead, "rename", "sub");
+
+      await bounded(watch.cycles.cycle(2), "inode reuse rerun");
+      expect(dead?.closeCount).toBe(1);
+      expect(watch.native.subscriptions.get(sub)).not.toBe(dead);
+      expect(graphText(root)).toContain("spec:tmp.watch-after-recreation");
+      expect(graphText(root)).not.toContain("spec:tmp.watch-before-recreation");
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "inode reuse watch exit")).toBe(0);
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("retires a directory replaced by another directory when a retired descendant reports first", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-other-ancestor-"));
+    const root = join(workspace, "root");
+    const sub = join(root, "specs", "sub");
+    const nested = join(sub, "nested");
+    const moved = join(workspace, "moved");
+    writeCarrier(join(nested, "probe.sdp.md"), "spec:tmp.watch-nested-before");
+    const watch = watchRoot(root);
+
+    try {
+      await bounded(watch.cycles.cycle(1), "other ancestor first cycle");
+      const retiredSub = watch.native.subscriptions.get(sub);
+      const retiredNested = watch.native.subscriptions.get(nested);
+      expect(retiredNested).toBeDefined();
+
+      // The first event comes from the moved tree's nested handle, before the parent's event.
+      renameSync(sub, moved);
+      writeCarrier(join(sub, "after.sdp.md"), "spec:tmp.watch-nested-after");
+      mkdirSync(join(moved, "nested", "child"));
+      await deliver(retiredNested, "rename", "child");
+
+      await bounded(watch.cycles.cycle(2), "other ancestor rerun");
+      expect(retiredSub?.closeCount).toBe(1);
+      expect(retiredNested?.closeCount).toBe(1);
+      expect(watch.native.subscriptions.get(sub)).not.toBe(retiredSub);
+      expect(watch.native.subscriptions.has(join(nested, "child"))).toBe(false);
+      expect(graphText(root)).toContain("spec:tmp.watch-nested-after");
+      expect(graphText(root)).not.toContain("spec:tmp.watch-nested-before");
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "other ancestor watch exit")).toBe(0);
+      expect(watch.capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  // A filename-less event reaches reconcileDirectory only when the directory still looked intact
+  // to the ancestor check a moment earlier; the injected lstat makes the two reads disagree.
+  it("reconciles a directory that became a skipped link after the ancestor check", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-reconcile-link-"));
+    const root = join(workspace, "root");
+    const outside = join(workspace, "outside");
+    const specs = join(root, "specs");
+    writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.watch-reconcile-link");
+    const opened = lstatSync(specs);
+    let stale = 0;
+    const watch = watchRoot(root, (path) => {
+      if (path === specs && stale > 0) {
+        stale -= 1;
+        return opened;
+      }
+      return lstatSync(path);
+    });
+
+    try {
+      await bounded(watch.cycles.cycle(1), "reconcile link first cycle");
+      const retired = watch.native.subscriptions.get(specs);
+      expect(retired).toBeDefined();
+
+      renameSync(specs, outside);
+      symlinkSync(outside, specs, "dir");
+      stale = 1;
+      await deliver(retired, "rename", "");
+      expect(stale).toBe(0);
+
+      await bounded(watch.cycles.cycle(2), "reconcile link rerun");
+      expect(retired?.closeCount).toBe(1);
+      expect(watch.cycleStderr(2)).toContain(linkWarning("specs"));
+      expect(graphText(root)).not.toContain("spec:tmp.watch-reconcile-link");
+
+      // The watch remembers the link, so removing it reruns and clears the warning.
+      unlinkSync(specs);
+      await deliver(watch.native.subscriptions.get(root), "rename", "specs");
+      await bounded(watch.cycles.cycle(3), "reconcile link removal rerun");
+      expect(watch.cycleStderr(3)).not.toContain("symbolic-link-skipped");
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "reconcile link watch exit")).toBe(0);
+      expect(watch.capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("reconciles a directory that vanished after the ancestor check", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-reconcile-gone-"));
+    const root = join(workspace, "root");
+    const specs = join(root, "specs");
+    writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.watch-reconcile-gone");
+    const opened = lstatSync(specs);
+    let stale = 0;
+    const watch = watchRoot(root, (path) => {
+      if (path === specs && stale > 0) {
+        stale -= 1;
+        return opened;
+      }
+      return lstatSync(path);
+    });
+
+    try {
+      await bounded(watch.cycles.cycle(1), "reconcile gone first cycle");
+      const retired = watch.native.subscriptions.get(specs);
+      expect(retired).toBeDefined();
+
+      rmSync(specs, { recursive: true });
+      stale = 1;
+      await deliver(retired, "rename", "");
+      expect(stale).toBe(0);
+
+      await bounded(watch.cycles.cycle(2), "reconcile gone rerun");
+      expect(retired?.closeCount).toBe(1);
+      expect(graphText(root)).not.toContain("spec:tmp.watch-reconcile-gone");
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "reconcile gone watch exit")).toBe(0);
+      expect(watch.capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+});
+
+// spec:consumers.validate-watch: a directory that replaces the root is watched in its place, and a
+// root that no longer resolves to a directory ends the watch with exit 1. The root has no parent
+// watcher, so only the handles of its own tree report its replacement; inotify reports the root's
+// own move or deletion on the root's handle as a rename under the root's basename.
+describe("validate watch root replacement", () => {
+  it.each([
+    ["the root's own move on the root's handle", "root", "rename", "self"],
+    ["an entry of the moved root on the root's handle", "root", "change", "specs"],
+    ["a carrier of the moved root on a descendant's handle", "specs", "rename", "before.sdp.md"],
+  ])(
+    "watches a directory that replaces the root when %s is reported first",
+    async (_label, reporter, eventType, name) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-root-replaced-"));
+      const root = join(workspace, "root");
+      const specs = join(root, "specs");
+      const moved = join(workspace, "moved");
+      writeCarrier(join(specs, "before.sdp.md"), "spec:tmp.watch-root-before");
+      const watch = watchRoot(root);
+
+      try {
+        await bounded(watch.cycles.cycle(1), "root replacement first cycle");
+        const retiredRoot = watch.native.subscriptions.get(root);
+        const retiredSpecs = watch.native.subscriptions.get(specs);
+        expect(retiredRoot).toBeDefined();
+        expect(retiredSpecs).toBeDefined();
+
+        renameSync(root, moved);
+        writeCarrier(join(specs, "after.sdp.md"), "spec:tmp.watch-root-after");
+        await deliver(
+          reporter === "root" ? retiredRoot : retiredSpecs,
+          eventType,
+          name === "self" ? basename(root) : name,
+        );
+
+        await bounded(watch.cycles.cycle(2), "root replacement rerun");
+        expect(retiredRoot?.closeCount).toBe(1);
+        expect(retiredSpecs?.closeCount).toBe(1);
+        const fresh = watch.native.subscriptions.get(root);
+        expect(fresh).toBeDefined();
+        expect(fresh).not.toBe(retiredRoot);
+        expect(graphText(root)).toContain("spec:tmp.watch-root-after");
+        expect(graphText(root)).not.toContain("spec:tmp.watch-root-before");
+
+        // The retired handles' events, edits in the moved root among them, start no run.
+        await deliver(retiredRoot, "rename", basename(root));
+        writeCarrier(join(moved, "specs", "before.sdp.md"), "spec:tmp.watch-root-moved-edit");
+        await deliver(retiredSpecs, "change", "before.sdp.md");
+        expect(watch.started).toEqual([1, 2]);
+
+        // The new root is watched: a carrier created in it joins the graph.
+        writeCarrier(join(root, "late.sdp.md"), "spec:tmp.watch-root-late");
+        await deliver(fresh, "rename", "late.sdp.md");
+        await bounded(watch.cycles.cycle(3), "new root carrier rerun");
+        expect(graphText(root)).toContain("spec:tmp.watch-root-late");
+
+        watch.cycles.abort.abort();
+        expect(await bounded(watch.running, "root replacement watch exit")).toBe(0);
+        expect(watch.started).toEqual([1, 2, 3]);
+        expect(watch.capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        watch.cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it("watches a root deleted and recreated with its inode reused", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-root-inode-reuse-"));
+    const root = join(workspace, "root");
+    writeCarrier(join(root, "specs", "before.sdp.md"), "spec:tmp.watch-root-before-recreation");
+    const opened = lstatSync(root);
+    let reuse = false;
+    // The recreated root reports the deleted one's identity, as a reused inode would.
+    const watch = watchRoot(root, (path) => (reuse && path === root ? opened : lstatSync(path)));
+
+    try {
+      await bounded(watch.cycles.cycle(1), "root inode reuse first cycle");
+      const dead = watch.native.subscriptions.get(root);
+      expect(dead).toBeDefined();
+
+      rmSync(root, { recursive: true });
+      writeCarrier(join(root, "specs", "after.sdp.md"), "spec:tmp.watch-root-after-recreation");
+      reuse = true;
+      await deliver(dead, "rename", basename(root));
+
+      await bounded(watch.cycles.cycle(2), "root inode reuse rerun");
+      expect(dead?.closeCount).toBe(1);
+      expect(watch.native.subscriptions.get(root)).not.toBe(dead);
+      expect(graphText(root)).toContain("spec:tmp.watch-root-after-recreation");
+      expect(graphText(root)).not.toContain("spec:tmp.watch-root-before-recreation");
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "root inode reuse watch exit")).toBe(0);
+      expect(watch.capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("watches a root deleted and recreated with its inode reused when it held an entry with its own name", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-root-own-name-"));
+    const root = join(workspace, "docs");
+    writeCarrier(join(root, "specs", "before.sdp.md"), "spec:tmp.watch-own-name-before");
+    writeFileSync(join(root, "docs"), "notes\n", "utf8");
+    const opened = lstatSync(root);
+    let reuse = false;
+    // The recreated root reports the deleted one's identity, as a reused inode would.
+    const watch = watchRoot(root, (path) => (reuse && path === root ? opened : lstatSync(path)));
+
+    try {
+      await bounded(watch.cycles.cycle(1), "own name first cycle");
+      const dead = watch.native.subscriptions.get(root);
+      expect(dead).toBeDefined();
+
+      rmSync(root, { recursive: true });
+      writeCarrier(join(root, "specs", "after.sdp.md"), "spec:tmp.watch-own-name-after");
+      reuse = true;
+      // inotify reports the entry `docs/docs` going first, under the same name as the root's own
+      // deletion that follows it. The entry's event retires nothing.
+      await deliver(dead, "rename", "docs");
+      expect(dead?.closeCount).toBe(0);
+      expect(watch.started).toEqual([1]);
+
+      await deliver(dead, "rename", "docs");
+      await bounded(watch.cycles.cycle(2), "own name rerun");
+      expect(dead?.closeCount).toBe(1);
+      expect(watch.native.subscriptions.get(root)).not.toBe(dead);
+      expect(graphText(root)).toContain("spec:tmp.watch-own-name-after");
+      expect(graphText(root)).not.toContain("spec:tmp.watch-own-name-before");
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "own name watch exit")).toBe(0);
+      expect(watch.capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  // A directory deleted and recreated can get the deleted one's inode number back, but it is born
+  // again: a filesystem that reports birth times gives it a new one, and one that reports none gives
+  // 0 for both. The new directory may already hold an entry with its own name when the dead handle's
+  // report of the deletion is read, and the old one may have held one too, whose deletion inotify
+  // reports first under the same name.
+  it.each([
+    ["the root", false, true, ""],
+    ["the root", true, true, ""],
+    ["the root", false, false, ""],
+    ["the root", true, false, ""],
+    ["a watched directory", false, true, "sub"],
+    ["a watched directory", true, false, "sub"],
+  ])(
+    "watches %s deleted and recreated with its inode reused that holds an entry with its own name (one before: %s, birth time reported: %s)",
+    async (_label, heldBefore, reported, directoryPath) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-own-name-reuse-"));
+      const root = join(workspace, "docs");
+      const directory = directoryPath === "" ? root : join(root, directoryPath);
+      const name = basename(directory);
+      writeCarrier(
+        join(directory, "specs", "before.sdp.md"),
+        "spec:tmp.watch-own-name-reuse-before",
+      );
+
+      if (heldBefore) {
+        writeFileSync(join(directory, name), "notes\n", "utf8");
+      }
+
+      const opened = lstatSync(directory);
+      let reuse = false;
+      const recreated = (path: string) => reuse && path === directory;
+      const lstatWithBirthTimes = birthTimes(reported, recreated);
+      const watch = watchRoot(root, (path) => {
+        const stats = lstatWithBirthTimes(path);
+
+        return recreated(path) ? withStats(stats, { dev: opened.dev, ino: opened.ino }) : stats;
+      });
+
+      try {
+        await bounded(watch.cycles.cycle(1), "own name reuse first cycle");
+        const dead = watch.native.subscriptions.get(directory);
+        expect(dead).toBeDefined();
+
+        rmSync(directory, { recursive: true });
+        writeCarrier(
+          join(directory, "specs", "after.sdp.md"),
+          "spec:tmp.watch-own-name-reuse-after",
+        );
+        writeFileSync(join(directory, name), "new notes\n", "utf8");
+        reuse = true;
+
+        if (heldBefore) {
+          await deliver(dead, "rename", name);
+        }
+
+        await deliver(dead, "rename", name);
+        await bounded(watch.cycles.cycle(2), "own name reuse rerun");
+        expect(dead?.closeCount).toBe(1);
+        const fresh = watch.native.subscriptions.get(directory);
+        expect(fresh).toBeDefined();
+        expect(fresh).not.toBe(dead);
+        expect(graphText(root)).toContain("spec:tmp.watch-own-name-reuse-after");
+        expect(graphText(root)).not.toContain("spec:tmp.watch-own-name-reuse-before");
+
+        // The new directory is watched: a carrier created in it joins the graph.
+        writeCarrier(join(directory, "late.sdp.md"), "spec:tmp.watch-own-name-reuse-late");
+        await deliver(fresh, "rename", "late.sdp.md");
+        await bounded(watch.cycles.cycle(3), "own name reuse carrier rerun");
+        expect(graphText(root)).toContain("spec:tmp.watch-own-name-reuse-late");
+
+        watch.cycles.abort.abort();
+        expect(await bounded(watch.running, "own name reuse watch exit")).toBe(0);
+        expect(watch.capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        watch.cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it.each([
+    ["moves away and the root's handle reports its own move", "nothing", "rename", "self"],
+    ["moves away and the root's handle reports an entry of it", "nothing", "change", "specs"],
+    ["is replaced by a file and the root's handle reports an entry", "file", "change", "specs"],
+  ])("fails typed when the root %s", async (_label, replacement, eventType, name) => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-root-moved-"));
+    const root = join(workspace, "root");
+    writeCarrier(join(root, "specs", "probe.sdp.md"), "spec:tmp.watch-root-moved");
+    const watch = watchRoot(root);
+
+    try {
+      await bounded(watch.cycles.cycle(1), "root moved first cycle");
+      const retired = watch.native.subscriptions.get(root);
+      expect(retired).toBeDefined();
+
+      renameSync(root, join(workspace, "moved"));
+
+      if (replacement === "file") {
+        writeFileSync(root, "not a directory\n", "utf8");
+      }
+
+      await deliver(retired, eventType, name === "self" ? basename(root) : name);
+
+      expect(await bounded(watch.running, "root moved typed watch failure")).toBe(1);
+      expect(watch.capture.readStderr()).toContain(
+        `sdp validate: watch failed — the watch root ${root} was removed or can no longer be watched`,
+      );
+      expect(retired?.closeCount).toBe(1);
+      expect(watch.started).toEqual([1]);
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+});
+
+// spec:consumers.validate-watch: the watcher ignores every non-carrier path, and only a watched
+// directory removed or replaced schedules a run. These events change no carrier and replace no
+// watched directory, so they must open or close no handle and start no run, but for the one cost
+// the Spec states: an entry with its directory's own name, where no birth time tells it apart.
+describe("validate watch handle cost", () => {
+  it.each([
+    ["the root", ""],
+    ["a watched directory", "notes"],
+  ])(
+    "keeps every handle and starts no run when an entry named after %s comes and goes",
+    async (_label, directoryPath) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-own-name-cost-"));
+      const root = join(workspace, "docs");
+      const directory = directoryPath === "" ? root : join(root, directoryPath);
+      const name = basename(directory);
+      const entry = join(directory, name);
+      const moved = join(directory, `${name}-old`);
+      // The carrier sits inside the directory, so reading the directory again would report it.
+      writeCarrier(join(directory, "specs", "probe.sdp.md"), "spec:tmp.watch-own-name-cost");
+      writeFileSync(entry, "notes\n", "utf8");
+      // On a filesystem that reports birth times, as APFS, ext4, XFS, btrfs and recent tmpfs do.
+      const watch = watchRoot(root, birthTimes(true));
+
+      try {
+        await bounded(watch.cycles.cycle(1), "own name cost first cycle");
+        const handle = watch.native.subscriptions.get(directory);
+        expect(handle).toBeDefined();
+        const before = watch.native.counts();
+
+        renameSync(entry, moved);
+        await deliver(handle, "rename", name);
+        await deliver(handle, "rename", basename(moved));
+        renameSync(moved, entry);
+        await deliver(handle, "rename", basename(moved));
+        await deliver(handle, "rename", name);
+        rmSync(entry);
+        await deliver(handle, "rename", name);
+        writeFileSync(entry, "notes again\n", "utf8");
+        await deliver(handle, "rename", name);
+
+        expect(watch.native.counts()).toEqual(before);
+        expect(watch.started).toEqual([1]);
+
+        watch.cycles.abort.abort();
+        expect(await bounded(watch.running, "own name cost watch exit")).toBe(0);
+      } finally {
+        watch.cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it("rebuilds the root once and starts one run when an entry named after it appears where the filesystem reports no birth time", async () => {
+    // The entry's event and the root's own report of a deletion look the same, and without a birth
+    // time the watcher cannot tell them apart, so it rebuilds. Once the entry is known, its other
+    // events cost nothing.
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-own-name-no-birth-time-"));
+    const root = join(workspace, "docs");
+    const entry = join(root, "docs");
+    writeCarrier(join(root, "specs", "probe.sdp.md"), "spec:tmp.watch-own-name-no-birth-time");
+    const watch = watchRoot(root, birthTimes(false));
+
+    try {
+      await bounded(watch.cycles.cycle(1), "no birth time first cycle");
+      const handle = watch.native.subscriptions.get(root);
+      const before = watch.native.counts();
+
+      writeFileSync(entry, "notes\n", "utf8");
+      await deliver(handle, "rename", "docs");
+      await bounded(watch.cycles.cycle(2), "no birth time rebuild");
+      expect(watch.native.counts()).toEqual({ opens: before.opens * 2, closes: before.opens });
+
+      const rebuilt = watch.native.counts();
+      const fresh = watch.native.subscriptions.get(root);
+      writeFileSync(entry, "more notes\n", "utf8");
+      await deliver(fresh, "change", "docs");
+      rmSync(entry);
+      await deliver(fresh, "rename", "docs");
+
+      expect(watch.native.counts()).toEqual(rebuilt);
+      expect(watch.started).toEqual([1, 2]);
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "no birth time watch exit")).toBe(0);
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it.each(["rename", "change"])(
+    "keeps a watched directory's handles when a %s event names it while it is still the directory they watch",
+    async (eventType) => {
+      // macOS reports a rename for a directory that has not moved, and Linux reports a change to a
+      // directory's own times as a rename at its parent.
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-same-directory-cost-"));
+      const root = join(workspace, "root");
+      // The carrier sits inside every directory the events name, so reading one of them again
+      // would report it as created.
+      writeCarrier(join(root, "a", "b", "c", "probe.sdp.md"), "spec:tmp.watch-same-directory-cost");
+      const watch = watchRoot(root);
+
+      try {
+        await bounded(watch.cycles.cycle(1), "same directory cost first cycle");
+        const before = watch.native.counts();
+
+        await deliver(watch.native.subscriptions.get(root), eventType, "a");
+        await deliver(watch.native.subscriptions.get(join(root, "a")), eventType, "b");
+        await deliver(watch.native.subscriptions.get(join(root, "a", "b")), eventType, "c");
+
+        expect(watch.native.counts()).toEqual(before);
+        expect(watch.started).toEqual([1]);
+
+        watch.cycles.abort.abort();
+        expect(await bounded(watch.running, "same directory cost watch exit")).toBe(0);
+      } finally {
+        watch.cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  // The other side of the cost: a directory the watch has not read yet is read in full, and the
+  // carriers already in it start a run.
+  it.each(["arrives", "replaces a watched one"])(
+    "reads a directory that %s and every directory under it",
+    async (arrival) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-new-directory-"));
+      const root = join(workspace, "root");
+      const parent = join(root, "a");
+      const directory = join(parent, "b");
+      writeCarrier(join(directory, "before.sdp.md"), "spec:tmp.watch-new-directory-before");
+      const watch = watchRoot(root);
+
+      try {
+        await bounded(watch.cycles.cycle(1), "new directory first cycle");
+        const retired = watch.native.subscriptions.get(directory);
+        expect(retired).toBeDefined();
+
+        if (arrival === "arrives") {
+          rmSync(directory, { recursive: true });
+          await deliver(watch.native.subscriptions.get(parent), "rename", "b");
+          await bounded(watch.cycles.cycle(2), "new directory removal rerun");
+          expect(watch.native.subscriptions.get(directory)).toBe(retired);
+          expect(retired?.closeCount).toBe(1);
+        } else {
+          renameSync(directory, join(workspace, "moved"));
+        }
+
+        writeCarrier(join(directory, "deep", "after.sdp.md"), "spec:tmp.watch-new-directory-after");
+        await deliver(watch.native.subscriptions.get(parent), "rename", "b");
+        const arrived = arrival === "arrives" ? 3 : 2;
+        await bounded(watch.cycles.cycle(arrived), "new directory rerun");
+
+        const fresh = watch.native.subscriptions.get(directory);
+        const deep = watch.native.subscriptions.get(join(directory, "deep"));
+        expect(fresh).toBeDefined();
+        expect(fresh).not.toBe(retired);
+        expect(deep).toBeDefined();
+        expect(graphText(root)).toContain("spec:tmp.watch-new-directory-after");
+        expect(graphText(root)).not.toContain("spec:tmp.watch-new-directory-before");
+
+        // The directory under it is watched too: a carrier created there joins the graph.
+        writeCarrier(join(directory, "deep", "late.sdp.md"), "spec:tmp.watch-new-directory-late");
+        await deliver(deep, "rename", "late.sdp.md");
+        await bounded(watch.cycles.cycle(arrived + 1), "new directory carrier rerun");
+        expect(graphText(root)).toContain("spec:tmp.watch-new-directory-late");
+        expect(watch.started).toEqual(arrival === "arrives" ? [1, 2, 3, 4] : [1, 2, 3]);
+
+        watch.cycles.abort.abort();
+        expect(await bounded(watch.running, "new directory watch exit")).toBe(0);
+        expect(watch.capture.readStderr()).not.toContain("watch failed");
+      } finally {
+        watch.cycles.abort.abort();
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it("keeps every handle and starts no run for non-carrier events where inode numbers change on every read", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-unstable-inode-cost-"));
+    const root = join(workspace, "root");
+    const nested = join(root, "a", "b");
+    // The carrier sits inside every directory the events name.
+    writeCarrier(join(nested, "probe.sdp.md"), "spec:tmp.watch-unstable-inode-cost");
+    let nextInode = 1_000_000;
+    // Some network and FUSE filesystems give a directory another inode number on each read.
+    const watch = watchRoot(root, (path) => {
+      const stats = lstatSync(path);
+
+      if (!stats.isDirectory()) {
+        return stats;
+      }
+
+      nextInode += 1;
+      return Object.assign(Object.create(Object.getPrototypeOf(stats) as object) as Stats, stats, {
+        ino: nextInode,
+      });
+    });
+
+    try {
+      await bounded(watch.cycles.cycle(1), "unstable inode first cycle");
+      const before = watch.native.counts();
+
+      writeFileSync(join(nested, "notes.txt"), "notes\n", "utf8");
+      await deliver(watch.native.subscriptions.get(nested), "rename", "notes.txt");
+      await deliver(watch.native.subscriptions.get(root), "change", "a");
+      await deliver(watch.native.subscriptions.get(join(root, "a")), "rename", "b");
+
+      expect(watch.native.counts()).toEqual(before);
+      expect(watch.started).toEqual([1]);
+
+      // A carrier event still starts a run.
+      writeCarrier(join(nested, "late.sdp.md"), "spec:tmp.watch-unstable-inode-late");
+      await deliver(watch.native.subscriptions.get(nested), "rename", "late.sdp.md");
+      await bounded(watch.cycles.cycle(2), "unstable inode carrier rerun");
+      expect(graphText(root)).toContain("spec:tmp.watch-unstable-inode-late");
+      expect(watch.native.counts()).toEqual(before);
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "unstable inode watch exit")).toBe(0);
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
 });

@@ -17,6 +17,24 @@ export function markdownLine(source: string, offset: number, baseLine: number): 
   return baseLine + source.slice(0, offset).split(/\r\n|\n/u).length - 1;
 }
 
+function isAsciiBlank(character: string | undefined): boolean {
+  return character === " " || character === "\t";
+}
+
+// A scan rather than `/[\t ]+$/`: that regex retries every start inside an interior run of
+// blanks, so one long padded line would make extraction quadratic in its length.
+export function asciiTrimEnd(text: string): string {
+  let end = text.length;
+  while (end > 0 && isAsciiBlank(text[end - 1])) end -= 1;
+  return text.slice(0, end);
+}
+
+export function asciiTrim(text: string): string {
+  let start = 0;
+  while (start < text.length && isAsciiBlank(text[start])) start += 1;
+  return asciiTrimEnd(text.slice(start));
+}
+
 export function addMarkdownFinding(findings: Finding[], entry: Finding): void {
   if (findings.length < MAX_FINDINGS) findings.push(entry);
 }

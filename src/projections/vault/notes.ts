@@ -2,6 +2,7 @@ import type { GraphNode, GraphSchema } from "../../graph/schema.js";
 import { createReader } from "../../reader/reader.js";
 import type { Reader, RelationEnd, SpecContext } from "../../reader/reader.js";
 import type { Finding } from "../../validate/contracts.js";
+import { floorPhrase } from "../floor-not-evaluated.js";
 import { renderBase } from "./bases.js";
 import { renderSections } from "./sections.js";
 import { compare } from "./sync.js";
@@ -114,7 +115,7 @@ export function renderVault(
       ];
       context.members.forEach((m, i) =>
         lines.push(
-          `${String(i + 1)}. ${link(m.id)} · stated ${m.statedReadiness ?? "none"} · floor ${m.derivedReadiness ?? "none"}${m.statedNextRung === undefined ? "" : ` · ${m.statedNextRung}: ${m.statedNextRungFailures?.length ? m.statedNextRungFailures.map((f) => f.clauseId).join(", ") : "nothing blocks"}`}`,
+          `${String(i + 1)}. ${link(m.id)} · stated ${m.statedReadiness ?? "none"} · ${floorPhrase(m)}${m.statedNextRung === undefined ? "" : ` · ${m.statedNextRung}: ${m.statedNextRungFailures?.length ? m.statedNextRungFailures.map((f) => f.clauseId).join(", ") : "nothing blocks"}`}`,
         ),
       );
       lines.push("", "## Boundary");
@@ -171,7 +172,8 @@ function specNote(c: SpecContext, reader: Reader, findings: readonly Finding[]):
       specKind: c.specKind,
       altitude: c.altitude,
       statedReadiness: c.statedReadiness,
-      derivedReadiness: c.derivedReadiness ?? "none",
+      derivedReadiness:
+        c.floorNotEvaluated === undefined ? (c.derivedReadiness ?? "none") : "not evaluated",
       statedNextRung: c.statedNextRung,
       statedNextRungFailures: c.statedNextRungFailures.map((f) => f.clauseId),
       implementationBinding: c.deliveryFacts.includes("implemented"),
@@ -188,7 +190,7 @@ function specNote(c: SpecContext, reader: Reader, findings: readonly Finding[]):
     "",
     `# ${text(c.title ?? c.id)}`,
     "",
-    `${code(c.id)} · ${c.kindDisplayLabel ?? c.specKind} · ${c.altitude} · stated ${c.statedReadiness} · floor ${c.derivedReadiness ?? "none"}${c.statedNextRung === undefined ? "" : ` · ${c.statedNextRung}: ${c.statedNextRungFailures.map((f) => f.clauseId).join(", ") || "nothing blocks"}`}`,
+    `${code(c.id)} · ${c.kindDisplayLabel ?? c.specKind} · ${c.altitude} · stated ${c.statedReadiness} · ${floorPhrase(c)}${c.statedNextRung === undefined ? "" : ` · ${c.statedNextRung}: ${c.statedNextRungFailures.map((f) => f.clauseId).join(", ") || "nothing blocks"}`}`,
     "",
     text(c.narrative ?? ""),
     ...renderSections(c, text),

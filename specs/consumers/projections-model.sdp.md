@@ -16,7 +16,7 @@ relations:
 
 ## Model
 - **projection** — A pure, disposable, regenerable function of the graph that produces a consumer artifact without becoming a second source of truth.
-- **diagnostic publication posture** — After extraction succeeds, a projection publishes its honestly labelled graph view even when validation reports errors, and returns the validation exit code so findings remain both visible and nonzero.
+- **diagnostic publication posture** — After extraction succeeds, a projection publishes its honestly labelled graph view even when validation reports errors, and returns the validation exit code so findings remain both visible and nonzero. Publication failures remain separate: an unsafe output parent refuses writes and cleanup through it; Design Review, Mermaid and Gherkin publishers refuse their whole page set on a case-insensitive page-path collision, name both ids and paths, remove stale roots only through safe parents, and exit 1. Renderers retain their page names and bytes.
 - **curated graph** — The part of the one derived graph that carries declared intent and anchored bindings, kept sparse by curation; the impact graph's inferred structure remains distinct.
 - **reader** — The thin typed front door that decodes graph joins and taxonomy once, returns composable data, and persists nothing.
 - **curation** — The deliberate difference between the sparse curated graph and the exhaustive code-structure surface `spec:consumers.impact-graph` designs; it is not drift.

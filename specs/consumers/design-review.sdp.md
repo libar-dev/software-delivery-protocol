@@ -35,12 +35,16 @@ relations:
 - rule: A Spec page lists the code units that realize the Spec and, apart, the units that reference it, each with its file and line, its role and, for a component, its layer and context; a reference confers no implementation binding.
 - rule: The renderer reads the reader and returns pages; writing them is the caller's job.
 
+- rule: [#portablePublication] A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.
+- rule: [#safeCleanup] Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.
+
 ## UI
 The generated Design Review exposes three page anatomies from the same graph.
 
 - specPage: A Spec page presents descriptors, the narrative, readiness, bindings, the authored sections, relations and findings in one context.
 - packPage: A Pack page presents the Pack's design as its child `spec:consumers.design-review.pack-design-page` states.
 - indexPage: The index holds one Markdown table of Specs, a linked list of Packs and the findings table, with stable links into each page.
+
 
 ## Example space
 ```gwt-vocabulary

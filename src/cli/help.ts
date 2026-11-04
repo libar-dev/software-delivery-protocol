@@ -72,10 +72,11 @@ const commands = {
              Findings remain visible; exit code follows validate. --check-clean independently
              re-renders and refuses missing or drifted output. --base PATH reads the graph JSON from
              an earlier sdp build and adds the design diff; --base-label TEXT names that base.
-             Keep the base outside <root>/generated/; paths resolving inside it are refused.
              Pages open through file://.
              Repeat --runs PATH to read CTRF JSON reports as external run evidence from test files.
-             Unreadable or invalid JSON refuses before extraction; report diagnostics show on Runs.`,
+             Unreadable or invalid JSON refuses before extraction; report diagnostics show on Runs.
+             An input the build could write or remove, such as <root>/generated/graph.json or a
+             file beneath a projection root, is refused, as is a link resolving to one.`,
   },
   stamp: {
     name: "stamp",
@@ -149,11 +150,14 @@ const commands = {
   },
 } as const;
 
-const scaffoldParagraph = `PATH is cwd-relative and must end
-in .sdp.md; parent directories are created as needed. The file is never
-overwritten. Readiness is always idea; relations are always empty. The kind's
-typed section is a bare heading with no invented content. constraint emits
-envelope, title, and Intent only, with no twin section.`;
+const scaffoldParagraph = `PATH is cwd-relative, must end in .sdp.md
+and must not contain .. segments. Its parent must resolve inside the working
+directory, and missing parent directories are created only there: a parent
+that escapes it, through a symbolic link or otherwise, or that cannot be
+resolved, ends the command with exit 1 before anything is created. The file
+is never overwritten. Readiness is always idea; relations are always empty.
+The kind's typed section is a bare heading with no invented content.
+constraint emits envelope, title, and Intent only, with no twin section.`;
 
 /** A verb and the help index compose the same usage and description. */
 export function verbHelpText(command: string): string | undefined {

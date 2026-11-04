@@ -1,5 +1,6 @@
 import type { GraphSchema, PrimitiveNode } from "../graph/schema.js";
 import type { Finding } from "../validate/contracts.js";
+import type { GraphIndex } from "../validate/graph-index.js";
 import { parseSlots, stepSkeleton } from "./slots.js";
 import type { SlotDeclaredType, SlotScalar } from "./slots.js";
 export const contractsFindingIds = {
@@ -26,6 +27,8 @@ export const contractsFindingIds = {
   multipleRegistrarPaths: "contracts/multiple-registrar-paths",
   conflictingStepKey: "contracts/conflicting-step-key",
   duplicateStepKey: "contracts/duplicate-step-key",
+  reservedThenSlot: "contracts/reserved-then-slot",
+  reservedThenKey: "contracts/reserved-then-key",
 } as const;
 
 export function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -71,6 +74,84 @@ export function structuredEntriesOf(node: PrimitiveNode): readonly StructuredEnt
   }
 
   return structured;
+}
+
+/** Locate Then occurrences without losing their authored indexes. */
+function thenStepsOf(
+  node: PrimitiveNode,
+): readonly { readonly text: string; readonly path: string }[] {
+  const behavior = asRecord(node.sections?.behavior);
+  const space = asRecord(behavior?.exampleSpace);
+  const examples = Array.isArray(behavior?.examples) ? behavior.examples : [];
+  const steps = [
+    ...asStringArray(space?.then).map((text, index) => ({
+      text,
+      path: `behavior.exampleSpace.then[${String(index)}]`,
+    })),
+    ...examples.flatMap((entry, entryIndex) =>
+      asStringArray(asRecord(entry)?.then).map((text, stepIndex) => ({
+        text,
+        path: `behavior.examples[${String(entryIndex)}].then[${String(stepIndex)}]`,
+      })),
+    ),
+  ];
+  return steps;
+}
+
+/** Then payload fields share the flat Outcome object with its discriminant. */
+export function reservedThenSlotsOf(
+  node: PrimitiveNode,
+): readonly { readonly text: string; readonly path: string }[] {
+  return thenStepsOf(node).filter(({ text }) =>
+    parseSlots(text).some((slot) => slot.name === "kind"),
+  );
+}
+
+const reservedKeyVocabularies = new WeakMap<
+  GraphIndex,
+  Map<string, readonly VocabularyEntry[] | undefined>
+>();
+
+/** The coverage-gap outcome cannot also identify an authored Then. */
+export function reservedThenKeysOf(
+  node: PrimitiveNode,
+  index: GraphIndex,
+): readonly { readonly text: string; readonly path: string }[] {
+  const steps = thenStepsOf(node);
+  if (steps.length === 0) return [];
+
+  let vocabularies = reservedKeyVocabularies.get(index);
+  if (vocabularies === undefined) {
+    vocabularies = new Map();
+    reservedKeyVocabularies.set(index, vocabularies);
+  }
+
+  // Both callers already index the graph. Inspect only this Spec's declared parents, in the
+  // same code-unit order codegen uses to resolve a step against multiple vocabularies.
+  const parents = (index.edgesByFrom.get(node.id) ?? [])
+    .filter((edge) => edge.type === "refines" && edge.claim === "declared")
+    .map((edge) => edge.to)
+    .sort()
+    .flatMap((id) => {
+      const cached = vocabularies.get(id);
+      if (cached !== undefined || vocabularies.has(id)) return [cached ?? []];
+      const parent = index.primitivesById.get(id);
+      const vocabulary = parent === undefined ? undefined : vocabularyOf(parent, []);
+      vocabularies.set(id, vocabulary);
+      return [vocabulary ?? []];
+    });
+  return steps.filter(({ text, path }) => {
+    const skeleton = stepSkeleton(text);
+    const ownKey = authoredStepKey(node, skeleton);
+    if (ownKey !== undefined) return ownKey === "unspecified";
+    if (path.startsWith("behavior.examples[")) {
+      for (const vocabulary of parents) {
+        const entry = vocabulary.find((entry) => entry.skeleton === skeleton);
+        if (entry !== undefined) return entry.key === "unspecified";
+      }
+    }
+    return skeleton === "unspecified";
+  });
 }
 
 export interface VocabularyEntry {
@@ -437,23 +518,28 @@ function decode(graph: GraphSchema) {
   const nodes = graph.nodes
     .filter((node): node is PrimitiveNode => node.nodeType === "Primitive")
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const nodesById = new Map(nodes.map((node) => [node.id, node]));
+  const childrenByParent = new Map<string, Set<string>>();
+  for (const edge of graph.edges) {
+    if (edge.type !== "refines" || edge.claim !== "declared") continue;
+    let children = childrenByParent.get(edge.to);
+    if (children === undefined) {
+      children = new Set();
+      childrenByParent.set(edge.to, children);
+    }
+    children.add(edge.from);
+  }
   for (const parent of nodes) {
     const vocabulary = vocabularyOf(parent, findings);
     if (vocabulary === undefined) continue;
     const space = buildSpaceModel(parent, vocabulary, findings);
     if (duplicateContractKeys(vocabulary, parent, "space", findings)) withheldSpaces.add(parent.id);
     spaces.set(parent.id, space);
-    const children = new Set(
-      graph.edges
-        .filter((e) => e.type === "refines" && e.claim === "declared" && e.to === parent.id)
-        .map((e) => e.from),
-    );
-    const bound = nodes
+    const bound = [...(childrenByParent.get(parent.id) ?? [])]
+      .map((id) => nodesById.get(id))
       .filter(
-        (child) =>
-          child.specKind === "example" &&
-          children.has(child.id) &&
-          structuredEntriesOf(child).length > 0,
+        (child): child is PrimitiveNode =>
+          child?.specKind === "example" && structuredEntriesOf(child).length > 0,
       )
       .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
       .map((child) => bindPoint(space, child, findings));

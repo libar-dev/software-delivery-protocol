@@ -1,16 +1,19 @@
 import { lstatSync, readdirSync, realpathSync, watch } from "node:fs";
 import type { Stats } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { isExcludedDiscoveryDirectory } from "../extract/discover.js";
+import {
+  isExcludedDiscoveryDirectory,
+  isSourceFileName,
+  isSpecFileName,
+  isWarnedSymbolicLink,
+} from "../extract/discover.js";
 import { parameterFiles } from "./params.js";
 import type { BuildArgs } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { writeStderr } from "./output.js";
 import { runValidate, runValidateRules } from "./validate-view-command.js";
 import type { ValidationViewHooks } from "./validate-view-command.js";
-
-const CARRIER_SUFFIXES = [".sdp.ts", ".sdp.md", ".sdp.gherkin"] as const;
 
 export interface ValidateWatchEvent {
   readonly type: "create" | "change" | "delete" | "rename";
@@ -26,6 +29,11 @@ export interface ValidateWatchEvent {
    * entry, so the event must schedule a rerun even though its path names a directory.
    */
   readonly unattributed?: boolean;
+  /**
+   * True when the event names a symbolic link discovery warns about, before or after the event:
+   * creating, removing or replacing one changes the warning list although no carrier changed.
+   */
+  readonly skippedLink?: boolean;
 }
 
 export interface ValidateWatchEventSource {
@@ -61,6 +69,10 @@ export interface ValidateWatchCycle {
 
 export interface ValidateWatchHooks {
   readonly watchSources?: boolean;
+  /**
+   * Drops events the cycle's own writes cause. It never sees a skipped-link event: it may resolve
+   * a link to its target, while the event concerns the link itself, which no cycle creates.
+   */
   readonly ignoreWatchPath?: (path: string) => boolean;
   readonly watchCommand?: string;
   readonly runWatchCycle?: () =>
@@ -169,16 +181,19 @@ function isWatchableDirectoryPath(
   return !isExcludedPrefix(relativePath, exclude);
 }
 
-export function isWatchedCarrierPath(
+/**
+ * The root-relative path of an entry discovery reaches, or `undefined` for an entry outside the
+ * root, under a directory discovery skips, or under a configured exclusion.
+ */
+function reachedEntryPath(
   root: string,
   eventPath: string,
   exclude: readonly string[],
-  sources = false,
-): boolean {
+): string | undefined {
   const relativePath = toPosixRelative(root, eventPath);
 
   if (relativePath === "" || relativePath === "." || relativePath.startsWith("../")) {
-    return false;
+    return undefined;
   }
 
   // Discovery skips dot-directories, never dot-files: a basename like `..cache.sdp.ts` is a
@@ -186,17 +201,31 @@ export function isWatchedCarrierPath(
   const segments = relativePath.split("/").filter((segment) => segment !== "");
 
   if (segments.slice(0, -1).some((segment) => isExcludedDiscoveryDirectory(segment))) {
+    return undefined;
+  }
+
+  return isExcludedPrefix(relativePath, exclude) ? undefined : relativePath;
+}
+
+function entryName(relativePath: string): string {
+  return relativePath.slice(relativePath.lastIndexOf("/") + 1);
+}
+
+export function isWatchedCarrierPath(
+  root: string,
+  eventPath: string,
+  exclude: readonly string[],
+  sources = false,
+): boolean {
+  const relativePath = reachedEntryPath(root, eventPath, exclude);
+
+  if (relativePath === undefined) {
     return false;
   }
 
-  if (isExcludedPrefix(relativePath, exclude)) {
-    return false;
-  }
+  const name = entryName(relativePath);
 
-  return (
-    CARRIER_SUFFIXES.some((suffix) => relativePath.endsWith(suffix)) ||
-    (sources && /\.tsx?$/u.test(relativePath) && !relativePath.endsWith(".d.ts"))
-  );
+  return isSpecFileName(name) || (sources && isSourceFileName(name));
 }
 
 function defaultNativeWatch(
@@ -219,6 +248,12 @@ function isNotFoundError(error: unknown): boolean {
   return code === "ENOENT" || code === "ENOTDIR";
 }
 
+/** A watched directory found gone or replaced, with what now stands at its path, if anything. */
+interface ReplacedDirectory {
+  readonly directory: string;
+  readonly replacement: Stats | undefined;
+}
+
 function createFilesystemWatchSource(input: {
   readonly root: string;
   readonly exclude: readonly string[];
@@ -227,12 +262,33 @@ function createFilesystemWatchSource(input: {
   readonly lstatWatchPath?: (path: string) => Stats;
 }): ValidateWatchEventSource {
   const createNativeWatch = input.createNativeWatch ?? defaultNativeWatch;
-  const lstatWatchPath = input.lstatWatchPath ?? lstatSync;
+  // Resolve only the selected root; descendant links stay outside the watched tree.
+  const lstatWatchPath =
+    input.lstatWatchPath ??
+    ((path: string) => lstatSync(path === input.root ? realpathSync.native(path) : path));
   const watchers = new Map<string, NativeWatchHandle>();
+  // The identity of the directory each handle was opened on. A watcher may follow the inode it
+  // was opened on (inotify does) rather than the path, so a path that now holds another
+  // directory needs a new handle. The birth time is 0 where the filesystem reports none.
+  const identities = new Map<
+    string,
+    { readonly dev: number; readonly ino: number; readonly birthtimeMs: number }
+  >();
+  // The watched directories that, when last read, held an entry with their own name, such as
+  // `docs/docs`. inotify reports a directory's own move or deletion on its handle under that name,
+  // so once nothing stands at that name, an event naming the entry is told apart from the
+  // directory's own by whether the entry was there.
+  const holdOwnName = new Set<string>();
+  // The links discovery warns about, by absolute path, so removing one still schedules a run.
+  const skippedLinks = new Set<string>();
   let eventListener: ((event: ValidateWatchEvent) => void) | undefined;
   let errorListener: ((error: unknown) => void) | undefined;
   let pendingError: unknown;
   let closed = false;
+
+  const isSkippedLink = (absolutePath: string, relativePath: string): boolean =>
+    reachedEntryPath(input.root, relativePath, input.exclude) !== undefined &&
+    isWarnedSymbolicLink(absolutePath, entryName(relativePath));
 
   const fail = (error: unknown): void => {
     if (closed) {
@@ -255,8 +311,145 @@ function createFilesystemWatchSource(input: {
 
       const handle = watchers.get(candidate);
       watchers.delete(candidate);
+      identities.delete(candidate);
+      holdOwnName.delete(candidate);
       handle?.close();
     }
+
+    for (const link of [...skippedLinks]) {
+      if (isDescendantPath(absoluteDirectory, link)) {
+        skippedLinks.delete(link);
+      }
+    }
+  };
+
+  // True when a watched path now holds a directory other than the one its handle was opened on.
+  // Some network and FUSE filesystems do not keep a directory's inode number stable, and one that
+  // changes it from one read to the next would make every event look like a replacement, so a
+  // changed identity counts only when a second read confirms it. On such a filesystem identity
+  // cannot show a directory replaced, and only the events that report a replacement do. A
+  // filesystem that changes a directory's number now and then, as when its cache drops the entry,
+  // still costs one rebuild of that subtree and one run per change. A second read that fails
+  // counts as another directory: the path no longer holds the one the handle was opened on.
+  const isOtherDirectory = (absoluteDirectory: string, stats: Stats): boolean => {
+    const opened = identities.get(absoluteDirectory);
+
+    if (
+      opened === undefined ||
+      !stats.isDirectory() ||
+      (opened.dev === stats.dev && opened.ino === stats.ino)
+    ) {
+      return false;
+    }
+
+    try {
+      const again = lstatWatchPath(absoluteDirectory);
+
+      return !again.isDirectory() || (again.dev === stats.dev && again.ino === stats.ino);
+    } catch {
+      return true;
+    }
+  };
+
+  // True when a watched directory still has the birth time it had when its handle was opened, so it
+  // is that directory and the handle lives. A directory deleted and recreated can get the deleted
+  // one's inode number back, but it is born again. Only the directory's own reports need this: the
+  // birth time is compared nowhere else, because a platform without birth times may report the
+  // change time in their place, and that changes with every entry.
+  const keepsBirthTime = (absoluteDirectory: string): boolean => {
+    const opened = identities.get(absoluteDirectory);
+
+    if (opened === undefined || !(opened.birthtimeMs > 0)) {
+      return false;
+    }
+
+    try {
+      const stats = lstatWatchPath(absoluteDirectory);
+
+      return stats.isDirectory() && stats.birthtimeMs === opened.birthtimeMs;
+    } catch {
+      return false;
+    }
+  };
+
+  // A callback names its entries by path. Once a watched directory on the way up from it is gone
+  // or was replaced by a link, a file or another directory, those paths resolve through the
+  // replacement, perhaps outside the root, and the retired handle may report another tree under
+  // them. Returns the highest such directory below the root, whose subtree is dropped, with what
+  // now stands at its path (`undefined` when nothing does).
+  const replacedDirectory = (absoluteDirectory: string): ReplacedDirectory | undefined => {
+    let replaced: ReplacedDirectory | undefined;
+
+    for (
+      let directory = absoluteDirectory;
+      isDescendantPath(input.root, directory);
+      directory = dirname(directory)
+    ) {
+      try {
+        const stats = lstatWatchPath(directory);
+
+        if (!stats.isDirectory() || isOtherDirectory(directory, stats)) {
+          replaced = { directory, replacement: stats };
+        }
+      } catch (error) {
+        if (!isNotFoundError(error)) {
+          throw error;
+        }
+
+        replaced = { directory, replacement: undefined };
+      }
+    }
+
+    return replaced;
+  };
+
+  // The root has no parent watcher, so only the handles of its own tree can show it replaced, and
+  // every name they report resolves through whatever now stands at the root. True when the root is
+  // gone, no longer a directory or another directory than the one its handle was opened on. A root
+  // deleted and recreated with its inode reused keeps its identity; its handle's own report of the
+  // deletion covers that case, as for any watched directory.
+  const rootReplaced = (): boolean => {
+    let stats: Stats;
+
+    try {
+      stats = lstatWatchPath(input.root);
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        throw error;
+      }
+
+      return true;
+    }
+
+    return !stats.isDirectory() || isOtherDirectory(input.root, stats);
+  };
+
+  // A watched directory that is gone, or was replaced by a link, a file or another directory, loses
+  // its carriers without per-file events, so its event schedules a run. A replacement link
+  // discovery warns about is remembered like any other, so removing that link later schedules a
+  // run too.
+  const dropDirectory = (
+    absoluteDirectory: string,
+    relativeDirectory: string,
+    replacement: Stats | undefined,
+  ): void => {
+    unwatchTree(absoluteDirectory);
+    const wasSkippedLink = skippedLinks.has(absoluteDirectory);
+    const skippedLink =
+      replacement?.isSymbolicLink() === true && isSkippedLink(absoluteDirectory, relativeDirectory);
+
+    if (skippedLink) {
+      skippedLinks.add(absoluteDirectory);
+    } else {
+      skippedLinks.delete(absoluteDirectory);
+    }
+
+    eventListener?.({
+      type: "delete",
+      path: relativeDirectory,
+      subtreeRemoved: true,
+      ...(skippedLink || wasSkippedLink ? { skippedLink: true } : {}),
+    });
   };
 
   // A directory whose subtree loses its watchers recovers through its parent's deletion event —
@@ -289,26 +482,24 @@ function createFilesystemWatchSource(input: {
         return;
       }
 
-      unwatchTree(absoluteDirectory);
-
       if (absoluteDirectory === input.root) {
+        unwatchTree(absoluteDirectory);
         failUnwatchableRoot(error);
         return;
       }
 
-      eventListener?.({ type: "delete", path: relativeDirectory, subtreeRemoved: true });
+      dropDirectory(absoluteDirectory, relativeDirectory, undefined);
       return;
     }
 
     if (!stats.isDirectory()) {
-      unwatchTree(absoluteDirectory);
-
       if (absoluteDirectory === input.root) {
+        unwatchTree(absoluteDirectory);
         failUnwatchableRoot(undefined);
         return;
       }
 
-      eventListener?.({ type: "delete", path: relativeDirectory, subtreeRemoved: true });
+      dropDirectory(absoluteDirectory, relativeDirectory, stats);
       return;
     }
 
@@ -355,11 +546,50 @@ function createFilesystemWatchSource(input: {
       return;
     }
 
-    let handle: NativeWatchHandle;
+    let handle: NativeWatchHandle | undefined;
 
     try {
       handle = createNativeWatch(absoluteDirectory, (eventType, filename) => {
-        if (closed) {
+        // A closed or retired subscription may still deliver a queued event; only the handle
+        // registered for this directory speaks for it.
+        if (closed || handle === undefined || watchers.get(absoluteDirectory) !== handle) {
+          return;
+        }
+
+        let replacedRoot: boolean;
+
+        try {
+          replacedRoot = rootReplaced();
+        } catch (error) {
+          fail(error);
+          return;
+        }
+
+        // Reconciling the root retires every handle, watches the directory that now stands at the
+        // root in its place and schedules a run, or fails typed when no directory stands there.
+        if (replacedRoot) {
+          reconcileDirectory(input.root, "");
+          return;
+        }
+
+        let replaced: ReplacedDirectory | undefined;
+
+        try {
+          replaced = replacedDirectory(absoluteDirectory);
+        } catch (error) {
+          fail(error);
+          return;
+        }
+
+        if (replaced !== undefined) {
+          const replacedPath = toPosixRelative(input.root, replaced.directory);
+          dropDirectory(replaced.directory, replacedPath, replaced.replacement);
+
+          // Another directory at the path is watched afresh, and its carriers join the next run.
+          if (replaced.replacement?.isDirectory() === true) {
+            subscribeTree(replaced.directory, replacedPath, true);
+          }
+
           return;
         }
 
@@ -372,6 +602,7 @@ function createFilesystemWatchSource(input: {
         const relativePath =
           relativeDirectory === "" ? entryName : `${relativeDirectory}/${entryName}`;
         const absolutePath = join(absoluteDirectory, entryName);
+        const namesOwnDirectory = entryName === basename(absoluteDirectory);
         let stats: Stats;
 
         try {
@@ -384,14 +615,69 @@ function createFilesystemWatchSource(input: {
             return;
           }
 
+          // inotify reports a watched directory's own move or deletion on its handle as a rename
+          // under the directory's own name. Unless an entry of that name was there to go, the
+          // event is the directory's own: its handle may be dead, even where a directory deleted
+          // and recreated reuses the inode and keeps its identity, so the directory is reconciled
+          // in place. inotify reports a change to the directory's own attributes, such as its
+          // times, the same way, so such a change also rebuilds its handles and schedules a run.
+          // So does an entry with the directory's name that comes and goes before its first event
+          // is read.
+          const heldOwnName = namesOwnDirectory && holdOwnName.delete(absoluteDirectory);
+
+          if (namesOwnDirectory && eventType === "rename" && !heldOwnName) {
+            reconcileDirectory(absoluteDirectory, relativeDirectory);
+            return;
+          }
+
           const removedWatchedDirectory = watchers.has(absolutePath);
           unwatchTree(absolutePath);
+          const removedSkippedLink = skippedLinks.delete(absolutePath);
           eventListener?.({
             type: "delete",
             path: relativePath,
             ...(removedWatchedDirectory ? { subtreeRemoved: true } : {}),
+            ...(removedSkippedLink ? { skippedLink: true } : {}),
           });
           return;
+        }
+
+        // With an entry of the directory's own name standing there, the entry's event and the
+        // directory's own report look the same, whether or not the entry was there before: a
+        // directory deleted and recreated with its inode reused may hold such an entry again. The
+        // directory's birth time tells them apart. Where the filesystem reports none, the event
+        // rebuilds the directory's handles and schedules a run.
+        if (namesOwnDirectory) {
+          if (eventType === "rename" && !keepsBirthTime(absoluteDirectory)) {
+            reconcileDirectory(absoluteDirectory, relativeDirectory);
+            return;
+          }
+
+          holdOwnName.add(absoluteDirectory);
+        }
+
+        // A watched directory replaced by a link, a file or another directory loses its carriers
+        // without per-file events, and its retained watchers would resolve their entries through
+        // the replacement or keep watching the moved directory. A directory that keeps its
+        // identity keeps its handles and is not read again: macOS can report a rename for a
+        // directory that has not moved, and Linux reports a change to a directory's own times as a
+        // rename at its parent. When such a directory was deleted and recreated with its inode
+        // reused, its own handle reports the deletion.
+        const replacedWatchedDirectory =
+          watchers.has(absolutePath) &&
+          (!stats.isDirectory() || isOtherDirectory(absolutePath, stats));
+
+        if (replacedWatchedDirectory) {
+          unwatchTree(absolutePath);
+        }
+
+        const wasSkippedLink = skippedLinks.has(absolutePath);
+        const skippedLink = stats.isSymbolicLink() && isSkippedLink(absolutePath, relativePath);
+
+        if (skippedLink) {
+          skippedLinks.add(absolutePath);
+        } else {
+          skippedLinks.delete(absolutePath);
         }
 
         if (stats.isDirectory()) {
@@ -401,6 +687,8 @@ function createFilesystemWatchSource(input: {
         eventListener?.({
           type: eventType === "rename" ? "rename" : "change",
           path: relativePath,
+          ...(replacedWatchedDirectory ? { subtreeRemoved: true } : {}),
+          ...(skippedLink || wasSkippedLink ? { skippedLink: true } : {}),
         });
       });
     } catch (error) {
@@ -409,16 +697,39 @@ function createFilesystemWatchSource(input: {
     }
 
     handle.on("error", (error) => {
+      if (closed || watchers.get(absoluteDirectory) !== handle) {
+        return;
+      }
+
+      const code = (error as NodeJS.ErrnoException).code;
+      if (absoluteDirectory !== input.root && (code === "EPERM" || code === "EACCES")) {
+        reconcileDirectory(absoluteDirectory, relativeDirectory);
+        return;
+      }
+
       fail(error);
     });
     watchers.set(absoluteDirectory, handle);
+    identities.set(absoluteDirectory, {
+      dev: directoryStats.dev,
+      ino: directoryStats.ino,
+      birthtimeMs: directoryStats.birthtimeMs,
+    });
   };
 
+  // Watches a directory the watch does not watch yet and every directory under it, reporting the
+  // carriers already there when asked. A directory already watched is not read again: its
+  // carriers are in the graph, and reporting them as created would start a run that changes
+  // nothing. A directory replaced or rebuilt loses its handles first, so it is read afresh.
   const subscribeTree = (
     absoluteDirectory: string,
     relativeDirectory: string,
     emitExistingCarriers: boolean,
   ): void => {
+    if (watchers.has(absoluteDirectory)) {
+      return;
+    }
+
     subscribeDirectory(absoluteDirectory, relativeDirectory);
 
     if (closed || !watchers.has(absoluteDirectory)) {
@@ -434,12 +745,32 @@ function createFilesystemWatchSource(input: {
       return;
     }
 
+    if (entries.some((entry) => entry.name === basename(absoluteDirectory))) {
+      holdOwnName.add(absoluteDirectory);
+    } else {
+      holdOwnName.delete(absoluteDirectory);
+    }
+
     for (const entry of entries) {
       const relativePath =
         relativeDirectory === "" ? entry.name : `${relativeDirectory}/${entry.name}`;
 
       if (entry.isDirectory()) {
         subscribeTree(join(absoluteDirectory, entry.name), relativePath, emitExistingCarriers);
+        continue;
+      }
+
+      if (entry.isSymbolicLink()) {
+        const absolutePath = join(absoluteDirectory, entry.name);
+
+        if (isSkippedLink(absolutePath, relativePath)) {
+          skippedLinks.add(absolutePath);
+
+          if (emitExistingCarriers) {
+            eventListener?.({ type: "create", path: relativePath, skippedLink: true });
+          }
+        }
+
         continue;
       }
 
@@ -481,6 +812,8 @@ function createFilesystemWatchSource(input: {
       }
 
       watchers.clear();
+      identities.clear();
+      holdOwnName.clear();
     },
   };
 }
@@ -677,13 +1010,17 @@ export async function runValidateWatch(
   };
 
   const onEvent = (event: ValidateWatchEvent) => {
-    if (state.closed || watchHooks.ignoreWatchPath?.(resolve(parsed.root, event.path))) {
+    if (
+      state.closed ||
+      (event.skippedLink !== true && watchHooks.ignoreWatchPath?.(resolve(parsed.root, event.path)))
+    ) {
       return;
     }
 
     if (
       event.subtreeRemoved !== true &&
       event.unattributed !== true &&
+      event.skippedLink !== true &&
       !files.includes(resolve(parsed.root, event.path)) &&
       !isWatchedCarrierPath(parsed.root, event.path, parsed.exclude, watchHooks.watchSources)
     ) {

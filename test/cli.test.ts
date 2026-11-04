@@ -1,4 +1,5 @@
 import { execFileSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   copyFileSync,
   cpSync,
@@ -7,6 +8,8 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -92,25 +95,7 @@ function materializeSelfHostingCopy(): string {
     });
   }
 
-  // Copied relative builder modules are outside the Protocol's trusted source checkout. Use
-  // the public anchors import in this isolated corpus so both forms retain their bindings.
-  for (const surface of ["src", "test"]) {
-    for (const entry of readdirSync(join(root, surface), {
-      recursive: true,
-      withFileTypes: true,
-    })) {
-      if (!entry.isFile() || !entry.name.endsWith(".ts")) continue;
-      const path = join(entry.parentPath, entry.name);
-      const source = readFileSync(path, "utf8");
-      writeFileSync(
-        path,
-        source.replace(
-          /from "(?:\.\.?\/)+(?:src\/)?(?:model\/)?(?:ids|anchors|code-anchor)\.js"/gu,
-          'from "@libar-dev/software-delivery-protocol/anchors"',
-        ),
-      );
-    }
-  }
+  copyFileSync(join(repoRoot, "package.json"), join(root, "package.json"));
 
   return root;
 }
@@ -886,6 +871,41 @@ export const probe = spec({
       expect(existsSync(join(corpusRoot, "generated", "graph.json"))).toBe(true);
     } finally {
       removeMaterializedCorpus(corpusRoot);
+    }
+  });
+
+  it("refuses a swapped registrar ancestor before creating outside parent directories", () => {
+    const root = materializeExampleCopy();
+    const outside = mkdtempSync(join(tmpdir(), "sdp-registrar-outside-"));
+    const ancestor = join(root, "test");
+    const native = realpathSync.native;
+    let visits = 0;
+    let swapped = false;
+    const spy = vi.spyOn(realpathSync, "native").mockImplementation((path) => {
+      const result = native(path);
+      if (path === ancestor && ++visits === 2) {
+        renameSync(ancestor, `${ancestor}-original`);
+        symlinkSync(outside, ancestor, "dir");
+        swapped = true;
+      }
+      return result;
+    });
+    try {
+      const capture = createCaptureOutput();
+      const exitCode = runSdpCli(["build", root], capture.output, {
+        generateContracts: (graph) => ({
+          ...generateContracts(graph),
+          registrars: new Map([["test/a/b/c/probe.test.generated.ts", "// registrar\n"]]),
+        }),
+      });
+      expect(swapped).toBe(true);
+      expect(exitCode).toBe(1);
+      expect(capture.readStderr()).toContain("escapes the extraction root");
+      expect(readdirSync(outside)).toEqual([]);
+    } finally {
+      spy.mockRestore();
+      rmSync(root, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
     }
   });
 
@@ -2370,6 +2390,39 @@ it("clean-repo determinism: the full pipeline at a different absolute path is by
   }
 });
 
+it("clean-repo determinism: an untouched Protocol copy has the same graph with external and local engines", () => {
+  const root = materializeSelfHostingCopy();
+
+  try {
+    // Both runs read the same unmodified corpus and execute byte-identical engine files.
+    cpSync(join(repoRoot, "dist"), join(root, "dist"), { recursive: true });
+    symlinkSync(join(repoRoot, "node_modules"), join(root, "node_modules"), "dir");
+    const args = [
+      "build",
+      root,
+      "--exclude",
+      "explorations",
+      "--exclude",
+      "examples",
+      "--exclude",
+      "test/fixtures/import/parity",
+    ];
+    execFileSync(process.execPath, [join(repoRoot, "dist/cli/sdp.js"), ...args]);
+    const externalGraph = readFileSync(join(root, "generated/graph.json"), "utf8");
+    execFileSync(process.execPath, [join(root, "dist/cli/sdp.js"), ...args]);
+    const localGraph = readFileSync(join(root, "generated/graph.json"), "utf8");
+
+    expect((JSON.parse(localGraph) as { nodes: unknown[] }).nodes).toContainEqual(
+      expect.objectContaining({ id: "component:protocol.extract", nodeType: "CodeNode" }),
+    );
+    expect(createHash("sha256").update(externalGraph).digest("hex")).toBe(
+      createHash("sha256").update(localGraph).digest("hex"),
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);
+
 const engineProvenanceTestAnchor = specTest({
   id: testAnchorId("test:protocol.engine-provenance"),
   label: "version checks verify the engine provenance line and the build's commit record",
@@ -2544,7 +2597,16 @@ describe("sdp --version", () => {
       execFileSync("tar", ["-xf", archive, "-C", archived]);
       expect(existsSync(join(archived, ".git"))).toBe(false);
       expect(readFileSync(join(archived, ".git-archive-commit"), "utf8").trim()).toBe(commit);
-      writeBuildArtifacts({ root: archived, outDir: join(archived, "dist") });
+      // A temporary directory inside a checkout would otherwise answer `git rev-parse HEAD`
+      // with that checkout's commit; the ceiling keeps git's discovery inside the scratch folder.
+      const ceiling = process.env.GIT_CEILING_DIRECTORIES;
+      process.env.GIT_CEILING_DIRECTORIES = scratch;
+      try {
+        writeBuildArtifacts({ root: archived, outDir: join(archived, "dist") });
+      } finally {
+        if (ceiling === undefined) delete process.env.GIT_CEILING_DIRECTORIES;
+        else process.env.GIT_CEILING_DIRECTORIES = ceiling;
+      }
       expect(JSON.parse(readFileSync(join(archived, "dist/cli/build-info.json"), "utf8"))).toEqual({
         commit,
       });

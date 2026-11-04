@@ -20,6 +20,7 @@ import {
   count,
   escape,
   findingList,
+  floorWords,
   link,
   list,
   location,
@@ -209,14 +210,16 @@ function bindings(ctx: PageContext, spec: SpecContext): string {
 export function specPage(ctx: PageContext, spec: SpecContext): string {
   const d = spec.designColumns;
   const findings = ctx.data.findings.filter((f) => f.subjectId === spec.id);
+  // No floor is evaluated over an unratified kind or altitude, so no divergence is known.
   const dishonest =
+    spec.floorNotEvaluated === undefined &&
     SPEC_READINESS.indexOf(spec.statedReadiness) >
-    (spec.derivedReadiness === undefined ? -1 : SPEC_READINESS.indexOf(spec.derivedReadiness));
+      (spec.derivedReadiness === undefined ? -1 : SPEC_READINESS.indexOf(spec.derivedReadiness));
   const firstUnmet = spec.floorFailures[0];
   const divergence = dishonest
     ? `<p class="divergence">stated ${escape(spec.statedReadiness)} exceeds the floor ${escape(spec.derivedReadiness ?? "below idea")}.${firstUnmet === undefined ? "" : ` First unmet clause: ${code(firstUnmet.clauseId)} · ${escape(firstUnmet.description)}`}</p>`
     : "";
-  const header = `<header class="page-head"><h1>${codeSpans(spec.title ?? spec.id)}</h1><div class="ids"><span>${code(spec.id)}${copy(spec.id)}</span><span>${escape(spec.kindDisplayLabel ?? spec.specKind)} · ${escape(spec.altitude)}</span><span class="rungs">${rungLine(spec.statedReadiness, spec.derivedReadiness)}</span></div>${specChangeNote(ctx, spec.id)}${divergence}${holds(ctx, spec.statedNextRung, spec.statedNextRungFailures)}<p>Packs: ${spec.packs.length ? spec.packs.map((id) => link(ctx, id)).join(", ") : "none"}</p><p>Design: ${count(d.entries, "design entry", "design entries", false)} · ${count(d.declarations, "pinned declaration", "pinned declarations", false)} · ${count(d.decisions.length, "decision", "decisions", false)}</p><p><a href="#findings">Findings: ${count(findings.filter((f) => f.severity === "error").length, "error", "errors", false)}, ${count(findings.filter((f) => f.severity === "warning").length, "warning", "warnings", false)}</a></p><p>${code(spec.file)}${copy(spec.file)}</p></header>`;
+  const header = `<header class="page-head"><h1>${codeSpans(spec.title ?? spec.id)}</h1><div class="ids"><span>${code(spec.id)}${copy(spec.id)}</span><span>${escape(spec.kindDisplayLabel ?? spec.specKind)} · ${escape(spec.altitude)}</span><span class="rungs">${rungLine(spec.statedReadiness, floorWords(spec))}</span></div>${specChangeNote(ctx, spec.id)}${divergence}${holds(ctx, spec.statedNextRung, spec.statedNextRungFailures)}<p>Packs: ${spec.packs.length ? spec.packs.map((id) => link(ctx, id)).join(", ") : "none"}</p><p>Design: ${count(d.entries, "design entry", "design entries", false)} · ${count(d.declarations, "pinned declaration", "pinned declarations", false)} · ${count(d.decisions.length, "decision", "decisions", false)}</p><p><a href="#findings">Findings: ${count(findings.filter((f) => f.severity === "error").length, "error", "errors", false)}, ${count(findings.filter((f) => f.severity === "warning").length, "warning", "warnings", false)}</a></p><p>${code(spec.file)}${copy(spec.file)}</p></header>`;
   const summary = `<p class="prose">${count(d.openQuestions.length, "open question")} and ${count(d.blockingQuestions, "blocking question", "blocking questions", false)}; implementation binding ${present(spec.implementations.length > 0)}, verifier binding ${present(spec.deliveryFacts.includes("has-verifier"))}, and expected-outcome oracle ${present(spec.oracle !== undefined)}.</p>`;
   const panel = (id: string, title: string, body: string): string =>
     `<details class="section" id="panel.${id}" open><summary>${title}</summary><div class="section-body">${body}</div></details>`;

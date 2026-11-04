@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { readdirSync, realpathSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
@@ -77,12 +77,14 @@ export interface DiscoveredSourceFile {
 export interface DiscoveredFiles {
   readonly specFiles: readonly DiscoveredSourceFile[];
   readonly anchorCandidateFiles: readonly DiscoveredSourceFile[];
+  readonly skippedLinks: readonly string[];
 }
 
 interface DiscoveryState {
   readonly excludes: readonly string[];
   readonly specFiles: DiscoveredSourceFile[];
   readonly anchorCandidateFiles: DiscoveredSourceFile[];
+  readonly skippedLinks: string[];
 }
 
 function compareCodeUnits(a: string, b: string): number {
@@ -101,11 +103,44 @@ function byRelativePath(left: DiscoveredSourceFile, right: DiscoveredSourceFile)
   return compareCodeUnits(left.relativePath, right.relativePath);
 }
 
-function isSourceFileName(name: string): boolean {
+/** A regular file with this name is a Spec or Pack carrier. */
+export function isSpecFileName(name: string): boolean {
+  return SPEC_FILE_SUFFIXES.some((suffix) => name.endsWith(suffix));
+}
+
+function isDirectoryLink(path: string): boolean {
+  try {
+    // Inspect only the target type; discovery never reads or traverses the target.
+    return statSync(path).isDirectory();
+  } catch {
+    // An unresolved target has no directory type; candidate filenames still warn.
+    return false;
+  }
+}
+
+/** A regular file with this name is an anchor candidate. */
+export function isSourceFileName(name: string): boolean {
   return (
     SOURCE_FILE_SUFFIXES.some((suffix) => name.endsWith(suffix)) &&
     !name.endsWith(DECLARATION_FILE_SUFFIX)
   );
+}
+
+/**
+ * Whether discovery names a symbolic link in a warning. A link is judged by the entry it stands
+ * for: a link to a directory warns unless discovery skips a directory of that name, and any other
+ * link, one with a missing target included, warns only when its name is a carrier or
+ * anchor-candidate filename, a leading dot included. Discovery skips dot-directories, never
+ * dot-files, so a dot-named file link can hide a carrier while a dot-named directory link cannot.
+ */
+export function isWarnedSymbolicLink(absolutePath: string, name: string): boolean {
+  if (isExcludedDiscoveryDirectory(name) && !isSpecFileName(name) && !isSourceFileName(name)) {
+    return false;
+  }
+
+  return isDirectoryLink(absolutePath)
+    ? !isExcludedDiscoveryDirectory(name)
+    : isSpecFileName(name) || isSourceFileName(name);
 }
 
 function isExcluded(relativePath: string, excludes: readonly string[]): boolean {
@@ -127,6 +162,13 @@ function walkDirectory(
       continue;
     }
 
+    if (entry.isSymbolicLink()) {
+      if (isWarnedSymbolicLink(join(absoluteDirectory, entry.name), entry.name)) {
+        state.skippedLinks.push(relativePath);
+      }
+      continue;
+    }
+
     if (entry.isDirectory()) {
       // No authoring surface lives in a dot-directory: a stray source copy under one (`.git`, an
       // editor history cache) would reify into phantom carriers or duplicate-id hard errors.
@@ -142,7 +184,7 @@ function walkDirectory(
       continue;
     }
 
-    if (SPEC_FILE_SUFFIXES.some((suffix) => entry.name.endsWith(suffix))) {
+    if (isSpecFileName(entry.name)) {
       state.specFiles.push({ absolutePath: join(absoluteDirectory, entry.name), relativePath });
       continue;
     }
@@ -168,11 +210,13 @@ export function discoverFiles(root: string, exclude?: readonly string[]): Discov
     excludes: normalizeExcludes(exclude),
     specFiles: [],
     anchorCandidateFiles: [],
+    skippedLinks: [],
   };
-  walkDirectory(root, "", state);
+  walkDirectory(realpathSync.native(root), "", state);
 
   return {
     specFiles: state.specFiles.sort(byRelativePath),
     anchorCandidateFiles: state.anchorCandidateFiles.sort(byRelativePath),
+    skippedLinks: state.skippedLinks.sort(compareCodeUnits),
   };
 }

@@ -103,6 +103,11 @@ const pack: GraphNode = {
 const ready = primitive(subject.id, { readiness: "ready" });
 
 const graphPairs: ProbeEntry[] = [
+  {
+    id: extractFindingIds.symbolicLinkSkipped,
+    refusing: { carriers: {}, links: { "linked.sdp.md": "missing.sdp.md" } },
+    accepting: { carriers: {}, links: { "generated/linked.sdp.md": "missing.sdp.md" } },
+  },
   graphPair(
     graphValidatorIds.referentialIntegrity,
     graph([subject, target], [relation("dependsOn", "spec:probe.absent")]),
@@ -184,6 +189,56 @@ const graphPairs: ProbeEntry[] = [
     graphValidatorIds.ruleExercises,
     graph([subject, target], [relation("verifies", target.id, { exercises: ["unknown"] })]),
     graph([subject, target], [relation("verifies", target.id, { exercises: ["known"] })]),
+  ),
+  graphPair(
+    graphValidatorIds.reservedThenSlot,
+    graph([
+      primitive(subject.id, {
+        sections: {
+          ...subject.sections,
+          behavior: {
+            ...subject.sections?.behavior,
+            exampleSpace: { then: ["result {kind:string}"] },
+          },
+        },
+      }),
+    ]),
+    graph([
+      primitive(subject.id, {
+        sections: {
+          ...subject.sections,
+          behavior: {
+            ...subject.sections?.behavior,
+            exampleSpace: { then: ["result {kinds:string}"] },
+          },
+        },
+      }),
+    ]),
+  ),
+  graphPair(
+    graphValidatorIds.reservedThenKey,
+    graph([
+      primitive(subject.id, {
+        sections: {
+          ...subject.sections,
+          behavior: {
+            ...subject.sections?.behavior,
+            exampleSpace: { then: ["unspecified"] },
+          },
+        },
+      }),
+    ]),
+    graph([
+      primitive(subject.id, {
+        sections: {
+          ...subject.sections,
+          behavior: {
+            ...subject.sections?.behavior,
+            exampleSpace: { then: ["specified"] },
+          },
+        },
+      }),
+    ]),
   ),
   graphPair(
     graphValidatorIds.authoringShape,

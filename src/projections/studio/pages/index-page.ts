@@ -1,6 +1,16 @@
 import type { CapabilityMap } from "../diagrams/capability.js";
 import { SPEC_READINESS } from "../../../model/descriptors.js";
-import { badge, code, count, escape, findingList, link, present, rungLine } from "./html.js";
+import {
+  badge,
+  code,
+  count,
+  escape,
+  findingList,
+  floorWords,
+  link,
+  present,
+  rungLine,
+} from "./html.js";
 import type { PageContext } from "./html.js";
 import { frame } from "./frame.js";
 import { codeSpans } from "./text.js";
@@ -15,10 +25,12 @@ import { codeSpans } from "./text.js";
  */
 export function indexPage(ctx: PageContext): string {
   const { specs, packs, findings } = ctx.data;
+  // A Spec with no floor evaluated, over an unratified kind or altitude, diverges from nothing.
   const divergence = specs.filter(
     (s) =>
+      s.floorNotEvaluated === undefined &&
       SPEC_READINESS.indexOf(s.statedReadiness) >
-      (s.derivedReadiness === undefined ? -1 : SPEC_READINESS.indexOf(s.derivedReadiness)),
+        (s.derivedReadiness === undefined ? -1 : SPEC_READINESS.indexOf(s.derivedReadiness)),
   ).length;
   const summary = [
     `${count(specs.length, "Spec")} and ${count(packs.length, "Pack", "Packs", false)} in this corpus.`,
@@ -45,7 +57,8 @@ export function indexPage(ctx: PageContext): string {
     kind: spec.specKind,
     altitude: spec.altitude,
     stated: spec.statedReadiness,
-    floor: spec.derivedReadiness ?? "none",
+    // Filter values are space-separated tokens, so the not-evaluated floor filters as one token.
+    floor: floorWords(spec).replace(" ", "-"),
     implementation: present(spec.implementations.length > 0),
     verifier: present(spec.deliveryFacts.includes("has-verifier")),
     pack: spec.packs.join(" "),
@@ -76,14 +89,15 @@ export function indexPage(ctx: PageContext): string {
         ),
       ].sort((a, b) =>
         name === "stated" || name === "floor"
-          ? [...SPEC_READINESS, "none"].indexOf(a) - [...SPEC_READINESS, "none"].indexOf(b)
+          ? [...SPEC_READINESS, "none", "not-evaluated"].indexOf(a) -
+            [...SPEC_READINESS, "none", "not-evaluated"].indexOf(b)
           : a < b
             ? -1
             : a > b
               ? 1
               : 0,
       );
-      return `<label>${label}<select data-filter="${name}"><option value="any">Any</option>${values.map((v) => `<option value="${escape(v)}">${escape(v)}</option>`).join("")}</select></label>`;
+      return `<label>${label}<select data-filter="${name}"><option value="any">Any</option>${values.map((v) => `<option value="${escape(v)}">${escape(v === "not-evaluated" ? "not evaluated" : v)}</option>`).join("")}</select></label>`;
     })
     .join("");
   const specRows = specs
@@ -93,13 +107,13 @@ export function indexPage(ctx: PageContext): string {
           .map(([name, value]) => `data-${name}="${escape(value)}"`)
           .join(
             " ",
-          )}>${link(ctx, spec.id, spec.title ?? spec.id, codeSpans(spec.title ?? spec.id))} · ${code(spec.id)} · ${rungLine(spec.statedReadiness, spec.derivedReadiness)} · ${escape(spec.specKind)} · ${escape(spec.altitude)} · implementation binding ${present(spec.implementations.length > 0)} · verifier binding ${present(spec.deliveryFacts.includes("has-verifier"))} · ${String(spec.designColumns.openQuestions.length)} open, ${String(spec.designColumns.blockingQuestions)} blocking questions · Packs ${spec.packs.length === 0 ? "none" : spec.packs.map((id) => link(ctx, id)).join(", ")}</li>`,
+          )}>${link(ctx, spec.id, spec.title ?? spec.id, codeSpans(spec.title ?? spec.id))} · ${code(spec.id)} · ${rungLine(spec.statedReadiness, floorWords(spec))} · ${escape(spec.specKind)} · ${escape(spec.altitude)} · implementation binding ${present(spec.implementations.length > 0)} · verifier binding ${present(spec.deliveryFacts.includes("has-verifier"))} · ${String(spec.designColumns.openQuestions.length)} open, ${String(spec.designColumns.blockingQuestions)} blocking questions · Packs ${spec.packs.length === 0 ? "none" : spec.packs.map((id) => link(ctx, id)).join(", ")}</li>`,
     )
     .join("");
   const packList = packs
     .map(
       ({ context: pack }) =>
-        `<details class="section"><summary>${codeSpans(pack.title ?? pack.id)} · ${code(pack.id)} · ${count(pack.members.length, "member")}</summary><div class="section-body"><p>${link(ctx, pack.id, "Read the Pack page")}</p><ol>${pack.members.map((m) => `<li>${link(ctx, m.id, m.title ?? m.id, codeSpans(m.title ?? m.id))} · ${m.resolved ? `${badge(m.statedReadiness)} · floor ${escape(m.derivedReadiness ?? "none")}` : "unresolved member"}</li>`).join("")}</ol></div></details>`,
+        `<details class="section"><summary>${codeSpans(pack.title ?? pack.id)} · ${code(pack.id)} · ${count(pack.members.length, "member")}</summary><div class="section-body"><p>${link(ctx, pack.id, "Read the Pack page")}</p><ol>${pack.members.map((m) => `<li>${link(ctx, m.id, m.title ?? m.id, codeSpans(m.title ?? m.id))} · ${m.resolved ? `${badge(m.statedReadiness)} · floor ${escape(floorWords(m))}` : "unresolved member"}</li>`).join("")}</ol></div></details>`,
     )
     .join("");
   return frame(

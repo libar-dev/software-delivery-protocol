@@ -1,10 +1,27 @@
-import { describe, expect, it } from "vitest";
+import { decodeExampleSpaces, reservedThenKeysOf } from "../src/notation/example-space.js";
+import { buildGraphIndex } from "../src/validate/graph-index.js";
+import { Script } from "node:vm";
+import ts from "typescript";
+import { format } from "prettier";
+import { describe, expect, it, vi } from "vitest";
+import { planExample, runExamplePlan } from "../src/runner/index.js";
+import type { ExampleContract, ParamShape, StepBindings } from "../src/runner/index.js";
+import {
+  compareContractOutcome,
+  completeRunnableExample,
+  createRunnableExample,
+  invokeRunnableExample,
+} from "../src/testing/index.js";
+import type { RunnableExampleAdapters, RunnableExampleWorld } from "../src/testing/index.js";
 
 import {
   createReader,
+  deriveGraph,
+  reifyMarkdownCarrier,
   evaluateBody,
   contractsFindingIds,
   generateContracts,
+  validateGraph,
   refines,
   spec,
   specId,
@@ -74,7 +91,227 @@ const BOUND_GWT = {
   then: ["an order is created with total {total: 100}"],
 };
 
+type ProbeAdapters = RunnableExampleAdapters<object, Record<string, never>, { kind: string }>;
+type ProbeExecution = RunnableExampleWorld<object, Record<string, never>, { kind: string }>;
+
+// Evaluate only this test's generated modules, in the same realm as the runtime comparator.
+function loadGeneratedModule(
+  source: string,
+  require: (name: string) => unknown = () => {
+    throw new Error("unexpected generated import");
+  },
+): Record<string, unknown> {
+  const js = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const exports: Record<string, unknown> = {};
+  const evaluate = new Script(`(function(exports, require) { ${js}\n })`).runInThisContext() as (
+    exports: Record<string, unknown>,
+    require: (name: string) => unknown,
+  ) => void;
+  evaluate(exports, require);
+  return exports;
+}
+
+function generateProbe(
+  steps: string,
+  vocabulary = steps,
+  parentId = "spec:probe.runtime",
+  childId = "spec:probe.runtime.shared",
+) {
+  const parent = reifyMarkdownCarrier(
+    `---
+id: ${parentId}
+kind: behavior
+altitude: story
+readiness: scoped
+relations: {}
+---
+# Runtime probe
+## Intent
+- outcome: Exercise generated step dispatch.
+## Example space
+\`\`\`gwt-vocabulary
+${vocabulary}
+\`\`\`
+`,
+    "parent.sdp.md",
+  );
+  const child = reifyMarkdownCarrier(
+    `---
+id: ${childId}
+kind: example
+altitude: story
+readiness: scoped
+relations:
+  refines: ${parentId}
+  verifies: ${parentId}
+---
+# Shared step
+## Intent
+- outcome: Exercise generated step dispatch.
+\`\`\`gwt
+${steps}
+\`\`\`
+`,
+    "child.sdp.md",
+  );
+  expect([...parent.findings, ...child.findings]).toEqual([]);
+  const base = deriveGraph([...parent.specs, ...child.specs], [], []);
+  const generated = generateContracts({
+    ...base,
+    nodes: [
+      ...base.nodes,
+      {
+        id: "test:probe.runtime",
+        nodeType: "Anchor",
+        claim: "anchored",
+        file: "test/probe.test.ts",
+        line: 1,
+      },
+    ],
+    edges: [
+      ...base.edges,
+      {
+        from: "test:probe.runtime",
+        type: "verifies",
+        to: childId,
+        claim: "anchored",
+      },
+    ],
+  });
+  expect(generated.findings).toEqual([]);
+  return generated;
+}
+
+function generatedProbe(
+  steps: string,
+  adapters: ProbeAdapters,
+  vocabulary = steps,
+): () => Promise<void> {
+  const generated = generateProbe(steps, vocabulary);
+  const contractModule = loadGeneratedModule(
+    generated.files.get("probe.runtime.shared.contract.ts") ?? "",
+  );
+  let run: (() => Promise<void>) | undefined;
+  const registrar = loadGeneratedModule(
+    generated.registrars.get("test/probe.runtime.shared.test.generated.ts") ?? "",
+    (name) => {
+      if (name.endsWith(".contract.js")) return contractModule;
+      if (name !== "@libar-dev/software-delivery-protocol/testing") throw new Error(name);
+      return {
+        compareContractOutcome,
+        invokeRunnableExample,
+        registerRunnableExample(
+          contract: ExampleContract<string, Record<string, ParamShape>>,
+          point: Record<string, never>,
+          required: readonly string[],
+          supplied: ProbeAdapters,
+          bindings: StepBindings<ProbeExecution, string, Record<string, ParamShape>>,
+        ) {
+          run = async () => {
+            const execution = createRunnableExample(
+              contract.spec,
+              point,
+              required,
+              supplied,
+              contract.steps.filter((step) => step.kind === "then"),
+            );
+            await runExamplePlan(planExample(contract, bindings), execution);
+            await completeRunnableExample(execution);
+          };
+        },
+      };
+    },
+  );
+  const register = registrar.registerShared as (adapters: ProbeAdapters) => void;
+  register(adapters);
+  if (!run) throw new Error("the generated registrar did not register its example");
+  return run;
+}
+
 describe("the contracts codegen stage", () => {
+  it.each(["ready", "[#readyKey] ready"])(
+    "invokes a throwing product when Given and When share %s",
+    async (shared) => {
+      const invoke = vi.fn(() => {
+        throw new Error("product invoked");
+      });
+      const observe = vi.fn(() => ({ kind: "done" }));
+      const run = generatedProbe(`Given ${shared}\nWhen ${shared}\nThen done`, {
+        createWorld: () => ({}),
+        invoke,
+        observe,
+        expected: () => ({ kind: "done" }),
+      });
+      await expect(run()).rejects.toThrow("at step: When ready\nproduct invoked");
+      expect(invoke).toHaveBeenCalledTimes(1);
+      expect(observe).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ["Given ready\nWhen ready\nThen ready", "ready"],
+    ["Given ready\nWhen run\nThen ready", "ready"],
+    ["Given start\nWhen ready\nThen ready", "ready"],
+  ])("dispatches every phase of a shared key: %s", async (steps, outcome) => {
+    const trace: string[] = [];
+    const run = generatedProbe(steps, {
+      createWorld: () => {
+        trace.push("given");
+        return {};
+      },
+      invoke: () => {
+        trace.push("when");
+      },
+      observe: () => {
+        trace.push("then");
+        return { kind: outcome };
+      },
+      expected: () => ({ kind: outcome }),
+      assertions: () => {
+        trace.push("assertions");
+      },
+    });
+    await run();
+    expect(trace).toEqual(["given", "when", "then", "assertions"]);
+  });
+
+  it.each([40, 60, 85, 110])(
+    "formats shared-key handlers with %i-character keys for adoption",
+    async (length) => {
+      const shared = "a shared step ".padEnd(length, "x");
+      const generated = generateProbe(`Given ${shared}\nWhen ${shared}\nThen all done`);
+      const registrar = generated.registrars.get("test/probe.runtime.shared.test.generated.ts");
+      expect(registrar).toBeDefined();
+      const bindings = (source: string) =>
+        source.split("  const bindings = {")[1]?.split("  } satisfies StepBindings")[0];
+      expect(bindings(registrar ?? "")).toBe(
+        bindings(await format(registrar ?? "", { parser: "typescript", printWidth: 100 })),
+      );
+    },
+  );
+
+  it("names the unspecified coverage gap with its own diagnostic and cause", async () => {
+    const observe = vi.fn(() => ({ kind: "unspecified" }));
+    const assertions = vi.fn();
+    const run = generatedProbe("Given ready\nWhen run\nThen done", {
+      createWorld: () => ({}),
+      invoke: () => undefined,
+      observe,
+      expected: () => ({ kind: "unspecified" }),
+      assertions,
+    });
+
+    await expect(run()).rejects.toMatchObject({
+      message:
+        'scenario spec:probe.runtime.shared: oracle selected "unspecified"; coverage gap cannot witness a bound example',
+      cause: new Error('oracle outcome "unspecified" names a coverage gap'),
+    });
+    expect(observe).not.toHaveBeenCalled();
+    expect(assertions).not.toHaveBeenCalled();
+  });
+
   it("emits a space contract per example-space parent and a step contract per bindable example", () => {
     const graph = deriveFixtureGraph({ specs: [parent(VOCABULARY), child(BOUND_GWT)] });
     const generated = generateContracts(graph);
@@ -702,5 +939,643 @@ describe("the contracts codegen stage", () => {
     // its own dishonesty — the artifact is all-or-nothing, and the warning (never a gate) says
     // why it is nothing this build.
     expect(generated.files.size).toBe(0);
+  });
+});
+
+describe("reserved Then slot kind", () => {
+  function carrierGraph(steps: string, vocabulary: boolean) {
+    const carrier = reifyMarkdownCarrier(
+      `---
+id: spec:probe.reserved-slot
+kind: ${vocabulary ? "behavior" : "example"}
+altitude: story
+readiness: idea
+relations: {}
+---
+# Reserved slot probe
+## Intent
+- outcome: Check the Then slot reservation.
+${vocabulary ? "## Example space\n```gwt-vocabulary" : "```gwt"}
+${steps}
+\`\`\`
+`,
+      "probe.sdp.md",
+    );
+    expect(carrier.findings).toEqual([]);
+    return deriveGraph(carrier.specs, [], []);
+  }
+
+  for (const vocabulary of [true, false]) {
+    for (const marker of ["", "[#result] "]) {
+      it.each(["{kind:string}", '{kind: "accepted"}', "{kind}", "{kind: maybe}"])(
+        `reports conformance for ${vocabulary ? "vocabulary" : "example"} ${marker}%s`,
+        (slot) => {
+          const graph = carrierGraph(
+            `Given ready\nWhen run\nThen ${marker}result ${slot}`,
+            vocabulary,
+          );
+          expect(
+            validateGraph(graph).findings.filter(
+              (finding) => finding.validatorId === "conformance/reserved-then-slot",
+            ),
+          ).toEqual([
+            expect.objectContaining({
+              family: "conformance",
+              severity: "error",
+              subjectId: "spec:probe.reserved-slot",
+              file: "probe.sdp.md",
+              path: vocabulary ? "behavior.exampleSpace.then[0]" : "behavior.examples[0].then[0]",
+              message: expect.stringContaining('Then slot "kind" is reserved') as unknown,
+            }),
+          ]);
+        },
+      );
+    }
+
+    it(`refuses the ${vocabulary ? "space" : "step"} contract and names kind`, () => {
+      const graph = carrierGraph(
+        `Given ready\nWhen run\nThen result ${vocabulary ? "{kind:string}" : '{kind: "accepted"}'}`,
+        vocabulary,
+      );
+      const generated = generateContracts(graph);
+      expect(generated.files.size).toBe(0);
+      expect(generated.findings).toEqual([
+        expect.objectContaining({
+          validatorId: "contracts/reserved-then-slot",
+          severity: "warning",
+          message: expect.stringContaining('Then slot "kind" is reserved') as unknown,
+        }),
+      ]);
+    });
+  }
+
+  it("checks later structured entries at their authored index", () => {
+    const graph = deriveFixtureGraph({ specs: [parent(), child(BOUND_GWT)] });
+    const changed: GraphSchema = {
+      ...graph,
+      nodes: graph.nodes.map((node) =>
+        node.nodeType === "Primitive" && node.specKind === "example"
+          ? {
+              ...node,
+              sections: {
+                ...node.sections,
+                behavior: {
+                  examples: [
+                    "A prose example",
+                    BOUND_GWT,
+                    { ...BOUND_GWT, then: ['result {kind: "accepted"}'] },
+                  ],
+                },
+              },
+            }
+          : node,
+      ),
+    };
+    expect(validateGraph(changed).findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "conformance/reserved-then-slot",
+        path: "behavior.examples[2].then[0]",
+      }),
+    );
+    expect(generateContracts(changed).files.has("orders.create-order.valid-cart.contract.ts")).toBe(
+      false,
+    );
+  });
+
+  it("withholds registrars even when the child does not use the reserved vocabulary step", () => {
+    const base = deriveFixtureGraph({
+      specs: [
+        parent({ ...VOCABULARY, then: [...VOCABULARY.then, "result {kind:string}"] }),
+        child(BOUND_GWT),
+      ],
+    });
+    const graph: GraphSchema = {
+      ...base,
+      nodes: [
+        ...base.nodes,
+        {
+          id: "test:probe.reserved-slot",
+          nodeType: "Anchor",
+          claim: "anchored",
+          file: "test/probe.test.ts",
+          line: 1,
+        },
+      ],
+      edges: [
+        ...base.edges,
+        {
+          from: "test:probe.reserved-slot",
+          to: "spec:orders.create-order.valid-cart",
+          type: "verifies",
+          claim: "anchored",
+        },
+      ],
+    };
+    const generated = generateContracts(graph);
+    expect(generated.files.has("orders.create-order.space.ts")).toBe(false);
+    expect(generated.files.has("orders.create-order.valid-cart.contract.ts")).toBe(true);
+    expect(generated.registrars.size).toBe(0);
+  });
+
+  it.each(["result", "Kind", "kindOf", "_kind"])(
+    "keeps the flat Outcome for lawful slot %s",
+    (name) => {
+      const generated = generateContracts(
+        carrierGraph(`Given ready\nWhen run\nThen result {${name}:string}`, true),
+      );
+      expect(generated.findings).toEqual([]);
+      expect(generated.files.get("probe.reserved-slot.space.ts")).toContain(
+        `{ readonly kind: "result {${name}}"; readonly ${name}: string }`,
+      );
+    },
+  );
+
+  it.each(["given", "when"] as const)(
+    "allows kind in %s and emits contracts that typecheck",
+    (phase) => {
+      const vocabulary = { given: ["ready"], when: ["run"], then: ["done"] };
+      const bound = { ...vocabulary, [phase]: ['input {kind: "accepted"}'] };
+      vocabulary[phase] = ["input {kind:string}"];
+      const graph = deriveFixtureGraph({ specs: [parent(vocabulary), child(bound)] });
+      expect(
+        validateGraph(graph).findings.filter(
+          (finding) => finding.validatorId === "conformance/reserved-then-slot",
+        ),
+      ).toEqual([]);
+      const generated = generateContracts(graph);
+      expect(generated.findings).toEqual([]);
+      expect(generated.files.size).toBe(2);
+      expect(generated.files.get("orders.create-order.space.ts")).toContain(
+        "readonly kind: string;",
+      );
+      expect(generated.files.get("orders.create-order.valid-cart.contract.ts")).toContain(
+        'params: { kind: "accepted" }',
+      );
+
+      const options: ts.CompilerOptions = {
+        noEmit: true,
+        strict: true,
+        skipLibCheck: true,
+        types: [],
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        moduleResolution: ts.ModuleResolutionKind.Bundler,
+        paths: {
+          "@libar-dev/software-delivery-protocol/runner": [process.cwd() + "/src/runner/index.ts"],
+        },
+      };
+      const sources = new Map(
+        [...generated.files].map(([path, text]) => [process.cwd() + "/generated/" + path, text]),
+      );
+      const host = ts.createCompilerHost(options);
+      const getSourceFile = host.getSourceFile.bind(host);
+      host.getSourceFile = (file, version, onError, shouldCreateNewSourceFile) => {
+        const text = sources.get(file);
+        return text === undefined
+          ? getSourceFile(file, version, onError, shouldCreateNewSourceFile)
+          : ts.createSourceFile(file, text, version, true);
+      };
+      const program = ts.createProgram([...sources.keys()], options, host);
+      expect(
+        ts
+          .getPreEmitDiagnostics(program)
+          .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+      ).toEqual([]);
+    },
+  );
+});
+
+describe("runtime and generation regressions", () => {
+  it.each(["constructor", "toString", "hasOwnProperty", "valueOf"])(
+    "refuses an omitted inherited Condition %s through the generated registrar",
+    async (name) => {
+      const steps = "Given ready\nWhen run\nThen done";
+      const expected = vi.fn(() => ({ kind: "done" }));
+      const observe = vi.fn(() => ({ kind: "done" }));
+      const run = generatedProbe(
+        steps,
+        {
+          createWorld: () => ({}),
+          invoke: () => undefined,
+          expected,
+          observe,
+        },
+        `Given unused {${name}:number}\n${steps}`,
+      );
+      await expect(run()).rejects.toThrow(`missing Conditions: "${name}"`);
+      expect(expected).not.toHaveBeenCalled();
+      expect(observe).not.toHaveBeenCalled();
+    },
+  );
+
+  it("emits an own handler for a prototype-named generated step", async () => {
+    const observe = vi.fn(() => ({ kind: "__proto__" }));
+    const run = generatedProbe("Given ready\nWhen run\nThen __proto__", {
+      createWorld: () => ({}),
+      invoke: () => undefined,
+      observe,
+      expected: () => ({ kind: "__proto__" }),
+    });
+    await run();
+    expect(observe).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    [
+      "runtime import collisions",
+      () =>
+        generateProbe(
+          "Given ready\nWhen run\nThen done",
+          undefined,
+          "spec:probe.unspecified",
+          "spec:probe.unspecified.runnable-example",
+        ),
+    ],
+    ["shared-key handlers", () => generateProbe("Given ready\nWhen ready\nThen done")],
+  ])("compiles generated modules for %s", (_name, makeGenerated) => {
+    const generated = makeGenerated();
+    expect(generated.files.size).toBe(2);
+    expect(generated.registrars.size).toBe(1);
+    const sources = new Map([
+      ...[...generated.files].map(
+        ([path, text]) => [process.cwd() + "/generated/contracts/" + path, text] as const,
+      ),
+      ...[...generated.registrars].map(
+        ([path, text]) => [process.cwd() + "/" + path, text] as const,
+      ),
+    ]);
+    const options: ts.CompilerOptions = {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      types: ["node"],
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      paths: {
+        "@libar-dev/software-delivery-protocol/runner": [process.cwd() + "/src/runner/index.ts"],
+        "@libar-dev/software-delivery-protocol/testing": [process.cwd() + "/src/testing/index.ts"],
+      },
+    };
+    const host = ts.createCompilerHost(options);
+    const getSourceFile = host.getSourceFile.bind(host);
+    const fileExists = host.fileExists.bind(host);
+    host.fileExists = (file) => sources.has(file) || fileExists(file);
+    host.getSourceFile = (file, version, onError, fresh) => {
+      const text = sources.get(file);
+      return text === undefined
+        ? getSourceFile(file, version, onError, fresh)
+        : ts.createSourceFile(file, text, version, true);
+    };
+    const program = ts.createProgram([...sources.keys()], options, host);
+    expect(
+      ts
+        .getPreEmitDiagnostics(program)
+        .map((d) => `${String(d.code)}: ${ts.flattenDiagnosticMessageText(d.messageText, "\n")}`),
+    ).toEqual([]);
+  });
+});
+describe("reserved Then contract key unspecified", () => {
+  for (const withThen of [false, true]) {
+    it.each([
+      ["validation", validateGraph],
+      ["generation", generateContracts],
+    ] as const)(
+      `keeps edge reads linear during %s ${withThen ? "with" : "without"} Then steps`,
+      (_name, run) => {
+        const count = 250;
+        const graph = deriveFixtureGraph({
+          specs: [
+            parent(VOCABULARY),
+            ...Array.from({ length: count }, (_, i) =>
+              spec({
+                ...child(BOUND_GWT, `spec:probe.member-${String(i)}`),
+                kind: "behavior",
+                readiness: "idea",
+                behavior: withThen ? { examples: [BOUND_GWT] } : {},
+              }),
+            ),
+          ],
+        });
+        let edgeReads = 0;
+        const measured = {
+          ...graph,
+          edges: graph.edges.map(
+            (edge) =>
+              new Proxy(edge, {
+                get(target, key, receiver) {
+                  edgeReads += 1;
+                  return Reflect.get(target, key, receiver) as unknown;
+                },
+              }),
+          ),
+        };
+        run(measured);
+        // Count graph work, not wall time: unrelated edges must not be read for every Spec.
+        // Allow ample room for the separate validators and generation passes.
+        expect(edgeReads).toBeLessThan(count * 50);
+      },
+    );
+  }
+
+  it("does not re-read a shared parent vocabulary for every child", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        parent(VOCABULARY),
+        ...Array.from({ length: 25 }, (_, i) => child(BOUND_GWT, `spec:probe.member-${String(i)}`)),
+      ],
+    });
+    let parentSectionsReads = 0;
+    const measured = {
+      ...graph,
+      nodes: graph.nodes.map((node) =>
+        node.id === "spec:orders.create-order"
+          ? new Proxy(node, {
+              get(target, key, receiver) {
+                if (key === "sections") parentSectionsReads += 1;
+                return Reflect.get(target, key, receiver) as unknown;
+              },
+            })
+          : node,
+      ),
+    };
+
+    const index = buildGraphIndex(measured);
+    for (const node of measured.nodes) {
+      if (node.nodeType === "Primitive") reservedThenKeysOf(node, index);
+    }
+
+    expect(parentSectionsReads).toBeLessThan(15);
+  });
+
+  it.each([false, true])(
+    "uses the first matching parent in id order when the reserved key comes first: %s",
+    (reservedFirst) => {
+      const steps = { given: ["ready"], when: ["run"], then: ["done"] };
+      const parents = ["a", "z"].map((suffix, i) =>
+        spec({
+          ...parent(steps),
+          id: specId(`spec:probe.${suffix}`),
+          behavior: {
+            exampleSpace: steps,
+            stepKeys: { [(i === 0) === reservedFirst ? "unspecified" : "specified"]: "done" },
+          },
+        }),
+      );
+      const graph = deriveFixtureGraph({
+        specs: [
+          ...parents,
+          spec({
+            ...child(steps),
+            // Reverse authored order to distinguish code-unit ordering from edge ordering.
+            relations: [refines(specId("spec:probe.z")), refines(specId("spec:probe.a"))],
+          }),
+        ],
+      });
+      const reversed = { ...graph, edges: [...graph.edges].reverse() };
+      for (const candidate of [graph, reversed]) {
+        const childId = "spec:orders.create-order.valid-cart";
+        const generated = generateContracts(candidate);
+        for (const { findings } of [validateGraph(candidate), generated]) {
+          expect(
+            findings.some(
+              (finding) =>
+                finding.subjectId === childId && finding.validatorId.endsWith("/reserved-then-key"),
+            ),
+          ).toBe(reservedFirst);
+        }
+        const contract = generated.files.get("orders.create-order.valid-cart.contract.ts");
+        if (reservedFirst) expect(contract).toBeUndefined();
+        else expect(contract).toContain('key: "specified"');
+      }
+    },
+  );
+
+  function carrierGraph(steps: string, vocabulary: boolean) {
+    const carrier = reifyMarkdownCarrier(
+      `---
+id: spec:probe.reserved-key
+kind: ${vocabulary ? "behavior" : "example"}
+altitude: story
+readiness: idea
+relations: {}
+---
+# Reserved slot probe
+## Intent
+- outcome: Check the Then slot reservation.
+${vocabulary ? "## Example space\n```gwt-vocabulary" : "```gwt"}
+${steps}
+\`\`\`
+`,
+      "probe.sdp.md",
+    );
+    expect(carrier.findings).toEqual([]);
+    return deriveGraph(carrier.specs, [], []);
+  }
+
+  for (const vocabulary of [true, false]) {
+    it.each(["unspecified", "[#unspecified] a coverage gap"])(
+      `refuses a reserved Then key in ${vocabulary ? "vocabulary" : "example"}: %s`,
+      (then) => {
+        const graph = carrierGraph(`Given ready\nWhen run\nThen ${then}`, vocabulary);
+        expect(validateGraph(graph).findings).toContainEqual(
+          expect.objectContaining({
+            validatorId: "conformance/reserved-then-key",
+            severity: "error",
+            path: vocabulary ? "behavior.exampleSpace.then[0]" : "behavior.examples[0].then[0]",
+          }),
+        );
+        const generated = generateContracts(graph);
+        expect(generated.files.size).toBe(0);
+        expect(generated.findings).toContainEqual(
+          expect.objectContaining({
+            validatorId: "contracts/reserved-then-key",
+            severity: "warning",
+            message: expect.stringContaining(
+              'Then contract key "unspecified" is reserved',
+            ) as unknown,
+          }),
+        );
+      },
+    );
+  }
+
+  it("checks later structured entries at their authored index", () => {
+    const graph = deriveFixtureGraph({ specs: [parent(), child(BOUND_GWT)] });
+    const changed: GraphSchema = {
+      ...graph,
+      nodes: graph.nodes.map((node) =>
+        node.nodeType === "Primitive" && node.specKind === "example"
+          ? {
+              ...node,
+              sections: {
+                ...node.sections,
+                behavior: {
+                  examples: ["A prose example", BOUND_GWT, { ...BOUND_GWT, then: ["unspecified"] }],
+                },
+              },
+            }
+          : node,
+      ),
+    };
+    expect(validateGraph(changed).findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "conformance/reserved-then-key",
+        path: "behavior.examples[2].then[0]",
+      }),
+    );
+    expect(generateContracts(changed).files.has("orders.create-order.valid-cart.contract.ts")).toBe(
+      false,
+    );
+  });
+
+  it("withholds registrars even when the child does not use the reserved vocabulary step", () => {
+    const base = deriveFixtureGraph({
+      specs: [
+        parent({ ...VOCABULARY, then: [...VOCABULARY.then, "unspecified"] }),
+        child(BOUND_GWT),
+      ],
+    });
+    const graph: GraphSchema = {
+      ...base,
+      nodes: [
+        ...base.nodes,
+        {
+          id: "test:probe.reserved-key",
+          nodeType: "Anchor",
+          claim: "anchored",
+          file: "test/probe.test.ts",
+          line: 1,
+        },
+      ],
+      edges: [
+        ...base.edges,
+        {
+          from: "test:probe.reserved-key",
+          to: "spec:orders.create-order.valid-cart",
+          type: "verifies",
+          claim: "anchored",
+        },
+      ],
+    };
+    const generated = generateContracts(graph);
+    expect(generated.files.has("orders.create-order.space.ts")).toBe(false);
+    expect(generated.files.has("orders.create-order.valid-cart.contract.ts")).toBe(true);
+    expect(generated.registrars.size).toBe(0);
+  });
+
+  it("refuses a reserved Then key inherited from the parent vocabulary", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        spec({
+          ...parent({ given: ["ready"], when: ["run"], then: ["a coverage gap"] }),
+          behavior: {
+            exampleSpace: { given: ["ready"], when: ["run"], then: ["a coverage gap"] },
+            stepKeys: { unspecified: "a coverage gap" },
+          },
+        }),
+        child({ given: ["ready"], when: ["run"], then: ["a coverage gap"] }),
+      ],
+    });
+    expect(validateGraph(graph).findings).toContainEqual(
+      expect.objectContaining({
+        validatorId: "conformance/reserved-then-key",
+        subjectId: "spec:orders.create-order.valid-cart",
+      }),
+    );
+    expect(generateContracts(graph).files.size).toBe(0);
+  });
+
+  it("allows unspecified text under a distinct explicit contract key", () => {
+    const graph = carrierGraph("Given ready\nWhen run\nThen [#specified] unspecified", true);
+    expect(
+      validateGraph(graph).findings.filter(
+        (f) => f.validatorId === "conformance/reserved-then-key",
+      ),
+    ).toEqual([]);
+    expect(generateContracts(graph).files.get("probe.reserved-key.space.ts")).toContain(
+      'readonly kind: "specified"',
+    );
+  });
+
+  it.each(["given", "when"] as const)("allows unspecified as a %s key", (phase) => {
+    const steps = { given: "ready", when: "run", then: "done", [phase]: "[#unspecified] open" };
+    const graph = carrierGraph(
+      `Given ${steps.given}\nWhen ${steps.when}\nThen ${steps.then}`,
+      true,
+    );
+    expect(
+      validateGraph(graph).findings.filter(
+        (f) => f.validatorId === "conformance/reserved-then-key",
+      ),
+    ).toEqual([]);
+    expect(generateContracts(graph).files.size).toBe(1);
+  });
+});
+
+it.each([
+  ['result {kind: "accepted"}', "slot"],
+  ["unspecified", "key"],
+])("does not claim to withhold a step contract for a non-example with %s", (then, reservation) => {
+  const graph = deriveFixtureGraph({
+    specs: [
+      spec({
+        ...parent(),
+        behavior: { examples: [{ given: ["ready"], when: ["run"], then: [then] }] },
+      }),
+    ],
+  });
+  expect(validateGraph(graph).findings).toContainEqual(
+    expect.objectContaining({
+      validatorId: `conformance/reserved-then-${reservation}`,
+      severity: "error",
+    }),
+  );
+  expect(generateContracts(graph).files.size).toBe(0);
+  expect(generateContracts(graph).findings).toEqual([]);
+});
+
+describe("example-space decoding scale", () => {
+  it("reads edges and nodes linearly across many declared spaces", () => {
+    const count = 250;
+    const graph = deriveFixtureGraph({
+      specs: Array.from({ length: count }, (_, i) => {
+        const id = specId(`spec:probe.space-${String(i)}`);
+        return [
+          spec({ ...parent(VOCABULARY), id }),
+          spec({ ...child(BOUND_GWT, `${id}.example`), relations: [refines(id)] }),
+        ];
+      }).flat(),
+    });
+    let edgeReads = 0;
+    let nodeReads = 0;
+    const measured = {
+      ...graph,
+      edges: graph.edges.map(
+        (edge) =>
+          new Proxy(edge, {
+            get(target, key, receiver) {
+              edgeReads += 1;
+              return Reflect.get(target, key, receiver) as unknown;
+            },
+          }),
+      ),
+      nodes: graph.nodes.map(
+        (node) =>
+          new Proxy(node, {
+            get(target, key, receiver) {
+              nodeReads += 1;
+              return Reflect.get(target, key, receiver) as unknown;
+            },
+          }),
+      ),
+    };
+    const decoded = decodeExampleSpaces(measured);
+    expect(decoded.contexts.size).toBe(count);
+    expect([...decoded.contexts.values()].every((space) => space.points.length === 1)).toBe(true);
+    expect(decoded.findings).toEqual([]);
+    expect(edgeReads).toBeLessThan(count * 10);
+    expect(nodeReads).toBeLessThan(count * 100);
+    expect(decoded.contexts).toEqual(decodeExampleSpaces(graph).contexts);
   });
 });

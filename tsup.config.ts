@@ -39,6 +39,10 @@ export default defineConfig([
       return Promise.resolve();
     },
   },
+  // A CommonJS TypeScript consumer cannot type `require` from the ESM dist/index.d.ts, so the
+  // build script's second tsup pass emits dist/index.d.cts. It runs after this whole array: the
+  // first config's declaration build deletes every declaration in dist/ as it starts, so one
+  // emitted here would race that delete.
   {
     entry: ["src/index.ts"],
     format: ["cjs"],

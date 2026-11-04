@@ -690,15 +690,17 @@ describe("the floor for a target rung and the targets a dependency failure names
     ).toEqual(["at-least-one-relation", "kind-evidence-present"]);
   });
 
-  it("yields no failure for an unratified kind or an unratified target rung", () => {
+  it("yields no failure for an unratified kind, altitude or target rung", () => {
     const { node, index } = indexedSubject(subjectId, [
       subjectStating("ready"),
       basisStating("scoped"),
     ]);
     const foreignKind = { ...node, specKind: "epic" } as unknown as PrimitiveNode;
     const foreignStated = { ...node, readiness: "shipped" } as unknown as PrimitiveNode;
+    const foreignAltitude = { ...node, altitude: "planet" } as unknown as PrimitiveNode;
 
     expect(evaluateReadinessFloor(foreignKind, index, "ready")).toEqual([]);
+    expect(evaluateReadinessFloor(foreignAltitude, index, "ready")).toEqual([]);
     expect(evaluateReadinessFloor(node, index, "shipped" as SpecReadiness)).toEqual([]);
     // An unratified stated rung yields nothing on its own, but a named target rung is evaluated.
     expect(evaluateReadinessFloor(foreignStated, index)).toEqual([]);

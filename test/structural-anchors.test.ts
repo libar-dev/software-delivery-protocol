@@ -11,6 +11,7 @@ import {
   schemaVersion,
   validateGraph,
 } from "../src/index.js";
+import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 import type { GraphEdge, GraphNode, GraphSchema } from "../src/index.js";
 
 const temporaryRoots: string[] = [];
@@ -69,6 +70,13 @@ afterAll(() => {
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+const structuralAnchorsTestAnchor = specTest({
+  id: testAnchorId("test:protocol.structural-anchor-regressions"),
+  label: "checks structural anchor refusals and binding contradictions",
+  verifies: ref("spec:model.anchors"),
+});
+void structuralAnchorsTestAnchor;
 
 describe("structural code anchors", () => {
   it("derives anchored memberOf and uses edges while accepting a multi-node uses cycle", () => {

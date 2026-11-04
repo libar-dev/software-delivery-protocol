@@ -754,6 +754,74 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
       expect(foreign?.derivedReadiness).toBeUndefined();
       expect(foreign?.nextRungFailures).toEqual([]);
     });
+
+    // spec:validation.next-rung-floor#rule.notEvaluated
+    it("marks an unratified kind or altitude as not evaluated, apart from below idea and from a clear rung", () => {
+      const node = (id: string, specKind: string, altitude: string) =>
+        ({
+          id,
+          nodeType: "Primitive",
+          claim: "declared",
+          specKind,
+          altitude,
+          readiness: "scoped",
+          title: `Title of ${id}`,
+          file: "specs/probe.sdp.md",
+          sections: {
+            intent: { outcome: "Probe the floor." },
+            behavior: { rules: ["The probe states one rule."] },
+          },
+        }) as unknown as GraphSchema["nodes"][number];
+      const graph: GraphSchema = {
+        schemaVersion,
+        nodes: [
+          node("spec:probe.saga", "saga", "story"),
+          node("spec:probe.planet", "rule", "planet"),
+          node("spec:probe.both", "saga", "planet"),
+          node("spec:probe.sound", "rule", "story"),
+          {
+            id: "pack:probe",
+            nodeType: "Pack",
+            claim: "declared",
+            title: "Probe",
+            file: "specs/probe.pack.sdp.md",
+            members: ["spec:probe.saga", "spec:probe.planet", "spec:probe.sound"],
+          },
+        ],
+        edges: [],
+      };
+      const reader = createReader(graph);
+      const summaries = new Map(reader.specs().map((summary) => [summary.id, summary]));
+
+      expect(summaries.get("spec:probe.saga")?.floorNotEvaluated).toEqual(["specKind"]);
+      expect(summaries.get("spec:probe.planet")?.floorNotEvaluated).toEqual(["altitude"]);
+      expect(summaries.get("spec:probe.both")?.floorNotEvaluated).toEqual(["specKind", "altitude"]);
+      // A ratified Spec carries no such field, so every extractor-derived summary is unchanged.
+      expect(summaries.get("spec:probe.sound")).not.toHaveProperty("floorNotEvaluated");
+      expect(reader.specContext("spec:probe.sound")?.statedNextRung).toBe("defined");
+
+      for (const id of ["spec:probe.saga", "spec:probe.planet", "spec:probe.both"]) {
+        const context = reader.specContext(id);
+        expect(context?.derivedReadiness, id).toBeUndefined();
+        // No stated next rung, so no consumer can read an empty failure list as `nothing blocks`.
+        expect(context, id).not.toHaveProperty("statedNextRung");
+        expect(context?.statedNextRungFailures, id).toEqual([]);
+        expect(context?.nextRungFailures, id).toEqual([]);
+        expect(context?.floorFailures, id).toEqual([]);
+      }
+
+      const members = reader.packContext("pack:probe")?.members ?? [];
+      expect(members.map((member) => [member.id, member.floorNotEvaluated])).toEqual([
+        ["spec:probe.saga", ["specKind"]],
+        ["spec:probe.planet", ["altitude"]],
+        ["spec:probe.sound", undefined],
+      ]);
+      expect(members.map((member) => member.statedNextRung)).toEqual([
+        undefined,
+        undefined,
+        "defined",
+      ]);
+    });
   });
 
   describe("packContext — the pack reviewed as a unit (JS-E4, JS-G4)", () => {

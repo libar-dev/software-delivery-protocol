@@ -25,5 +25,7 @@ export const GHERKIN_KIND_LIE_REASONS = {
 export type GherkinRefusedKind = keyof typeof GHERKIN_KIND_LIE_REASONS;
 
 export function gherkinKindLieReason(kind: string): string | undefined {
-  return (GHERKIN_KIND_LIE_REASONS as Readonly<Record<string, string>>)[kind];
+  return Object.hasOwn(GHERKIN_KIND_LIE_REASONS, kind)
+    ? (GHERKIN_KIND_LIE_REASONS as Readonly<Record<string, string>>)[kind]
+    : undefined;
 }

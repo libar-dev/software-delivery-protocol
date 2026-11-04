@@ -29,8 +29,8 @@ export function readMarkdownBody(
   kind: string,
 ): MarkdownBodyResult {
   const envelope = readMarkdownEnvelope(sourceText);
-  if (typeof envelope === "string")
-    return { ok: false, findings: [markdownFinding(file, 1, envelope)] };
+  if ("reason" in envelope)
+    return { ok: false, findings: [markdownFinding(file, envelope.line, envelope.reason)] };
   return parseMarkdownBody(envelope.body, envelope.bodyBaseLine, file, kind);
 }
 

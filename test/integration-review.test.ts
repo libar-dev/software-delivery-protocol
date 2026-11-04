@@ -27,6 +27,9 @@ it("records future measurement commands as run and provides portable commands se
   const scratch = mkdtempSync(join(tmpdir(), "sdp-measure-evidence-"));
   try {
     const [base, head, platform] = ["base", "head", "platform"].map((name) => join(scratch, name));
+    // The probes use require(); a temporary directory inside an ES module package would load
+    // them as ES modules, so the scratch folder declares its own module type.
+    writeFileSync(join(scratch, "package.json"), `${JSON.stringify({ type: "commonjs" })}\n`);
     for (const engine of [base, head]) {
       if (engine === undefined) throw new Error("Expected a probe engine.");
       mkdirSync(join(engine, "dist/cli"), { recursive: true });

@@ -1034,6 +1034,78 @@ it("uses the stamp base, labels fields, orders actions and copies and saves the 
   expect(dom.copied).toEqual([memo, document]);
 });
 
+it("names each gathered intent's scope and the change it asks for", () => {
+  // spec:consumers.spec-studio.intent-panel#ui.gatheredIntents
+  const dom = studioDom(assets.script, "https://studio.test/index.html", storage());
+  const panel = dom.mount("sdp-intent-panel", { "page-root": "./" });
+  panel.gather?.({
+    scope: ["spec:probe.s1"],
+    request: "Cover the empty cart",
+    action: "propose-example",
+  });
+  panel.gather?.({
+    scope: ["spec:probe.s2"],
+    request: "Tighten the bound",
+    action: "change-target",
+  });
+  const framing = {
+    scope: ["spec:probe.s1", "spec:probe.s2"],
+    pack: "pack:probe",
+    request: "Reframe the Pack",
+    action: "change-pack",
+  };
+  panel.gather?.(framing);
+  expect(
+    panel
+      .querySelector("ol")
+      ?.querySelectorAll("li")
+      .map((row) => row.textContent),
+  ).toEqual([
+    "spec:probe.s1 Propose example: Cover the empty cart Discard",
+    "spec:probe.s2 Change target: Tighten the bound Discard",
+    "pack:probe Change Pack membership or framing: Reframe the Pack Discard",
+  ]);
+});
+
+it("previews the memo it hands off, closed and read-only, before the copy actions", async () => {
+  // spec:consumers.spec-studio.intent-panel#rule.memoPreview
+  const dom = studioDom(assets.script, "https://studio.test/index.html", storage());
+  dom.mount("sdp-stamp", { "data-corpus-commit": "abc" });
+  const panel = dom.mount("sdp-intent-panel", { "page-root": "./" });
+  panel.gather?.({ scope: ["spec:probe.s1"], request: "Read this", action: "change-entry" });
+  const preview = () => panel.querySelector(".memo-preview");
+  expect(preview()).toBeNull();
+  const reason = panel.querySelector("input");
+  if (!reason) throw new Error("Missing reason field");
+  reason.value = "Review this design";
+  reason.dispatch("input");
+  const memo = (text: string) =>
+    renderMemo({
+      schema: "sdp-proposal/1",
+      base: "abc",
+      reason: text,
+      changes: [{ scope: ["spec:probe.s1"], request: "Read this" }],
+    });
+  const shown = preview();
+  expect(shown?.tagName).toBe("details");
+  expect(shown?.open).toBe(false);
+  expect(shown?.querySelector("summary")?.textContent).toBe("Preview memo");
+  expect(shown?.querySelector("pre")?.textContent).toBe(memo("Review this design"));
+  expect(shown?.querySelectorAll("textarea, input, button")).toHaveLength(0);
+  expect(panel.querySelector(".intent-actions")?.children[0]).toBe(shown);
+  panel
+    .querySelectorAll("button")
+    .find((b) => b.textContent === "Copy memo")
+    ?.dispatch("click");
+  await Promise.resolve();
+  expect(dom.copied).toEqual([shown?.querySelector("pre")?.textContent]);
+  if (shown) shown.open = true;
+  reason.value = "Review this design again";
+  reason.dispatch("input");
+  expect(preview()?.open).toBe(true);
+  expect(preview()?.querySelector("pre")?.textContent).toBe(memo("Review this design again"));
+});
+
 it("copies distinct actions and recorded scopes for both Pack choices without a stamp", () => {
   // spec:consumers.spec-studio.intent-panel#rule.textApart
   const copies = ["members", "pack"].map((choice) => {
@@ -1509,3 +1581,20 @@ it("hides phone scroll advice and closed source in print while keeping opened so
     });
   }
 });
+
+it.each(["unknown-action", "constructor", "toString", "valueOf", "hasOwnProperty", "__proto__"])(
+  "shows the raw unknown action %s and offers no compose control for it",
+  (action) => {
+    const dom = studioDom(assets.script, "https://studio.test/index.html", storage());
+    const panel = dom.mount("sdp-intent-panel", { "page-root": "./" });
+    panel.gather?.({ scope: ["spec:probe.s1"], request: "Read this", action });
+    expect(
+      panel
+        .querySelector("ol")
+        ?.querySelectorAll("li")
+        .map((row) => row.textContent),
+    ).toEqual([`spec:probe.s1 ${action}: Read this Discard`]);
+    const compose = dom.mount("sdp-compose", { action, scope: "spec:probe.s1" });
+    expect(compose.querySelector("button")).toBeNull();
+  },
+);

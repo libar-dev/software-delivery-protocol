@@ -1,15 +1,6 @@
 import { button } from "./dom.js";
 import { gatherInPage } from "./intent-panel-element.js";
-const labels: Readonly<Record<string, string>> = {
-  "resolve-question": "Resolve question",
-  "promote-question": "Propose decision record",
-  "edit-example": "Edit example",
-  "propose-example": "Propose example",
-  "change-target": "Change target",
-  "propose-target": "Propose target",
-  "propose-values": "Propose examples for uncovered values",
-  "change-entry": "Propose new text",
-};
+import { composeLabels as labels } from "./intent-panel.js";
 /**
  * @sdpAnchor impl:protocol.studio-compose
  * @sdpLabel opens a native request dialog beside build-rendered scopes without changing their content
@@ -24,7 +15,7 @@ export function registerCompose(): void {
     connectedCallback(): void {
       if (this.control) return;
       const action = this.getAttribute("action") ?? "";
-      const label = labels[action];
+      const label = Object.hasOwn(labels, action) ? labels[action] : undefined;
       if (!label) return;
       this.control = button(this, label);
       this.control.addEventListener("click", () => {

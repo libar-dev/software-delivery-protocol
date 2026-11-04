@@ -15,7 +15,8 @@ import { describe, expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
-import { emitMarkdownSpec, reifyTypeScriptCarrier } from "../src/index.js";
+import { reifyGherkinCarrier } from "../src/extract/gherkin.js";
+import { emitMarkdownSpec, reifyMarkdownCarrier, reifyTypeScriptCarrier } from "../src/index.js";
 import { assertAuthoredRoundTrip, assertGraphRoundTrip } from "./import-round-trip.helpers.js";
 
 const markdownAuthoringTestAnchor = specTest({
@@ -125,4 +126,296 @@ describe("import round-trip harness", () => {
       rmSync(dirname(corpus.tsRoot), { recursive: true, force: true });
     }
   });
+});
+
+const separators = [
+  ["a lone CR", "\r"],
+  ["U+2028", "\u2028"],
+  ["U+2029", "\u2029"],
+] as const;
+
+/** A TypeScript string literal that spells every line terminator as an escape. */
+function literal(text: string): string {
+  return JSON.stringify(text).replaceAll("\u2028", "\\u2028").replaceAll("\u2029", "\\u2029");
+}
+
+function typeScriptSpec(fields: readonly string[], kind = "behavior"): string {
+  return [
+    'import { spec, specId } from "@libar-dev/software-delivery-protocol";',
+    "",
+    "export const probe = spec({",
+    '  id: specId("spec:probe.lines"),',
+    `  kind: "${kind}",`,
+    '  altitude: "story",',
+    '  readiness: "idea",',
+    ...fields.map((field) => `  ${field},`),
+    "});",
+    "",
+  ].join("\n");
+}
+
+describe("one line-ending law across the carriers", () => {
+  describe.each(separators)("a title holding %s", (_name, separator) => {
+    const title = `Probe title${separator}@implemented injected`;
+
+    it("is refused by the Markdown, Gherkin and TypeScript carriers alike", () => {
+      const markdown = reifyMarkdownCarrier(
+        `---\nid: spec:probe.lines\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# ${title}\n`,
+        "probe.sdp.md",
+      );
+      const gherkin = reifyGherkinCarrier(
+        `@spec.probe.lines @altitude.story @readiness.idea\nFeature: ${title}\n`,
+        "probe.sdp.gherkin",
+      );
+      const typeScript = reifyTypeScriptCarrier(
+        typeScriptSpec([`title: ${literal(title)}`]),
+        "probe.sdp.ts",
+      );
+
+      for (const [carrier, line] of [
+        [markdown, 8],
+        [gherkin, 2],
+        [typeScript, 8],
+      ] as const) {
+        expect(carrier.specs).toEqual([]);
+        expect(carrier.findings).toEqual([
+          expect.objectContaining({
+            severity: "error",
+            line,
+            message: expect.stringContaining("lone CR, U+2028 or U+2029") as unknown,
+          }),
+        ]);
+      }
+      expect(typeScript.findings[0]).toMatchObject({
+        validatorId: "extract/non-static-envelope",
+        subjectId: "spec:probe.lines",
+        path: "title",
+      });
+    });
+  });
+
+  describe.each(separators)("a TypeScript string holding %s", (_name, separator) => {
+    const text = `First${separator}Then hidden text`;
+
+    it.each([
+      ["the narrative", [`narrative: ${literal(text)}`], "behavior", 8],
+      ["an Intent field", ["intent: {", `    outcome: ${literal(text)},`, "  }"], "behavior", 9],
+      ["a rule entry", ["behavior: {", `    rules: [${literal(text)}],`, "  }"], "behavior", 9],
+      [
+        "an example step",
+        [
+          "behavior: {",
+          `    exampleSpace: { given: [${literal(text)}], when: ["it runs"], then: ["it holds"] },`,
+          "  }",
+        ],
+        "behavior",
+        9,
+      ],
+      [
+        "a Model term",
+        ["model: {", `    terms: { ${literal(text)}: "A definition." },`, "  }"],
+        "model",
+        9,
+      ],
+      ["a Design value", ["design: {", `    shape: ${literal(text)},`, "  }"], "behavior", 9],
+    ])("refuses the Spec when %s holds one", (_site, lines, kind, line) => {
+      const result = reifyTypeScriptCarrier(
+        typeScriptSpec([lines.join("\n")], kind),
+        "probe.sdp.ts",
+      );
+
+      expect(result.specs).toEqual([]);
+      expect(result.findings).toContainEqual(
+        expect.objectContaining({
+          validatorId: "extract/non-static-envelope",
+          severity: "error",
+          subjectId: "spec:probe.lines",
+          line,
+          message: expect.stringContaining("lone CR, U+2028 or U+2029") as unknown,
+        }),
+      );
+    });
+
+    it.each(["title", "framing"])("refuses a Pack whose %s holds one", (field) => {
+      const result = reifyTypeScriptCarrier(
+        [
+          'import { pack, packId } from "@libar-dev/software-delivery-protocol";',
+          "",
+          "export const probe = pack({",
+          '  id: packId("pack:probe.lines"),',
+          "  specs: [],",
+          `  ${field}: ${literal(text)},`,
+          "});",
+          "",
+        ].join("\n"),
+        "probe.sdp.ts",
+      );
+
+      expect(result.packs).toEqual([]);
+      expect(result.findings).toEqual([
+        expect.objectContaining({
+          validatorId: "extract/non-static-envelope",
+          severity: "error",
+          subjectId: "pack:probe.lines",
+          line: 6,
+        }),
+      ]);
+    });
+  });
+
+  // A template literal may hold the raw character, and the TypeScript scanner keeps U+2028 and
+  // U+2029 in its value; it normalizes a raw CR to LF, which is lawful.
+  it.each([
+    ["U+2028", 0x2028],
+    ["U+2029", 0x2029],
+  ])("refuses a raw %s inside a template literal", (_name, code) => {
+    const raw = String.fromCharCode(code);
+    const result = reifyTypeScriptCarrier(
+      typeScriptSpec([`title: \`Probe title${raw}@implemented injected\``]),
+      "probe.sdp.ts",
+    );
+
+    expect(result.specs).toEqual([]);
+    expect(result.findings).toEqual([
+      expect.objectContaining({ validatorId: "extract/non-static-envelope", line: 8 }),
+    ]);
+  });
+
+  it("keeps LF and CRLF lawful in TypeScript prose", () => {
+    for (const ending of ["\n", "\r\n"]) {
+      const narrative = `First paragraph.${ending}${ending}Second paragraph.`;
+      const result = reifyTypeScriptCarrier(
+        typeScriptSpec([`title: "Probe title"`, `narrative: ${literal(narrative)}`]),
+        "probe.sdp.ts",
+      );
+
+      expect(result.findings).toEqual([]);
+      expect(result.specs[0]?.data.narrative).toBe(narrative);
+    }
+  });
+
+  // Only the strings the carrier keeps are read. A type in an assertion is erased, so a separator
+  // there is in no title or entry; a value the reader drops never reaches the graph.
+  describe.each(separators)(
+    "a TypeScript separator outside the kept strings (%s)",
+    (_name, sep) => {
+      const typeOnly = `string | ${literal(sep)}`;
+
+      it.each([
+        [
+          "a title assertion",
+          [`title: ("Probe title" as ${typeOnly})`],
+          "behavior",
+          { title: "Probe title" },
+        ],
+        [
+          "a narrative assertion",
+          [`narrative: ("A narrative." as ${typeOnly})`],
+          "behavior",
+          { narrative: "A narrative." },
+        ],
+        [
+          "a rule entry assertion",
+          ["behavior: {", `    rules: ["A rule." as ${typeOnly}],`, "  }"],
+          "behavior",
+          { behavior: { rules: ["A rule."] } },
+        ],
+        [
+          "a Design value assertion",
+          ["design: {", `    shape: ("A shape." as ${typeOnly}),`, "  }"],
+          "behavior",
+          { design: { shape: "A shape." } },
+        ],
+        [
+          "a whole-section assertion",
+          [`intent: ({ outcome: "An outcome." } as { outcome: ${typeOnly} })`],
+          "behavior",
+          { intent: { outcome: "An outcome." } },
+        ],
+        [
+          "a Model terms assertion",
+          [
+            "model: {",
+            `    terms: { Order: "A definition." } as { ${literal(`Order${sep}`)}?: string; Order: string },`,
+            "  }",
+          ],
+          "model",
+          { model: { terms: { Order: "A definition." } } },
+        ],
+      ])("keeps the Spec when %s names one only as a type", (_site, lines, kind, expected) => {
+        const result = reifyTypeScriptCarrier(
+          typeScriptSpec([lines.join("\n")], kind),
+          "probe.sdp.ts",
+        );
+
+        expect(result.findings).toEqual([]);
+        expect(result.specs).toHaveLength(1);
+        expect(result.specs[0]?.data).toMatchObject(expected);
+      });
+
+      it.each(["title", "framing"])("keeps a Pack whose %s names one only as a type", (field) => {
+        const result = reifyTypeScriptCarrier(
+          [
+            'import { pack, packId } from "@libar-dev/software-delivery-protocol";',
+            "",
+            "export const probe = pack({",
+            '  id: packId("pack:probe.lines"),',
+            "  specs: [],",
+            `  ${field}: ("Pack text" as ${typeOnly}),`,
+            "});",
+            "",
+          ].join("\n"),
+          "probe.sdp.ts",
+        );
+
+        expect(result.findings).toEqual([]);
+        expect(result.packs[0]?.data).toMatchObject({ [field]: "Pack text" });
+      });
+
+      it("still refuses one inside the asserted value", () => {
+        const result = reifyTypeScriptCarrier(
+          typeScriptSpec([`title: (${literal(`Probe${sep}title`)} as string)`]),
+          "probe.sdp.ts",
+        );
+
+        expect(result.specs).toEqual([]);
+        expect(result.findings).toEqual([
+          expect.objectContaining({
+            validatorId: "extract/non-static-envelope",
+            line: 8,
+            path: "title",
+          }),
+        ]);
+      });
+
+      it.each([
+        [
+          "a repeated Design key",
+          ["design: {", '    shape: "A shape.",', `    shape: ${literal(`Hidden${sep}`)},`, "  }"],
+          { shape: "A shape." },
+        ],
+        [
+          "a non-static Design value",
+          ["design: {", `    shape: String(${literal(sep)}),`, "  }"],
+          {},
+        ],
+        [
+          "a Design value beside a non-static sibling in its array",
+          ["design: {", `    shape: [${literal(`Hidden${sep}`)}, String("x")],`, "  }"],
+          {},
+        ],
+      ])("drops %s alone, with its own warning", (_site, lines, design) => {
+        const result = reifyTypeScriptCarrier(typeScriptSpec([lines.join("\n")]), "probe.sdp.ts");
+
+        expect(result.specs).toHaveLength(1);
+        expect(result.specs[0]?.data.design).toEqual(design);
+        expect(result.findings).toEqual([
+          expect.objectContaining({
+            validatorId: "extract/non-static-section",
+            severity: "warning",
+          }),
+        ]);
+      });
+    },
+  );
 });

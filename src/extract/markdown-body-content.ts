@@ -2,7 +2,12 @@ import { extractFindingIds } from "./reify.js";
 import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
 import { parseSlots } from "../notation/slots.js";
 import type { Finding } from "../validate/contracts.js";
-import { addMarkdownFinding, markdownFinding } from "./markdown-support.js";
+import {
+  addMarkdownFinding,
+  asciiTrim,
+  asciiTrimEnd,
+  markdownFinding,
+} from "./markdown-support.js";
 
 /**
  * @sdpAnchor impl:protocol.markdown-content
@@ -39,8 +44,6 @@ export interface MarkdownFence {
   };
 }
 
-const ASCII_TRIM = /^[\t ]+|[\t ]+$/gu;
-
 function bodyFinding(file: string, line: number, message: string): Finding {
   return markdownFinding(file, line, message, extractFindingIds.invalidMarkdownStructure);
 }
@@ -49,7 +52,7 @@ export function normalizeProse(lines: readonly MarkdownLine[]): string {
   const paragraphs: string[] = [];
   let paragraph: string[] = [];
   for (const line of lines) {
-    const trimmed = line.text.replace(ASCII_TRIM, "");
+    const trimmed = asciiTrim(line.text);
     if (trimmed.length === 0) {
       if (paragraph.length > 0) paragraphs.push(paragraph.join(" "));
       paragraph = [];
@@ -59,11 +62,32 @@ export function normalizeProse(lines: readonly MarkdownLine[]): string {
   return paragraphs.join("\n\n");
 }
 
+/** Backticks in an info string make a backtick run inline text, not a fence. */
+export function isMarkdownFenceOpener(text: string): boolean {
+  if (text.startsWith("~~~")) return true;
+  if (!text.startsWith("```")) return false;
+  let end = 3;
+  while (text[end] === "`") end += 1;
+  return !text.slice(end).includes("`");
+}
+
 export function isUnsupportedCommonMarkBlock(text: string): boolean {
-  return (
-    /^(?:[*+][\t ]|\d+[.)][\t ]|-[\t]|<)/u.test(text) ||
-    /^(?:={3,}|(?:\*[\t ]*){3,}|(?:-[\t ]*){3,}|(?:_[\t ]*){3,})[\t ]*$/u.test(text)
-  );
+  if (/^(?:[*+](?:[\t ]|$)|\d+[.)](?:[\t ]|$)|-[\t]|<)/u.test(text)) return true;
+  const marker = text[0];
+  if (marker !== "=" && marker !== "-" && marker !== "*" && marker !== "_") return false;
+  let count = 0;
+  let spaced = false;
+  let contiguous = true;
+  for (const char of text) {
+    if (char === marker) {
+      count += 1;
+      if (spaced) contiguous = false;
+    } else if (char === " " || char === "\t") spaced = true;
+    else return false;
+  }
+  // Setext underlines allow one marker and trailing blanks, but no interior blanks.
+  if ((marker === "=" || marker === "-") && contiguous) return true;
+  return marker !== "=" && count >= 3;
 }
 
 function parseFence(
@@ -232,7 +256,9 @@ export function parseSectionContent(
       );
       continue;
     }
-    if (line.text.startsWith("```")) {
+    // Match the heading splitter's backtick boundary; the info-string exception is
+    // only for inline list text, not a way to admit malformed section fences.
+    if (line.text.startsWith("```") || line.text.startsWith("~~~")) {
       structured = true;
       const parsed = parseFence(lines, index, file, findings);
       if (parsed.fence !== undefined) fences.push(parsed.fence);
@@ -246,7 +272,7 @@ export function parseSectionContent(
           findings,
           bodyFinding(file, line.line, "an H3 owner is authored more than once"),
         );
-      else h3 = { text: line.text.replace(/[\t ]+$/gu, ""), line: line.line };
+      else h3 = { text: asciiTrimEnd(line.text), line: line.line };
       continue;
     }
     if (line.text.startsWith("#")) {
@@ -258,6 +284,16 @@ export function parseSectionContent(
       const text = line.text.slice(2);
       if (text.trim().length === 0 || /^[\t ]/u.test(text))
         addMarkdownFinding(findings, bodyFinding(file, line.line, "list text must not be empty"));
+      else if (
+        isUnsupportedCommonMarkBlock(text) ||
+        isMarkdownFenceOpener(text) ||
+        /^#{1,6}(?:[\t ]|$)/u.test(text) ||
+        /^(?:(?:[-*+]|\d+[.)])(?:[\t ]|$)|[|>])/u.test(text)
+      )
+        addMarkdownFinding(
+          findings,
+          bodyFinding(file, line.line, "nested or unsupported Markdown structure"),
+        );
       else items.push({ text, line: line.line, afterH3: h3 !== undefined, fields: [] });
       continue;
     }

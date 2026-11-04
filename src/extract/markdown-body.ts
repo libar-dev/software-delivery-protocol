@@ -3,9 +3,18 @@ import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import { hasRawHtmlOutsideCodeSpans } from "./markdown-inline-code.js";
 import type { Finding } from "../validate/contracts.js";
-import { addMarkdownFinding, capMarkdownFindings, markdownFinding } from "./markdown-support.js";
+import {
+  addMarkdownFinding,
+  asciiTrim,
+  capMarkdownFindings,
+  markdownFinding,
+} from "./markdown-support.js";
 import { mapOwner } from "./markdown-body-owners.js";
-import { isUnsupportedCommonMarkBlock, normalizeProse } from "./markdown-body-content.js";
+import {
+  isMarkdownFenceOpener,
+  isUnsupportedCommonMarkBlock,
+  normalizeProse,
+} from "./markdown-body-content.js";
 import type { MarkdownLine } from "./markdown-body-content.js";
 import type { ReifiedEntryLine } from "./reify.js";
 import type { MarkdownBodyResult } from "./markdown-types.js";
@@ -39,10 +48,6 @@ interface MarkdownOwner {
 
 function structure(file: string, line: number, message: string): Finding {
   return markdownFinding(file, line, message, extractFindingIds.invalidMarkdownStructure);
-}
-
-function asciiTrim(text: string): string {
-  return text.replace(/^[\t ]+|[\t ]+$/gu, "");
 }
 
 function levenshtein(left: string, right: string): number {
@@ -107,6 +112,7 @@ function narrative(lines: readonly MarkdownLine[], file: string, findings: Findi
     if (
       /^(?:-|```|\||>|<|#)/u.test(line.text) ||
       /^[\t ]/u.test(line.text) ||
+      isMarkdownFenceOpener(line.text) ||
       isUnsupportedCommonMarkBlock(line.text)
     )
       addMarkdownFinding(
