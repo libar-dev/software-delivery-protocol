@@ -7,16 +7,18 @@
 // It orients the session's own project, never the plugin's: the nearest directory, at or above the
 // hook input's `cwd`, that is the Protocol checkout or holds the installed package. That project's
 // own reading-skill runner prints orientation answers 1 and 5, within a bounded size. It prints
-// answers, never rules. It prints one line when the runner fails or no Spec derives, nothing where
-// no package is installed, and nothing for a second copy of the same session event, such as the
-// plugin's and the checkout's wiring both firing. It exits 0 on every path, and never validates,
-// builds or publishes.
+// answers, never rules. It prints one short line when the runner fails or no Spec derives, nothing
+// where no package is installed, and nothing for a second copy of the same session event, such as
+// the plugin's and the checkout's wiring both firing. Clients pass no event id, so a copy is told
+// from the next event by time: a copy that starts while another runs, or within two seconds after
+// it ends, is a copy. It exits 0 on every path, and never validates, builds or publishes.
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, parse, relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { inspect } from "node:util";
 
 const packageName = "@libar-dev/software-delivery-protocol";
@@ -25,8 +27,17 @@ const answers = "1,5";
 // Under Claude Code's 10,000-character hook output cap and Codex's default limit of about 2,500
 // tokens for one hook's context.
 const maxCharacters = 7_500;
-// How long a claimed session event keeps a second copy silent: longer than one run may take.
-const claimWindowMs = 60_000;
+// The longest reason a failure line quotes from the runner.
+const maxReason = 200;
+// The runner stops its graph query at this deadline; the client's own timeout is 30 seconds.
+const queryTimeoutMs = 25_000;
+// A claim still running after this long belongs to a copy the client killed at its timeout.
+const runningClaimMs = 35_000;
+// After a copy finishes, a copy the client starts next is silent this long: a client that runs
+// copies one after another starts the next at once.
+const finishedGraceMs = 2_000;
+// How long a copy waits for another to finish reading or writing the claim before it prints anyway.
+const lockWaitMs = 2_000;
 
 function readJson(path) {
   try {
@@ -61,49 +72,96 @@ function findProject(cwd) {
 }
 
 /**
- * Claims this session event for this copy of the hook. Returns false when another copy claimed the
- * same session and source within the window; copies of one event start together, so the first
- * exclusive create wins. A claim older than the window is an earlier event: one copy moves it aside
- * and claims anew.
+ * The files that coordinate the copies of one session event: the claim, and the lock under which
+ * one copy at a time reads or writes it. None without a session id, where every copy prints.
  */
-function claimEvent(input) {
-  if (typeof input.session_id !== "string" || input.session_id === "") return true;
+export function eventPaths(input, directory = join(tmpdir(), "sdp-session-start")) {
+  if (typeof input.session_id !== "string" || input.session_id === "") return undefined;
   const key = createHash("sha256")
     .update(`${input.session_id}\0${String(input.source ?? "")}`)
     .digest("hex")
     .slice(0, 32);
-  const directory = join(tmpdir(), "sdp-session-start");
-  const claim = join(directory, key);
-  try {
-    mkdirSync(directory, { recursive: true });
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const now = Date.now();
-      try {
-        writeFileSync(claim, String(now), { flag: "wx" });
-        return true;
-      } catch (error) {
-        if (error?.code !== "EEXIST") return true;
-      }
-      let claimed;
-      try {
-        claimed = Number(readFileSync(claim, "utf8"));
-      } catch {
-        continue; // Another copy moved a stale claim aside; try the exclusive create again.
-      }
-      // An empty claim is one another copy is writing now.
-      if (!(claimed > 0) || now - claimed < claimWindowMs) return false;
-      const stale = `${claim}.${String(process.pid)}`;
-      try {
-        renameSync(claim, stale);
-        rmSync(stale, { force: true });
-      } catch {
-        // Another copy moved it first.
-      }
+  return { directory, claim: join(directory, key), lock: join(directory, `${key}.lock`) };
+}
+
+function pause(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Runs `step` while this copy alone holds the lock, and returns its result; `{ timedOut: true }`
+ * when the lock stays held past the wait. A lock left by a killed copy is never broken, so the
+ * copies after it print rather than stay silent.
+ */
+function whileLocked(lock, step) {
+  const deadline = Date.now() + lockWaitMs;
+  for (;;) {
+    try {
+      writeFileSync(lock, String(process.pid), { flag: "wx" });
+      break;
+    } catch (error) {
+      if (error?.code !== "EEXIST" || Date.now() >= deadline) return { timedOut: true };
+      pause(20);
     }
+  }
+  try {
+    return { value: step() };
+  } finally {
+    rmSync(lock, { force: true });
+  }
+}
+
+function readClaim(claim) {
+  const value = readJson(claim);
+  return typeof value?.started === "number" ? value : undefined;
+}
+
+/**
+ * Claims this session event for this copy of the hook. Returns `{ print, finish }`: `print` is
+ * false when another copy holds the event, running now or finished within the grace; `finish`
+ * records that this copy's run ended. Expiry is read and the claim replaced under the lock, so two
+ * copies that find one expired claim never both win.
+ */
+export function claimEvent(input, paths = eventPaths(input)) {
+  const open = { print: true, finish: () => undefined };
+  if (paths === undefined) return open;
+  try {
+    mkdirSync(paths.directory, { recursive: true });
+    const claimed = whileLocked(paths.lock, () => {
+      const now = Date.now();
+      const current = readClaim(paths.claim);
+      const held =
+        current !== undefined &&
+        (typeof current.finished === "number"
+          ? now - current.finished < finishedGraceMs
+          : now - current.started < runningClaimMs);
+      if (held) return undefined;
+      const token = `${String(process.pid)}-${String(now)}`;
+      writeFileSync(paths.claim, JSON.stringify({ started: now, token }));
+      return token;
+    });
+    if (claimed.timedOut === true) return open;
+    if (claimed.value === undefined) return { print: false, finish: () => undefined };
+    const finish = () => {
+      try {
+        whileLocked(paths.lock, () => {
+          const current = readClaim(paths.claim);
+          if (current?.token === claimed.value)
+            writeFileSync(paths.claim, JSON.stringify({ ...current, finished: Date.now() }));
+        });
+      } catch {
+        // The claim stays running and lapses after its window.
+      }
+    };
+    return { print: true, finish };
   } catch {
     // No writable temporary directory: print rather than stay silent.
+    return open;
   }
-  return true;
+}
+
+function clip(text, limit) {
+  return text.length <= limit ? text : `${text.slice(0, limit - 1)}…`;
 }
 
 function bounded(text, command) {
@@ -114,29 +172,40 @@ function bounded(text, command) {
   return `${text.slice(0, cut > 0 ? cut : room)}${note}`;
 }
 
+/** The line that says why the runner failed: a refused carrier's own line first. */
+function failureReason(run) {
+  const lines = `${run.error?.message ?? ""}\n${run.stderr ?? ""}`
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "" && !line.startsWith("hint:"))
+    .filter((line) => !line.startsWith("sdp q: this skill comes from"));
+  return (
+    lines.find((line) => /:\d+ — \[error\] /u.test(line)) ??
+    lines.find((line) => /^(\w*Error\b|sdp\b|orient\b)/u.test(line)) ??
+    lines.at(-1) ??
+    `exit ${String(run.status)}`
+  );
+}
+
 function orientation(project) {
   const command = `node ${relative(project.root, project.runner)} --only ${answers}`;
   const failed = (reason) =>
-    `Orientation did not run at session start (${reason}). From ${project.root}: ${command}`;
+    `Orientation did not run at session start (${clip(reason.replace(/\.$/u, ""), maxReason)}). From ${project.root}: ${command}`;
   if (!existsSync(project.runner)) return failed("the package has no orientation runner");
 
-  const run = spawnSync(process.execPath, [project.runner, "--only", answers, "--json"], {
-    cwd: project.root,
-    encoding: "utf8",
-    timeout: 25_000,
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  if (run.error !== undefined || run.status !== 0) {
-    const lines = `${run.error?.message ?? ""}\n${run.stderr ?? ""}`
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line !== "" && !line.startsWith("hint:"));
-    const reason =
-      lines.find((line) => /^(\w*Error\b|sdp\b|orient\b)/u.test(line)) ??
-      lines.at(-1) ??
-      `exit ${String(run.status)}`;
-    return failed(reason.replace(/\.$/u, ""));
-  }
+  // The runner stops its own graph query at the deadline; this timeout only backs it up.
+  const run = spawnSync(
+    process.execPath,
+    [project.runner, "--only", answers, "--json", "--timeout", String(queryTimeoutMs)],
+    {
+      cwd: project.root,
+      encoding: "utf8",
+      timeout: queryTimeoutMs + 3_000,
+      killSignal: "SIGKILL",
+      maxBuffer: 64 * 1024 * 1024,
+    },
+  );
+  if (run.error !== undefined || run.status !== 0) return failed(failureReason(run));
 
   let parsed;
   try {
@@ -168,14 +237,28 @@ function orientation(project) {
   return bounded([header, ...sections].join("\n\n"), command);
 }
 
-process.stdout.on("error", () => {
-  // The client stopped reading; the session starts without this context.
-});
-try {
-  const input = hookInput();
-  const cwd = typeof input.cwd === "string" && input.cwd !== "" ? input.cwd : process.cwd();
-  const project = findProject(resolve(cwd));
-  if (project !== undefined && claimEvent(input)) process.stdout.write(`${orientation(project)}\n`);
-} catch {
-  // Context is optional; the session starts without it.
+function main() {
+  process.stdout.on("error", () => {
+    // The client stopped reading; the session starts without this context.
+  });
+  try {
+    const input = hookInput();
+    const cwd = typeof input.cwd === "string" && input.cwd !== "" ? input.cwd : process.cwd();
+    const project = findProject(resolve(cwd));
+    if (project === undefined) return;
+    const event = claimEvent(input);
+    if (!event.print) return;
+    const text = orientation(project);
+    event.finish();
+    process.stdout.write(`${text}\n`);
+  } catch {
+    // Context is optional; the session starts without it.
+  }
+}
+
+if (
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+) {
+  main();
 }

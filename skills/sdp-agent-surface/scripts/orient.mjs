@@ -2,7 +2,7 @@
 // Runs the orientation queries over one graph derivation and prints each answer under its
 // heading and the line its body teaches, with the pointer to the notes that say how to read it.
 //
-//   node scripts/orient.mjs [--only N[,N]...] [--subjects JSON | @PATH] [--json] [--root PATH | --protocol] [--exclude PATH]...
+//   node scripts/orient.mjs [--only N[,N]...] [--subjects JSON | @PATH] [--json] [--root PATH | --protocol] [--exclude PATH]... [--timeout MS]
 //
 // Each body under orientation/ takes its subject from `params` and derives a default from the
 // graph when none is given, so the queries run in any corpus. In the Protocol source checkout,
@@ -11,6 +11,7 @@
 // A body with a `// Subject:` line takes what the agent arrives with; unless `--subjects` names
 // it, its answer prints shortened, as a demonstration, beside the call that runs it in full.
 // `--json` prints every answer in full. `--protocol` selects the root as the runner does.
+// `--timeout` stops the graph query, and the CLI process that runs it, after that many milliseconds.
 
 import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync, realpathSync } from "node:fs";
@@ -98,11 +99,21 @@ export function compactAnswer(value) {
 }
 
 function parseArguments(args) {
-  const options = { only: undefined, subjects: undefined, json: false, pass: [] };
+  const options = {
+    only: undefined,
+    subjects: undefined,
+    json: false,
+    timeout: undefined,
+    pass: [],
+  };
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === "--json") options.json = true;
-    else if (arg === "--only") options.only = (args[++index] ?? "").split(",").map(Number);
+    else if (arg === "--timeout") {
+      options.timeout = Number(args[++index]);
+      if (!Number.isInteger(options.timeout) || options.timeout <= 0)
+        return { error: "orient: --timeout takes a whole number of milliseconds" };
+    } else if (arg === "--only") options.only = (args[++index] ?? "").split(",").map(Number);
     else if (arg === "--subjects") options.subjects = args[++index];
     else if (arg === "--root" || arg === "--exclude") options.pass.push(arg, args[++index] ?? "");
     else if (arg === "--protocol") options.pass.push(arg);
@@ -156,8 +167,19 @@ function main(args) {
       "--json",
       ...selected.args,
     ]),
-    { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 },
+    {
+      encoding: "utf8",
+      maxBuffer: 256 * 1024 * 1024,
+      timeout: options.timeout,
+      killSignal: "SIGKILL",
+    },
   );
+  if (result.error?.code === "ETIMEDOUT") {
+    console.error(
+      `orient: the graph query did not finish within ${String(options.timeout)} ms and was stopped; run orientation again without --timeout.`,
+    );
+    return 1;
+  }
   if (result.status !== 0) {
     process.stderr.write(result.stderr ?? "");
     process.stdout.write(result.stdout ?? "");
