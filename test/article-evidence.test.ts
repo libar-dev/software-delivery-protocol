@@ -909,6 +909,8 @@ describe("pinned evidence source", () => {
     "missing .git",
     "locked as initializing",
     "missing .git while locked",
+    "missing .git with relative registration",
+    "missing .git after an unrelated ENOTDIR entry",
     "missing directory",
     "never registered",
   ])("cleans up a worktree %s without pruning unrelated registrations", (state) => {
@@ -921,6 +923,7 @@ describe("pinned evidence source", () => {
     try {
       mkdirSync(repo);
       git("init", "-q");
+      git("config", "worktree.useRelativePaths", String(state.includes("relative")));
       git(
         "-c",
         "user.name=Test",
@@ -934,12 +937,18 @@ describe("pinned evidence source", () => {
         "pin",
       );
       // A moved worktree is prunable until repaired, but its index still owns staged work.
-      const original = path.join(temporary, "other");
+      const obstructed = state.includes("ENOTDIR");
+      const parent = path.join(temporary, "broken");
+      const original = obstructed ? path.join(parent, "aaa") : path.join(temporary, "other");
       const moved = path.join(temporary, "moved");
       git("worktree", "add", "-b", "other", original, "HEAD");
       writeFileSync(path.join(original, "staged.txt"), "keep staged contents\n");
       git("-C", original, "add", "staged.txt");
       renameSync(original, moved);
+      if (obstructed) {
+        rmSync(parent, { recursive: true });
+        writeFileSync(parent, "unrelated obstruction\n");
+      }
       const before = git("worktree", "list", "--porcelain");
       expect(before).toContain("prunable");
       // Exercise --git-common-dir from a linked checkout through a path alias.
@@ -949,6 +958,13 @@ describe("pinned evidence source", () => {
       symlinkSync(temporary, alias, "dir");
       if (state !== "never registered") {
         git("worktree", "add", "--detach", source, "HEAD");
+        if (state.includes("relative")) {
+          const gitdir = readFileSync(
+            path.join(repo, ".git/worktrees/source/gitdir"),
+            "utf8",
+          ).trim();
+          expect(path.isAbsolute(gitdir)).toBe(false);
+        }
         if (state.includes("locked")) git("worktree", "lock", "--reason", "initializing", source);
         if (state.startsWith("missing .git")) rmSync(path.join(source, ".git"));
         if (state === "missing directory") rmSync(source, { recursive: true });
@@ -960,6 +976,7 @@ describe("pinned evidence source", () => {
         before.split("\n\n").find((entry) => entry.includes("branch refs/heads/other")),
       );
       expect(after.match(/^worktree /gm)).toHaveLength(3);
+      if (obstructed) expect(readFileSync(parent, "utf8")).toBe("unrelated obstruction\n");
       git("worktree", "repair", moved);
       expect(git("-C", moved, "status", "--short")).toBe("A  staged.txt");
       expect(git("-C", moved, "show", ":staged.txt")).toBe("keep staged contents");
