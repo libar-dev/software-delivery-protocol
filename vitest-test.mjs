@@ -315,8 +315,9 @@ if (resolvedReporting?.coverage?.enabled === true) {
 // as a blob report in a folder of its own and merges them into the reporters and files the run
 // asks for, on the command line or in its configuration. A run writes one when it has an output
 // file, or a reporter with its own output file, or the html or blob reporter, which write to a
-// default path. Vitest merges into any reporter but the blob reporter. A reporter given inline or
-// by path is not known to write a file; when nothing else asks for one, it runs in each pass.
+// default path. JUnit writes one document to stdout when no file is named, so it merges too.
+// Vitest merges into any reporter but the blob reporter. A reporter given inline or by path is not
+// known to write a file; when nothing else asks for one, it runs in each pass.
 const reporters = (resolvedReporting?.reporters ?? []).map((reporter) =>
   Array.isArray(reporter) ? reporter : [reporter, {}],
 );
@@ -325,7 +326,10 @@ const mergesReports =
   (resolvedReporting.outputFile !== undefined ||
     reporters.some(
       ([name, reporterOptions]) =>
-        name === "html" || name === "blob" || reporterOptions?.outputFile !== undefined,
+        name === "html" ||
+        name === "blob" ||
+        name === "junit" ||
+        reporterOptions?.outputFile !== undefined,
     ));
 
 if (mergesReports && reporters.some(([name]) => name === "blob")) {

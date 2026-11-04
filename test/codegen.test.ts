@@ -1,4 +1,5 @@
-import { decodeExampleSpaces } from "../src/notation/example-space.js";
+import { decodeExampleSpaces, reservedThenKeysOf } from "../src/notation/example-space.js";
+import { buildGraphIndex } from "../src/validate/graph-index.js";
 import { Script } from "node:vm";
 import ts from "typescript";
 import { format } from "prettier";
@@ -1179,13 +1180,20 @@ describe("runtime and generation regressions", () => {
     expect(observe).toHaveBeenCalledOnce();
   });
 
-  it("compiles generated names that collide with runtime imports", () => {
-    const generated = generateProbe(
-      "Given ready\nWhen run\nThen done",
-      undefined,
-      "spec:probe.unspecified",
-      "spec:probe.unspecified.runnable-example",
-    );
+  it.each([
+    [
+      "runtime import collisions",
+      () =>
+        generateProbe(
+          "Given ready\nWhen run\nThen done",
+          undefined,
+          "spec:probe.unspecified",
+          "spec:probe.unspecified.runnable-example",
+        ),
+    ],
+    ["shared-key handlers", () => generateProbe("Given ready\nWhen ready\nThen done")],
+  ])("compiles generated modules for %s", (_name, makeGenerated) => {
+    const generated = makeGenerated();
     expect(generated.files.size).toBe(2);
     expect(generated.registrars.size).toBe(1);
     const sources = new Map([
@@ -1269,6 +1277,36 @@ describe("reserved Then contract key unspecified", () => {
       },
     );
   }
+
+  it("does not re-read a shared parent vocabulary for every child", () => {
+    const graph = deriveFixtureGraph({
+      specs: [
+        parent(VOCABULARY),
+        ...Array.from({ length: 25 }, (_, i) => child(BOUND_GWT, `spec:probe.member-${String(i)}`)),
+      ],
+    });
+    let parentSectionsReads = 0;
+    const measured = {
+      ...graph,
+      nodes: graph.nodes.map((node) =>
+        node.id === "spec:orders.create-order"
+          ? new Proxy(node, {
+              get(target, key, receiver) {
+                if (key === "sections") parentSectionsReads += 1;
+                return Reflect.get(target, key, receiver) as unknown;
+              },
+            })
+          : node,
+      ),
+    };
+
+    const index = buildGraphIndex(measured);
+    for (const node of measured.nodes) {
+      if (node.nodeType === "Primitive") reservedThenKeysOf(node, index);
+    }
+
+    expect(parentSectionsReads).toBeLessThan(15);
+  });
 
   it.each([false, true])(
     "uses the first matching parent in id order when the reserved key comes first: %s",

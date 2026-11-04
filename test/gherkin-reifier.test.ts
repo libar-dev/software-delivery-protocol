@@ -522,6 +522,7 @@ Feature: Multiple findings
       `Gherkin tag "${tag}" is refused: ${reason}; delivery facts, claims, and lifecycle state are never authored by the carrier`,
     );
     expect(found?.line).toBe(1);
+    expect(found?.subjectId).toBe("spec:probe.parent");
   });
 
   it.each([
@@ -826,6 +827,9 @@ Feature: Probe feature
       ["Example title", "Probe example", 10, "spec:probe.child"],
       ["space title", "Space title", 6, "spec:probe.parent"],
       ["Rule title", "Rule title", 14, "spec:probe.parent"],
+      ["Feature tag", FEATURE_TAGS, 1, "spec:probe.parent"],
+      ["Scenario tag", SCENARIO_TAGS, 9, "spec:probe.child"],
+      ["space tag", "@example-space", 5, "spec:probe.parent"],
       ["ordinary step", "ordinary text", 11, "spec:probe.child"],
       ["conjunction step", "continued text", 12, "spec:probe.child"],
       ["space step", "space text", 7, "spec:probe.parent"],
@@ -836,7 +840,8 @@ Feature: Probe feature
           : source;
       for (const ending of ["\n", "\r\n"]) {
         expect(reify(original.replaceAll("\n", ending)).findings).toEqual([]);
-        for (const suffix of ["Then hidden text", ""]) {
+        const suffixes = _site.endsWith(" tag") ? [""] : ["Then hidden text", ""];
+        for (const suffix of suffixes) {
           const input = original
             .replaceAll("\n", ending)
             .replace(text, `${text}${separator}${suffix}`);

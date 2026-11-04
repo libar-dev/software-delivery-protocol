@@ -134,6 +134,10 @@ export function isSourceFileName(name: string): boolean {
  * dot-files, so a dot-named file link can hide a carrier while a dot-named directory link cannot.
  */
 export function isWarnedSymbolicLink(absolutePath: string, name: string): boolean {
+  if (isExcludedDiscoveryDirectory(name) && !isSpecFileName(name) && !isSourceFileName(name)) {
+    return false;
+  }
+
   return isDirectoryLink(absolutePath)
     ? !isExcludedDiscoveryDirectory(name)
     : isSpecFileName(name) || isSourceFileName(name);

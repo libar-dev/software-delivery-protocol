@@ -823,6 +823,7 @@ describe("query body positions and merged parameters", () => {
   it.each([
     ["return 1;\n})\n;(function(){", 2, 1],
     ["const a = 1;\r\n  return a; })\n(function(){", 2, 13],
+    ["const a = g.specs();\nreturn a; }", 2, 11],
   ])(
     "locates the brace of a body that closes its function early %j",
     async (body, line, column) => {

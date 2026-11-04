@@ -62,9 +62,9 @@ reviewing families:
 
 - **Final verification.** A holistic cross-family review of the integrated branches, an audit of
   every finding against its commit and proof test, and a sweep of the lanes' own reports: 54
-  items, 42 confirmed. Five lanes fixed them, four here and one on PR #34's branch.
+  items, 42 confirmed. Five lanes fixed them, W1 through W4 here and W5 on PR #34's branch.
 - **Closing review.** The same review over the third round's diffs alone: 16 items, all
-  confirmed. Four lanes fixed them, three here and one on PR #34's branch.
+  confirmed. Four lanes fixed them, V1 through V3 here and V4 on PR #34's branch.
 
 PR #38's branch was then merged in (`merge: the whole-repository review from PR #38`), so this
 pull request carries the whole-repository review, the execution of its findings (PR #39's

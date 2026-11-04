@@ -649,7 +649,9 @@ function parseMetadataTags(
     }
 
     const refusedDecoration = decorationTagFinding(tag, file);
-    if (refusedDecoration !== undefined) appendFinding(collector, refusedDecoration, file);
+    if (refusedDecoration !== undefined) {
+      appendFinding(collector, { ...refusedDecoration, subjectId: id }, file);
+    }
   }
 
   if (idTags === 0) {
@@ -984,6 +986,7 @@ function parseExampleSpaceScenario(
     file,
     subjectId,
   );
+  checkTagLines(scenario.tags, sourceIndex, "@example-space tag", collector, file, subjectId);
   let markerCount = 0;
   for (const tag of scenario.tags) {
     if (tag.name === "@example-space") {
@@ -1083,6 +1086,7 @@ function parseRule(
 ): string | undefined {
   const findingCount = collector.findingCount;
   checkTitleOrStepLine(sourceIndex, rule.location.line, "Rule title", collector, file, subjectId);
+  checkTagLines(rule.tags, sourceIndex, "Rule tag", collector, file, subjectId);
   for (const tag of rule.tags) {
     appendFinding(
       collector,
@@ -1137,6 +1141,7 @@ function reifyOrdinaryScenario(
     "Scenario",
     collector,
   );
+  checkTagLines(scenario.tags, sourceIndex, "Scenario tag", collector, file, metadata.id);
   checkTitleOrStepLine(
     sourceIndex,
     scenario.location.line,
@@ -1252,9 +1257,9 @@ function reifyOrdinaryScenario(
 }
 
 /**
- * Read the physical line: the Gherkin parser trims trailing separators from names and steps. The
- * refusal names the Spec that owns the line, as its sibling refusals do: a Scenario's own id, or the
- * Feature's id for the Feature, a Rule and the `@example-space` pseudo-scenario.
+ * Read the physical line: the Gherkin parser trims trailing separators from names, steps and tags.
+ * The refusal names the Spec that owns the line, as its sibling refusals do: a Scenario's own id, or
+ * the Feature's id for the Feature, a Rule and the `@example-space` pseudo-scenario.
  */
 function checkTitleOrStepLine(
   sourceIndex: GherkinSourceIndex,
@@ -1275,6 +1280,19 @@ function checkTitleOrStepLine(
     ),
     file,
   );
+}
+
+function checkTagLines(
+  tags: readonly Tag[],
+  sourceIndex: GherkinSourceIndex,
+  construct: string,
+  collector: GherkinFindingCollector,
+  file: string,
+  subjectId: string | undefined,
+): void {
+  for (const line of new Set(tags.map((tag) => tag.location.line))) {
+    checkTitleOrStepLine(sourceIndex, line, construct, collector, file, subjectId);
+  }
 }
 
 function reifyFeature(
@@ -1304,6 +1322,7 @@ function reifyFeature(
     "Feature",
     collector,
   );
+  checkTagLines(feature.tags, sourceIndex, "Feature tag", collector, file, metadata.id);
   checkTitleOrStepLine(
     sourceIndex,
     feature.location.line,

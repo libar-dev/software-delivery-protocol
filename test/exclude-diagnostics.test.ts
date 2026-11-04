@@ -1,12 +1,25 @@
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { extract } from "../src/extract/index.js";
 
 import { discoverFiles, normalizeExcludes } from "../src/extract/discover.js";
+
+vi.mock("node:fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs")>();
+  return { ...actual, statSync: vi.fn(actual.statSync) };
+});
 
 const temporaryRoots: string[] = [];
 
@@ -21,6 +34,26 @@ describe("exclusion diagnostics", () => {
     for (const root of temporaryRoots.splice(0)) {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+
+  it("does not stat excluded link targets that cannot hide a carrier or anchor", () => {
+    const workspace = temporaryRoot();
+    const root = join(workspace, "corpus");
+    const outside = join(workspace, "outside");
+    mkdirSync(root);
+    mkdirSync(outside);
+    for (const name of ["node_modules", "dist", "generated", "coverage", ".hidden"]) {
+      symlinkSync(outside, join(root, name), "dir");
+    }
+    const stat = vi.mocked(statSync);
+    stat.mockClear();
+
+    expect(discoverFiles(root).skippedLinks).toEqual([]);
+    expect(stat).not.toHaveBeenCalled();
+
+    symlinkSync(join(outside, "missing"), join(root, "linked.sdp.md"));
+    expect(discoverFiles(root).skippedLinks).toEqual(["linked.sdp.md"]);
+    expect(stat).toHaveBeenCalledTimes(1);
   });
 
   it("names skipped candidate links while resolving an explicitly linked root", () => {

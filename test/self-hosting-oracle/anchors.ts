@@ -3504,7 +3504,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "impl:protocol.authored-honesty-shape",
     nodeType: "CodeNode",
-    label: "refuses derived properties smuggled through authored section carriers",
+    label: "refuses derived properties smuggled through authored envelopes and section carriers",
     file: "src/validate/validators.ts",
     constant: "authoringShapeAnchor",
     site: "function checkAuthoringShape",

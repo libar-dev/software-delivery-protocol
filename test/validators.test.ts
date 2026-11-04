@@ -876,6 +876,50 @@ describe("graph validators", () => {
     },
   );
 
+  it("refuses reserved properties on foreign graph Spec and Pack envelopes while keeping derived node fields", () => {
+    const names = [
+      "IMPLEMENTED",
+      "hasVerifier",
+      "Observed",
+      "satisfies",
+      "verifies",
+      "belongsTo",
+      "models",
+    ];
+    const extras = Object.fromEntries(names.map((name) => [name, true]));
+    const primitive = {
+      ...ideaPrimitive("spec:probe.envelope", "Keep facts derived."),
+      ...extras,
+    };
+    const pack = {
+      id: "pack:probe.envelope",
+      nodeType: "Pack",
+      claim: "declared",
+      title: "Probe aggregate",
+      members: [],
+      file: "specs/probe.pack.sdp.md",
+      ...extras,
+      deliveryFacts: ["implemented"],
+      specKind: "behavior",
+    } as unknown as GraphNode;
+
+    const findingsFor = (node: GraphNode) =>
+      validateGraph(syntheticGraph([node], [])).findings.filter(
+        (finding) => finding.validatorId === graphValidatorIds.authoringShape,
+      );
+
+    expect(
+      findingsFor(primitive)
+        .map((finding) => finding.path)
+        .sort(),
+    ).toEqual([...names].sort());
+    expect(
+      findingsFor(pack)
+        .map((finding) => finding.path)
+        .sort(),
+    ).toEqual([...names, "deliveryFacts", "specKind"].sort());
+  });
+
   it("fails closed on unratified descriptor values — a conformance error, never a crash or a silent floor skip", () => {
     const bogusKind = {
       ...ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order."),

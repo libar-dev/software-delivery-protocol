@@ -886,6 +886,27 @@ describe("the test wrapper over real Vitest", () => {
     120_000,
   );
 
+  it("writes one JUnit document to stdout when no output file is named", () => {
+    const { root, environment } = realVitestRoot();
+    const result = spawnSync(
+      process.execPath,
+      [join(repoRoot, "vitest-test.mjs"), "--reporter=junit"],
+      {
+        cwd: root,
+        encoding: "utf8",
+        env: environment,
+      },
+    );
+
+    expect(result.status, result.stderr).toBe(0);
+    const ran = ["cli alpha", "cli beta", "other gamma"];
+    expect(readFileSync(join(root, "ran.log"), "utf8").trim().split("\n").sort()).toEqual(ran);
+    expect([...result.stdout.matchAll(/<\?xml\b/gu)]).toHaveLength(1);
+    expect(
+      [...result.stdout.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort(),
+    ).toEqual(ran);
+  }, 120_000);
+
   it.each([[["--config", "custom.config.mjs"]], [["-c", "custom.config.mjs"]]])(
     "merges both passes with the configuration file %j they ran with",
     (configuration) => {

@@ -71,6 +71,16 @@ function diagnoseRefusal(source: string, refusal: unknown): BodyParseError {
   const lastLine = lines.length;
   const pastEnd = (message: string) =>
     new BodyParseError(lastLine, (lines[lastLine - 1]?.length ?? 0) + 1, message);
+  const closingEarly = (): BodyParseError | undefined => {
+    const brace = closingBrace(wrapper) - wrapperHead.length;
+    if (brace < 0 || brace >= source.length) return undefined;
+    const { line, column } = bodyPosition(source, brace);
+    return new BodyParseError(
+      line,
+      column,
+      "this brace closes the function the body runs in, before the body ends",
+    );
+  };
 
   try {
     new Script(wrapper, { filename: bodyFile });
@@ -81,9 +91,11 @@ function diagnoseRefusal(source: string, refusal: unknown): BodyParseError {
     const lineMatch = /^sdp-q-body:(\d+)/u.exec(stack);
     const caret = /^sdp-q-body:\d+\n[^\n]*\n([^\n^]*)\^/u.exec(stack);
     const wrapperLine = Number(lineMatch?.[1] ?? 2);
-    // An error on the wrapper's closing line means the body stopped short; the engine would
-    // name the wrapper's own brace, a token the caller never wrote.
-    if (wrapperLine - 1 > lastLine) return pastEnd("the body ends before it is complete");
+    // An error on the wrapper's closing line means the body stopped short or closed the wrapper
+    // early; never name the wrapper's own brace, a token the caller never wrote.
+    if (wrapperLine - 1 > lastLine) {
+      return closingEarly() ?? pastEnd("the body ends before it is complete");
+    }
     const line = Math.max(1, wrapperLine - 1);
     const caretColumn = caret?.[1] === undefined ? undefined : caret[1].length + 1;
     const column =
@@ -93,14 +105,7 @@ function diagnoseRefusal(source: string, refusal: unknown): BodyParseError {
 
   // The wrapper compiles while the constructor refused: the body closed the function it runs in
   // and went on outside it, which the constructor's single-function check refuses.
-  const brace = closingBrace(wrapper) - wrapperHead.length;
-  if (brace < 0 || brace >= source.length) return pastEnd(oneLine(errorMessage(refusal)));
-  const { line, column } = bodyPosition(source, brace);
-  return new BodyParseError(
-    line,
-    column,
-    "this brace closes the function the body runs in, before the body ends",
-  );
+  return closingEarly() ?? pastEnd(oneLine(errorMessage(refusal)));
 }
 
 /**
@@ -134,7 +139,7 @@ function engineColumn(wrapper: string, wrapperLine: number): number | undefined 
   return column;
 }
 
-/** The offset of the brace that closes the wrapper's function, read from a parse of valid source. */
+/** The offset of the brace that closes the wrapper's function, read from its recoverable parse. */
 function closingBrace(wrapper: string): number {
   const file = ts.createSourceFile(
     `${bodyFile}.js`,

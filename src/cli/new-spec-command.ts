@@ -443,7 +443,15 @@ export function runNewSpec(
         throw new Error(`${component} lies outside it once entered`);
     }
   } catch (error) {
-    process.chdir(restoreCwd);
+    try {
+      process.chdir(restoreCwd);
+    } catch {
+      try {
+        process.chdir(cwdReal);
+      } catch {
+        // Both restore targets vanished concurrently; the original refusal still applies.
+      }
+    }
     refuse(
       output,
       `PATH cannot be resolved inside the current working directory: ${errorMessage(error)}`,

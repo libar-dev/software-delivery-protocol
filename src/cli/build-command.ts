@@ -211,7 +211,15 @@ function confinedRegistrarPath(
         throw new Error(`unsafe registrar sibling path "${path}" escapes the extraction root`);
       }
     } finally {
-      process.chdir(restoreCwd);
+      try {
+        process.chdir(restoreCwd);
+      } catch {
+        try {
+          process.chdir(rootReal);
+        } catch {
+          // Both restore targets vanished concurrently; the build's own result still applies.
+        }
+      }
     }
   }
 

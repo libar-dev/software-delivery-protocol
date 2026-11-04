@@ -224,7 +224,10 @@ describe("validate watch filesystem source", () => {
         "spec:tmp.removed-directory",
       );
 
+      const removed = native.subscriptions.get(join(root, "specs"));
       rmSync(join(root, "specs"), { recursive: true });
+      removed?.errorListener?.(errno("EPERM"));
+      removed?.errorListener?.(errno("EIO"));
       native.subscriptions.get(root)?.listener("rename", "specs");
 
       expect(await bounded(secondCycle, "directory removal rerun")).toEqual({

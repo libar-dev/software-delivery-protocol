@@ -1561,22 +1561,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 /**
  * The layer split: extraction hard-errors on derived graph vocabulary at the *top level* of a
- * spec/pack call (`extract/reserved-property`) before derivation; this check owns *section
- * interiors* — the path `tsc` never closes (a non-fresh literal, a defused corpus, a foreign
- * graph producer). The scan covers carrier-level keys only (the section record and its array
- * entries): nested content stays content — a vocabulary may legitimately name a term
- * "implemented".
+ * spec/pack call (`extract/reserved-property`) before derivation; this check applies the same rule
+ * to a foreign graph's Spec and Pack envelopes and section interiors. Typed graph identity fields
+ * and a Primitive's derived deliveryFacts stay graph output. Nested content stays content: a
+ * vocabulary may legitimately name a term "implemented".
  */
 const authoringShapeAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authored-honesty-shape"),
-  label: "refuses derived properties smuggled through authored section carriers",
+  label: "refuses derived properties smuggled through authored envelopes and section carriers",
   satisfies: ref("spec:validation.authored-honesty"),
   component: componentAnchorId("component:protocol.validate"),
   role: "validator",
 });
 void authoringShapeAnchor;
 
-function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
+function checkAuthoringShape(node: PrimitiveNode | PackNode, findings: Finding[]): void {
   const appendSmuggledFact = (name: string, path: string): void => {
     const factName = deliveryFactName(name);
     findings.push(
@@ -1606,11 +1605,16 @@ function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
     }
   };
 
-  const sections = node.sections as Record<string, unknown> | undefined;
-
-  if (sections === undefined) {
-    return;
+  for (const name of Object.keys(node)) {
+    if (name === "claim" || name === "nodeType") continue;
+    if (node.nodeType === "Primitive" && (name === "specKind" || name === "deliveryFacts")) {
+      continue;
+    }
+    if (isReservedDerivedProperty(name)) appendSmuggledFact(name, name);
   }
+
+  if (node.nodeType !== "Primitive" || node.sections === undefined) return;
+  const sections = node.sections as Record<string, unknown>;
 
   for (const sectionName of SPEC_SECTION_NAMES) {
     const section = sections[sectionName];
@@ -1981,7 +1985,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
   const authoringShapeFindings: Finding[] = [];
 
   for (const node of graph.nodes) {
-    if (node.nodeType === "Primitive") {
+    if (node.nodeType === "Primitive" || node.nodeType === "Pack") {
       checkAuthoringShape(node, authoringShapeFindings);
     }
   }

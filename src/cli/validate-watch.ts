@@ -697,6 +697,16 @@ function createFilesystemWatchSource(input: {
     }
 
     handle.on("error", (error) => {
+      if (closed || watchers.get(absoluteDirectory) !== handle) {
+        return;
+      }
+
+      const code = (error as NodeJS.ErrnoException).code;
+      if (absoluteDirectory !== input.root && (code === "EPERM" || code === "EACCES")) {
+        reconcileDirectory(absoluteDirectory, relativeDirectory);
+        return;
+      }
+
       fail(error);
     });
     watchers.set(absoluteDirectory, handle);

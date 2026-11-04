@@ -761,6 +761,24 @@ describe("sdp new spec containment checkpoints", () => {
     }
   });
 
+  it("refuses when the original working directory vanishes during parent creation", () => {
+    const result = scaffoldIn("specs/nested/probe.sdp.md", ({ root }) => ({
+      onScaffoldCheckpoint: (checkpoint, name) => {
+        if (checkpoint === "enter" && name === "specs") {
+          rmSync(root, { recursive: true, force: true });
+        }
+      },
+    }));
+    try {
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain(
+        "PATH cannot be resolved inside the current working directory",
+      );
+    } finally {
+      cleanup(result);
+    }
+  });
+
   it("refuses before the write when the held parent moved out after the last parent check", () => {
     let reachedWrite = false;
     const result = scaffoldIn("specs/probe.sdp.md", ({ root, moved }) => ({

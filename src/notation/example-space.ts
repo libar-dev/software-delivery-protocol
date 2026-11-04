@@ -107,6 +107,11 @@ export function reservedThenSlotsOf(
   );
 }
 
+const reservedKeyVocabularies = new WeakMap<
+  GraphIndex,
+  Map<string, readonly VocabularyEntry[] | undefined>
+>();
+
 /** The coverage-gap outcome cannot also identify an authored Then. */
 export function reservedThenKeysOf(
   node: PrimitiveNode,
@@ -115,6 +120,12 @@ export function reservedThenKeysOf(
   const steps = thenStepsOf(node);
   if (steps.length === 0) return [];
 
+  let vocabularies = reservedKeyVocabularies.get(index);
+  if (vocabularies === undefined) {
+    vocabularies = new Map();
+    reservedKeyVocabularies.set(index, vocabularies);
+  }
+
   // Both callers already index the graph. Inspect only this Spec's declared parents, in the
   // same code-unit order codegen uses to resolve a step against multiple vocabularies.
   const parents = (index.edgesByFrom.get(node.id) ?? [])
@@ -122,8 +133,12 @@ export function reservedThenKeysOf(
     .map((edge) => edge.to)
     .sort()
     .flatMap((id) => {
+      const cached = vocabularies.get(id);
+      if (cached !== undefined || vocabularies.has(id)) return [cached ?? []];
       const parent = index.primitivesById.get(id);
-      return parent === undefined ? [] : [vocabularyOf(parent, []) ?? []];
+      const vocabulary = parent === undefined ? undefined : vocabularyOf(parent, []);
+      vocabularies.set(id, vocabulary);
+      return [vocabulary ?? []];
     });
   return steps.filter(({ text, path }) => {
     const skeleton = stepSkeleton(text);

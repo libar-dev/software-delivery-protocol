@@ -453,7 +453,7 @@ const inlineTag = new RegExp(
   `<(?:[A-Za-z][A-Za-z0-9-]*(?:${inlineAttribute})*${tagSpace}*/?|/[A-Za-z][A-Za-z0-9-]*${tagSpace}*)>`,
   "uy",
 );
-const inlineComment = /<!--(?:>|->|(?:[^-]|-[^-]|--[^>])*-->)/uy;
+const inlineComment = /<!--(?:>|->|(?:[^-]|-[^-]|--(?![>!]>))*(?:-->|--!>))/uy;
 const inlineCdata = /<!\[CDATA\[(?:[^\]]|\][^\]]|\]\][^>])*\]\]>/uy;
 const inlineDeclaration = new RegExp(`<![A-Z]+${tagSpace}+[^>]*>`, "uy");
 const inlineInstruction = /<\?(?:[^?>]|\?[^>]|>)*\?>/uy;
@@ -969,8 +969,8 @@ export function markdownAnchors(markdown: string): ReadonlySet<string> {
   const scopes = scopesOf(markdown);
   const labels = new Set(
     scopes
-      .filter((scope) => scope.kind === "paragraph")
-      .flatMap((scope) => definitionsAt(scopeText(scope)).definitions)
+      .filter((scope) => scope.kind !== "html")
+      .flatMap((scope) => definitionsAt(scopeText(scope).trimStart()).definitions)
       .map((definition) => labelKey(definition.label)),
   );
   // Headings number their repeats among themselves; an HTML anchor takes no heading's place.
