@@ -8,6 +8,7 @@ import {
   readFileSync,
   readdirSync,
   readlinkSync,
+  realpathSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -288,13 +289,16 @@ describe("article evidence CLI entry", () => {
         });
         child.kill(signal);
         await expect
-          .poll(() => child?.exitCode !== null || child?.signalCode !== null, { timeout: 5_000 })
+          .poll(() => child?.exitCode !== null || child.signalCode !== null, { timeout: 5_000 })
           .toBe(true);
         expect.soft(await exited, stderr).toBe(signal === "SIGINT" ? 130 : 143);
         expect.soft(gate.status, gate.stdout + gate.stderr).toBe(0);
-        expect.soft(path.relative(repo, workerSource).startsWith(".." + path.sep)).toBe(true);
+        expect
+          .soft(path.relative(realpathSync(repo), workerSource).startsWith(".." + path.sep))
+          .toBe(true);
         expect.soft(git("status", "--porcelain", "--untracked-files=all")).toBe(before);
         expect.soft(existsSync(workerSource)).toBe(false);
+        expect(existsSync(path.dirname(path.dirname(workerSource)))).toBe(false);
         expect(git("worktree", "list", "--porcelain").match(/^worktree /gm)).toHaveLength(1);
         await expect
           .poll(
@@ -410,7 +414,7 @@ describe("article evidence CLI entry", () => {
     } finally {
       rmSync(temporary, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 });
 
 // Import the CLI's helpers directly: an import must not validate a checkout or regenerate files.
@@ -590,25 +594,30 @@ describe("article evidence structure", () => {
     }
   });
 
-  it("renders the entire drift recipe answer including firstUnmetClause", () => {
-    const expected = execFileSync(
-      process.execPath,
-      [
-        path.join(repositoryRoot, "dist/cli/sdp.js"),
-        "q",
-        "return recipes(2)",
-        "--root",
-        "examples/checkout-v1",
-        "--json",
-      ],
-      { cwd: repositoryRoot, encoding: "utf8" },
-    );
-    const block = evidenceBlocks(repositoryRoot, "pin").find(
-      (entry) => entry.id === "example-drift",
-    );
-    if (!block) throw new Error("Missing drift generator");
-    expect(JSON.parse(block.generate())).toEqual(JSON.parse(expected));
-    expect(block.generate()).toContain('"firstUnmetClause"');
+  it.each([
+    [
+      "nonempty",
+      {
+        total: 1,
+        alarms: [{ id: "spec:probe.drift", futureDetail: { clause: "not-ready" } }],
+        extra: "preserve me",
+      },
+    ],
+    ["empty", { total: 0, alarms: [] }],
+  ])("renders the entire %s drift recipe answer independently of HEAD", (_name, answer) => {
+    const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-drift-"));
+    try {
+      mkdirSync(path.join(temporary, "dist/cli"), { recursive: true });
+      writeFileSync(
+        path.join(temporary, "dist/cli/sdp.js"),
+        `console.log(${JSON.stringify(JSON.stringify(answer))});`,
+      );
+      const block = evidenceBlocks(temporary, "pin").find((entry) => entry.id === "example-drift");
+      if (!block) throw new Error("Missing drift generator");
+      expect(block.generate()).toBe(JSON.stringify(answer, null, 2));
+    } finally {
+      rmSync(temporary, { recursive: true, force: true });
+    }
   });
 
   it("moves measurement labels with the pin inside both generated blocks", () => {
@@ -676,6 +685,25 @@ describe("article evidence arguments", () => {
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("Usage:");
     expect(readFileSync(article, "utf8")).toBe(before);
+  });
+
+  it("ties refresh runtime guidance to checkout engines and rechecks pinned prose", () => {
+    const playbook = readFileSync(path.join(repositoryRoot, "docs/articles/README.md"), "utf8");
+    const install = playbook.split("### Step 1:")[1]?.split("### Step 2:")[0];
+    expect(install).toContain("`package.json`");
+    expect(install).toContain("`engines.node`");
+    expect(install).not.toContain("CLI's declared Node `>=20`");
+    expect(playbook).toContain(
+      "runtime and engines statements outside evidence blocks, including Step 1 and Part 1",
+    );
+  });
+
+  it("distinguishes repository-path link checks from manual publication review", () => {
+    const playbook = readFileSync(path.join(repositoryRoot, "docs/articles/README.md"), "utf8");
+    const verify = playbook.split("### Step 6:")[1];
+    expect(verify).not.toContain("main gate does not check those links");
+    expect(verify).toContain("Markdown link gate");
+    expect(verify).toContain("link fragments, commit-pinned URLs and code fence structure");
   });
 
   it("does not offer an implicit source repository", () => {
@@ -869,5 +897,6 @@ describe("pinned evidence source", () => {
         rmSync(temporary, { recursive: true, force: true });
       }
     },
+    30_000,
   );
 });

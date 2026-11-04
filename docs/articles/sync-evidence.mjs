@@ -43,7 +43,8 @@ export function evidenceMarkers(original, file) {
       const run = delimiter[1];
       const rest = line.slice(delimiter[0].length);
       if (!fence) fence = run;
-      else if (run[0] === fence[0] && run.length >= fence.length && /^[ \t]*\r?$/.test(rest)) fence = undefined;
+      else if (run[0] === fence[0] && run.length >= fence.length && /^[ \t]*\r?$/.test(rest))
+        fence = undefined;
     }
     offset += line.length + 1;
   }
@@ -470,7 +471,8 @@ async function supervise(repository) {
       child.once("error", reject);
       child.once("close", (code) => resolve(code));
     });
-    process.exitCode = interrupted === "SIGINT" ? 130 : interrupted === "SIGTERM" ? 143 : (code ?? 1);
+    process.exitCode =
+      interrupted === "SIGINT" ? 130 : interrupted === "SIGTERM" ? 143 : (code ?? 1);
   } finally {
     try {
       // A killed worker cannot run its finally. Remove only this invocation's
@@ -478,7 +480,9 @@ async function supervise(repository) {
       for (const name of readdirSync(temporary)) {
         const source = path.join(temporary, name, "source");
         if (existsSync(source)) {
-          execFileSync("git", ["-C", repository, "worktree", "remove", "--force", source], { stdio: "pipe" });
+          execFileSync("git", ["-C", repository, "worktree", "remove", "--force", source], {
+            stdio: "pipe",
+          });
         }
       }
       rmSync(temporary, { recursive: true, force: true });
