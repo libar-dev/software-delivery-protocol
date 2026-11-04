@@ -3,12 +3,14 @@
 // invokes a bare `sdp` (macOS ships an unrelated binary of that name) or `pnpm exec sdp` in the
 // Protocol checkout (the package does not link its own binary there).
 //
-//   node scripts/q.mjs '<body>' [--params JSON | @PATH | KEY=@PATH]... [--json] [--root PATH] [--exclude PATH]...
+//   node scripts/q.mjs '<body>' [--params JSON | @PATH | KEY=@PATH]... [--json] [--root PATH | --protocol] [--exclude PATH]...
 //
 // In the Protocol source checkout it runs the built CLI with the checkout's fixture exclusions
 // whenever the corpus is the checkout itself, a --root that resolves to it included; a --root
 // naming another corpus gets none. Anywhere else it runs the project's installed
-// @libar-dev/software-delivery-protocol. Arguments pass through to `sdp q` unchanged.
+// @libar-dev/software-delivery-protocol. Arguments pass through to `sdp q` unchanged, except
+// --protocol, which selects the root holding the Protocol's own Specs: the checkout's root, with
+// its exclusions and bindings, or the installed package's specs/, which holds intent only.
 
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
@@ -83,6 +85,32 @@ export function namedRoot(args) {
 }
 
 /**
+ * Turns `--protocol` into the `--root` that holds the Protocol's own Specs: the source checkout's
+ * root, where the checkout's exclusions then apply, or `<package root>/specs` in a project. It
+ * selects the root and nothing else, so it refuses beside `--root`. Returns `{ args }` or
+ * `{ error }`.
+ */
+export function protocolArguments(runtime, args) {
+  const rest = [];
+  let protocol = false;
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--protocol") {
+      protocol = true;
+      continue;
+    }
+    rest.push(arg);
+    if (["--params", "--exclude", "--root"].includes(arg) && index + 1 < args.length)
+      rest.push(args[++index]);
+  }
+  if (!protocol) return { args: rest };
+  if (namedRoot(rest) !== undefined)
+    return { error: "sdp q: --protocol selects the root; pass --protocol or --root, not both." };
+  const root = runtime.mode === "source" ? runtime.packageRoot : join(runtime.packageRoot, "specs");
+  return { args: [...rest, "--root", root] };
+}
+
+/**
  * Whether the query reads the runtime's own package root: no root named, or a root that resolves,
  * against `cwd`, to the same directory. Only then do the source checkout's exclusions apply.
  */
@@ -135,7 +163,14 @@ function main(args) {
   }
   const warning = skewWarning(runtime);
   if (warning !== undefined) console.error(warning);
-  const result = spawnSync(process.execPath, queryArguments(runtime, args), { stdio: "inherit" });
+  const selected = protocolArguments(runtime, args);
+  if ("error" in selected) {
+    console.error(selected.error);
+    return 2;
+  }
+  const result = spawnSync(process.execPath, queryArguments(runtime, selected.args), {
+    stdio: "inherit",
+  });
   if (result.error !== undefined) {
     console.error(`sdp q: ${result.error.message}`);
     return 1;

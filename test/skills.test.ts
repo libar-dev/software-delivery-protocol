@@ -958,6 +958,7 @@ describe("the graph-reading on-ramp", () => {
       const answers = JSON.parse(run.stdout) as {
         number: number;
         title: string;
+        teaches: string;
         notes: string;
         error?: string;
       }[];
@@ -969,11 +970,99 @@ describe("the graph-reading on-ramp", () => {
           number: answer.number,
           error: undefined,
         });
+        expect(answer.teaches.length).toBeGreaterThan(0);
         expect(answer.notes).toBe(
           `references/orientation.md#${slug(`${String(answer.number)}. ${answer.title}`)}`,
         );
       }
     }
+  }, 120_000);
+
+  it("prints what each query teaches and shortens an arrival query unless its subject is given", async () => {
+    const script = join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs");
+    const orient = (await import(pathToFileURL(script).href)) as {
+      orientationQueries: () => {
+        number: number;
+        title: string;
+        teaches: string;
+        subject?: string;
+      }[];
+    };
+    const queries = orient.orientationQueries();
+    // The arrival queries take what an agent arrives with: a word, a file, a Spec, an address.
+    expect(
+      queries.filter((query) => query.subject !== undefined).map((query) => query.number),
+    ).toEqual([8, 9, 10, 11]);
+    const section = (stdout: string, number: number) =>
+      stdout.split(/^## /mu).find((part) => part.startsWith(`${String(number)}. `)) ?? "";
+    const run = (args: readonly string[]) =>
+      spawnSync(process.execPath, [script, "--only", "4,10", ...args], {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+
+    const demonstration = run([]);
+    expect(demonstration.status, demonstration.stderr).toBe(0);
+    for (const query of queries.filter((candidate) => [4, 10].includes(candidate.number))) {
+      expect(section(demonstration.stdout, query.number)).toContain(
+        `${String(query.number)}. ${query.title}\nTeaches: ${query.teaches}\n`,
+      );
+    }
+    expect(section(demonstration.stdout, 4)).not.toContain("A shortened demonstration");
+    const shortened = section(demonstration.stdout, 10);
+    expect(shortened).toMatch(/'… \d+ more'/u);
+    expect(shortened).toContain(`--only 10 --subjects '{"10":{"specs":["<a Spec id>"]}}'`);
+
+    // Given its subject, the query answers in full: every rule of the Spec, none counted away.
+    const full = run(["--subjects", '{"10":{"specs":["spec:consumers.agent-surface"]}}']);
+    expect(full.status, full.stderr).toBe(0);
+    const rules = readFileSync(join(repoRoot, "specs/consumers/agent-surface.sdp.md"), "utf8")
+      .split("\n")
+      .filter((line) => line.startsWith("- rule: "));
+    expect(rules.length).toBeGreaterThan(1);
+    expect(section(full.stdout, 10)).not.toContain("A shortened demonstration");
+    expect(section(full.stdout, 10).match(/'line \d+ /gu)).toHaveLength(rules.length);
+  }, 120_000);
+
+  it("selects the Protocol's own Specs with --protocol, and only the root", async () => {
+    const runner = (await import(
+      pathToFileURL(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs")).href
+    )) as {
+      protocolArguments: (
+        runtime: { mode: string; packageRoot: string },
+        args: readonly string[],
+      ) => { args: string[] } | { error: string };
+    };
+    const source = { mode: "source", packageRoot: repoRoot };
+    const project = { mode: "adopter", packageRoot: "/project/node_modules/@libar-dev/sdp" };
+
+    expect(runner.protocolArguments(source, ["return 1", "--protocol", "--json"])).toEqual({
+      args: ["return 1", "--json", "--root", repoRoot],
+    });
+    expect(runner.protocolArguments(project, ["return 1", "--protocol"])).toEqual({
+      args: ["return 1", "--root", join(project.packageRoot, "specs")],
+    });
+    expect(runner.protocolArguments(source, ["return 1", "--params", "--protocol"])).toEqual({
+      args: ["return 1", "--params", "--protocol"],
+    });
+    expect(runner.protocolArguments(source, ["return 1", "--protocol", "--root", "."])).toEqual({
+      error: "sdp q: --protocol selects the root; pass --protocol or --root, not both.",
+    });
+
+    // Here the checkout's own graph derives, exclusions and bindings included; its specs/ alone
+    // holds intent only, as the installed package's does.
+    const body = 'return g.specContext("spec:consumers.reading-on-ramp")?.deliveryFacts ?? null';
+    const facts = (args: readonly string[]) => {
+      const run = spawnSync(
+        process.execPath,
+        [join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs"), body, "--json", ...args],
+        { cwd: repoRoot, encoding: "utf8" },
+      );
+      expect(run.status, run.stderr).toBe(0);
+      return JSON.parse(run.stdout) as unknown;
+    };
+    expect(facts(["--protocol"])).toEqual(expect.arrayContaining(["implemented"]));
+    expect(facts(["--root", "specs"])).toEqual([]);
   }, 120_000);
 
   it("keeps the checkout's exclusions whenever --root resolves to the checkout", async () => {

@@ -22,3 +22,5 @@ relations:
 - rule: The skill directs the reader from a question to the numbered, named catalog recipe that answers it, passes subjects as `params`, and teaches summary and detail output without creating query verbs.
 - rule: The skill links the Specs that own law and uses summaries for orientation; current graph data answers state questions and the carrying Specs answer intended truth.
 - rule: The skill carries one sheet that maps a delivery task to the recipe that answers it.
+- rule: [#protocolRoot] The runner's `--protocol` selects the root that holds the Protocol's own Specs and nothing else: in the Protocol source checkout its root, with the checkout's exclusions and bindings; anywhere else the installed package's `specs/`, which holds intent only; beside `--root` it refuses.
+- rule: [#orientationOutput] The orientation runner prints each answer under its title with the one line its body says the query teaches. A query whose body names the subject an agent arrives with prints a shortened demonstration and the call that runs it in full on that subject, unless `--subjects` names the query; `--json` prints every answer in full.

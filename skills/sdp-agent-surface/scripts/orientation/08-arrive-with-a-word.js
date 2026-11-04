@@ -1,5 +1,7 @@
 // 8. Arrive with a word: where each term in `params.terms` lives, through both matchers. Without
 // terms, the first epic's id leaf is searched in its spaced and hyphenated forms.
+// Teaches: the word entry `g.findByConcept(term)` beside entry search, `recipes(23, { term })`, per term
+// Subject: {"terms":["<a word you hold>"]}
 const epic = g.specs().find((s) => s.altitude === "epic") ?? g.specs()[0];
 const leaf = epic === undefined ? "" : epic.id.split(".").pop();
 const fallback = leaf.includes("-") ? [leaf.replaceAll("-", " "), leaf] : leaf ? [leaf] : [];

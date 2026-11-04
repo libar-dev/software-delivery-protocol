@@ -1,6 +1,7 @@
 // 1. The corpus and its surface: Specs by family, altitude and named coordinate; node, edge and
 // claim counts; the reader's methods, every field a Spec row or an edge carries, and the
 // parameters ten recipes accept.
+// Teaches: an ad-hoc body pre-shaped into counts; field names gathered across every row; the parameter probe `recipes(n, { "?": 1 }).accepts`
 const specs = g.specs();
 const tally = (xs) => xs.reduce((t, x) => ({ ...t, [x]: (t[x] ?? 0) + 1 }), {});
 const keys = (rows) => [...new Set(rows.flatMap((r) => Object.keys(r)))].join(" ");

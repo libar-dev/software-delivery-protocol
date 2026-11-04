@@ -1,5 +1,6 @@
 // 2. The capabilities: each capability epic as a one-line promise, with counts over its
 // refinement descendants, and one `distinct` line of corpus totals.
+// Teaches: a shipped recipe composed in a body, `recipes(52)`, cut to one line per epic
 const map = await recipes(52);
 const t = map.totals;
 const count = (k, one, many = `${one}s`) => `${k} ${k === 1 ? one : many}`;

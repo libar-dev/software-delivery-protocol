@@ -1,6 +1,7 @@
 // 7. Architecture and decisions: each anchored component with its layer, units, satisfied Specs
 // and uses; the direction unit-level `uses` edges run across layers; the decision register's
 // totals; the decisions with the widest reach, by name. Never print recipe 17 bare: it floods.
+// Teaches: four recipes (17, 32, 31, 18) composed into one bounded view
 const arch = await recipes(17);
 const crossings = await recipes(32);
 const register = await recipes(31);

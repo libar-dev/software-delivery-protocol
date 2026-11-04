@@ -1,6 +1,7 @@
 // 5. Next work: the roadmap over every priority Pack, or over `params.pack`: each entry's need,
 // stated rung against its floor, holding questions, build-now ids and drift, plus the statements
 // and the selected decider's questions waiting.
+// Teaches: a subject passed as `--params` into a composed recipe, `recipes(53, …)`, behind a diagnostics guard
 const answer = await recipes(53, { pack: params.pack, decider: params.decider });
 if (answer.diagnostics) return answer;
 const entry = (e) =>

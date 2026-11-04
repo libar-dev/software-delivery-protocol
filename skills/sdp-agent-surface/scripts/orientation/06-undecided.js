@@ -1,6 +1,7 @@
 // 6. Undecided: every open question by entry address, as a hold, a deferral or non-blocking,
 // with its decider and any provisional answer; then the readiness statements waiting, in
 // dependency order, for `params.decider` (the recipe's default, `owner`, when absent).
+// Teaches: a parameterless recipe (20) composed with a parameterized one (46, its `decider` from `--params`)
 const register = await recipes(20);
 const queue = await recipes(46, { decider: params.decider });
 if (queue.diagnostics) return queue;

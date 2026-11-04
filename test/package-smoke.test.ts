@@ -802,6 +802,21 @@ relations: {}
         stderr: answeredStderr,
       });
       expect(JSON.parse(skillQuery.stdout)).toEqual(["spec:package.own"]);
+      // --protocol reads the Protocol's own Specs from the installed package: intent only.
+      const protocolQuery = spawnSync(
+        process.execPath,
+        [
+          join(installedSkill, "scripts", "q.mjs"),
+          'const c = g.specContext("spec:consumers.reading-on-ramp"); return c && c.deliveryFacts',
+          "--protocol",
+          "--json",
+        ],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect({ status: protocolQuery.status, stdout: protocolQuery.stdout.trim() }).toEqual({
+        status: 0,
+        stdout: "[]",
+      });
       const skillOrientation = spawnSync(
         process.execPath,
         [join(installedSkill, "scripts", "orient.mjs"), "--json"],

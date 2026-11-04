@@ -2,6 +2,8 @@
 // file, line and full wording, or why it fails and which keys the named section holds. Without
 // addresses, the first two keyed entries the corpus holds (rules, Design and UI entries, open
 // questions) stand in, beside a bare Spec id, which is not an entry address.
+// Teaches: the frozen join `g.resolveEntryAddress` beside `recipes(25, { addresses })`, which adds the wording and line
+// Subject: {"addresses":["<an entry address>"]}
 const candidates = [];
 for (const spec of g.specs()) {
   const sections = g.specContext(spec.id)?.sections ?? {};

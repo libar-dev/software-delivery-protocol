@@ -2,6 +2,8 @@
 // Spec's coordinate, readiness, delivery facts, carrier, outcome, keyed rules with their lines,
 // a decision's ruling, Design and UI keys, questions, relations, implementations and verifiers.
 // Without either, the roadmap's first entry stands in, or the first epic.
+// Teaches: the frozen join `g.specContext(id)`, its `ruleKeys` (`rules[N]`) joined to `entryLocations` (`rule[N]`)
+// Subject: {"specs":["<a Spec id>"]}
 const roadmapFirst = (await recipes(53, {})).roadmaps?.[0]?.entries?.[0]?.id;
 const fallback = roadmapFirst ?? (g.specs().find((s) => s.altitude === "epic") ?? g.specs()[0])?.id;
 const ids =

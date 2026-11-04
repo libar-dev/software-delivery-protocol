@@ -1,26 +1,35 @@
 #!/usr/bin/env node
 // Runs the orientation queries over one graph derivation and prints each answer under its
-// heading, with the pointer to the notes that say how to read it.
+// heading and the line its body teaches, with the pointer to the notes that say how to read it.
 //
-//   node scripts/orient.mjs [--only N[,N]...] [--subjects JSON | @PATH] [--json] [--root PATH] [--exclude PATH]...
+//   node scripts/orient.mjs [--only N[,N]...] [--subjects JSON | @PATH] [--json] [--root PATH | --protocol] [--exclude PATH]...
 //
 // Each body under orientation/ takes its subject from `params` and derives a default from the
 // graph when none is given, so the queries run in any corpus. In the Protocol source checkout,
 // orientation/protocol-checkout.json supplies the subjects the notes were written against.
 // `--subjects` replaces them, keyed by query number: '{"10":{"specs":["spec:example.id"]}}'.
+// A body with a `// Subject:` line takes what the agent arrives with; unless `--subjects` names
+// it, its answer prints shortened, as a demonstration, beside the call that runs it in full.
+// `--json` prints every answer in full. `--protocol` selects the root as the runner does.
 
 import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { inspect } from "node:util";
 
-import { queryArguments, readsPackageRoot, selectRuntime, skewWarning } from "./q.mjs";
+import {
+  protocolArguments,
+  queryArguments,
+  readsPackageRoot,
+  selectRuntime,
+  skewWarning,
+} from "./q.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const bodies = join(here, "orientation");
 
-/** The orientation queries in order: number, title, notes anchor and body. */
+/** The orientation queries in order: number, title, what each teaches, its subject, notes anchor and body. */
 export function orientationQueries() {
   return readdirSync(bodies)
     .filter((name) => /^\d{2}-[a-z0-9-]+\.js$/u.test(name))
@@ -35,7 +44,17 @@ export function orientationQueries() {
         .toLowerCase()
         .replaceAll(/[^a-z0-9]+/gu, "-")
         .replace(/-$/u, "")}`;
-      return { number, title: heading.title, notes: `references/orientation.md#${anchor}`, source };
+      const teaches = /^\/\/ Teaches: (?<line>.+)$/mu.exec(source)?.groups?.line;
+      if (teaches === undefined) throw new Error(`orientation/${name} has no "// Teaches:" line`);
+      const subject = /^\/\/ Subject: (?<json>.+)$/mu.exec(source)?.groups?.json;
+      return {
+        number,
+        title: heading.title,
+        teaches,
+        subject,
+        notes: `references/orientation.md#${anchor}`,
+        source,
+      };
     });
 }
 
@@ -62,6 +81,22 @@ export function combinedBody(queries) {
   ].join("\n");
 }
 
+/**
+ * A demonstration's answer, shortened: each list keeps its first item and counts the rest, and
+ * each string keeps its first hundred characters.
+ */
+export function compactAnswer(value) {
+  if (Array.isArray(value)) {
+    const kept = value.slice(0, 1).map(compactAnswer);
+    return value.length > 1 ? [...kept, `… ${value.length - 1} more`] : kept;
+  }
+  if (value !== null && typeof value === "object")
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, compactAnswer(item)]),
+    );
+  return typeof value === "string" && value.length > 100 ? `${value.slice(0, 100)}…` : value;
+}
+
 function parseArguments(args) {
   const options = { only: undefined, subjects: undefined, json: false, pass: [] };
   for (let index = 0; index < args.length; index += 1) {
@@ -70,6 +105,7 @@ function parseArguments(args) {
     else if (arg === "--only") options.only = (args[++index] ?? "").split(",").map(Number);
     else if (arg === "--subjects") options.subjects = args[++index];
     else if (arg === "--root" || arg === "--exclude") options.pass.push(arg, args[++index] ?? "");
+    else if (arg === "--protocol") options.pass.push(arg);
     else if (arg.startsWith("--root=") || arg.startsWith("--exclude=")) options.pass.push(arg);
     else return { error: `orient: unknown argument ${arg}` };
   }
@@ -95,13 +131,19 @@ function main(args) {
   }
   const warning = skewWarning(runtime);
   if (warning !== undefined) console.error(warning);
+  const selected = protocolArguments(runtime, options.pass);
+  if ("error" in selected) {
+    console.error(selected.error);
+    return 2;
+  }
 
   const queries = orientationQueries().filter(
     (query) => options.only === undefined || options.only.includes(query.number),
   );
+  const given = readSubjects(options.subjects);
   const subjects =
-    readSubjects(options.subjects) ??
-    (runtime.mode === "source" && readsPackageRoot(runtime, options.pass)
+    given ??
+    (runtime.mode === "source" && readsPackageRoot(runtime, selected.args)
       ? JSON.parse(readFileSync(join(bodies, "protocol-checkout.json"), "utf8"))
       : {});
 
@@ -112,37 +154,51 @@ function main(args) {
       "--params",
       JSON.stringify({ subjects }),
       "--json",
-      ...options.pass,
+      ...selected.args,
     ]),
     { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 },
   );
-  // Extraction warnings reach stderr even when the graph derives; an agent must see them.
-  process.stderr.write(result.stderr ?? "");
   if (result.status !== 0) {
+    process.stderr.write(result.stderr ?? "");
     process.stdout.write(result.stdout ?? "");
     return result.status ?? 1;
   }
   const answers = JSON.parse(result.stdout);
   const failed = answers.filter((answer) => answer.error !== undefined);
+  const script = relative(process.cwd(), process.argv[1] ?? fileURLToPath(import.meta.url));
 
   if (options.json) {
     const titled = answers.map((answer) => {
       const query = queries.find((q) => q.number === answer.number);
-      return { ...answer, title: query?.title, notes: query?.notes };
+      return { ...answer, title: query?.title, teaches: query?.teaches, notes: query?.notes };
     });
     process.stdout.write(`${JSON.stringify(titled, null, 2)}\n`);
   } else {
+    const render = (value) =>
+      inspect(value, {
+        depth: Infinity,
+        maxArrayLength: Infinity,
+        maxStringLength: Infinity,
+        breakLength: 120,
+      });
     for (const answer of answers) {
       const query = queries.find((q) => q.number === answer.number);
-      process.stdout.write(`## ${answer.number}. ${query?.title}\n\n`);
-      process.stdout.write(
-        answer.error === undefined
-          ? `${inspect(answer.answer, { depth: Infinity, maxArrayLength: Infinity, maxStringLength: Infinity, breakLength: 120 })}\n`
-          : `FAILED: ${answer.error}\n`,
-      );
+      const demonstration =
+        query?.subject !== undefined && given?.[String(answer.number)] === undefined;
+      process.stdout.write(`## ${answer.number}. ${query?.title}\nTeaches: ${query?.teaches}\n\n`);
+      if (answer.error !== undefined) process.stdout.write(`FAILED: ${answer.error}\n`);
+      else if (!demonstration) process.stdout.write(`${render(answer.answer)}\n`);
+      else
+        process.stdout.write(
+          `${render(compactAnswer(answer.answer))}\n\nA shortened demonstration. In full, on what you hold:\n` +
+            `node ${script} --only ${answer.number} --subjects '{"${answer.number}":${query.subject}}'\n`,
+        );
       process.stdout.write(`\nRead it with ${query?.notes}\n\n`);
     }
   }
+  // Extraction warnings reach stderr even when the graph derives, and the query's hint closes the
+  // run: an agent must see both.
+  process.stderr.write(result.stderr ?? "");
   if (failed.length > 0) {
     console.error(
       `orient: ${failed.length} of ${answers.length} queries failed: report each as a finding.`,
