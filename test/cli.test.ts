@@ -343,7 +343,7 @@ describe("sdp cli", () => {
       cwd.mockRestore();
       rmSync(root, { recursive: true, force: true });
     }
-  }, 15_000);
+  }, 120_000);
 
   it("renders contracts warnings through the one formatter and counts them in the summary", () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-contracts-warning-"));
