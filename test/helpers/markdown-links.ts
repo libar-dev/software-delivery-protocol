@@ -24,12 +24,14 @@ import { decodeHtmlReferences, decodeMarkdownReferences } from "./character-refe
  * a reference link. It reads tags inside processing instructions, declarations and CDATA
  * sections, which the forge's sanitizer treats inconsistently.
  *
- * A fragment on a link to a Markdown page, or on a same-page link, must name one of the page's
- * anchors (`markdownAnchors`). The forge derives a heading's anchor from the heading's rendered
+ * A fragment on a link to a Markdown page, or on a same-page link (`#part` or `?query#part`), must
+ * name one of the page's anchors (`markdownAnchors`). Fragments on the forge's source view
+ * (`?plain=1`) name lines and are not checked. The forge derives a heading's anchor from the heading's rendered
  * text: lower-cased, with every character other than a letter, mark, digit, `_`, `-` or space
  * removed, and each space turned into `-`; a repeated anchor gets `-1`, `-2` and so on. The `id`
- * and `name` values of raw HTML tags are anchors too. Where the anchors depart from the forge,
- * they accept more, never less: every `id` and `name` counts, and so do headings in raw HTML.
+ * and `name` values of raw HTML tags are anchors too, and nothing inside an HTML comment is one.
+ * Where the anchors depart from the forge, they accept more, never less: every `id` and `name`
+ * counts, and so do headings in raw HTML.
  */
 
 export interface LinkTarget {
@@ -532,34 +534,70 @@ function readTag(
 }
 
 /**
+ * The offset after the HTML comment whose `<!--` is at `at`: after the first `-->` or `--!>`, at
+ * once when `<!--` is followed by `>` or `->`, or `end` for a comment left open.
+ */
+function commentEnd(text: string, at: number, end: number): number {
+  const abrupt = /->|>/uy;
+  abrupt.lastIndex = at + 4;
+  if (abrupt.exec(text) !== null) return abrupt.lastIndex;
+  const closes = ["-->", "--!>"].map((closer) => {
+    const index = text.indexOf(closer, at + 4);
+    return index === -1 ? end : index + closer.length;
+  });
+  return Math.min(end, ...closes);
+}
+
+/** The name of the tag that starts at `start`, lower-cased. */
+function tagNameAt(text: string, start: number): string {
+  tagName.lastIndex = start;
+  return (tagName.exec(text)?.[0] ?? "").toLowerCase();
+}
+
+/**
  * The `href` and `src` values of the tags in the raw HTML between `start` and `end`, read as an
- * HTML parser reads them, with the tags' `id` and `name` values added to `ids`. A comment ends at
- * the first `-->` or `--!>`, or at once when `<!--` is followed by `>` or `->`. Any other `<`
- * that opens no start or end tag is text.
+ * HTML parser reads them, with the tags' `id` and `name` values added to `ids` and the text of
+ * each closed `<h1>` to `<h6>` element added to `headings`. Comments render nothing, so nothing
+ * in one counts (`commentEnd`). Any other `<` that opens no start or end tag is text.
  */
 function htmlTargets(
   text: string,
   start: number,
   end: number,
   ids: string[] = [],
+  headings: string[] = [],
 ): readonly Found[] {
   const found: Found[] = [];
+  // The heading element open here, with the text it holds so far, and where that text resumes.
+  let heading: { readonly name: string; text: string } | undefined;
+  let textStart = start;
   let at = text.indexOf("<", start);
   while (at !== -1 && at < end) {
     let next = at + 1;
+    let tag: "start" | "end" | undefined;
+    let markup = true;
     if (text.startsWith("<!--", at)) {
-      const abrupt = /->|>/uy;
-      abrupt.lastIndex = at + 4;
-      const closes = ["-->", "--!>"].map((closer) => {
-        const index = text.indexOf(closer, at + 4);
-        return index === -1 ? end : index + closer.length;
-      });
-      next = abrupt.exec(text) === null ? Math.min(end, ...closes) : abrupt.lastIndex;
+      next = commentEnd(text, at, end);
     } else if (/[A-Za-z]/u.test(text.charAt(at + 1))) {
       next = readTag(text, at + 1, end, found, ids);
+      tag = "start";
     } else if (text.charAt(at + 1) === "/" && /[A-Za-z]/u.test(text.charAt(at + 2))) {
       // An end tag's attributes are dropped.
       next = readTag(text, at + 2, end, []);
+      tag = "end";
+    } else {
+      markup = false;
+    }
+    if (markup) {
+      if (heading !== undefined) heading.text += text.slice(textStart, at);
+      textStart = next;
+      const name = tag === undefined ? "" : tagNameAt(text, at + (tag === "end" ? 2 : 1));
+      if (tag === "start" && heading === undefined && /^h[1-6]$/u.test(name)) {
+        heading = { name, text: "" };
+      } else if (tag === "end" && heading?.name === name) {
+        headings.push(decodeMarkdownReferences(heading.text));
+        heading = undefined;
+      }
     }
     at = text.indexOf("<", next);
   }
@@ -649,9 +687,15 @@ export function markdownLinkTargets(markdown: string): readonly LinkTarget[] {
     .sort((left, right) => left.line - right.line);
 }
 
+/**
+ * True for a target that names the page it is on: empty, or a fragment or query alone. A browser
+ * resolves `#part` and `?plain=1#L5` against the page's own address.
+ */
+const namesSamePage = (target: string): boolean => /^(?:$|[#?])/u.test(target);
+
 /** The repository path a target names from `from`, or undefined for an external or same-page link. */
 export function linkedPath(from: string, target: string): string | undefined {
-  if (target === "" || target.startsWith("#") || target.startsWith("//")) return undefined;
+  if (namesSamePage(target) || target.startsWith("//")) return undefined;
   if (/^[a-z][a-z\d+.-]*:/iu.test(target)) return undefined;
   const raw = target.split(/[?#]/u)[0] ?? "";
   let path = raw;
@@ -916,16 +960,6 @@ function slugOf(text: string): string {
     .replaceAll(" ", "-");
 }
 
-/** The text of the `<h1>` to `<h6>` elements in raw HTML. */
-function htmlHeadings(html: string): readonly string[] {
-  const headings = /<h([1-6])(?=[\t\n\f\r />])[^>]*>([\s\S]*?)<\/h\1[\t\n\f\r ]*>/giu;
-  return [...html.matchAll(headings)].map((match) =>
-    decodeMarkdownReferences(
-      (match[2] ?? "").replaceAll(/<!--[\s\S]*?-->/gu, "").replaceAll(/<[^>]*>/gu, ""),
-    ),
-  );
-}
-
 /**
  * The fragments that reach a place in `markdown` as the forge renders it: each heading's anchor,
  * with `-1`, `-2` and so on added to a repeated one, and the `id` and `name` values of its raw
@@ -951,8 +985,9 @@ export function markdownAnchors(markdown: string): ReadonlySet<string> {
   for (const scope of scopes) {
     const text = scopeText(scope);
     if (scope.kind === "html") {
-      htmlTargets(text, 0, text.length, ids);
-      for (const heading of htmlHeadings(text)) addHeading(heading);
+      const htmlHeadings: string[] = [];
+      htmlTargets(text, 0, text.length, ids, htmlHeadings);
+      for (const heading of htmlHeadings) addHeading(heading);
     } else if (scope.heading === "atx") {
       const content = text
         .trim()
@@ -1006,7 +1041,7 @@ export function danglingLinks(
         dangling.push(`${file}:${String(line)} ${target}`);
         continue;
       }
-      const page = path ?? (target.startsWith("#") ? file : undefined);
+      const page = path ?? (namesSamePage(target) ? file : undefined);
       const fragment = linkedFragment(target);
       if (page === undefined || fragment === undefined || !/\.md$/iu.test(page)) continue;
       const anchors = anchorsOf(page);

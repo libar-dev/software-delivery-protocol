@@ -487,6 +487,55 @@ describe("relative Markdown links", () => {
     ]);
   });
 
+  it("counts no heading or anchor inside an HTML comment, which renders nothing", () => {
+    const page = [
+      "<!-- <h2>Old</h2> -->",
+      "",
+      "<!--",
+      "<h2>Older</h2>",
+      '<a id="hidden"></a>',
+      "-->",
+      "",
+      "<div>",
+      "<h2>Kept <!-- <span>x</span> -->heading</h2>",
+      "<!-- <h3>Not</h3> --><h3>After</h3>",
+      "<!--><h4>Abrupt</h4>",
+      "</div>",
+      "",
+      "[old](#old) [older](#older) [hidden](#hidden) [kept](#kept-heading) [not](#not)",
+      "[after](#after) [abrupt](#abrupt)",
+    ].join("\n");
+    expect([...markdownAnchors(page)].sort()).toEqual(["abrupt", "after", "kept-heading"]);
+    expect(danglingLinks(new Map([["docs/page.md", page]]), () => true)).toEqual([
+      "docs/page.md:14 #old",
+      "docs/page.md:14 #older",
+      "docs/page.md:14 #hidden",
+      "docs/page.md:14 #not",
+    ]);
+  });
+
+  it("checks the fragment of a link that names its own page by a query", () => {
+    expect(linkedPath("docs/guide.md", "?x=1#missing")).toBeUndefined();
+    expect(linkedPath("docs/guide.md", "?plain=1")).toBeUndefined();
+    const documents = new Map([
+      [
+        "docs/guide.md",
+        [
+          "# Kept",
+          "",
+          "[a](?x=1#missing) [b](?x=1#kept) [c](?plain=1#L5) [d](?x=1)",
+          "[e](guide.md?x=1#missing) [f](guide.md?plain=1#L5)",
+        ].join("\n"),
+      ],
+    ]);
+    // The page's folder is present too, as it is in the repository.
+    const present = new Set(["docs", "docs/guide.md"]);
+    expect(danglingLinks(documents, (path) => present.has(path))).toEqual([
+      "docs/guide.md:3 ?x=1#missing",
+      "docs/guide.md:4 guide.md?x=1#missing",
+    ]);
+  });
+
   it("reports a fragment left behind when its heading is renamed", () => {
     const story = "See [the section](../docs/guide.md#first-steps).\n";
     const before = new Map([
