@@ -1652,6 +1652,26 @@ describe("the Studio on-ramp", () => {
     expect(withInputs).toContain("exports/probe.review.html");
   });
 
+  it("names each page's recipe by its catalog number and name", () => {
+    // A recipe the skill does not run is named by number and name
+    // (`spec:consumers.shipped-protocol-corpus#rule.skillShape`): a bare number tells the reader
+    // nothing until it is looked up.
+    const headings = catalogHeadings();
+    const cells = read(pagesPath)
+      .split("\n")
+      .filter((line) => line.startsWith("| ") && !/^\| (?:Task|-)/u.test(line))
+      .map((row) => row.split("|").at(-2)?.trim() ?? "");
+    expect(cells.length).toBeGreaterThan(10);
+    const unnamed = cells
+      .filter((cell) => cell !== "none")
+      .flatMap((cell) => cell.split("; "))
+      .filter((mention) => {
+        const match = /^(?<ordinal>\d+), (?<name>.+)$/u.exec(mention);
+        return match === null || headings.get(Number(match.groups?.ordinal)) !== match.groups?.name;
+      });
+    expect(unnamed).toEqual([]);
+  });
+
   it("receives the composing panel's hand-off through the proposal check", async () => {
     const receive = skillSection(studioSkillPath, "## Receive composed intent");
 
