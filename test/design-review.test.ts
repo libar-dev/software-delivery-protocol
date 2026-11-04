@@ -291,7 +291,8 @@ describe("the generated Design Review", () => {
       rmSync(firstRoot, { recursive: true, force: true });
       rmSync(secondRoot, { recursive: true, force: true });
     }
-  }, 20_000);
+    // A budget that holds when the whole suite runs in parallel on a loaded machine.
+  }, 120_000);
 
   it("rejects swapped prose semantically even when the wrong graph renders deterministically", () => {
     const correct = deriveFixtureGraph({

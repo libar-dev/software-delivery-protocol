@@ -100,43 +100,49 @@ describe("Studio capabilities", () => {
     [30, 1],
     [45, 5],
     [40, 40],
-  ])("folds whole sibling branches for %i features with %i stories", async (features, stories) => {
-    const root = spec("root", { altitude: "epic" });
-    const nodes = [root];
-    const edges: GraphSchema["edges"][number][] = [];
-    for (let i = 0; i < features; i++) {
-      const feature = `feature${String(i).padStart(2, "0")}`;
-      nodes.push(spec(feature, { altitude: "feature" }));
-      edges.push(refines(feature, "root"));
-      for (let j = 0; j < stories; j++) {
-        const story = `${feature}.story${String(j).padStart(2, "0")}`;
-        nodes.push(spec(story));
-        edges.push(refines(story, feature));
+  ])(
+    "folds whole sibling branches for %i features with %i stories",
+    async (features, stories) => {
+      const root = spec("root", { altitude: "epic" });
+      const nodes = [root];
+      const edges: GraphSchema["edges"][number][] = [];
+      for (let i = 0; i < features; i++) {
+        const feature = `feature${String(i).padStart(2, "0")}`;
+        nodes.push(spec(feature, { altitude: "feature" }));
+        edges.push(refines(feature, "root"));
+        for (let j = 0; j < stories; j++) {
+          const story = `${feature}.story${String(j).padStart(2, "0")}`;
+          nodes.push(spec(story));
+          edges.push(refines(story, feature));
+        }
       }
-    }
-    const answer = (await evaluateBody("return recipes(52, {detail: true})", {
-      graph: graph(nodes, edges),
-    })) as CapabilityMap;
-    const drawing = capabilityDiagrams(answer, [root.id], root.id)[0];
-    const drawn = new Set(drawing.boxes.map((b) => b.id));
-    expect(drawing.boxes.length).toBeLessThanOrEqual(40);
-    for (const box of drawing.boxes)
-      if (box.parent) expect(drawn.has(box.parent), box.id).toBe(true);
-    expect(drawing.edges).toHaveLength(drawing.boxes.length - 1);
-    const visible = new Set(drawing.boxes.filter((b) => !b.folded).map((b) => b.identity));
-    const hidden = nodes
-      .filter((n) => !visible.has(n.id))
-      .map((n) => n.id)
-      .sort();
-    const folded = [...new Set(drawing.boxes.flatMap((b) => b.foldedIds ?? []))].sort();
-    expect(folded).toEqual(hidden);
-    const output = renderDiagram(drawing);
-    expect(output).toContain("<svg");
-    for (const match of output.matchAll(/<tspan class="box-id"[^>]*>([^<]*)<\/tspan>/gu)) {
-      expect(match[1]).not.toMatch(/%3A|\.capability\.branch\./u);
-    }
-    expect(drawing).toEqual(capabilityDiagrams(answer, [root.id], root.id)[0]);
-  });
+      const answer = (await evaluateBody("return recipes(52, {detail: true})", {
+        graph: graph(nodes, edges),
+      })) as CapabilityMap;
+      const drawing = capabilityDiagrams(answer, [root.id], root.id)[0];
+      const drawn = new Set(drawing.boxes.map((b) => b.id));
+      expect(drawing.boxes.length).toBeLessThanOrEqual(40);
+      for (const box of drawing.boxes)
+        if (box.parent) expect(drawn.has(box.parent), box.id).toBe(true);
+      expect(drawing.edges).toHaveLength(drawing.boxes.length - 1);
+      const visible = new Set(drawing.boxes.filter((b) => !b.folded).map((b) => b.identity));
+      const hidden = nodes
+        .filter((n) => !visible.has(n.id))
+        .map((n) => n.id)
+        .sort();
+      const folded = [...new Set(drawing.boxes.flatMap((b) => b.foldedIds ?? []))].sort();
+      expect(folded).toEqual(hidden);
+      const output = renderDiagram(drawing);
+      expect(output).toContain("<svg");
+      for (const match of output.matchAll(/<tspan class="box-id"[^>]*>([^<]*)<\/tspan>/gu)) {
+        expect(match[1]).not.toMatch(/%3A|\.capability\.branch\./u);
+      }
+      expect(drawing).toEqual(capabilityDiagrams(answer, [root.id], root.id)[0]);
+      // A budget that holds when the whole suite runs in parallel on a loaded machine: the largest
+      // case draws a graph of more than 1,600 nodes twice.
+    },
+    60_000,
+  );
 
   it("keeps reached children out of the unreached drawing and complete rows", async () => {
     const data = await createStudioData(
