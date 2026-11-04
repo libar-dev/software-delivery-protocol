@@ -13,7 +13,7 @@ const ids =
 if (ids === undefined)
   return { specs: params.specs ?? null, pack: params.pack ?? null, found: false };
 const clip = (t) => {
-  const x = typeof t === "string" ? t : JSON.stringify(t);
+  const x = typeof t === "string" ? t : (JSON.stringify(t) ?? "");
   return x.length > 110 ? `${x.slice(0, 110)}...` : x;
 };
 return ids.map((id) => {
@@ -34,7 +34,10 @@ return ids.map((id) => {
     deliveryFacts: c.deliveryFacts,
     file: c.file,
     outcome: clip(s.intent?.outcome ?? ""),
-    ...(s.decision ? { decision: clip(s.decision.decision) } : {}),
+    // A draft decision may carry its context before any ruling.
+    ...(s.decision
+      ? { decision: s.decision.decision === undefined ? null : clip(s.decision.decision) }
+      : {}),
     rules: (s.behavior?.rules ?? []).map(
       (r, i) =>
         `line ${line.get(`rule[${i}]`) ?? "-"} ${keyOf[`rules[${i}]`] ? `#${keyOf[`rules[${i}]`]}` : "(unkeyed)"}: ${clip(r)}`,

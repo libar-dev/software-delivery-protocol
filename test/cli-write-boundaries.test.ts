@@ -20,6 +20,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 function writeCarrier(root: string, file: string, id: string): void {
@@ -755,6 +756,34 @@ describe("operating-system metadata under a published root", () => {
     },
     60_000,
   );
+
+  it("counts only a whole-name match on the junk list as metadata", () => {
+    const metadata = (name: string) => isOsMetadataFile({ name, isFile: () => true });
+    expect(
+      [".DS_Store", "Thumbs.db", "._index.md", ".Trashes", "desktop.ini"].map(metadata),
+    ).toEqual([true, true, true, true, true]);
+    // The list's patterns `\.Trashes`, `~$` and `@eaDir$` also match inside a name.
+    expect(
+      ["filesystem.Trashes.feature.md", "notes~", "x@eaDir", "index.md"].map(metadata),
+    ).toEqual([false, false, false, false]);
+  });
+
+  it("certifies a lawful page whose name contains a junk pattern", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-os-metadata-lawful-"));
+    writeCarrier(root, "trashes.sdp.md", "spec:filesystem.Trashes");
+    try {
+      expect(await runSdpCli(["generate", root], createCaptureOutput().output, studioAssets)).toBe(
+        0,
+      );
+      const certified = createCaptureOutput();
+      expect(
+        await runSdpCli(["generate", root, "--check-clean"], certified.output, studioAssets),
+        certified.readStderr(),
+      ).toBe(0);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 
   it("reads a directory named .DS_Store as content, never as metadata", async () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-os-metadata-dir-"));

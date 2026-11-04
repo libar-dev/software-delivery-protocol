@@ -116,8 +116,9 @@ function main(args) {
     ]),
     { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 },
   );
+  // Extraction warnings reach stderr even when the graph derives; an agent must see them.
+  process.stderr.write(result.stderr ?? "");
   if (result.status !== 0) {
-    process.stderr.write(result.stderr ?? "");
     process.stdout.write(result.stdout ?? "");
     return result.status ?? 1;
   }

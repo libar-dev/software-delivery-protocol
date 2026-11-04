@@ -8,6 +8,7 @@ import {
   readFileSync,
   readlinkSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { createRequire } from "node:module";
@@ -1023,6 +1024,48 @@ describe("the graph-reading on-ramp", () => {
         status: 0,
         stdout: "true",
       });
+    }
+  }, 120_000);
+
+  it("orients over a draft decision and passes extraction warnings through", () => {
+    const corpus = mkdtempSync(join(tmpdir(), "sdp-orient-draft-"));
+    mkdirSync(join(corpus, "specs"));
+    mkdirSync(join(corpus, "outside"));
+    writeFileSync(
+      join(corpus, "specs/draft.sdp.md"),
+      "---\nid: spec:probe.draft-decision\nkind: decision\naltitude: feature\nreadiness: idea\nrelations: {}\n---\n# A draft decision\n\n## Intent\n\n- outcome: Settle a question later.\n\n## Decision\n\n- context: The question is open and no ruling exists yet.\n",
+    );
+    // A linked carrier is skipped with an extraction warning while the graph still derives.
+    writeFileSync(
+      join(corpus, "outside/linked.sdp.md"),
+      "---\nid: spec:probe.linked\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Linked\n\n## Intent\n\n- outcome: Be reached through a link.\n\n## Rule\n",
+    );
+    symlinkSync("../outside/linked.sdp.md", join(corpus, "specs/linked.sdp.md"));
+    try {
+      const run = spawnSync(
+        process.execPath,
+        [
+          join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs"),
+          "--root",
+          corpus,
+          "--only",
+          "10",
+          "--subjects",
+          '{"10":{"specs":["spec:probe.draft-decision"]}}',
+          "--json",
+        ],
+        { cwd: repoRoot, encoding: "utf8" },
+      );
+      expect(run.status, run.stderr).toBe(0);
+      expect(run.stderr).toContain("extract/symbolic-link-skipped");
+      const [answer] = JSON.parse(run.stdout) as {
+        error?: string;
+        answer: { id: string; decision: string | null }[];
+      }[];
+      expect(answer?.error).toBeUndefined();
+      expect(answer?.answer[0]).toMatchObject({ id: "spec:probe.draft-decision", decision: null });
+    } finally {
+      rmSync(corpus, { recursive: true, force: true });
     }
   }, 120_000);
 

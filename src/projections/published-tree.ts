@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import type { Dirent } from "node:fs";
 import { join, relative } from "node:path";
 
-import { isJunk } from "junk";
+import { junkRegex } from "junk";
 
 /**
  * Finder's metadata file: Finder writes it into any folder a window shows. The vault's ratified
@@ -13,12 +13,16 @@ export const OS_METADATA_FILE = ".DS_Store";
 /**
  * Whether an entry under a published root is a file the operating system or a tool wrote for its
  * own use, never a page, as `spec:consumers.wholesale-view-rewrite#rule.osMetadata` states: Finder's
- * `.DS_Store`, Windows's `Thumbs.db` and the rest of the `junk` package's list. It applies to files
- * only, so a directory of such a name is still read as content.
+ * `.DS_Store`, Windows's `Thumbs.db` and the rest of the `junk` package's list. Only a whole-name
+ * match counts: some of the list's patterns also match inside a name, which would hide a lawful
+ * page such as `spec/filesystem.Trashes.feature.md`. It applies to files only, so a directory of
+ * such a name is still read as content.
  */
 export function isOsMetadataFile(entry: Pick<Dirent, "name" | "isFile">): boolean {
-  return entry.isFile() && isJunk(entry.name);
+  return entry.isFile() && wholeNameJunk.test(entry.name);
 }
+
+const wholeNameJunk = new RegExp(`^(?:${junkRegex.source})$`);
 
 /**
  * Bounded retries for removing a published tree. A folder that gains an entry while it is being
