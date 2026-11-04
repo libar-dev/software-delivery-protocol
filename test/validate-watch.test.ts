@@ -10,6 +10,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from "node:fs";
+import type { Stats } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
@@ -949,10 +950,7 @@ interface WatchRun {
   readonly cycleStderr: (index: number) => string;
 }
 
-function watchRoot(
-  root: string,
-  lstatWatchPath?: (path: string) => ReturnType<typeof lstatSync>,
-): WatchRun {
+function watchRoot(root: string, lstatWatchPath?: (path: string) => Stats): WatchRun {
   const capture = createCaptureOutput();
   const cycles = new CycleHarness();
   const native = new NativeWatchHarness();
