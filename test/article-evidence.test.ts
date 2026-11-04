@@ -427,10 +427,14 @@ describe("article evidence CLI entry", () => {
         child.stderr?.on("data", (data: Buffer) => {
           stderr += data.toString();
         });
-        const exited = new Promise<number | null>((resolve, reject) => {
-          child?.once("error", reject);
-          child?.once("close", resolve);
-        });
+        const exited = new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
+          (resolve, reject) => {
+            child?.once("error", reject);
+            child?.once("close", (code, closeSignal) => {
+              resolve({ code, signal: closeSignal });
+            });
+          },
+        );
         await expect.poll(() => existsSync(started), { timeout: 15_000 }).toBe(true);
         const startedData = JSON.parse(readFileSync(started, "utf8")) as {
           source: string;
@@ -449,7 +453,19 @@ describe("article evidence CLI entry", () => {
         await expect
           .poll(() => child?.exitCode !== null || child.signalCode !== null, { timeout: 5_000 })
           .toBe(true);
-        expect.soft(await exited, stderr).toBe(signal === "SIGINT" ? 130 : 143);
+        const outcome = await exited;
+        const signalExit = signal === "SIGINT" ? 130 : 143;
+        // The sync itself must exit 128 + n. npm reports its own end differently by
+        // version: npm 11 exits 128 + n, while npm 10 (Node 20's) dies from the same
+        // signal, so the wrapper case accepts either form of that one signal.
+        if (invocation === "npm")
+          expect
+            .soft(
+              outcome.code === signalExit || (outcome.code === null && outcome.signal === signal),
+              `${JSON.stringify(outcome)}\n${stderr}`,
+            )
+            .toBe(true);
+        else expect.soft(outcome.code, stderr).toBe(signalExit);
         if (injectSignal) expect(readFileSync(killAttempts, "utf8")).toBe("kill\n");
         expect.soft(gate.status, gate.stdout + gate.stderr).toBe(0);
         expect
