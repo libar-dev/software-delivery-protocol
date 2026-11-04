@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, fork, spawnSync } from "node:child_process";
 import {
   closeSync,
   existsSync,
@@ -12,6 +12,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -437,7 +438,58 @@ export function evidenceBlocks(sourceRoot, pinnedCommit) {
   return blocks;
 }
 
-function main() {
+// Keep cancellation in a responsive parent while the worker runs synchronous git,
+// npm and evidence commands. A separate process group includes npm's descendants.
+async function supervise(repository) {
+  const temporary = realpathSync(mkdtempSync(path.join(tmpdir(), "article-evidence-")));
+  let interrupted;
+  const child = fork(fileURLToPath(import.meta.url), process.argv.slice(2), {
+    detached: process.platform !== "win32",
+    stdio: ["inherit", "inherit", "inherit", "ipc"],
+    env: { ...process.env, SDP_ARTICLE_WORKER_ROOT: temporary },
+  });
+  const stop = (signal) => {
+    interrupted ??= signal;
+    if (!child.pid) return;
+    if (process.platform === "win32") {
+      spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+    } else {
+      try {
+        process.kill(-child.pid, "SIGKILL");
+      } catch (error) {
+        if (error.code !== "ESRCH") throw error;
+      }
+    }
+  };
+  const onInterrupt = () => stop("SIGINT");
+  const onTerminate = () => stop("SIGTERM");
+  process.on("SIGINT", onInterrupt);
+  process.on("SIGTERM", onTerminate);
+  try {
+    const code = await new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", (code) => resolve(code));
+    });
+    process.exitCode = interrupted === "SIGINT" ? 130 : interrupted === "SIGTERM" ? 143 : (code ?? 1);
+  } finally {
+    try {
+      // A killed worker cannot run its finally. Remove only this invocation's
+      // registrations, after its process group has stopped writing.
+      for (const name of readdirSync(temporary)) {
+        const source = path.join(temporary, name, "source");
+        if (existsSync(source)) {
+          execFileSync("git", ["-C", repository, "worktree", "remove", "--force", source], { stdio: "pipe" });
+        }
+      }
+      rmSync(temporary, { recursive: true, force: true });
+    } finally {
+      process.off("SIGINT", onInterrupt);
+      process.off("SIGTERM", onTerminate);
+    }
+  }
+}
+
+async function main() {
   const { check, printPin, source: sourceArgument } = parseArguments(process.argv.slice(2));
   const articlesDir = path.dirname(fileURLToPath(import.meta.url));
   const repositoryRoot = path.resolve(articlesDir, "../..");
@@ -469,10 +521,13 @@ function main() {
       .map((name) => [name, readFileSync(path.join(articlesDir, name), "utf8")]),
   );
   validateEvidenceMarkers(documents, evidenceBlocks(repositoryRoot, pinnedCommit));
+  if (!process.send || !process.env.SDP_ARTICLE_WORKER_ROOT) {
+    return supervise(sourceArgument);
+  }
   return withPinnedSource(
     sourceArgument,
     pinnedCommit,
-    path.join(repositoryRoot, ".scratch"),
+    process.env.SDP_ARTICLE_WORKER_ROOT,
     (sourceRoot) => {
       const blocks = evidenceBlocks(sourceRoot, pinnedCommit);
       const drift = [];
@@ -507,5 +562,5 @@ if (
   process.argv[1] &&
   realpathSync(path.resolve(process.argv[1])) === realpathSync(fileURLToPath(import.meta.url))
 ) {
-  main();
+  await main();
 }

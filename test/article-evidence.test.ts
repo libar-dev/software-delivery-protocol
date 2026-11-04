@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import {
   chmodSync,
   copyFileSync,
@@ -191,6 +191,146 @@ describe("article evidence CLI entry", () => {
       rmSync(temporary, { recursive: true, force: true });
     }
   });
+
+  it.each(["SIGINT", "SIGTERM"] as const)(
+    "stops descendants and removes the temporary registration on %s while gates can run",
+    async (signal) => {
+      const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-cancel-"));
+      const repo = path.join(temporary, "repository");
+      const articles = path.join(repo, "docs/articles");
+      const started = path.join(temporary, "started.json");
+      const git = (...args: string[]) =>
+        execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", stdio: "pipe" }).trim();
+      let child: ReturnType<typeof spawn> | undefined;
+      let workerSource: string | undefined;
+      let descendant: number | undefined;
+      try {
+        mkdirSync(articles, { recursive: true });
+        git("init", "-q");
+        writeFileSync(
+          path.join(repo, "package.json"),
+          JSON.stringify({
+            name: "cancel-probe",
+            version: "1.0.0",
+            scripts: { build: "node build.cjs" },
+          }),
+        );
+        writeFileSync(
+          path.join(repo, "package-lock.json"),
+          JSON.stringify({
+            name: "cancel-probe",
+            version: "1.0.0",
+            lockfileVersion: 3,
+            packages: { "": { name: "cancel-probe", version: "1.0.0" } },
+          }),
+        );
+        // npm -> shell -> build -> long-lived descendant. Killing only npm leaks it.
+        writeFileSync(
+          path.join(repo, "build.cjs"),
+          `const {spawn} = require("node:child_process");
+          const child = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], {stdio: "inherit"});
+          require("node:fs").writeFileSync(${JSON.stringify(started)}, JSON.stringify({source: process.cwd(), pid: child.pid}));
+          setInterval(() => {}, 1000);`,
+        );
+        git("add", "package.json", "package-lock.json", "build.cjs");
+        git(
+          "-c",
+          "user.name=Test",
+          "-c",
+          "user.email=test@example.invalid",
+          "-c",
+          "commit.gpgsign=false",
+          "commit",
+          "-qm",
+          "pin",
+        );
+        const pin = git("rev-parse", "HEAD");
+        copyFileSync(
+          path.join(repositoryRoot, "docs/articles/sync-evidence.mjs"),
+          path.join(articles, "sync-evidence.mjs"),
+        );
+        copyFileSync(
+          path.join(repositoryRoot, "check-temporal.mjs"),
+          path.join(repo, "check-temporal.mjs"),
+        );
+        const documents = new Map([["README.md", `Pinned source baseline: x/tree/${pin}\n`]]);
+        for (const block of evidenceBlocks(repo, pin))
+          documents.set(
+            block.file,
+            (documents.get(block.file) ?? "") +
+              `<!-- evidence:${block.id} -->\nold\n<!-- /evidence:${block.id} -->\n`,
+          );
+        for (const [file, text] of documents) writeFileSync(path.join(articles, file), text);
+        const before = git("status", "--porcelain", "--untracked-files=all");
+        child = spawn(
+          process.execPath,
+          [path.join(articles, "sync-evidence.mjs"), "--check", repo],
+          { stdio: "pipe", detached: process.platform !== "win32" },
+        );
+        let stderr = "";
+        child.stderr?.on("data", (data: Buffer) => {
+          stderr += data.toString();
+        });
+        const exited = new Promise<number | null>((resolve, reject) => {
+          child?.once("error", reject);
+          child?.once("close", resolve);
+        });
+        await expect.poll(() => existsSync(started), { timeout: 15_000 }).toBe(true);
+        const startedData = JSON.parse(readFileSync(started, "utf8")) as {
+          source: string;
+          pid: number;
+        };
+        workerSource = startedData.source;
+        descendant = startedData.pid;
+        // A concurrent repository gate must not enumerate the disposable source.
+        const gate = spawnSync(process.execPath, [path.join(repo, "check-temporal.mjs")], {
+          encoding: "utf8",
+        });
+        child.kill(signal);
+        await expect
+          .poll(() => child?.exitCode !== null || child?.signalCode !== null, { timeout: 5_000 })
+          .toBe(true);
+        expect.soft(await exited, stderr).toBe(signal === "SIGINT" ? 130 : 143);
+        expect.soft(gate.status, gate.stdout + gate.stderr).toBe(0);
+        expect.soft(path.relative(repo, workerSource).startsWith(".." + path.sep)).toBe(true);
+        expect.soft(git("status", "--porcelain", "--untracked-files=all")).toBe(before);
+        expect.soft(existsSync(workerSource)).toBe(false);
+        expect(git("worktree", "list", "--porcelain").match(/^worktree /gm)).toHaveLength(1);
+        await expect
+          .poll(
+            () => {
+              try {
+                process.kill(startedData.pid, 0);
+                return true;
+              } catch {
+                return false;
+              }
+            },
+            { timeout: 5_000 },
+          )
+          .toBe(false);
+      } finally {
+        if (child?.pid && process.platform !== "win32") {
+          try {
+            process.kill(-child.pid, "SIGKILL");
+          } catch {
+            /* already stopped */
+          }
+        } else if (child?.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+        if (descendant) {
+          try {
+            process.kill(descendant, "SIGKILL");
+          } catch {
+            /* already stopped */
+          }
+        }
+        if (workerSource && existsSync(workerSource))
+          spawnSync("git", ["-C", repo, "worktree", "remove", "--force", workerSource]);
+        rmSync(temporary, { recursive: true, force: true });
+      }
+    },
+    30_000,
+  );
 
   it("generates evidence from the materialized pin, never the supplied checkout", () => {
     const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-main-"));
