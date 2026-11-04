@@ -143,14 +143,21 @@ export function planExample<W, S extends string, PM extends Record<S, ParamShape
       text: step.text,
       label: renderContractStep(step),
       run: (world: W) => {
-        // Class methods are bindings too; prototype constructors and Object.prototype are not.
+        // Class methods are bindings too; prototype constructors, Object.prototype and
+        // Function.prototype are not.
         let owner: object | null = bindings;
-        while (owner !== null && owner !== Object.prototype && !Object.hasOwn(owner, step.key)) {
+        while (
+          owner !== null &&
+          owner !== Object.prototype &&
+          owner !== Function.prototype &&
+          !Object.hasOwn(owner, step.key)
+        ) {
           owner = Object.getPrototypeOf(owner) as object | null;
         }
         const handler =
           owner !== null &&
           owner !== Object.prototype &&
+          owner !== Function.prototype &&
           (owner === bindings || step.key !== "constructor")
             ? bindings[step.key]
             : undefined;

@@ -275,3 +275,62 @@ describe("class-instance step bindings", () => {
     expect(handler.mock.contexts).toEqual([bindings]);
   });
 });
+
+describe("function-shaped step bindings", () => {
+  describe.each([
+    {
+      name: "static class",
+      create: () =>
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- exercise class-valued bindings
+        class Steps {
+          static submit = pass;
+        },
+    },
+    {
+      name: "function namespace",
+      create: () =>
+        Object.assign(
+          function Steps() {
+            return undefined;
+          },
+          { submit: pass },
+        ),
+    },
+  ])("$name", ({ create }) => {
+    it.each(["toString", "bind", "call", "apply"])(
+      "refuses inherited Function.prototype handler %s",
+      async (key) => {
+        const contract = {
+          spec: "spec:probe.function-missing",
+          title: "Missing function handler",
+          steps: [{ kind: "then" as const, key, text: key, params: {} }],
+        };
+        const bindings = create() as unknown as Record<string, StepFn<object, ParamShape>>;
+        await expect(runExamplePlan(planExample(contract, bindings), {})).rejects.toThrow(
+          `at step: Then ${key}\nno handler bound for step key "${key}"`,
+        );
+      },
+    );
+  });
+
+  it("runs inherited static methods with the bindings class as receiver", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- exercise static handler inheritance
+    class BaseSteps {
+      static amount = 1;
+      static submit(world: { total: number }) {
+        world.total += this.amount;
+      }
+    }
+    class Steps extends BaseSteps {
+      static override amount = 42;
+    }
+    const contract = {
+      spec: "spec:probe.static-handlers",
+      title: "Static handlers",
+      steps: [{ kind: "when" as const, key: "submit" as const, text: "submit", params: {} }],
+    };
+    const world = { total: 0 };
+    await runExamplePlan(planExample(contract, Steps), world);
+    expect(world.total).toBe(42);
+  });
+});
