@@ -8472,4 +8472,35 @@ export const consumersSpecs = [
     },
     deliveryFacts: [],
   },
+  {
+    id: "spec:consumers.wholesale-view-rewrite.validate-page-roots",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/wholesale-view-rewrite.validate-page-roots.sdp.md",
+    title: "A validate run and the page roots it removes",
+    narrative:
+      "`sdp validate` enters the shared build, so it removes the five generated page roots before extraction and writes none of them back. It names none of the roots it removed, so a session that runs it to read findings loses the pages it was reading without being told.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a person or a CI job that runs `sdp validate` keep the pages it was reading, or learn from the run which page roots it removed.",
+        openQuestions: [
+          {
+            question:
+              "Should `sdp validate` keep the page roots it removes today, or name each one it removed?",
+            blocking: true,
+            key: "validatePageRoots",
+            decider: "owner",
+            provisional:
+              "read findings through `sdp q`'s `report`, which writes nothing, and restore removed pages with `sdp generate`",
+            links: ["spec:consumers.wholesale-view-rewrite#rule.buildInvalidates"],
+            trigger: "a session or CI job loses pages it still needed to a validate run",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
 ] as const;

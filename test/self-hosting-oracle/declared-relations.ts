@@ -5142,4 +5142,16 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:protocol.roadmap-replaces-plans",
     "the handbook keeps the roadmap pointer the self-hosting gate reads, whatever a hook prints",
   ],
+  [
+    "spec:model.anchors.markdown-deliverable",
+    "refines",
+    "spec:model.anchors",
+    "the question is whether the anchor model reaches a Markdown file",
+  ],
+  [
+    "spec:consumers.wholesale-view-rewrite.validate-page-roots",
+    "refines",
+    "spec:consumers.wholesale-view-rewrite",
+    "the question narrows the build's removal of the page roots for a validate run",
+  ],
 ] as const;

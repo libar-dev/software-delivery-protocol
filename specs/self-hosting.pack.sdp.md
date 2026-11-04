@@ -73,6 +73,7 @@ specs:
   - spec:model.anchors
   - spec:model.anchors.lookalike-refusal
   - spec:model.anchors.physical-identity
+  - spec:model.anchors.markdown-deliverable
   - spec:model.structural-patterns
   - spec:model.open-question-keys
   - spec:model.open-question-keys.keyed-question-resolves
@@ -248,6 +249,7 @@ specs:
   - spec:consumers.wholesale-view-rewrite.late-stale-page
   - spec:consumers.wholesale-view-rewrite.failed-run-view-removed
   - spec:consumers.wholesale-view-rewrite.build-invalidates-view
+  - spec:consumers.wholesale-view-rewrite.validate-page-roots
   - spec:consumers.agent-surface.address-and-cycle-recipes
   - spec:consumers.agent-surface.address-and-cycle-recipes.cycle-fails-a-rules-run
   - spec:consumers.agent-surface.address-and-cycle-recipes.unresolved-address-fails-a-rules-run
