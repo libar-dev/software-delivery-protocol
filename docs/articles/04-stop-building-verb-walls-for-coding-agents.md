@@ -6,13 +6,13 @@ A CLI gains `list-specs`. Then it gains a readiness filter, a command for verifi
 
 The agent makes a sequence of calls, receives more output than its context can hold and joins the results in scratch space. The tool has exposed many operations and little of the underlying model.
 
-The Libar Software Delivery Protocol takes another path ([the agent front door, MD-22](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/decisions/agent-front-door.sdp.md)):
+The Libar Software Delivery Protocol takes another path ([the agent front door, MD-22](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/decisions/agent-front-door.sdp.md)):
 
 > Give coding agents a visible, typed graph and one evaluation sink they can script.
 
 ## Start with what the agent holds
 
-Before designing [`spec:consumers.agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/agent-surface.sdp.md), we asked what an agent has when a session starts. Usually it does not have the Spec ID it needs. It has one of three things, the demand map:
+Before designing [`spec:consumers.agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/consumers/agent-surface.sdp.md), we asked what an agent has when a session starts. Usually it does not have the Spec ID it needs. It has one of three things, the demand map:
 
 1. A concept string from a prompt, such as "where do we enforce the readiness floor?"
 2. A file path it is about to read or edit.
@@ -54,7 +54,7 @@ At the pinned commit, that returns:
     {
       "id": "impl:protocol.census-page",
       "nodeType": "CodeNode",
-      "line": 21
+      "line": 22
     }
   ],
   "specs": [
@@ -70,7 +70,7 @@ The body is code, and `sdp q` runs it with the local process's full authority. N
 
 ## Grow by recipe, not by verb
 
-A recurring question becomes a recipe in [`docs/agent-surface/recipes.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/agent-surface/recipes.md). Every recipe is executed as written by the test suite and shipped under `dist/recipes/`. The [generated baseline metrics](./README.md#step-3-re-derive-corpus-metrics) carry the recipe count at the pin.
+A recurring question becomes a recipe in [`docs/agent-surface/recipes.md`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/agent-surface/recipes.md). Every recipe is executed as written by the test suite and shipped under `dist/recipes/`. The [generated baseline metrics](./README.md#step-3-re-derive-corpus-metrics) carry the recipe count at the pin.
 
 A recipe takes documented parameters through `--params`. An unknown parameter returns `{ unknownParams, accepts }` rather than silently changing the question. A caller can also wrap a recipe in its own body and filter the answer, without editing the shipped body.
 
@@ -80,7 +80,7 @@ A join moves into the reader only at the second-caller bar: a second machine con
 
 Some questions need more than a small answer. A design pass over a Pack may need member sections, open questions, dependency footing, declarations, examples and the Pack boundary.
 
-The context bundle, recipe 36, composes that reading on demand within a budget counted in UTF-16 code units. It states what it left out and never saves a second reading of the graph. When the whole scope cannot fit one budget, `part` returns ordered parts whose members together cover the scope. An oversized item is named rather than silently dropped ([`spec:consumers.context-bundle`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/context-bundle.sdp.md)).
+The context bundle, recipe 36, composes that reading on demand within a budget counted in UTF-16 code units. It states what it left out and never saves a second reading of the graph. When the whole scope cannot fit one budget, `part` returns ordered parts whose members together cover the scope. An oversized item is named rather than silently dropped ([`spec:consumers.context-bundle`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/consumers/context-bundle.sdp.md)).
 
 The design slice, recipe 54, answers a different question. It reads a Pack or selected Specs as one design: internal relations, touched components, decisions, open questions and what each member needs next. It is a reading composed on each invocation, not a saved planning artifact.
 
@@ -96,7 +96,7 @@ That is the useful feedback loop. The graph remains stable while the on-ramps an
 
 ## Repository-owned skills teach the workflow
 
-A capable surface still needs an on-ramp. The package ships repository-owned skills, counted in the [generated baseline metrics](./README.md#step-3-re-derive-corpus-metrics), under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/.agents/skills):
+A capable surface still needs an on-ramp. The package ships repository-owned skills, counted in the [generated baseline metrics](./README.md#step-3-re-derive-corpus-metrics), under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3/.agents/skills):
 
 - `sdp-agent-surface` teaches graph reading and the task-to-recipe map.
 - `sdp-authoring` teaches the carriers, readiness floors, relations and bindings.
@@ -121,7 +121,7 @@ From a checkout at the pinned commit:
 ```sh
 git clone https://github.com/libar-dev/software-delivery-protocol.git
 cd software-delivery-protocol
-git checkout b5e0a8bea1e3bedd48c616f96c9928e955792753
+git checkout f990bded1d7ca86f19f5746ef412613f8e908be3
 npm ci
 
 # Find a concept.
@@ -145,4 +145,4 @@ In this source checkout, `npm run --silent sdp:q --` supplies the corpus's fixtu
 
 ---
 
-*About this article: Part 4 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753). Repository links and command outputs are pinned to commit `b5e0a8be`; re-run the commands rather than quoting them at a later commit.*
+*About this article: Part 4 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3). Repository links and command outputs are pinned to commit `f990bded`; re-run the commands rather than quoting them at a later commit.*

@@ -30,7 +30,7 @@ It could compose a new deterministic projection through code. An agent proposes 
 
 It could produce explanatory prose or a bespoke arrangement beside a deterministic projection. A summary might explain why two Specs conflict or translate a readiness floor failure into plainer language. This is where the fine-tuning and presentation finesse become valuable, and where the current guarantees need careful extension.
 
-All three patterns are options to explore. None is a ratified product design today.
+All three patterns are options to explore. None is a ratified product design today. The boundary has a carrying Spec, [`spec:consumers.ai-assisted-reading`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/consumers/ai-assisted-reading.sdp.md), at `idea`. Its one blocking question asks what contract the second and third patterns would need. Its provisional answer, which the owner has yet to decide, allows only the first: select existing deterministic readings, and keep any generated text outside the Studio and the frozen projections, labelled as assistant output with its source commit and scope.
 
 ## The determinism question cannot be waved away
 
@@ -59,7 +59,7 @@ These rules do not guarantee that a summary is good. They make its claims inspec
 
 ## A better goal than "AI-generated UI"
 
-The seed design treated AI context as a first-class projection and the Studio as a place to explore and refine a living model ([the seed projection design](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/07-spec-studio-and-projections.md)). The current system has made the graph, agent surface, Studio and intent hand-off real.
+The seed design treated AI context as a first-class projection and the Studio as a place to explore and refine a living model ([the seed projection design](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/lineage/v0-design/07-spec-studio-and-projections.md)). The current system has made the graph, agent surface, Studio and intent hand-off real.
 
 The next useful step is not a button that generates an entire dashboard. It is a set of measured experiments:
 
@@ -69,9 +69,9 @@ The next useful step is not a button that generates an entire dashboard. It is a
 4. Which generated artifacts need a model, prompt and source-commit record to remain reviewable?
 5. When does adaptive presentation save effort, and when does a stable page structure make review easier?
 
-The first UX/UI design pass can explore these questions without committing the product to AI-rendered pages. The deterministic Studio remains a baseline and a fallback.
+The first UX/UI design pass can explore these questions without committing the product to AI-rendered pages. Its measurements are also the capture's named trigger: the boundary question reopens when the pass shows that assistant selection or a generated explanation helps a named review task. The deterministic Studio remains a baseline and a fallback.
 
-The strategic value is flexibility within explicit contracts. We can test additional readings and explore AI assistance while preserving the current deterministic surfaces. Reshaping Design Review, census, Mermaid or Gherkin requires a decision that refines or supersedes the [shipped-projections decision](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/decisions/shipped-projections-frozen.sdp.md) (MD-32); Studio changes follow its own carrying Specs. The interface can keep changing. The record does not change with it.
+The strategic value is flexibility within explicit contracts. We can test additional readings and explore AI assistance while preserving the current deterministic surfaces. Reshaping Design Review, census, Mermaid or Gherkin requires a decision that refines or supersedes the [shipped-projections decision](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/decisions/shipped-projections-frozen.sdp.md) (MD-32); Studio changes follow its own carrying Specs. The interface can keep changing. The record does not change with it.
 
 ## Up next
 
@@ -79,4 +79,4 @@ Part 6, *Shared language is a performance feature*, returns to the construction 
 
 ---
 
-*About this article: Part 5 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753). Repository links are pinned to commit `b5e0a8be`. Current capabilities are distinguished from design options throughout; the AI presentation direction is not shipped functionality.*
+*About this article: Part 5 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3). Repository links are pinned to commit `f990bded`. Current capabilities are distinguished from design options throughout; the AI presentation direction is not shipped functionality.*

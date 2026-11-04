@@ -4,7 +4,7 @@
 
 [Part 1](./01-the-spec-is-the-prompt-is-the-design.md) introduced one enrichable `Spec`, source anchors and the derived graph. [Part 2](./02-one-graph-many-views.md) showed how people read that graph through regenerable projections.
 
-This article follows the engineering loop in a text editor and a terminal. We will use Order Management in [`examples/checkout-v1`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/examples/checkout-v1), then inspect a comment-form binding in the Protocol's own engine.
+This article follows the engineering loop in a text editor and a terminal. We will use Order Management in [`examples/checkout-v1`](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3/examples/checkout-v1), then inspect a comment-form binding in the Protocol's own engine.
 
 ## Setup
 
@@ -13,7 +13,7 @@ Every command runs from a checkout at the pinned commit. Use Node `^20.19.0 || ^
 ```sh
 git clone https://github.com/libar-dev/software-delivery-protocol.git
 cd software-delivery-protocol
-git checkout b5e0a8bea1e3bedd48c616f96c9928e955792753
+git checkout f990bded1d7ca86f19f5746ef412613f8e908be3
 npm ci
 ```
 
@@ -99,7 +99,7 @@ The Specs listed by the generated drift answer have implementation bindings and 
 
 ## Author the parent and its example space
 
-Open [`create-order.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/examples/checkout-v1/specs/orders/create-order.sdp.md):
+Open [`create-order.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/examples/checkout-v1/specs/orders/create-order.sdp.md):
 
 <!-- evidence:create-order-carrier -->
 ````markdown
@@ -143,7 +143,7 @@ The `gwt-vocabulary` fence declares the typed example space its child examples s
 
 ### Bind one point
 
-The child example [`create-order-valid-cart.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/examples/checkout-v1/specs/orders/create-order-valid-cart.sdp.md) refines and verifies its parent:
+The child example [`create-order-valid-cart.sdp.md`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/examples/checkout-v1/specs/orders/create-order-valid-cart.sdp.md) refines and verifies its parent:
 
 <!-- evidence:valid-cart-carrier -->
 ````markdown
@@ -203,7 +203,7 @@ export const createOrderUseCaseAnchor = codeAnchor({
 ```
 <!-- /evidence:constant-anchor -->
 
-The comment form needs no runtime import. This anchor comes from the Protocol's own [`src/projections/census.ts`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/src/projections/census.ts):
+The comment form needs no runtime import. This anchor comes from the Protocol's own [`src/projections/census.ts`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/src/projections/census.ts):
 
 <!-- evidence:comment-anchor -->
 ```ts
@@ -293,4 +293,4 @@ These experiments show the boundary between extraction, conformance, honesty and
 
 ---
 
-*About this article: Part 3 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753). Repository links and command outputs are pinned to commit `b5e0a8be`; re-run the commands rather than quoting the outputs at a later commit.*
+*About this article: Part 3 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3). Repository links and command outputs are pinned to commit `f990bded`; re-run the commands rather than quoting the outputs at a later commit.*

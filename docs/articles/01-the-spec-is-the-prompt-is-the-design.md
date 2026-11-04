@@ -6,7 +6,7 @@ At the start of a project, intent is sharp. You write an architecture document, 
 
 An AI coding agent inherits that fragmentation. It can write a function quickly, but it cannot tell an early idea from a settled contract, an implementation shortcut from a ratified decision, or a verifier binding from a passing test. It reads raw files and stale prose, then guesses at the missing structure.
 
-[Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753) (`@libar-dev/software-delivery-protocol`, CLI `sdp`) addresses that missing structure. It is an executable, self-validating meta-model of the software-delivery process.
+[Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3) (`@libar-dev/software-delivery-protocol`, CLI `sdp`) addresses that missing structure. It is an executable, self-validating meta-model of the software-delivery process.
 
 Its premise has four parts:
 
@@ -18,7 +18,7 @@ This article explains those parts and what they make possible.
 
 Delivery tools often make an idea change artifact types as it matures. A note becomes a requirement, then a design document, then tickets, then acceptance criteria. Each migration loses context and breaks traceability.
 
-The Protocol has one authored truth-primitive, `Spec`. A Spec keeps its stable, namespaced identity, such as `spec:orders.create-order`, from its first capture through implementation. You enrich it with typed sections or refine it into child Specs. You do not convert it into a different artifact ([`spec:model.core-model`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/model/core-model.sdp.md)).
+The Protocol has one authored truth-primitive, `Spec`. A Spec keeps its stable, namespaced identity, such as `spec:orders.create-order`, from its first capture through implementation. You enrich it with typed sections or refine it into child Specs. You do not convert it into a different artifact ([`spec:model.core-model`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/model/core-model.sdp.md)).
 
 Three independent descriptors position every Spec:
 
@@ -44,7 +44,7 @@ That only works when authors avoid padding. The Protocol's readiness floor is a 
 
 ## The graph is derived
 
-Nobody authors the graph. `sdp build` reads the carriers and source anchors and derives one flat, typed, deterministic document: nodes, edges and a location table. Validators, recipes and projections consume that one read model rather than parsing source into private alternatives ([`spec:extraction.derive-graph`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/extraction/derive-graph.sdp.md)).
+Nobody authors the graph. `sdp build` reads the carriers and source anchors and derives one flat, typed, deterministic document: nodes, edges and a location table. Validators, recipes and projections consume that one read model rather than parsing source into private alternatives ([`spec:extraction.derive-graph`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/extraction/derive-graph.sdp.md)).
 
 Edges that touch the same Spec can carry different claims:
 
@@ -66,7 +66,7 @@ Every node and edge has one of three claims:
 | `anchored` | Human-authored source or test anchor | Authoritative binding, no intent |
 | `inferred` | Mechanical analysis | Advisory structure, never silently promoted |
 
-The current curated graph contains declared and anchored content. File-level imports supplied through `sdp build --imports` remain separate inferred input for curation advice. They do not mint curated edges or delivery facts ([`spec:extraction.claim-taxonomy`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/extraction/claim-taxonomy.sdp.md)).
+The current curated graph contains declared and anchored content. File-level imports supplied through `sdp build --imports` remain separate inferred input for curation advice. They do not mint curated edges or delivery facts ([`spec:extraction.claim-taxonomy`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/extraction/claim-taxonomy.sdp.md)).
 
 Readiness and realization stay independent too:
 
@@ -120,17 +120,17 @@ The Spec Studio makes the human side concrete. A reviewer can explore a Pack, in
 
 ## The Protocol measures itself
 
-The Protocol has no separate PRD. It authors its own rules as Specs, binds its engine and tests to them, derives its own graph and checks that graph in CI ([`spec:protocol.self-hosting`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/protocol/self-hosting.sdp.md)).
+The Protocol has no separate PRD. It authors its own rules as Specs, binds its engine and tests to them, derives its own graph and checks that graph in CI ([`spec:protocol.self-hosting`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/protocol/self-hosting.sdp.md)).
 
 <!-- evidence:self-hosting-census -->
-Measured at commit `b5e0a8bea1e3bedd48c616f96c9928e955792753`:
+Measured at commit `f990bded1d7ca86f19f5746ef412613f8e908be3`:
 
 | Measure | Value |
 |---|---|
-| Authored Specs | 456: 447 `ready`, 4 `scoped`, 5 `idea` |
+| Authored Specs | 459: 447 `ready`, 4 `scoped`, 8 `idea` |
 | Packs | 9 |
-| Source and test bindings | 241 CodeNodes and 366 Anchors |
-| Graph | 1,072 nodes, 2,978 edges, 3,120 locations |
+| Source and test bindings | 241 CodeNodes and 370 Anchors |
+| Graph | 1,079 nodes, 2,996 edges, 3,157 locations |
 | Delivery facts | 166 `implemented`, 397 `has-verifier`, 0 `observed` |
 | Operational build backlog | 2 |
 | Drift alarm | 0 |
@@ -149,18 +149,18 @@ It is not an embedded permissions system. Approval belongs in git and CI.
 
 It does not infer intent. Mechanical structure can assist curation, but a person authors intent and bindings.
 
-The aim is to connect adjacent tools rather than replace them. Today the Studio reads supplied CTRF test reports as run evidence. An interface and API reference remains an [idea-stage capture](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/reference-projection.sdp.md). Dedicated integrations with issue trackers and design tools are not designed yet; generic Design and UI prose can mention them without providing that experience.
+The aim is to connect adjacent tools rather than replace them. Today the Studio reads supplied CTRF test reports as run evidence. An interface and API reference remains an [idea-stage capture](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/consumers/reference-projection.sdp.md). Dedicated integrations with issue trackers and design tools are not designed yet; generic Design and UI prose can mention them without providing that experience.
 
 At the pinned commit, installation is from a reviewed git commit rather than an npm release. The package version is `0.0.0`; `sdp --version` names the build commit.
 
 ## Try it
 
-For this source checkout, use Node `^20.19.0 || ^22.12.0 || >=24.0.0`, where the ranges declared by the installed test toolchain (Vitest, Vite and Rolldown) overlap. The installed CLI separately declares Node `>=20`:
+For this source checkout, use Node `^20.19.0 || ^22.12.0 || >=24.0.0`, where the ranges declared by the installed test toolchain (Vitest, Vite and Rolldown) overlap. The installed CLI separately declares Node `^20.19.0 || >=22.12.0` in its `engines` field:
 
 ```sh
 git clone https://github.com/libar-dev/software-delivery-protocol.git
 cd software-delivery-protocol
-git checkout b5e0a8bea1e3bedd48c616f96c9928e955792753
+git checkout f990bded1d7ca86f19f5746ef412613f8e908be3
 npm ci
 
 npm run --silent sdp -- validate . \
@@ -181,4 +181,4 @@ Open `generated/spec-studio/index.html`. The `sdp:q` script supplies the reposit
 
 ---
 
-*About this article: Part 1 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753). Repository links and measurements are pinned to commit `b5e0a8be`; re-run the commands rather than quoting the numbers at a later commit.*
+*About this article: Part 1 in a series introducing the [Libar Software Delivery Protocol](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3). Repository links and measurements are pinned to commit `f990bded`; re-run the commands rather than quoting the numbers at a later commit.*
