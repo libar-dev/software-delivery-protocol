@@ -269,8 +269,16 @@ function createFilesystemWatchSource(input: {
   const watchers = new Map<string, NativeWatchHandle>();
   // The identity of the directory each handle was opened on. A watcher may follow the inode it
   // was opened on (inotify does) rather than the path, so a path that now holds another
-  // directory needs a new handle.
-  const identities = new Map<string, { readonly dev: number; readonly ino: number }>();
+  // directory needs a new handle. The birth time is 0 where the filesystem reports none.
+  const identities = new Map<
+    string,
+    { readonly dev: number; readonly ino: number; readonly birthtimeMs: number }
+  >();
+  // The watched directories that, when last read, held an entry with their own name, such as
+  // `docs/docs`. inotify reports a directory's own move or deletion on its handle under that name,
+  // so once nothing stands at that name, an event naming the entry is told apart from the
+  // directory's own by whether the entry was there.
+  const holdOwnName = new Set<string>();
   // The links discovery warns about, by absolute path, so removing one still schedules a run.
   const skippedLinks = new Set<string>();
   let eventListener: ((event: ValidateWatchEvent) => void) | undefined;
@@ -304,6 +312,7 @@ function createFilesystemWatchSource(input: {
       const handle = watchers.get(candidate);
       watchers.delete(candidate);
       identities.delete(candidate);
+      holdOwnName.delete(candidate);
       handle?.close();
     }
 
@@ -315,14 +324,52 @@ function createFilesystemWatchSource(input: {
   };
 
   // True when a watched path now holds a directory other than the one its handle was opened on.
+  // Some network and FUSE filesystems do not keep a directory's inode number stable, and one that
+  // changes it from one read to the next would make every event look like a replacement, so a
+  // changed identity counts only when a second read confirms it. On such a filesystem identity
+  // cannot show a directory replaced, and only the events that report a replacement do. A
+  // filesystem that changes a directory's number now and then, as when its cache drops the entry,
+  // still costs one rebuild of that subtree and one run per change. A second read that fails
+  // counts as another directory: the path no longer holds the one the handle was opened on.
   const isOtherDirectory = (absoluteDirectory: string, stats: Stats): boolean => {
     const opened = identities.get(absoluteDirectory);
 
-    return (
-      opened !== undefined &&
-      stats.isDirectory() &&
-      (opened.dev !== stats.dev || opened.ino !== stats.ino)
-    );
+    if (
+      opened === undefined ||
+      !stats.isDirectory() ||
+      (opened.dev === stats.dev && opened.ino === stats.ino)
+    ) {
+      return false;
+    }
+
+    try {
+      const again = lstatWatchPath(absoluteDirectory);
+
+      return !again.isDirectory() || (again.dev === stats.dev && again.ino === stats.ino);
+    } catch {
+      return true;
+    }
+  };
+
+  // True when a watched directory still has the birth time it had when its handle was opened, so it
+  // is that directory and the handle lives. A directory deleted and recreated can get the deleted
+  // one's inode number back, but it is born again. Only the directory's own reports need this: the
+  // birth time is compared nowhere else, because a platform without birth times may report the
+  // change time in their place, and that changes with every entry.
+  const keepsBirthTime = (absoluteDirectory: string): boolean => {
+    const opened = identities.get(absoluteDirectory);
+
+    if (opened === undefined || !(opened.birthtimeMs > 0)) {
+      return false;
+    }
+
+    try {
+      const stats = lstatWatchPath(absoluteDirectory);
+
+      return stats.isDirectory() && stats.birthtimeMs === opened.birthtimeMs;
+    } catch {
+      return false;
+    }
   };
 
   // A callback names its entries by path. Once a watched directory on the way up from it is gone
@@ -357,24 +404,11 @@ function createFilesystemWatchSource(input: {
   };
 
   // The root has no parent watcher, so only the handles of its own tree can show it replaced, and
-  // every name they report resolves through whatever now stands at the root. inotify reports the
-  // root's own move or deletion on the root's handle as a rename under the root's basename. True
-  // when the root is gone, no longer a directory or another directory than the one its handle was
-  // opened on, and for that self rename even when the identity matches: a root deleted and
-  // recreated may reuse the inode while the old handle is dead.
-  const rootReplaced = (
-    absoluteDirectory: string,
-    eventType: string,
-    filename: string | null,
-  ): boolean => {
-    if (
-      absoluteDirectory === input.root &&
-      eventType === "rename" &&
-      filename === basename(input.root)
-    ) {
-      return true;
-    }
-
+  // every name they report resolves through whatever now stands at the root. True when the root is
+  // gone, no longer a directory or another directory than the one its handle was opened on. A root
+  // deleted and recreated with its inode reused keeps its identity; its handle's own report of the
+  // deletion covers that case, as for any watched directory.
+  const rootReplaced = (): boolean => {
     let stats: Stats;
 
     try {
@@ -525,7 +559,7 @@ function createFilesystemWatchSource(input: {
         let replacedRoot: boolean;
 
         try {
-          replacedRoot = rootReplaced(absoluteDirectory, eventType, filename);
+          replacedRoot = rootReplaced();
         } catch (error) {
           fail(error);
           return;
@@ -568,6 +602,7 @@ function createFilesystemWatchSource(input: {
         const relativePath =
           relativeDirectory === "" ? entryName : `${relativeDirectory}/${entryName}`;
         const absolutePath = join(absoluteDirectory, entryName);
+        const namesOwnDirectory = entryName === basename(absoluteDirectory);
         let stats: Stats;
 
         try {
@@ -577,6 +612,21 @@ function createFilesystemWatchSource(input: {
         } catch (error) {
           if (!isNotFoundError(error)) {
             fail(error);
+            return;
+          }
+
+          // inotify reports a watched directory's own move or deletion on its handle as a rename
+          // under the directory's own name. Unless an entry of that name was there to go, the
+          // event is the directory's own: its handle may be dead, even where a directory deleted
+          // and recreated reuses the inode and keeps its identity, so the directory is reconciled
+          // in place. inotify reports a change to the directory's own attributes, such as its
+          // times, the same way, so such a change also rebuilds its handles and schedules a run.
+          // So does an entry with the directory's name that comes and goes before its first event
+          // is read.
+          const heldOwnName = namesOwnDirectory && holdOwnName.delete(absoluteDirectory);
+
+          if (namesOwnDirectory && eventType === "rename" && !heldOwnName) {
+            reconcileDirectory(absoluteDirectory, relativeDirectory);
             return;
           }
 
@@ -592,14 +642,30 @@ function createFilesystemWatchSource(input: {
           return;
         }
 
+        // With an entry of the directory's own name standing there, the entry's event and the
+        // directory's own report look the same, whether or not the entry was there before: a
+        // directory deleted and recreated with its inode reused may hold such an entry again. The
+        // directory's birth time tells them apart. Where the filesystem reports none, the event
+        // rebuilds the directory's handles and schedules a run.
+        if (namesOwnDirectory) {
+          if (eventType === "rename" && !keepsBirthTime(absoluteDirectory)) {
+            reconcileDirectory(absoluteDirectory, relativeDirectory);
+            return;
+          }
+
+          holdOwnName.add(absoluteDirectory);
+        }
+
         // A watched directory replaced by a link, a file or another directory loses its carriers
         // without per-file events, and its retained watchers would resolve their entries through
-        // the replacement or keep watching the moved directory. A rename at a watched directory's
-        // path retires its handle even when the identity matches: a directory deleted and
-        // recreated may reuse the inode while the old handle is dead.
+        // the replacement or keep watching the moved directory. A directory that keeps its
+        // identity keeps its handles and is not read again: macOS can report a rename for a
+        // directory that has not moved, and Linux reports a change to a directory's own times as a
+        // rename at its parent. When such a directory was deleted and recreated with its inode
+        // reused, its own handle reports the deletion.
         const replacedWatchedDirectory =
           watchers.has(absolutePath) &&
-          (!stats.isDirectory() || eventType === "rename" || isOtherDirectory(absolutePath, stats));
+          (!stats.isDirectory() || isOtherDirectory(absolutePath, stats));
 
         if (replacedWatchedDirectory) {
           unwatchTree(absolutePath);
@@ -634,14 +700,26 @@ function createFilesystemWatchSource(input: {
       fail(error);
     });
     watchers.set(absoluteDirectory, handle);
-    identities.set(absoluteDirectory, { dev: directoryStats.dev, ino: directoryStats.ino });
+    identities.set(absoluteDirectory, {
+      dev: directoryStats.dev,
+      ino: directoryStats.ino,
+      birthtimeMs: directoryStats.birthtimeMs,
+    });
   };
 
+  // Watches a directory the watch does not watch yet and every directory under it, reporting the
+  // carriers already there when asked. A directory already watched is not read again: its
+  // carriers are in the graph, and reporting them as created would start a run that changes
+  // nothing. A directory replaced or rebuilt loses its handles first, so it is read afresh.
   const subscribeTree = (
     absoluteDirectory: string,
     relativeDirectory: string,
     emitExistingCarriers: boolean,
   ): void => {
+    if (watchers.has(absoluteDirectory)) {
+      return;
+    }
+
     subscribeDirectory(absoluteDirectory, relativeDirectory);
 
     if (closed || !watchers.has(absoluteDirectory)) {
@@ -655,6 +733,12 @@ function createFilesystemWatchSource(input: {
     } catch (error) {
       fail(error);
       return;
+    }
+
+    if (entries.some((entry) => entry.name === basename(absoluteDirectory))) {
+      holdOwnName.add(absoluteDirectory);
+    } else {
+      holdOwnName.delete(absoluteDirectory);
     }
 
     for (const entry of entries) {
@@ -719,6 +803,7 @@ function createFilesystemWatchSource(input: {
 
       watchers.clear();
       identities.clear();
+      holdOwnName.clear();
     },
   };
 }
