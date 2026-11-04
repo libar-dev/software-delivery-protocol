@@ -43,7 +43,11 @@ export interface ExampleContract<S extends string, PM extends Record<S, ParamSha
   readonly steps: readonly { readonly [K in S]: ContractStep<K, PM[K]> }[S][];
 }
 
-export type StepFn<W, P extends ParamShape> = (world: W, params: P) => void | Promise<void>;
+export type StepFn<W, P extends ParamShape> = (
+  world: W,
+  params: P,
+  step: ContractStep<string, P>,
+) => void | Promise<void>;
 
 /** Every step, only the steps — and each handler's params typed per step. */
 export type StepBindings<W, S extends string, PM extends Record<S, ParamShape>> = {
@@ -87,7 +91,7 @@ export function renderContractStep(step: {
 /** Re-binds the skeleton's `{name}` groups with the step's params for natural rendering. */
 function substituteParams(skeleton: string, params: ParamShape): string {
   return skeleton.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/gu, (group, name: string) =>
-    name in params ? String(params[name]) : group,
+    Object.hasOwn(params, name) ? String(params[name]) : group,
   );
 }
 
@@ -138,7 +142,32 @@ export function planExample<W, S extends string, PM extends Record<S, ParamShape
       key: step.key,
       text: step.text,
       label: renderContractStep(step),
-      run: (world: W) => bindings[step.key](world, step.params),
+      run: (world: W) => {
+        // Structural stops cover Object.prototype and Function.prototype from any realm.
+        // A callable parent class remains eligible; Function.prototype's parent is terminal.
+        let owner: object | null = bindings;
+        while (owner !== null) {
+          const parent = Object.getPrototypeOf(owner) as object | null;
+          if (
+            owner !== bindings &&
+            (parent === null ||
+              (typeof owner === "function" && Object.getPrototypeOf(parent) === null))
+          ) {
+            owner = null;
+            break;
+          }
+          if (Object.hasOwn(owner, step.key)) break;
+          owner = parent;
+        }
+        const handler =
+          owner !== null && (owner === bindings || step.key !== "constructor")
+            ? bindings[step.key]
+            : undefined;
+        if (typeof handler !== "function") {
+          throw new Error(`no handler bound for step key "${step.key}"`);
+        }
+        return handler.call(bindings, world, step.params, step);
+      },
     })),
   };
 }

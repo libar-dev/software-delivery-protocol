@@ -26,8 +26,12 @@ export const consumersSpecs = [
           "The guarantees recipe (recipe 3) returns each section's entries as the Spec states them and the binding fields the Spec context carries, not only the names of the sections.",
           "The orphans and gaps recipe (recipe 8) reports each kind the verifier-gap signal exempts and how many ready Specs it exempts, as the build backlog reports its exclusions.",
           "A design-backlog recipe lists the Specs stated `defined` that no code realizes, with their design columns, excluding examples and decisions as the build backlog does.",
+          "A recipe that reports a Spec's floor reached reports `not evaluated`, never `none`, for a Spec over whose unratified kind or altitude the reader evaluates no floor, with no stated next rung and no unmet clause; readiness divergence leaves such a Spec out, and a count by floor reached counts it under a `not evaluated` key, present only when such a Spec is counted.",
           "The catalog opens with an index, one row per recipe, and shows how to run a shipped body inside a caller's own body to filter its answer.",
         ],
+        ruleKeys: {
+          floorNotEvaluated: "rules[4]",
+        },
       },
       design: {
         detailParameter:
@@ -49,7 +53,7 @@ export const consumersSpecs = [
         catalogIndex:
           "the catalog opens with a table of every recipe, its number, name, parameters and a one-line use, before the contract; the build writes one file per body and none for the index.",
         wrapIdiom:
-          "to filter a shipped answer, the caller wraps the shipped body in an async arrow function that takes `params`, inside its own body, `const answer = await (async (params) => { <shipped body> })({ <the recipe's own parameters> });`, and returns a filtered value, so the caller's own parameters never reach the recipe as names it does not take; the catalog shows the shell form and states that the caller's part must hold no shell expansion.",
+          "to filter a shipped answer, the caller calls the recipe through the `recipes` binding with only the recipe's own parameters, `const answer = await recipes(<number>, { <the recipe's own parameters> });`, inside its own body, and returns a filtered value, so the caller's own parameters never reach the recipe as names it does not take and the shipped body is never inlined into the caller's; the catalog shows the shell form and states that the caller's part must hold no shell expansion.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -131,10 +135,12 @@ export const consumersSpecs = [
           "Disconnected neighborhoods and foreign edge types remain visible when they appear in the selected one-hop or Pack slice; absence of a neighbor is honest silence, not a synthetic hub.",
           "Hard bounds are exact: `maxNodesPerDiagram = 64` and `maxEdgesPerDiagram = 128`. A token collision or an overflow of either bound refuses the affected diagram with a deterministic refusal that names the bound, while every in-bound diagram still publishes and the command exits 0. The projection never silently truncates, shards partially, drops edges to fit, or aborts the whole page set because one diagram overflowed.",
           "After the shared build, publication owns only `generated/mermaid/` and uses the explicit `sdp mermaid` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
-          "A Mermaid run writes its complete page set to `generated/mermaid.tmp/`, removes the prior Mermaid root, and renames the temporary root into place. The shared build invalidates this root and all sibling projection roots before extraction, as `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` states, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Mermaid root it cannot certify.",
+          "A Mermaid run writes its complete page set to `generated/mermaid.tmp/`, removes the prior Mermaid root, and renames the temporary root into place. The shared build invalidates this root and all sibling projection roots before extraction, as `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` states, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Mermaid root it cannot certify when its output parent remains safe.",
           "`sdp mermaid --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
           "When extraction succeeds but graph validation reports errors, Mermaid still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
           "The projection adds no Mermaid-specific Reader accessors, maintains no projection-owned taxonomy list, and confers nothing back into the graph.",
+          "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
+          "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
         ],
         exampleSpace: {
           given: [
@@ -156,6 +162,10 @@ export const consumersSpecs = [
             "validation errors label the index as a diagnostic projection",
             "no whole-graph diagram is emitted",
           ],
+        },
+        ruleKeys: {
+          portablePublication: "rules[14]",
+          safeCleanup: "rules[15]",
         },
       },
     },
@@ -180,12 +190,14 @@ export const consumersSpecs = [
           "Every Spec renders as one Gherkin-shaped page plus one deterministic index. Pages use `spec/<id body>.feature.md`, with the `spec:` namespace removed from the id. Packs are not projected. The projection never uses `.sdp.gherkin` and never claims round-trip parity.",
           "Each page says it is generated and disposable. A page for a kind the Gherkin carrier does not carry has a `# LOSSY:` comment in its header giving that kind's reason, and content Gherkin cannot carry honestly is marked the same way rather than invented as structure.",
           "Description prose lands only on the narrative and keyed description bullets under the prose-ownership decision, `spec:decisions.prose-ownership`; the projection never emits DocStrings, DataTables, Scenario Outlines, Examples tables, backgrounds, star steps or leading conjunctions.",
-          "Every emitted record is ordered by deterministic code-unit order independent of graph input order. Hostile characters are escaped so they cannot close a fence or invent a DocString.",
+          "Every emitted record is ordered by deterministic code-unit order independent of graph input order. Hostile characters are escaped so they cannot close a fence or invent a DocString, and every line terminator, CR, LF, U+2028 or U+2029, folds to one space, so a page never shows a line the graph does not state.",
           "After the shared build, publication owns only `generated/gherkin/` and uses the explicit `sdp gherkin` surface. It is not a child of or an extra write inside Design Review's transaction, and it shares no publication bus or hidden side channel with other projections.",
-          "A Gherkin-view run writes its complete page set to `generated/gherkin.tmp/`, removes the prior Gherkin-view root, and renames the temporary root into place. The shared build invalidates this root and all sibling projection roots before extraction, as `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` states, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Gherkin-view root it cannot certify.",
+          "A Gherkin-view run writes its complete page set to `generated/gherkin.tmp/`, removes the prior Gherkin-view root, and renames the temporary root into place. The shared build invalidates this root and all sibling projection roots before extraction, as `spec:consumers.wholesale-view-rewrite#rule.buildInvalidates` states, so failure leaves honest absence rather than stale output that looks current. A failed publish removes any live or temporary Gherkin-view root it cannot certify when its output parent remains safe.",
           "`sdp gherkin --check-clean` renders an independent twin, refuses divergent renders, and compares the current generated root with the new render. Missing or drifted output returns nonzero and is removed; clean output is replaced wholesale with byte-identical content.",
           "When extraction succeeds but graph validation reports errors, the Gherkin view still publishes the labelled diagnostic projection and returns the nonzero validation exit code.",
           "The projection adds no Gherkin-specific Reader accessors and confers nothing back into the graph.",
+          "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
+          "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
         ],
         exampleSpace: {
           given: [
@@ -203,6 +215,10 @@ export const consumersSpecs = [
             "validation errors label the index as a diagnostic projection",
             "no page uses the .sdp.gherkin suffix",
           ],
+        },
+        ruleKeys: {
+          portablePublication: "rules[10]",
+          safeCleanup: "rules[11]",
         },
       },
     },
@@ -223,18 +239,18 @@ export const consumersSpecs = [
       },
       model: {
         terms: {
-          "curated graph":
-            "The part of the one derived graph that carries declared intent and anchored bindings, kept sparse by curation; the impact graph's inferred structure remains distinct.",
-          curation:
-            "The deliberate difference between the sparse curated graph and the exhaustive code-structure surface `spec:consumers.impact-graph` designs; it is not drift.",
-          "diagnostic publication posture":
-            "After extraction succeeds, a projection publishes its honestly labelled graph view even when validation reports errors, and returns the validation exit code so findings remain both visible and nonzero.",
-          discipline:
-            "A filter that selects or groups Specs by kind or section; it is not a phase to pass through.",
           projection:
             "A pure, disposable, regenerable function of the graph that produces a consumer artifact without becoming a second source of truth.",
+          "diagnostic publication posture":
+            "After extraction succeeds, a projection publishes its honestly labelled graph view even when validation reports errors, and returns the validation exit code so findings remain both visible and nonzero. Publication failures remain separate: an unsafe output parent refuses writes and cleanup through it; Design Review, Mermaid and Gherkin publishers refuse their whole page set on a case-insensitive page-path collision, name both ids and paths, remove stale roots only through safe parents, and exit 1. Renderers retain their page names and bytes.",
+          "curated graph":
+            "The part of the one derived graph that carries declared intent and anchored bindings, kept sparse by curation; the impact graph's inferred structure remains distinct.",
           reader:
             "The thin typed front door that decodes graph joins and taxonomy once, returns composable data, and persists nothing.",
+          curation:
+            "The deliberate difference between the sparse curated graph and the exhaustive code-structure surface `spec:consumers.impact-graph` designs; it is not drift.",
+          discipline:
+            "A filter that selects or groups Specs by kind or section; it is not a phase to pass through.",
         },
       },
     },
@@ -320,6 +336,8 @@ export const consumersSpecs = [
           "An open question that carries a key opens with the key as inline code, `#<key>`, before its text.",
           "A Spec page lists the code units that realize the Spec and, apart, the units that reference it, each with its file and line, its role and, for a component, its layer and context; a reference confers no implementation binding.",
           "The renderer reads the reader and returns pages; writing them is the caller's job.",
+          "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
+          "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
         ],
         exampleSpace: {
           given: [
@@ -339,6 +357,8 @@ export const consumersSpecs = [
           fieldEscaping: "rules[6]",
           openSectionList: "rules[7]",
           inlineCode: "rules[8]",
+          portablePublication: "rules[12]",
+          safeCleanup: "rules[13]",
         },
       },
       ui: {
@@ -372,7 +392,7 @@ export const consumersSpecs = [
           "`renderCensus` is a pure `Reader -> pages` projection with no filesystem or clock access; every page, row, and finding is deterministically sorted so equal reader data produces byte-identical output.",
           "Spec kind rows and their display labels, altitude rows, and readiness rows derive from `SPEC_KINDS`, `SPEC_KIND_DISPLAY_LABELS`, `SPEC_ALTITUDES`, and `SPEC_READINESS`; graph node, claim, delivery-fact, and edge rows derive from `graphNodeTypes`, `graphClaims`, `deliveryFactNames`, and `graphEdgeTypes`. Every exported runtime category renders even at count zero; no projection-owned taxonomy list is maintained. The structural section's layer rows derive from `CODE_ANCHOR_LAYERS`.",
           "A foreign value outside an exported runtime taxonomy renders as a deterministic `unrecognized` row sorted by its literal value rather than disappearing or being coerced into a known category.",
-          "Stated readiness and structurally derived readiness render as separate dimensions, including a count for Specs that have not structurally reached the first derived rung; the census never resolves or confers readiness.",
+          "Stated readiness and structurally derived readiness render as separate dimensions, including a count for Specs that have not structurally reached the first derived rung. A Spec whose kind or altitude is unratified has no floor evaluated, so it stays out of that count and counts on a `floor not evaluated (unratified descriptor)` row, present only when such a Spec exists. The census never resolves or confers readiness.",
           "Anchor flavor groups binding nodes by node type, id namespace and outgoing edge type, counting each outgoing edge occurrence; a binding node with no outgoing edge has a `no binding edge` row, so a missing binding is stated rather than inferred.",
           "The structural section counts `memberOf`, `uses` and `references` edges, with code units counted apart; it lists component members, `uses` fan-in and fan-out including members, references, and `uses` cycles as data rather than findings. Dangling structural references are read from the validation report.",
           "With no structural edge or role, layer or context attribute, the section states that no structural binding exists. Otherwise it lists every closed layer value even at zero and the role and context values the graph holds, each with the units that carry it.",
@@ -417,7 +437,8 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "`createReader` constructs a fresh thin typed loader that indexes graph joins and claims and computes delivery facts and validation findings once, derives readiness when a caller asks, and returns plain composable data without persisting state.",
-          "The reader exposes `graph`, the raw graph it reads, and the methods `specs`, `packs`, `findings`, `findByConcept`, `byFile`, `blastRadius`, `specContext` and `packContext`; a join is added only when a second machine consumer needs it and hand-rolled attempts get it wrong.",
+          "The reader exposes `graph`, the raw graph it reads, and the methods `specs`, `packs`, `findings`, `findByConcept`, `byFile`, `blastRadius`, `resolveEntryAddress`, `specContext` and `packContext`; a join is added only when a second machine consumer needs it and hand-rolled attempts get it wrong.",
+          "`resolveEntryAddress` resolves one entry address with the grammar and entry rules that prose validation and entry citations use, and returns `{ entry, resolves, reason }`: `entry` names the resolved entry, such as `rule[2]`, `question[0]` or `design.wrapIdiom`, or is null; `reason` is null when the address resolves and otherwise `malformed`, `spec`, `section` or `entry`; recipe 51 and the vault projection are its machine consumers.",
           "`findByConcept` matches ids, titles, anchor labels, Pack framing, Spec narrative, and reified section content, including model term keys, and names the fields a node matched on rather than returning a bare hit.",
           "`byFile` answers with the nodes the graph records at the path and with the Specs those nodes reach, so a source file carrying a binding names the Spec it binds and a carrier file names the Spec authored in it.",
           "`blastRadius` maps changed files to Specs and Packs authored at them and Specs reached through `satisfies`, `references`, `verifies` or a usable oracle `models` binding, plus their explicit one-hop at-risk neighbors; it reports every file the graph records nothing at as `coverageUnknown` and every changed code unit with no Spec linkage as `unlinked`, and neither list claims exhaustive coverage.",
@@ -450,10 +471,11 @@ export const consumersSpecs = [
           ],
         },
         ruleKeys: {
-          conceptEntry: "rules[2]",
-          fileEntry: "rules[3]",
-          blastRadius: "rules[4]",
-          reasonsAsData: "rules[5]",
+          entryAddressResolution: "rules[2]",
+          conceptEntry: "rules[3]",
+          fileEntry: "rules[4]",
+          blastRadius: "rules[5]",
+          reasonsAsData: "rules[6]",
         },
       },
     },
@@ -503,6 +525,7 @@ export const consumersSpecs = [
           "The divergence banner is raised only in the dishonest direction — the floor reached standing below the stated rung. A floor reached at or above the stated rung raises nothing, because a floor is a floor and never a quota that nags upward.",
           "A raised banner names the first unmet clause by its clause id and its description, so the reader is told which clause to satisfy rather than only that something is wrong.",
           "When even the `idea` floor is unmet, the floor reached renders as none rather than as a rung, and a raised banner states that the floor stands below `idea`.",
+          "When no floor is evaluated over a Spec because its kind or altitude is unratified, the floor reached renders as `floor not evaluated (unratified descriptor)` on its page, in the index and in the Pack member table, and no banner is raised, because no clause was evaluated to be unmet.",
           "The banner is rendering, never a check: the same divergence is already the readiness floor's own finding, and the page shows it in context rather than gating on it.",
         ],
         exampleSpace: {
@@ -711,10 +734,12 @@ export const consumersSpecs = [
         rules: [
           "A view run rewrites the view wholesale: no page written by an earlier run survives a later one, so a Spec that left the corpus leaves no page behind.",
           "Pages are written to a temporary sibling of the view directory, the previous directory is removed, and the temporary is renamed into place — one rename, so no half-written view is ever readable and no temporary survives a completed run.",
-          "A run that cannot produce a current view removes the stale one instead of leaving it readable as current: an absent view is honest, a stale view is not.",
+          "A run that cannot produce a current view removes the stale one when its output parent remains safe instead of leaving it readable as current: an absent view is honest, a stale view is not.",
           "Before extraction, the shared build removes `generated/design-review/`, `generated/census/`, `generated/mermaid/` and `generated/gherkin/`, each with its temporary sibling, so a run that fails before rendering leaves no view behind; a removal failure refuses the build before extraction. Every command that enters this build, including validate and its watch runs and every publisher, has this invalidation effect, so a sibling root the command does not publish stays absent until a later publication. The Studio's root is removed beside these four, as `spec:consumers.spec-studio.publisher#rule.buildInvalidates` states.",
           "Under `--check-clean` the view is rendered twice from the same graph and the run refuses when the two renders diverge, removing the view it could not certify.",
-          "Findings never withhold the view. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.",
+          "Validation findings never withhold the view; publication refusals remain separate. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.",
+          "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
+          "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
         ],
         exampleSpace: {
           given: [
@@ -732,6 +757,8 @@ export const consumersSpecs = [
         },
         ruleKeys: {
           buildInvalidates: "rules[3]",
+          portablePublication: "rules[6]",
+          safeCleanup: "rules[7]",
         },
       },
     },
@@ -1090,6 +1117,7 @@ export const consumersSpecs = [
         rules: [
           "An author starts from the build-backlog and drift-alarm recipes, reads carrying Specs for law, and edits the canonical carrier.",
           "Cheap capture starts with `sdp new spec` (or the equivalent hand-authored idea carrier) in the family found through concept search; the scaffolder emits envelope, Intent outcome, and the kind's bare typed heading, never invented content, and for `constraint` emits envelope, title, and Intent only with no twin section. Every later readiness edit is preceded by the promotion-preflight recipe and remains a human statement.",
+          "`sdp new spec` uses the original working directory as the boundary for parent creation and the scaffold write. It refuses an escaping or unresolvable parent with exit 1, before creating anything through a statically planted escaping link. It creates parents and the scaffold through held directories, rechecks containment before each creation and after entering each parent, and rechecks the scaffold's location before reporting success; a detected relocation removes the scaffold and refuses. This defends against planted links and detects intervening changes; Node has no openat-style operations, so re-verification does not provide race-free confinement against a concurrent writer inside the working directory.",
           "The skill teaches question keys and their optional fields through `spec:model.open-question-keys` and `spec:model.open-question-fields`, rule keys and an example's `exercises` through `spec:model.rule-keys`, and optional relation reasons through `spec:model.relation-reasons`.",
           "The skill teaches the least design two parties need to agree: keyed Design entries for shared names and shapes, code spans for pinned declarations, rule keys for outside citations, one prose owner for why, and no derived counts, delivery state or implementation sequence authored as design.",
           "The skill teaches design in rounds over a design slice: what each rung's design typically settles, that a detail only the builder reads and a question only the builder answers belong to the build, and how a reviewer reads the design columns beside each rung; no check reads this guidance.",
@@ -1103,7 +1131,7 @@ export const consumersSpecs = [
           "An anchor carries identity, an optional label, its flavor's targets and optional structure, never intent; a code anchor with neither `satisfies` nor `references` is identity-only and lawful. A Markdown deliverable binds through the document-realization convention: the suite asserting the shipped document carries the code anchor, and blast radius stays coverage-unknown for the Markdown file.",
           "Design Review supplies context for the human readiness statement without becoming a workflow gate.",
         ],
-        ruleKeys: { designRounds: "rules[4]" },
+        ruleKeys: { scaffoldWriteBoundary: "rules[2]", designRounds: "rules[5]" },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -1157,9 +1185,9 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "Promotion preflight reports the Spec's stated rung, floor reached, current floor failures, and both next rungs as `aboveStated` and `aboveFloor`, each with `rung`, `failures` and `firstUnmetClause`; `rung` is null at `ready`, and a typed-dependency failure carries its targets.",
+          "Promotion preflight reports the Spec's stated rung, floor reached, current floor failures, and both next rungs as `aboveStated` and `aboveFloor`, each with `rung`, `failures` and `firstUnmetClause`; `rung` is null at `ready`, and a typed-dependency failure carries its targets. A Spec whose floor is not evaluated reports its floor reached as `not evaluated` and null for both next rungs and its current floor failures.",
           "Declared versus enabled verifiers keeps declared example relations distinct from enabled verifier bindings.",
-          "The lower ladder groups non-ready Specs by family and reports stated readiness, floor reached, stated next rung and its first unmet clause; null means nothing blocks that rung, never automatic promotion.",
+          "The lower ladder groups non-ready Specs by family and reports stated readiness, floor reached, stated next rung and its first unmet clause; beside a named next rung, a null clause means nothing blocks that rung, never automatic promotion. A Spec whose floor is not evaluated reports its floor reached as `not evaluated` with no next rung and no clause.",
         ],
       },
     },
@@ -1654,7 +1682,7 @@ export const consumersSpecs = [
           "`{ packs: { id: string; title?: string; members: { id: string; title?: string; statedReadiness?: string; ownsExampleSpace: boolean }[] }[]; findings: { errors: number; warnings: number } }`, the values every page's rail renders: each Pack in id order with its members in authored order, a member owning an example space when its Spec context carries one, and the validation report's findings counted by severity.",
         searchIndex: "`{ records: SearchRecord[] }`, one record per graph node, in id order.",
         searchRecord:
-          '`{ id: string; nodeType: "Primitive" | "Pack" | "Anchor" | "CodeNode"; page: string | null; title?: string; label?: string; framing?: string; narrative?: string; sections?: Record<string, unknown>; file?: string; line?: number; specKind?: string; statedReadiness?: string; floorReached?: string | null; bindings: { edge: string; specId: string }[]; entries: SearchEntry[] }`: `title`, `label`, `framing`, `narrative` and `sections` exactly as the graph node holds them, the fields `findByConcept` reads; `page` the node\'s page path in the page set, null for an Anchor or a CodeNode; `file` and `line` as recorded; the kind and the two rungs on a Spec only, `floorReached` null when no rung derives; `bindings` the Specs an Anchor\'s or CodeNode\'s outgoing edges reach, with the edge type, and empty for any other node.',
+          '`{ id: string; nodeType: "Primitive" | "Pack" | "Anchor" | "CodeNode"; page: string | null; title?: string; label?: string; framing?: string; narrative?: string; sections?: Record<string, unknown>; file?: string; line?: number; specKind?: string; statedReadiness?: string; floorReached?: string | null; bindings: { edge: string; specId: string }[]; entries: SearchEntry[] }`: `title`, `label`, `framing`, `narrative` and `sections` exactly as the graph node holds them, the fields `findByConcept` reads; `page` the node\'s page path in the page set, null for an Anchor or a CodeNode; `file` and `line` as recorded; the kind and the two rungs on a Spec only, `floorReached` null when no rung derives and `not evaluated` when no floor is evaluated; `bindings` the Specs an Anchor\'s or CodeNode\'s outgoing edges reach, with the edge type, and empty for any other node.',
         searchEntry:
           "`{ section: string; entry: string | null; key: string | null; address: string | null; line: number | null; text: string }`, one per value recipe 23's walk reaches in a Spec's narrative and sections, taken with no term: each string, and each value that is not a string under a key the author coins, as its JSON text; in that walk's order, with that recipe's entry path, coined key, address and line. A term matches an entry as that recipe matches it, a string by its key or text and any other value by its key only, so the entries a term matches are the rows recipe 23 returns for it.",
       },
@@ -1848,6 +1876,7 @@ export const consumersSpecs = [
           "A composed intent names its scope by id or entry address, so the agent that receives it reads the same Spec, Pack, entry or question through the graph.",
           "The panel hands its gathered intents off as one change proposal, on the change-proposal contract, and as the memo recipe 49 renders for it: the person copies the memo or the proposal as text, or saves either as a file. The page opens no pull request, because a static page holds no credentials; any pull request comes from the agent's ordinary source edit.",
           "The memo the panel writes for a proposal is byte for byte the memo recipe 49 returns for the same proposal.",
+          "Whenever the panel offers the memo, it shows a closed, read-only preview of the same text `Copy memo` copies and `Save memo` saves, so the person can read the hand-off before it leaves.",
           "A proposal's base is the commit a present build stamp names, otherwise one the person supplies, and the person gives one reason for the whole proposal; without a base and a reason the panel exports its intents as scoped-intent text, and the agent that receives them writes the proposal against a commit it knows.",
           "A request scoped to a Pack records the members this page set renders for that Pack, and expands to them at hand-off only when the proposal's base is the commit the page set's stamp names; otherwise it stays scoped-intent text for an agent to resolve against the base. A request that changes a Pack's membership or framing, names an empty Pack or names a Pack with an unresolved member, stays scoped-intent text too, so the change-proposal contract keeps its Spec and entry scopes.",
           "The proposal holds only the intents its contract can carry; every intent that stays scoped-intent text is listed apart under `Not in the proposal`, and `Copy scoped intent` copies those intents, so the panel drops none. The copied text names each intent's action and recorded scope: the member Spec ids for a member change, with the Pack id as context, or the Pack id for a membership or framing change.",
@@ -1858,10 +1887,11 @@ export const consumersSpecs = [
           persist: "rules[3]",
           handOff: "rules[5]",
           sameMemo: "rules[6]",
-          proposalBase: "rules[7]",
-          packScope: "rules[8]",
-          textApart: "rules[9]",
-          noRequest: "rules[10]",
+          memoPreview: "rules[7]",
+          proposalBase: "rules[8]",
+          packScope: "rules[9]",
+          textApart: "rules[10]",
+          noRequest: "rules[11]",
         },
         exampleSpace: {
           given: ["the composing panel holds {gathered:number} gathered intents"],
@@ -1886,6 +1916,8 @@ export const consumersSpecs = [
           "the base as code when a stamp names it, otherwise a labelled text field for a commit, then a labelled text field for the proposal's reason.",
         panelActions:
           "`Copy memo`, `Copy proposal`, `Save memo`, `Save proposal` and `Discard all`, the copy and save actions shown only when a base and a reason are present; and `Copy scoped intent` whenever an intent stays scoped-intent text, every intent without a base and a reason, and otherwise those the proposal cannot hold.",
+        memoPreview:
+          "a closed disclosure headed `Preview memo`, before the copy and save actions and shown with them, holding the memo as preformatted text that the person reads and cannot edit.",
         composingActions:
           "the actions on other panels that compose intent: propose new text for a keyed entry, resolve an open question or promote it to a decision record, propose or edit an example, propose or change a constraint target, and propose examples for values no example binds.",
         composeDialog:
@@ -2031,7 +2063,7 @@ export const consumersSpecs = [
         rules: [
           "A build is shared by uploading its page set to a static host, such as S3, Vercel or GitHub Pages.",
           "The Studio's build writes no stamp, so every page and data file it writes stays a function of the graph and its named inputs; the stamp is written apart, after the build.",
-          "`sdp stamp [root] [--commit SHA] [--source TEMPLATE]` writes `stamp.json` into `<root>/generated/spec-studio/` and touches no other file: it derives no graph, renders no page, and refuses with exit 1 when the root holds no page set; a stamp without `--commit` names the commit `unknown`.",
+          "`sdp stamp [root] [--commit SHA] [--source TEMPLATE]` writes `stamp.json` into `<root>/generated/spec-studio/` and touches no other file but its staging file `stamp.json.tmp` beside it: it removes a leftover staging file, writes the stamp there and renames it into place, and removes it again when the stamp fails after writing it. It derives no graph, renders no page, and refuses with exit 1 when the root holds no page set or when `generated/` or the page set is a symbolic link; a stamp without `--commit` names the commit `unknown`.",
           "A later build removes the page set and its stamp together, so no stamp outlives the build it names.",
           "Publishing a preview and writing its stamp are a step the adopter's CI runs, never the Studio's build; the shell reads the stamp as `spec:consumers.spec-studio.shell#rule.stamp` states.",
           "The package's repository ships a reusable GitHub Actions workflow that, on a pull request, installs the caller's dependencies, runs `sdp studio` with the caller's root, exclusions and inputs, runs `sdp stamp` with the checked-out merge commit and the repository's source template, and uploads the page set as a CI artifact; it opens no pull request, writes no comment and holds no credential beyond the run's own token.",
@@ -2106,7 +2138,7 @@ export const consumersSpecs = [
           "The rail's count of findings is the count of the validation report's findings, never a count the page derives.",
           "The shell shows no recent edits and no other history: git holds it.",
           "Served over http or https, the shell reads `stamp.json` beside the page set and, when it loads, shows the build context it names; a page opened through `file://` requests nothing and shows no stamp.",
-          "A stated rung shows as a badge that carries the rung's word, colored from a palette of four that stays distinct under color blindness; the floor reached shows beside it as words with no color of its own, and only the divergence banner adds a warning color, beside its words.",
+          "A stated rung shows as a badge that carries the rung's word, colored from a palette of four that stays distinct under color blindness; the floor reached shows beside it as words with no color of its own, and only the divergence banner adds a warning color, beside its words. A Spec whose floor is not evaluated shows `floor not evaluated`, and no page raises a divergence banner for it, counts it as stated above its floor or shows its stated next rung.",
           "Every meaning a color conveys is also written in words, so no reading depends on color.",
           "Every link and control is reachable from the keyboard in reading order and shows where the focus is.",
           "Prose runs no wider than about 80 characters, and a table wider than the canvas scrolls inside its own box, never the page.",
@@ -2394,7 +2426,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "One helper derives a Spec's design columns; the Spec context carries them as `designColumns` and each resolved Pack member carries the same value as `design`, while the Pack context carries the boundary.",
-          "A member's stated next rung is the rung above its stated rung, none when it states `ready`. Its unmet clauses come from the one floor evaluator with that rung as the target, each failure with its targets when it has them. The list is empty when the floor already holds the stated next rung, so the rung waits for its author's statement, never a promotion. The floor reached and the failures at the rung above it are separate readings.",
+          "A member's stated next rung is the rung above its stated rung, none when it states `ready` or no floor is evaluated over it. Its unmet clauses come from the one floor evaluator with that rung as the target, each failure with its targets when it has them. The list is empty when the floor already holds the stated next rung, so the rung waits for its author's statement, never a promotion. The floor reached and the failures at the rung above it are separate readings.",
           "A member's design columns count its keyed `design` and `ui` entries other than `description`, its pinned declarations under the contract-declarations rule, and its open questions with how many block. They list each question with its zero-based authored `index`, text, blocking flag, optional key, `decider`, `links`, `provisional` and `trigger` as present, and optional source line from the location table. They list the decisions it names through `decidedBy`, each with its stated rung or unresolved when the target is no Spec. The columns are counts and lists read from the graph, never a score or a rung.",
           "A member lists the code units that satisfy it and those that reference it as code unit bindings; each binding carries `codeId` and `claim`, plus `label`, `file`, `line` and `role` when recorded. A component unit carries its own optional `layer` and `context`; a `memberOf` edge adds its component's id and optional layer and context. The Spec context carries the same bindings.",
           "A member counts its verifiers and enabled verifiers, and the example Specs that declare `verifies` on it with how many are enabled, using the reader's verifier decoding.",
@@ -2550,7 +2582,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "`sdp validate --watch [root]` installs its watcher first, then runs the same validate path `sdp validate` runs, from scratch, once at start and again after every carrier create, change, delete or rename under the root.",
-          "A carrier ends in `.sdp.md`, `.sdp.gherkin` or `.sdp.ts`. The watcher ignores the directories discovery skips, the configured exclusion prefixes and every non-carrier path other than the rules files and parameter files `--rules` names, which it watches wherever they live, as `spec:validation.corpus-rules#rule.watchReruns` and `spec:validation.corpus-rules#rule.watchedParams` state; a removed watched directory and an event with no filename each schedule a run because their affected carriers cannot be named.",
+          "A carrier ends in `.sdp.md`, `.sdp.gherkin` or `.sdp.ts`. The watcher ignores the directories discovery skips, the configured exclusion prefixes and every non-carrier path other than the rules files and parameter files `--rules` names, which it watches wherever they live, as `spec:validation.corpus-rules#rule.watchReruns` and `spec:validation.corpus-rules#rule.watchedParams` state, and the symbolic links discovery warns about, as `spec:extraction.excludes#rule.canonicalDiscovery` states, because creating, removing or replacing one changes the warning list. The watcher never follows a link. A watched directory removed or replaced by a link, a file or another directory, and an event with no filename, each schedule a run because their affected carriers cannot be named. So does a watched directory's own watch reporting a change to the directory itself, because a directory deleted and recreated can keep its identity while that watch has died; on a platform that reports a change to the directory's attributes the same way, that change schedules a run too. An event for an entry that has the directory's own name can look the same and then schedules a run too, as where the filesystem reports no birth time for the directory. A directory that replaces a watched one, the root included, is watched in its place, and a root that no longer resolves to a directory ends the watch with exit 1.",
           "Events that arrive while a run is in progress coalesce into one pending run.",
           "Findings print as `sdp validate` prints them and the process stays alive; operator SIGINT terminates the process with exit 0 even while a rules body is active, without waiting for it. No further rules file runs or output is written after the stop.",
           "For `sdp validate`, `--watch` cannot combine with `--check-clean`, and it re-runs on carrier edits and on edits to the files `--rules` names, and never on source edits, so an author re-runs validation after editing an anchor. This rule restricts no other verb's `--watch`, which its own Spec states.",
@@ -2580,7 +2612,7 @@ export const consumersSpecs = [
           "The engine decodes each Spec's example space into its typed slots, and each example child's steps into its bound point, once, through the notation module that writes the space contracts, and the reader carries both on the Spec context; no recipe or projection parses slot notation a second time.",
           "Slot-value coverage is a catalog recipe, recipe 44, over the decoded reader values, listing each literal-union value with the example children that bind it and each value no child binds.",
           "The recipe enumerates slots typed as closed unions of quoted literals. It reports every other slot type, a boolean included, as not enumerable by this recipe, never as covered or as missing a value.",
-          "Coverage is reported per slot value; the recipe reports no combination of two or more slots until a design pass asks which combinations no example exercises.",
+          "Coverage is reported per slot value; the recipe reports no combination of two or more slots.",
           "The examples counted are the children its space contract collects.",
           "An example that binds no value for a slot is listed under that slot as unbound, never as covering a value of it.",
           "Slot-value coverage reports and confers nothing: it moves no readiness, records no verdict and emits no validation finding.",
@@ -3159,6 +3191,7 @@ export const consumersSpecs = [
           "`sdp vault [root | --root PATH] [--exclude PATH]... [--out DIR] [--watch]` validates the graph as `sdp validate` does and then synchronizes the vault at `DIR`, by default `generated/obsidian-vault/` under the root; the root is given as an argument or by `--root`, never both, and defaults to the working directory, each exclusion is a root-relative path prefix as for the publishers, and `--out` resolves against the working directory; a root given both ways, `--root` or `--out` given twice or without a value, and any other option refuse the run.",
           "A vault directory inside the root must lie under a directory discovery skips or under an excluded prefix, so no file in the vault is ever read as a carrier or a source; any other vault directory inside the root refuses the run before the build, writing and removing nothing.",
           "A vault directory that is, lies inside or holds a path the shared build writes or removes, as `spec:consumers.obsidian-vault#design.buildOwnedPaths` lists, refuses the run before the build, writing and removing nothing, so no build ever removes a file in the vault.",
+          "When a run names no vault directory, the default `generated/obsidian-vault/` must resolve inside the root, following any symbolic link at or above it. A run checks this before the build and before each synchronization, and a watch checks it again before its closing cleanup: a default that resolves outside the root, or is a link that resolves nowhere, refuses the run or skips that cleanup, writing and removing nothing in the vault. A default that resolves inside the root, through a link or not, is held to `spec:consumers.obsidian-vault#rule.outsideExtraction` and `spec:consumers.obsidian-vault#rule.apartFromBuild` where it resolves; a vault outside the root is one the run names.",
           "The command writes only the generated folder `sdp/` inside the vault; Obsidian's settings, a person's intent notes and every other file of the vault lie outside it and are never written, moved or removed.",
           "Before the build and before any cleanup, a run inspects `sdp/` and every entry under it, names that begin with a dot included, and refuses when `sdp/` or an entry under it is a symbolic link or neither a file nor a directory, when the file list is not well formed, when a file other than the file list, the command's own temporaries and a `.DS_Store` file is one the list does not name, or when a listed file other than a `.base` file has bytes matching no content the list records for it; a refused run writes nothing, removes nothing, names each such path and exits 1. A `.DS_Store` file under `sdp/` is ignored. A listed `.base` file whose bytes a person changed is kept, even when it leaves the generated set; the run warns with its path and the words `delete it to regenerate`, keeps its recorded content in the list, and goes on. Without a file list, every file under `sdp/` other than `.DS_Store` is one the list does not name.",
           "A run that passes the guard first removes each file the list names that the new set no longer holds, except a changed `.base` file; then it writes each generated file whose bytes differ from the file on disk through a temporary sibling renamed into place, except a changed `.base` file, leaves every file whose bytes already match untouched, removes every directory under `sdp/` left empty, and writes the file list last.",
@@ -3198,17 +3231,18 @@ export const consumersSpecs = [
           verb: "rules[1]",
           outsideExtraction: "rules[2]",
           apartFromBuild: "rules[3]",
-          ownedFolder: "rules[4]",
-          guard: "rules[5]",
-          synchronize: "rules[6]",
-          interruptedRun: "rules[7]",
-          standsApart: "rules[8]",
-          deterministic: "rules[9]",
-          linksResolve: "rules[10]",
-          findingsShown: "rules[11]",
-          failedExtraction: "rules[12]",
-          plainNotes: "rules[13]",
-          openAsVault: "rules[14]",
+          defaultInsideRoot: "rules[4]",
+          ownedFolder: "rules[5]",
+          guard: "rules[6]",
+          synchronize: "rules[7]",
+          interruptedRun: "rules[8]",
+          standsApart: "rules[9]",
+          deterministic: "rules[10]",
+          linksResolve: "rules[11]",
+          findingsShown: "rules[12]",
+          failedExtraction: "rules[13]",
+          plainNotes: "rules[14]",
+          openAsVault: "rules[15]",
         },
         description:
           "The world writes a probe corpus of one Pack and its member Specs, runs the vault command with the vault under the root's `generated/` directory unless a point names another, and reads the vault from disk; a second run reads the same graph. The world leaves a stopped run's files by running the command with its first rename failing, which leaves the file list recording both contents and a whole temporary beside its target, and a failed run's files by running it while the member's carrier is one the extractor refuses, then repairing that carrier. A fresh vault is one the command writes into an empty directory from the same graph.",
@@ -3228,6 +3262,8 @@ export const consumersSpecs = [
           "one stderr line per refused path, with `<path>` relative to the vault: `sdp vault: <path> is not a file this command wrote (unknown)`, `sdp vault: <path> has changed since this command wrote it (changed)`, `sdp vault: <path> is a link or a special file, which this command never writes (not a file)` or `sdp vault: sdp/.sdp-vault.json is not a file list this command wrote (malformed)`; then `sdp vault: nothing was written or removed; keep what you wrote outside sdp/, then delete each refused path, or delete sdp/ whole`.",
         outsideExtractionMessage:
           "`sdp vault: the vault <out> lies inside the root and would be read as source; choose a directory under generated/, under an excluded prefix, or outside the root`.",
+        defaultVaultMessage:
+          "`sdp vault: the default vault <out> does not resolve inside the root; choose a vault directory explicitly to place it elsewhere`.",
         buildOwnedMessage:
           "`sdp vault: the vault <out> overlaps <path>, which every build rewrites or removes; choose another directory, such as generated/obsidian-vault/`, with `<path>` the first overlapping path in the order `spec:consumers.obsidian-vault#design.buildOwnedPaths` lists them.",
         summaryLine:
@@ -3632,7 +3668,7 @@ export const consumersSpecs = [
         propertyEncoding:
           "the properties sit between two `---` lines at the top of the note, one per line as `<key>: <JSON value>`, in the order listed below; a property the graph does not hold is left out.",
         specProperties:
-          "`aliases` (the id, then the title), `title`, `specKind`, `altitude`, `statedReadiness`, `derivedReadiness` (`none` when no rung derives), `statedNextRung` (left out when the Spec states `ready`), `statedNextRungFailures` (the failing clause ids), `implementationBinding`, `verifierBinding`, `designEntries`, `declarations`, `openQuestions` (a count), `blockingQuestions`, `decisions` (links to the notes of the resolving decisions the design columns name), `packs` (links to the Pack notes), `carrier` (the root-relative carrier path).",
+          "`aliases` (the id, then the title), `title`, `specKind`, `altitude`, `statedReadiness`, `derivedReadiness` (`none` when no rung derives, and `not evaluated` when the Spec's kind or altitude is unratified, so no floor is evaluated), `statedNextRung` (left out when the Spec states `ready`), `statedNextRungFailures` (the failing clause ids), `implementationBinding`, `verifierBinding`, `designEntries`, `declarations`, `openQuestions` (a count), `blockingQuestions`, `decisions` (links to the notes of the resolving decisions the design columns name), `packs` (links to the Pack notes), `carrier` (the root-relative carrier path).",
         packProperties:
           '`aliases` (the id, then the title), `title`, `manifest` (the root-relative manifest path), and optional `order`, present as `"priority"` only when the Pack states it.',
         codeProperties:
@@ -3642,13 +3678,13 @@ export const consumersSpecs = [
         banner:
           "the first line after the properties, `` > [!info] Generated by `sdp vault` from the graph. Edit the <carrier|Pack manifest|source file> `<root-relative path>`, never this note: a regeneration refuses while a note it wrote has changed. ``, naming the Spec's carrier, the Pack's manifest or the unit's source file.",
         headLine:
-          "under a Spec note's title, `` `<id>` · <kind display label> · <altitude> · stated <rung> · floor <rung or none> ``, then ` · <stated next rung>: <failing clause ids, or nothing blocks>` when the Spec states less than `ready`.",
+          "under a Spec note's title, `` `<id>` · <kind display label> · <altitude> · stated <rung> · floor <rung or none> ``, with `floor not evaluated (unratified descriptor)` in place of the floor when the Spec's kind or altitude is unratified, then ` · <stated next rung>: <failing clause ids, or nothing blocks>` when the reader names a stated next rung, which it does for a Spec stating less than `ready` with its floor evaluated.",
         specNoteBody:
           "the banner, `# <title>`, the head line, the narrative's paragraphs, each section under `## <Section>` in the graph's order with Intent's open questions under `### Open questions` and an example's steps or an example space's vocabulary in a fenced `gherkin` block, then `## Relations` with `### From this Spec` and `### Toward this Spec`, `## Bindings`, `## Packs` and `## Findings`, each heading left out when it has nothing under it.",
         bindingLines:
           "under `## Bindings`, `- Implementation binding: present` or `none` with each realizing unit, the units that reference the Spec, `- Verifier binding: present` or `none` with each verifier, `- Expected-outcome oracle: present` or `none`, and `- Runtime observation: not tracked`.",
         packNoteBody:
-          "the banner, `# <title>`, the framing, `## Members, filterable` with the Pack's Base embedded, `## Members, in advisory priority order` when `order` is `\"priority\"`, otherwise `## Members, in reading order`, as a numbered list in manifest order, each a link with its stated rung, floor and stated next rung or `nothing blocks`, then `## Boundary` with the reader's four boundary lists and `## Findings`. A roadmap states `Priority confers no permission or sequencing requirement.` before its ordered list heading.",
+          "the banner, `# <title>`, the framing, `## Members, filterable` with the Pack's Base embedded, `## Members, in advisory priority order` when `order` is `\"priority\"`, otherwise `## Members, in reading order`, as a numbered list in manifest order, each a link with its stated rung, its floor as the head line writes it, and its stated next rung with its failing clause ids or `nothing blocks` when the reader names one, then `## Boundary` with the reader's four boundary lists and `## Findings`. A roadmap states `Priority confers no permission or sequencing requirement.` before its ordered list heading.",
         codeNoteBody:
           "the banner, `# <id>`, the label, `` `<file>:<line>` ``, then link lists under `## Member of`, `## Members`, `## Uses`, `## Used by`, `## Satisfies`, `## References`, `## Verifies` and `## Models`, each left out when empty.",
         termNoteBody:
@@ -4401,7 +4437,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "After the summary, show the categorical grid and full member lists defined by spec:consumers.spec-studio.diagram-kinds.maturity-picture. Every resolved member belongs to one stated-rung and floor cell; unresolved members are named apart. Populated cells link to their built lists, whose members stay in authored order.",
+          "After the summary, show the categorical grid and full member lists defined by spec:consumers.spec-studio.diagram-kinds.maturity-picture. Every resolved member whose floor is evaluated belongs to one stated-rung and floor cell; unresolved members and members whose floor is not evaluated are named apart. Populated cells link to their built lists, whose members stay in authored order.",
         ],
         ruleKeys: {
           maturityMap: "rules[0]",
@@ -6529,7 +6565,7 @@ export const consumersSpecs = [
         rules: [
           "The map follows only declared `refines` edges between resolving Specs, from parent to child for reading. It reads every kind at every altitude, preserves intermediate Specs, and derives no parent from a title, path, Pack, dependency or binding.",
           "Every Spec at epic altitude is an entry, whatever its kind. An epic may itself refine another epic; both remain selectable, and a parent's descendant set includes the nested epic and its descendants.",
-          "Each Spec carries its own stated readiness, structural floor reached, delivery facts, and open questions with their blocking flags. A missing floor reads `none`. No value propagates from a child to its parent.",
+          "Each Spec carries its own stated readiness, structural floor reached, delivery facts, and open questions with their blocking flags. A missing floor reads `none`, and a floor not evaluated over an unratified kind or altitude reads `not evaluated`. No value propagates from a child to its parent.",
           "Every refining parent remains in the answer; a Spec appears once in nodes with all its parents, and a page decides where it expands.",
           "An epic's rollup counts distinct descendants, excluding the epic itself, by stated rung, floor reached, kind and altitude; it counts those with implementation bindings and those with verifier bindings separately. Open and blocking question totals count the questions on those distinct descendants. Rollups for overlapping epics are never added to form a corpus total.",
           "Examples and decisions participate in reach, counts and edges like every other kind. The page may fold them into labelled disclosures, but exposes their rows and any descendants they parent. A verifier count means a binding exists, never that a test passed; the map states no percent complete, inherited fact or work order.",
@@ -6563,7 +6599,7 @@ export const consumersSpecs = [
         epicRow:
           "`{ id, title, parentEpicIds, descendantIds, rollup }` for every selected epic, with its distinct descendants in the selected set. `parentEpicIds` lists resolving direct refinement parents at epic altitude in the full corpus, in id order. Selection by one epic includes every descendant of a nested epic, so its rollup stays complete.",
         countShape:
-          "totals and each rollup carry `{ specs, byStatedReadiness, byFloorReached, byKind, byAltitude, withImplementationBinding, withVerifierBinding, openQuestions, blockingQuestions }`; every descriptor value has a key including zero, floor counts add `none`, and totals additionally carry `{ epics, reached, unreached }`. Reached and unreached partition selected nodes, using their full-corpus epic membership. The epic's own evidence stays on its node row, outside its rollup.",
+          "totals and each rollup carry `{ specs, byStatedReadiness, byFloorReached, byKind, byAltitude, withImplementationBinding, withVerifierBinding, openQuestions, blockingQuestions }`; every ratified descriptor value has a key including zero and floor counts add `none`; any other value, such as an unratified kind or altitude or the floor `not evaluated`, has a key only when a counted Spec carries it; totals additionally carry `{ epics, reached, unreached }`. Reached and unreached partition selected nodes, using their full-corpus epic membership. The epic's own evidence stays on its node row, outside its rollup.",
         unreachedRoots:
           "a root is an unreached Spec with no unreached parent; a group of unreached Specs that refine one another in a cycle, with no unreached parent outside the group, uses its smallest id as its root. Reach may overlap between roots; unreached.ids stays unique and complete. In an epic selection both lists are empty.",
         graphDamage:
@@ -7028,9 +7064,9 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "Draw one equal-sized cell per stated-rung and floor pair. A populated cell shows its exact count and one mark per member, up to `100` marks, beyond which it is filled solid, and links to that cell's full ordered member list; an empty cell is a faint outline with no number. `matches`, `floor above statement` and `statement above floor` are named once each in the legend, and the diagonal carries an outline. Floor none is distinct from idea, and unresolved members are listed apart.",
+          "Draw one equal-sized cell per stated-rung and floor pair. A populated cell shows its exact count and one mark per member, up to `100` marks, beyond which it is filled solid, and links to that cell's full ordered member list; an empty cell is a faint outline with no number. `matches`, `floor above statement` and `statement above floor` are named once each in the legend, and the diagonal carries an outline. Floor none is distinct from idea, and unresolved members and members whose floor is not evaluated are listed apart.",
           "Use categorical cell position, never normalized coordinates, a quality score, area proportional to maturity, completion percentage or a recommendation to implement. Marks count members and score nothing.",
-          "Every resolved member appears in exactly one cell list in authored order. The picture holds cell counts, not per-member cards. Without script every populated cell links to its already-built list and every member links to its card.",
+          "Every resolved member whose floor is evaluated appears in exactly one cell list in authored order. The picture holds cell counts, not per-member cards. Without script every populated cell links to its already-built list and every member links to its card.",
           "When every resolved member falls in one cell, one sentence before the grid names that cell's stated rung and floor with its count and links to the cell's member list, and the grid sits in a closed disclosure; when two or more cells hold members, the grid shows with no disclosure. The sentence scores nothing, and print opens the disclosure.",
         ],
         ruleKeys: {
@@ -7236,16 +7272,6 @@ export const consumersSpecs = [
       intent: {
         outcome:
           "Give the Studio a page per Pack that shows its design slice: the members' dependency drawing, the components they touch, the decisions and open questions in scope, and each member's next rung.",
-        openQuestions: [
-          {
-            question: "Does a Pack export also carry the Pack's slice page?",
-            blocking: false,
-            key: "exportCarriesSlice",
-            decider: "delegated",
-            provisional:
-              "no; the export keeps the Pack page and its members, and the slice page stays one link away in the page set",
-          },
-        ],
       },
       behavior: {
         rules: [
@@ -7266,6 +7292,7 @@ export const consumersSpecs = [
           "Under `Where the slice meets the rest` come four closed sections, Rests on, Rested on by, Verified by and Superseded by, each headed with its count; a Rests on row shows the outside Spec linked, its stated rung beside the floor reached, its implementation binding as present or none, the members it joins under each relation type, and the members it holds.",
           "The page speaks binding language: a unit implements or references a member, a verifier is bound, and no cell reads built, done, verified or approved.",
           "`Open all` and `Close all` open or close every closed section and text equivalent at once, and the page reads in full without script.",
+          "A Pack export carries the Pack page and its members' pages and not the slice page, which stays one link from the Pack page in the page set.",
         ],
         ruleKeys: {
           slicePerPack: "rules[0]",
@@ -7285,6 +7312,7 @@ export const consumersSpecs = [
           boundary: "rules[14]",
           bindingWords: "rules[15]",
           openAll: "rules[16]",
+          exportOmitsSlice: "rules[17]",
         },
       },
       ui: {
@@ -7406,7 +7434,7 @@ export const consumersSpecs = [
         needValues:
           'an entry\'s `need` is `"to design"`, `"to state"`, `"to build"` or `"built"`; a Spec\'s need is one of those or `"settled"`.',
         entryRow:
-          "`{ place, id, title, specKind, altitude, need, statedReadiness, floorReached, statedNextRung, holdsNextRung, work, workRows, buildNow, blockingQuestions, decisions, restsOn, restedOnBy, earlierStatements, packs, sharesScopeWith }` in place order, where `statedNextRung` is null at `ready`, `holdsNextRung` lists the holding rows that keep the floor from the stated next rung, `work` is `{ specs, toDesign, toState, toBuild, built, drift }` counted over the entry's work, `buildNow` lists the ids of its work to build, `packs` lists the entry's Packs other than the roadmap, and `sharesScopeWith` lists places.",
+          "`{ place, id, title, specKind, altitude, need, statedReadiness, floorReached, statedNextRung, holdsNextRung, work, workRows, buildNow, blockingQuestions, decisions, restsOn, restedOnBy, earlierStatements, packs, sharesScopeWith }` in place order, where `floorReached` is null when no rung derives and `not evaluated` when no floor is evaluated, `statedNextRung` is null at `ready` and when no floor is evaluated, `holdsNextRung` lists the holding rows that keep the floor from the stated next rung, `work` is `{ specs, toDesign, toState, toBuild, built, drift }` counted over the entry's work, `buildNow` lists the ids of its work to build, `packs` lists the entry's Packs other than the roadmap, and `sharesScopeWith` lists places.",
         workRow:
           "`workRows` lists every Spec counted in `work` once, in Spec-id order, as `{ id, need, statedReadiness, floorReached, statedNextRung, holdsNextRung, drift }`, with `statedNextRung` and `holdsNextRung` read as on the entry row and `drift` a boolean; the rows whose `need` equals the entry's are the ones that set it.",
         holdsRow:
@@ -7514,7 +7542,7 @@ export const consumersSpecs = [
           "Recipe 55 renders one roadmap's reading, recipe 53's answer for that Pack, as one Markdown memo a pull request description carries as its forward section; the roadmap page shows the same bytes.",
           "The memo holds, in order: the roadmap's title, a line saying what to state and built mean, and its framing; the entries to design, to state and to build, each need in priority order with every entry's place; what waits on the owner; the questions that name no decider; the entries built and still listed; the unresolved members with their original places and ids; and the deferred open questions with their triggers. The to design and to build sections always appear and say when they hold no entry; every other section is left out when it holds no row.",
           "An entry's purpose and reach is read, never authored: its intent's problem, or its outcome when it states no problem, then how many Specs outside its scope wait on it and how many of its parts are ready to build now. These values state its purpose and its place in the graph's structure, never why the owner selected the entry or gave it its place; the description's author may state that reason around the memo, and the memo adds no status, date, estimate or assignment to a pull request.",
-          "An entry to design names the parts that set its need, its own first, each with its stated next rung and the clauses and dependency targets that hold it, then its blocking questions and its decisions below `ready`; an entry to state names the waiting statements the statement queue puts before its own, inside the entry, elsewhere on the roadmap and outside it, as advice on the order of statements and never as a readiness requirement; an entry to build names each Spec it rests on that is not built.",
+          "An entry to design names the parts that set its need, its own first, each with its stated next rung and the clauses and dependency targets that hold it, or with `floor not evaluated` when no floor is evaluated over the part, then its blocking questions and its decisions below `ready`; an entry to state names the waiting statements the statement queue puts before its own, inside the entry, elsewhere on the roadmap and outside it, as advice on the order of statements and never as a readiness requirement; an entry to build names each Spec it rests on that is not built.",
           "The memo derives no reason for the priority and carries no re-entry condition or refused list; the description's author writes those around it.",
           "A memo of a Pack whose order is reading order says so under the framing, so no description presents it as a priority.",
           "One graph and one set of parameters render one memo, byte for byte.",
@@ -7535,7 +7563,7 @@ export const consumersSpecs = [
         memoHead:
           "the memo opens with the line `## The next work, from the roadmap`, a blank line, the line `Roadmap: ` followed by the Pack's title and its id as a code span, a blank line, the line `To state means the floor allows ready and a person still judges the statement. Built means every Spec of the entry's work states ready and has an implementation binding; it reports no passing test and no deployment.` and a blank line, each paragraph of the framing as authored followed by a blank line, and for a reading-order Pack the line `This Pack's order is reading order, not a stated priority.` and a blank line.",
         memoDesign:
-          "the section `### To design` holds a table with the columns `Place`, `Entry`, `Next` and `Purpose and reach`; `Next` reads, for at most three of the work rows with the entry's need, the entry's own first and the rest in Spec-id order, the row's id as a code span or `itself` for the entry's own, its stated rung and stated next rung as code spans joined by ` → `, then `held by` and each clause id followed by its targets as code spans in parentheses, or `nothing holds it`; then `and <n> more parts to design` when rows are left out; then `blocked by` and each blocking question's address as a code span, or its Spec id when unkeyed; then `decided by` and each decision below `ready` as a code span with its stated rung; the parts joined by `; `.",
+          "the section `### To design` holds a table with the columns `Place`, `Entry`, `Next` and `Purpose and reach`; `Next` reads, for at most three of the work rows with the entry's need, the entry's own first and the rest in Spec-id order, the row's id as a code span or `itself` for the entry's own, its stated rung and stated next rung as code spans joined by ` → `, then `held by` and each clause id followed by its targets as code spans in parentheses, or `nothing holds it`, or for a row whose floor is not evaluated its stated rung as a code span followed by `, floor not evaluated`; then `and <n> more parts to design` when rows are left out; then `blocked by` and each blocking question's address as a code span, or its Spec id when unkeyed; then `decided by` and each decision below `ready` as a code span with its stated rung; the parts joined by `; `.",
         memoState:
           "the section `### To state` holds a table with the columns `Place`, `Entry`, `Earlier waiting statements` and `Purpose and reach`; the third column reads `No preceding waiting statement in the statement queue.` when the entry's `earlierStatements` is empty, and otherwise `in this entry` followed by those inside it as code spans, `on the roadmap` followed by those at another entry as code spans each with `(place <n>)`, and `<n> outside the roadmap`, each part present only when it holds a row and the parts joined by `; `.",
         memoBuild:
@@ -7564,7 +7592,7 @@ export const consumersSpecs = [
     readiness: "scoped",
     title: "A pinned declaration shows the words of each test line that cites it",
     narrative:
-      "A reader checking a pinned declaration reaches the test line that cites it and then follows a source link to read the assertion. The words of that line would close the task on the page. The graph records where a line cites an entry and never what the line says, and the Studio reads only the graph and its named inputs, so one of them has to hold the words. The extractor already reads the line when it records the citation, which makes the citation row the cheapest honest home; the choice is the owner's, because it puts source text in the graph for the first time.",
+      "A reader checking a pinned declaration reaches the test line that cites it and then follows a source link to read the assertion. The words of that line would close the task on the page. The graph records where a line cites an entry and never what the line says, and the Studio reads only the graph and its named inputs, so one of them has to hold the words. The extractor already reads the line when it records the citation, which makes the citation row the cheapest honest home; the owner chose it, though it puts source text in the graph for the first time.",
     sections: {
       intent: {
         actor:
@@ -7573,38 +7601,24 @@ export const consumersSpecs = [
           "The declarations page names each citing line by file and line only, so the reader leaves the page to read it, and has no route at all when the page set carries no source link.",
         outcome:
           "Show beside each pinned declaration the text of every test line that cites it, so a reviewer reads the check without leaving the page.",
-        openQuestions: [
-          {
-            question:
-              "May the Studio show source text the graph does not hold, and if so is it recorded in the graph beside the citation or read as a named input?",
-            blocking: true,
-            key: "lineText",
-            decider: "owner",
-            provisional:
-              "the extractor records the citing line's text, trimmed and bounded, on the citation row it already writes, as inferred data that confers nothing, and the Studio reads no source",
-          },
-          {
-            question:
-              "How long may a recorded line be, and how does a page show a line that was cut?",
-            blocking: false,
-            key: "lineBound",
-            decider: "delegated",
-            provisional:
-              "a bound of a few hundred code units, cut at a word boundary and marked as cut, the whole line one source link away",
-          },
-        ],
       },
       behavior: {
         rules: [
           "Beside each citing line, the declarations page and the Spec page show the line's words as code after its file and line, and the reader's citation row carries them.",
           "The words are what the citing line said at the commit the graph was derived from; no page says the line asserts, checks or passes anything because of them.",
           "A citation whose words are not recorded shows its file and line as it does now.",
+          "The extractor records the citing line's text, trimmed and bounded, on the citation row it already writes, as inferred data that confers nothing; the Studio reads no source to show it.",
         ],
         ruleKeys: {
           lineShown: "rules[0]",
           wordsNotVerdict: "rules[1]",
           withoutWords: "rules[2]",
+          lineRecorded: "rules[3]",
         },
+      },
+      design: {
+        lineBound:
+          "a recorded line holds at most a few hundred code units; a longer line is cut at a word boundary and marked as cut, and the whole line stays one source link away",
       },
     },
     deliveryFacts: [],
@@ -8364,5 +8378,70 @@ export const consumersSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:consumers.ai-assisted-reading",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/ai-assisted-reading.sdp.md",
+    title: "A boundary for assistant-written presentation",
+    narrative:
+      "Every reading the Protocol ships is a deterministic function of the graph and the inputs a caller names, as founding principle P3, deterministic derivation, requires. An assistant that only selects one of those readings keeps that property; one that writes explanations or arrangements of its own does not, so its output needs a contract before it reaches a reader.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a reader ask for a useful existing reading and inspect why it was selected and what scope it omits.",
+        openQuestions: [
+          {
+            question:
+              "If an assistant generates explanations or arrangements beyond selecting deterministic readings, what contract keeps its output distinct from graph claims and makes the exact reading reviewable, including how the exact output is retained with its model, prompt and inputs?",
+            blocking: true,
+            key: "aiPresentationBoundary",
+            decider: "owner",
+            provisional:
+              "Select existing deterministic readings only; any generated text stays outside the Studio and the frozen projections, labelled as assistant output with its source commit and scope, and adds no claim, fact or validator.",
+            links: [
+              "spec:consumers.projections-model",
+              "spec:extraction.claim-taxonomy",
+              "spec:decisions.shipped-projections-frozen",
+              "spec:consumers.spec-studio#rule.namedInputs",
+            ],
+            trigger:
+              "the UX design pass measures that assistant selection or a generated explanation helps a named review task",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.agent-surface.combination-coverage",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/agent-surface.combination-coverage.sdp.md",
+    title: "Which slot-value combinations example-space coverage reports",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Report the combinations of slot values no example exercises, once a design pass needs them.",
+        openQuestions: [
+          {
+            question: "Which combinations of slot values should coverage enumerate and report?",
+            blocking: true,
+            key: "combinationCoverage",
+            decider: "owner",
+            provisional: "keep recipe 44 limited to individual slot values",
+            links: ["spec:consumers.agent-surface.example-space-coverage#rule.perSlotOnly"],
+            trigger: "a design pass asks which combinations no example exercises",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
   },
 ] as const;

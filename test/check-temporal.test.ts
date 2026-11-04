@@ -107,6 +107,25 @@ describe("check:temporal", () => {
     });
   });
 
+  it("sweeps the decision registry, which holds current truth rather than a dated diary", () => {
+    withRoot((root) => {
+      writeExcludedFile(root, "docs/concept/DECISIONS.md");
+
+      const result = runGuard(root);
+
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain("docs/concept/DECISIONS.md:1");
+    });
+  });
+
+  it("states the same law in its header: the registry is never a dated diary or a model for one", () => {
+    const source = readFileSync(join(repoRoot, guardName), "utf8");
+    const header = source.slice(0, source.indexOf("const pattern"));
+
+    expect(header).toContain("never the decision registry");
+    expect(header).not.toMatch(/DECISIONS|decision diary/u);
+  });
+
   it("accepts an in-repository directory symlink when its canonical files are tracked", () => {
     withRoot((root) => {
       mkdirSync(join(root, ".agents", "skills", "example"), { recursive: true });
@@ -137,10 +156,10 @@ describe("check:temporal", () => {
 
   it("keeps each explicit temporal genre exclusion", () => {
     withRoot((root) => {
-      writeExcludedFile(root, "docs/concept/DECISIONS.md");
       writeExcludedFile(root, "plans/record.md");
       writeExcludedFile(root, "reviews/record.md");
       writeExcludedFile(root, "explorations/record.md");
+      writeExcludedFile(root, "evidence/pr1/record.md");
       writeExcludedFile(root, "package-lock.json");
 
       expect(runGuard(root).status).toBe(0);
@@ -172,6 +191,36 @@ describe("check:temporal", () => {
 
       expect(result.status).not.toBe(0);
       expect(result.stderr).toContain(".omo/boulder.json:1");
+    });
+  });
+
+  it("exempts each genre at the repository root only, never a nested or look-alike path", () => {
+    withRoot((root) => {
+      const sweptPaths = [
+        "docs/evidence/record.md",
+        "test/fixtures/sample/evidence/record.md",
+        "evidence-notes/record.md",
+        "nested/plans/record.md",
+        "nested/reviews/record.md",
+        "nested/explorations/record.md",
+        "nested/docs/lineage/record.md",
+        "nested/.omo/drafts/record.md",
+        "nested/.omo/plans/record.md",
+        "nested/.omo/evidence/record.md",
+        "nested/package-lock.json",
+      ];
+
+      for (const path of sweptPaths) {
+        writeExcludedFile(root, path);
+      }
+
+      const result = runGuard(root);
+
+      expect(result.status).not.toBe(0);
+
+      for (const path of sweptPaths) {
+        expect(result.stderr).toContain(`${path}:1:`);
+      }
     });
   });
 

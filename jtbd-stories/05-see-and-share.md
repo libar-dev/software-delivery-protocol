@@ -45,7 +45,7 @@ The graph is only valuable if humans and agents can actually consume it. The job
 5. The `claim` travels with the data — the agent can tell `declared` facts from `anchored` and `inferred` ones.
 6. The agent surface and `graph.json` are regenerable from the repo and stay current as it changes.
 7. The surface is strictly read-only: producing context never gives the agent a direct write path to canonical source (edits go through the path in Theme F).
-8. Keeping the data in-process and returning conclusions is a measured context-efficiency win (a measured fraction of the tokens of a grep/verb-API equivalent on a multi-probe session); token-budgeted slices and the **MCP surface** — a separate, later-designed integration surface for *user-facing apps*, not the coding-agent surface — are a later layer over this same read-only model.
+8. Keeping the data in-process and returning conclusions is a measured context-efficiency win (a measured fraction of the tokens of a grep/verb-API equivalent on a multi-probe session). The **context bundle** (recipe 36) already composes one design pass's reading within a budget counted in UTF-16 code units; the **MCP surface** — a separate, later-designed integration surface for *user-facing apps*, not the coding-agent surface — is a later layer over this same read-only model.
 
 ---
 

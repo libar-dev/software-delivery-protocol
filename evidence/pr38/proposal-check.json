@@ -1,0 +1,151 @@
+{
+  "schemaProblems": [],
+  "base": "b5e0a8bea1e3bedd48c616f96c9928e955792753",
+  "diagnostics": [],
+  "totals": {
+    "changes": 7,
+    "moved": 0,
+    "unresolved": 0
+  },
+  "changes": [
+    {
+      "index": 0,
+      "scope": [
+        {
+          "ref": "spec:consumers.agent-surface.answer-shapes#design.wrapIdiom",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        },
+        {
+          "ref": "spec:consumers.agent-surface.evaluation-sink#rule.recipeCall",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        }
+      ],
+      "moved": false,
+      "relationTarget": null
+    },
+    {
+      "index": 1,
+      "scope": [
+        {
+          "ref": "spec:consumers.reader",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        }
+      ],
+      "moved": false,
+      "relationTarget": null
+    },
+    {
+      "index": 2,
+      "scope": [
+        {
+          "ref": "spec:consumers.reader",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        },
+        {
+          "ref": "spec:consumers.reader#rule.conceptEntry",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        },
+        {
+          "ref": "spec:extraction.entry-citations",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        },
+        {
+          "ref": "spec:validation.prose-mentions",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        }
+      ],
+      "moved": false,
+      "relationTarget": null
+    },
+    {
+      "index": 3,
+      "scope": [
+        {
+          "ref": "spec:protocol.delivery-record-cleanup",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        },
+        {
+          "ref": "spec:protocol.delivery-record-cleanup#question.durableContent",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        }
+      ],
+      "moved": false,
+      "relationTarget": null
+    },
+    {
+      "index": 4,
+      "scope": [
+        {
+          "ref": "spec:protocol.delivery-record-cleanup#question.durableContent",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        }
+      ],
+      "moved": false,
+      "relationTarget": null
+    },
+    {
+      "index": 5,
+      "scope": [
+        {
+          "ref": "spec:consumers.spec-studio.cited-line-text",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        },
+        {
+          "ref": "spec:consumers.spec-studio.cited-line-text#question.lineText",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        },
+        {
+          "ref": "spec:consumers.spec-studio.cited-line-text#rule.withoutWords",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        }
+      ],
+      "moved": false,
+      "relationTarget": null
+    },
+    {
+      "index": 6,
+      "scope": [
+        {
+          "ref": "spec:consumers.spec-studio.cited-line-text",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        },
+        {
+          "ref": "spec:consumers.spec-studio.cited-line-text#question.lineBound",
+          "resolvesAtHead": true,
+          "resolvesAtBase": true,
+          "moved": false
+        }
+      ],
+      "moved": false,
+      "relationTarget": null
+    }
+  ]
+}

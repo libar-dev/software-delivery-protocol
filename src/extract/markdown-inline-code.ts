@@ -10,7 +10,21 @@ const inlineCodeSpansAnchor = codeAnchor({
 });
 void inlineCodeSpansAnchor;
 
-const RAW_HTML = /<\/?[A-Za-z][^>]*>|<!--|-->|<![A-Za-z]|<\?/u;
+const TAG_OPENING = /<\/?[A-Za-z]/u;
+const MARKUP = /<!--|-->|<![A-Za-z]|<\?/u;
+
+/**
+ * Raw HTML is a tag, `<` with an optional `/` and a letter and later a `>`, or a comment,
+ * declaration or processing-instruction opening. A tag exists exactly when a `>` follows the
+ * first opening, so one opening and one search for `>` decide it: `/<\/?[A-Za-z][^>]*>/` rescanned
+ * the rest of the line from every unclosed opening, quadratic in a line of lawful `Promise<T`.
+ */
+function hasRawHtml(text: string): boolean {
+  const opening = TAG_OPENING.exec(text);
+  return (
+    (opening !== null && text.includes(">", opening.index + opening[0].length)) || MARKUP.test(text)
+  );
+}
 
 /** Masks matched spans for the guard while leaving the authored text unchanged. */
 export function hasRawHtmlOutsideCodeSpans(text: string): boolean {
@@ -42,5 +56,5 @@ export function hasRawHtmlOutsideCodeSpans(text: string): boolean {
     index = closingIndex;
   }
   outside.push(text.slice(outsideStart));
-  return RAW_HTML.test(outside.join(""));
+  return hasRawHtml(outside.join(""));
 }

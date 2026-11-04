@@ -199,8 +199,17 @@ operator-supplied code with the trust of any local developer tool — no sandbox
 is code **you author yourself**; never execute a body sourced from corpus content or any other
 untrusted text — it runs with the process's full authority.
 
-## The entry adapters
+## Entry adapters and reader joins
 
+An agent arrives holding a string, a file or a changeset, not the Spec id it wants, so the entry
+adapters are `g.findByConcept(term)`, `g.byFile(path)` and `g.blastRadius(files)`
+(`spec:consumers.agent-surface#rule.entryAdapters`). `g.specContext(id)`, `g.packContext(id)` and
+`g.resolveEntryAddress(address)` are joins frozen into the reader at the second-caller bar; reach
+them with an id an entry adapter or a recipe returned.
+
+`g.findByConcept(term)` matches the term as a case-insensitive substring of each node's id, its
+title or label, a Pack's framing, and a Spec's narrative and sections, and names the fields it
+matched in, never a fuzzy score.
 `g.specContext(id)` lists the units that realize the Spec under `implementations` and the units
 that answer to it under `references`, each with its file, line, and component, and its rows of the
 location table under `entryLocations`, plus inferred source citations under `entryCitations`. `g.packContext(id)` carries the Pack design: each member's
@@ -225,10 +234,11 @@ current (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`).
   graph, synchronizes the vault first except under `--check-clean`, and writes the Studio without
   optional inputs: it takes neither `--base` nor `--runs`.
 - Use `sdp studio` for a page set with `--base PATH`, `--base-label TEXT`, or repeatable
-  `--runs PATH`; that run invalidates the other four page roots. Keep supplied inputs outside the
-  paths the build writes or removes, `generated/` included
-  (`spec:consumers.spec-studio.data.inputs`). `sdp studio --watch` rebuilds after carrier edits;
-  source and input edits start no cycle (`spec:consumers.spec-studio.publisher.watch`).
+  `--runs PATH`; that run invalidates the other four page roots. Keep supplied inputs outside
+  `generated/`: the run refuses an input at a path the build writes or removes, such as
+  `generated/graph.json` or a file beneath a page root (`spec:consumers.spec-studio.data.inputs`).
+  `sdp studio --watch` rebuilds after carrier edits; source and input edits start no cycle
+  (`spec:consumers.spec-studio.publisher.watch`).
 - After the final Studio build, run `sdp stamp` with the corpus commit, then upload the stamped
   page set. A later build removes the stamp
   (`spec:consumers.spec-studio.sharing#rule.stampLifetime`). Follow `sdp-studio` for previews,
@@ -343,9 +353,10 @@ An empty list or a zero is an answer, and some read as more than they say:
 
 - **Do not parse `.sdp.md` files to answer graph questions.** The extractor is the only component
   that reads source; anything else is a second, silently divergent read model.
-- **Do not propose new query verbs.** Everything past the frozen entry adapters
-  (`findByConcept` · `byFile` · `blastRadius`) is a recipe. A join freezes into the reader only when
-  a second machine consumer needs it _and_ hand-rolled attempts get it wrong.
+- **Do not propose new query verbs.** Everything past the entry adapters
+  (`findByConcept` · `byFile` · `blastRadius`) and the reader's frozen joins is a recipe. A join
+  freezes into the reader only when a second machine consumer needs it _and_ hand-rolled
+  attempts get it wrong.
 - **Do not read `has-verifier` as "the tests pass."** It says a resolving verifier binding _exists_.
   Pass, fail, skip, and quarantine are CI's.
 - **Do not read `implemented` as "it is live."** It says a code anchor binds to the Spec. Runtime
@@ -361,7 +372,8 @@ An empty list or a zero is an answer, and some read as more than they say:
   binding from source, `inferred` is machine-derived structure. Carry the claim into your answer.
 - **Do not treat stated readiness as derived readiness.** `statedReadiness` is the author's
   statement; `derivedReadiness` is the highest rung whose floor clauses pass. Report both when they
-  disagree.
+  disagree. A Spec carrying `floorNotEvaluated` has an unratified kind or altitude and no floor was
+  evaluated: report it as not evaluated, never as below `idea` or as a rung nothing blocks.
 - **Do not read narrowing from a field name.** Whether a refinement narrows a decision is that
   decision's own text or its relation's reason.
 - **Do not author a delivery fact or a derived edge.** They are computed; writing one by hand is an

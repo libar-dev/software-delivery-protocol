@@ -11,6 +11,7 @@ import {
   count,
   escape,
   findingList,
+  floorWords,
   link,
   list,
   present,
@@ -62,7 +63,7 @@ function memberCard(ctx: PageContext, member: PackMemberSummary, index: number):
     (member.verifiers?.total ?? 0) > 0 || (member.examples?.total ?? 0) > 0
       ? `${count(member.verifiers?.total ?? 0, "verifier")}, ${String(member.verifiers?.enabled ?? 0)} enabled · ${count(member.examples?.total ?? 0, "verifying example", "verifying examples", false)}, ${String(member.examples?.enabled ?? 0)} enabled`
       : "";
-  return `${opening}<span class="line1">${String(index + 1)}. ${codeSpans(member.title ?? member.id)}</span><span class="line2">${escape(member.specKind)} · ${rungLine(member.statedReadiness, member.derivedReadiness)}${next} · ${String(design?.openQuestions.length ?? 0)} open, ${String(design?.blockingQuestions ?? 0)} blocking questions · implementation binding ${present((member.implementations?.length ?? 0) > 0)} · verifier binding ${present(verifier)}</span></summary><div class="card-body"><p>${link(ctx, member.id)}</p>${holds(ctx, member.statedNextRung, member.statedNextRungFailures)}<h3>Design</h3><p>${count(design?.entries ?? 0, "design entry", "design entries")} · ${count(design?.declarations ?? 0, "pinned declaration", "pinned declarations", false)}</p>${design?.decisions.length ? `<h3>Decisions</h3>${decisions}` : ""}<h3>Open questions</h3>${questions}<h3>Implementation binding: ${present((member.implementations?.length ?? 0) > 0)}</h3>${member.implementations?.length ? unitList(member.implementations, ctx) : ""}<h3>Design reference: ${present((member.references?.length ?? 0) > 0)}</h3>${member.references?.length ? unitList(member.references, ctx) : ""}<h3>Verifier binding: ${present(verifier)}</h3>${counts ? `<p>${counts}</p>` : ""}</div></details></sdp-spec-card>`;
+  return `${opening}<span class="line1">${String(index + 1)}. ${codeSpans(member.title ?? member.id)}</span><span class="line2">${escape(member.specKind)} · ${rungLine(member.statedReadiness, floorWords(member))}${next} · ${String(design?.openQuestions.length ?? 0)} open, ${String(design?.blockingQuestions ?? 0)} blocking questions · implementation binding ${present((member.implementations?.length ?? 0) > 0)} · verifier binding ${present(verifier)}</span></summary><div class="card-body"><p>${link(ctx, member.id)}</p>${holds(ctx, member.statedNextRung, member.statedNextRungFailures)}<h3>Design</h3><p>${count(design?.entries ?? 0, "design entry", "design entries")} · ${count(design?.declarations ?? 0, "pinned declaration", "pinned declarations", false)}</p>${design?.decisions.length ? `<h3>Decisions</h3>${decisions}` : ""}<h3>Open questions</h3>${questions}<h3>Implementation binding: ${present((member.implementations?.length ?? 0) > 0)}</h3>${member.implementations?.length ? unitList(member.implementations, ctx) : ""}<h3>Design reference: ${present((member.references?.length ?? 0) > 0)}</h3>${member.references?.length ? unitList(member.references, ctx) : ""}<h3>Verifier binding: ${present(verifier)}</h3>${counts ? `<p>${counts}</p>` : ""}</div></details></sdp-spec-card>`;
 }
 
 /**

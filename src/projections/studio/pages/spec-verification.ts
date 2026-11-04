@@ -7,6 +7,7 @@ import {
   sourceCode,
   copy,
   escape,
+  floorWords,
   link,
   list,
   location,
@@ -59,7 +60,7 @@ export function exampleCards(ctx: PageContext, spec: SpecContext): string {
     .map((example) => {
       const steps = exampleSteps(example);
       const executable = example.verifiers.some((v) => v.via === "test-anchor");
-      return `<article class="example-card"><sdp-spec-card spec-id="${escape(example.id)}" variant="short"><p>${link(ctx, example.id, example.title ?? example.id, codeSpans(example.title ?? example.id))} · ${code(example.id)} · ${rungLine(example.statedReadiness, example.derivedReadiness)}</p></sdp-spec-card><p>${executable ? "Executable Spec" : "No verifier binding"}</p>${steps || "<p>No given, when and then steps recorded.</p>"}${scenarioTemplate(example, steps ? "edit" : "propose")}<p>${link(ctx, example.id, "Open example")}${composeSlot(example.id, steps ? "edit-example" : "propose-example")}</p></article>`;
+      return `<article class="example-card"><sdp-spec-card spec-id="${escape(example.id)}" variant="short"><p>${link(ctx, example.id, example.title ?? example.id, codeSpans(example.title ?? example.id))} · ${code(example.id)} · ${rungLine(example.statedReadiness, floorWords(example))}</p></sdp-spec-card><p>${executable ? "Executable Spec" : "No verifier binding"}</p>${steps || "<p>No given, when and then steps recorded.</p>"}${scenarioTemplate(example, steps ? "edit" : "propose")}<p>${link(ctx, example.id, "Open example")}${composeSlot(example.id, steps ? "edit-example" : "propose-example")}</p></article>`;
     })
     .join("")}`;
 }

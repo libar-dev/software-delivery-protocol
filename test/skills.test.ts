@@ -1,4 +1,5 @@
 import {
+  existsSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -994,6 +995,30 @@ describe("adopter install and upgrade guidance", () => {
   });
 });
 
+// The glossary's term names the text format; a file written in it is a carrier file. The README's
+// definition is the first one an outsider meets, so it keeps the two levels apart the same way.
+describe("the carrier's two levels", () => {
+  it("glosses the format and the file, and the README defines them the same way", () => {
+    const rows = readFileSync(join(repoRoot, "CONTEXT.md"), "utf8")
+      .split("\n")
+      .filter((line) => line.startsWith("| **carrier** |"));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toContain("the text format that carries the authored `Spec` document");
+    expect(rows[0]).toContain(
+      '"A carrier" or "a carrier file" is also one file written in that format; say which level when it matters',
+    );
+
+    const readme = readFileSync(join(repoRoot, "README.md"), "utf8");
+    const carriers = readme
+      .slice(readme.indexOf("## Carriers"), readme.indexOf("## Installed CLI"))
+      .replaceAll(/\s+/gu, " ");
+    expect(carriers).toContain(
+      "A carrier is the text format a Spec or a Pack is written in; a carrier file is one file written in it.",
+    );
+    expect(carriers).not.toMatch(/A carrier is the file/u);
+  });
+});
+
 function grammarProbe(section: string) {
   return parseMarkdownBody(
     `# Teaching probe\n\n${section}\n`,
@@ -1364,7 +1389,10 @@ describe("the reviewed skill teaching", () => {
       expect(usageLine("generate")).not.toContain(`${flag ?? ""} `);
     }
     expect(publish).toContain("writes the Studio without optional inputs");
-    expect(publish).toContain("Keep supplied inputs outside the paths the build writes or removes");
+    expect(publish).toContain(
+      "Keep supplied inputs outside `generated/`: the run refuses an input at a path the build writes or removes, such as `generated/graph.json` or a file beneath a page root",
+    );
+    expect(publish).not.toContain("`generated/` included");
     expect(publish).toContain("run `sdp stamp` with the corpus commit, then upload");
     expect(publish).toContain("A later build removes the stamp");
 
@@ -1510,7 +1538,7 @@ describe("the reviewed skill teaching", () => {
       "## Bootstrap discipline",
       "## Answer a task with a recipe",
       "## The contract",
-      "## The entry adapters",
+      "## Entry adapters and reader joins",
       "## The shape of the graph",
       "## How delivery state derives",
       "## Empty answers that mislead",
@@ -1528,6 +1556,25 @@ describe("the reviewed skill teaching", () => {
     ]) {
       expect(description).toContain(trigger);
     }
+  });
+
+  // The demand map rules the adapters by what an agent holds; a by-id join taught as an adapter
+  // would send agents looking up ids they do not have.
+  it("names as entry adapters exactly the ones the demand map rules, apart from the reader joins", () => {
+    const reader = createReader(shippedCorpusGraph());
+    const address = reader.resolveEntryAddress("spec:consumers.agent-surface#rule.entryAdapters");
+    const index = Number(/^rule\[(\d+)\]$/u.exec(String(address.entry))?.[1]);
+    const rule = reader.specContext("spec:consumers.agent-surface")?.sections?.behavior?.rules?.[
+      index
+    ];
+    const ruled = [...String(rule).matchAll(/`(\w+)`/gu)].map((match) => match[1]);
+    expect(ruled).toHaveLength(3);
+    const section = flat(skillSection(surfacePath, "## Entry adapters and reader joins"));
+    const adapters = /the entry adapters are (.+?) \(/u.exec(section)?.[1] ?? "";
+    expect([...adapters.matchAll(/`g\.(\w+)\(/gu)].map((match) => match[1])).toEqual(ruled);
+    expect(section).toContain(
+      "`g.specContext(id)`, `g.packContext(id)` and `g.resolveEntryAddress(address)` are joins frozen into the reader",
+    );
   });
 
   it("states the graph's flat topology and which node types carry lines, as the graph does", () => {
@@ -1761,7 +1808,9 @@ describe("the Studio on-ramp", () => {
       "`sdp generate` writes the Studio beside the other four page roots, with no optional input.",
       "Build the Studio last.",
       "`spec:consumers.spec-studio.publisher#rule.buildInvalidates`",
-      "Keep every input outside `generated/` and every other path the build writes or removes.",
+      "Keep every input outside `generated/`.",
+      "The run refuses an input at a path the build writes or removes, `generated/graph.json` or a file beneath a page root among them, or at a link resolving to one, before it changes a file",
+      "Another file under `generated/` is read as given.",
       "nothing serves or reloads the page",
     ]) {
       expect(text).toContain(clause);
@@ -1779,6 +1828,36 @@ describe("the Studio on-ramp", () => {
       );
       expect(exitCode).toBe(1);
       expect(refused.readStderr()).toContain("--base");
+      mkdirSync(join(root, "generated", "census"));
+      writeFileSync(join(root, "generated", "census", "base.json"), "{}");
+      const beneathPageRoot = createCaptureOutput();
+      expect(
+        await runSdpCli(
+          ["studio", root, "--base", join(root, "generated", "census", "base.json")],
+          beneathPageRoot.output,
+        ),
+      ).toBe(1);
+      expect(beneathPageRoot.readStderr()).toContain("writes or removes");
+
+      // A base graph the build does not own is read as given, even under generated/.
+      expect(await runSdpCli(["build", root], createCaptureOutput().output)).toBe(0);
+      writeFileSync(
+        join(root, "generated", "mybase.json"),
+        readFileSync(join(root, "generated", "graph.json"), "utf8"),
+      );
+      const accepted = createCaptureOutput();
+      await runSdpCli(
+        ["studio", root, "--base", join(root, "generated", "mybase.json")],
+        accepted.output,
+        {
+          studioAssets: {
+            script: join(repoRoot, "dist", "studio", "studio.js"),
+            stylesheet: join(repoRoot, "dist", "studio", "studio.css"),
+          },
+        },
+      );
+      expect(accepted.readStderr()).not.toContain("writes or removes");
+      expect(existsSync(join(root, "generated", "spec-studio", "diff.html"))).toBe(true);
       const generate = createCaptureOutput();
       expect(
         await runSdpCli(["generate", root, "--runs", join(root, "x.json")], generate.output),

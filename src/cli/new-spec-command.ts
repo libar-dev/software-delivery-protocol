@@ -25,8 +25,16 @@ export interface NewSpecArgs {
   readonly outcome: string;
 }
 
+/**
+ * A containment recheck the scaffolder makes: `create` before it creates a parent, `enter` after
+ * it enters one, and `hold` before the scaffold write, in the held parent.
+ */
+export type ScaffoldCheckpoint = "create" | "enter" | "hold";
+
 export interface NewSpecHooks {
-  readonly mkdirSync?: (path: PathLike, options: { recursive: true }) => string | undefined;
+  readonly mkdirSync?: (path: PathLike, options: { recursive: boolean }) => string | undefined;
+  /** Runs just before each containment recheck, with the parent or scaffold name it guards. */
+  readonly onScaffoldCheckpoint?: (checkpoint: ScaffoldCheckpoint, name: string) => void;
   /** Runs after the parent is held and verified, before the write — tests inject a swap here. */
   readonly onBeforeScaffoldWrite?: () => void;
 }
@@ -59,7 +67,9 @@ function requireSingleLine(flag: string, value: string, output: CliOutput): stri
     return undefined;
   }
 
-  if (value.includes("\n") || value.includes("\r")) {
+  // The extractor refuses a carrier line holding a lone CR, U+2028 or U+2029, so the scaffold
+  // never writes one.
+  if (/[\n\r\u2028\u2029]/u.test(value)) {
     refuse(output, `${flag} must be a single line.`);
     return undefined;
   }
@@ -393,15 +403,10 @@ export function runNewSpec(
     return 1;
   }
 
-  const createParent = hooks.mkdirSync ?? mkdirSync;
+  const createParent: NonNullable<NewSpecHooks["mkdirSync"]> =
+    hooks.mkdirSync ?? ((path, options) => mkdirSync(path, options));
   const parentPath = dirname(targetPath);
-
-  try {
-    createParent(parentPath, { recursive: true });
-  } catch (error) {
-    writeStderr(output, `sdp new spec: ${errorMessage(error)}\n`);
-    return 1;
-  }
+  const parentComponents = relative(resolve(process.cwd()), parentPath).split(sep).filter(Boolean);
 
   const cwdReal = workingDirectoryReal(output);
 
@@ -415,12 +420,38 @@ export function runNewSpec(
   // is the handle — it binds the process to the parent's inode, the relative `wx` create names
   // that inode directly, and a swap after the bind cannot redirect it.
   const scaffoldName = basename(targetPath);
-  let restoreCwd: string;
+  let restoreCwd = cwdReal;
 
   try {
     restoreCwd = realpathSync.native(".");
-    process.chdir(parentPath);
+    process.chdir(cwdReal);
+    // Bind each parent before creating its next child; never recursively traverse a checked path.
+    for (const component of parentComponents) {
+      hooks.onScaffoldCheckpoint?.("create", component);
+      if (!containedWithin(realpathSync.native("."), cwdReal))
+        throw new Error(
+          `the directory that holds ${component} lies outside it before ${component} is created`,
+        );
+      try {
+        createParent(component, { recursive: false });
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      }
+      process.chdir(component);
+      hooks.onScaffoldCheckpoint?.("enter", component);
+      if (!containedWithin(realpathSync.native("."), cwdReal))
+        throw new Error(`${component} lies outside it once entered`);
+    }
   } catch (error) {
+    try {
+      process.chdir(restoreCwd);
+    } catch {
+      try {
+        process.chdir(cwdReal);
+      } catch {
+        // Both restore targets vanished concurrently; the original refusal still applies.
+      }
+    }
     refuse(
       output,
       `PATH cannot be resolved inside the current working directory: ${errorMessage(error)}`,
@@ -430,6 +461,7 @@ export function runNewSpec(
 
   try {
     let heldReal: string;
+    hooks.onScaffoldCheckpoint?.("hold", scaffoldName);
 
     try {
       heldReal = realpathSync.native(".");
@@ -442,7 +474,10 @@ export function runNewSpec(
     }
 
     if (!containedWithin(heldReal, cwdReal)) {
-      refuse(output, "PATH escapes the current working directory through a parent symlink.");
+      refuse(
+        output,
+        "PATH escapes the current working directory: the scaffold's directory lies outside it before the write.",
+      );
       return 1;
     }
 
@@ -470,7 +505,10 @@ export function runNewSpec(
     try {
       if (!containedWithin(realpathSync.native("."), cwdReal)) {
         unlinkSync(scaffoldName);
-        refuse(output, "PATH escapes the current working directory through a parent symlink.");
+        refuse(
+          output,
+          "PATH escapes the current working directory: the scaffold landed outside it and was removed.",
+        );
         return 1;
       }
     } catch (error) {

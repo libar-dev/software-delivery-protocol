@@ -28,7 +28,7 @@ export const validationSpecs = [
           "Only relations the Spec itself declares count toward the relation clauses; membership of a Pack is derived from the manifest and never stands in for an authored relation.",
           "Every clause except the two evidence clauses is kind-blind; what counts as a kind's natural evidence is stated in full by `spec:validation.kind-evidence`.",
           "One clause table checks the stated rung and yields derived readiness, the highest rung whose cumulative clauses all pass, which is read beside the stated rung and never overwrites it. Asked about a named rung, the evaluator yields that rung's unmet clauses; the reader uses it for the stated next rung and the floor's next rung.",
-          "Given a Primitive node and a valid graph index over plain value data, evidence predicates tolerate section containers of the wrong shape and treat missing expected containers as absent evidence. An unratified kind derives no rung; an evaluation with an unratified kind or rung returns no failures, and descriptor conformance reports the invalid descriptor.",
+          "Given a Primitive node and a valid graph index over plain value data, evidence predicates tolerate section containers of the wrong shape and treat missing expected containers as absent evidence. An unratified kind or altitude derives no rung; an evaluation with an unratified kind, altitude or rung returns no failures, and descriptor conformance reports the invalid descriptor.",
           "The shipped clause table is the only floor any Spec is checked against; no validator reads a per-team floor setting.",
           "The floor table in `src/validate/readiness-floor.ts` is the clause set's code-level source of truth and the realizing entrypoint. The clauses stated here and the rows of that table are one law read twice, so any disagreement between them is drift to resolve on one side, never a second floor.",
         ],
@@ -884,8 +884,9 @@ export const validationSpecs = [
           "Keep derived graph truth trustworthy by rejecting any authored substitute for a derived edge or delivery fact.",
       },
       behavior: {
+        ruleKeys: { reservedProperties: "rules[0]" },
         rules: [
-          "Specs and Packs author no derived edge or delivery fact.",
+          "Specs and Packs author no derived edge or delivery fact. Spec and Pack envelope properties, top-level properties of each section record and each entry in a section array, and keyed Markdown entries reserve `implemented`, `has-verifier`, `hasVerifier`, `observed` and `deliveryFacts`, compared case-insensitively, and `claim`, `nodeType`, `specKind`, `satisfies`, `verifies`, `belongsTo` and `models`. Underscore forms are not delivery-fact names. Gherkin tags refuse delivery-fact names and authored claim or lifecycle lookalikes. Nested content, such as a Model term named `implemented` or a key inside a Design value, may name these concepts without authoring graph truth.",
           "A Primitive node's `deliveryFacts` equals the facts the one derivation recomputes from the graph.",
         ],
         exampleSpace: {
@@ -1799,9 +1800,10 @@ export const validationSpecs = [
       },
       behavior: {
         rules: [
-          "The evaluator takes an optional rung to evaluate. Given one, it evaluates the cumulative clauses of every rung up to and including it; without one, it evaluates up to the stated rung. A Spec of an unratified kind, or an evaluation with no ratified rung to reach, yields no failure, and the descriptor conformance error owns that case.",
-          "The floor's next rung is the rung above derived readiness: `idea` when no rung derives, and none when derived readiness is `ready`. Because derived readiness is the highest rung whose cumulative clauses all pass, the failures at the floor's next rung are that rung's own clauses, and there is at least one whenever that rung exists for a Spec of a ratified kind.",
+          "The evaluator takes an optional rung to evaluate. Given one, it evaluates the cumulative clauses of every rung up to and including it; without one, it evaluates up to the stated rung. A Spec of an unratified kind or altitude, or an evaluation with no ratified rung to reach, yields no failure, and the descriptor conformance error owns that case.",
+          "The floor's next rung is the rung above derived readiness: `idea` when no rung derives, and none when derived readiness is `ready` or no floor is evaluated. Because derived readiness is the highest rung whose cumulative clauses all pass, the failures at the floor's next rung are that rung's own clauses, and there is at least one whenever that rung exists.",
           "The reader's Spec context carries these failures as `nextRungFailures`, beside `floorFailures` for the stated rung and `statedNextRungFailures` for the stated next rung, which `spec:consumers.pack-design` owns. All three come from the one evaluator, and `nextRungFailures` is empty when derived readiness is `ready`.",
+          "No floor is evaluated over a Spec whose kind or altitude is unratified. The reader marks such a Spec with `floorNotEvaluated`, naming those descriptors with the kind first, and gives it no derived readiness, no floor's next rung and no stated next rung; its failure lists are empty because nothing was evaluated, so a consumer can read it as not evaluated rather than as below `idea` or as a rung nothing blocks.",
           "A failure of the typed-dependency clause carries its targets: every distinct resolving `refines`, `dependsOn`, `constrainedBy`, or `decidedBy` target that states a rung below `defined`, or that is not a Spec, each with its relation type, its id, and its stated rung when it is a Spec. Targets sort by relation type in that order and then by id in code-unit order. No other clause carries targets.",
           "Promotion preflight reports the floor's next rung with its failures, each with its targets when it has them, and the first of them. The report is never a promotion: stating any rung stays a human's edit.",
         ],
@@ -1817,6 +1819,9 @@ export const validationSpecs = [
             "that failure names the targets {targets:string}",
             "the stated rung's floor failures number {currentFailures:number}",
           ],
+        },
+        ruleKeys: {
+          notEvaluated: "rules[3]",
         },
       },
     },

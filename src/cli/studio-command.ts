@@ -1,7 +1,7 @@
 import { runValidateWatch } from "./validate-watch.js";
 import type { ValidateWatchHooks } from "./validate-watch.js";
 import { readStudioBase, readStudioRuns } from "./studio-inputs.js";
-import { readFileSync, rmSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,7 +15,7 @@ import {
 } from "../projections/studio/publish.js";
 import type { StudioAssets, StudioFile } from "../projections/studio/publish.js";
 import { createReader } from "../reader/reader.js";
-import { removeArtifacts } from "./artifacts.js";
+import { guardedOutput, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
 import type { CliOutput } from "./output.js";
@@ -37,7 +37,8 @@ export function prepareStudioPublication(
 ): ((validated: ProtocolValidationOutcome) => Promise<number>) | undefined {
   const studioPath = join(parsed.root, "generated", "spec-studio");
   const temporaryPath = `${studioPath}.tmp`;
-  const recoveryRm = hooks.rmSync ?? rmSync;
+  const fs = guardedOutput(parsed.root, hooks);
+  const recoveryRm = fs.rmSync;
   const fail = (message: string): number => {
     writeStderr(output, message);
     removeArtifacts([studioPath, temporaryPath], output, command, recoveryRm);
@@ -94,7 +95,7 @@ export function prepareStudioPublication(
             `sdp ${command} --check-clean: generated Studio differs from the current projection.\n`,
           );
       }
-      publishStudio(studioPath, files);
+      publishStudio(studioPath, files, fs);
       writeStdout(output, `Wrote ${studioPath} (${String(files.length)} files)\n`);
       return validated.exitCode;
     } catch (error) {

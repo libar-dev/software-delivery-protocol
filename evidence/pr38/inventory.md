@@ -1,0 +1,276 @@
+# Durable-content inventory
+
+This inventory answers `spec:protocol.delivery-record-cleanup#question.durableContent`:
+
+> Which content in `plans/`, `reviews/` and the concept documents does no Spec, test, decision or
+> recipe carry yet, and where does each piece belong?
+
+The question's provisional reading asks for "a measured inventory by the arc that removes them,
+reviewed before anything is deleted". The owner let that answer stand after PR #36's forward memo
+and added two details: the inventory is the cleanup arc's first commit, and a cross-family review
+checks it before anything is deleted. Only PR #36's description records that acceptance (finding
+L12-01, below).
+
+This inventory was measured at base `b5e0a8bea1e3bedd48c616f96c9928e955792753` by lanes L7
+(`plans/`, `docs/concept/`) and L8 (`reviews/`), each verified by the other model family, and
+completed by L12 for the pull-request descriptions. The owner has accepted it, with the row rulings
+at the end of this file. No lane proposed a deletion, and this inventory proposes none; it says
+where durable content should move so the cleanup arc can remove the records safely. **Nothing is
+deleted before that arc lands this inventory, and no record goes before the durable content it
+holds has its home.**
+
+A "carrier" here is any graph home (a Spec, decision Spec, open question) or a test or recipe that
+states the content. Tests count as carriers: that is why R3 was refuted.
+
+## Record findings: durable content with no carrier yet
+
+The lanes' 11 record findings were all confirmed; none is uncertain. R12 was found after the
+owner's rulings, by a later cross-family review of this inventory, and awaits the owner's ruling.
+Severities are the verifier's.
+
+| Id    | Source (path:lines)                                                                                                             | Durable content                                                                                                                                                                                                                                                                                                                                                                                                | Proposed home                                                                                                                                                                                                                                                                                                                     | Severity |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| R1    | `plans/16-carrier-ruling.md:40-63`, `:124-139`                                                                                  | The detailed grounds of the carrier ruling: an owned grammar's permanent tooling (parser, formatter, highlighting, language server) and the grammar-context cost to agents; the rejected directions: whole-Spec data (YAML, JSON, TOML, CUE), embedded in-source Specs, other dialects (AsciiDoc, org-mode, Djot, Typst), notebooks, structured or projection editing and typed markup as the authored surface | `alternative:` entries on `spec:decisions.carrier-ruling` (it has none). Verifier narrowing: the owned-grammar and kind-split conclusions already survive there, and parser parity lives in `spec:carrier.markdown-parser`, so add only the missing grounds and directions                                                        | medium   |
+| R4    | `docs/concept/04-authoring-and-binding.md:37-50`                                                                                | The TypeScript carrier's static-data grammar: literals only, no loops, conditionals, computed or interpolated ids, IO, async or product imports; relation targets as string-literal ids; the designed-for `sdp/spec-static` lint                                                                                                                                                                               | A new carrier Spec, e.g. `spec:carrier.typescript-authoring`, mirroring `spec:carrier.markdown-authoring`, with a non-blocking `staticLint` question. Keep authoring restrictions apart from the extractor's warning-and-degrade behaviour, which `spec:carrier.markdown-parser` and `test/extract.test.ts:159-195` already carry | medium   |
+| R5    | `docs/concept/00-vision-scope-and-mvp-boundary.md:93-96`                                                                        | Two permanent non-goals: change approval stays in git and CI, with no embedded access control or governance engine; the Protocol links adjacent tools (issue trackers, design tools, architecture and API formats) rather than replacing them                                                                                                                                                                  | `consequence:` entries on `spec:decisions.executable-meta-model`. Do not add the view-is-never-an-editor boundary: `spec:consumers.edit-model` and `spec:consumers.spec-studio` already carry it                                                                                                                                  | medium   |
+| R6    | `docs/concept/00-vision-scope-and-mvp-boundary.md:35-38`, `:78-81`; `docs/concept/01-founding-principles-and-invariants.md:124` | The designed-for, deferred trajectory: standards interop, design and accessibility linkage, multi-tenant, multi-repository and polyglot extraction, incremental builds, caching and sharding, a database once traversal scale forces it                                                                                                                                                                        | Owner decision. Either one `idea` Spec per deferral, each with a blocking question and `trigger`, or one decision Spec listing each deferral with its re-entry condition. Existing import and run-evidence capabilities already cover part of the interop item. Triggers are the owner's to set, not the inventory's to invent    | medium   |
+| R2    | `plans/12-executable-examples-design-session.md:453-456`, `:479-488`                                                            | Field evidence from the earlier system's corpus: 93 of 132 executable features written as truth tables; maturing meant migrating between two file trees, with rot at the migration (stale cross-pointers, hand-copied invariants, always-throwing stubs read as coverage)                                                                                                                                      | Context on `spec:decisions.point-per-example` and a rationale on `spec:decisions.one-primitive`, framed as historical evidence, never as a new measurement; or the cleanup pull request's record                                                                                                                                  | low      |
+| R7    | `docs/concept/04-authoring-and-binding.md:79`, `:85`                                                                            | Anchors are framework-neutral: an anchor binds a class, function, route or module by id, however the runtime is wired                                                                                                                                                                                                                                                                                          | A Model term or rule on `spec:model.anchors`, without promising extraction beyond the supported source forms                                                                                                                                                                                                                      | low      |
+| R8    | `docs/concept/06-consumers-and-projections.md:56-64`                                                                            | The mapping from classic disciplines to kinds and graph homes (Requirements, Analysis and Design, Test, Deployment, Configuration and Change Management, Project Management, Business Modeling)                                                                                                                                                                                                                | A `## Design` entry `disciplineMap` on `spec:consumers.projections-model`, updated to the built capability map (recipe 52) and roadmap (recipe 53), with release and baseline views still deferred                                                                                                                                | low      |
+| R9    | `plans/06-slice1-extractor.md:102-103`; `src/extract/serialize.ts:24-32`                                                        | The graph's node and edge sort is code-unit string order, never a locale-aware collation, because collation varies by environment                                                                                                                                                                                                                                                                              | Rule 1 of `spec:extraction.determinism` (`determinism.sdp.md:23`)                                                                                                                                                                                                                                                                 | low      |
+| R11   | `plans/18-self-hosting-phase-2-brief.md:197-220`                                                                                | The rewrite test for decision prose ("would this still hold if the repository were rebuilt tomorrow under the same design?") and the exclusion of procedural context (dates, commit hashes, session numbers) from decision Specs                                                                                                                                                                               | The decision guidance in `.agents/skills/sdp-authoring/SKILL.md` (around the Decision row at :129). Rejected paths and supersession are already carried by `CONTEXT.md` and need no move                                                                                                                                          | low      |
+| L8-01 | `reviews/12-self-hosting-phase-5-post-close-review.md:62`                                                                       | Why the reading skill keeps a self-contained summary of the `sdp q` contract: an agent loads the skill without the catalog in context, so a pointer-only contract is weaker. The Studio and vault on-ramps "restate neither", so without this reason the reading skill looks inconsistent                                                                                                                      | Narrative before Intent in `specs/consumers/reading-on-ramp.sdp.md`                                                                                                                                                                                                                                                               | low      |
+| L8-02 | `reviews/14-executable-verification-design-review.md:203-209`, `:223`, `:236`                                                   | The cost of the rejected engine-execution alternative: loading and executing adopter code crosses a trust boundary and moves module loading, isolation, world setup and test-framework integration into the engine                                                                                                                                                                                             | Narrative before Intent in `specs/extraction/runnable-modules.sdp.md`; a decision `alternative:` would also work but is not required                                                                                                                                                                                              | low      |
+| R12   | `docs/concept/01-founding-principles-and-invariants.md:99`, `:117`                                                              | The designed-for, deferred carve-out of principle L8: an optional generated `spec-ids` union type that `tsc` reads for early checks of Spec references, never a gate, because the graph validator catches the same broken references at build time                                                                                                                                                             | Owner decision: keep it beside R6's deferrals, in the form R6 takes, or drop it. No Spec carries it: recipe 6 finds no match for `spec-ids`                                                                                                                                                                                       | low      |
+
+Refuted record findings, kept here so they are not re-raised: **R3** (the correctness-oracle law is
+carried by tests: `test/extract.test.ts:1852-1857`, `test/checkout-v1.test.ts:17-19,68-74`,
+`test/design-review.test.ts:393-402`, `test/cli.test.ts:480-495`) and **R10** (relation-named Design
+keys are settled law in `specs/carrier/markdown-body-grammar.sdp.md:44-45`).
+
+## Record content in the pull-request descriptions
+
+Lane L12 read the five most recent merged descriptions (#31, #32, #33, #35, #36) against the graph,
+because the descriptions are the delivery record the cleanup keeps and some of their content also
+sits in the plans it removes. All 196 distinct pinned file links (blob and raw) in them resolve. The
+lane checked no other kind of link: the descriptions also hold 17 distinct pinned tree and commit
+links, 213 pinned links in all, and a later check found that those 17 resolve too. Two findings were
+confirmed, both medium. Two ledger items, U1 and U2, had no verifier ruling; the owner has since
+settled both. Full ledger: `pr-record.md`.
+
+| Id     | Where it lives today                                                                                | Content                                                                                                                                                                                                                                                                                                                       | Proposed home                                                                                                                                                                                                                                                                                                                 | Severity |
+| ------ | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| L12-01 | PR #36's description only, "Answered since the memo was rendered" (lines 347-358 of the saved copy) | The owner let three provisional answers stand: `#durableContent` (with the first-commit inventory and the cross-family review), `#lineText` and `#lineBound`                                                                                                                                                                  | Proposal changes 4 to 7: the accepted method becomes rule `#inventoryFirst` on the cleanup Spec, and its question stays blocking until the cleanup arc lands this inventory in its first commit (the owner's ruling, below); the two cited-line answers become a rule and a Design entry, and their questions leave that Spec | medium   |
+| L12-02 | The plan "Designs people can read, and an adopter at full speed" only (plan 46)                     | Two re-entry triggers, in plan 46's words: "A reader is misled by a run whose commit matches but whose files moved" (bound-file freshness) and "A design pass asks which combinations no example exercises" (slot-combination coverage). PR #35 lists both as deferred without them, and recipe 55's deferral list omits both | Two `idea` captures, each with a blocking question carrying its trigger (`open-questions.md`, questions 4 and 5). The owner reworded the freshness trigger: "a reader cannot tell whether a run at another commit still applies". Move them before plan 46 goes                                                               | medium   |
+
+The same plan also defers build attestations, deployments and SBOMs until "a Spec designs their
+source". That condition is carried as prose and rules in
+`spec:consumers.spec-studio.lenses.evidence#notTracked` and the verification panels, so it is not
+lost.
+
+Two ledger items had no verifier ruling (see `open-questions.md`); the owner has since settled
+both:
+
+- **U1:** no description recorded the owner confirming the delegated choices of the whole-corpus
+  refresh (PR #32, plan 44). **Ruled:** they are ratified as the graph carries them; where a later
+  ruling narrowed one, the later ruling wins. No Spec edit.
+- **U2:** PR #35's phrase "the Studio build computes a join" reads broader than the carrying law in
+  `spec:consumers.spec-studio`. **Ruled:** PR #35's refused-list wording was wrong. The build
+  composes every join; what is refused is a page that recomputes one, or a second graph
+  (`spec:consumers.spec-studio#rule.noSecondGraph`).
+
+### What L12-01 means for the cleanup entry
+
+- **The answer to the cleanup's blocking question is this inventory.** In PR #36 the owner settled
+  how the question is answered; the owner has since accepted this inventory as its answer, with the
+  row rulings below. The question stays open until the cleanup arc lands this inventory in its first
+  commit, which closes it.
+- **This file is not the arc's first commit.** It lives in the review's evidence, which is removed
+  before merge. To meet the accepted answer, the cleanup arc opens with this inventory, as the owner
+  ruled it, in its first commit. Its cross-family check is already done: L7, L8 and L12 were each
+  verified by the other model family.
+- **The graph does not yet show the acceptance.** At the base, recipe 20 lists `#durableContent` as
+  blocking and recipe 55 lists it under "Waiting on the owner", with a provisional that lacks both
+  accepted details. An agent reading only the graph would ask the owner again. Changes 4 and 5
+  record the accepted method. Measured in a trial application of all seven changes, recipe 55 still
+  lists place 1 as to design, blocked by `#durableContent` and waiting on the owner, and the Spec's
+  floor then allows `scoped`. Change 5's provisional predates the owner's acceptance of this
+  inventory, so the provisional must also come to name that acceptance and the closure condition,
+  or an agent would still ask the owner to review the inventory.
+- **The acceptance passage needs no other home** once those changes land: GitHub keeps PR #36's
+  description, and the graph then carries the answers.
+
+## Neighbouring findings
+
+Two neighbouring findings are not record findings but bear on the cleanup:
+
+- **C1** (code, confirmed): `check-temporal.mjs` still exempts `docs/concept/DECISIONS.md` as "the
+  dated decision diary". Plan 05 is the only prose home of the guard's law, but the script and its
+  test carry it, so removing plan 05 loses no law. See C1 in `findings.json`.
+- **Concept-document drift** (L6-2, D1, L6-5, docs, confirmed): the concept documents that will be
+  dissolved also state stale facts. Fix or dissolve them in the same arc; do not move the stale text
+  into a Spec.
+
+## Live dependencies on the records
+
+A cleanup arc must move, repoint or retire these before it removes what they depend on. The first
+two break the gate:
+
+- `check-self-hosting-gates.mjs` reads plans 16, 17 and 18 (plan 16 at line 44; plan 17's docket and
+  ledger; plan 18's G1–G8 ledger) as frozen historical checks.
+- `test/integration-review.test.ts:42` invokes `reviews/assets/plan46-s1/measure.mjs`.
+- `spec:decisions.studio-diagram-renderer` and `spec:consumers.obsidian-vault` cite
+  `reviews/assets/plan46-prototypes/**` as design evidence.
+- `docs/concept/DECISIONS.md` is the live registry (read by `AGENTS.md`, the gates script and package
+  smoke tests). It is not cleanup material.
+- 21 Markdown links in documents the cleanup keeps point into the concept documents it may dissolve:
+  - `jtbd-stories/`, 17, by story number and line: `01:33`, `02:11` and `02:32` (concept 04);
+    `01:117`, `05:13`, `05:34`, `05:56`, `05:77`, `06:11`, `07:11` and `07:54` (concept 06);
+    `03:74`, `07:54` and `08:13` (concept 01); `08:13` (concept 00); `README.md:3` and
+    `README.md:15` (the concept README);
+  - `README.md:11` (the concept README);
+  - `examples/checkout-v1/README.md`, 3: `:12` (the concept README), `:164` (concept 04) and `:166`
+    (concept 06).
+
+  Each is repointed to the Spec that carries its subject, or removed, before its target goes. Nine
+  of them target concept 06, whose dissolution depends on R8. Two exploration exhibits also link
+  plans the cleanup removes: `explorations/carrier-competition/gherkin-fork/CLOSED.md:19` (plan 15c)
+  and `explorations/carrier-competition/typed-markup/CLOSED.md:23` (plan 15d); the cleanup treats
+  them the same way, or records why a verbatim exhibit keeps a dangling link. No code or test reads
+  a concept document other than `DECISIONS.md`. Apart from OmO's own state under `.omo/`, which other
+  sessions leave alone, nothing else outside the records links into `plans/` or `reviews/`.
+
+- `AGENTS.md` (lines 22, 61 and 69) and `CONTEXT.md` (line 8) name `plans/`, `reviews/` and
+  `docs/concept/` in prose; the cleanup rewrites those pointers in the same change.
+
+## Per-file classification
+
+Classes: **C** fully carried; **H** historical only (sequencing, logistics, close records, measurements
+that git and pull requests already hold); **U** holds durable content not yet carried (finding id in
+brackets). Classifications from L7 for `plans/` and `docs/concept/`, and from L8 for `reviews/`.
+
+### `plans/`
+
+| File                                                                       | Class            | Carriers or notes                                                                                                                                                                                       |
+| -------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 01                                                                         | H                | status stub                                                                                                                                                                                             |
+| 01a                                                                        | H                | Phase 0 execution plan; the law lives in the `model.*` Specs                                                                                                                                            |
+| 02                                                                         | H                | "a floor, never a quota" carried by `spec:decisions.kind-conditional-floor` and `spec:consumers.derived-readiness-banner`                                                                               |
+| 03                                                                         | H                | outcomes are the MD-10 to MD-15 decision Specs; base-first method in `AGENTS.md`                                                                                                                        |
+| 04                                                                         | H                | meta-discipline in `AGENTS.md` and `spec:decisions.plain-language-references`; "crippled graph" superseded by `spec:protocol.self-hosting`                                                              |
+| 05                                                                         | H, one remnant   | the temporal-guard law is carried by `check-temporal.mjs` and its test (see C1)                                                                                                                         |
+| 06                                                                         | C + U [R9]       | `spec:extraction.derive-graph`, `spec:extraction.build-pipeline#rule.emitOnClean`, `spec:extraction.determinism`; the golden-oracle point is carried by tests (R3 refuted)                              |
+| 07                                                                         | C                | `spec:model.anchors`, `spec:extraction.delivery-facts`                                                                                                                                                  |
+| 08                                                                         | C                | `spec:validation.two-check-families`, `spec:validation.readiness-floor`, `spec:extraction.build-pipeline`                                                                                               |
+| 09                                                                         | C                | `spec:consumers.agent-surface`, `spec:consumers.design-review`, `spec:consumers.binding-language-views`, `spec:consumers.derived-readiness-banner`                                                      |
+| 10                                                                         | C                | `spec:consumers.agent-surface#rule.growByRecipe`, `spec:validation.diagnostic-rendering`, `spec:extraction.determinism`                                                                                 |
+| 11                                                                         | H                |                                                                                                                                                                                                         |
+| 12                                                                         | C + U [R2]       | MD-14 to MD-17 decision Specs, `spec:extraction.executable-contracts`                                                                                                                                   |
+| 13                                                                         | C                | `spec:extraction.executable-contracts`, `spec:extraction.executable-examples`                                                                                                                           |
+| 14, 14a, 15a, 15b, 15c, 15d, please-use-the-context-imperative-stonebraker | H                | competition logistics; the exhibits live in `explorations/`                                                                                                                                             |
+| 16                                                                         | C + U [R1]       | §3 and §4 carried by `spec:decisions.carrier-ruling` and `spec:decisions.prose-ownership`; the gates script reads this file                                                                             |
+| 17, 17b                                                                    | H                | the gates script reads plan 17's docket and ledger; rulings went to `carrier.*` Specs (sampled)                                                                                                         |
+| 18-brief                                                                   | U, partial [R11] | placement carried by `spec:decisions.planning-truths-placement` and `AGENTS.md`                                                                                                                         |
+| 18, 18a                                                                    | H                | the gates script reads plan 18's G1–G8 ledger                                                                                                                                                           |
+| 19                                                                         | C                | `spec:model.anchors`, `spec:carrier.sdp-import`, `spec:consumers.design-review#rule.inlineCode`                                                                                                         |
+| 20, 21, 22                                                                 | H                | audit design in `spec:decisions.concept-docs-dissolve`; front-door weighing in `spec:decisions.agent-front-door`                                                                                        |
+| 24, 25, 26, 27                                                             | H                | process layer in the `sdp-sessions` skill and `spec:consumers.delivery-session-on-ramp`; lineage in `docs/lineage`                                                                                      |
+| 28, 30, 31                                                                 | C                | `spec:carrier.gherkin-authoring`, `spec:decisions.sdp-gherkin-extension`, `spec:decisions.carrier-universality`, `spec:extraction.runnable-modules`                                                     |
+| 29, 32, 34, 36                                                             | C                | briefs; sampled do-not-reopen rows carried by `spec:extraction.runnable-modules`, `spec:decisions.carrier-universality`, `spec:decisions.agent-front-door`, `spec:decisions.shipped-projections-frozen` |
+| 33, 35, 37                                                                 | H                | close records; plan 37's bundle stand-down superseded by `spec:consumers.context-bundle`                                                                                                                |
+| 38                                                                         | C                | `spec:consumers.graph-first-planning`                                                                                                                                                                   |
+| 39                                                                         | C                | owner items resolved in Specs; its relation-named-key question is settled law (R10 refuted)                                                                                                             |
+| 40, 41                                                                     | C                | `spec:decisions.anchor-comment-form`, `spec:decisions.anchor-binding-grain`, `spec:decisions.architectural-annotation`, `spec:decisions.pack-design-page`; drift queue resolved                         |
+| 42, 43, 45, 47                                                             | C                | spec-studio family, deferrals as triggers (recipe 20), refusals in Specs, `spec:decisions.roadmap-priority`, `spec:decisions.roadmap-over-plans`, `spec:decisions.epics-of-any-kind`                    |
+| 46                                                                         | C + U [L12-02]   | as above; but two deferral triggers (bound-file freshness, slot-combination coverage) live only here (L12 corrected L7's C); the first-npm-release deferral is pull request record only                 |
+| 44                                                                         | H                |                                                                                                                                                                                                         |
+
+L7 read the ledgers of plans 17, 18a, 20, 21, 22, 24, 26, 29, 32 and 34 by section, not line by line.
+
+### `docs/concept/`
+
+| File         | Class                       | Notes                                                                                                                                                                                                         |
+| ------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| README       | C                           | founding principles carried by `spec:extraction.regenerability`, `spec:extraction.claim-taxonomy`, `spec:decisions.executable-meta-model`, `spec:extraction.derive-graph`; reading conventions in `AGENTS.md` |
+| 00           | U + drift [R5, R6]          | stale CLI list and intent-panel status (L6-5, D1)                                                                                                                                                             |
+| 01           | C + U + drift [R6, R12]     | P1–P10, L2, L3, L9 carried; the L8 `spec-ids` union aspiration is uncarried (R12), and line 124 holds part of R6's deferred trajectory; stale statuses (D1)                                                   |
+| 04           | U + drift [R4, R7]          | §4 carried by `spec:carrier.gherkin-authoring` and `spec:decisions.sdp-gherkin-extension`; "one runtime truth" stale (D1)                                                                                     |
+| 06           | pointers C + U + drift [R8] | stale built/unbuilt statements (L6-2, D1)                                                                                                                                                                     |
+| 07           | C                           | the correctness-oracle law is carried by tests (R3 refuted); L7 had marked it U                                                                                                                               |
+| DECISIONS.md | live registry               | not cleanup material; MD codes and deleted-row commits live only here                                                                                                                                         |
+
+### `reviews/`
+
+129 files measured (42 Markdown, 13 JSON, 6 MJS, 45 PNG, 6 WebP, 1 JSONL, 16 TXT).
+
+| Path                                                                                                                                                           | Class     | Carriers or notes                                                                                                                                                                                                                                                                                                           |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `README.md`, `03-post-split-adverserial-review-prompt.md`, `05-plan-finalization-prompt.md`                                                                    | H         | index and session prompts                                                                                                                                                                                                                                                                                                   |
+| `01-opus-plan-implementation-review.md`, `02-founding-ideation-back-for-review.md`, `04-post-split-adversarial-review.md`                                      | C         | `spec:model.core-model`, `spec:model.anchors`, `spec:model.pack-aggregate`, `spec:validation.kind-evidence`, `spec:validation.readiness-floor`, `spec:decisions.one-validation-path`, `spec:decisions.typing-law`, `spec:decisions.content-only-sections`, `spec:consumers.binding-language-views`, `spec:consumers.reader` |
+| `06-self-hosting-phase-1-code-review.md`                                                                                                                       | H         | contracts carried by `spec:carrier.envelope-contract`, `spec:carrier.markdown-body-grammar`, `spec:carrier.markdown-parser` and tests; PR #10 at 014bd5bc                                                                                                                                                                   |
+| `07-...phase-2-code-review.md`, `08-...phase-2-pre-merge-review.md`                                                                                            | H         | `spec:carrier.sdp-import`, `spec:model.anchors.physical-identity` and regression suites; PR #11 at 5095a996                                                                                                                                                                                                                 |
+| `09-...phase-3-pre-close-review.md`                                                                                                                            | H         | `spec:extraction.executable-contracts.concreteness-refusal`, `spec:model.stable-ids`, `spec:validation.readiness-floor`, `spec:validation.verification-linkage`; PR #12 at 34746582                                                                                                                                         |
+| `10-...phase-4-pre-close-review.md`                                                                                                                            | H         | `spec:consumers.wholesale-view-rewrite`, `spec:consumers.binding-language-views.pack-member-table`, `spec:validation.warn-level-signals`, `test/cli.test.ts:1505`; PR #13 at 5b8c2f9d                                                                                                                                       |
+| `11-...phase-5-pre-close-review.md`                                                                                                                            | H         | `spec:consumers.agent-surface.evaluation-sink`, `spec:consumers.reading-on-ramp`, `test/cli-q.test.ts`, `test/recipes.test.ts`                                                                                                                                                                                              |
+| `12-...phase-5-post-close-review.md`                                                                                                                           | U [L8-01] | other fixes carried by CLI, query and recipe tests; 09b568f0 and PR #14 at b9b11055                                                                                                                                                                                                                                         |
+| `13-dissolution-value-transfer-audit.md`                                                                                                                       | C         | P1–P6 carried by `spec:model.core-model`, `spec:validation.readiness-floor`, `spec:model.relations`, `spec:consumers.design-diff`, `spec:validation.pack-coherence`, `spec:decisions.executable-meta-model`; P7 historical; recovery commit 57368775                                                                        |
+| `14-executable-verification-design-review.md`                                                                                                                  | U [L8-02] | chosen policy in `spec:decisions.gherkin-carrier-option`, `spec:decisions.carrier-universality`, `spec:extraction.runnable-modules`; 74e9a6c8                                                                                                                                                                               |
+| `25-architecture-design-followup.md`, `25-pr-description.md`                                                                                                   | H         | `spec:model.structural-patterns`, `spec:protocol.structural-self-binding`, `spec:extraction.delivery-facts`, `spec:extraction.example-runner`, recipes 17–19; PR #25 at 25d24f23                                                                                                                                            |
+| `26-whole-corpus-refresh.md`                                                                                                                                   | H         | `spec:decisions.anchor-binding-grain`, `spec:extraction.schema-versioning`, `spec:model.relation-reasons`, `spec:carrier.gherkin-authoring`, `spec:validation.validator-self-testing`, `spec:consumers.reading-on-ramp`, recipe 20; not re-reviewed issue by issue                                                          |
+| `plan46-close-x1.md`                                                                                                                                           | C         | glossary, `spec:consumers.command-line`, Studio Specs, `spec:consumers.edit-model`, `spec:consumers.intent-composition`                                                                                                                                                                                                     |
+| `plan46-s1-build.md`                                                                                                                                           | C         | `spec:consumers.spec-studio.diagrams` and lenses, `spec:consumers.spec-studio.data.recipe-answers`, recipe 44                                                                                                                                                                                                               |
+| `plan46-s5-build.md`, `plan46-s5-fixes.md`                                                                                                                     | C         | `spec:consumers.spec-studio.intent-panel`, `spec:consumers.intent-composition.proposal.memo`, `spec:consumers.spec-studio.export`, `spec:consumers.spec-studio.publisher.watch`, `test/studio-s5.test.ts`                                                                                                                   |
+| `plan46-s6-polish.md`, `plan46-s7-keying.md`                                                                                                                   | C         | `spec:consumers.spec-studio.responsive` and children, `spec:consumers.design-diff`, recipe 35, Studio suites                                                                                                                                                                                                                |
+| `plan46-upgrade-kit-build.md`                                                                                                                                  | C         | `spec:consumers.upgrade-kit` and children, recipes 47–48, upgrade guide, `test/upgrade-kit.test.ts`                                                                                                                                                                                                                         |
+| `plan46-vault-build.md`                                                                                                                                        | C         | `spec:consumers.obsidian-vault` and children, `spec:decisions.vault-owned-folder`, vault suites                                                                                                                                                                                                                             |
+| `plan46-wave2a-integration.md`, `plan46-wave2b-integration.md`                                                                                                 | H         | corrections carried by `spec:consumers.context-bundle`, `spec:consumers.agent-surface.address-and-cycle-recipes`, `spec:consumers.spec-studio.owner-queue`, `spec:consumers.command-line`, recipes 25, 36, 46, 51                                                                                                           |
+| `plan46-x2b-fixes.md`, `plan46-x2b-rereview-fixes.md`                                                                                                          | C         | `spec:extraction.build-pipeline`, `spec:consumers.obsidian-vault`, `spec:consumers.obsidian-vault.bases`, `spec:consumers.spec-studio.sharing`; `test/x2b-cli.test.ts`, `test/x2b-studio.test.ts`, `test/studio-s4.test.ts`                                                                                                 |
+| `plan46-k-step-keys-platform.md`                                                                                                                               | H         | requirement carried by `spec:carrier.step-keys`                                                                                                                                                                                                                                                                             |
+| `plan46-acceptance.md`, `plan46-acceptance/**`                                                                                                                 | H         | package defect regression in `test/package-smoke.test.ts`; scripts inspected, not run                                                                                                                                                                                                                                       |
+| `assets/plan46-prototypes/**`                                                                                                                                  | H, cited  | cited by `spec:decisions.studio-diagram-renderer` and `spec:consumers.obsidian-vault`; cleanup must account for the citations                                                                                                                                                                                               |
+| `assets/plan46-s1/measure.mjs`                                                                                                                                 | C, live   | invoked by `test/integration-review.test.ts:42`; must move before removal                                                                                                                                                                                                                                                   |
+| other `assets/plan46-s1/**`                                                                                                                                    | H         | measurements and offline renders                                                                                                                                                                                                                                                                                            |
+| `assets/plan46-integrate-2a/**`, `plan46-s3/**`, `plan46-s5/**`, `plan46-s6/**`, `plan46-s6-fixes/**`, `plan46-s7-keying/**`, `plan46-u/**`, `plan46-vault/**` | H         | measurements, capture tools, acceptance instructions                                                                                                                                                                                                                                                                        |
+| `assets/pr33/**`, `assets/pr35/**`                                                                                                                             | H         | PR presentation evidence; PR #33 at 5a0b22c2, PR #35 at da4b1419; images not re-viewed                                                                                                                                                                                                                                      |
+
+## Answer in one paragraph
+
+Most of `plans/` and `reviews/` is either carried by Specs, decision Specs, open questions, tests
+and recipes, or is execution history that git and the pull requests already hold. The uncarried
+durable content is small and named above: four medium items (R1, R4, R5, R6), eight low items (R2,
+R7, R8, R9, R11, R12, L8-01, L8-02), two deferral triggers that live only in plan 46 (L12-02), and
+the concept-document drift to fix as the documents dissolve. The owner's acceptance of this method
+lives only in PR #36's description (L12-01) until proposal changes 4 to 7 land. The owner has
+accepted this inventory. The cleanup arc opens with it in its first commit, which closes the
+question; before any record is removed, its durable items land in their homes and the live
+dependencies are moved, repointed or retired.
+
+## The owner's rulings on this inventory
+
+The owner accepted this inventory as the answer to
+`spec:protocol.delivery-record-cleanup#question.durableContent`. The cleanup arc lands it in its
+first commit and closes the question there: that is the question's one closure condition, and
+nothing listed below as still open holds it open. The rows are ruled as follows:
+
+| Rows                                       | Ruling                                                                                                                                                                                              |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1, R5, R7, R9, R11, L8-01, L8-02          | Take the proposed homes.                                                                                                                                                                            |
+| R4, the TypeScript carrier's grammar       | A new `spec:carrier.typescript-authoring`. The authoring session states its rung honestly.                                                                                                          |
+| R2, field evidence from the earlier system | The cleanup pull request's record, never a Spec: a count inside a Spec is on the durable refused list. At most a number-free rationale sentence on `spec:decisions.point-per-example`.              |
+| Live dependencies                          | `docs/concept/DECISIONS.md` stays. The plan-reading gate checks retire with the folders (`spec:protocol.roadmap-replaces-plans#rule.gateRecord`). `measure.mjs` moves beside the test that runs it. |
+| L12-01, L12-02                             | Carried by the proposal and the captures that PR #39 applies.                                                                                                                                       |
+
+Still open, on purpose. None of these blocks opening the cleanup arc or closing the question; each
+is settled before the record that holds it is removed, so in the cleanup arc, or later if that
+record stays:
+
+- R6's re-entry conditions, or dropping R6;
+- R8's home, which depends on whether the cleanup dissolves `docs/concept/06`;
+- the new location of the plan-46 prototypes under `reviews/assets/`, which two Specs cite.
+
+Added after these rulings, by a later cross-family review of this inventory:
+
+- R12, which awaits the owner's ruling, keep it with a home or drop it; like R6, it is settled
+  before concept 01 is removed and does not hold the question open;
+- the Markdown links and prose pointers in the live-dependency list, which need no ruling: the
+  cleanup repoints or removes each before its target goes.

@@ -159,6 +159,14 @@ describe("corpus rules on validate", () => {
   it.each([
     ["throw new Error('two\\nlines')", "threw: two lines"],
     ["return {", "does not parse at line 1, column"],
+    [
+      "return { findings: [] }; /* open comment",
+      "does not parse at line 1, column 26: Invalid or unexpected token",
+    ],
+    [
+      "return { findings: [] };\n})\n;(function(){",
+      "does not parse at line 2, column 1: this brace closes the function the body runs in, before the body ends",
+    ],
     ["return { diagnostics: ['bad'] }", 'returned no findings array; diagnostics: ["bad"]'],
     [
       "return { unknownParams: ['typo'], accepts: [] }",

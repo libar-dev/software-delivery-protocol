@@ -1,0 +1,316 @@
+{
+  "base": "b5e0a8bea1e3bedd48c616f96c9928e955792753",
+  "articles": "230b0d28850ee7d927098595a2b7bfe5e6b79ee2",
+  "lanes": [
+    {
+      "lane": "L10",
+      "family": "claude",
+      "model": "claude-opus-5-5 (high)",
+      "question": "Seed to current: how far has the human review experience moved from the seed design?",
+      "verifier": {
+        "family": "gpt",
+        "model": "gpt-6.1-sol (high)",
+        "job": "job-mw0xwirv-368c9079",
+        "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0xwirv-368c9079/report.md"
+      },
+      "summary": "Most of the seed's human review experience exists today, often in a different form: a static page set that opens from file://, Packs/Architecture/Tests/Evidence lenses plus a Capabilities lens and search, a maturity map, an impact panel, an open-question panel, example-space coverage, phone layouts with intents kept in local storage, stamped previews at /preview/<pr>/, and a diff against a base. Each seed edit button now gathers scoped intent instead of producing a patch (spec:consumers.edit-model; intent-panel #handOff). Three seed promises rest outside any Spec: the interactive harness, target slider and drag reordering; build attestation, deployment and SBOM evidence sources; and the AI presentation-assistant direction. Five article statements need fixing. Of Part 2's seven questions, a person can fully do 1, 2, 4 and 5; 3 and 6 are partial; 7 is research.",
+      "verifySummary": "Confirmed L10-4, L10-5, L10-7, L10-8, L10-9 and L10-11; refuted L10-1, L10-2, L10-3, L10-6 and L10-10. Seed aspirations do not establish current obligations, and explicitly future article directions do not authorize implementation. Coverage-map rows 3, 5, 20, 26 and 33 need correction.",
+      "mapCorrections": {
+        "3": "Overstates equivalence with the seed's runtime impact: the panel shows structural reach over the graph, not runtime impact.",
+        "5": "Overlooks the cleanup safeguard: spec:protocol.delivery-record-cleanup#question.durableContent and the concept-documents dissolution decision keep the content from being lost.",
+        "20": "Describes an idea-stage reference capture (spec:consumers.reference-projection) as settled OpenAPI/AsyncAPI design.",
+        "26": "Flaky and slow views are absent with no ruling, not refused.",
+        "33": "Confuses missing implementation bindings with inability to perform the external-agent hand-off; the hand-off works today through ordinary edits."
+      },
+      "taskQuestions": {
+        "1": "Mostly yes; declaration source text and outside-register entries remain unavailable.",
+        "2": "Yes, with a base input: diff.html and the Pack's 'Changed since the base'.",
+        "3": "Partial: declared/anchored labels and supplied run evidence appear; inferred citations appear under 'Cited at'; no inferred dependency graph.",
+        "4": "Yes for current states.",
+        "5": "Structurally supported; phone usability needs visual testing.",
+        "6": "Partial: gathering and exclusions work; exact hand-off text has no preview before Copy or Save.",
+        "7": "Needs user research; acceptance tasks readable on specs/consumers.spec-studio.html."
+      }
+    },
+    {
+      "lane": "L11",
+      "family": "gpt",
+      "model": "gpt-6-astra (xhigh)",
+      "job": "job-mw0xiazc-622aacab",
+      "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0xiazc-622aacab/report.md",
+      "question": "Current to future: what does Part 5's AI direction need that the model does not yet carry?",
+      "verifier": {
+        "family": "claude",
+        "model": "claude-opus-5-5 (high)"
+      },
+      "summary": "The current agent surface supplies deterministic graph reading, bounded context and proposal hand-off tools. It does not supply the future presentation assistant. Existing decisions cover MCP deferral, ordinary source editing, claim separation and frozen projections, but no capture or open question owns the assistant's variable-output contract. Part 5 acknowledges this uncertainty correctly; its unqualified freedom to replace projections needs the MD-32 exception.",
+      "verifySummary": "Both findings hold; engine and corpus still match the base. L11-01 kept at medium, with two changes: link founding principle P3 (deterministic derivation), and author the question as a blocking question on an idea-level capture with a trigger rather than a non-blocking question on the ready, implemented spec:consumers.projections-model. L11-02 lowered from medium to low; the same wording recurs in docs/articles/README.md:18 and Part 2:9, so the fix should be series-wide. Map corrections: row 1 cites seed 08:278-284 (Migration section) where the AI helper commands are at 08:274-276; row 3 omits the seed's GraphRAG community summaries (07:750, model-written, aimed at agents) and P3. Row 2 checked and correct.",
+      "mapCorrections": {
+        "1": "Seed citation for AI helper commands is 08:274-276, not 08:278-284.",
+        "3": "Add seed 07:750 hierarchical community summaries (model-written) and founding principle P3 to the bounding law."
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "L10-1",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "spec",
+      "severity": "medium",
+      "title": "Seed harness, slider and drag interactions deferred 'for their own Specs' but no Spec carries them",
+      "location": "specs/decisions/studio-html-surface.sdp.md:28; docs/concept/00-vision-scope-and-mvp-boundary.md:36,76; docs/concept/04-authoring-and-binding.md:108-110; docs/lineage/v0-design/07-spec-studio-and-projections.md:624-644",
+      "claim": "The seed made harnesses 'first-class citizens of the Studio' (07:626) and the North Star scenario turns on toggling paymentState (00:160). Today the data half is built: example space, bound points, coverage table and the propose-values action. The interactive half is deferred by a ruling that says it waits for 'later phases and their own Specs', yet no capture Spec or open question exists. The only carriers are concept documents that roadmap entry 1 (spec:protocol.delivery-record-cleanup) intends to remove, plus an exploration render.",
+      "evidence": "studio-html-surface.sdp.md:28: \"The richer interactions the original design lists, such as moving a target on a slider, running a scenario harness or reordering members by drag and drop, wait for later phases and their own Specs\". Recipe 6 for \"harness\" returns only components, shell, verification-panels and three decisions; no idea or scoped Spec (the non-ready list has 9 Specs, none about a harness). docs/concept/00:76: \"Only the UI stays cut, a named later slice; its rendered spec lives at explorations/executable-examples/5-harness/render/\". Part 2's brief never mentions it.",
+      "failureScenario": "The cleanup arc removes docs/concept/00 and 04 as superseded. The named later slice then disappears from the record, and a designer working from Part 2 never learns that interactive exploration was a seed promise.",
+      "proposedChange": "Capture spec:consumers.spec-studio.harness (behavior, story, readiness idea) refining spec:consumers.spec-studio.components. Outcome: 'Let a reviewer explore an example space's dimensions against its oracle and see uncovered combinations before implementation.' Blocking question key interactiveExploration: 'Does a reviewer need interactive exploration of an example space beyond the coverage table and the propose-values action?' Fields: decider owner; provisional 'keep cut; the coverage table and propose-values serve the job'; trigger 'a reviewer task the coverage table cannot complete'; links docs/lineage/v0-design/07-spec-studio-and-projections.md, explorations/executable-examples/5-harness/render/create-order-harness.html, spec:decisions.studio-html-surface. Fold the slider and drag-reorder interactions in as non-blocking questions.",
+      "verdict": {
+        "id": "L10-1",
+        "verdict": "refuted",
+        "severity": "medium",
+        "reason": "The dedicated harness capture is absent, but the claimed unrecorded deferral and cleanup-loss scenario are already covered. The ruling explicitly defers these interactions, and cleanup requires an owner-reviewed inventory before deletion. A harness capture remains an optional owner choice.",
+        "evidence": "specs/decisions/studio-html-surface.sdp.md:28 explicitly defers harnesses, sliders and dragging. Recipe 20 returned spec:protocol.delivery-record-cleanup#question.durableContent; its carrier at specs/protocol/delivery-record-cleanup.sdp.md:23 asks where uncaptured durable content belongs. specs/decisions/concept-docs-dissolve.sdp.md:16 forbids dissolution before carrying the semantic contract."
+      }
+    },
+    {
+      "id": "L10-2",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "design",
+      "severity": "medium",
+      "title": "Evidence lens permanently lists three sources no Spec or question plans",
+      "location": "specs/consumers/spec-studio.lenses.evidence.sdp.md:12,18; generated/spec-studio/evidence.html",
+      "claim": "Seed document 08, and 07:232-241 and 687-694, promised build provenance, deployments and SBOM evidence. The current lens names build attestations, deployments and SBOMs, and says each is not tracked and that 'A Spec that designs this source would bring it in'. No capture Spec or open question exists for them, while runtime observation has spec:observation.runtime-overlay.",
+      "evidence": "evidence.html renders: \"Build attestations: not tracked. A Spec that designs this source would bring it in. / Deployments: not tracked. … / Software bills of materials: not tracked. …\". A grep for slsa|sbom|cyclonedx|bills of materials in specs/ and docs/concept matches only lenses.evidence and verification-panels. Recipe 20's 16 questions include none on these sources.",
+      "failureScenario": "Every reader of every page set sees three rows that invite a design nobody has scoped. The seed's audit and compliance persona (00:106) has no recorded fate: neither deferred, refused nor planned.",
+      "proposedChange": "Add an open question to spec:consumers.spec-studio.lenses.evidence with key provenanceSources: 'Should build attestations, deployments and bills of materials stay listed as not tracked, or does each need a capture Spec with a deferral trigger like spec:observation.runtime-overlay?' Decider owner. Provisional: 'capture one idea-stage spec:observation.delivery-provenance with a trigger of a named adopter needing provenance beside a Spec; keep the rows'. Links: docs/lineage/v0-design/08-delivery-evidence-and-tooling.md, spec:observation.runtime-overlay.",
+      "verdict": {
+        "id": "L10-2",
+        "verdict": "refuted",
+        "severity": "medium",
+        "reason": "The missing integrations are accurately reported and deliberately exposed by current intended truth. The lens neither promises delivery nor silently drops the seed capability. Whether these placeholders earn their space is a valid usability question, but their existence does not establish a missing owner ruling.",
+        "evidence": "specs/consumers/spec-studio.lenses.evidence.sdp.md:12 explicitly says no Spec designs the three sources and explains retaining the lens. Its #rule.notTracked at line 18 requires those rows. In-memory evidence.html reproduced each 'not tracked' message and its conditional introduction language."
+      }
+    },
+    {
+      "id": "L10-3",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "design",
+      "severity": "medium",
+      "title": "AI presentation-assistant direction (Part 2, Part 5) has no open question in the graph",
+      "location": "docs/articles/02-one-graph-many-views.md:114 and 05-ai-can-shape-the-reading.md:19-43 at 230b0d28; spec:consumers.projections-model",
+      "claim": "Part 2 lists 'How a future AI assistant can steer a reading' as open design space. Part 5 names the determinism tension between projections that are pure functions of the graph and model-written prose, and calls these 'design questions, not implementation details to hide'. The seed had an AI integration section (07:721-752). No open question carries this direction, so the graph cannot route it to the owner or make it visible to a designer working from the Studio's Questions page.",
+      "evidence": "Recipe 20 totals: 16 questions over 12 Specs. None concerns AI presentation, generated prose or the determinism of an assistant. The only AI-surface ruling is spec:decisions.mcp-deferred. Part 5:41: \"These are design questions, not implementation details to hide.\"",
+      "failureScenario": "A first UX pass explores an assistant from the articles alone. No decider, provisional answer or trigger exists, so a generated summary could ship as a 'projection' and quietly break the byte-for-byte determinism the shipped-projections-frozen ruling (MD-32) and spec:extraction.determinism rely on.",
+      "proposedChange": "Add a non-blocking open question to spec:consumers.projections-model with key presentationAssistant: 'Where may model-written presentation (selection, explanation, arrangement) live, and what reproducibility record does it carry?' Decider owner. Provisional: 'an assistant selects among deterministic readings only; any generated prose is a named input recording its model, prompt and source commit, never a projection'. Trigger: 'a prototype assistant enters a design pass'. Links: Part 5, spec:decisions.shipped-projections-frozen, spec:extraction.determinism, docs/lineage/v0-design/07-spec-studio-and-projections.md.",
+      "verdict": {
+        "id": "L10-3",
+        "verdict": "refuted",
+        "severity": "medium",
+        "reason": "The missing graph question is real, but the article explicitly presents exploratory future options rather than adopted work. It also states the determinism boundary the finding fears would be lost. Capturing the direction requires an owner choice; its absence is not a current product defect.",
+        "evidence": "At 230b0d28, Part 5:3 labels itself a direction article; :19 says the capability is future; :33 says none of the options is ratified; :43 rejects assuming generated prose inherits projection guarantees. Recipe 6 returned no presentation-assistant capture, and recipe 20 contained no corresponding question."
+      }
+    },
+    {
+      "id": "L10-4",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "docs",
+      "severity": "medium",
+      "title": "Part 2 lists 'which projections survive, merge or disappear' as open, against the frozen-projections ruling",
+      "location": "docs/articles/02-one-graph-many-views.md:110 (and fixed-ground list :98-105) at 230b0d28",
+      "claim": "The brief's open design space includes 'Which projections deserve to survive, merge or disappear.' The shipped-projections decision refuses re-specifying the Design Review, census, Mermaid and Gherkin projections; changing them requires a decision record that supersedes or refines it. The brief's fixed ground never mentions this ruling, so a designer is told they may merge or drop four projections that current law freezes. Only the Studio is unfrozen.",
+      "evidence": "specs/decisions/shipped-projections-frozen.sdp.md decision: \"Re-specifying the shipped Design Review, census, Mermaid, or Gherkin projection is refused… Any proposal to reshape one of them arrives as a decision record that refines this one … or supersedes it whole.\" Part 2:110: \"Which projections deserve to survive, merge or disappear.\"",
+      "failureScenario": "A designer proposes folding the Design Review and census into the Studio. The proposal then collides with a ratified refusal the brief never disclosed.",
+      "proposedChange": "Add to the fixed ground: 'The Design Review, census, Mermaid and Gherkin projections are frozen by the shipped-projections decision (MD-32); reshaping one needs a decision record. The Studio is the open surface.' Reword :110 to: 'Which Studio pages deserve to survive, merge or disappear, and which questions might justify revisiting a frozen projection through a decision record.'",
+      "verdict": {
+        "id": "L10-4",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The brief presents projection survival, merger and removal as unrestricted design space while omitting a ratified restriction. Limit the invitation to Studio pages, or explicitly require a refining or superseding decision for the frozen projections.",
+        "evidence": "Part 2@230b0d28:110 says 'Which projections deserve to survive, merge or disappear.' specs/decisions/shipped-projections-frozen.sdp.md:16 and :18 require a decision record to reshape the four frozen projections. specs/consumers/spec-studio.sdp.md:37 expressly preserves them."
+      }
+    },
+    {
+      "id": "L10-5",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "docs",
+      "severity": "medium",
+      "title": "Part 2 uses the ratified term coverage-unknown for an absence the Studio cannot show",
+      "location": "docs/articles/02-one-graph-many-views.md:76 and :121 (question 4) at 230b0d28",
+      "claim": "Part 2 gives `coverage-unknown` as an absence the interface must word differently from a missing verifier or untracked observation, and question 4 asks how 'unknown coverage' should look. In the ratified vocabulary, coverage-unknown is the blind spot of file-level changeset impact: a changed file the graph records nothing at. The Studio takes no changeset input, and its example-coverage absences are 'not enumerable', 'not measurable' and 'no example'. A designer would look for a state the pages never produce.",
+      "evidence": "CONTEXT.md:170: \"coverage-unknown | the honest blind spot of file-level impact: a changed file the graph records nothing at\". Self-hosting page set: coverage-unknown appears only in glossary.html, search.html and specs/consumers.agent-surface.html. tests.html uses \"not enumerable\" and \"not measurable\"; the example create-order page shows '\"out of stock\" no example'.",
+      "failureScenario": "A designer mocks a 'coverage unknown' badge for Spec pages. That either misuses a ratified term or invents a Studio state with no graph source.",
+      "proposedChange": "Replace :76 with: 'An example-space value no example binds, a slot whose coverage is not measurable, a missing verifier and an evidence lens with no tracked observations say different things.' In question 4, replace 'unknown coverage' with 'unmeasurable or uncovered example-space coverage'.",
+      "verdict": {
+        "id": "L10-5",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "Confirmed as briefing ambiguity, rather than a model defect: the ratified term names file-impact uncertainty, whereas current Studio coverage describes example spaces. Distinguish those domains so the current-page exercise does not imply a changeset state.",
+        "evidence": "Part 2@230b0d28:76 uses coverage-unknown and :121 asks about unknown coverage. CONTEXT.md:170 defines coverage-unknown as an unrecorded changed file. specs/consumers/spec-studio.sdp.md:36 admits only base and run inputs beside the graph. In-memory tests.html showed 'not measurable' and 'not enumerable'; #rule.coverageGrid specifies 'no example'."
+      }
+    },
+    {
+      "id": "L10-6",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "docs",
+      "severity": "medium",
+      "title": "Part 2 asks designers to show inferred structure, which the Studio cannot read today",
+      "location": "docs/articles/02-one-graph-many-views.md:70 and :120 (question 3) at 230b0d28; specs/consumers/spec-studio.sdp.md:36",
+      "claim": "Part 2 says a view must keep inferred structure distinct and asks how a reader should distinguish 'inferred structure'. The curated graph holds no inferred content (Part 1:69), and the Studio's rule limits its inputs to the graph, a base graph and run records. File-level imports reach only the curation recipe. No Studio page shows any inferred node or edge. The seed's inferred dependency-cruise graph (07:668-670) is therefore currently refused for this surface, and the brief does not say so.",
+      "evidence": "spec-studio.sdp.md:36 [#namedInputs]: \"Beside the graph the Studio reads only two optional inputs, a base graph and run records\". Part 1:69: \"The current curated graph contains declared and anchored content.\" On the generated architecture.html and index.html, the word 'inferred' appears only inside Spec titles and the curation-recipe test title.",
+      "failureScenario": "A design pass spends effort on an 'inferred' visual treatment whose data cannot reach the Studio without a new input ruling. That ruling is already pending in spec:consumers.spec-studio.cited-line-text, whose provisional answer would record citing-line text 'as inferred data'.",
+      "proposedChange": "Add after :70: 'Today's Studio shows no inferred structure: the curated graph holds none, and the Studio reads only a base graph and run records beside it. Admitting inferred data is an open question (spec:consumers.spec-studio.cited-line-text).' Reword question 3 to separate today's three (intent, binding, supplied run evidence) from the future fourth.",
+      "verdict": {
+        "id": "L10-6",
+        "verdict": "refuted",
+        "severity": "medium",
+        "reason": "No inferred dependency graph appears today, but the stronger assertion that the Studio cannot read inferred data is false. Inferred citations already enter through the graph and appear on its pages. The article's claim-separation requirement is general law, not a promise that inferred dependency edges currently appear.",
+        "evidence": "specs/extraction/entry-citations.sdp.md:23 calls citations inferred location data; #rule.inferredClaim at :34 requires their inferred claim. The query returned 373 graph citations. Recipe 51 and specContext returned claim: inferred for spec:validation.corpus-rules#design.ruleFinding; in-memory declarations.html rendered 'Cited at test/skills.test.ts:1474'."
+      }
+    },
+    {
+      "id": "L10-7",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "docs",
+      "severity": "medium",
+      "title": "Part 1 claims the Protocol links to issue trackers and design tools, which nothing designs",
+      "location": "docs/articles/01-the-spec-is-the-prompt-is-the-design.md:152 at 230b0d28",
+      "claim": "Part 1 says in the present tense: 'It links to issue trackers, design tools, API formats and evidence systems.' The seed promised a UiFacet with Storybook, Figma, Pencil, Playwright and accessibility links (04:659-708) and interop with Jira and Linear (00:127). In the current corpus, nothing designs links to issue trackers or design tools; API references are an idea-stage capture; the only evidence system read is CTRF run records. The concept doc lists standards interop as aspirational.",
+      "evidence": "Recipe 6 for 'Storybook' and 'Figma' returns []. A grep for 'issue tracker|jira|design tool|figma' in specs/ returns nothing. docs/concept/00-vision-scope-and-mvp-boundary.md:35: \"Standards interop … (Aspirational beyond the MVP view.)\" spec:consumers.reference-projection has readiness idea.",
+      "failureScenario": "An adopter reads Part 1, expects to attach a Figma frame or a ticket to a Spec, and finds no field, anchor or page for it.",
+      "proposedChange": "Reword to: 'It aims to link adjacent tools rather than replace them. Today it reads CTRF run records as a named Studio input; API references are an idea-stage capture, and links to issue trackers and design tools are not designed yet.' Optionally have the owner rule on whether the seed's UI facet (design-tool references) deserves a capture Spec.",
+      "verdict": {
+        "id": "L10-7",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The present-tense statement overstates current adjacent-tool support. Generic open Design/UI content can hold references, but that does not realize the seed's tool-linking experience. Separate current CTRF input from deferred API references and uncaptured integrations.",
+        "evidence": "Part 1@230b0d28:152 says the Protocol links to issue trackers and design tools. Recipe 6 returned zero matches for issue tracker, design tool, Figma and Storybook. spec:consumers.reference-projection is idea-stage. src/projections/studio/pages/text.ts:8 describes linking only graph-resolving tokens; arbitrary external URLs remain text."
+      }
+    },
+    {
+      "id": "L10-8",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "docs",
+      "severity": "low",
+      "title": "Part 2's scenario says a base graph shows changes 'since the last review'; the preview diffs against the PR base",
+      "location": "docs/articles/02-one-graph-many-views.md:5 at 230b0d28; specs/consumers/spec-studio.sharing.sdp.md:39; specs/consumers/spec-studio.shell.sdp.md:21",
+      "claim": "The preview workflow's `diff` input writes the graph of the pull request's base commit. A returning reviewer on a stamped preview therefore sees the cumulative change of the PR, not what changed since their last review. No input selects a last-reviewed commit, and the seed's 'Recent edits' rail is refused. A local build can take any base, but the phone scenario describes the preview.",
+      "evidence": "sharing.sdp.md:39 workflowInputs: \"`diff` (a boolean: write the graph of the pull request's base commit … and pass it as `--base`\". shell.sdp.md:21: \"Recent edits stay out of it\". Part 2:5: \"A base graph shows what changed since the last review.\"",
+      "failureScenario": "A product manager re-reviews after a second push, expecting only the new changes, and re-reads the whole PR delta.",
+      "proposedChange": "Reword to 'A base graph shows what the pull request changed in the design.' Optionally add a non-blocking question to spec:consumers.spec-studio.diff-page asking whether a preview should diff against a reviewer-chosen commit. Decider owner; provisional 'no; a local build with --base serves re-review'.",
+      "verdict": {
+        "id": "L10-8",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The preview scenario implies a reviewer-relative comparison that the reusable workflow does not select. Say 'since the supplied base' or 'against the pull request base.' Arbitrary local base selection does not make the preview remember a previous review.",
+        "evidence": "Part 2@230b0d28:5 says 'since the last review.' .github/workflows/studio-preview.yml:64 selects github.event.pull_request.base.sha, and :85 passes that graph as --base. specs/consumers/spec-studio.sharing.sdp.md:39 states the same contract. The in-memory diff identified its explicitly supplied base."
+      }
+    },
+    {
+      "id": "L10-9",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "design",
+      "severity": "low",
+      "title": "Composing panel does not show the exact hand-off text before Copy or Save (Part 2 question 6)",
+      "location": "src/studio-elements/intent-panel-element.ts:129-130,189-197; specs/consumers/spec-studio.intent-panel.sdp.md:37",
+      "claim": "Part 2 question 6 asks how a person understands exactly what will be handed to an agent. Each gathered row shows only the scope and the free-text request, not the action ('Change target', 'Propose example') or the exact entry text gathered with it. The memo and proposal are visible only after copying or by opening a saved file. The seed's pending-changes panel (07:268-273) showed typed lines such as '[~] Change performance target to p95 < 250 ms'.",
+      "evidence": "intent-panel-element.ts:129-130: `scope.textContent = intent.pack ?? intent.scope.join(\", \"); row.append(scope, ` ${intent.request} `);`. Lines 189-197 render only Copy and Save buttons, with no visible memo. The UI entry gatheredIntents says each line names 'its scope and the change it asks for, such as adding an example or changing a constraint's target'.",
+      "failureScenario": "A reviewer on a phone gathers three intents and copies the memo into a chat without seeing which ones went into the proposal and which went to 'Not in the proposal', or what exact text the agent will receive.",
+      "proposedChange": "Add a non-blocking open question to spec:consumers.spec-studio.intent-panel with key handOffPreview: 'Should the panel show the memo it will hand off, and each row's action and exact text, before Copy or Save?' Decider owner. Provisional: 'yes: a collapsed read-only memo preview plus the action label on each row; no new data'. Links: docs/lineage/v0-design/07-spec-studio-and-projections.md, Part 2 question 6.",
+      "verdict": {
+        "id": "L10-9",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The exact-text preview gap holds and warrants the proposed owner question. Narrow the failure scenario: exclusions are visible before copying, although gathered rows omit action and exact text. This is a design improvement, not proof that the existing Spec requires a complete memo preview.",
+        "evidence": "src/studio-elements/intent-panel-element.ts:129-130 renders scope and request only; :178-202 creates copy/save controls without a document preview. Lines :205-218 visibly list 'Not in the proposal'. An in-memory probe gathered two intents and produced one proposal change plus one separately reported Pack request."
+      }
+    },
+    {
+      "id": "L10-10",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "docs",
+      "severity": "low",
+      "title": "Articles present the apply side of the hand-off as built; the graph puts it on the build backlog",
+      "location": "docs/articles/05-ai-can-shape-the-reading.md:17, 01-the-spec-is-the-prompt-is-the-design.md:117 at 230b0d28",
+      "claim": "Part 5 says 'AI as an editor is built as a hand-off … An agent checks the proposal against its base and applies accepted changes as ordinary source edits', and Part 1 says the same in the present tense. The panel, proposal and memo are implemented. spec:consumers.edit-model and spec:consumers.intent-composition, which own the apply side and the changed-scope rule, have no implementation binding. They are the whole operational build backlog and roadmap entry 4 'to build'.",
+      "evidence": "Recipe 1: total 2, both spec:consumers.edit-model and spec:consumers.intent-composition. Recipe 53, entry 4: need 'to build', buildNow [edit-model, intent-composition], workRows proposal, memo and intent-panel 'built'.",
+      "failureScenario": "A reader takes the composed-intent loop as fully realized and misses that the roadmap still lists its applying half as next build work.",
+      "proposedChange": "Say that the panel, proposal and memo ship, and that applying a proposal is today an agent's manual work under the edit model, whose code is on the roadmap (entry 4).",
+      "verdict": {
+        "id": "L10-10",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "The articles describe a built hand-off followed by an external agent's ordinary source edits, not an automatic apply engine. The two backlog entries lack satisfies bindings, but that fact alone cannot establish that the described manual workflow is unavailable.",
+        "evidence": "Part 5@230b0d28:17 qualifies 'built as a hand-off'. specs/consumers/edit-model.sdp.md:16 explicitly assigns ordinary editing to the agent. .agents/skills/sdp-studio/SKILL.md:173-185 documents recipe 38 and applying unchanged scopes through ordinary edits. Recipe 1 reproduced both backlog entries; the graph-reading skill explicitly warns that empty implementation bindings do not prove nothing is built."
+      }
+    },
+    {
+      "id": "L10-11",
+      "lane": "L10",
+      "readerFamily": "claude",
+      "target": "docs",
+      "severity": "low",
+      "title": "Part 2 brief omits the Studio's existing task-based acceptance, the natural input to question 7",
+      "location": "docs/articles/02-one-graph-many-views.md:116-126 at 230b0d28; specs/consumers/spec-studio.sdp.md:39-43",
+      "claim": "Question 7 asks which pages solve real review jobs, and the brief asks for 'task-based experiences'. The Studio Spec already states task-based manual acceptance: five tasks from the first adopter, plus the owner queue, diff page and architecture lens tasks. The brief does not point to it, so the first design pass starts without the jobs the corpus already ratified.",
+      "evidence": "spec-studio.sdp.md:40: \"accepted when a person given only a link … completes … the five tasks the first adopter set …\" and :41-43 for the queue, diff and architecture tasks.",
+      "failureScenario": "A designer rebuilds a task list from scratch and drops a task the Studio was accepted on.",
+      "proposedChange": "In the brief add: 'Start from the Studio's manual acceptance tasks in spec:consumers.spec-studio (Verification — manual) and test each prototype against them.'",
+      "verdict": {
+        "id": "L10-11",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The brief omits a useful starting reference for its task-based design exercise. Link the existing acceptance tasks while keeping their specification separate from evidence that anyone completed them.",
+        "evidence": "Part 2@230b0d28:116-126 poses seven prototype questions without pointing to manual acceptance. specs/consumers/spec-studio.sdp.md:40-43 states five adopter tasks plus queue, diff and architecture tasks. The in-memory specs/consumers.spec-studio.html rendered those criteria under 'Verification · manual'."
+      }
+    },
+    {
+      "id": "L11-01",
+      "lane": "L11",
+      "readerFamily": "gpt",
+      "target": "design",
+      "severity": "medium",
+      "title": "Give variable AI explanations a carrying question before treating them as a projection",
+      "location": "spec:consumers.projections-model, Intent; proposed new question #aiPresentationBoundary",
+      "claim": "The future direction names a real trust-boundary problem, but no current capture, question or deferral owns it. Current projection purity, structural claims and Studio inputs do not specify how an LLM explanation identifies its sources, discloses variation and omissions, or leaves a reviewable record. This is an owner decision about future scope, not a missing shipped feature.",
+      "evidence": "At article commit 230b0d28850ee7d927098595a2b7bfe5e6b79ee2, Part 5:41 says variable prose could be cached, restricted to selection, or given a different reproducibility contract; :69 asks which artifacts need model, prompt and source-commit records. Recipe 20 contains no corresponding question, and recipe 6 finds no assistant, LLM or adaptive capture. specs/consumers/projections-model.sdp.md:18 defines a projection as pure and regenerable; specs/extraction/claim-taxonomy.sdp.md:17 defines inferred as structural information; specs/consumers/spec-studio.sdp.md:31,36 requires byte-identical files and admits only base graphs and run records beside the graph.",
+      "proposedChange": "On spec:consumers.projections-model add this future-scoped, non-blocking question: '[non-blocking #aiPresentationBoundary] If an assistant generates explanations or arrangements beyond selecting deterministic readings, what contract keeps its output distinct from graph claims and makes the exact reading reviewable?' decider: owner. provisional: 'Begin with selection of existing deterministic readings. Keep variable explanations outside the current Studio and frozen projection outputs; label them as assistant-generated and not guaranteed byte-reproducible, preserve the original claims on cited facts, expose source commit, scope and omissions, and decide how to retain the exact output with its model, prompt and named-input record. Add no claim category, delivery fact or quality/workflow validator.' links: spec:consumers.context-bundle#rule.cutOrder; spec:consumers.review-perspectives#rule.contentIntact; spec:extraction.claim-taxonomy; spec:consumers.spec-studio#rule.namedInputs; spec:decisions.shipped-projections-frozen; Part 5:35–56,64–72 at the article commit. Capture candidate, subject to the owner's choice: an idea-level behavior in consumers.*, proposed id spec:consumers.ai-assisted-reading, with outcome 'Let a reader ask for a useful existing reading and inspect why it was selected and what scope it omits.' Capture alone must not add roadmap priority.",
+      "failureScenario": "A future implementation inserts an LLM summary into the current Studio, labels its conclusions inferred, and retains only a source commit. Reviewers then cannot distinguish structural evidence from generated interpretation or recover the exact explanation another reviewer saw, while the page appears to inherit the existing deterministic contract.",
+      "verdict": {
+        "id": "L11-01",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "Re-measured: no open question, deferral or capture covers how variable AI-generated presentation relates to the deterministic projection law. Recipe 20 returns 16 questions and 6 deferrals; none concerns an assistant or LLM output. Recipe 6 finds nothing for LLM, assistant, language model, adaptive, non-determin or generated explanation. The cited law is accurate. The need comes from Part 5's future direction, not from the seed design; it is a scope question for the owner. Two corrections. (1) Add the founding principle P3, deterministic derivation (`view = f(graph)`, rebuild byte-identically), to the links. (2) Follow the corpus convention for unbuilt directions: an idea-level capture (e.g. spec:consumers.ai-assisted-reading) carrying the question as blocking, decider owner, with a trigger such as 'the UX design pass measures that assistant selection or a generated explanation helps a named review task'. Do not attach a non-blocking question to spec:consumers.projections-model, which is ready and implemented. The capture must add no roadmap priority.",
+        "evidence": "specs/consumers/projections-model.sdp.md:18 '**projection** — A pure, disposable, regenerable function of the graph'; specs/extraction/claim-taxonomy.sdp.md:17 'inferred — Machine-derived structural information'; specs/consumers/spec-studio.sdp.md:31 (byte-identical), :36 [#namedInputs] (base graph and run records only), :37 (stands beside the four frozen projections); docs/concept/01-founding-principles-and-invariants.md:25 (P3). Recipe 20 output: totals questions 16, deferrals 6, malformed 0, with no AI or presentation key among featureAdapter, symbolIdentity, releaseReader, namedOutsideReader, referenceSource, lineText, lineBound, registerEntry, inputForm, textLinks, namedStructuralReader, observationIdentity, durableContent, exportCarriesSlice, designColumnsSufficiency, freshness. Recipe 6 returns total 0 for each listed term. Deferral pattern: reference-projection (idea), runtime-overlay (idea) and symbol-reach (idea) each carry a blocking question with a trigger. Article at 230b0d28, Part 5:41 and :69 raise the reproducibility and model/prompt/source-commit record questions."
+      }
+    },
+    {
+      "id": "L11-02",
+      "lane": "L11",
+      "readerFamily": "gpt",
+      "target": "docs",
+      "severity": "medium",
+      "title": "Qualify Part 5's freedom to replace projections",
+      "location": "230b0d28850ee7d927098595a2b7bfe5e6b79ee2:docs/articles/05-ai-can-shape-the-reading.md:74",
+      "claim": "The closing statement presents replacement of projections as unrestricted product flexibility. Current law expressly refuses re-specifying four shipped projections without a later decision. The future framing elsewhere is careful, but this sentence omits a material boundary for the proposed UX experiments.",
+      "evidence": "Part 5:74 says the graph and edit model 'let us replace weak projections, test specialized ones and add AI assistance where it proves useful.' specs/decisions/shipped-projections-frozen.sdp.md:16–18 requires a decision refining the ruling for the affected projection/rendering or superseding it whole. Recipe 31 lists existing narrow refinements and no AI-presentation exception. specs/consumers/spec-studio.sdp.md:37 explicitly places Studio beside the four frozen projections.",
+      "proposedChange": "Replace the first two sentences of the closing paragraph with: 'The strategic value is flexibility within explicit contracts. We can test additional readings and AI assistance while preserving the current deterministic surfaces. Re-specifying Design Review, census, Mermaid or Gherkin requires a decision that refines or supersedes the shipped-projections ruling (MD-32); Studio changes follow its carrying Specs.' Link the ruling at the article's pinned repository commit.",
+      "failureScenario": "A designer or agent treats replacing or merging the shipped Mermaid or Design Review surface as already-authorized presentation work because the underlying graph remains unchanged, bypassing the deliberate decision boundary.",
+      "verdict": {
+        "id": "L11-02",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The quoted sentence exists and omits the frozen-projections ruling (MD-32). The sentence is about what the graph and edit model make possible, not a statement of authorization, and MD-32 itself allows replacement through a refining or superseding decision. So this is an omitted qualifier, not a misstatement. The failure scenario is unlikely: the ruling sits in the graph that agents read, and the articles carry no authority. Severity lowered to low. The same unqualified wording recurs in docs/articles/README.md:18 and Part 2:9 (the latter about the Studio, which is lawfully replaceable). A fix should be series-wide and note that Studio replacement follows its own Specs, not MD-32.",
+        "evidence": "git show 230b0d28:docs/articles/05-ai-can-shape-the-reading.md line 74: 'A strong graph and an explicit edit model let us replace weak projections, test specialized ones and add AI assistance where it proves useful.' specs/decisions/shipped-projections-frozen.sdp.md:16. docs/concept/DECISIONS.md:43 lists five existing narrowing decisions and no AI exception. README.md:18 at the article commit: '**Projections are cheap to replace.**' Part 2:9: 'We can replace it without replacing the truth it presents.'"
+      }
+    }
+  ]
+}

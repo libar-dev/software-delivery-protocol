@@ -1,4 +1,3 @@
-import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import { renderDesignReview } from "../projections/design-review.js";
@@ -7,7 +6,7 @@ import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
 import type { CorpusValidationReport, Finding, ValidationReport } from "../validate/contracts.js";
 import { validateGraph } from "../validate/validators.js";
-import { removeArtifacts } from "./artifacts.js";
+import { guardedOutput, assertDistinctPagePaths, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import { runBuild } from "./build-command.js";
 import type { BuildHooks, BuildOutcome } from "./build-command.js";
@@ -141,8 +140,15 @@ export function publishDesignReview(
   hooks: ValidationViewHooks,
   command = "view",
 ): number {
+  const {
+    rmSync: remove,
+    mkdirSync: mkdir,
+    writeFileSync: writeOutput,
+    renameSync: rename,
+    check,
+  } = guardedOutput(parsed.root, hooks);
   const render = hooks.renderDesignReview ?? renderDesignReview;
-  const recoveryRm = hooks.rmSync ?? rmSync;
+  const recoveryRm = remove;
   const viewPath = join(parsed.root, "generated", "design-review");
 
   if (validate.graph === undefined) {
@@ -159,6 +165,7 @@ export function publishDesignReview(
 
   try {
     const pages = render(createReader(validate.graph));
+    assertDistinctPagePaths(pages);
 
     if (parsed.checkClean) {
       const second = render(createReader(validate.graph));
@@ -170,16 +177,17 @@ export function publishDesignReview(
       }
     }
 
-    rmSync(temporaryPath, { recursive: true, force: true });
+    remove(temporaryPath, { recursive: true, force: true });
 
     for (const page of pages) {
       const target = join(temporaryPath, page.path);
-      mkdirSync(dirname(target), { recursive: true });
-      writeFileSync(target, page.content, "utf8");
+      mkdir(dirname(target), { recursive: true });
+      writeOutput(target, page.content, { encoding: "utf8", flag: "wx" });
     }
 
-    rmSync(viewPath, { recursive: true, force: true });
-    renameSync(temporaryPath, viewPath);
+    remove(viewPath, { recursive: true, force: true });
+    rename(temporaryPath, viewPath);
+    check(join(parsed.root, "generated", ".boundary"));
     writeStdout(output, `Wrote ${viewPath} (${String(pages.length)} pages)\n`);
     return validate.exitCode;
   } catch (error) {

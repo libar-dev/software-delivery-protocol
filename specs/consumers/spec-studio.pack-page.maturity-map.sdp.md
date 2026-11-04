@@ -19,7 +19,7 @@ A Pack's maturity map shows its distribution before its member lists. Equal-size
 - outcome: Let a reviewer see at a glance where every member of a Pack stands, by the rung it states and the floor it reaches.
 
 ## Behavior
-- rule: [#maturityMap] After the summary, show the categorical grid and full member lists defined by spec:consumers.spec-studio.diagram-kinds.maturity-picture. Every resolved member belongs to one stated-rung and floor cell; unresolved members are named apart. Populated cells link to their built lists, whose members stay in authored order.
+- rule: [#maturityMap] After the summary, show the categorical grid and full member lists defined by spec:consumers.spec-studio.diagram-kinds.maturity-picture. Every resolved member whose floor is evaluated belongs to one stated-rung and floor cell; unresolved members and members whose floor is not evaluated are named apart. Populated cells link to their built lists, whose members stay in authored order.
 
 ## UI
 - maturityMap: An `sdp-maturity-map` holds the static SVG grid, caption and accessible count table, followed by populated cells' full member lists in disclosures that print open. Equal-sized cells have explicit axes; the legend names matches, floor above statement and statement above floor once. The diagonal has an outline, empty cells are faint, and populated cells carry exact counts and member marks, up to `100` marks and solid fill above that. Every member links to its card.

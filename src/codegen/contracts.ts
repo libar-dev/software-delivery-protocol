@@ -12,6 +12,8 @@ import {
   pointEntryOf,
   isCompleteEntry,
   decodeExampleSpaces,
+  reservedThenSlotsOf,
+  reservedThenKeysOf,
 } from "../notation/example-space.js";
 import type {
   StepPhase,
@@ -116,7 +118,13 @@ function renderSpaceContract(space: SpaceModel, points: readonly ExamplePointMod
   const lines: string[] = [];
 
   lines.push(GENERATED_HEADER(`the example space of ${space.parent.id}`));
-  lines.push(`import type { UnspecifiedOutcome } from "${RUNNER_SPECIFIER}";`);
+  const unspecifiedType =
+    pascal === "Unspecified" ? "_sdpUnspecifiedOutcome" : "UnspecifiedOutcome";
+  const unspecifiedImport =
+    unspecifiedType === "UnspecifiedOutcome"
+      ? unspecifiedType
+      : `UnspecifiedOutcome as ${unspecifiedType}`;
+  lines.push(`import type { ${unspecifiedImport} } from "${RUNNER_SPECIFIER}";`);
   lines.push("");
   lines.push(
     `/** The Outcome union — one variant per Then-vocabulary step, its \`kind\` the step's own`,
@@ -134,7 +142,7 @@ function renderSpaceContract(space: SpaceModel, points: readonly ExamplePointMod
     lines.push(`  | { readonly kind: ${JSON.stringify(entry.key)}${payload} }`);
   }
 
-  lines.push(`  | UnspecifiedOutcome;`);
+  lines.push(`  | ${unspecifiedType};`);
   lines.push("");
   lines.push(`/** One value per input dimension (Given/When slots) — what the oracle consumes. */`);
 
@@ -481,6 +489,14 @@ function renderRunnableRegistrar(
   const contractName = `${camelCase(node.id)}Contract`;
   const parentPascal = pascalCase(space.parent.id);
   const registerName = `register${pascalCase(node.id).replace(parentPascal, "") || pascalCase(node.id)}`;
+  const registerRuntime =
+    registerName === "registerRunnableExample"
+      ? "_sdpRegisterRunnableExample"
+      : "registerRunnableExample";
+  const registerImport =
+    registerRuntime === "registerRunnableExample"
+      ? registerRuntime
+      : `registerRunnableExample as ${registerRuntime}`;
   const contractPath = `generated/contracts/${idPath(node.id)}.contract.js`;
   const spacePath = `generated/contracts/${idPath(space.parent.id)}.space.js`;
   const relativeImport = (target: string): string => {
@@ -497,7 +513,7 @@ function renderRunnableRegistrar(
   lines.push(`import {`);
   lines.push(`  compareContractOutcome,`);
   lines.push(`  invokeRunnableExample,`);
-  lines.push(`  registerRunnableExample,`);
+  lines.push(`  ${registerImport},`);
   lines.push(`} from ${JSON.stringify(TESTING_SPECIFIER)};`);
   lines.push(`import type {`);
   lines.push(`  RunnableExampleAdapters,`);
@@ -543,18 +559,30 @@ function renderRunnableRegistrar(
       continue;
     }
     renderedBindings.add(step.key);
-    const bindingKey = `    ${JSON.stringify(step.key)}:`;
-    const opening =
-      step.kind === "given"
+    // A literal __proto__ property sets the prototype instead of creating a handler.
+    const property =
+      step.key === "__proto__" ? `[${JSON.stringify(step.key)}]` : JSON.stringify(step.key);
+    const bindingKey = `    ${property}:`;
+    // One key may occur in several phases; its handler must read the current occurrence.
+    const phases = new Set(
+      steps.filter((entry) => entry.key === step.key).map((entry) => entry.kind),
+    );
+    const shared = phases.size > 1;
+    const opening = shared
+      ? `async (execution, params, step) => {`
+      : step.kind === "given"
         ? `() => {`
         : step.kind === "when"
           ? `async (execution) => {`
           : `(execution, params) => {`;
     const exceedsLine = bindingKey.length + 1 + opening.length > 100;
-    const wrappedThenParams = step.kind === "then" && exceedsLine && bindingKey.length + 2 <= 100;
-    const wrappedWhenParam =
-      step.kind === "when" && exceedsLine && bindingKey.length + " async (".length <= 100;
-    const hanging = exceedsLine && !wrappedThenParams && !wrappedWhenParam;
+    const wrappedThenParams =
+      !shared && step.kind === "then" && exceedsLine && bindingKey.length + 2 <= 100;
+    const wrappedAsyncParams =
+      (shared || step.kind === "when") &&
+      exceedsLine &&
+      bindingKey.length + " async (".length <= 100;
+    const hanging = exceedsLine && !wrappedThenParams && !wrappedAsyncParams;
     const bodyIndent = hanging ? "        " : "      ";
     const closeIndent = hanging ? "      " : "    ";
 
@@ -563,9 +591,13 @@ function renderRunnableRegistrar(
       lines.push(`      execution,`);
       lines.push(`      params,`);
       lines.push(`    ) => {`);
-    } else if (wrappedWhenParam) {
+    } else if (wrappedAsyncParams) {
       lines.push(`${bindingKey} async (`);
       lines.push(`      execution,`);
+      if (shared) {
+        lines.push(`      params,`);
+        lines.push(`      step,`);
+      }
       lines.push(`    ) => {`);
     } else {
       lines.push(hanging ? bindingKey : `${bindingKey} ${opening}`);
@@ -574,7 +606,13 @@ function renderRunnableRegistrar(
       }
     }
 
-    if (step.kind === "given") {
+    if (shared) {
+      lines.push(`${bodyIndent}if (step.kind === "when") {`);
+      lines.push(`${bodyIndent}  await invokeRunnableExample(execution);`);
+      lines.push(`${bodyIndent}} else if (step.kind === "then") {`);
+      lines.push(`${bodyIndent}  compareContractOutcome(execution, { ...step, params });`);
+      lines.push(`${bodyIndent}}`);
+    } else if (step.kind === "given") {
       lines.push(
         `${bodyIndent}// Given state is materialized by createWorld from the generated point.`,
       );
@@ -597,12 +635,12 @@ function renderRunnableRegistrar(
   const renderedConditions = `[${space.dimensions
     .map((dimension) => JSON.stringify(dimension.name))
     .join(", ")}]`;
-  const registration = `registerRunnableExample(${contractName}, ${renderedPoint}, ${renderedConditions}, adapters, bindings);`;
+  const registration = `${registerRuntime}(${contractName}, ${renderedPoint}, ${renderedConditions}, adapters, bindings);`;
 
   if (registration.length + 2 <= 100) {
     lines.push(`  ${registration}`);
   } else {
-    lines.push(`  registerRunnableExample(`);
+    lines.push(`  ${registerRuntime}(`);
     lines.push(`    ${contractName},`);
     if (renderedPoint.length + 5 <= 100) {
       lines.push(`    ${renderedPoint},`);
@@ -695,7 +733,37 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
   );
   const decoded = decodeExampleSpaces(graph);
   const spacesByParent = decoded.spaces;
-  const withheldSpaces = decoded.withheldSpaces;
+  const withheldSpaces = new Set(decoded.withheldSpaces);
+  const withheldExamples = new Set<string>();
+  for (const id of sortedIds) {
+    const node = primitives.get(id);
+    if (node === undefined) continue;
+    const reservations = [
+      ...reservedThenSlotsOf(node).map((step) => ({
+        ...step,
+        validatorId: contractsFindingIds.reservedThenSlot,
+        reason: 'Then slot "kind" is reserved for the Outcome discriminant',
+      })),
+      ...reservedThenKeysOf(node, graphIndex).map((step) => ({
+        ...step,
+        validatorId: contractsFindingIds.reservedThenKey,
+        reason: 'Then contract key "unspecified" is reserved for the coverage gap',
+      })),
+    ];
+    for (const { text, path, validatorId, reason } of reservations) {
+      const isSpace = path.startsWith("behavior.exampleSpace.");
+      if (!isSpace && node.specKind !== "example") continue;
+      (isSpace ? withheldSpaces : withheldExamples).add(id);
+      findings.push(
+        contractsFinding(
+          validatorId,
+          `${reason} in step "${text}"; ${isSpace ? "space" : "step"} contract withheld`,
+          node,
+          path,
+        ),
+      );
+    }
+  }
   findings.push(...decoded.findings);
   const boundPoints = new Map<string, ExamplePointModel>();
   const files = new Map<string, string>();
@@ -710,7 +778,7 @@ export function generateContracts(graph: GraphSchema): GeneratedContracts {
   for (const id of sortedIds) {
     const node = primitives.get(id);
 
-    if (node?.specKind !== "example") {
+    if (node?.specKind !== "example" || withheldExamples.has(id)) {
       continue;
     }
 

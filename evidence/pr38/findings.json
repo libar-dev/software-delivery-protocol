@@ -1,0 +1,1262 @@
+{
+  "base": "b5e0a8bea1e3bedd48c616f96c9928e955792753",
+  "lanes": [
+    {
+      "lane": "L1",
+      "name": "intent-core",
+      "family": "gpt",
+      "model": "gpt-6-astra (xhigh)",
+      "job": "job-mw0x05zw-b864ff67",
+      "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0x05zw-b864ff67/report.md",
+      "verifier": {
+        "family": "claude",
+        "model": "claude-opus-5-5 (high)"
+      },
+      "summary": "Five reproduced intent-versus-realization defects: two high-severity runnable verification failures and three medium-severity generation, carrier, and validation mismatches.",
+      "coverage": "Inventoried all six families; ran recipes 2, 7, 9, 11 and impact ranking with recipe 30; used recipe 3 for examined Specs. Inspected core model, anchors, delivery facts, readiness, claim validation, Markdown parsing, notation and contract generation. Followed runnable guarantees into src/testing and exercised generated registrars with production runtime functions in memory, replacing test registration only. Observation and protocol received graph/Spec triage. No full test suite, publication checks, exhaustive verifier audit, or detailed Gherkin/import review. No files changed.",
+      "verifySummary": "All five findings reproduced against the review tree. The tree is at HEAD 209f5553. It differs from b5e0a8be only by evidence/pr38/README.md, so src/ is identical. Probe files stayed in scratchpad/probe, and the tree is untouched (git status clean). I ran the probes with real generateContracts, validateGraph, reifyMarkdownCarrier and createReader through vitest, executed the generated registrars through the production ./testing runtime, and typechecked the generated space module with tsc.\n\nSeverity changes:\n- L1-01 and L1-02 go from high to medium. Each needs a contrived but lawful authoring shape: one skeleton used in both Given and When, or a Then keyed literally `unspecified`.\n- L1-05 goes to low. Only foreign graph data reaches it, and validateGraph already fails closed with an error.\n\nNot covered: whether the Markdown or Gherkin extractors reject a non-ratified altitude before the graph exists (this only affects L1-05's reach), and the Gherkin and TypeScript carrier forms of L1-01 and L1-02."
+    },
+    {
+      "lane": "L2",
+      "name": "intent-consumers",
+      "family": "claude",
+      "model": "claude-opus-5-5 (high)",
+      "verifier": {
+        "family": "gpt",
+        "model": "gpt-6.1-sol (high)",
+        "job": "job-mw0xktxj-715d0cd3",
+        "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0xktxj-715d0cd3/report.md"
+      },
+      "summary": "The consumers family is in good shape. Over the review tree at b5e0a8be: the drift alarm (recipe 2) has 0 rows, readiness divergence (recipe 7) is empty, and recipe 8 reports only the 3 known honesty/gaps warnings. The 195 consumers Specs break down as 95 ready, implemented and verified; 94 ready and verified but not implemented (all examples apart from edit-model and intent-composition); 4 scoped and 2 idea. I probed `sdp q` / evaluateBody / `--params`, `recipes()`, `sdp generate`, the `--help` of every verb, stamp, the vault directory guards, Studio input refusals, and recipes 3, 4, 8, 29, 33, 35, 36, 52, 53, 54 and 55 against their Spec designs. Nearly all of it behaved as stated. The real drift is narrow:\n- The reader exposes an unspecified public method, `resolveEntryAddress`, which shipped recipe 51 and the vault depend on.\n- The answer-shapes Spec still prescribes the retired wrap-the-body idiom.\n- The parse-error position is wrong when the body ends inside a template literal.\n- `intent-composition` and `edit-model` carry `has-verifier` from a test that exercises none of their keyed rules.\n- Two pieces of help/catalog text are inaccurate, and two minor gaps (an omitted shipped file, an ambiguous error message) are polish.",
+      "coverage": "Covered: recipes 1, 2, 7, 8, 10 and 11 over the corpus; recipe 3 for the evaluation sink, recipe-parameters, answer-shapes, edit-model, intent-composition and reader; Spec context reads for command-line, wholesale-view-rewrite, spec-studio.sharing, data.inputs, roadmap, roadmap.memo, roadmap-page, slice-page, design-slice, capability-map, design-diff, obsidian-vault, upgrade-kit, shipped-protocol-corpus, lenses.evidence, search, derived-readiness-banner and binding-language-views. Live CLI probes: sdp q (bodies, stdin, parse errors, --json refusals, every --params form, recipes() rejections), exported evaluateBody, the --help of every verb, sdp generate with and without --check-clean, the publishers' --check-clean with and without a prior tree, sdp stamp, sdp vault guards, Studio --base/--runs refusals, and rendered roadmap and slice pages. I compared every recipe's declared parameter list (`accepts`) with the catalog index, and tested absent-subject reporting across 22 recipes and diagnostics for recipes 35, 36, 38, 40, 42, 45, 48, 49, 50, 53, 54 and 55. I listed every realization (`satisfies`) binding for a consumers Spec, and every code anchor placed in a test file, against the document-realization ruling in spec:model.anchors.\n\nNot covered in depth: rule-by-rule checks of the frozen Design Review, census, Mermaid and Gherkin pages; most Studio ui entries (diagram kinds, responsive layout, export and print, page elements); vault notes and Bases contents and the vault watch mode; Studio and validate watch behaviour; correctness of context-bundle parts; the perspective filter (37), proposal check (38) and memo (49) beyond diagnostics; src/runner, src/testing and src/adapters beyond the typescript-imports anchor; and whether each verifier test asserts every rule of the other ready Specs. I did not run recipe 34 corpus-wide.",
+      "verifySummary": "Five confirmed, three refuted. L2-1 downgraded to low because resolution behavior already has carrying intent; the missing public-method documentation remains."
+    },
+    {
+      "lane": "L3",
+      "name": "engine-core-code",
+      "family": "claude",
+      "model": "claude-opus-5-5 (high)",
+      "verifier": {
+        "family": "gpt",
+        "model": "gpt-6.1-sol (high)",
+        "job": "job-mw0xf722-6e9c3efb",
+        "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0xf722-6e9c3efb/report.md"
+      },
+      "summary": "The engine core is heavily hardened. I tested about 25 edge-case areas: CRLF, lone CR and BOM in Markdown and Gherkin, integer-like keys, prototype-named keys (`constructor`, `toString`) in entry addresses, duplicate relation targets, fence closers, YAML aliases and anchors, case-colliding contract paths, empty and missing roots, refines and supersedes cycles, delivery-fact conferral against claim separation, and determinism of sort order and serialization. Almost all of them hold. Six targeted test files pass (407 tests). A CPU profile of the self-hosting corpus showed no hotspot. Measured at b5e0a8be: 1072 nodes, 2978 edges, 3 findings.\n\nFive findings survived verification, each reproduced with a probe corpus under the scratchpad:\n1. The authored-honesty check misses the camelCase delivery-fact spelling `hasVerifier`. A TypeScript carrier can author `design.hasVerifier` into graph.json, or have `behavior.hasVerifier` dropped silently, and still get 0 errors.\n2. Discovery silently skips symbolic links: a symlinked carrier or spec directory disappears and `sdp validate` exits 0.\n3. The ASCII trim regex used on every Markdown prose line is quadratic.\n4. The \"Did you mean\" suggestion for a dangling reference can name the edge's own source.\n5. The derive-graph Spec lists the graph payload without its citation table.",
+      "coverage": "Read in full or in large part: src/extract/{index,discover,derive,serialize,carrier,markdown,markdown-body,markdown-body-owner-sections,markdown-pack,markdown-frontmatter (envelope part),markdown-yaml-policy (node inspection),entry-citations,protocol-bindings,authoring-normalization}.ts; src/graph/{delivery-facts,entry-address,oracle-bindings}.ts; src/validate/{graph-index,readiness-floor (predicates and the kind-evidence table)}.ts and validators.ts (referential integrity, claim separation, structural anchors, pack coherence, orphans, prose mentions, rule exercises, authoring shape, delivery facts, readiness floors, superseded decisions, aggregation and sorting); src/reader/{reader (createReader, specContext, packContext, byFile, blastRadius, specDesignColumns),concept-match,entry-citations,evaluate-body}.ts; src/import/import.ts; src/codegen/contracts.ts (naming, path derivation, registrar rendering, case-collision withholding, string escaping); src/notation/slots.ts (brace scan, number parsing); src/index.ts and src/anchors.ts (exports). Skimmed: src/extract/anchors.ts (comment-block reading and refusal), src/extract/reify.ts (id reification, integer-key policy, reserved properties), src/extract/gherkin.ts (id parsing, the source index, the outer catch). Not covered in depth: most of gherkin.ts and reify.ts, src/notation/example-space.ts and src/graph/example-space.ts (vocabulary matching), src/import/emit-markdown.ts and markdown-fidelity.ts, src/model builders apart from anchors.ts, the codegen step-contract and space-contract bodies beyond escaping, and gherkin-kind-honesty.ts. src/cli was looked at only where the reader or report crosses into it. Probes ran `node dist/cli/sdp.js validate` and `sdp q` on throwaway roots under the scratchpad (probe1 to probe8, probe-auth.mjs); nothing in the review tree was modified. Targeted tests run read-only: `npx vitest run test/extract.test.ts test/validators.test.ts test/readiness.test.ts test/reader.test.ts test/codegen.test.ts test/notation.test.ts` gave 6 files, 407 tests passed.",
+      "verifySummary": "Confirmed L3-01, L3-02 and L3-03; refuted L3-04 and L3-05 against authored intent."
+    },
+    {
+      "lane": "L4",
+      "name": "engine-surface-code",
+      "family": "gpt",
+      "model": "gpt-6-astra (xhigh)",
+      "job": "job-mw0x070p-67d80b46",
+      "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0x070p-67d80b46/report.md",
+      "verifier": {
+        "family": "claude",
+        "model": "claude-opus-5-5 (high)"
+      },
+      "summary": "Found unsafe temporary-file writes, case-colliding projection paths, test-wrapper argument misclassification, and rejection of valid symlinked watch roots.",
+      "coverage": "Reviewed CLI dispatch and all verbs, publication and watch paths, vault synchronization, sampled Studio rendering/browser code, runner/testing adapters, root scripts, and both workflows. Ran read-only graph queries, pure rendering probes, intercepted filesystem/process calls, and a watcher probe. The synthetic Studio probe produced 17 pages with no raw executable payload and identical repeat-render bytes. Did not run the mutating full gate, destructive filesystem reproductions, browser execution, or hosted GitHub Actions.",
+      "verifySummary": "I checked all four findings against the review tree. Its HEAD is 209f5553 (\"evidence: open the whole-repository review\"), not b5e0a8b as the brief said. Each probe ran on a corpus copied into the scratchpad directory /private/tmp/claude-502/-Users-darkomijic-dev-libar-software-delivery-protocol/66e1af33-7988-43a3-b08b-30c3fbf1fd8c/scratchpad/l4verify, using the built dist/cli/sdp.js; no file in the review tree was changed.\n\nAll four hold:\n- **L4-01 (confirmed, high):** a build follows a symlink planted as generated/graph.json.tmp and overwrites a file outside the corpus.\n- **L4-02 (confirmed, medium):** two Spec IDs that differ only in letter case collide on the case-insensitive macOS volume in the view, mermaid and gherkin publishers. Studio does not collide.\n- **L4-03 (confirmed, lowered to low):** the test wrapper's argument parsing is wrong, but it only affects contributors' test runs, and the existing fingerprint guard turns the race into a loud failure.\n- **L4-04 (confirmed, medium):** validate and studio in watch mode exit 1 before their first cycle when the root is a symlinked directory.\n\nNot covered: hard-link temporaries for L4-01, vault watch mode for L4-04, and a check of the CI workflows."
+    },
+    {
+      "lane": "L5",
+      "name": "tests-as-evidence",
+      "family": "gpt",
+      "model": "gpt-6-astra (xhigh)",
+      "job": "job-mw0x07kt-07869705",
+      "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0x07kt-07869705/report.md",
+      "verifier": {
+        "family": "claude",
+        "model": "claude-opus-5-5 (high)"
+      },
+      "summary": "Two surviving mutants expose missing verifier bindings to existing regression tests. Neither demonstrates a regression that survives the full test suite.",
+      "coverage": "Used recipes 3 and 30 to select nine ready, implemented Specs with 325–437 transitive dependents. Mutations killed: extraction.determinism (disable second-extraction comparison), model.open-question-fields (allow nonblocking triggers), carrier.step-keys (omit step normalization), extraction.derive-graph (mark binding edges declared), model.rule-keys (allow duplicate keys), model.term-addresses (allow duplicate term keys), validation.two-check-families (give aggregate report a family). Survivors are detailed below. Audited recipe execution at test/recipes.test.ts:387 and :525, conditional skips, empty test callbacks, snapshot matcher usage, and source-to-test references across 168 source modules. No wholly untested module was established; indirect assertions and browser behavior were not exhaustively verified. Graph queries found only the three known non-decision honesty/gaps. Broad baseline: 3182 passed, 8 failed; separate CLI baseline: 99 passed, 1 failed. Native watchers reported EMFILE; package smoke tests reported npm-cache EPERM. All source mutations were immediately restored with git checkout; final status clean.",
+      "verifySummary": "I checked both findings in the review-tests worktree at b5e0a8be by running the mutations myself, and confirmed both. I restored every edited file with git checkout, and git status is clean.\n\nL5-01: spec:carrier.markdown-body-grammar is ready. Its bound verifiers are 14 of its own executable examples plus one kind-evidence example, and test/self-hosting-markdown-grammar.test.ts runs them. None of those examples uses a star bullet. With `[*+]` changed to `[+]` at src/extract/markdown-body-content.ts:64, the bound files still passed (2 files, 50 tests). test/markdown-reifier.test.ts failed 3 star-bullet cases (3 failed, 114 passed).\n\nL5-02: spec:model.anchors is ready. Its only verifiers are its two examples, both run by test/self-hosting-model.test.ts, and neither touches the rule against naming one target in both satisfies and references. The reviewer's single mutation survives the bound file (5/5) and fails test/structural-anchors.test.ts:459. However, that mutant is nearly equivalent at the Spec level. The Spec (specs/model/anchors.sdp.md:27) says only that the overlap \"is an error\", and the check at src/validate/validators.ts:688 still raises it. A stronger mutant makes the finding hold: I disabled both the extraction check (anchors.ts:518) and the validator check (validators.ts:688). The bound file still passed 5/5, so the Spec's guaranteed error can disappear with every bound test green.\n\nNot covered: I did not run the full test suite under either mutation. I did not check whether other unbound tests catch these mutants, beyond markdown-reifier.test.ts and structural-anchors.test.ts:355 and :459. I did not try the proposed specTest anchors."
+    },
+    {
+      "lane": "L6",
+      "name": "agent-surface-vocabulary-governance",
+      "family": "claude",
+      "model": "claude-opus-5-5 (high)",
+      "verifier": {
+        "family": "gpt",
+        "model": "gpt-6.1-sol (high)",
+        "job": "job-mw0xdywj-6aa5e95e",
+        "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0xdywj-6aa5e95e/report.md"
+      },
+      "summary": "The core governance surface is mostly consistent. All 47 decision Specs, each stated ready, appear in DECISIONS.md, either under a registry code or in the without-code list. No registry row points at a missing Spec. The D1–D6 targets resolve. Every refines-to-a-non-decision has its decidedBy pair. The 55 recipe bodies are byte-identical between recipes.md and dist/recipes. Every body's `accepts` list matches the params.X the catalog prose names. Live material carries no residual pre-ratification terms: \"marker\" is ratified for the bracket prefix, and \"provenance\" survives only in the build-origin sense. Every CLI flag cited in AGENTS.md and the skills exists in `sdp --help`.\n\nI found eight real defects. Two are stale claims in AGENTS.md and concept doc 06. One is drift between the ready `spec:consumers.reader` Spec and the reader's public API (`resolveEntryAddress`). One is a registry convention the registry itself breaks: the narrowed row names its narrowers (MD-33, MD-25, MD-27). Four are smaller inaccuracies in concept doc 00 and the sdp-agent-surface skill.",
+      "coverage": "Read in full: AGENTS.md (via CLAUDE.md and spot checks in the tree), CONTEXT.md, DECISIONS.md, all five SKILL.md files, upgrade-guide.md, architecture.md, and docs/concept/README, 00, 01 (headings), 04, 06 and 07.\n\nChecks run:\n- Recipe 31 against the registry: set coverage, refines/refinedBy, reasons and titles.\n- The decidedBy/refines pairing convention.\n- Recipe 25 over every entry address in live docs. The only misses are the catalog's deliberate samples.\n- Every spec:/pack: id cited in live docs. The only misses are order-domain placeholders.\n- Recipe 22 and the validation report against the AGENTS.md warning claims.\n- Recipe 10 on examples/checkout-v1.\n- The catalog's documented params and return shapes against the bodies, and dist against md.\n- `sdp --help` against the documented verbs and flags.\n- `sdp new spec` output for all kinds, in the scratchpad.\n- The reader's key set against spec:consumers.reader and spec:consumers.agent-surface.\n- The architecture.md claims, via findByConcept and the edges.\n- The package exports and subpaths.\n- Grep for the old readiness ladder, abstraction, facet, two axes, provenance and marker.\n\nNot covered:\n- Individual decision Spec bodies were not read in full for content contradictions; I compared their titles, relations and reasons only.\n- The answer field names were spot-checked for about 12 recipes, not all 55.\n- README.md and jtbd-stories were not audited.\n- I did not run the green gate (npm run check) or the projection suite.\n- The specs/decisions narratives were not checked against CONTEXT.md term by term.",
+      "verifySummary": "Six confirmed, two refuted. All confirmed findings retain their proposed severity."
+    },
+    {
+      "lane": "L7",
+      "name": "inventory-plans-concept",
+      "family": "claude",
+      "model": "claude-opus-5-5 (high)",
+      "verifier": {
+        "family": "gpt",
+        "model": "gpt-6.1-sol (high)",
+        "job": "job-mw0xj425-a47d130d",
+        "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0xj425-a47d130d/report.md"
+      },
+      "summary": "Read spec:protocol.delivery-record-cleanup with recipe 3: it states `idea`, its one blocking question is #question.durableContent, and its only decision is spec:decisions.roadmap-over-plans. Most of what plans/ holds is already carried. Plans 19, 28, 30, 31 and 38 to 47 put their rulings, refusals and deferrals in Specs, decision Specs or open questions with triggers; I sampled about 40 rows across those plans and found every one carried. The plans that remain are sequencing, ledgers and close records that git and the pull requests already hold. The uncarried durable content sits in three places. (1) The carrier competition's grounds and measured evidence (plans 12 and 16): spec:decisions.carrier-ruling has no `alternative:` entries. (2) The concept documents: 00's non-goals and deferred trajectory, 04's TypeScript static grammar and the point that anchors are framework-neutral, 06's mapping from disciplines to kinds, and 07's correctness-oracle law. (3) A few smaller items: the code-unit sort comparator, one open owner question from plan 39 that a probe confirms is still live, and the routing rubric for decision content. Separately, five concept documents have drifted from ready, implemented Specs: they call the Studio, the capability map and architecture enforcement unbuilt or aspirational, they list an old CLI, and they promote \"one runtime truth\" to a Protocol principle when a Spec makes it a corpus's own rule. The temporal guard's exemption for DECISIONS.md is also stale. I found 11 record findings, 1 docs finding and 1 code finding. I propose no deletion.",
+      "coverage": "Method: I read AGENTS.md, CONTEXT.md (outline and the rows I used), the sdp-agent-surface skill, recipe 3 on spec:protocol.delivery-record-cleanup, recipe 20 (16 questions: 10 blocking, 6 deferrals), recipe 53 and spec:decisions.roadmap-over-plans. I ran concept search (recipe 6) and entry search (recipe 23) on about 50 terms through the helper /private/tmp/claude-502/-Users-darkomijic-dev-libar-software-delivery-protocol/66e1af33-7988-43a3-b08b-30c3fbf1fd8c/scratchpad/l7s.sh. Where token search misses phrases, I grepped specs/. I read all of docs/concept/ in full. For plans/, I built an outline of every file's status line and H2 headings at /private/tmp/claude-502/-Users-darkomijic-dev-libar-software-delivery-protocol/66e1af33-7988-43a3-b08b-30c3fbf1fd8c/scratchpad/l7-plan-outline.txt, then read the sections likely to hold durable content: rulings, refusals, deferrals, owner items, measured evidence and rubrics. I checked check-self-hosting-gates.mjs (it reads plans 16, 17 and 18) and check-temporal.mjs.\n\nClassification of plans/. C = fully carried, H = historical only, U = holds uncarried durable content (finding id in brackets).\n| File | Class | Carriers or notes |\n|---|---|---|\n| 01 | H | status stub |\n| 01a | H | Phase 0 execution plan; the law now lives in the model.* Specs |\n| 02 | H | framing (\"a floor, never a quota\") carried by spec:decisions.kind-conditional-floor and spec:consumers.derived-readiness-banner |\n| 03 | H | outcomes are the MD-10 to MD-15 decision Specs; the base-first method is in AGENTS.md |\n| 04 | H | the meta-discipline is in AGENTS.md and spec:decisions.plain-language-references; the \"crippled graph\" is superseded by spec:protocol.self-hosting |\n| 05 | H, one remnant | the temporal-guard law is carried only by check-temporal.mjs and test/check-temporal.test.ts (C1) |\n| 06 | C + U | spec:extraction.derive-graph, spec:extraction.build-pipeline#rule.emitOnClean, spec:extraction.determinism; uncarried: the sort comparator (R9) and the golden fixture as correctness oracle (R3) |\n| 07 | C | spec:model.anchors, spec:extraction.delivery-facts |\n| 08 | C | spec:validation.two-check-families, spec:validation.readiness-floor, spec:extraction.build-pipeline |\n| 09 | C | spec:consumers.agent-surface, spec:consumers.design-review, spec:consumers.binding-language-views, spec:consumers.derived-readiness-banner |\n| 10 | C | spec:consumers.agent-surface#rule.growByRecipe, spec:validation.diagnostic-rendering, spec:extraction.determinism |\n| 11 | H | |\n| 12 | C + U | MD-14 to MD-17 decision Specs and spec:extraction.executable-contracts; uncarried: the measured evidence from the earlier system's corpus (R2) |\n| 13 | C | spec:extraction.executable-contracts, spec:extraction.executable-examples |\n| 14, 14a, 15a, 15b, 15c, 15d, please-use-the-context-imperative-stonebraker | H | competition logistics; the exhibits live in explorations/ |\n| 16 | C + U | §3 and §4 carried by spec:decisions.carrier-ruling and spec:decisions.prose-ownership; §2 grounds and §5 dismissals uncarried (R1); the gate reads this file |\n| 17, 17b | H | the gate reads plan 17's docket and ledger; its rulings went to carrier.* Specs (sampled) |\n| 18-brief | U, partial | §4 rubric: placement carried by spec:decisions.planning-truths-placement and AGENTS.md; the rewrite test is uncarried (R11) |\n| 18, 18a | H | the gate reads plan 18's G1–G8 ledger |\n| 19 | C | spec:model.anchors (Protocol builder binding), spec:carrier.sdp-import (publication), spec:consumers.design-review#rule.inlineCode |\n| 20, 21, 22 | H | the audit design is in spec:decisions.concept-docs-dissolve; the front-door weighing is in spec:decisions.agent-front-door's rationale |\n| 24, 25, 26, 27 | H | the process layer is the sdp-sessions skill and spec:consumers.delivery-session-on-ramp; the lineage is docs/lineage |\n| 28, 30, 31 | C | spec:carrier.gherkin-authoring, spec:decisions.sdp-gherkin-extension, spec:decisions.carrier-universality, spec:extraction.runnable-modules |\n| 29, 32, 34, 36 | C | briefs; sampled do-not-reopen rows are carried by spec:extraction.runnable-modules, spec:decisions.carrier-universality, spec:decisions.agent-front-door and spec:decisions.shipped-projections-frozen |\n| 33, 35, 37 | H | close records; plan 37's bundle stand-down is superseded by spec:consumers.context-bundle |\n| 38 | C | spec:consumers.graph-first-planning |\n| 39 | C + U | owner items resolved in Specs, except the relation-named Design key (R10) |\n| 40, 41 | C | spec:decisions.anchor-comment-form, spec:decisions.anchor-binding-grain, spec:decisions.architectural-annotation, spec:decisions.pack-design-page; the drift queue is resolved (spec:extraction.regenerability no longer has thresholds) |\n| 42, 43, 45, 46, 47 | C | the spec-studio family, deferrals as triggers (recipe 20), refusals in Specs, spec:decisions.roadmap-priority, spec:decisions.roadmap-over-plans, spec:decisions.epics-of-any-kind; plan 46's \"first npm release\" deferral is pull request record only |\n| 44 | H | |\n\nClassification of docs/concept/:\n| File | Class | Notes |\n|---|---|---|\n| README | C | the five founding principles are carried by spec:extraction.regenerability, spec:extraction.claim-taxonomy, spec:decisions.executable-meta-model and spec:extraction.derive-graph; the reading conventions are in AGENTS.md |\n| 00 | U + drift | R5, R6, D1 |\n| 01 | mostly C + drift | P1–P10, L2, L3 and L9 are carried; the L8 `spec-ids` union aspiration is uncarried but low value; D1 |\n| 04 | U + drift | R4, R7, D1; §4 is carried by spec:carrier.gherkin-authoring and spec:decisions.sdp-gherkin-extension, plus the README editor association |\n| 06 | pointers C + U + drift | R8, D1 |\n| 07 | U | R3 |\n| DECISIONS.md | live registry, not cleanup material | AGENTS.md, check-self-hosting-gates and package-smoke read it; the MD codes and the deleted-row commits live only here, and 5 of 47 decision files mention an MD code |\n\nNot covered: reviews/ (another lane). I did not read plans 17, 18a, 20, 21, 22, 24, 26, 29, 32 and 34 line by line; their 500 to 1,000-line ledgers were spot-checked by section. I did not run the full green gate. I did not probe plan 39's question about the TypeScript open-questions value.",
+      "verifySummary": "11 confirmed, 2 refuted. Confirmations apply to the narrowed claims below, not automatically to every proposed replacement."
+    },
+    {
+      "lane": "L8",
+      "name": "inventory-reviews",
+      "family": "gpt",
+      "model": "gpt-6-astra (xhigh)",
+      "job": "job-mw0x078e-5e38e0ed",
+      "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0x078e-5e38e0ed/report.md",
+      "verifier": {
+        "family": "claude",
+        "model": "claude-opus-5-5 (high)"
+      },
+      "summary": "Two durable rationales remain only in review records. Most substantive findings are carried by current Specs and tests; execution receipts and superseded recommendations are historical. No deletion is proposed.",
+      "coverage": "Scope: reviews/ at b5e0a8bea1e3bedd48c616f96c9928e955792753. Measured inventory: 129 files—42 Markdown, 13 JSON, 6 MJS, 45 PNG, 6 WebP, 1 JSONL and 16 TXT. The reviewed paths remained unchanged against that base. Read AGENTS.md, CONTEXT.md and the graph-reading skill; started with recipe 3 for spec:protocol.delivery-record-cleanup, then used recipes 6 and 23 and targeted Spec contexts. Classifications below apply to every file matched by each group; historical measurements are not current verification claims.\n\nreviews/README.md, 03-post-split-adverserial-review-prompt.md and 05-plan-finalization-prompt.md: HISTORICAL ONLY—index and session prompts, with no independent current design promise.\n\nreviews/01-opus-plan-implementation-review.md, 02-founding-ideation-back-for-review.md and 04-post-split-adversarial-review.md: FULLY CARRIED substantive guidance—spec:model.core-model, spec:model.anchors, spec:model.pack-aggregate, spec:validation.kind-evidence, spec:validation.readiness-floor, spec:decisions.one-validation-path, spec:decisions.typing-law and spec:decisions.content-only-sections; binding language and bounded impact are carried by spec:consumers.binding-language-views and spec:consumers.reader. Bootstrap sequencing and old measurements are historical.\n\nreviews/06-self-hosting-phase-1-code-review.md: HISTORICAL remediation record; enduring parser, refusal and extraction contracts are carried by spec:carrier.envelope-contract, spec:carrier.markdown-body-grammar and spec:carrier.markdown-parser, with Markdown reifier tests and the test wrapper. The later 08 record supersedes its residual grammar docket. PR #10 is present in git at 014bd5bc.\n\nreviews/07-self-hosting-phase-2-code-review.md and 08-self-hosting-phase-2-pre-merge-review.md: HISTORICAL remediation records; import fidelity and publication belong to spec:carrier.sdp-import and its round-trip example, builder identity to spec:model.anchors.physical-identity, with import, CLI-import, anchor-trust and Design Review regression suites. PR #11 is present at 5095a996.\n\nreviews/09-self-hosting-phase-3-pre-close-review.md: HISTORICAL mutation and dissolution record; current homes include spec:extraction.executable-contracts.concreteness-refusal, spec:model.stable-ids, spec:validation.readiness-floor, spec:validation.verification-linkage and the self-hosting extraction/validator suites. PR #12 is present at 34746582.\n\nreviews/10-self-hosting-phase-4-pre-close-review.md: HISTORICAL mutation/disposition record; spec:consumers.wholesale-view-rewrite and its examples, spec:consumers.binding-language-views.pack-member-table and spec:validation.warn-level-signals carry the substantive repairs. test/cli.test.ts:1505 also carries the divergent-render regression and explains its injection seam. The remeasurement lesson is in AGENTS.md. PR #13 is present at 5b8c2f9d.\n\nreviews/11-self-hosting-phase-5-pre-close-review.md: HISTORICAL probes and dispositions; current homes are spec:consumers.agent-surface.evaluation-sink, spec:consumers.reading-on-ramp, test/cli-q.test.ts and test/recipes.test.ts. The old help refusal and unwired-gate descriptions are superseded history, not new findings.\n\nreviews/12-self-hosting-phase-5-post-close-review.md: HOLDS UNCarried rationale R-17, reported as L8-01. Other fixes are carried by CLI/query/recipe tests and current on-ramp Specs; counting corrections and rejected helper extraction are historical. Remediation commit 09b568f0 and PR #14 merge b9b11055 are present in git.\n\nreviews/13-dissolution-value-transfer-audit.md: FULLY CARRIED surviving guidance. P1 is in spec:model.core-model; P2 in spec:validation.readiness-floor; P3 in spec:model.relations; P4 in spec:consumers.design-diff and recipe 35; P5 in spec:validation.pack-coherence; P6 in spec:decisions.executable-meta-model. P7 is historical measurement supporting wording no longer present in the current concept document. Recovery commit 57368775 is present in git; the old PARTIAL labels are not current defects.\n\nreviews/14-executable-verification-design-review.md: HOLDS UNCarried O5 rationale, reported as L8-02. The chosen carrier policy is carried by spec:decisions.gherkin-carrier-option and spec:decisions.carrier-universality; the later generated-wrapper design is carried by spec:extraction.runnable-modules. Historical lexical percentages, external-repository observations and the original recommendation remain historical. Owner-selection commit 74e9a6c8 is present in git.\n\nreviews/25-architecture-design-followup.md and 25-pr-description.md: HISTORICAL PR #25 record, merged at 25d24f23. Surviving architecture content is carried by spec:model.structural-patterns, spec:protocol.structural-self-binding, spec:extraction.delivery-facts, spec:extraction.example-runner and recipes 17–19. Later comment-form and architectural-annotation decisions supersede the old refusals.\n\nreviews/26-whole-corpus-refresh.md: HISTORICAL review and ruling register. Current homes include spec:decisions.anchor-binding-grain, spec:extraction.schema-versioning, spec:model.relation-reasons, spec:carrier.gherkin-authoring, spec:validation.validator-self-testing, spec:consumers.reading-on-ramp and recipe 20. This inventory did not independently repeat the original whole-corpus review or certify each historical issue as fixed.\n\nreviews/plan46-close-x1.md: FULLY CARRIED enduring content—glossary terms, spec:consumers.command-line, Studio Specs, spec:consumers.edit-model and spec:consumers.intent-composition. Binding tallies and acceptance boundaries are historical.\n\nreviews/plan46-s1-build.md: FULLY CARRIED design in spec:consumers.spec-studio.diagrams, its architecture/tests/evidence lenses, spec:consumers.spec-studio.data.recipe-answers and recipe 44; lane boundaries and measurements are historical.\n\nreviews/plan46-s5-build.md and plan46-s5-fixes.md: FULLY CARRIED design in spec:consumers.spec-studio.intent-panel, spec:consumers.intent-composition.proposal.memo, spec:consumers.spec-studio.export and spec:consumers.spec-studio.publisher.watch, with test/studio-s5.test.ts. Export-size observations are historical; the one-file promise remains explicit.\n\nreviews/plan46-s6-polish.md and plan46-s7-keying.md: FULLY CARRIED changes in spec:consumers.spec-studio.responsive, its maturity-map and diff-page Specs, spec:consumers.design-diff, recipe 35 and Studio regression suites. Captures and measured widths are historical acceptance evidence.\n\nreviews/plan46-upgrade-kit-build.md: FULLY CARRIED by spec:consumers.upgrade-kit and its children, recipes 47–48, the upgrade guide and test/upgrade-kit.test.ts. The integration handoff is closed by the subsequent integration record; adopter counts are historical.\n\nreviews/plan46-vault-build.md: FULLY CARRIED by spec:consumers.obsidian-vault and its notes/bases/iteration children, spec:decisions.vault-owned-folder and vault regression suites. GUI acceptance limitations are historical, not evidence of a current product defect.\n\nreviews/plan46-wave2a-integration.md and plan46-wave2b-integration.md: HISTORICAL merge, conflict and bisect records. Enduring corrections are carried by spec:consumers.context-bundle, spec:consumers.agent-surface.address-and-cycle-recipes, spec:consumers.spec-studio.owner-queue, spec:consumers.command-line, recipes 25/36/46/51 and integration/Studio tests. The adopter's four-binding test-stub failure is an adopter migration observation, not a Protocol defect.\n\nreviews/plan46-x2b-fixes.md and plan46-x2b-rereview-fixes.md: FULLY CARRIED substantive corrections. Graph reads confirm the formerly pending staged-publication wording, changed-Base qualifications and sharing-conduct narrative now live in spec:extraction.build-pipeline, spec:consumers.obsidian-vault, spec:consumers.obsidian-vault.bases and spec:consumers.spec-studio.sharing. test/x2b-cli.test.ts, test/x2b-studio.test.ts and test/studio-s4.test.ts carry the regression cases.\n\nreviews/plan46-k-step-keys-platform.md: HISTORICAL adopter experiment; the shared-vocabulary requirement is carried by spec:carrier.step-keys, including rewordedStaysBound, and keyed-contract tests.\n\nreviews/plan46-acceptance.md and reviews/plan46-acceptance/**: HISTORICAL acceptance record, command ledger, adapter remeasurement and sixteen reproduction scripts. The package defect has an installed-consumer regression in test/package-smoke.test.ts; current feature homes include step-keys, context-bundle, upgrade-kit, run-evidence, Studio and vault Specs. Scripts were inspected as reproduction tools, not executed. The report's browser and adopter-stub limitations were not promoted into engine findings.\n\nreviews/assets/plan46-prototypes/**: HISTORICAL design evidence explicitly cited by spec:decisions.studio-diagram-renderer and spec:consumers.obsidian-vault. Their live citations and source-commit provenance must be accounted for in cleanup; the underlying design rationale is already carried.\n\nreviews/assets/plan46-s1/measure.mjs: FULLY CARRIED operational evidence helper, directly invoked by test/integration-review.test.ts:42. It is a live test dependency despite its historical directory. The other files under reviews/assets/plan46-s1/** are HISTORICAL measurements and offline diagram renders.\n\nreviews/assets/plan46-integrate-2a/**, plan46-s3/**, plan46-s5/**, plan46-s6/**, plan46-s6-fixes/**, plan46-s7-keying/**, plan46-u/** and plan46-vault/**: HISTORICAL measurements, capture/reproduction tools and acceptance instructions associated with the classified reports. No measured number was treated as a current guarantee.\n\nreviews/assets/pr33/** and reviews/assets/pr35/**: HISTORICAL PR presentation evidence; READMEs identify source commits, commands, pages and preview provenance. Git contains PR #33 merge 5a0b22c2 and PR #35 merge da4b1419. All 51 image files were inventoried through these asset groups but not visually re-reviewed.\n\nNot covered: independent plans/ or concept-document inventories, external adopter checkouts, external lineage sources, live GitHub PR bodies, rerunning historical experiments, or a fresh engine correctness/test-coverage review. No files were modified and no deletion is proposed.",
+      "verifySummary": "I verified both findings against the tree at b5e0a8be and confirmed both at low severity. For L8-01, the overlap R-17 describes still exists: SKILL.md:155 has a \"The contract\" section, and docs/agent-surface/recipes.md:148 has \"The contract, in one place.\" Recipe 6 found no match for \"cold\". Grep over specs/, docs/concept, docs/agent-surface, .agents/skills and test/recipes.test.ts found no text giving the cold-load reason. The sibling Studio and vault on-ramp Specs require their skills to \"restate neither\", so the reading skill's different choice has no explanation anywhere in the corpus. For L8-02, spec:extraction.runnable-modules says only that the engine \"never loads or executes adopter code\". Recipe 6 found nothing for \"trust boundary\". Grep over specs/ found nothing for \"isolation\" in this sense, and no decision Spec lists engine-executed examples as an alternative. The review's own ADR table (reviews/14:236) says O5 \"passes, but evidence rejects it now\", so the rejected alternative is durable rationale that nothing else carries. Not covered: the rest of the reviews/ inventory, which belongs to the primary reviewer; I checked only these two findings."
+    },
+    {
+      "lane": "L9",
+      "name": "outsider-view",
+      "family": "claude",
+      "model": "claude-opus-5-5 (high)",
+      "verifier": {
+        "family": "gpt",
+        "model": "gpt-6.1-sol (high)",
+        "job": "job-mw0xegqo-800e7c90",
+        "reportPath": "/Users/darkomijic/.relay-jobs/software-delivery-protocol-b281175f/job-mw0xegqo-800e7c90/report.md"
+      },
+      "summary": "I walked the newcomer path in the review tree at b5e0a8be: the README quick start, the full checkout-v1 walkthrough, all five break-it-on-purpose experiments (run on copies in the scratchpad), the README's Gherkin and test-anchor samples (run in a fresh adopter root), recipes 10, 25, 53 and 55, and every claim and link in the article series at 230b0d28 that can be checked offline. Most of it holds up. The commands work, all the experiments produce the outcomes the docs describe, the README Gherkin sample validates and emits its registrar, every relative and commit-pinned link resolves, and the articles' generated evidence blocks match the graph I re-derived (456 Specs, 9 Packs, 1,072 nodes, 2,978 edges, 166 implemented, 397 has-verifier, build backlog 2, drift 0, 55 recipes, 3 honesty/gaps warnings). I found 9 problems:\n- **Medium:** the worked-example README shows a stale build summary and Pack count.\n- **Medium:** the root export's `require` condition ships ESM-only types, so TypeScript CommonJS consumers get TS1479.\n- **Medium:** the in-view token budget that JS-F1 requires is carried by no Spec.\n- **Low (6):** the JS-A1 job sentence contradicts its own acceptance criteria and the `sdp new spec` CLI; the README uses the undefined \"Studio phase 1\" and opens on insider jargon; the article evidence generator labels any warning as intentional and leaves hand-written counts outside its checked blocks; the Node floor is understated for the dev toolchain; the README's recipe 25 sample address cannot resolve on the worked example; the jobs are absent from the graph, so job coverage cannot be queried.",
+      "coverage": "Covered:\n- **README.md:** every command I could run offline, including `npm run --silent sdp:q`, `--version`, `--help`, the Gherkin sample and the test-anchor-to-registrar sample in a scratch adopter root, the recipe 25 sample, the node_modules exclusion check and a relative-link check.\n- **package.json:** exports (ESM and CJS runtime import, and a TypeScript node16 CJS consumer typecheck), bin, files and engines against the declared engines of the dev dependencies.\n- **examples/checkout-v1 README:** the full walk on copies: build, validate, vitest, recipes 10, 53 and 55, and all five break-it-on-purpose experiments plus the hand-authored `implemented` and `satisfies` refusals.\n- **jtbd-stories/:** read the README and every job statement; searched the graph for all 25 job IDs and for key phrases of each job with `findByConcept` and recipe 6. Every job maps to at least one Spec, except the token-budget criterion of JS-F1.\n- **docs/lineage/README.md:** read at HEAD and at 230b0d28.\n- **Articles at 230b0d28:** all five manuscripts, the playbook README and `sync-evidence.mjs`. I re-derived every evidence block and baseline metric with the graph, re-ran `byFile`, `blastRadius`, `specContext`, the unknown-parameter shape and the Studio lenses and page set, and checked every commit-pinned path at b5e0a8be and every sibling anchor.\n\nNot covered:\n- Anything needing the network: `npm ci` from a clean clone, `npm run check:git-install`, and the npm `allowScripts` / `allow-git=root` and pnpm `allowBuilds` statements, which depend on package-manager versions.\n- I did not run `npm run check`, `npm run generate:*` or `sync-evidence.mjs` in the review tree, to avoid rewriting generated/ there. I read the script instead and reproduced its queries.\n- Node 20.0–20.18 was not exercised; finding F7 rests on declared engines.\n- The Studio HTML was not inspected visually, and the vault was not run.\n- The skills were only grepped for adopter guidance.\n- The docs/concept documents were only skimmed.",
+      "verifySummary": "Seven findings confirmed, two refuted. F1 downgraded to low; F2, F5, F6 and F7 narrowed to the reproduced evidence."
+    }
+  ],
+  "findings": [
+    {
+      "id": "L1-01",
+      "title": "A shared Given/When key silently suppresses product invocation",
+      "target": "code",
+      "severity": "high",
+      "location": "src/codegen/contracts.ts:542",
+      "claim": "spec:extraction.runnable-modules requires the first When occurrence to invoke the product (specs/extraction/runnable-modules.sdp.md:35). The generated registrar instead chooses each key's behavior from its first occurrence.",
+      "evidence": "An in-memory Markdown parent and child containing 'Given ready / When ready / Then done' produced no validation or generation findings. The generated 'ready' handler was the Given no-op. Executing the generated registrar through production runtime functions and runExamplePlan returned {\"invoked\":false,\"compared\":true,\"invokeCalls\":0,\"test\":\"passed\"}, although the supplied invoke callback throws. The bound runtime test at test/testing.test.ts:78 calls invokeRunnableExample directly and does not exercise this generated dispatch case.",
+      "proposedChange": "Dispatch generated registrar behavior using each step occurrence's phase while retaining its contract key. Do not let deduplication select Given semantics for a When occurrence. Add a generated-registrar regression proving a throwing invoke executes when Given and When share a key.",
+      "failureScenario": "A lawful example reuses one skeleton across Given and When. Its initial world already matches the oracle, so verification passes without exercising the product.",
+      "verdict": {
+        "id": "L1-01",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The generated registrar dedupes bindings by contract key, so the When occurrence of a shared skeleton runs the Given no-op and `invoke` never runs. This contradicts runnable-modules' rule that the first When invokes the product. Downgraded because it needs one skeleton authored in both Given and When. Under step-keys #oneKeyOneStep ('a step being one skeleton') that is a single step with a single handler, so the owner may prefer to refuse cross-phase skeletons in the Spec (target design) rather than dispatch by phase. Neither validation nor codegen flags the case today.",
+        "evidence": "With parent and child `Given ready / When ready / Then done`, generateContracts gave no findings and the registrar holds `\"ready\": () => { // Given state is materialized ... }`. The contract has `{ kind: \"when\", key: \"ready\", ... }` (contract.ts lines 21-22). Running registerKid with an invoke that pushes to a log and throws: the test passed and the log was `[]`. Code: src/codegen/contracts.ts:542-545 (`if (renderedBindings.has(step.key)) continue;`)."
+      },
+      "lane": "L1",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L1-02",
+      "title": "An authored unspecified Then can turn a coverage gap into a pass",
+      "target": "code",
+      "severity": "high",
+      "location": "src/testing/index.ts:110",
+      "claim": "spec:extraction.runnable-modules explicitly requires a bound example selecting unspecified to fail (specs/extraction/runnable-modules.sdp.md:39). The runtime only checks whether the oracle kind matches a Then key.",
+      "evidence": "A parent vocabulary and child with 'Given ready / When run / Then unspecified' reified and generated without findings. Running the generated registrar with expected() and observe() both returning {\"kind\":\"unspecified\"} completed successfully: {\"invoked\":true,\"compared\":true,\"invokeCalls\":1,\"test\":\"passed\"}. compareContractOutcome marks this comparison complete at line 128, and completeRunnableExample accepts it.",
+      "proposedChange": "Explicitly reject oracle.kind === 'unspecified' before matching or comparing any authored Then. Add a regression with an actual Then key named unspecified, covering both skeleton and explicit-key forms.",
+      "failureScenario": "A Then skeleton or step key equals unspecified, allowing an oracle's declared coverage gap to count as successful executable evidence.",
+      "verdict": {
+        "id": "L1-02",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "compareContractOutcome (src/testing/index.ts:110-130) only checks `step.key !== oracle.kind`, and nothing reserves `unspecified` as a Then key. An authored Then `unspecified` therefore makes a bound example selecting unspecified pass, against runnable-modules' bound-unspecified rule. Downgraded because it needs a Then whose skeleton or key is literally `unspecified`. A Spec-side reservation of that key would also work as a fix.",
+        "evidence": "With vocabulary and child `Given ready / When run / Then unspecified` there were no generation findings. The space emits `| { readonly kind: \"unspecified\" } | UnspecifiedOutcome` and the registrar binds `\"unspecified\": (execution, params) => { compareContractOutcome(...) }`. Running it with expected and observe both returning `{kind:\"unspecified\"}`: the test passed."
+      },
+      "lane": "L1",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L1-03",
+      "title": "A legal kind slot generates an invalid Outcome type",
+      "target": "code",
+      "severity": "medium",
+      "location": "src/codegen/contracts.ts:130",
+      "claim": "spec:carrier.slot-notation permits the identifier kind (specs/carrier/slot-notation.sdp.md:17), while spec:extraction.executable-contracts promises typed Outcome variants containing the contract-key discriminant and authored slots (specs/extraction/executable-contracts.sdp.md:30,53). Code generation fails to handle their collision.",
+      "evidence": "Reifying a lawful vocabulary with 'Then result {kind:number}' and running generateContracts emitted no finding and generated '{ readonly kind: \"result {kind}\"; readonly kind: number }'. An in-memory TypeScript compiler check produced TS2300 'Duplicate identifier kind' and TS2717 requiring the two declarations to have the same type.",
+      "proposedChange": "Detect payload-slot collisions with the Outcome discriminant before rendering. Withhold the unrepresentable space contract and dependent registrars with a named generation warning instead of emitting invalid TypeScript; add a compiler-backed regression. Any revised payload representation should be settled in the carrying Spec.",
+      "failureScenario": "An adopter uses a permitted domain slot named kind in a Then step; validation succeeds, but generated contracts break the adopter's typecheck.",
+      "verdict": {
+        "id": "L1-03",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "slot-notation #slotName admits `kind`, and executable-contracts' outcomeVariant shape `{ readonly kind: \"<contract key>\"; readonly <slot>: <type> }` collides with it. Codegen emits invalid TypeScript and raises no finding. The fix spans Spec and code: reserve `kind` as a Then slot name (or change the payload representation) in the Spec, and withhold with a named finding in codegen.",
+        "evidence": "Vocabulary `Then result {kind:number}` with child `Then result {kind: 3}` gave genFindings []. The space has `| { readonly kind: \"result {kind}\"; readonly kind: number }`. tsc on that file: `TS2300: Duplicate identifier 'kind'` (12,16) and (12,48), plus `TS2717 ... Property 'kind' must be of type '\"result {kind}\"', but here has type 'number'`."
+      },
+      "lane": "L1",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L1-04",
+      "title": "Forbidden Markdown block shapes are accepted inside list entries",
+      "target": "code",
+      "severity": "medium",
+      "location": "src/extract/markdown-body-content.ts:256",
+      "claim": "spec:carrier.markdown-body-grammar#rule.blockShapes explicitly applies block-shape refusals to list text, and #rule.oneLineEntries refuses nested and ordered lists (specs/carrier/markdown-body-grammar.sdp.md:34-35). The parser checks the outer line but does not check the text after stripping '- '.",
+      "evidence": "Separate reifyMarkdownCarrier probes under '## Rule' accepted '- > quote', '- * nested', '- 1. numbered', and '- | table'. Every probe returned specs:1 and findings:[], with the forbidden text retained verbatim in behavior.rules. Lines 258-261 check only empty or whitespace-prefixed list text before accepting it.",
+      "proposedChange": "Apply the declared block-shape checks to extracted list text before adding an item, preserving code-span handling. Add refusal probes for block quotes, nested bullets, ordered-list prefixes and pipe-prefixed text inside rule bullets.",
+      "failureScenario": "An author supplies a block construct the ready carrier contract promises to refuse; extraction accepts it as a rule, producing a different interpretation from the authored Markdown structure.",
+      "verdict": {
+        "id": "L1-04",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "markdown-body-grammar #blockShapes applies its refusals to list text, and #oneLineEntries refuses nested and ordered lists. The parser strips `- ` and checks only for empty or whitespace-led text (src/extract/markdown-body-content.ts:256-260); it never runs isUnsupportedCommonMarkBlock or the pipe and quote checks on the remainder. The same constructs as top-level lines are refused.",
+        "evidence": "reifyMarkdownCarrier on a rule Spec whose `## Rule` holds `- > quote`, `- * nested`, `- 1. numbered`, `- | table` and `- + plus`: each returned specs 1 with findings [], and the rules kept the raw text (`[\"> quote\"]`, `[\"1. numbered\"]`, ...). Controls `1. control ordered` and `> control quote` returned specs 0 with `nested or unsupported Markdown structure`."
+      },
+      "lane": "L1",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L1-05",
+      "title": "Invalid altitude still receives readiness-floor evaluation",
+      "target": "code",
+      "severity": "medium",
+      "location": "src/validate/readiness-floor.ts:631",
+      "claim": "spec:validation.claim-separation states that an unratified descriptor produces a conformance error and no readiness floor is evaluated over it (specs/validation/claim-separation.sdp.md:19). The evaluator guards kind and rung but omits altitude.",
+      "evidence": "A synthetic Primitive with kind rule, altitude planet, readiness ready, outcome and rules, but no relations, produced both conformance/claim-separation for altitude and honesty/readiness-floor for at-least-one-relation. createReader also derived readiness idea for it. test/validators.test.ts:805 includes an invalid-altitude node, but its no-floor assertion explicitly selects only the invalid-kind and invalid-readiness nodes.",
+      "proposedChange": "Include altitude validity in the guard before floor evaluation and derived-readiness computation. Extend the existing invalid-descriptor test to assert that an invalid-altitude node receives no floor evaluation or derived rung.",
+      "failureScenario": "A caller supplies an off-contract graph through the public validation/reader seam and receives readiness conclusions for a Spec whose descriptors the Protocol has rejected.",
+      "verdict": {
+        "id": "L1-05",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "claim-separation's rule says no readiness floor is evaluated over any unratified descriptor, but evaluateReadinessFloor (src/validate/readiness-floor.ts:631) guards only kind and rung. The existing test (test/validators.test.ts:842-848) checks no-floor only for the bogus kind and bogus readiness nodes. Downgraded to low: only foreign graph data reaches it, and the claim-separation error already fails validateGraph closed.",
+        "evidence": "A fixture graph with spec:p.alt (rule, ready) patched to altitude `planet` gave conformance/claim-separation (error, path altitude) plus three honesty/readiness-floor errors (at-least-one-relation, kind-evidence-complete, kind-evidence-present). createReader gave `{stated: \"ready\", derived: \"idea\", alt: \"planet\"}`."
+      },
+      "lane": "L1",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L2-1",
+      "title": "Reader exposes resolveEntryAddress, which no Spec states; shipped recipe 51 and the vault depend on it",
+      "target": "spec",
+      "severity": "medium",
+      "location": "specs/consumers/reader.sdp.gherkin:74; src/reader/reader.ts:415,1212; docs/agent-surface/recipes.md:5160; .agents/skills/sdp-agent-surface/SKILL.md:346",
+      "claim": "spec:consumers.reader rule 2 lists the reader's public surface as a closed list: graph, specs, packs, findings, findByConcept, byFile, blastRadius, specContext and packContext. The Reader interface also exposes resolveEntryAddress. Shipped recipe 51 (entry citations) and the vault projection call it. No Spec, skill or catalog prose states it, so adopters script against a public method with no carrying intent. The agent-surface skill even says everything past the three entry adapters is a recipe. The code side has a reason: two machine consumers meet the reader's own rule for adding a join (spec:consumers.agent-surface#rule.growByRecipe). So the Spec is the stale side.",
+      "evidence": "`sdp q 'return Object.keys(g)'` returns [graph, specs, packs, findings, findByConcept, byFile, blastRadius, resolveEntryAddress, specContext, packContext]. src/reader/reader.ts:415 declares `resolveEntryAddress(address: string): AddressResolution;` in `export interface Reader`. The recipes.md:5160 body runs `const { reason } = g.resolveEntryAddress(row.address);`. src/projections/vault/notes.ts:197 and src/projections/vault/text.ts:45 call reader.resolveEntryAddress. `grep -rn resolveEntryAddress specs` returns nothing. git -S puts the addition in 604c7432 \"fix(d): the review findings\".",
+      "failureScenario": "An adopter reads spec:consumers.reader to learn the reader contract, does not find resolveEntryAddress, and either re-implements the address grammar (a second, divergent read of the entry rules) or relies on a method the Protocol may remove with no Spec change to flag it. Recipe 51 would break silently if the method were renamed.",
+      "proposedChange": "Replace the rule at specs/consumers/reader.sdp.gherkin:74 with: \"Rule: The reader exposes `graph`, the raw graph it reads, and the methods `specs`, `packs`, `findings`, `findByConcept`, `byFile`, `blastRadius`, `resolveEntryAddress`, `specContext` and `packContext`; `resolveEntryAddress` resolves an entry address with the grammar and entry rules prose validation uses and returns `{ resolves, reason }`; a join is added only when a second machine consumer needs it and hand-rolled attempts get it wrong.\" Then add a reader example or test assertion for it, and name it beside the entry adapters in the 'Do not propose new query verbs' bullet of sdp-agent-surface/SKILL.md.",
+      "verdict": {
+        "id": "L2-1",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The public method is absent from the reader's method inventory and from every Spec's narrative and sections. Add its signature and actual result shape, including entry, resolves and reason; severity is low because entry-citations and prose-mentions already carry the resolution semantics.",
+        "evidence": "Recipe 3 returns the method list without resolveEntryAddress; Object.keys(g) includes it. src/reader/reader.ts:415 declares it, docs/agent-surface/recipes.md:5160 and src/projections/vault/text.ts:45 call it, and src/graph/entry-address.ts:15 defines the result fields."
+      },
+      "lane": "L2",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L2-2",
+      "title": "answer-shapes Spec still prescribes the retired wrap-the-shipped-body idiom; the catalog now uses recipes()",
+      "target": "spec",
+      "severity": "medium",
+      "location": "specs/consumers/agent-surface.answer-shapes.sdp.md:42 (design.wrapIdiom)",
+      "claim": "The ready Spec's design entry wrapIdiom says a caller filters a shipped answer by wrapping the shipped body as `const answer = await (async (params) => { <shipped body> })({ ... });`. Since the fifth binding (spec:consumers.agent-surface.evaluation-sink#rule.fifthBinding and #rule.recipeCall), the catalog and the reading skill teach `await recipes(<n>, { ... })` instead. The Spec's design entry is stale, and the self-hosting oracle pins the stale text.",
+      "evidence": "specs/consumers/agent-surface.answer-shapes.sdp.md:42: \"- wrapIdiom: to filter a shipped answer, the caller wraps the shipped body in an async arrow function that takes `params`, inside its own body, `const answer = await (async (params) => { <shipped body> })(...)`\". docs/agent-surface/recipes.md:136-146: \"To filter a shipped answer, call it through `recipes` with only its own parameters:\" followed by `pnpm --silent sdp:q 'const answer = await recipes(33); return answer.rows.filter(...)'`. SKILL.md shows the same recipes(29, ...) form. `grep -rn \"async (params)\" test/*.ts` finds no test that exercises the wrap idiom; test/self-hosting-oracle/consumers.ts:51 pins the wrapIdiom text.",
+      "failureScenario": "An agent reading the carrying Spec (as the skill tells it to for law) inlines a whole recipe body inside its own shell-quoted body. That is the shell-expansion hazard and second derivation of the code that the recipes binding exists to avoid, and it contradicts the catalog.",
+      "proposedChange": "Replace design.wrapIdiom with: \"wrapIdiom: to filter a shipped answer, the caller calls `const answer = await recipes(<number>, { <the recipe's own parameters> });` inside its own body and returns a filtered value, so the caller's own parameters never reach the recipe as names it does not take; the catalog shows the shell form and states that the caller's part must hold no shell expansion.\" Update the pinned text in test/self-hosting-oracle/consumers.ts in the same change.",
+      "verdict": {
+        "id": "L2-2",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The ready Spec explicitly prescribes an idiom the catalog no longer demonstrates. Replace design.wrapIdiom with the recipes(number, parameters) form and update its oracle expectation.",
+        "evidence": "specs/consumers/agent-surface.answer-shapes.sdp.md:42 prescribes the inline async wrapper; docs/agent-surface/recipes.md:136 demonstrates await recipes(33). test/self-hosting-oracle/consumers.ts:51 still pins the wrapper wording."
+      },
+      "lane": "L2",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L2-3",
+      "title": "Parse error inside an unterminated template literal is reported at line 1, column 1",
+      "target": "code",
+      "severity": "medium",
+      "location": "src/reader/evaluate-body.ts:58-70 (compileBody refusal path)",
+      "claim": "The evaluation-sink rule (\"A body that fails to parse is reported with the line and column of the error in the body the caller wrote\") and design.parseErrorLine are not met when the body ends inside a template literal (and similar cases). The literal swallows the wrapper's closing `})`. V8's stack then has no caret on its third line, so the position regex fails. The code falls back to wrapperLine 2, which yields line 1, column 1 and the raw message \"Unexpected end of input\". The past-the-end branch, \"the body ends before it is complete\", is skipped.",
+      "evidence": "`node dist/cli/sdp.js q --exclude explorations --exclude examples --exclude test/fixtures/import/parity $'const a = 1;\\nreturn `x${a`'` prints `sdp q: the body does not parse at line 1, column 1: Unexpected end of input`. The error is at the end of line 2. V8 stack for that wrapper: [\"sdp-q-body:4\",\"})\",\"  \",\"\"]: line 4 is known, but the regex `/^sdp-q-body:(\\d+)\\n[^\\n]*\\n([^\\n^]*)\\^/u` needs a caret, so it falls to `Number(position?.[1] ?? 2)`. By contrast `return (1` correctly reports line 1, column 9, \"the body ends before it is complete\".",
+      "failureScenario": "An agent's multi-line body with an unclosed template literal (common in bodies that format strings) gets pointed at line 1, column 1. It edits the wrong place. `sdp validate --rules`, which shares the same compiler, misreports the same way.",
+      "proposedChange": "Parse the line number separately from the caret: `const lineMatch = /^sdp-q-body:(\\d+)/u.exec(stack); const caret = /^sdp-q-body:\\d+\\n[^\\n]*\\n([^\\n^]*)\\^/u.exec(stack); const wrapperLine = Number(lineMatch?.[1] ?? 2);`. Then use `caret?.[1]` for the column. Line 4 then triggers pastEnd and reports line 2 at its end column with \"the body ends before it is complete\". Add a cli-q test for a body ending inside a template literal.",
+      "verdict": {
+        "id": "L2-3",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The unterminated template reproduces an incorrect body position, violating the stated parse-diagnostic guarantee. Extract the wrapper line independently of the caret so the existing past-end handling runs.",
+        "evidence": "CLI q with body \"const a = 1;\\nreturn `x${a`\" exits 1 with \"the body does not parse at line 1, column 1: Unexpected end of input\". The reproduced V8 stack starts at sdp-q-body:4 without a caret; src/reader/evaluate-body.ts:61 consequently falls back to wrapper line 2."
+      },
+      "lane": "L2",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L2-4",
+      "title": "edit-model and intent-composition have has-verifier from a test that exercises none of their keyed rules",
+      "target": "test",
+      "severity": "medium",
+      "location": "test/studio-s5.test.ts:407-417 (test:protocol.studio-intent-handoff)",
+      "claim": "Both Specs are ready, unimplemented and on the build backlog (recipe 1) and the roadmap (entry 4, to build). Their only verifier is one test anchor that also verifies four Studio Specs. It contributes the has-verifier fact. Its tests cover the composing panel: no source writes, local storage, the schema problems recipe 38 shares. Nothing tests intent-composition#rule.changedScope (the applying caller routes a moved or unresolved scope to a person and applies the rest only from a worktree that validates clean), or edit-model#rule.agentEdits and #rule.lifecycleEdits. So the graph's verifier column for these two to-build Specs suggests coverage of promises nothing exercises.",
+      "evidence": "Recipe 3 for both Specs shows exactly one verifier: `test:protocol.studio-intent-handoff test/studio-s5.test.ts:407`. Recipe 34 for spec:consumers.intent-composition: `keyedRules 1, exercised 0` (rule.changedScope). Recipe 34 for spec:consumers.edit-model: `keyedRules 2, exercised 0` (agentEdits, lifecycleEdits). The anchor at test/studio-s5.test.ts:408-416 has `verifies: [intent-panel, edit-model, intent-composition, responsive, export, components]`. `grep -n \"worktree\\|sdp validate\\|moved\" test/studio-s5.test.ts` returns nothing.",
+      "failureScenario": "The roadmap and Studio show the to-build entry 'Views compose scoped intent' with its verifier bound. Whoever picks up roadmap entry 4 assumes the applying-caller law already has a test to make pass, but none exists. A future satisfies anchor would then flip the Spec to implemented and verified with its keyed rule never exercised.",
+      "proposedChange": "Drop spec:consumers.edit-model and spec:consumers.intent-composition from the verifies list at test/studio-s5.test.ts:408-416 until a test exercises their rules. The keyed rules have no way to be checked: replace the anchor with a `references`-style relationship or leave the gap visible. Alternatively, add an example under intent-composition that `exercises: [changedScope]`, driving recipe 38 with a moved scope and asserting the routing the sdp-studio skill teaches.",
+      "verdict": {
+        "id": "L2-4",
+        "verdict": "refuted",
+        "severity": "medium",
+        "reason": "The binding verifies real promises about scoped handoff and leaving source unchanged; has-verifier does not assert exhaustive rule coverage, and recipe 34 counts declared example exercises. Moved and unresolved scope routing also has tests elsewhere, so removing these bindings is not justified by the cited zero counts.",
+        "evidence": "test/studio-s5.test.ts:419 checks scoped handoff, and :525 checks that composition leaves source unchanged. test/skills.test.ts:1623 runs the taught proposal check and :1685 asserts person/apply routing; spec:model.rule-keys#design.ruleCoverage describes exercisedBy as example coverage."
+      },
+      "lane": "L2",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L2-5",
+      "title": "`sdp studio --help` claims every path inside generated/ is refused; only build-owned paths are",
+      "target": "code",
+      "severity": "low",
+      "location": "src/cli/help.ts:75",
+      "claim": "The help says \"Keep the base outside <root>/generated/; paths resolving inside it are refused.\" spec:consumers.spec-studio.data.inputs rule 3 refuses only \"an input path that the build could write or remove\", and the code follows the Spec: `--base generated/mybase.json` is accepted. The help text overstates the refusal.",
+      "evidence": "In a copy of examples/checkout-v1, `sdp studio . --base generated/mybase.json` prints `Wrote …/generated/spec-studio (33 files)` and exits 0, while `sdp studio . --base generated/graph.json` refuses with `--base \"generated/graph.json\" is inside generated output or another path the build writes or removes`.",
+      "failureScenario": "A user or agent trusts the help and treats generated/ as a refused zone, or relies on a refusal that never comes for, say, a base kept at generated/base.json. Help and Spec disagree, and the command-line Spec makes the help the verb's contract text.",
+      "proposedChange": "Replace the help line with: \"Keep the base outside the paths the build writes or removes, such as <root>/generated/graph.json and the projection roots; such paths are refused.\" Alternatively, if the owner prefers the broader rule, change data.inputs rule 3 and the code together.",
+      "verdict": {
+        "id": "L2-5",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The help promises a broader refusal than the Spec and implementation provide. Change src/cli/help.ts:75 to describe build-owned paths and projection roots.",
+        "evidence": "studio --help prints \"paths resolving inside it are refused\" for generated/. An in-memory probe of the actual placement checker and build-owned path definitions accepted generated/mybase.json and refused generated/graph.json; src/cli/studio-inputs.ts:64 checks only buildOwnedPaths."
+      },
+      "lane": "L2",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L2-6",
+      "title": "Catalog's list of recipes that report an absent Pack in diagnostics is incomplete",
+      "target": "docs",
+      "severity": "low",
+      "location": "docs/agent-surface/recipes.md:120-121",
+      "claim": "The catalog says \"Most use `found: false`; the design diff, context bundle, perspective filter and key-family register report an absent Pack in `diagnostics`.\" Recipes 44, 48, 51, 53, 54 and 55 also report an absent Pack in diagnostics. That makes ten recipes reporting an absent subject in diagnostics against ten using found: false, so \"most\" is inaccurate and the list misses six.",
+      "evidence": "A body calling recipes(n, {pack:\"pack:nope\"}) returns found:false for 5, 27, 29, 34 and 39 (plus 3, 9, 14, 19 and 21 for spec or component subjects). It returns diagnostics for 35, 36, 37, 41, 44 (`Pack not found`), 48 (`Expected a resolving Pack id.`), 51 (`Expected a Pack id that resolves.`), 53 and 55 (`Expected the id of a Pack in this graph.`) and 54 (`Pack does not resolve.`).",
+      "failureScenario": "An agent following the catalog checks `found === false` on recipe 53, 54 or 51, never sees it, and reads the diagnostics-only answer as an empty result.",
+      "proposedChange": "Replace with: \"Recipes 3, 5, 9, 14, 19, 21, 27, 29, 34 and 39 report an absent subject as `found: false`; the design diff, context bundle, perspective filter, key-family register, example-space coverage, rule-key proposal, entry citations, the roadmap, the design slice and the roadmap memo (recipes 35, 36, 37, 41, 44, 48, 51, 53, 54 and 55) report an absent Pack in `diagnostics`.\"",
+      "verdict": {
+        "id": "L2-6",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The catalog's general guidance omits six diagnostics-based absent-Pack answers and incorrectly describes found:false as the majority among the cited subject recipes. Replace it with the explicit recipe lists or direct callers to each documented result shape.",
+        "evidence": "docs/agent-surface/recipes.md:120 names only four diagnostics-based recipes. Calls to recipes 44, 48, 51, 53, 54 and 55 with pack:\"pack:nope\" all returned diagnostics without found:false."
+      },
+      "lane": "L2",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L2-7",
+      "title": "Shipped-corpus Spec's list of shipped files omits the upgrade guide",
+      "target": "spec",
+      "severity": "low",
+      "location": "specs/consumers/shipped-protocol-corpus.sdp.md:21",
+      "claim": "Rule 1 lists what ships beside dist/, and under docs/agent-surface/ names only \"the recipe catalog and architecture walkthrough\". package.json `files` also ships docs/agent-surface/upgrade-guide.md, and spec:consumers.upgrade-kit#design.guideFile requires it to ship. The two ready Specs disagree on what the package ships.",
+      "evidence": "package.json files includes \"docs/agent-surface/upgrade-guide.md\". The shipped-protocol-corpus rule text reads \"the recipe catalog and architecture walkthrough under `docs/agent-surface/`\". upgrade-kit design.guideFile reads \"shipped in the package beside the recipe catalog, listed in the package's files\".",
+      "failureScenario": "A reviewer auditing package contents against spec:consumers.shipped-protocol-corpus flags the guide as unexpected, or removes it, which breaks the upgrade kit's on-ramp.",
+      "proposedChange": "In rule 1, replace \"the recipe catalog and architecture walkthrough under `docs/agent-surface/`\" with \"the recipe catalog, upgrade guide and architecture walkthrough under `docs/agent-surface/`\".",
+      "verdict": {
+        "id": "L2-7",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "The shipped-corpus rule makes positive shipping guarantees without saying its list is exclusive. The upgrade guide has an explicit shipping guarantee elsewhere, and both package metadata and the package test include it, so the two Specs do not contradict each other.",
+        "evidence": "specs/consumers/shipped-protocol-corpus.sdp.md:21 contains no exclusivity clause. specs/consumers/upgrade-kit.sdp.md:36 requires the guide; package.json:18 includes it and test/package-smoke.test.ts:399 includes it in the asserted package contents."
+      },
+      "lane": "L2",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L2-8",
+      "title": "recipes() rejection prints a string argument as if it were a number",
+      "target": "code",
+      "severity": "low",
+      "location": "src/reader/evaluate-body.ts:161",
+      "claim": "design.callRejections specifies `recipes: <value> is not a recipe number`. The code renders the value with String(number), so `recipes(\"1\")` prints `recipes: 1 is not a recipe number`. That reads as the integer 1 being refused, and the caller cannot see that the problem was a string.",
+      "evidence": "`sdp q 'return recipes(\"1\")'` prints `sdp q: recipes: 1 is not a recipe number` and exits 1. `sdp q 'return recipes(1)'` succeeds.",
+      "failureScenario": "A script passing a recipe number read from JSON text, such as the string \"53\", gets `recipes: 53 is not a recipe number` and assumes the catalog lacks recipe 53.",
+      "proposedChange": "At src/reader/evaluate-body.ts:161 render the value with `typeof number === \"string\" ? JSON.stringify(number) : String(number)`, giving `recipes: \"1\" is not a recipe number`, and add the case to the evaluation-sink test.",
+      "verdict": {
+        "id": "L2-8",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "The awkward rendering reproduces, but the pinned contract does not require type-preserving quotation and the implementation correctly rejects the string. Quoting strings would be a diagnostic usability improvement rather than an intent-versus-realization defect in this lane.",
+        "evidence": "CLI q with recipes(\"1\") prints \"recipes: 1 is not a recipe number\", while recipes(1) succeeds. specs/consumers/agent-surface.evaluation-sink.sdp.md:35 specifies <value> without a rendering rule; test/reach-core.test.ts:511 explicitly tests the unquoted string-number diagnostic."
+      },
+      "lane": "L2",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L3-01",
+      "title": "The authored-honesty check misses the camelCase delivery-fact spelling `hasVerifier`, so a hand-authored fact passes or is dropped silently",
+      "target": "code",
+      "severity": "high",
+      "location": "src/validate/validators.ts:1586 (checkAuthoringShape → scanCarrier); parity intent stated at src/extract/reify.ts:109-113",
+      "claim": "checkAuthoringShape scans section carriers only for the names in `deliveryFactNames` (`implemented`, `has-verifier`, `observed`, src/graph/schema.ts:48). Extraction lets reserved names inside a section 'reify through' to this validator: the reify.ts comment says 'In-section content stays the honesty checks' jurisdiction' and 'every delivery-fact spelling is reserved in both carriers (R-6 parity)'. The validator never checks the camelCase `hasVerifier`, which the Markdown carrier (markdown-body-owner-support.ts:7), the YAML policy (markdown-yaml-policy.ts:21) and Gherkin (gherkin.ts:377) all reserve. So in a TypeScript carrier, `design.hasVerifier` lands in the graph with no finding, and `behavior.hasVerifier` is dropped with neither an honesty error nor the usual extract/unrecognized-property warning. This breaks the ready rule of spec:validation.authored-honesty ('Specs and Packs author no derived edge or delivery fact') and L2 ('authored content must never silently fall out of the graph').",
+      "evidence": "Validator alone, via dist/index.js validateGraph on a Primitive with each design shape: {\"implemented\":\"yes\"} → one honesty/authoring-shape error; {\"has-verifier\":\"yes\"} → one error; {\"hasVerifier\":\"yes\"} → [] (no finding). End to end, a .sdp.ts carrier with `design: { hasVerifier: \"yes\", observed: \"no\" }` gives `sdp validate`: only `[error] honesty/authoring-shape … \"observed\" at \"design.observed\"`; generated/graph.json line 23 holds `\"hasVerifier\": \"yes\"` and the location table holds `\"entry\": \"design.hasVerifier\"`. The same carrier with `behavior: { rules: [...], hasVerifier: true }` gives `0 errors · 1 warnings` (the orphan warning only), and graph.json has no hasVerifier key, while `behavior: { …, foo: \"bar\" }` gives `[warning] extract/unrecognized-property — property \"behavior.foo\" … is dropped`.",
+      "failureScenario": "A TypeScript-carrier author writes `design: { hasVerifier: \"yes — covered by e2e\" }`. The design section is an open string record, so tsc accepts it. `sdp validate` reports no honesty error, and every reader of the graph sees an authored verification claim on the Spec. The equivalent Markdown carrier is refused.",
+      "proposedChange": "In checkAuthoringShape, scan every reserved delivery-fact spelling rather than `deliveryFactNames` alone, e.g. `const DELIVERY_FACT_SPELLINGS = [...deliveryFactNames, \"hasVerifier\"] as const;`, and report `relatedId: \"has-verifier\"` for the camelCase hit. Better, export one shared spelling list (from graph/schema.ts) that reify.ts RESERVED_DERIVED_PROPERTIES, markdown-body-owner-support.ts, markdown-yaml-policy.ts, the gherkin.ts tag pattern and this validator all import, so the parity cannot drift again. Add a validators.test.ts case for `design.hasVerifier` and `behavior.hasVerifier`.",
+      "verdict": {
+        "id": "L3-01",
+        "verdict": "confirmed",
+        "severity": "high",
+        "reason": "The reserved camelCase spelling bypasses authoring-shape honesty; high remains warranted for that honesty violation, although it does not forge the derived deliveryFacts badge. Share the reserved spellings across extraction and validation and test both sections.",
+        "evidence": "src/validate/validators.ts:1586 scans only deliveryFactNames, while src/extract/reify.ts:112 reserves hasVerifier. My reify→derive→validate→serialize probes produced no extraction or honesty finding: design.hasVerifier survived serialization and behavior.hasVerifier disappeared; equivalent Markdown produced extract/reserved-property."
+      },
+      "lane": "L3",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L3-02",
+      "title": "Discovery silently skips symlinked carriers and directories; validate exits 0",
+      "target": "design",
+      "severity": "medium",
+      "location": "src/extract/discover.ts:130-143 (walkDirectory: `entry.isDirectory()` / `entry.isFile()` on Dirent); the canonicalDiscovery rule of spec:extraction.excludes",
+      "claim": "`readdirSync(…, { withFileTypes: true })` returns Dirents whose isFile() and isDirectory() are false for symbolic links, so walkDirectory drops a symlinked `.sdp.md` or `.ts` file, or a symlinked directory of carriers, without a finding. The ready rule `spec:extraction.excludes#canonicalDiscovery` lists every skip discovery makes (node_modules, dist, generated, coverage, dot-directories, configured exclusions) and says nothing about symlinks, so the code has an unstated, silent exclusion. The watch path (src/cli/validate-watch.ts:378) refuses to follow symlinks on purpose, so not following may well be the intent. The defect is that the drop is silent and the Spec does not say it, against the 'never silently dropped' discipline the extractor otherwise keeps (unrecognized-property, coverageUnknown).",
+      "evidence": "probe8: root/specs → symlink to a directory holding a valid s.sdp.md. `node dist/cli/sdp.js validate probe8/root` prints `note: no *.sdp.ts, *.sdp.md, or *.sdp.gherkin spec files found … the authored model is empty`, `0 specs`, `validate: 0 errors · 0 warnings`, exit=0. probe1: specs/link.sdp.md → symlink to elsewhere/a.sdp.md (spec:demo.a) beside real/b.sdp.md, which refines spec:demo.a. Validate counts `1 specs`, and the only trace of the lost carrier is the dangling-reference error on b. With nothing pointing at the symlinked Spec, it vanishes with no output at all. `grep -rn symlink specs/extraction` finds nothing.",
+      "failureScenario": "A monorepo shares a spec folder through `specs -> ../shared/specs`, or links one carrier into two packages. Every Spec behind the link drops out of the graph, recipes 1, 8 and 53 answer over the reduced corpus, and CI stays green.",
+      "proposedChange": "Owner decision: follow, refuse or name. Recommended: keep not following (consistent with watch), but make it loud and stated. (a) Append to the canonicalDiscovery rule in specs/extraction/excludes.sdp.md: 'Discovery never follows a symbolic link; each symbolic link it meets, outside an excluded path and the skipped directories, is named in a warning and read as neither a carrier nor a directory.' (b) In walkDirectory, `if (entry.isSymbolicLink()) { state.skippedLinks.push(relativePath); continue; }`, and have extract() emit one `extract/symbolic-link-skipped` warning per path. Add a fixture with a symlinked carrier.",
+      "verdict": {
+        "id": "L3-02",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "Silent omission is real, and canonicalDiscovery leaves symlink handling unstated. Confirmed as a design gap: the owner should state the policy before implementing following, refusal or diagnosed skipping.",
+        "evidence": "src/extract/discover.ts:130-142 silently skips entries that are neither directories nor files; specs/extraction/excludes.sdp.md:16 names no symlink exclusion. Using the actual CLAUDE.md symlink's Dirent predicates in an injected directory listing, my extract probes for linked.sdp.md and specs each returned zero carriers, no extraction findings and no validation findings."
+      },
+      "lane": "L3",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L3-03",
+      "title": "The ASCII trim regex is quadratic on long whitespace runs inside Markdown prose lines",
+      "target": "code",
+      "severity": "low",
+      "location": "src/extract/markdown-body-content.ts:42,52 (ASCII_TRIM in normalizeProse); src/extract/markdown-body.ts:45 (asciiTrim); src/extract/markdown-pack.ts:40,54",
+      "claim": "`/^[\\t ]+|[\\t ]+$/gu` backtracks quadratically: for each start position in an interior run of spaces, `[\\t ]+$` consumes the run and then fails on the next non-space character. normalizeProse applies it to every narrative and description line of every Markdown carrier, so one long interior whitespace run makes extraction quadratic in the line's length.",
+      "evidence": "Regex alone: `\"a\"+\" \".repeat(10000)+\"b\"` takes 158 ms and the 40000-space version 2501 ms (4x length, about 16x time). End to end: a carrier whose narrative line is `word` + 60000 spaces + `word` takes `real 0m5.875s` under `sdp validate`, against `real 0m0.259s` for the same carrier with one space.",
+      "failureScenario": "A generated or pasted carrier line with a long run of interior padding, such as a converted table or ASCII art in prose, stalls `sdp validate --watch`, `sdp q` and the projections for seconds to minutes on every run.",
+      "proposedChange": "Replace the regex trims with a linear helper shared by the three files: `export function asciiTrim(text: string): string { let start = 0; let end = text.length; while (start < end && (text[start] === \" \" || text[start] === \"\\t\")) start += 1; while (end > start && (text[end - 1] === \" \" || text[end - 1] === \"\\t\")) end -= 1; return text.slice(start, end); }`. Use it in normalizeProse, markdown-body.ts asciiTrim and the two markdown-pack.ts call sites.",
+      "verdict": {
+        "id": "L3-03",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The quadratic cost reproduces through valid Markdown carrier reification, not merely the isolated regex. Replace the affected trims with a shared linear ASCII-trimming helper.",
+        "evidence": "src/extract/markdown-body-content.ts:42,52 uses the reported regex. My valid-carrier probes with 10,000, 20,000 and 40,000 interior spaces took 153, 600 and 2,419 ms respectively; each extracted one Spec with no findings."
+      },
+      "lane": "L3",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L3-04",
+      "title": "A dangling reference's 'Did you mean' suggestion can name the referencing Spec itself",
+      "target": "code",
+      "severity": "low",
+      "location": "src/validate/validators.ts:151-179 (suggestNearestId / describeMissingTarget), called at :218",
+      "claim": "suggestNearestId considers every node id, including the edge's own source, so a Spec whose dangling target differs from its own id by up to two edits is told to point at itself.",
+      "evidence": "probe1: real/b.sdp.md (spec:demo.b) declares `refines: spec:demo.a`, and spec:demo.a is not in the graph. `sdp validate` prints: `real/b.sdp.md — [error] conformance/referential-integrity — Reference from \"spec:demo.b\" via \"refines\" points to missing target \"spec:demo.a\". Did you mean \"spec:demo.b\"?`",
+      "failureScenario": "An author or agent following the hint turns a dangling reference into a self-refinement. Validation accepts it, since cycles are data, and the original intent is lost.",
+      "proposedChange": "Give suggestNearestId an exclusion: `function suggestNearestId(missingId: string, index: GraphIndex, exclude?: string)`, skip `candidate === exclude` in the loop, and pass `edge.from` from the missing-target branch of checkEdgeReferentialIntegrity (src/validate/validators.ts:218).",
+      "verdict": {
+        "id": "L3-04",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "The suggestion reproduces, but it implements explicit intended behavior: the unique nearest known ID is suggested without excluding the source. Excluding it would require an intent change, not this code correction.",
+        "evidence": "specs/validation/referential-integrity.sdp.md:16 requires the unique nearest known ID; test/validators.test.ts:122 explicitly tests a source-ID suggestion. My validateGraph probe reproduced the self-suggestion and accepted the self-refinement."
+      },
+      "lane": "L3",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L3-05",
+      "title": "The derive-graph Spec lists the graph payload without its citation table",
+      "target": "spec",
+      "severity": "low",
+      "location": "specs/extraction/derive-graph.sdp.md:28 (rule: 'The graph payload carries …')",
+      "claim": "The ready rule says 'The graph payload carries `schemaVersion`, flat arrays of typed nodes and edges, and the location table.' The serialized graph also carries `citations` (src/extract/serialize.ts serializeGraph; src/graph/schema.ts:200 `citations?`), which spec:extraction.entry-citations defines as 'a table of their own beside the location table'. The Spec is stale and the code is right: entry citations came later and the payload list was never widened.",
+      "evidence": "`grep -n \"citation\" specs/extraction/derive-graph.sdp.md` → no match. `sdp q … 'return {locs: graph.locations.length, cites: graph.citations.length}'` → `\"locs\": 3120, \"cites\": 373`.",
+      "failureScenario": "An adopter writing a second graph producer or a schema consumer from derive-graph alone omits or rejects the `citations` table, and entry-citation rows in specContext silently come back empty.",
+      "proposedChange": "Replace the rule text at specs/extraction/derive-graph.sdp.md:28 with: 'The graph payload carries `schemaVersion`, flat arrays of typed nodes and edges, the location table, and the citation table that spec:extraction.entry-citations defines. Hierarchy and containment are edges, never nested nodes.' and add `dependsOn: spec:extraction.entry-citations` if the owner wants the mention backed.",
+      "verdict": {
+        "id": "L3-05",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "The parent rule does not declare an exhaustive payload list, and its entry-citations refinement explicitly adds the optional citation table. The omission alone establishes no stale claim or intent/code disagreement.",
+        "evidence": "specs/extraction/derive-graph.sdp.md:28 says the payload carries the listed fields without saying only; specs/extraction/entry-citations.sdp.md:7,33,42 supplies the refinement and optional-table contract. My graph query returned citations among the payload keys; src/graph/schema.ts:199-200 explicitly permits its absence."
+      },
+      "lane": "L3",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L4-01",
+      "title": "Build staging files follow existing links and can overwrite unrelated files",
+      "target": "code",
+      "severity": "high",
+      "location": "src/cli/build-command.ts:450-453,493-499",
+      "claim": "Graph, imports, and registrar-manifest temporaries are opened with the default truncating write mode without rejecting or unlinking existing links. Renaming afterward does not prevent damage to the link target.",
+      "evidence": "A read-only runBuild probe with filesystem mutations intercepted returned exitCode 0 and recorded graph.json.tmp operations as write(path, serialized, 'utf8'), then rename(path, graph.json), with no preceding removal or exclusive creation. Lines 452, 453 and 494 use this pattern; registrar sibling temporaries instead receive explicit removal at line 481.",
+      "proposedChange": "Create staging files exclusively with no-follow semantics after safely handling stale owned temporary entries. Validate the physical output-parent boundary before mutations. Add regressions for symlink and hard-link temporaries targeting an unrelated sentinel file.",
+      "failureScenario": "generated/graph.json.tmp is a symlink to ../../README.md. Running build truncates README.md with graph JSON and then publishes the symlink as graph.json, potentially returning success.",
+      "verdict": {
+        "id": "L4-01",
+        "verdict": "confirmed",
+        "severity": "high",
+        "reason": "Reproduced end to end: `sdp build` exited 0, wrote graph JSON through the planted symlink into a file outside the corpus, and published the symlink itself as graph.json. The code writes the graph and imports temporaries with a plain writeFileSync (build-command.ts:452-453) and the registrar manifest at :494, with no unlink or no-follow first. Registrar siblings get rmSync at :481, and the vault Spec explicitly refuses symbolic links under its owned folder, so build is the inconsistent writer. Severity stays high: arbitrary data loss outside the root. The precondition is a planted link, for example a force-committed generated/graph.json.tmp in a cloned repo.",
+        "evidence": "In the scratchpad corpus: `echo SENTINEL > outside/sentinel.txt; ln -s ../../outside/sentinel.txt corpus/generated/graph.json.tmp; node review/dist/cli/sdp.js build corpus` printed 'Wrote .../generated/graph.json' and exit=0. Afterwards `ls -la` showed `graph.json -> ../../outside/sentinel.txt`, and `head outside/sentinel.txt` showed `{\"schemaVersion\": \"0.12.0\", \"nodes\": [...`, so the sentinel was overwritten."
+      },
+      "lane": "L4",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L4-02",
+      "title": "Three projection publishers silently collide on case-insensitive filesystems",
+      "target": "code",
+      "severity": "medium",
+      "location": "src/projections/design-review-markdown.ts:12-15; src/projections/mermaid.ts:75-83; src/projections/gherkin-view.ts:45-53",
+      "claim": "Distinct lawful Spec IDs differing only in letter case produce filesystem-equivalent page paths. The publishers write both without detecting the collision, so one page overwrites another.",
+      "evidence": "An in-memory graph containing spec:probe.Twin and spec:probe.twin passed validateGraph with zero errors. renderDesignReview and renderMermaid returned spec/probe.Twin.md and spec/probe.twin.md; renderGherkinView returned the corresponding .feature.md paths. Each pair had only one distinct case-folded path.",
+      "proposedChange": "Check the complete publication path set for case-insensitive collisions before writing and refuse the affected publication with both IDs named. Alternatively adopt collision-free encoding consistently across page paths and links, as Studio already does.",
+      "failureScenario": "On a default case-insensitive macOS volume, view, mermaid, or gherkin reports successful publication while both IDs' links resolve to the same surviving page.",
+      "verdict": {
+        "id": "L4-02",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "spec:probe.Twin and spec:probe.twin validate with 0 errors. On this macOS volume each of view, mermaid and gherkin reported '3 pages' and exit 0, but only one Spec page file exists. The surviving design-review/spec/probe.Twin.md carries spec:probe.twin's content, so one Spec silently loses its page. Studio avoids the collision with distinct names (specs/probe._twin.html and specs/probe.twin.html), so the fix already exists in one publisher.",
+        "evidence": "`node dist/cli/sdp.js view case` printed 'Wrote .../design-review (3 pages)' with exit=0, yet `find case/generated -type f` showed one spec page. design-review/spec/probe.Twin.md has the heading '# Probe twin' and the line '`spec:probe.twin` · ... authored in specs/probe-2.sdp.md'. mermaid left only mermaid/spec/probe.Twin.md and gherkin only gherkin/spec/probe.Twin.feature.md, each with exit 0. The page-path code (design-review-markdown.ts:12-15, mermaid.ts:75-83, gherkin-view.ts:45-53) keeps the ID's case."
+      },
+      "lane": "L4",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L4-03",
+      "title": "Option values bypass the dedicated CLI test pass",
+      "target": "code",
+      "severity": "medium",
+      "location": "vitest-test.mjs:19-48,130-131",
+      "claim": "Every argument not beginning with '-' is treated as a test-file filter, including values belonging to options. This bypasses both contract selection and the isolation reserved for test/cli.test.ts.",
+      "evidence": "Executed the wrapper in memory with spawnSync intercepted. With no arguments it spawned a pooled run excluding test/cli.test.ts, followed by the dedicated CLI run. With ['--reporter','verbose'] it spawned only ['--run','--reporter','verbose']; with ['--maxWorkers','1'] it likewise spawned one unrestricted pooled run.",
+      "proposedChange": "Parse positional file filters separately from option values using an argument parser that understands the supported Vitest options. Preserve the dedicated CLI pass when options are supplied without file filters, and test these command-line forms.",
+      "failureScenario": "npm test -- --reporter verbose includes the root-mutating CLI suite in the ordinary worker pool, allowing it to regenerate shared contracts and projections while other suites consume them. Missing-contract preflight can also be skipped.",
+      "verdict": {
+        "id": "L4-03",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "vitest-test.mjs:19 treats every argument without a leading '-' as a file filter, so the value of `--reporter verbose` becomes a filter. That takes the branch at :130-131: one pooled run that does not exclude test/cli.test.ts, with zero contract rows checked. I lowered severity to low: this is a contributor test harness, not a shipped surface. The `--reporter=verbose` form works, and runPooledVitest's fingerprint guard (:112-123) fails the run loudly if generated/ changes, so the race is never silent.",
+        "evidence": "I simulated the wrapper's classification logic over its real contract-dependent-suites.mjs. `[]` gave pooled(excl cli) + dedicated cli, 2 of 2 rows checked. `[\"--reporter\",\"verbose\"]` gave a single pooled run with cli.test.ts NOT excluded, 0 of 2 rows checked. `[\"--maxWorkers\",\"1\"]` also gave a single pooled run with cli.test.ts not excluded. `[\"--reporter=verbose\"]` gave the correct two-pass split."
+      },
+      "lane": "L4",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L4-04",
+      "title": "Watch mode rejects a symlinked root accepted by ordinary commands",
+      "target": "code",
+      "severity": "medium",
+      "location": "src/cli/build-args.ts:331-343; src/cli/validate-watch.ts:337-355",
+      "claim": "Root parsing accepts directory symlinks through statSync but retains their lexical path. Watch initialization uses lstatSync on that path and incorrectly reports the root as unwatchable before its first cycle.",
+      "evidence": "The existing .claude/skills symlink points to ../.agents/skills. Calling the built runSdpCli with ['validate','.claude/skills','--watch'], an abort signal, and a non-writing cycle hook returned exit 1, cycles 0, and 'watch root .../.claude/skills was removed or can no longer be watched'. The graph's validate-watch guarantee requires the ordinary validation path once at startup.",
+      "proposedChange": "Resolve the explicitly selected root to its physical directory before watcher initialization and use that identity consistently. Continue rejecting descendant directory symlinks during traversal.",
+      "failureScenario": "An adopter invokes validate, studio, or vault watch mode through a workspace symlink. Argument parsing accepts the directory, but watch mode immediately fails despite the target directory existing.",
+      "verdict": {
+        "id": "L4-04",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "Root parsing accepts a symlinked directory, because statSync follows links (build-args.ts:342-344). Watch setup then calls lstatWatchPath on the same lexical path (validate-watch.ts:337-353), sees a symlink rather than a directory, and fails as an unwatchable root. Without --watch, validate on the same symlinked root works. The error message says the root 'was removed', which is also misleading.",
+        "evidence": "`ln -s case caselink; node dist/cli/sdp.js validate caselink --watch` printed 'sdp validate: watch failed — the watch root .../caselink was removed or can no longer be watched' with exit=1 and no validation cycle output. `studio caselink --watch` failed with the same message, exit=1. `validate case --watch` on the real directory ran its cycle and exited 0 on SIGINT."
+      },
+      "lane": "L4",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L5-01",
+      "title": "Markdown body grammar's verifier bindings omit the star-bullet regression tests",
+      "target": "test",
+      "severity": "medium",
+      "location": "test/markdown-reifier.test.ts:91; test/markdown-reifier.test.ts:1004; src/extract/markdown-body-content.ts:64",
+      "claim": "The ready, implemented spec:carrier.markdown-body-grammar refuses star bullets in narrative and section prose, but its resolving verifier files remain green when that refusal is removed. Existing tests enforce the guarantee without binding to this Spec.",
+      "evidence": "Intended truth: specs/carrier/markdown-body-grammar.sdp.md:34–35. Recipes 3 and 30 returned 325 dependents and verifier files test/self-hosting-markdown-grammar.test.ts and test/self-hosting-validators.test.ts. Exact applied diff at src/extract/markdown-body-content.ts:64:\n-    /^(?:[*+][\\t ]|\\d+[.)][\\t ]|-[\\t]|<)/u.test(text) ||\n+    /^(?:[+][\\t ]|\\d+[.)][\\t ]|-[\\t]|<)/u.test(text) ||\nWith this mutation, npx vitest run test/self-hosting-markdown-grammar.test.ts test/self-hosting-validators.test.ts returned exit 0, 50 passed. Running npx vitest run test/markdown-reifier.test.ts against the same mutation failed three star-bullet cases, with 114 passing. The unmutated regression file passed all 117 tests.",
+      "proposedChange": "Add a specTest anchor beside the body-grammar regression table in test/markdown-reifier.test.ts, with verifies: ref(\"spec:carrier.markdown-body-grammar\"), so graph-derived verifier selection includes the existing assertions.",
+      "failureScenario": "An agent selects tests through this Spec's verifier bindings after changing Markdown parsing. Star bullets become accepted as prose while every selected test passes; the complete regression suite would catch it.",
+      "verdict": {
+        "id": "L5-01",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "Reproduced. The Spec's [#oneLineEntries] and [#blockShapes] rules refuse star bullets, and none of the 15 bound examples uses one: the constructs are a table row, ordered list, plain bullet, and so on. The mutant survives every bound verifier and is caught only by unbound tests in markdown-reifier.test.ts. The proposed specTest anchor (the same mechanism test/census.test.ts uses) works as a fix. Another option is an executable example such as markdown-body-grammar.star-bullet-refused that exercises blockShapes.",
+        "evidence": "Diff applied at src/extract/markdown-body-content.ts:64: `-    /^(?:[*+][\\t ]|\\d+[.)][\\t ]|-[\\t]|<)/u.test(text) ||` / `+    /^(?:[+][\\t ]|\\d+[.)][\\t ]|-[\\t]|<)/u.test(text) ||`. Result: `npx vitest run test/self-hosting-markdown-grammar.test.ts test/self-hosting-validators.test.ts` gave Test Files 2 passed, Tests 50 passed. `npx vitest run test/markdown-reifier.test.ts` gave 3 failed and 114 passed (the failures: refuses star list in narrative, refuses star tab list in narrative, refuses star list in section prose). Recipe 3 lists the verifiers as 14 markdown-body-grammar.*-refused examples plus validation.kind-evidence.second-entry-untargeted. Restored with git checkout."
+      },
+      "lane": "L5",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L5-02",
+      "title": "Anchor-model verifier bindings omit structural refusal evidence",
+      "target": "test",
+      "severity": "medium",
+      "location": "test/structural-anchors.test.ts:459; test/self-hosting-model.test.ts:292; src/extract/anchors.ts:518",
+      "claim": "The ready, implemented spec:model.anchors forbids the same target in satisfies and references. Its resolving verifier examples exercise builder trust only, so disabling the extraction refusal survives all bound tests.",
+      "evidence": "Intended truth: specs/model/anchors.sdp.md:27. Recipes 3 and 30 returned 417 dependents and only test/self-hosting-model.test.ts as the resolving verifier file. Exact applied diff at src/extract/anchors.ts:518:\n-      if (satisfies.has(target)) {\n+      if (false && satisfies.has(target)) {\nWith this mutation, npx vitest run test/self-hosting-model.test.ts returned exit 0, 5 passed. Running npx vitest run test/structural-anchors.test.ts against the same mutation failed 'refuses a repeated references target and the satisfies overlap at reification', with 16 passing. The unmutated structural suite passed all 17 tests.",
+      "proposedChange": "Add a specTest anchor beside the structural-anchor regression suite with verifies: ref(\"spec:model.anchors\"), retaining its existing assertion that an overlapping anchor is absent from the extracted graph.",
+      "failureScenario": "Graph-selected verification of an anchor-extraction change passes even though a contradictory anchor is now minted. The downstream graph validator still diagnoses the overlap, but extraction-time refusal has regressed; the existing unbound structural test detects it.",
+      "verdict": {
+        "id": "L5-02",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "Confirmed, with one correction. The single mutation only moves the refusal from reification to src/validate/validators.ts:688, which still raises the error the Spec guarantees ('a target also named in satisfies is an error', anchors.sdp.md:27). So 'extraction-time refusal has regressed' is not, by itself, a Spec violation. The stronger mutant disables both checks and still passes all 5 tests in the only bound file. That means the guaranteed error can vanish with every bound test green, while structural-anchors.test.ts:355 and :459 would catch it. The proposed specTest anchor (verifies: ref(\"spec:model.anchors\")) on those tests is the right fix.",
+        "evidence": "Single mutant at src/extract/anchors.ts:518 (`-      if (satisfies.has(target)) {` / `+      if (false && satisfies.has(target)) {`): self-hosting-model.test.ts passed 5/5. structural-anchors.test.ts gave 1 failed and 16 passed; the failure was 'refuses a repeated references target and the satisfies overlap at reification' with AssertionError: expected [] to deeply equal [ObjectContaining…]. Double mutant, adding at src/validate/validators.ts:688 (`-      if (satisfiedBySource.get(edge.from)?.has(edge.to) === true) {` / `+      if (false && satisfiedBySource.get(edge.from)?.has(edge.to) === true) {`): `npx vitest run test/self-hosting-model.test.ts test/model.anchors` gave Test Files 1 passed, Tests 5 passed. Recipe 3 lists the verifiers as only spec:model.anchors.lookalike-refusal and spec:model.anchors.physical-identity, and the realizing code includes both src/extract/anchors.ts and src/validate/validators.ts. Both files restored and git status is clean."
+      },
+      "lane": "L5",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L6-1",
+      "title": "AGENTS.md claims check:self-hosting emits pinned conformance/prose-mentions warnings; none exist and the oracle pins their absence",
+      "target": "docs",
+      "severity": "medium",
+      "location": "AGENTS.md:296-299",
+      "claim": "AGENTS.md says the check:self-hosting step emits two kinds of intentional warning, honesty/gaps and conformance/prose-mentions, and that the self-hosting oracle pins both sets. The current graph emits only three honesty/gaps warnings. The oracle pins zero prose-mention warnings.",
+      "evidence": "`sdp q 'return report.findings.map(f=>f.validatorId+\" \"+f.subjectId)'` returns only [\"honesty/gaps spec:extraction.executable-examples\", \"honesty/gaps spec:model.spec-sections\", \"honesty/gaps spec:protocol.role-vocabulary\"]. Recipe 22 totals: {pairs:129, backed:99, unbacked:0, reverseOnly:30}. test/self-hosting-oracle/index.ts:52 reads \"No intended prose-mention pair is left without a declared relation\", and expectedWarnings holds only the three gap() rows. test/self-hosting-graph.test.ts:343 is titled \"reports exactly the retained verifier gaps and no unbacked prose mention\".",
+      "failureScenario": "A session sees a new conformance/prose-mentions warning and reads it as expected under AGENTS.md. In fact it is a regression the oracle fails on. Or a session wastes time looking for pinned pairs that do not exist.",
+      "proposedChange": "Replace AGENTS.md:296-299 with: \"The `check:self-hosting` step emits one kind of intentional warning: `honesty/gaps`, one per owner-ratified ready non-decision Spec without a resolving verifier binding. The self-hosting oracle pins that set and pins that no `conformance/prose-mentions` warning remains (recipe 22's `unbacked` is empty). Any other warning is a regression.\"",
+      "verdict": {
+        "id": "L6-1",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "Docs: AGENTS describes prose-mention warnings as expected, but the oracle requires their absence. Correct the documented baseline to retained honesty gaps and zero unbacked prose mentions.",
+        "evidence": "AGENTS.md:296-299; test/self-hosting-oracle/index.ts:52-70; test/self-hosting-graph.test.ts:343. Re-derived report contains only three honesty/gaps warnings; recipe 22 returns unbacked: 0."
+      },
+      "lane": "L6",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L6-2",
+      "title": "Concept doc 06 calls the Studio, the Capability Map and roadmap views unbuilt or deferred",
+      "target": "docs",
+      "severity": "medium",
+      "location": "docs/concept/06-consumers-and-projections.md:13, :54, :58, :63",
+      "claim": "06 §1 lists the Spec Studio under \"Surfaces designed and not built\". §6 calls the Capability Map \"a designed-for, unbuilt Capability Map projection\". §6 says release, baseline, phase, iteration and milestone are all \"optional roadmap views, deferred\", and maps Project Management to \"the deferred roadmap views\". The Specs say the Studio, the capability map and the roadmap reading are ready and realized, and only release and baseline views remain deferred. 06 is the stale side.",
+      "evidence": "Graph: spec:consumers.spec-studio, spec:consumers.capability-map and spec:consumers.roadmap all state ready with deliveryFacts [implemented, has-verifier]; `sdp studio` is a shipped verb; recipes 52 and 53 ship. The narrative of spec:consumers.projections-model.roadmap-views reads: \"the roadmap reading answers it ... Release and baseline views still wait for a reader of their own.\" Its Model term says phase / iteration / milestone are \"Descriptive words a roadmap's framing may use, never an entry field\". CONTEXT.md:240 already says \"roadmap readings are built, release and baseline views remain deferred\".",
+      "failureScenario": "A reader following AGENTS.md's \"Where to look\" into docs/concept concludes that the Studio, capability map and roadmap are unbuilt. They then propose designing surfaces that already ship, or they skip them.",
+      "proposedChange": "06:13: move the Studio out of the unbuilt bullet. Add a bullet: \"**The Spec Studio** — `spec:consumers.spec-studio`: static derived HTML (MD-41) from custom elements (MD-42), published by `sdp studio`, with per-pull-request previews in `spec:consumers.spec-studio.sharing`.\" Rename the remaining bullet \"Surfaces designed and not built — the reference projection ... and the MCP surface ...\".\n\n06:54: replace \"release, baseline, phase, iteration and milestone are optional roadmap views, deferred until a reader needs them\" with \"the roadmap reading is built (`spec:consumers.roadmap`); release and baseline views wait for a reader (`spec:consumers.projections-model.roadmap-views`), and phase, iteration and milestone stay descriptive words\".\n\n06:58: replace with \"(+ the Capability Map, `spec:consumers.capability-map`)\".\n\n06:63: replace with \"Packs (+ the roadmap, `spec:consumers.roadmap`; release and baseline views deferred)\".",
+      "verdict": {
+        "id": "L6-2",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "Docs: Concept 06 is stale against the carrying Specs and realized surfaces. Describe the Studio, Capability Map and roadmap as built, while retaining the release/baseline deferral.",
+        "evidence": "docs/concept/06-consumers-and-projections.md:13,54,58,63. Fresh graph queries show consumers.spec-studio, consumers.capability-map and consumers.roadmap ready with implemented and has-verifier; specs/consumers/projections-model.roadmap-views.sdp.md:14,32 distinguishes remaining deferrals and descriptive vocabulary."
+      },
+      "lane": "L6",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L6-3",
+      "title": "The reader exposes a public resolveEntryAddress method that the ready spec:consumers.reader method list omits",
+      "target": "spec",
+      "severity": "medium",
+      "location": "specs/consumers/reader.sdp.gherkin:74; src/reader/reader.ts:415,1212",
+      "claim": "spec:consumers.reader states ready and enumerates the reader's methods: graph, specs, packs, findings, findByConcept, byFile, blastRadius, specContext, packContext. It adds that a join is added only at the second-caller bar. The realized reader also exposes resolveEntryAddress on its public Reader interface. A shipped recipe body depends on it, yet no Spec states it. This is drift. The Spec is likely the stale side, because a shipped recipe already consumes the method. Otherwise it is an owner design question: keep the join, or remove it from the public surface.",
+      "evidence": "`sdp q 'return Object.keys(g)'` returns [graph, specs, packs, findings, findByConcept, byFile, blastRadius, resolveEntryAddress, specContext, packContext]. reader.sdp.gherkin:74 reads: \"Rule: The reader exposes `graph`, the raw graph it reads, and the methods `specs`, `packs`, `findings`, `findByConcept`, `byFile`, `blastRadius`, `specContext` and `packContext`\". `grep -rn resolveEntryAddress specs` finds nothing. docs/agent-surface/recipes.md:5160 (recipe 51) calls `g.resolveEntryAddress(row.address)`. No skill documents the method.",
+      "failureScenario": "An agent reading the carrying Spec believes the reader is closed to those eight methods. It hand-rolls address resolution, or it treats recipe 51's call as illegal. Conversely, a refactor that honours the Spec removes the method and breaks a shipped recipe without any Spec catching it.",
+      "proposedChange": "In spec:consumers.reader, extend the rule at reader.sdp.gherkin:74 to: \"... `blastRadius`, `specContext`, `packContext` and `resolveEntryAddress`\". Add a rule stating its contract: it resolves one entry address by the rules address resolution (recipe 25) applies and returns the resolution with its reason. Name recipe 51 as the second machine consumer. Alternatively, raise it as an owner open question on spec:consumers.reader.",
+      "verdict": {
+        "id": "L6-3",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "Spec: The public method and shipped consumer lack a stated reader contract. This confirms drift requiring reconciliation, but code usage alone does not ratify the proposed API addition.",
+        "evidence": "specs/consumers/reader.sdp.gherkin:74 omits resolveEntryAddress; src/reader/reader.ts:415,1212 exposes it; docs/agent-surface/recipes.md:5160 consumes it. Fresh graph concept search and Primitive-content search both return no resolveEntryAddress occurrence."
+      },
+      "lane": "L6",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L6-4",
+      "title": "DECISIONS.md breaks its own rule that the narrowed row names its narrowers (MD-33, MD-25, MD-27)",
+      "target": "docs",
+      "severity": "low",
+      "location": "docs/concept/DECISIONS.md:7, :36, :38, :44",
+      "claim": "The registry preamble says \"A decision that narrows one part of another refines it, and the narrowed row names it.\" MD-32 and MD-42 follow the rule with \"narrowed by\" links. MD-33's row names neither of its two narrowers, MD-46 and MD-47, although both relation reasons say \"narrows\". MD-25's row does not name MD-46, which opens its manifest envelope. MD-27's row names MD-28 but omits MD-29.",
+      "evidence": "Recipe 31 shows refinedBy for spec:decisions.planning-truths-placement = [roadmap-over-plans, roadmap-priority], with reasons \"narrows what a plan file may still carry once a roadmap holds priority\" and \"narrows the refusal of recorded work order for one case\". It shows refinedBy for pack-markdown-carrier = [roadmap-priority], with reason \"opens the closed Pack manifest envelope to one optional field\". It shows refinedBy for gherkin-carrier-option = [carrier-universality, sdp-gherkin-extension]. DECISIONS.md:44 (MD-33), :36 (MD-25) and :38 (MD-27, gloss mentions MD-28 only) carry no matching names.",
+      "failureScenario": "A reader resolving MD-33 by name reads its refusal as whole law. They miss that MD-46 and MD-47 narrow it for roadmap priority and plan files. They then treat a roadmap's order as a forbidden recorded work order.",
+      "proposedChange": "Append to the pointer column:\n- MD-33: \"; narrowed by [Spec](../../specs/decisions/roadmap-priority.sdp.md) (`spec:decisions.roadmap-priority`) and [Spec](../../specs/decisions/roadmap-over-plans.sdp.md) (`spec:decisions.roadmap-over-plans`)\".\n- MD-25: \"; narrowed by [Spec](../../specs/decisions/roadmap-priority.sdp.md) (`spec:decisions.roadmap-priority`)\".\n- MD-27: \"; narrowed by [Spec](../../specs/decisions/sdp-gherkin-extension.sdp.md) (`spec:decisions.sdp-gherkin-extension`) and [Spec](../../specs/decisions/carrier-universality.sdp.md) (`spec:decisions.carrier-universality`)\".\n- Optionally move MD-18's gloss mentions of MD-25 and MD-27 into the same \"narrowed by\" form.",
+      "verdict": {
+        "id": "L6-4",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "Docs: The narrowed registry rows omit narrowers required by their own preamble. Add the missing forward pointers; MD-27 already mentions MD-28 in its gloss, so only MD-29 is missing there.",
+        "evidence": "docs/concept/DECISIONS.md:7,36,38,44. Re-run recipe 31 returns planning-truths-placement refinedBy roadmap-over-plans and roadmap-priority, pack-markdown-carrier refinedBy roadmap-priority, and gherkin-carrier-option refinedBy carrier-universality and sdp-gherkin-extension."
+      },
+      "lane": "L6",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L6-5",
+      "title": "Concept doc 00 lists a nine-verb CLI and calls the intent-composition UI aspirational",
+      "target": "docs",
+      "severity": "low",
+      "location": "docs/concept/00-vision-scope-and-mvp-boundary.md:31, :82",
+      "claim": "00 §4's \"Full CLI\" row says in the present tense: \"The CLI is `sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `import` · `new spec` · `q`\". It omits studio, vault, stamp and generate. §2 says \"the richer intent-composition UI is aspirational\". The Studio's composing panel is ready and implemented.",
+      "evidence": "`node dist/cli/sdp.js --help` lists build, validate, view, census, mermaid, gherkin, studio, stamp, vault, generate, import, new spec and q. AGENTS.md lists the same thirteen. Graph: spec:consumers.spec-studio.intent-panel is ready with [implemented, has-verifier].",
+      "failureScenario": "A reader of the vision doc enumerates the CLI from it and misses four shipped verbs. Or they believe no intent-composition UI exists.",
+      "proposedChange": "00:82: replace the list with \"The CLI is `sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `studio` · `stamp` · `vault` · `generate` · `import` · `new spec` · `q`\". Alternatively, scope the sentence to the MVP: \"The MVP's CLI was …; the current surface is in `sdp --help`\". 00:31: replace \"the richer intent-composition UI is aspirational\" with \"the Studio's composing panel hands intent off as a change proposal, `spec:consumers.spec-studio.intent-panel`\".",
+      "verdict": {
+        "id": "L6-5",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "Docs: Despite its MVP framing, the document presents an incomplete current CLI list and an obsolete intent-panel deferral. Update those statements or explicitly label them historical.",
+        "evidence": "docs/concept/00-vision-scope-and-mvp-boundary.md:31,82. CLI --help includes studio, stamp, vault and generate; fresh graph query shows consumers.spec-studio.intent-panel ready with implemented and has-verifier, and its carrier states the hand-off at specs/consumers/spec-studio.intent-panel.sdp.md:29."
+      },
+      "lane": "L6",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L6-6",
+      "title": "The sdp-agent-surface skill calls specContext and packContext entry adapters, against spec:consumers.agent-surface",
+      "target": "docs",
+      "severity": "low",
+      "location": ".agents/skills/sdp-agent-surface/SKILL.md:202-215, :346-347",
+      "claim": "The section headed \"The entry adapters\" documents g.specContext and g.packContext, and omits findByConcept. spec:consumers.agent-surface#rule.entryAdapters says the entry adapters are findByConcept, byFile and blastRadius. specContext and packContext are joins frozen into the reader. Line 346 says \"Everything past the frozen entry adapters (findByConcept · byFile · blastRadius) is a recipe\", which the same section contradicts by teaching three non-recipe reader joins.",
+      "evidence": "Section heading at SKILL.md:202 is \"## The entry adapters\", and its first sentence describes `g.specContext(id)`. specs/consumers/agent-surface.sdp.md rule [#entryAdapters]: \"The string entry is `findByConcept`, the file entry is `byFile`, and the changeset entry is `blastRadius`\". The reader keys include specContext, packContext and resolveEntryAddress.",
+      "failureScenario": "An agent reads specContext as a demand-map entry and builds lookups by id. The demand map says agents arrive without the id. Or the agent concludes that any non-adapter reader method must be a recipe.",
+      "proposedChange": "Rename the heading to \"## Entry adapters and reader joins\". Open the section with: \"The entry adapters are `g.findByConcept(term)`, `g.byFile(path)` and `g.blastRadius(files)`. `g.specContext(id)`, `g.packContext(id)` and `g.resolveEntryAddress(address)` are joins frozen into the reader at the second-caller bar.\" At :346 write: \"Everything past the entry adapters and the reader's frozen joins is a recipe.\"",
+      "verdict": {
+        "id": "L6-6",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "Docs: The heading incorrectly groups context joins under entry adapters and omits the string adapter. Rename and distinguish them; the alleged absolute recipe prohibition is overstated because the following sentence explicitly permits frozen joins.",
+        "evidence": ".agents/skills/sdp-agent-surface/SKILL.md:202-215,346-348 versus specs/consumers/agent-surface.sdp.md:24-26, which names findByConcept, byFile and blastRadius and separately permits joins at the second-caller bar."
+      },
+      "lane": "L6",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L6-7",
+      "title": "The sdp-agent-surface skill's list of recipes that take params.detail omits recipes 47 and 52",
+      "target": "docs",
+      "severity": "low",
+      "location": ".agents/skills/sdp-agent-surface/SKILL.md:183-185",
+      "claim": "The skill says a recipe taking `params.detail` returns a summary with `leftOut` by default. It lists those recipes as 4, 29, 35 and 54. Capability adoption (47) and the capability map (52) also accept `detail` and return `leftOut`.",
+      "evidence": "The cmp script over recipes.md shows accepts for 47 = [\"detail\",\"perspectives\"] and for 52 = [\"epic\",\"detail\"]. Running recipe 52 with no params returns keys [input, totals, epics, unreached, cycles, damage, leftOut]. Recipe 47 returns [totals, capabilities, packs, specs, leftOut].",
+      "failureScenario": "An agent reads recipe 52's default answer as the complete capability map. It misses descendant ids and unreached roots that only `detail: true` returns.",
+      "proposedChange": "Replace the parenthetical with: \"(changed-file impact, recipe 4; Pack design, recipe 29; the design diff, recipe 35; capability adoption, recipe 47; the capability map, recipe 52; the design slice, recipe 54)\".",
+      "verdict": {
+        "id": "L6-7",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "The parenthetical does omit 47 and 52, but it never claims to enumerate every detail-capable recipe. Their contracts and omission fields are already documented where the skill explicitly directs callers to read them.",
+        "evidence": ".agents/skills/sdp-agent-surface/SKILL.md:105-108,183-185; docs/agent-surface/recipes.md:4629-4632,5187-5192. Re-running recipes 47 and 52 confirms detail support and explicit default leftOut fields."
+      },
+      "lane": "L6",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L6-8",
+      "title": "The sdp-agent-surface skill misdescribes the raw graph's top-level shape and omits graph.citations",
+      "target": "docs",
+      "severity": "low",
+      "location": ".agents/skills/sdp-agent-surface/SKILL.md:165, :246-254",
+      "claim": "The bindings list describes `graph` as \"the raw graph schema (nodes, edges, claims)\". The \"shape of the graph\" section mentions only nodes, edges and `graph.locations`. The schema's top-level keys are schemaVersion, nodes, edges, locations and citations. Claims are fields on nodes and edges, not a top-level collection. The inferred entry-citation table, `graph.citations`, goes unmentioned.",
+      "evidence": "`sdp q 'return Object.keys(graph)'` returns [\"schemaVersion\",\"nodes\",\"edges\",\"locations\",\"citations\"]. CONTEXT.md defines **entry citation** as an inferred, located occurrence (spec:extraction.entry-citations).",
+      "failureScenario": "An agent scripting the raw graph looks for `graph.claims`. It never discovers `graph.citations` and re-derives citations by scanning source, which is a second read model.",
+      "proposedChange": "SKILL.md:165: \"`graph` — the raw graph schema (`schemaVersion`, `nodes`, `edges`, `locations`, `citations`; each node and edge carries its claim)\". In \"The shape of the graph\", add after the location-table sentence: \"`graph.citations` records inferred entry citations found in anchored source files (`spec:extraction.entry-citations`); a citation confers no binding.\"",
+      "verdict": {
+        "id": "L6-8",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "The parenthetical summarizes graph concepts rather than declaring top-level keys, and the skill explicitly places claims on nodes and edges. Raw citations could be added for completeness, but citation discovery and reading are already documented, so the claimed schema contradiction is unsupported.",
+        "evidence": ".agents/skills/sdp-agent-surface/SKILL.md:134-138,165,204-206,286 explicitly documents citations and node/edge claims. Object.keys(graph) returns schemaVersion, nodes, edges, locations and citations, matching src/graph/schema.ts:193-200."
+      },
+      "lane": "L6",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R1",
+      "title": "Carrier ruling's grounds and rejected alternatives live only in plan 16",
+      "target": "record",
+      "severity": "medium",
+      "location": "plans/16-carrier-ruling.md:32-56 (§2 grounds, kind-partitioned dual carrier declined) and :120-139 (§5 directions re-dismissed); spec:decisions.carrier-ruling",
+      "claim": "spec:decisions.carrier-ruling has a one-line rationale and no `alternative:` entries. Plan 16 alone records why Markdown won, why each other direction was rejected, and the obligation the C2 parity note carried forward. C2's permanent owned surfaces (parser, formatter, highlighting, LSP) and the grammar-context tax on agents are recorded nowhere else. The rejected directions are pure-data carriers (YAML, JSON, TOML, CUE), embedded doctest-style Specs, other dialects (AsciiDoc, org-mode, Djot, Typst), notebooks, projection or structured editing as the authored surface, typed markup (TSX), and a permanent kind-partitioned dual carrier.",
+      "evidence": "`grep -c alternative: specs/decisions/carrier-ruling.sdp.md` → 0 (21 other decision files have them). `grep -rn \"AsciiDoc\\|notebook\\|ipynb\\|CUE\\|doctest\\|TSX\" specs` → no hits. Plan 16:124 \"**Pure-data carriers** ... making the entire spec data kills prose; CUE is the exact C1 disease.\" check-self-hosting-gates.mjs:44 reads plan 16 as a frozen historical check.",
+      "failureScenario": "The cleanup arc removes plans/. A later session proposes an AsciiDoc or notebook carrier or a kind-split carrier. Nothing in the graph says it was weighed and why it lost, so the competition gets re-run.",
+      "proposedChange": "Add to spec:decisions.carrier-ruling `## Decision`: `- alternative: An owned grammar (C2): its parser, formatter, highlighting, rendering, editor integration and language server stay permanent owned surfaces, and every unfamiliar agent pays a grammar-context tax; its wins (differentiation, slightly less ceremony, diff and merge) do not price that out.`; `- alternative: A permanent kind-partitioned dual carrier: it doubles authoring docs, import paths and teaching for nothing the Markdown exhibit failed at; the per-ID option stays the escape hatch.`; `- alternative: Whole-Spec data (YAML, JSON, TOML, CUE): making the entire Spec data loses prose.`; `- alternative: Embedded in-source Specs: the embedding is refused; colocated placement stays open.`; `- alternative: Other document dialects (AsciiDoc, org-mode, Djot, Typst) and notebooks (.ipynb, MyST): each loses Markdown's agent emission register and renders-everywhere page, and notebooks are hostile to diffs and agents.`; `- alternative: Structured or projection editing, or typed markup (TSX), as the authored surface: it contradicts git as the event log; as-you-type envelope typing stays a projection-layer competency.`",
+      "verdict": {
+        "id": "R1",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The detailed tooling-cost rationale and several rejected carrier directions lack graph homes. Narrow the finding: the owned-grammar and kind-split conclusions already survive in the decision, and parser parity is separately specified.",
+        "evidence": "plans/16-carrier-ruling.md:40-63 and :124-139 contain the detailed grounds; specs/decisions/carrier-ruling.sdp.md:15-18 contains only the condensed rationale; recipes 6 and 23 returned zero matches for grammar-context, notebook and AsciiDoc; specs/carrier/markdown-parser.sdp.md:22-29 carries finding parity."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R2",
+      "title": "Measured evidence from the earlier system's corpus that motivates enrich-in-place and point-per-example is uncarried",
+      "target": "record",
+      "severity": "medium",
+      "location": "plans/12-executable-examples-design-session.md:453-456 and :477-488",
+      "claim": "Plan 12 records a measured reread of the earlier system's (`@libar-dev/architect`) usage in production. The corpus had 22 planning specs and 132 executable features, 93 of them in a truth-table house style. Maturity there meant migrating across two file trees, and rot appeared exactly at the migration: stale cross-pointers, invariants copied by hand, and always-throwing stubs read as coverage. Bold pseudo-fields appeared ×723. This is the field evidence behind point-per-example (MD-17) and the one-file maturity arc, and no decision Spec cites it.",
+      "evidence": "Plan 12:455 \"the truth-table house style: 93 of 132 executable features in a production gen-1 corpus\". `grep -n \"132\\|truth-table\\|migration\" specs/decisions/point-per-example.sdp.md specs/decisions/one-primitive.sdp.md specs/model/enrichment-lifecycle.sdp.md` → no hits. The point-per-example context reads only \"A single example must remain one witness in its parent's typed example space.\"",
+      "failureScenario": "A reviewer challenges table sugar or enrich-in-place without knowing the measured cost of migrating between two trees. The only measurement disappears with plans/.",
+      "proposedChange": "spec:decisions.point-per-example, append to `context:`: \"In the earlier system's production corpus, 93 of 132 executable features were written as truth tables, so table authoring is a real need that sugar must serve.\" spec:decisions.one-primitive, add `- rationale: In the earlier system's production corpus, maturing meant rewriting prose specs into separate executable features, and the rot sat at that migration: stale cross-pointers, invariants copied by hand, and throwing stubs read as coverage.`",
+      "verdict": {
+        "id": "R2",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The historical field evidence is missing from the carrying decisions, although their conclusions are preserved. Downgraded because this is supporting history; preserve its provenance in decision context or the pull request record without presenting the old figures as newly measured.",
+        "evidence": "plans/12-executable-examples-design-session.md:453-456 and :479-488 record the measurements and migration failures; recipes 6 and 23 returned zero matches for 132 and truth-table; specs/decisions/point-per-example.sdp.md:15-18 and specs/decisions/one-primitive.sdp.md:15-18 omit that evidence."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R3",
+      "title": "The correctness-oracle law in concept 07 has no carrying Spec",
+      "target": "record",
+      "severity": "medium",
+      "location": "docs/concept/07-mvp-roadmap-and-open-questions.md:7-11; plans/06-slice1-extractor.md:104-108",
+      "claim": "The rule that the committed golden fixtures under test/fixtures/checkout-v1/ are the correctness oracle is held only by concept 07 and plan 06. The same documents say the determinism self-checks are self-comparisons, never diffs against a committed generated/, and that the golden lives in test/fixtures/ because generated/ is gitignored. spec:extraction.determinism states sort order and `--check-clean` only. The concept README itself says 07 holds 'the MVP acceptance criterion no Spec carries'.",
+      "evidence": "`grep -rn -i \"golden\\|expected-graph\\|correctness oracle\\|self-comparison\" specs` → no hits. spec:extraction.determinism Behavior has two rules (sort and timestamps; `--check-clean`). test/checkout-v1.test.ts reads expected-graph.json, so the mechanism is tested but the law is not stated.",
+      "failureScenario": "Once concept 07 dissolves, someone commits generated/ output as a determinism baseline, or folds the golden comparison into `--check-clean`. Both conflate two different claims, and no Spec refuses it.",
+      "proposedChange": "Add to spec:extraction.determinism Behavior: `- rule: [#oracleApart] Correctness and determinism are separate claims. The committed golden graph and projection trees under test/fixtures/ are the correctness oracle; every determinism check compares two fresh derivations with each other and never compares output with a committed generated/ tree, which stays ignored.` Bind test/checkout-v1.test.ts as a verifier. Then concept 07 can dissolve under spec:decisions.concept-docs-dissolve.",
+      "verdict": {
+        "id": "R3",
+        "verdict": "refuted",
+        "severity": "medium",
+        "reason": "There is no carrying Spec, but this lane explicitly accepts tests as durable carriers. Existing tests name and implement the correctness-golden versus determinism-self-comparison distinction, so the asserted inventory gap does not hold.",
+        "evidence": "test/checkout-v1.test.ts:17-19 and :68-74 read the committed correctness golden; test/design-review.test.ts:393-402 does the projection comparison; test/extract.test.ts:1852-1857 explicitly calls determinism distinct from the golden oracle; test/cli.test.ts:480-495 compares fresh builds."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R4",
+      "title": "The TypeScript carrier's static-data grammar has no carrier Spec",
+      "target": "record",
+      "severity": "medium",
+      "location": "docs/concept/04-authoring-and-binding.md:37-50",
+      "claim": "Only concept 04 §1 states what a `.sdp.ts` Spec file may contain: static, side-effect-free literals; no loops, conditionals, or computed or interpolated ids; no IO or async; no imports of product code; relation arguments as string-literal ids; and the designed-for `sdp/spec-static` lint. The carrier family has Specs for Markdown (spec:carrier.markdown-authoring, spec:carrier.envelope-contract, spec:carrier.markdown-body-grammar) and Gherkin, but none for the TypeScript carrier. spec:carrier.markdown-parser carries only the two-tier finding parity.",
+      "evidence": "`ls specs/carrier | grep -i 'ts\\|typescript'` → only markdown-pack-authoring.markdown-ts-parity and step-keys.typescript-keyed-step-imports-keyed. `grep -rn -i \"statically\\|static literal\" specs` → no TS grammar rule. Concept 04:42: \"no IO, async, or imports of *product* code (only `@libar-dev/software-delivery-protocol` helpers)\".",
+      "failureScenario": "An adopter using the lawful per-ID TS option imports product code or computes an id. The only statement of what is admitted lives in a concept document slated for dissolution, and the CLI only reports a non-static finding after the fact.",
+      "proposedChange": "Capture `spec:carrier.typescript-authoring` (carrier family, behavior, `defined` against the shipped extractor), mirroring spec:carrier.markdown-authoring, with the rules: a `.sdp.ts` Spec or Pack is static data that TypeScript validates; admitted are the package's builders over literal values only (no loops, conditionals, computed or interpolated ids, IO, async, or imports beyond the package); relation targets are string-literal ids; the envelope-hard and section-degrades tiers point to spec:carrier.markdown-parser. Add a non-blocking open question `staticLint` (decider owner) for the designed-for `sdp/spec-static` lint.",
+      "verdict": {
+        "id": "R4",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The complete TypeScript authoring contract and deferred lint still lack a graph home. Existing Specs and tests carry portions, so the new carrier Spec should distinguish authoring restrictions from the extractor's warning-and-degradation behavior.",
+        "evidence": "docs/concept/04-authoring-and-binding.md:37-50 states the restrictions and lint; recipes 6 and 23 returned zero matches for side-effect-free and statically extractable; specs/carrier/markdown-parser.sdp.md:25-29 carries only selected extraction behavior; test/extract.test.ts:159-195 tests non-static fields; src/extract/reify.ts:2153-2157 documents warning behavior."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R5",
+      "title": "Concept 00's permanent non-goals are mostly uncarried",
+      "target": "record",
+      "severity": "medium",
+      "location": "docs/concept/00-vision-scope-and-mvp-boundary.md:88-96",
+      "claim": "Three of the five permanent non-goals have no carrying Spec. Change approval lives in git and CI (pull request review, CODEOWNERS), with no embedded RBAC or governance engine. The Protocol is the membrane that links issue trackers, design tools, LikeC4 and OpenAPI, never their replacement. Authoring stays in code; the view is a lens and never a no-code editor. The other two are carried: decider authorizes nothing (spec:model.open-question-fields) and inference stays advisory (spec:extraction.claim-taxonomy).",
+      "evidence": "Recipe 6 and recipe 23 on \"RBAC\", \"membrane\", \"issue tracker\", \"LikeC4\", \"non-goal\" → 0 matches each. `grep -rli \"CODEOWNERS\\|no-code\\|membrane\" specs` → none. spec:decisions.adopt-the-nouns covers only the state-machine refusal.",
+      "failureScenario": "A future arc proposes an approval workflow or a replacement issue-tracker view inside the graph. No decision Spec records that the Protocol refused that scope, so the refusal has to be re-derived from a deleted document.",
+      "proposedChange": "Add to spec:decisions.executable-meta-model: `- consequence: Change approval stays in git and CI (pull request review, code owners); the Protocol embeds no access control or governance engine.` `- consequence: The Protocol links adjacent tools (issue trackers, design tools, architecture and API formats) rather than replacing them.` `- consequence: Authoring stays in carriers under git; a view is a lens and never an editor of canonical source.` Under MD-33, refusals belong on a decision Spec.",
+      "verdict": {
+        "id": "R5",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "Confirmed for the explicit no-RBAC boundary and refusal to replace adjacent tools. The view-versus-canonical-source boundary is already carried and should not be duplicated as another missing non-goal.",
+        "evidence": "docs/concept/00-vision-scope-and-mvp-boundary.md:93-96 states the boundaries; recipes 6 and 23 returned zero matches for RBAC, membrane and issue tracker; recipe 3 for spec:consumers.edit-model returns the indirect source-edit rules, and spec:consumers.spec-studio states that it writes nothing to canonical source."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R6",
+      "title": "Deferred trajectory items in concept 00 have no graph home or trigger",
+      "target": "record",
+      "severity": "medium",
+      "location": "docs/concept/00-vision-scope-and-mvp-boundary.md:27-38 and :71-82; docs/concept/01-founding-principles-and-invariants.md:124,133",
+      "claim": "Concept 00 names these as designed-for and deferred, 'never forgotten': standards interop (ingesting dependency graphs, test messages and ADR Markdown; emitting LikeC4 and JSON-LD/PROV-O/SHACL); design and accessibility linkage; multi-tenant, multi-repo and polyglot extraction; incremental builds, caching and sharding; and the file-based graph until traversal scale forces a database. spec:decisions.planning-truths-placement rules that a deferral is a blocking question with a trigger or a ruling on a decision Spec. Recipe 20 lists 6 deferrals and none of these.",
+      "evidence": "Recipe 20 totals: {questions:16, deferrals:6}; the triggers cover feature-adapter, symbol-reach, roadmap-views, reference-projection, structural-mermaid and runtime-overlay only. Recipe 6 on \"federation\", \"polyglot\", \"tenant\", \"incremental\", \"accessibility\", \"LikeC4\" → 0 each. spec:extraction.regenerability says only \"The graph is one JSON document queried in memory.\"",
+      "failureScenario": "Once concept 00 dissolves, these named deferrals vanish from every readable surface. The vision's 'designed-for, never forgotten' promise becomes false, and a reader cannot tell a refused scope from an unconsidered one.",
+      "proposedChange": "Either (a) capture one `idea` Spec per deferral, each with a blocking question and a `trigger`: spec:consumers.standards-interop (trigger: a named consumer of an external format), spec:extraction.multi-repo-federation (trigger: an adopter with Specs in two repositories), spec:extraction.incremental-build (trigger: a measured rebuild time an author reports as pain); or (b) add one decision Spec, spec:decisions.mvp-boundary, whose consequences list each deferral with its re-entry condition. Fold design-tool linkage into the spec-studio lens Specs as a non-tracked source.",
+      "verdict": {
+        "id": "R6",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The remaining federation, tenant, scale and external-format ambitions have no corresponding graph deferrals or re-entry conditions. Existing import and run-evidence capabilities cover parts of the trajectory; new triggers require owner decisions rather than invention during inventory.",
+        "evidence": "docs/concept/00-vision-scope-and-mvp-boundary.md:35-38 and :78-81, plus docs/concept/01-founding-principles-and-invariants.md:124, retain the ambitions; recipes 6 and 23 returned zero matches for federation, polyglot, tenant, incremental, accessibility and database; recipe 20 returned six deferrals, none covering these items."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "D1",
+      "title": "Concept documents contradict ready, implemented Specs",
+      "target": "docs",
+      "severity": "medium",
+      "location": "docs/concept/06-consumers-and-projections.md:13,58; docs/concept/00-vision-scope-and-mvp-boundary.md:80,82; docs/concept/01-founding-principles-and-invariants.md:119,126,133; docs/concept/04-authoring-and-binding.md:87",
+      "claim": "The surviving concept documents describe as unbuilt or aspirational surfaces the graph shows as ready and implemented. 06:13 lists the Spec Studio under 'Surfaces designed and not built'. 06:58 calls the Capability Map 'designed-for, unbuilt'. 00:80 and 01:133 list architecture enforcement as deferred or aspirational. 01:119 lists HTML and Web Components as aspirational. 00:82 says 'The CLI is `sdp build` · `validate` · `view` · `census` · `mermaid` · `gherkin` · `import` · `new spec` · `q`', omitting studio, stamp, vault and generate. 01:126 and 04:87 call 'one runtime truth' the only Principle in this area, while spec:model.planned-architecture makes keeping one composition mechanism a corpus's own architecture rule. Under the drift rule the Specs are intended truth, so the concept text is the stale side.",
+      "evidence": "`sdp q` delivery facts: spec:consumers.spec-studio ready implemented,has-verifier; spec:consumers.capability-map ready implemented,has-verifier; spec:validation.architecture-constraints ready implemented,has-verifier. `node dist/cli/sdp.js --help` lists studio, stamp, vault and generate. specs/model/planned-architecture.sdp.md:21: \"Keeping one composition mechanism per application is a corpus's own architecture rule when the corpus wants it\".",
+      "failureScenario": "A reader evaluating the Protocol from the concept set, which the README offers as the evaluation path, concludes the Studio, capability map and architecture walk do not exist. They miss four CLI verbs, and they treat one runtime truth as Protocol law.",
+      "proposedChange": "06:13 → move the Studio to §1's built list: \"the Spec Studio (`spec:consumers.spec-studio`), derived HTML (MD-41) from custom elements (MD-42)\"; keep the reference projection and MCP as not built. 06:58 → \"(+ the Capability Map, recipe 52, `spec:consumers.capability-map`)\". 00:80 table row → \"Architecture rules are a corpus's own rules over the shipped walk (`spec:validation.architecture-constraints`, recipe 42); the Protocol's validators judge no architecture.\" Drop it from 01:133. 01:119 → status CORE, pointing to MD-41 and MD-42. 00:82 → use the verb list from `sdp --help`. 01:126 and 04:87 → \"Keeping one composition mechanism is a corpus's own architecture rule (`spec:model.planned-architecture`); which mechanism is a Representation.\"",
+      "verdict": {
+        "id": "D1",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The explicit unbuilt statements, incomplete current CLI list and universal one-composition principle are stale. Qualify the proposed repair: CORE/ASPIRATIONAL also describes the historical MVP boundary, so later implementation alone does not justify relabeling every row CORE.",
+        "evidence": "docs/concept/06-consumers-and-projections.md:13 and :58 say unbuilt; fresh graph queries mark spec-studio, capability-map and architecture-constraints ready with implemented and has-verifier; CLI --help lists studio, stamp, vault and generate; specs/model/planned-architecture.sdp.md:21 makes composition policy corpus-owned, contrary to concept 04:87 and concept 01:126."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R7",
+      "title": "Framework-neutral binding is stated only in concept 04",
+      "target": "record",
+      "severity": "low",
+      "location": "docs/concept/04-authoring-and-binding.md:79",
+      "claim": "Concept 04 says, 'One point no Spec states, kept here: anchors are framework-neutral. An anchor binds any class, function, route or module, however the runtime is wired.' spec:model.anchors does not state it.",
+      "evidence": "`grep -n -i \"framework\\|route\\|runtime\" specs/model/anchors.sdp.md` → no hits. Recipe 6 \"framework neutral\" → 0.",
+      "failureScenario": "Once 04 dissolves, a framework-specific anchor form (an Effect layer or Fastify plugin adapter) could be proposed as the binding mechanism with no Spec to refuse it.",
+      "proposedChange": "Add to spec:model.anchors Model or Rule: `- **framework neutrality** — An anchor binds any class, function, route or module by id, however the runtime is wired; binding never reads framework composition, which stays a later adapter's concern.`",
+      "verdict": {
+        "id": "R7",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "Framework-independent binding is stated explicitly in the concept material but not in the anchor Spec. Carry that limited guarantee into spec:model.anchors without promising extraction beyond the supported source forms.",
+        "evidence": "docs/concept/04-authoring-and-binding.md:79 and :85 state independence from framework composition; specs/model/anchors.sdp.md:20-24 defines binding forms without that statement; concept search for framework-neutral returns only spec:extraction.runnable-modules, concerning the runner."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R8",
+      "title": "The mapping from disciplines to kinds has no carrier",
+      "target": "record",
+      "severity": "low",
+      "location": "docs/concept/06-consumers-and-projections.md:56-64",
+      "claim": "Concept 06 §6 keeps 'the one mapping no Spec carries': Requirements → behavior Specs, Analysis & Design → design sections and decision records, Test → example Specs and `verifies`, Deployment → `observed`, Config & Change Management → git, Project Management → Packs and roadmap views, Business Modeling → model Specs. spec:consumers.projections-model defines `discipline` only as a filter.",
+      "evidence": "specs/consumers/projections-model.sdp.md:23 \"**discipline** — A filter that selects or groups Specs by kind or section; it is not a phase to pass through.\" CONTEXT.md:242 has the same gloss without the mapping.",
+      "failureScenario": "Once 06 dissolves, the guidance on where a classic discipline's work lives on the one graph is lost, and the entries already stale here (an unbuilt capability map) keep misleading until then.",
+      "proposedChange": "Add to spec:consumers.projections-model a `## Design` entry `disciplineMap:` with the seven rows, updated to current state: Requirements → behavior Specs and the capability map (recipe 52); Project Management → Packs and the roadmap (recipe 53), with release and baseline views deferred (spec:consumers.projections-model.roadmap-views).",
+      "verdict": {
+        "id": "R8",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The discipline-to-kind mapping remains uncarried guidance, distinct from the existing definition of discipline. Moving the updated mapping into spec:consumers.projections-model preserves it without introducing phase gates.",
+        "evidence": "docs/concept/06-consumers-and-projections.md:56-64 contains the seven mappings; recipe 23 for discipline returns the filter definition in spec:consumers.projections-model and unrelated perspective/testing prose, but no mapping."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R9",
+      "title": "The graph's sort comparator lives only in a plan and a source comment",
+      "target": "record",
+      "severity": "low",
+      "location": "plans/06-slice1-extractor.md:102-103; src/extract/serialize.ts:24",
+      "claim": "Plan 06 rules that sorting is code-unit string comparison, never `localeCompare`, because locale-aware collation depends on the environment and breaks determinism. spec:extraction.determinism says only 'Nodes sort by id and edges by from, type and to', while newer Specs (capability-map, readiness-planner, obsidian-vault) do say 'code-unit order'.",
+      "evidence": "`grep -rn -i \"code-unit\\|localeCompare\" specs` → hits in consumers.capability-map:50, consumers.readiness-planner:36 and consumers.obsidian-vault:57, none in extraction.determinism. The src/extract/serialize.ts:24 comment: \"Sorting is code-unit string comparison, never `localeCompare`\".",
+      "failureScenario": "A refactor swaps in `localeCompare` for readability. Graph bytes then differ across machine locales, and no Spec rule names the comparator.",
+      "proposedChange": "spec:extraction.determinism rule 1 → \"Nodes sort by id and edges by from, type and to, in code-unit string order, never a locale-aware collation, which varies by environment. ...\"",
+      "verdict": {
+        "id": "R9",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The graph-node and edge comparator is explicit only in the historical plan and implementation comment; the determinism Spec leaves it unspecified. Tests specifying code-unit order for locations and citations do not establish the node/edge comparator.",
+        "evidence": "plans/06-slice1-extractor.md:102-103 and src/extract/serialize.ts:24-32 specify code-unit comparison; specs/extraction/determinism.sdp.md:23 omits it; an in-memory comparison of both expected-graph.json fixtures found no node or edge ordering difference between code-unit sorting and localeCompare."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R10",
+      "title": "Plan 39's open question about relation-named Design keys never reached the graph",
+      "target": "record",
+      "severity": "low",
+      "location": "plans/39-adopter-driven-hardening.md:118-119",
+      "claim": "Plan 39's 'For the owner, not on a Spec' list asks: '`refines` and `dependsOn` are accepted as plain Design keys and create no edge. Should the carrier refuse a relation name as a key?' The question is still live, and no Spec carries it as an open question.",
+      "evidence": "Probe at /private/tmp/claude-502/-Users-darkomijic-dev-libar-software-delivery-protocol/66e1af33-7988-43a3-b08b-30c3fbf1fd8c/scratchpad/l7probe: a Spec with `## Design` entries `- refines: spec:probe.b` and `- dependsOn: spec:probe.b`. `sdp validate` reports only `conformance/prose-mentions` errors for the missing target and \"0 edges\", with no refusal of the key. Recipe 20 shows no such question.",
+      "failureScenario": "An author writes `- dependsOn: spec:x` under Design expecting an edge. The floor and design-change impact silently miss the dependency; only an unbacked-mention warning appears if the target exists.",
+      "proposedChange": "Add to spec:carrier.markdown-body-grammar `## Intent`: `- question: Should a Design or UI key spelled as a relation name (refines, dependsOn, constrainedBy, decidedBy, verifies, supersedes) be refused, since it creates no edge?` with `key: relationNamedKey`, `decider: owner`, `provisional: keep accepting it; the mention check names it when the target exists`.",
+      "verdict": {
+        "id": "R10",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "The current carrier law explicitly settles this behavior: lawful relation-named Design keys are ordinary content and create no edge. The frozen plan question is superseded by that authored guarantee, not evidence of a still-open question.",
+        "evidence": "specs/carrier/markdown-body-grammar.sdp.md:44-45 explicitly permits otherwise lawful keys, naming dependsOn; .agents/skills/sdp-authoring/SKILL.md:165-169 repeats the distinction and directs relations to frontmatter."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "R11",
+      "title": "Plan 18 brief's routing rubric for decision content is partly uncarried",
+      "target": "record",
+      "severity": "low",
+      "location": "plans/18-self-hosting-phase-2-brief.md:195-236",
+      "claim": "The placement half of the rubric is carried by spec:decisions.planning-truths-placement and the AGENTS.md three-part test. Four parts are not: the rewrite test ('would the sentence still be true if the repo were re-implemented tomorrow under the same design? If not, it is execution context'); the rule that a decision Spec carries no procedural context (dates, SHAs, session numbers); that rejected paths live in the winning decision's alternatives; and that superseded is a graph query, never an authored status.",
+      "evidence": "`grep -n -i \"rewrite\\|execution context\\|commit SHA\" .agents/skills/sdp-authoring/SKILL.md` → no rubric hits (only an unrelated step-key 'rewording'). The skill's Decision row (line 129) lists the slots but no admission or routing test.",
+      "failureScenario": "Decision Specs accrete dates and landed-at notes once plans/ (the rubric's only home) is gone. This is authoring guidance, never a validator.",
+      "proposedChange": "Add to .agents/skills/sdp-authoring/SKILL.md under the decision guidance: \"A decision Spec states current law only. Apply the rewrite test: a sentence that would not still hold if the repository were rebuilt tomorrow under the same design is execution context and belongs in git or the pull request. Rejected paths are the winning decision's `alternative:` entries; superseded is a `supersedes` relation, never an authored status.\"",
+      "verdict": {
+        "id": "R11",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "Confirmed only for the rewrite test and explicit exclusion of procedural execution context from decision prose. Rejected paths and supersession already have durable guidance in CONTEXT.md, so those portions should not be reported as missing.",
+        "evidence": "plans/18-self-hosting-phase-2-brief.md:197-220 carries the missing rubric; the authoring skill's Decision row at :129 supplies syntax without that test; CONTEXT.md's term ledger routes rejected paths to alternatives/consequences and rejects decision.status, while its supersedes definition carries replacement semantics."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "C1",
+      "title": "The temporal guard exempts DECISIONS.md as a dated diary it no longer is, and the guard's law has no Spec",
+      "target": "code",
+      "severity": "low",
+      "location": "check-temporal.mjs:6-20; plans/05-de-temporalization-and-decisions-registry.md:63-78",
+      "claim": "check-temporal.mjs exempts `docs/concept/DECISIONS.md` as 'the dated decision diary', but the registry is now lean and holds no token the guard bans. The exemption would let a dated row slip in unchecked. The guard's law ('name by capability, not calendar; state the invariant, not the event') is carried only by the script comment, its test and plan 05. Plan 05's Rule 3 ('status lives in exactly one place: plans/') is superseded by spec:decisions.roadmap-over-plans.",
+      "evidence": "`grep -nE \"Session[ -][0-9]|Wave[- ][A-Z]|Fold-[A-Z]|deferredInSession|plans/[0-9]+|20[0-9]{2}-[0-9]{2}-[0-9]{2}\" docs/concept/DECISIONS.md` → no output. check-temporal.mjs:19 `const excludedFiles = [\"docs/concept/DECISIONS.md\", \"package-lock.json\"];`. test/check-temporal.test.ts:140 pins the exclusion.",
+      "failureScenario": "A session adds a dated 'ratified 2026-…' note to a registry row and `check:temporal` passes it, contrary to the guard's own rule that durable artifacts carry current truth.",
+      "proposedChange": "Remove `docs/concept/DECISIONS.md` from `excludedFiles` and the 'dated decision diary' clause from the header comment, and update test/check-temporal.test.ts:140 to expect DECISIONS.md to be swept. In the cleanup arc, record the guard's law as a rule on spec:protocol.self-hosting (or on spec:protocol.delivery-record-cleanup's design) before plans/ goes.",
+      "verdict": {
+        "id": "C1",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The exemption's dated-diary justification is stale, and the active registry can bypass the guard. The separate assertion that the guard's law is uncarried is too broad because its script and tests preserve it; the actionable defect is the obsolete exclusion.",
+        "evidence": "check-temporal.mjs:10-20 calls DECISIONS.md a dated diary and excludes it; docs/concept/DECISIONS.md:3 describes a lean registry with history elsewhere; the guard-pattern search returned no matches there; test/check-temporal.test.ts:138-146 explicitly preserves the exclusion."
+      },
+      "lane": "L7",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L8-01",
+      "title": "The reason for keeping the reading skill self-contained remains only in a declined review finding",
+      "target": "record",
+      "severity": "low",
+      "location": "reviews/12-self-hosting-phase-5-post-close-review.md:62",
+      "claim": "R-17 preserves a durable explanation for intentional overlap between the reading skill and recipe catalog: an agent loads the skill without surrounding context, so replacing its executable-contract summary with pointers weakens the on-ramp. The current reading-on-ramp Spec carries orientation and citation rules, but not this reason for retaining the overlap.",
+      "evidence": "The disposition says: 'the file is loaded cold into agent context, where a pointer-only contract is strictly weaker.' Recipes 6 and 23 returned no matches for 'loaded cold', 'pointer only' or 'self-standing'. Recipe 3 and g.specContext for spec:consumers.reading-on-ramp showed six behavior rules and no narrative explaining this trade-off. Targeted searches of the current skills, recipe guidance and skill/recipe tests found no equivalent rationale.",
+      "proposedChange": "Preserve the rationale as narrative in specs/consumers/reading-on-ramp.sdp.md before Intent: 'An agent may load this skill without the recipe catalog in context. The skill therefore keeps the execution summary needed to use the front door, while pointing to carrying Specs for law. This intentional overlap keeps the on-ramp usable on its own; it is not another source of authority.' Keep the historical disposition in git.",
+      "failureScenario": "A future simplification pass treats the overlap as accidental duplication and removes the self-contained instructions, repeating a change the earlier review explicitly declined.",
+      "verdict": {
+        "id": "L8-01",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The overlap the declined R-17 accepted still exists, and no Spec, skill, recipe doc or test carries the reason for it (the skill is loaded cold, so a pointer-only contract is weaker). spec:consumers.reading-on-ramp only allows 'summaries for orientation' and gives no reason. The Studio and vault on-ramp Specs require their skills to 'restate neither', so without the rationale the reading skill's choice looks like an inconsistency.",
+        "evidence": "reviews/12-self-hosting-phase-5-post-close-review.md:62: 'the file is loaded cold into agent context, where a pointer-only contract is strictly weaker'. .agents/skills/sdp-agent-surface/SKILL.md:155 '## The contract' plus a summary of the five bindings. docs/agent-surface/recipes.md:148 '**The contract, in one place.**'. Recipe 6 for 'cold' returned total 0. Grep over specs/, docs/concept, docs/agent-surface, .agents/skills and test/ for 'cold', 'pointer-only', 'self-standing', 'self-contain' and 'into agent context' found no rationale (the only 'self-contained' hits are Studio export Specs). specs/consumers/studio-on-ramp.sdp.md:38 and vault-on-ramp.sdp.md:37 both say '...and restates neither.' The proposed narrative before Intent in specs/consumers/reading-on-ramp.sdp.md is a suitable home."
+      },
+      "lane": "L8",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L8-02",
+      "title": "The rejected engine-execution alternative loses its trust-boundary rationale outside the review",
+      "target": "record",
+      "severity": "low",
+      "location": "reviews/14-executable-verification-design-review.md:203-209",
+      "claim": "The current runnable-modules Spec preserves the outcome that generation does not load or execute adopter code, but the review alone explains the rejected alternative's cost: moving module loading, isolation, world setup and framework integration into the engine. That explanation remains useful when reconsidering executable-example ergonomics.",
+      "evidence": "Line 207 says: 'The engine crosses a new trust boundary by loading and executing adopter code' and identifies the additional responsibilities. Line 209 records the machinery/security trade-off. Recipes 6 and 23 returned no matches for 'trust boundary', 'module loading' or 'security'. Searching 'adopter code' found spec:extraction.runnable-modules, whose current text states the prohibition without that rationale. Recipe 3 for spec:decisions.gherkin-carrier-option retains the Markdown and generated-wrapper alternatives, but not O5's explanation.",
+      "proposedChange": "Preserve this explanation as narrative in specs/extraction/runnable-modules.sdp.md before Intent: 'Generating registrars removes repeated test structure without making the extraction and generation engine load adopter modules. Moving example execution into that engine would also move module loading, isolation, world setup and test-framework integration into its responsibilities. The authored test therefore activates the generated registrar under the adopter’s runner.' Preserve the original option analysis in git; do not introduce a new validator or imply that this historical review ratified a new decision.",
+      "failureScenario": "A later attempt to reduce authored test files sees only an unexplained prohibition and reopens engine-owned execution without the previously identified architectural costs.",
+      "verdict": {
+        "id": "L8-02",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "spec:extraction.runnable-modules carries only the outcome: its value line and last rule say the engine 'neither loads nor executes adopter code'. No Spec or decision records the rejected engine-execution alternative or its costs (trust boundary, module loading, isolation, world anchors, framework integration). The review's ADR table records that O5 passed the three-part test and was rejected on evidence, so this is durable rationale held only by frozen history.",
+        "evidence": "reviews/14-executable-verification-design-review.md:207 'The engine crosses a new trust boundary by loading and executing adopter code', :209 'disproportionate machinery and security cost', :223 matrix row 'new trust/isolation/liveness boundaries', :236 'passes, but evidence rejects it now'. Recipe 6 for 'trust boundary' returned total 0. Recipe 6 for 'adopter code' returned only spec:extraction.runnable-modules, whose text states the prohibition without the reason. The decisions the Spec is decidedBy (adopted-registrars-committed, binding-not-liveness, point-per-example, anchor-comment-form) and gherkin-carrier-option contain no engine-execution alternative: grepping decision alternatives for engine/execut/runner/harness found none on this subject. The proposed narrative in runnable-modules is a suitable home. A decision Spec alternative would also work but is not required."
+      },
+      "lane": "L8",
+      "readerFamily": "gpt"
+    },
+    {
+      "id": "L9-F1",
+      "title": "Worked-example README reports a stale build summary and Pack count",
+      "target": "docs",
+      "severity": "medium",
+      "location": "examples/checkout-v1/README.md:3 and :62 (tree b5e0a8be)",
+      "claim": "The walkthrough says the example has one Pack and that `build` prints `11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges`. Since the roadmap Pack was added, the example has two Packs and 18 nodes and 34 edges. The same README links that roadmap Pack at line 144, so the file contradicts itself, and article 03 at 230b0d28 prints the correct line.",
+      "evidence": "`node dist/cli/sdp.js build <copy of examples/checkout-v1>` prints `11 specs · 2 packs · 5 anchors → 18 nodes · 34 edges (0 errors, 0 warnings)`. README:3 reads \"eleven `Spec`s, one `Pack`, five anchors\". README:62 reads `11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)`. `git log -1 -- examples/checkout-v1/specs/roadmap.pack.sdp.md` shows it arrived with 46a6440b. No test pins this README line: grep for '17 nodes' outside plans/ only hits this README.",
+      "failureScenario": "A newcomer runs step one of the walkthrough, sees different numbers from the ones documented, and cannot tell whether the install or the example is broken.",
+      "proposedChange": "README:3 → \"modeled as `pack:checkout-v1` — eleven `Spec`s, two `Pack`s (the checkout Pack and a worked roadmap, `pack:checkout-roadmap`), five anchors.\" README:62 → `11 specs · 2 packs · 5 anchors → 18 nodes · 34 edges (0 errors, 0 warnings)`. Optionally pin the line with a test, or generate it the way docs/articles/sync-evidence.mjs `exampleBuild()` does, so it cannot go stale silently.",
+      "verdict": {
+        "id": "L9-F1",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The documented counts are stale; replace them with two Packs, 18 nodes and 34 edges. Downgraded because this is a minor walkthrough inconsistency and does not prevent execution.",
+        "evidence": "examples/checkout-v1/README.md:3-4,62 says one Pack and 17 nodes/32 edges; fresh q --root examples/checkout-v1 measured 11 Specs, two Packs, three CodeNodes, two Anchors, 18 nodes, 34 edges and no findings."
+      },
+      "lane": "L9",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L9-F2",
+      "title": "Root export advertises CommonJS `require` but ships only ESM type declarations",
+      "target": "code",
+      "severity": "medium",
+      "location": "package.json:31-35 (exports \".\"); tsup.config.ts:44-46 (cjs build with dts: false)",
+      "claim": "`exports[\".\"]` pairs `\"require\": \"./dist/index.cjs\"` with one top-level `\"types\": \"./dist/index.d.ts\"`. In a `\"type\": \"module\"` package that .d.ts is read as ESM, so a TypeScript CommonJS consumer cannot type-import the package, even though the runtime `require` works.",
+      "evidence": "`node -e \"require('./dist/index.cjs')\"` loads 90 exports. A scratch CJS consumer (`{\"type\":\"commonjs\"}`, tsconfig module/moduleResolution node16) with `import { ref } from \"@libar-dev/software-delivery-protocol\"` fails `tsc` with: `a.ts(1,21): error TS1479: The current file is a CommonJS module whose imports will produce 'require' calls; however, the referenced file is an ECMAScript module...`. `ls dist/index.d.cts` → No such file.",
+      "failureScenario": "An adopter with a CommonJS TypeScript test or tooling package (module node16 or nodenext) imports `specTest` or `ref` and gets TS1479, although the package's own exports say `require` is supported.",
+      "proposedChange": "Emit CJS declarations (set `dts: true` on the cjs tsup entry so dist/index.d.cts is produced) and nest the conditions: `\".\": { \"import\": { \"types\": \"./dist/index.d.ts\", \"default\": \"./dist/index.js\" }, \"require\": { \"types\": \"./dist/index.d.cts\", \"default\": \"./dist/index.cjs\" } }`. Alternatively, drop the `require` condition if CommonJS is not a supported surface.",
+      "verdict": {
+        "id": "L9-F2",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The declaration export breaks CommonJS TypeScript imports under Node16 resolution; provide condition-specific CJS declarations. Narrow the claim: the same import passes under NodeNext with installed TypeScript 5.9.3.",
+        "evidence": "package.json:31-34 exports index.d.ts with index.cjs; tsup.config.ts:46 disables CJS declarations. An in-memory .cts consumer produced TS1479 under module/moduleResolution Node16; runtime require loaded 90 exports, and dist/index.d.cts is absent."
+      },
+      "lane": "L9",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L9-F3",
+      "title": "JS-F1 requires a token-budgeted scope preview in the view, and no Spec carries it",
+      "target": "design",
+      "severity": "medium",
+      "location": "jtbd-stories/06-edit-through-the-lens.md:13, acceptance criteria 1 and 7",
+      "claim": "JS-F1 says the view hands the agent \"a clean, token-budgeted prompt\". It also says \"the scope preview shows what the agent will be given (the in-context specs/relations and the token budget)\". The composing-panel Specs, all stated ready and some implemented, say nothing about a budget. The only budgeted reading in the graph is the context bundle (recipe 36), which is an agent-side recipe, not the view. Either the job is stale or it is unserved.",
+      "evidence": "`g.findByConcept(\"budget\")` returns Primitive matches only in context-bundle, delivery-session-on-ramp, spec-studio.diagram-kinds and diagrams, and upgrade-kit, never intent-composition or spec-studio.intent-panel. Neither appears for \"token\". The intent-composition family and spec:consumers.spec-studio.intent-panel are all `ready` (the panel is `implemented,has-verifier`). Its intent outcome is \"Give every surface that composes scoped intent one hand-off shape\", with no budget.",
+      "failureScenario": "A reader takes jtbd-stories as the functional spec, expects the Studio composing panel to show a token budget before hand-off, and finds none. Or a future agent implements a budget the ratified Specs never asked for.",
+      "proposedChange": "The owner decides which way to go. Either amend JS-F1 AC1 to \"The view's only output is scoped intent: the user picks a scope … and states the change; the view composes the hand-off (intent composition) and writes nothing to the repo\" and AC7 to \"The hand-off names its scope so the human can tighten it; the agent reads that scope with a budgeted context bundle (recipe 36)\". Or add an open question with a decider to spec:consumers.spec-studio.intent-panel asking whether the panel should show a budget.",
+      "verdict": {
+        "id": "L9-F3",
+        "verdict": "confirmed",
+        "severity": "medium",
+        "reason": "The job promises a view-side token-budget preview that the current composing contracts do not carry. This is design/docs drift requiring owner resolution, not authority to add an implementation requirement silently.",
+        "evidence": "jtbd-stories/06-edit-through-the-lens.md:13,18,24 explicitly promises token-budgeted intent and a budget preview. Fresh graph inspection found no budget/token requirement in the composition family, edit-model or intent-panel; specs/consumers/spec-studio.intent-panel.sdp.md:28 instead delegates scope reading to the receiving agent, while context-bundle defines recipe-side budgeting."
+      },
+      "lane": "L9",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L9-F4",
+      "title": "The JS-A1 job sentence contradicts its own acceptance criteria and the CLI",
+      "target": "docs",
+      "severity": "low",
+      "location": "jtbd-stories/01-capture-and-evolve-intent.md:13 (vs :18 AC1)",
+      "claim": "The job says capture needs \"only an `id`, a `title`, and a sentence of intent\". AC1 in the same story, the carrier, and `sdp new spec` all also require `kind` and `altitude`.",
+      "evidence": "`node dist/cli/sdp.js new spec specs/orders/x.sdp.md --id spec:orders.x --title X --outcome \"Do X\"` → `sdp new spec: --kind is required.` (exit 1). AC1 reads: \"with only `id`, `title`, `kind`, `altitude`, and either `intent.outcome` or a parent relation\".",
+      "failureScenario": "A newcomer tries the \"zero ceremony\" capture the job promises and hits a required-flag error.",
+      "proposedChange": "Line 13 → \"**I want to** record it as a spec in seconds with only an `id`, a `title`, its `kind` and `altitude`, and a sentence of intent (or a parent relation), **so I can** …\"",
+      "verdict": {
+        "id": "L9-F4",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The job sentence omits required descriptors that its own acceptance criterion includes. Add kind and altitude, and acknowledge the outcome-or-parent alternative.",
+        "evidence": "jtbd-stories/01-capture-and-evolve-intent.md:13 conflicts with :18. Running new spec with id, title and outcome but without kind exited 1 with 'sdp new spec: --kind is required.'"
+      },
+      "lane": "L9",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L9-F5",
+      "title": "README opens on insider jargon and uses an undefined \"Studio phase 1\"",
+      "target": "docs",
+      "severity": "low",
+      "location": "README.md:7-9 and :148 (tree b5e0a8be)",
+      "claim": "Line 7, the first thing after the one-sentence definition, is a \"Carrier rule\" (\"lawful per-ID option\", three decision names) given before the reader learns what a carrier, Spec or Pack is. Line 148 says \"The Studio's phase 1 adds …\", relative to a phase 0 the README never defines. The term appears nowhere in the graph or the skills, and the list names two of the five lenses.",
+      "evidence": "Recipe 6 with `{\"term\":\"phase 1\"}` returns `total: 0`. `grep -n \"phase 1\" README.md CONTEXT.md .agents/skills/sdp-studio/SKILL.md` matches only README.md:148. The Studio page set has five lens pages: index (Packs), capabilities, architecture, tests and evidence. The articles playbook (230b0d28 README:245) itself warns against saying \"phase 0\" from memory.",
+      "failureScenario": "An outsider cannot tell which Studio is being described, and the first screen of the README reads as a ruling rather than an introduction.",
+      "proposedChange": "README:148 → \"The Studio is a static page set: five lenses (Packs, capabilities, architecture, tests and evidence), static SVG diagrams, every Spec-page panel, registers, the owner queue, the roadmap and a glossary.\" Move the \"Carrier rule\" paragraph below the quick start under a \"Carriers\" heading. In its place, add one plain sentence such as \"You write Specs as Markdown files (`*.sdp.md`); `sdp` derives a graph from them and from anchors in your code, then checks it.\"",
+      "verdict": {
+        "id": "L9-F5",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The unexplained Studio milestone and front-loaded carrier terminology are valid newcomer clarity issues. Replace 'phase 1' with current capabilities; mentioning two added lenses does not itself claim an exhaustive lens list.",
+        "evidence": "README.md:7-9 introduces carrier rulings before explanatory material; :148 uses 'The Studio’s phase 1'. Recipe 6 returned zero matches for 'phase 1'; the graph's spec:consumers.spec-studio.lenses title names Packs, capabilities, architecture, tests and evidence."
+      },
+      "lane": "L9",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L9-F6",
+      "title": "Article evidence generator labels any warning as intentional, and some counts sit outside checked blocks",
+      "target": "docs",
+      "severity": "low",
+      "location": "docs/articles/sync-evidence.mjs:141-158; docs/articles/01-the-spec-is-the-prompt-is-the-design.md:140; docs/articles/03-walkthrough-intent-to-verified-code.md:26; docs/articles/README.md:243,247 (all at 230b0d28)",
+      "claim": "`baselineMetrics()` parses only the warning total from `sdp validate` and renders it as \"N intentional `honesty/gaps` warnings\" without checking which validators produced them. A new warning class would be published as intentional, and `--check` would pass as long as the total matched. Several counts the articles state are also hand-written outside the marked blocks, so `--check` cannot catch them going stale: article 01:140 (\"3 intentional honesty/gaps warnings\"), article 03:26 (\"11 Specs, two Packs and five anchors\") and the playbook's \"55 and five\" and \"18 nodes and 34 edges\".",
+      "evidence": "sync-evidence.mjs:142 `const validationMatch = validation.match(/validate: (\\d+) errors · (\\d+) warnings/);` and :158 `| Validation | ${validationMatch[1]} errors and ${validationMatch[2]} intentional \\`honesty/gaps\\` warnings |`. These values are correct today: `report.findings.map(f=>f.validatorId)` returns three `honesty/gaps` (executable-examples, spec-sections, role-vocabulary). Article 01 line 140 follows the closing `<!-- /evidence:self-hosting-census -->` at line 138.",
+      "failureScenario": "A later pin adds a conformance warning. The refresh regenerates \"4 intentional honesty/gaps warnings\", which is a false honesty statement, and the hand-written prose counts drift unnoticed.",
+      "proposedChange": "In baselineMetrics, read `report.findings` through `query()`, group by `validatorId`, render each group, and throw if any warning's validatorId is not `honesty/gaps`. Move the article 01:140 sentence, the article 03:26 counts and the playbook's recipe, skill and example counts into marked evidence blocks with generators.",
+      "verdict": {
+        "id": "L9-F6",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The generator classifies warnings using only their total; inspect validator IDs before labeling them intentional honesty/gaps. The handwritten counts are a refresh risk, not currently false measurements, and the playbook explicitly requests manual recounting.",
+        "evidence": "At 230b0d28850ee7d927098595a2b7bfe5e6b79ee2, docs/articles/sync-evidence.mjs:142,158 parses totals and hardcodes the label. Executing the isolated baselineMetrics function with synthetic conformance/prose-mentions output rendered '0 errors and 1 intentional `honesty/gaps` warnings'; article 01:140 lies outside the evidence block ending at :138."
+      },
+      "lane": "L9",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L9-F7",
+      "title": "The documented Node floor (\"20 or later\") is below what the dev toolchain declares",
+      "target": "docs",
+      "severity": "low",
+      "location": "package.json:57-59 (engines); docs/articles/01-the-spec-is-the-prompt-is-the-design.md:158 at 230b0d28; .github/workflows/ci.yml:18",
+      "claim": "The article's try-it and the engines field say Node 20 or later. The walkthrough's test step (`npx vitest`, README example and article 03) runs Vite 8 and rolldown, which declare `^20.19.0 || >=22.12.0`. CI pins `node-version: 20`, which resolves to the newest 20.x, so the floor is never tested.",
+      "evidence": "node_modules/vite/package.json engines `{\"node\":\"^20.19.0 || >=22.12.0\"}` (vite 8.1.5); node_modules/rolldown/package.json engines the same (1.1.5); package.json engines `{\"node\":\">=20\"}`. I did not run on Node < 20.19: the evidence is the declared engines.",
+      "failureScenario": "A newcomer on Node 20.10 builds the CLI fine, then reaches the bound-test step of the walkthrough and gets an engine or runtime failure from Vite.",
+      "proposedChange": "State the contributor floor where the tests run: \"Node 20.19 or later (22.12 or later on Node 22)\" in the article 01 try-it, the examples README and the root README source-checkout section. Keep engines `>=20` if the installed CLI really supports it, or raise it to `^20.19.0 || >=22.12.0`.",
+      "verdict": {
+        "id": "L9-F7",
+        "verdict": "confirmed",
+        "severity": "low",
+        "reason": "The source-development instructions understate the installed test toolchain's declared Node requirements. Document the contributor floor separately; this evidence does not establish that the installed CLI's runtime engines field must change.",
+        "evidence": "At 230b0d28, docs/articles/01-the-spec-is-the-prompt-is-the-design.md:158 says 'Node 20 or later'; package.json:58 says >=20. Installed Vite 8.1.5 and rolldown 1.1.5 declare ^20.19.0 || >=22.12.0 at node_modules/vite/package.json:179 and node_modules/rolldown/package.json:112; CI specifies only Node 20 at .github/workflows/ci.yml:18."
+      },
+      "lane": "L9",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L9-F8",
+      "title": "README's recipe 25 sample address cannot resolve on the worked example",
+      "target": "docs",
+      "severity": "low",
+      "location": "README.md:181 (tree b5e0a8be)",
+      "claim": "The upgrade note's sample, `spec:orders.create-order#rule.validCart`, uses the worked example's namespace. checkout-v1 has no keyed entries at all, so a newcomer who runs it on the example gets an error, and no address in the example can demonstrate the recipe.",
+      "evidence": "Running recipe 25 with `--root <checkout-v1 copy> --params '{\"addresses\":[\"spec:orders.create-order#rule.validCart\"]}'` returns `resolves: false`, with the finding \"spec:orders.create-order has no rule entries\". `g.specContext(\"spec:orders.order-total-rule\").entryLocations` lists only `rule[0]` and `rule[1]`, and `#rule[0]` is reported `malformed`.",
+      "failureScenario": "An adopter checks the recipe against the shipped example before using it on their own corpus and concludes address resolution is broken.",
+      "proposedChange": "Key one rule in the example, for instance `- rule: [#lineTotalSum] …` in examples/checkout-v1/specs/orders/order-total-rule.sdp.md, and change README:181 to `{\"addresses\":[\"spec:orders.order-total-rule#rule.lineTotalSum\"]}` run with `--root examples/checkout-v1`. Or state plainly that the address is a placeholder that will not resolve on checkout-v1.",
+      "verdict": {
+        "id": "L9-F8",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "The command is an adopter upgrade example, not a checkout-v1 walkthrough command, and the immediately following text instructs callers to use their own corpus's addresses. Its placeholder failing against checkout-v1 therefore does not demonstrate the claimed defect.",
+        "evidence": "README.md:170-185 places the example under 'Upgrade recipe callers' and says 'Use your corpus’s addresses'. Recipe 25 against checkout-v1 did reproduce resolves:false with reason:section, consistent with a placeholder rather than broken resolution."
+      },
+      "lane": "L9",
+      "readerFamily": "claude"
+    },
+    {
+      "id": "L9-F9",
+      "title": "Jobs are outside the graph, so which job no Spec serves cannot be queried",
+      "target": "design",
+      "severity": "low",
+      "location": "jtbd-stories/README.md (story index); corpus-wide",
+      "claim": "AGENTS.md calls jtbd-stories \"the jobs (functional spec)\", but no Spec, Pack or anchor names any of the 25 job IDs. Job-to-Spec coverage can only be checked by a person, through prose search, which is how F3 was found. This is offered as an open design question, not a request for a validator.",
+      "evidence": "`g.findByConcept(id)` returns 0 matches for every one of JS-A1 … JS-H1. `grep -rn \"JS-[A-H][0-9]\" specs | wc -l` → 0. The stories point to Specs one way only, through their References lines.",
+      "failureScenario": "A job's acceptance criterion drifts away from the Specs that serve it (as JS-F1's budget did), and no recipe, census or Studio page can show it.",
+      "proposedChange": "Open question for the owner, with `decider: owner`: should a capture-kind Spec or Pack carry the job set, for example one `epic` Spec per theme that the serving Specs `refines`, or Pack framing that names the jobs, so that recipe 6 or 29 can answer job coverage? The alternative is to record that jobs stay deliberately outside the graph as stable prose.",
+      "verdict": {
+        "id": "L9-F9",
+        "verdict": "refuted",
+        "severity": "low",
+        "reason": "Missing job-ID mappings do not establish an unserved job or a violated coverage guarantee. Graph-backed job traceability remains a possible owner design choice, but the cited index promises prose inputs and references, not that capability.",
+        "evidence": "I derived 25 job IDs from the story headings and independently queried every ID: all returned zero concept matches. jtbd-stories/README.md:3 describes stories as direct inputs, while individual References lines already identify serving intent—for example JS-A1 at 01-capture-and-evolve-intent.md:11 points to spec:model.core-model, which resolves in the graph."
+      },
+      "lane": "L9",
+      "readerFamily": "claude"
+    }
+  ]
+}

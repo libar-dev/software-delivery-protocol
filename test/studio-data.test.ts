@@ -81,7 +81,8 @@ describe.each(corpora)("Studio data over $name", (subject) => {
     corpus = { ...subject, extracted: extract(subject) };
     reader = createReader(corpus.extracted.graph);
     data = await createStudioData(reader);
-  }, 30_000);
+    // The same extraction and Studio build as the page-set hooks, on the same loaded-machine budget.
+  }, 120_000);
 
   it("counts every Pack exactly as recipe 29", async () => {
     expect(reader.packs().length).toBeGreaterThan(0);

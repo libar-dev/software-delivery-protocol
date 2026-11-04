@@ -143,3 +143,95 @@ describe("generated registrar testing runtime", () => {
     expect(expected).not.toHaveBeenCalled();
   });
 });
+
+describe("own comparator data", () => {
+  it.each(["constructor", "toString", "valueOf", "hasOwnProperty"])(
+    "requires an own defined Condition named %s before calling the oracle",
+    (name) => {
+      const expected = vi.fn(() => ({ kind: "done" }));
+      const observe = vi.fn(() => ({ kind: "done" }));
+      const step = { kind: "then" as const, key: "done", text: "done", params: {} };
+      for (const point of [{}, { [name]: undefined }, { [name]: 3 }]) {
+        expected.mockClear();
+        observe.mockClear();
+        const run = createRunnableExample<
+          object,
+          Record<string, number | undefined>,
+          { kind: string }
+        >(
+          "spec:probe.own",
+          point,
+          [name],
+          { createWorld: () => ({}), invoke: () => undefined, expected, observe },
+          [step],
+        );
+        if (Object.hasOwn(point, name) && point[name] !== undefined) {
+          compareContractOutcome(run, step);
+          expect(expected).toHaveBeenCalledOnce();
+          expect(observe).toHaveBeenCalledOnce();
+        } else {
+          expect(() => {
+            compareContractOutcome(run, step);
+          }).toThrow(`missing Conditions: "${name}"`);
+          expect(expected).not.toHaveBeenCalled();
+          expect(observe).not.toHaveBeenCalled();
+        }
+      }
+    },
+  );
+  it.each(["constructor", "toString", "valueOf", "hasOwnProperty"])(
+    "reports missing and extra own payload fields named %s",
+    (name) => {
+      for (const missing of [true, false]) {
+        const payload = { [name]: 3 };
+        const run = createRunnableExample(
+          "spec:probe.own",
+          {},
+          [],
+          {
+            createWorld: () => ({}),
+            invoke: () => undefined,
+            expected: () => ({ kind: "done", ...(missing ? {} : payload) }),
+            observe: () => ({ kind: "done" }),
+          },
+          [],
+        );
+        expect(() => {
+          compareContractOutcome(run, {
+            kind: "then",
+            key: "done",
+            text: "done",
+            params: missing ? payload : {},
+          });
+        }).toThrow(`$.${name}: ${missing ? "missing; expected" : "extra; actual"} 3`);
+      }
+    },
+  );
+});
+
+it("refuses a legacy Then named unspecified with the coverage-gap diagnostic", async () => {
+  const step = { kind: "then" as const, key: "unspecified", text: "unspecified", params: {} };
+  const observe = vi.fn(() => ({ kind: "unspecified" }));
+  const assertions = vi.fn();
+  const run = createRunnableExample(
+    "spec:probe.legacy",
+    {},
+    [],
+    {
+      createWorld: () => ({}),
+      invoke: () => undefined,
+      observe,
+      assertions,
+      expected: () => ({ kind: "unspecified" }),
+    },
+    [step],
+  );
+  compareContractOutcome(run, step);
+  await expect(completeRunnableExample(run)).rejects.toMatchObject({
+    message:
+      'scenario spec:probe.legacy: oracle selected "unspecified"; coverage gap cannot witness a bound example',
+    cause: new Error('oracle outcome "unspecified" names a coverage gap'),
+  });
+  expect(observe).not.toHaveBeenCalled();
+  expect(assertions).not.toHaveBeenCalled();
+});

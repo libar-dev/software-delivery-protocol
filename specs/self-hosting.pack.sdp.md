@@ -206,6 +206,7 @@ specs:
   - spec:validation.external-registers.uncited-on-request
   - spec:consumers.projections-model
   - spec:consumers.projections-model.roadmap-views
+  - spec:consumers.ai-assisted-reading
   - spec:consumers.impact-graph
   - spec:consumers.impact-graph.curation-assist
   - spec:consumers.impact-graph.symbol-reach
@@ -312,6 +313,7 @@ specs:
   - spec:consumers.agent-surface.example-space-coverage
   - spec:consumers.agent-surface.example-space-coverage.uncovered-literal
   - spec:consumers.agent-surface.example-space-coverage.number-not-enumerable
+  - spec:consumers.agent-surface.combination-coverage
   - spec:consumers.review-perspectives
   - spec:consumers.context-bundle
   - spec:consumers.context-bundle.parts-cover-the-pack
@@ -403,6 +405,7 @@ specs:
   - spec:observation.run-evidence
   - spec:observation.run-evidence.absolute-path-joins
   - spec:observation.run-evidence.unanchored-file-unjoined
+  - spec:observation.run-evidence.bound-file-freshness
   - spec:protocol.self-hosting
   - spec:protocol.structural-self-binding
   - spec:protocol.significant-units-review

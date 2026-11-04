@@ -33,6 +33,9 @@ pnpm --silent sdp vault . --exclude explorations --exclude examples --exclude te
   `dist/`, `coverage/` or a dot-directory) or under an excluded prefix, and apart from every path
   the build writes or removes (`spec:consumers.obsidian-vault#design.buildOwnedPaths`). The run
   refuses any other directory before the build, writing nothing.
+- A link at the default folder places the vault where it resolves, under the same rules, but never
+  outside the root: a default that resolves outside the root, or nowhere, refuses the run. Name an
+  outside vault with `--out` (`spec:consumers.obsidian-vault#rule.defaultInsideRoot`).
 - Open the vault directory itself in Obsidian, never its `sdp/` folder: every link and Base filter
   names its target by a path from that directory.
 

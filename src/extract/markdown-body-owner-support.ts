@@ -1,20 +1,12 @@
+import {
+  isDeliveryFactProperty,
+  isReservedDerivedProperty,
+} from "../graph/delivery-fact-spellings.js";
 import { extractFindingIds } from "./reify.js";
 import type { Finding } from "../validate/contracts.js";
 import { addMarkdownFinding, markdownFinding } from "./markdown-support.js";
 
-export const reservedMarkdownProperties = new Set([
-  "implemented",
-  "hasVerifier",
-  "observed",
-  "claim",
-  "deliveryFacts",
-  "nodeType",
-  "specKind",
-  "satisfies",
-  "verifies",
-  "belongsTo",
-  "models",
-]);
+export { isReservedDerivedProperty as isReservedMarkdownProperty };
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -29,7 +21,7 @@ export function propertyFinding(file: string, line: number, name: string): Findi
     file,
     line,
     `property "${name}" is not accepted`,
-    reservedMarkdownProperties.has(name)
+    isReservedDerivedProperty(name)
       ? extractFindingIds.reservedProperty
       : extractFindingIds.unrecognizedProperty,
   );
@@ -61,7 +53,8 @@ export function single(
 }
 
 export function keyed(text: string): { readonly key: string; readonly value: string } | undefined {
-  const match = /^([A-Za-z][A-Za-z0-9]*): (.+)$/u.exec(text);
+  const match = /^([A-Za-z][A-Za-z0-9-]*): (.+)$/u.exec(text);
+  if (match?.[1]?.includes("-") && !isDeliveryFactProperty(match[1])) return undefined;
   return match?.[1] === undefined || match[2] === undefined
     ? undefined
     : { key: match[1], value: match[2] };

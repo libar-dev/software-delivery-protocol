@@ -206,17 +206,18 @@ void binding;
     );
   },
   "a relative import resolving to the Protocol builder modules": (root) => {
-    mkdirSync(join(root, "model"), { recursive: true });
+    // Keep builder dependencies outside discovery; the example measures binding diagnostics.
+    mkdirSync(join(root, ".builders", "model"), { recursive: true });
     mkdirSync(join(root, "deep", "nested"), { recursive: true });
-    symlinkSync(join(packageRoot, "src", "ids.ts"), join(root, "ids.ts"));
+    symlinkSync(join(packageRoot, "src", "ids.ts"), join(root, ".builders", "ids.ts"));
     symlinkSync(
       join(packageRoot, "src", "model", "code-anchor.ts"),
-      join(root, "model", "code-anchor.ts"),
+      join(root, ".builders", "model", "code-anchor.ts"),
     );
     writeFileSync(
       join(root, "deep", "nested", "binding.ts"),
-      `import { codeAnchor } from "../../model/code-anchor.js";
-import { codeAnchorId, ref } from "../../ids.js";
+      `import { codeAnchor } from "../../.builders/model/code-anchor.js";
+import { codeAnchorId, ref } from "../../.builders/ids.js";
 
 const binding = codeAnchor({
   id: codeAnchorId("impl:protocol.deep-binding"),

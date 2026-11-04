@@ -4,7 +4,6 @@ import {
   mkdirSync,
   readFileSync,
   realpathSync,
-  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -18,7 +17,7 @@ import type { GraphSchema } from "../graph/schema.js";
 import type { ValidationReport } from "../validate/contracts.js";
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
-import { removeArtifact, removeArtifacts } from "./artifacts.js";
+import { guardedOutput, removeArtifact, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
@@ -52,7 +51,13 @@ const cliComponentAnchor = codeAnchor({
 export interface BuildHooks {
   readonly extract?: typeof extract;
   readonly generateContracts?: typeof generateContracts;
+  /**
+   * Replaces `rmSync` in every guarded removal the build and the publishers make, ordinary
+   * staging cleanup and recovery alike, not in recovery alone. A test that fails one removal
+   * must match the path it means and pass every other call through.
+   */
   readonly rmSync?: typeof rmSync;
+  /** Replaces `writeFileSync` in every guarded write the build and the publishers make. */
   readonly writeFileSync?: typeof writeFileSync;
 }
 
@@ -186,7 +191,36 @@ function confinedRegistrarPath(
       return undefined;
     }
 
-    mkdirSync(lexicalParent, { recursive: true });
+    // Hold each directory while creating its next child, as `sdp new spec` does.
+    // Re-traversing a checked pathname with recursive mkdir could follow a swapped ancestor.
+    const restoreCwd = realpathSync.native(".");
+    try {
+      process.chdir(existingParentReal);
+      for (const segment of relative(existingParent, lexicalParent).split(sep)) {
+        if (!containedWithin(rootReal, realpathSync.native("."))) {
+          throw new Error(`unsafe registrar sibling path "${path}" escapes the extraction root`);
+        }
+        try {
+          mkdirSync(segment);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+        }
+        process.chdir(segment);
+      }
+      if (!containedWithin(rootReal, realpathSync.native("."))) {
+        throw new Error(`unsafe registrar sibling path "${path}" escapes the extraction root`);
+      }
+    } finally {
+      try {
+        process.chdir(restoreCwd);
+      } catch {
+        try {
+          process.chdir(rootReal);
+        } catch {
+          // Both restore targets vanished concurrently; the build's own result still applies.
+        }
+      }
+    }
   }
 
   let parentReal: string;
@@ -267,13 +301,20 @@ export function runBuild(
   command: string,
   hooks: BuildHooks,
 ): BuildOutcome {
+  const {
+    rmSync: remove,
+    mkdirSync: mkdir,
+    writeFileSync: writeOutput,
+    renameSync: rename,
+    check,
+  } = guardedOutput(parsed.root, hooks);
   void [cliComponentAnchor, buildPipelineEmitAnchor];
   const { root: resolvedRoot, exclude, checkClean } = parsed;
   const extractionOptions = { root: resolvedRoot, exclude };
   const runExtract = hooks.extract ?? extract;
   const runGenerateContracts = hooks.generateContracts ?? generateContracts;
-  const recoveryRm = hooks.rmSync ?? rmSync;
-  const write = hooks.writeFileSync ?? writeFileSync;
+  const recoveryRm = remove;
+  const write = writeOutput;
   const graphPath = join(resolvedRoot, buildOutputs.graph);
   const importsPath = join(resolvedRoot, buildOutputs.imports);
   const contractsPath = join(resolvedRoot, buildOutputs.contracts);
@@ -283,22 +324,44 @@ export function runBuild(
   let nextRegistrarPaths: readonly string[] = [];
   const projectionPaths = projectionOutputs.map((path) => join(resolvedRoot, path));
 
+  const outputParentIsSafe = (): boolean => {
+    try {
+      check(graphPath);
+      return true;
+    } catch (error) {
+      writeStderr(
+        output,
+        `sdp ${command}: ${errorMessage(error)} — outputs must not be read as current.\n`,
+      );
+      return false;
+    }
+  };
+  if (!outputParentIsSafe()) return { exitCode: 1 };
+
+  const stageFile = (path: string, content: string): void => {
+    check(path);
+    // Unlink stale entries first; exclusive creation also refuses a link planted after removal.
+    remove(path, { force: true });
+    write(path, content, { encoding: "utf8", flag: "wx" });
+  };
+
   const failBuild = (message: string, report?: ValidationReport): BuildOutcome => {
     writeStderr(output, message);
-    removeArtifacts(
-      [
-        graphPath,
-        `${graphPath}.tmp`,
-        contractsPath,
-        `${contractsPath}.tmp`,
-        registrarManifestPath,
-        `${registrarManifestPath}.tmp`,
-        ...(parsed.imports === undefined ? [] : [importsPath, `${importsPath}.tmp`]),
-      ],
-      output,
-      command,
-      recoveryRm,
-    );
+    if (outputParentIsSafe())
+      removeArtifacts(
+        [
+          graphPath,
+          `${graphPath}.tmp`,
+          contractsPath,
+          `${contractsPath}.tmp`,
+          registrarManifestPath,
+          `${registrarManifestPath}.tmp`,
+          ...(parsed.imports === undefined ? [] : [importsPath, `${importsPath}.tmp`]),
+        ],
+        output,
+        command,
+        recoveryRm,
+      );
 
     for (const path of new Set([...priorRegistrarPaths, ...nextRegistrarPaths])) {
       try {
@@ -448,20 +511,21 @@ export function runBuild(
     }
 
     const temporaryPath = `${graphPath}.tmp`;
-    mkdirSync(join(resolvedRoot, "generated"), { recursive: true });
-    write(temporaryPath, serialized, "utf8");
-    if (imports !== undefined) write(`${importsPath}.tmp`, imports, "utf8");
+    check(graphPath);
+    mkdir(join(resolvedRoot, "generated"), { recursive: true });
+    stageFile(temporaryPath, serialized);
+    if (imports !== undefined) stageFile(`${importsPath}.tmp`, imports);
 
     const contractsTemporaryPath = `${contractsPath}.tmp`;
-    rmSync(contractsTemporaryPath, { recursive: true, force: true });
+    remove(contractsTemporaryPath, { recursive: true, force: true });
 
     if (contracts.files.size > 0) {
-      mkdirSync(contractsTemporaryPath, { recursive: true });
+      mkdir(contractsTemporaryPath, { recursive: true });
 
       for (const [relativePath, content] of contracts.files) {
         const target = join(contractsTemporaryPath, relativePath);
-        mkdirSync(join(target, ".."), { recursive: true });
-        write(target, content, "utf8");
+        mkdir(join(target, ".."), { recursive: true });
+        stageFile(target, content);
       }
     }
 
@@ -478,7 +542,7 @@ export function runBuild(
         throw new Error(`unsafe registrar sibling path "${relativePath}"`);
       }
 
-      rmSync(`${createdRegistrarPath}.tmp`, { force: true });
+      remove(`${createdRegistrarPath}.tmp`, { force: true });
       const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, relativePath);
 
       if (registrarPath === undefined) {
@@ -486,20 +550,20 @@ export function runBuild(
       }
 
       if (existsSync(registrarPath) && readFileSync(registrarPath, "utf8") === content) continue;
-      write(`${registrarPath}.tmp`, content, "utf8");
+      stageFile(`${registrarPath}.tmp`, content);
       changedRegistrarPaths.add(relativePath);
     }
 
     const registrarManifestTemporaryPath = `${registrarManifestPath}.tmp`;
-    write(registrarManifestTemporaryPath, serializeRegistrarManifest(nextRegistrarPaths), "utf8");
+    stageFile(registrarManifestTemporaryPath, serializeRegistrarManifest(nextRegistrarPaths));
 
     // Changed bytes now exist in temporary locations. Publish, reconcile, and remove stale
     // siblings; any later failure falls through failBuild, which removes the whole known set so
     // partially current output cannot survive.
-    renameSync(temporaryPath, graphPath);
-    rmSync(contractsPath, { recursive: true, force: true });
+    rename(temporaryPath, graphPath);
+    remove(contractsPath, { recursive: true, force: true });
     if (contracts.files.size > 0) {
-      renameSync(contractsTemporaryPath, contractsPath);
+      rename(contractsTemporaryPath, contractsPath);
     }
     for (const stalePath of priorRegistrarPaths.filter(
       (path) => !nextRegistrarPaths.includes(path),
@@ -507,7 +571,7 @@ export function runBuild(
       const registrarPath = confinedRegistrarPath(resolvedRoot, registrarRootReal, stalePath);
 
       if (registrarPath !== undefined) {
-        rmSync(registrarPath, { force: true });
+        remove(registrarPath, { force: true });
       }
     }
     for (const relativePath of changedRegistrarPaths) {
@@ -517,11 +581,12 @@ export function runBuild(
         throw new Error(`unsafe registrar sibling path "${relativePath}"`);
       }
 
-      renameSync(`${registrarPath}.tmp`, registrarPath);
+      rename(`${registrarPath}.tmp`, registrarPath);
     }
-    renameSync(registrarManifestTemporaryPath, registrarManifestPath);
-    if (imports !== undefined) renameSync(`${importsPath}.tmp`, importsPath);
+    rename(registrarManifestTemporaryPath, registrarManifestPath);
+    if (imports !== undefined) rename(`${importsPath}.tmp`, importsPath);
 
+    check(graphPath);
     writeStdout(output, summary);
     writeStdout(output, `Wrote ${graphPath}\n`);
     if (imports !== undefined)

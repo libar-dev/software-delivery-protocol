@@ -330,9 +330,17 @@ export const protocolSpecs = [
             key: "durableContent",
             decider: "owner",
             provisional:
-              "a measured inventory by the arc that removes them, reviewed before anything is deleted",
+              "the owner accepted the whole-repository review's measured inventory, with its row rulings, as the answer; the question leaves the Spec when the cleanup arc lands that inventory in its first commit",
           },
         ],
+      },
+      behavior: {
+        rules: [
+          "The arc that removes them opens with a measured inventory, in its first commit, of what `plans/`, `reviews/` and the concept documents still carry that no Spec, test, decision or recipe carries, each piece with its home; a review by another model family checks the inventory before anything is deleted.",
+        ],
+        ruleKeys: {
+          inventoryFirst: "rules[0]",
+        },
       },
     },
     deliveryFacts: [],

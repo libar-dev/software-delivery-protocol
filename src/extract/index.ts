@@ -17,8 +17,13 @@ import type { DiscoveredSourceFile } from "./discover.js";
 import { reifyMarkdownCarrier } from "./markdown.js";
 import { extractFindingIds } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
-import { hasProtocolBuilderImport, protocolBindingScopeFor } from "./protocol-bindings.js";
+import {
+  hasProtocolBuilderImport,
+  protocolBindingScopeFor,
+  trustedBuilderModulesForRoot,
+} from "./protocol-bindings.js";
 import type { ProtocolBindingScope } from "./protocol-bindings.js";
+import { compilerLine } from "./typescript-lines.js";
 
 export {
   PROTOCOL_ANCHORS_MODULE_SPECIFIER,
@@ -165,7 +170,7 @@ function fileParses(program: Program, source: ParsedSourceFile, findings: Findin
     severity: "error",
     message: `the file does not parse: ${typeof text === "string" ? text : text.getMessageText()} — the error-tolerant parse recovers by guessing, so the file cannot be reified faithfully and its content is excluded from the graph (ambiguity is loud, L2)`,
     file: source.file.relativePath,
-    line: firstDiagnostic.getLineNumber(),
+    line: compilerLine(source.sourceFile, firstDiagnostic.getStart()),
   });
 
   return false;
@@ -220,10 +225,17 @@ export const extractAnchor = codeAnchor({
 
 export function extract(options: ExtractOptions): ExtractionResult {
   const files = discoverFiles(options.root, options.exclude);
+  const trustedBuilderModules = trustedBuilderModulesForRoot(options.root);
   const specs: ReifiedSpec[] = [];
   const packs: ReifiedPack[] = [];
   const anchors: ReifiedAnchor[] = [];
-  const findings: Finding[] = [];
+  const findings: Finding[] = files.skippedLinks.map((file) => ({
+    validatorId: extractFindingIds.symbolicLinkSkipped,
+    family: "conformance",
+    severity: "warning",
+    message: `symbolic link "${file}" is skipped; discovery never follows links below the root`,
+    file,
+  }));
   const citations: EntryCitationLocation[] = [];
 
   for (const file of files.specFiles) {
@@ -235,7 +247,7 @@ export function extract(options: ExtractOptions): ExtractionResult {
         : reifyTypeScriptCarrier(
             sourceText,
             file.relativePath,
-            protocolBindingScopeFor(file.absolutePath),
+            protocolBindingScopeFor(file.absolutePath, trustedBuilderModules),
           );
     specs.push(...reified.specs);
     packs.push(...reified.packs);
@@ -249,13 +261,12 @@ export function extract(options: ExtractOptions): ExtractionResult {
 
   for (const file of files.anchorCandidateFiles) {
     const sourceText = readFileSync(file.absolutePath, "utf8");
-    const bindingScope = protocolBindingScopeFor(file.absolutePath);
+    const bindingScope = protocolBindingScopeFor(file.absolutePath, trustedBuilderModules);
 
     // Anchors are recognized by import binding; the contract takes the specifier written
     // verbatim. This raw text test gates AST work: it passes on a package-specifier hit, or on
-    // any relative import when this runtime's trusted builder modules are known (Protocol source
-    // checkout) — there it skips little; in consumer repos it still skips the bulk of source
-    // files. Escape-spelled specifier, require, and re-aliased locals sit outside the binding
+    // any relative import when runtime or extraction-root builder modules are known — there
+    // it skips little; in consumer repos it still skips the bulk of source files. Escape-spelled specifier, require, and re-aliased locals sit outside the binding
     // contract.
     if (!hasProtocolBuilderImport(sourceText, bindingScope)) {
       continue;

@@ -1,6 +1,7 @@
 import { resolveEntryAddress } from "../graph/entry-address.js";
 import { computeDeliveryFacts, isResolvingTestAnchorVerify } from "../graph/delivery-facts.js";
 import { isResolvingOracleModel, ownsExampleSpace } from "../graph/oracle-bindings.js";
+import { deliveryFactName, isReservedDerivedProperty } from "../graph/delivery-fact-spellings.js";
 import { deliveryFactNames, graphClaims, graphEdgeTypes, graphNodeTypes } from "../graph/schema.js";
 import {
   CODE_ANCHOR_NAMESPACES,
@@ -27,6 +28,7 @@ import { SPEC_SECTION_NAMES } from "../model/sections.js";
 import { buildGraphIndex } from "./graph-index.js";
 import type { GraphIndex } from "./graph-index.js";
 import type { Finding, Severity, ValidationReport, ValidatorFamily } from "./contracts.js";
+import { reservedThenSlotsOf, reservedThenKeysOf } from "../notation/example-space.js";
 import { evaluateReadinessFloor } from "./readiness-floor.js";
 
 /**
@@ -50,6 +52,8 @@ export const graphValidatorIds = {
   orphans: "conformance/orphans",
   proseMentions: "conformance/prose-mentions",
   ruleExercises: "conformance/rule-exercises",
+  reservedThenSlot: "conformance/reserved-then-slot",
+  reservedThenKey: "conformance/reserved-then-key",
   authoringShape: "honesty/authoring-shape",
   deliveryFacts: "honesty/delivery-facts",
   readinessFloor: "honesty/readiness-floor",
@@ -1181,7 +1185,17 @@ const MENTION_PATTERN =
   /(?<![A-Za-z0-9-])spec:(?:[^\p{White_Space}\P{ASCII}`"'()[\]{}<>|]|[^\p{ASCII}\p{White_Space}\p{Pd}\p{Ps}\p{Pe}\p{Pi}\p{Pf}\p{Po}\p{S}\p{Z}])*/gu;
 
 /** Trailing punctuation a sentence, a list, or emphasis may put after an id. */
-const MENTION_TRAILING_PUNCTUATION = /[.,;:!?*_~]+$/u;
+const MENTION_TRAILING_PUNCTUATION = ".,;:!?*_~";
+
+/**
+ * A backward scan rather than `/[.,;:!?*_~]+$/u`: that regex retries every start inside an interior
+ * run of punctuation, so one long run made every mention scan quadratic in its length.
+ */
+function trimMentionPunctuation(rest: string): string {
+  let end = rest.length;
+  while (end > 0 && MENTION_TRAILING_PUNCTUATION.includes(rest.charAt(end - 1))) end -= 1;
+  return rest.slice(0, end);
+}
 
 /** The six authored relations; a declared one in either direction backs a mention. */
 const BACKING_RELATIONS: ReadonlySet<string> = new Set([
@@ -1294,7 +1308,7 @@ function proseMentionTexts(node: PrimitiveNode): readonly MentionText[] {
  */
 export function mentionTokens(text: string): readonly string[] {
   return [...text.replace(MARKDOWN_ESCAPE, "$1").matchAll(MENTION_PATTERN)]
-    .map((match) => match[0].slice("spec:".length).replace(MENTION_TRAILING_PUNCTUATION, ""))
+    .map((match) => trimMentionPunctuation(match[0].slice("spec:".length)))
     .filter((rest) => rest.length > 0)
     .map((rest) => `spec:${rest}`);
 }
@@ -1547,31 +1561,34 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 /**
  * The layer split: extraction hard-errors on derived graph vocabulary at the *top level* of a
- * spec/pack call (`extract/reserved-property`) before derivation; this check owns *section
- * interiors* — the path `tsc` never closes (a non-fresh literal, a defused corpus, a foreign
- * graph producer). The scan covers carrier-level keys only (the section record and its array
- * entries): nested content stays content — a vocabulary may legitimately name a term
- * "implemented".
+ * spec/pack call (`extract/reserved-property`) before derivation; this check applies the same rule
+ * to a foreign graph's Spec and Pack envelopes and section interiors. Typed graph identity fields
+ * and a Primitive's derived deliveryFacts stay graph output. Nested content stays content: a
+ * vocabulary may legitimately name a term "implemented".
  */
 const authoringShapeAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.authored-honesty-shape"),
-  label: "refuses delivery facts smuggled through authored section carriers",
+  label: "refuses derived properties smuggled through authored envelopes and section carriers",
   satisfies: ref("spec:validation.authored-honesty"),
   component: componentAnchorId("component:protocol.validate"),
   role: "validator",
 });
 void authoringShapeAnchor;
 
-function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
-  const appendSmuggledFact = (factName: string, path: string): void => {
+function checkAuthoringShape(node: PrimitiveNode | PackNode, findings: Finding[]): void {
+  const appendSmuggledFact = (name: string, path: string): void => {
+    const factName = deliveryFactName(name);
     findings.push(
       createFinding({
         validatorId: graphValidatorIds.authoringShape,
         family: "honesty",
         severity: "error",
-        message: `"${node.id}" hand-authors the derived delivery fact "${factName}" at "${path}" — delivery facts are derived, never authored.`,
+        message:
+          factName === undefined
+            ? `"${node.id}" hand-authors the derived property "${name}" at "${path}" — graph truth is derived, never authored.`
+            : `"${node.id}" hand-authors the derived delivery fact "${factName}" at "${path}" — delivery facts are derived, never authored.`,
         subjectId: node.id,
-        relatedId: factName,
+        relatedId: factName ?? name,
         path,
         file: node.file,
       }),
@@ -1583,18 +1600,21 @@ function checkAuthoringShape(node: PrimitiveNode, findings: Finding[]): void {
       return;
     }
 
-    for (const factName of deliveryFactNames) {
-      if (factName in carrier) {
-        appendSmuggledFact(factName, `${basePath}.${factName}`);
-      }
+    for (const name of Object.keys(carrier)) {
+      if (isReservedDerivedProperty(name)) appendSmuggledFact(name, `${basePath}.${name}`);
     }
   };
 
-  const sections = node.sections as Record<string, unknown> | undefined;
-
-  if (sections === undefined) {
-    return;
+  for (const name of Object.keys(node)) {
+    if (name === "claim" || name === "nodeType") continue;
+    if (node.nodeType === "Primitive" && (name === "specKind" || name === "deliveryFacts")) {
+      continue;
+    }
+    if (isReservedDerivedProperty(name)) appendSmuggledFact(name, name);
   }
+
+  if (node.nodeType !== "Primitive" || node.sections === undefined) return;
+  const sections = node.sections as Record<string, unknown>;
 
   for (const sectionName of SPEC_SECTION_NAMES) {
     const section = sections[sectionName];
@@ -1895,6 +1915,44 @@ function checkSupersededDecisions(graph: GraphSchema, index: GraphIndex): readon
   return findings;
 }
 
+/* ----- conformance/reserved-then-slot ----- */
+
+function checkReservedThenSlots(graph: GraphSchema): readonly Finding[] {
+  return graph.nodes.flatMap((node) =>
+    node.nodeType !== "Primitive"
+      ? []
+      : reservedThenSlotsOf(node).map(({ text, path }) =>
+          createFinding({
+            validatorId: graphValidatorIds.reservedThenSlot,
+            family: "conformance",
+            severity: "error",
+            subjectId: node.id,
+            file: node.file,
+            path,
+            message: `Then slot "kind" is reserved for the Outcome discriminant in step "${text}"`,
+          }),
+        ),
+  );
+}
+
+function checkReservedThenKeys(graph: GraphSchema, index: GraphIndex): readonly Finding[] {
+  return graph.nodes.flatMap((node) =>
+    node.nodeType !== "Primitive"
+      ? []
+      : reservedThenKeysOf(node, index).map(({ text, path }) =>
+          createFinding({
+            validatorId: graphValidatorIds.reservedThenKey,
+            family: "conformance",
+            severity: "error",
+            subjectId: node.id,
+            file: node.file,
+            path,
+            message: `Then contract key "unspecified" is reserved for the coverage gap in step "${text}"`,
+          }),
+        ),
+  );
+}
+
 /* ----- the aggregate ----- */
 
 function compareCodeUnits(left: string, right: string): number {
@@ -1927,7 +1985,7 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
   const authoringShapeFindings: Finding[] = [];
 
   for (const node of graph.nodes) {
-    if (node.nodeType === "Primitive") {
+    if (node.nodeType === "Primitive" || node.nodeType === "Pack") {
       checkAuthoringShape(node, authoringShapeFindings);
     }
   }
@@ -1943,6 +2001,8 @@ export function validateGraph(graph: GraphSchema): ValidationReport {
     ...checkOrphans(graph, index),
     ...checkProseMentions(graph, index),
     ...checkRuleExercises(graph, index),
+    ...checkReservedThenSlots(graph),
+    ...checkReservedThenKeys(graph, index),
     ...checkSupersededDecisions(graph, index),
     ...authoringShapeFindings,
     ...checkDeliveryFacts(graph, derivedFacts),

@@ -181,13 +181,14 @@ async function runRecipe(
     },
   );
 
-  // The expected stderr is the empty string, not a self-comparison: a recipe run over the green
-  // corpus has nothing to say on stderr, and the object shape keeps the actual output in the
-  // failure diff when it does.
   expect(
     { recipe: recipe.title, exitCode, stderr: capture.readStderr() },
     `recipe ${String(recipe.ordinal)} must run as written`,
-  ).toEqual({ recipe: recipe.title, exitCode: 0, stderr: "" });
+  ).toEqual({
+    recipe: recipe.title,
+    exitCode: 0,
+    stderr: "",
+  });
 
   return JSON.parse(capture.readStdout()) as unknown;
 }
@@ -505,6 +506,66 @@ describe("the agent-surface recipe corpus", () => {
       expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
+
+  // A caller checks the shape the intro names; a recipe missing from its list reads an absent
+  // subject as an empty answer. Every single-id subject parameter the catalog takes is probed, and
+  // a diagnostic counts for the subject whose parameter it names.
+  it("names in the intro every recipe that reports an absent subject, by its shape", async () => {
+    const intro = source.slice(0, source.indexOf("## 1.")).replace(/\s+/gu, " ");
+    const ordinals = (list: string | undefined) =>
+      [...(list ?? "").matchAll(/\d+/gu)].map((match) => Number(match[0]));
+    const subjects = {
+      pack: { id: "pack:absent-v1", noun: "Pack" },
+      spec: { id: "spec:absent", noun: "Spec" },
+      component: { id: "component:absent", noun: "component" },
+      epic: { id: "spec:absent", noun: "epic" },
+    } as const;
+    const diagnosedSentence = /In `diagnostics`, ([^.]+)\./u.exec(intro)?.[1] ?? "";
+    const documented = {
+      foundFalse: ordinals(
+        /Recipes ([\d, and]+) answer an absent subject with `found: false`/u.exec(intro)?.[1],
+      ),
+      diagnosed: Object.fromEntries(
+        Object.entries(subjects).map(([key, { noun }]) => [
+          key,
+          ordinals(
+            new RegExp(`\\(recipes? ([\\d, and]+)\\)(?: report)? an absent ${noun}\\b`, "u").exec(
+              diagnosedSentence,
+            )?.[1],
+          ),
+        ]),
+      ),
+    };
+    // Inputs these recipes refuse before they look the Pack up.
+    const companions: Readonly<Record<number, Readonly<Record<string, unknown>>>> = {
+      35: { base: derived.graph },
+      48: { commit: "0".repeat(40) },
+    };
+    const answered = {
+      foundFalse: new Set<number>(),
+      diagnosed: Object.fromEntries(
+        Object.keys(subjects).map((key) => [key, new Set<number>()] as const),
+      ),
+    };
+    for (const recipe of recipes) {
+      for (const [key, { id }] of Object.entries(subjects)) {
+        const answer = await runRecipe(recipe, { ...companions[recipe.ordinal], [key]: id });
+        if (typeof answer !== "object" || answer === null || Array.isArray(answer)) continue;
+        const record = answer as Record<string, unknown>;
+        if (record.found === false) answered.foundFalse.add(recipe.ordinal);
+        const diagnostics = Array.isArray(record.diagnostics) ? record.diagnostics : [];
+        if (diagnostics.some((entry) => Object.values(asRecord(entry)).includes(key))) {
+          answered.diagnosed[key]?.add(recipe.ordinal);
+        }
+      }
+    }
+    expect(documented).toEqual({
+      foundFalse: [...answered.foundFalse],
+      diagnosed: Object.fromEntries(
+        Object.entries(answered.diagnosed).map(([key, found]) => [key, [...found]]),
+      ),
+    });
+  }, 120_000);
 
   it("keeps every body plain JavaScript with a return", () => {
     for (const recipe of recipes) {
@@ -4685,7 +4746,10 @@ describe("recipe parameters and the shipped recipe files", () => {
       writeFileSync(path, JSON.stringify({ files, detail: true }));
 
       const run = await runShipped(shippedBody(recipeByOrdinal(4)), ["--params", `@${path}`]);
-      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
+        exitCode: 0,
+        stderr: "",
+      });
 
       const result = asRecord(JSON.parse(run.stdout));
       const radius = reader.blastRadius(files);
@@ -4723,7 +4787,10 @@ describe("recipe parameters and the shipped recipe files", () => {
       "--params",
       JSON.stringify({ addresses }),
     ]);
-    expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+    expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
+      exitCode: 0,
+      stderr: "",
+    });
 
     const result = asRecord(JSON.parse(run.stdout));
     expect(result.totals).toEqual({
@@ -4751,7 +4818,10 @@ describe("recipe parameters and the shipped recipe files", () => {
     for (const ordinal of [5, 27]) {
       const body = shippedBody(recipeByOrdinal(ordinal));
       const run = await runShipped(body, ["--params", JSON.stringify({ pack: chosen })]);
-      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({ exitCode: 0, stderr: "" });
+      expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
+        exitCode: 0,
+        stderr: "",
+      });
 
       const result = asRecord(JSON.parse(run.stdout));
       expect(result.id).toBe(chosen);
@@ -8417,4 +8487,279 @@ No entry is ready to build.
 - State \`spec:orders.order-model\`: it states \`defined\` and its floor allows \`ready\`; place 2
 `,
   });
+});
+
+// spec:validation.next-rung-floor#rule.notEvaluated
+// spec:consumers.agent-surface.answer-shapes#rule.floorNotEvaluated
+describe("a floor the reader does not evaluate", () => {
+  // A foreign producer's graph: the worked example with one unratified kind and two unratified
+  // altitudes. Carriers cannot state these values; only a graph handed to the reader can.
+  const example = extract({ root: join(repoRoot, "examples/checkout-v1") });
+  const unratified: Readonly<Record<string, Partial<Record<"specKind" | "altitude", string>>>> = {
+    "spec:orders.order-placement-flow": { altitude: "planet" },
+    "spec:orders.order-model": { specKind: "saga" },
+    "spec:orders.create-order": { altitude: "planet" },
+  };
+  const flagged = Object.keys(unratified);
+  const foreign: ExtractionResult = {
+    ...example,
+    graph: {
+      ...example.graph,
+      nodes: example.graph.nodes.map((node) =>
+        node.id in unratified ? ({ ...node, ...unratified[node.id] } as GraphNode) : node,
+      ),
+    },
+  };
+  const rowsFor = (rows: readonly unknown[]) =>
+    rows.map(asRecord).filter((row) => flagged.includes(stringAt(row, "id")));
+
+  it("is left out of readiness divergence rather than read as below idea", async () => {
+    // Each flagged Spec states a rung, so reading its absent derived rung as below idea would list it.
+    expect(asArray(await runRecipe(recipeByOrdinal(7), undefined, foreign))).toEqual([]);
+  });
+
+  it("answers promotion preflight as not evaluated, with no floor reading to pass or fail", async () => {
+    for (const id of flagged) {
+      const result = asRecord(await runRecipe(recipeByOrdinal(9), { spec: id }, foreign));
+      expect(Object.keys(result)).toEqual([
+        "id",
+        "found",
+        "statedReadiness",
+        "floorReached",
+        "aboveStated",
+        "aboveFloor",
+        "currentFloorFailures",
+        "firstUnmetClause",
+        "promotionRequiresHumanStatement",
+      ]);
+      expect(result).toMatchObject({
+        id,
+        found: true,
+        floorReached: "not evaluated",
+        aboveStated: null,
+        aboveFloor: null,
+        currentFloorFailures: null,
+        firstUnmetClause: null,
+        promotionRequiresHumanStatement: true,
+      });
+    }
+  });
+
+  it("labels the lower ladder and names no next rung nothing blocks", async () => {
+    const result = asRecord(await runRecipe(recipeByOrdinal(11), undefined, foreign));
+    const rows = rowsFor(asArray(asRecord(result.byFamily).orders));
+    expect(rows.map((row) => row.id).sort()).toEqual([...flagged].sort());
+    for (const row of rows) {
+      expect(row).toMatchObject({
+        floorReached: "not evaluated",
+        statedNextRung: null,
+        nextUnmetClause: null,
+      });
+    }
+  });
+
+  it("reads as not evaluated in every recipe row that reports the floor reached", async () => {
+    const floors = (rows: readonly unknown[]) =>
+      rowsFor(rows).map((row) => [row.id, row.floorReached]);
+    const notEvaluated = (...ids: string[]) => ids.map((id) => [id, "not evaluated"]);
+
+    const drift = asRecord(await runRecipe(recipeByOrdinal(2), undefined, foreign));
+    expect(floors(asArray(drift.alarms))).toEqual(notEvaluated("spec:orders.create-order"));
+    for (const id of flagged) {
+      const guarantees = asRecord(await runRecipe(recipeByOrdinal(3), { spec: id }, foreign));
+      expect(guarantees.floorReached).toBe("not evaluated");
+      const footing = asRecord(await runRecipe(recipeByOrdinal(21), { spec: id }, foreign));
+      expect(footing.floorReached).toBe("not evaluated");
+    }
+    const resting = asRecord(
+      await runRecipe(recipeByOrdinal(21), { spec: "spec:orders.order-placement-flow" }, foreign),
+    );
+    expect(floors(asArray(resting.footing))).toEqual(notEvaluated("spec:orders.create-order"));
+    const design = asRecord(
+      await runRecipe(recipeByOrdinal(29), { pack: "pack:checkout-v1", detail: true }, foreign),
+    );
+    const designRows = rowsFor(asArray(design.members));
+    expect(designRows).toHaveLength(flagged.length);
+    for (const row of designRows) {
+      expect(row).toMatchObject({
+        floorReached: "not evaluated",
+        statedNextRung: null,
+        statedNextRungFailures: [],
+      });
+    }
+    const backlog = asRecord(await runRecipe(recipeByOrdinal(33), undefined, foreign));
+    expect(floors(asArray(backlog.rows))).toEqual(notEvaluated("spec:orders.order-model"));
+    const bundle = asRecord(
+      await runRecipe(recipeByOrdinal(36), { specs: flagged, budget: 1_000_000 }, foreign),
+    );
+    for (const row of rowsFor(asArray(bundle.members))) {
+      expect(row).toMatchObject({ floorReached: "not evaluated", statedNextRung: null, holds: [] });
+    }
+    const map = asRecord(await runRecipe(recipeByOrdinal(52), { detail: true }, foreign));
+    expect(floors(asArray(map.nodes)).sort()).toEqual(notEvaluated(...flagged).sort());
+    const slice = asRecord(
+      await runRecipe(
+        recipeByOrdinal(54),
+        { pack: "pack:checkout-roadmap", detail: true },
+        foreign,
+      ),
+    );
+    for (const row of rowsFor(asArray(slice.members))) {
+      expect(row).toMatchObject({ floorReached: "not evaluated", statedNextRung: null, holds: [] });
+    }
+    expect(asRecord(slice.totals).waitingForAuthor).toBe(0);
+  });
+
+  it("counts it in the capability map's totals and rollups, beside an unratified kind or altitude", async () => {
+    const map = asRecord(await runRecipe(recipeByOrdinal(52), undefined, foreign));
+    const totals = asRecord(map.totals);
+    const rollups = asArray(map.epics).map((epic) => asRecord(asRecord(epic).rollup));
+    // Every bucket is whole numbers that add up to the Specs counted: none is lost or NaN.
+    for (const count of [totals, ...rollups]) {
+      for (const bucket of ["byStatedReadiness", "byFloorReached", "byKind", "byAltitude"]) {
+        const values = Object.values(asRecord(count[bucket]));
+        for (const value of values) expect(Number.isInteger(value), bucket).toBe(true);
+        const sum = values.reduce<number>((total, value) => total + Number(value), 0);
+        expect(sum, bucket).toBe(count.specs);
+      }
+    }
+    expect(asRecord(totals.byFloorReached)["not evaluated"]).toBe(flagged.length);
+    expect(asRecord(totals.byKind).saga).toBe(1);
+    expect(asRecord(totals.byAltitude).planet).toBe(2);
+    expect(
+      rollups.some((rollup) => asRecord(rollup.byFloorReached)["not evaluated"] !== undefined),
+    ).toBe(true);
+    // Ratified values keep their keys at zero; any other value has a key only when counted.
+    const plain = asRecord(
+      asRecord(await runRecipe(recipeByOrdinal(52), undefined, example)).totals,
+    );
+    expect(Object.keys(asRecord(plain.byFloorReached))).toEqual([
+      "none",
+      "idea",
+      "scoped",
+      "defined",
+      "ready",
+    ]);
+    expect(Object.keys(asRecord(plain.byAltitude))).toEqual(["epic", "feature", "story"]);
+  });
+
+  it("counts a footing target it holds in dependency footing's totals", async () => {
+    const params = { spec: "spec:orders.order-placement-flow" };
+    const resting = asRecord(await runRecipe(recipeByOrdinal(21), params, foreign));
+    const byFloor = asRecord(asRecord(resting.totals).byFloorReached);
+    expect(byFloor["not evaluated"]).toBe(1);
+    const specRows = asArray(resting.footing)
+      .map(asRecord)
+      .filter((row) => row.floorReached !== null);
+    const sum = Object.values(byFloor).reduce<number>((total, value) => total + Number(value), 0);
+    expect(sum).toBe(specRows.length);
+    const plain = asRecord(await runRecipe(recipeByOrdinal(21), params, example));
+    expect(asRecord(asRecord(plain.totals).byFloorReached)).not.toHaveProperty("not evaluated");
+  });
+
+  it("puts the roadmap entries to design and renders their memo rows as not evaluated", async () => {
+    const params = { pack: "pack:checkout-roadmap" };
+    const answer = asRecord(await runRecipe(recipeByOrdinal(53), params, foreign));
+    const entries = asArray(asRecord(asArray(answer.roadmaps)[0]).entries).map(asRecord);
+    expect(
+      entries.map((row) => [
+        row.id,
+        row.need,
+        row.floorReached,
+        row.statedNextRung,
+        row.holdsNextRung,
+      ]),
+    ).toEqual([
+      ["spec:orders.order-placement-flow", "to design", "not evaluated", null, []],
+      ["spec:orders.order-model", "to design", "not evaluated", null, []],
+    ]);
+    const memo = stringAt(asRecord(await runRecipe(recipeByOrdinal(55), params, foreign)), "memo");
+    expect(memo).toContain(
+      "| 1 | Order placement flow `spec:orders.order-placement-flow` | itself `scoped`, floor not evaluated |",
+    );
+    expect(memo).toContain(
+      "| 2 | Order-management domain vocabulary `spec:orders.order-model` | itself `defined`, floor not evaluated |",
+    );
+    expect(memo).not.toContain("nothing holds it");
+    expect(memo).not.toContain("`null`");
+  });
+});
+
+describe("dependency footing with unratified stated readiness", () => {
+  it.each(["done", "__proto__", "constructor", "unresolved", "nonSpec"])(
+    "counts foreign readiness %s as unratified without changing structural buckets",
+    async (readiness) => {
+      const example = extract({ root: join(repoRoot, "examples/checkout-v1") });
+      const foreign = {
+        ...example,
+        graph: {
+          ...example.graph,
+          nodes: example.graph.nodes.map((node) =>
+            node.id === "spec:orders.create-order"
+              ? ({ ...node, readiness } as unknown as GraphNode)
+              : node,
+          ),
+        },
+      };
+      const result = asRecord(
+        await runRecipe(
+          recipeByOrdinal(21),
+          {
+            spec: "spec:orders.order-placement-flow",
+          },
+          foreign,
+        ),
+      );
+      const totals = asRecord(result.totals);
+      const counts = asRecord(totals.byStatedReadiness);
+      expect(counts.unratified).toBe(1);
+      expect(counts.unresolved).toBe(0);
+      expect(counts.nonSpec).toBe(0);
+      expect(asArray(result.footing).map(asRecord)).toContainEqual(
+        expect.objectContaining({
+          id: "spec:orders.create-order",
+          resolved: true,
+          statedReadiness: readiness,
+        }),
+      );
+      expect(counts).toMatchObject({ idea: 0, scoped: 0, defined: 1, ready: 0 });
+      expect(Object.values(counts).reduce<number>((sum, value) => sum + Number(value), 0)).toBe(
+        totals.relations,
+      );
+    },
+  );
+});
+
+describe.each([5, 31])("recipe %i readiness tallies with foreign values", (ordinal) => {
+  it.each(["constructor", "__proto__", "done"])(
+    "counts foreign readiness %s without losing a member or decision",
+    async (readiness) => {
+      const example = extract({ root: join(repoRoot, "examples/checkout-v1") });
+      const foreign = {
+        ...example,
+        graph: {
+          ...example.graph,
+          nodes: example.graph.nodes.map((node) =>
+            node.id === "spec:orders.create-order" || node.id === "spec:decisions.order-lifecycle"
+              ? ({ ...node, readiness } as unknown as GraphNode)
+              : node,
+          ),
+        },
+      };
+      const result = asRecord(
+        await runRecipe(
+          recipeByOrdinal(ordinal),
+          ordinal === 5 ? { pack: "pack:checkout-v1" } : {},
+          foreign,
+        ),
+      );
+      const counts = asRecord(
+        ordinal === 5 ? result.byStatedReadiness : asRecord(result.totals).byRung,
+      );
+      expect(counts[readiness]).toBe(ordinal === 5 ? 2 : 1);
+      expect(Object.values(counts).reduce<number>((sum, value) => sum + Number(value), 0)).toBe(
+        ordinal === 5 ? result.memberCount : asRecord(result.totals).decisions,
+      );
+    },
+  );
 });

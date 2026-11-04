@@ -13,6 +13,7 @@ import {
   extract,
   extractFindingIds,
   graphValidatorIds,
+  reifyMarkdownCarrier,
   reifyTypeScriptCarrier,
   serializeGraph,
   validateGraph,
@@ -294,6 +295,171 @@ describe("extraction corpora", () => {
     expect(node).toBeDefined();
     expect(JSON.stringify(node)).not.toContain("behaviour");
   });
+
+  it.each(["design", "behavior"])(
+    "reports every reserved delivery-fact spelling reified through %s",
+    (section) => {
+      for (const spelling of ["implemented", "has-verifier", "hasVerifier", "observed"]) {
+        const reified = reifyTypeScriptCarrier(
+          `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:probe.authored-fact"),
+  title: "Keep facts derived",
+  kind: "behavior", altitude: "story", readiness: "idea",
+  intent: { outcome: "Keep facts derived." },
+  ${section}: { "${spelling}": "yes" },
+});`,
+          "authored-fact.sdp.ts",
+        );
+        expect(reified.findings).toEqual([]);
+        const graph = deriveGraph(reified.specs, reified.packs, []);
+        expect(
+          validateGraph(graph).findings.filter(
+            (finding) => finding.validatorId === graphValidatorIds.authoringShape,
+          ),
+        ).toMatchObject([
+          {
+            severity: "error",
+            relatedId: spelling === "hasVerifier" ? "has-verifier" : spelling,
+            path: `${section}.${spelling}`,
+          },
+        ]);
+      }
+    },
+  );
+
+  it.each(
+    [
+      "intent",
+      "behavior",
+      "constraints",
+      "model",
+      "decision",
+      "verification",
+      "design",
+      "ui",
+    ].flatMap((section) =>
+      [
+        "deliveryFacts",
+        "claim",
+        "nodeType",
+        "specKind",
+        "satisfies",
+        "verifies",
+        "belongsTo",
+        "models",
+        "IMPLEMENTED",
+        "hasverifier",
+        "HasVerifier",
+        "HAS-VERIFIER",
+        "Observed",
+      ].map((name) => [section, name] as const),
+    ),
+  )("refuses reserved derived property %s.%s (C-g-1, S-C-2, S-C-8)", (section, name) => {
+    for (const value of [
+      '"implemented, has-verifier, observed"',
+      '["implemented", "has-verifier", "observed"]',
+    ]) {
+      const record = `{ "${name}": ${value} }`;
+      const reified = reifyTypeScriptCarrier(
+        `
+import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:probe.reserved"), title: "Derived properties",
+  kind: "behavior", altitude: "story", readiness: "idea",
+  ${section}: ${section === "constraints" ? `[${record}]` : record},
+});`,
+        "reserved.sdp.ts",
+      );
+      expect(reified.findings).toEqual([]);
+      const findings = validateGraph(deriveGraph(reified.specs, reified.packs, [])).findings;
+      expect(findings, `${section}.${name}`).toContainEqual(
+        expect.objectContaining({
+          validatorId: graphValidatorIds.authoringShape,
+          severity: "error",
+          path: `${section}${section === "constraints" ? "[0]" : ""}.${name}`,
+        }),
+      );
+    }
+  });
+
+  it.each(["deliveryFacts", "claim", "satisfies"])(
+    "refuses the same reserved Intent property in TypeScript and Markdown: %s",
+    (name) => {
+      const ts = reifyTypeScriptCarrier(
+        `import { spec, specId } from "@libar-dev/software-delivery-protocol";
+export const carrier = spec({
+  id: specId("spec:probe.parity"), title: "Carrier parity",
+  kind: "behavior", altitude: "story", readiness: "idea", relations: [],
+  intent: { outcome: "Refuse derived properties.", ${name}: "implemented" },
+});`,
+        "parity.sdp.ts",
+      );
+      const md = reifyMarkdownCarrier(
+        `---
+id: spec:probe.parity
+kind: behavior
+altitude: story
+readiness: idea
+relations: {}
+---
+# Carrier parity
+## Intent
+- outcome: Refuse derived properties.
+- ${name}: implemented`,
+        "parity.sdp.md",
+      );
+      expect(ts.findings).toEqual([]);
+      expect(validateGraph(deriveGraph(ts.specs, ts.packs, [])).findings).toContainEqual(
+        expect.objectContaining({
+          validatorId: graphValidatorIds.authoringShape,
+          severity: "error",
+          path: `intent.${name}`,
+        }),
+      );
+      expect(md.specs).toEqual([]);
+      expect(md.findings).toContainEqual(
+        expect.objectContaining({
+          validatorId: extractFindingIds.reservedProperty,
+          severity: "error",
+          line: 11,
+          message: `property "${name}" is not accepted`,
+        }),
+      );
+    },
+  );
+
+  it.each(["spec", "pack"])(
+    "refuses case-folded delivery facts on the TS %s envelope",
+    (builder) => {
+      for (const name of [
+        "IMPLEMENTED",
+        "hasverifier",
+        "HasVerifier",
+        "HAS-VERIFIER",
+        "Observed",
+        "deliveryFacts",
+      ]) {
+        const result = reifyTypeScriptCarrier(
+          `
+import { spec, specId, pack, packId } from "@libar-dev/software-delivery-protocol";
+export const carrier = ${builder}({
+  id: ${builder}Id("${builder}:probe.reserved"), title: "Derived properties",
+  ${builder === "spec" ? 'kind: "behavior", altitude: "story", readiness: "idea",' : "specs: [],"}
+  "${name}": true,
+});`,
+          "reserved.sdp.ts",
+        );
+        expect(result.findings).toContainEqual(
+          expect.objectContaining({
+            validatorId: extractFindingIds.reservedProperty,
+            severity: "error",
+            path: name,
+          }),
+        );
+      }
+    },
+  );
 
   it("unrecognized in-section property: warns before canonical serialization drops it", () => {
     const reified = reifyTypeScriptCarrier(
@@ -861,6 +1027,58 @@ relations: {}
     expect(result.graph.edges).toEqual([]);
     expect(result.counts).toEqual({ specs: 1, packs: 0, anchors: 0 });
     expect(JSON.stringify(result.graph)).not.toContain("spec:orders.swallowed");
+  });
+
+  describe.each([
+    ["LF", "\n"],
+    ["CRLF", "\r\n"],
+    ["CR", "\r"],
+    ["U+2028", "\u2028"],
+    ["U+2029", "\u2029"],
+  ])("TypeScript parse-error locations with %s", (_name, newline) => {
+    it("locates a carrier syntax error on the compiler line map", () => {
+      const result = reifyTypeScriptCarrier(
+        ["const a = 1;", "const b = 2;", "const c = ;", ""].join(newline),
+        "specs/broken.sdp.ts",
+      );
+
+      expect(result.findings).toEqual([
+        expect.objectContaining({
+          validatorId: extractFindingIds.parseError,
+          file: "specs/broken.sdp.ts",
+          line: 3,
+        }),
+      ]);
+      expect(result.specs).toEqual([]);
+      expect(result.packs).toEqual([]);
+    });
+
+    it("locates an anchor source syntax error on the compiler line map", () => {
+      const root = temporaryCorpusRoot("parse-error-lines");
+      mkdirSync(join(root, "src"));
+      writeFileSync(
+        join(root, "src", "broken.ts"),
+        [
+          'import { codeAnchor, codeAnchorId } from "@libar-dev/software-delivery-protocol";',
+          'const bound = codeAnchor({ id: codeAnchorId("impl:probe.lines") });',
+          "const broken = ;",
+          "",
+        ].join(newline),
+        "utf8",
+      );
+
+      const result = extract({ root });
+
+      expect(result.report.findings).toEqual([
+        expect.objectContaining({
+          validatorId: extractFindingIds.parseError,
+          file: "src/broken.ts",
+          line: 3,
+        }),
+      ]);
+      expect(result.graph.nodes).toEqual([]);
+      expect(result.counts.anchors).toBe(0);
+    });
   });
 
   it("invalid-missing-envelope-fields: every absent required field reports in one pass — spec, pack, and anchor carriers", () => {

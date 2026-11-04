@@ -802,6 +802,124 @@ describe("graph validators", () => {
     expect(findings[0]?.message).toContain("omits the delivery fact");
   });
 
+  it.each(["design", "behavior", "intent", "constraints"])(
+    "refuses a camelCase delivery fact on the %s carrier",
+    (section) => {
+      const carrier = { hasVerifier: "yes" };
+      const node = {
+        ...ideaPrimitive("spec:probe.authored-fact", "Keep facts derived."),
+        sections: { [section]: section === "constraints" ? [carrier] : carrier },
+      } as unknown as PrimitiveNode;
+      const findings = validateGraph(syntheticGraph([node], [])).findings.filter(
+        (finding) => finding.validatorId === graphValidatorIds.authoringShape,
+      );
+
+      expect(findings).toMatchObject([
+        {
+          severity: "error",
+          subjectId: node.id,
+          relatedId: "has-verifier",
+          path: `${section}${section === "constraints" ? "[0]" : ""}.hasVerifier`,
+        },
+      ]);
+    },
+  );
+
+  it.each([
+    "intent",
+    "behavior",
+    "constraints",
+    "model",
+    "decision",
+    "verification",
+    "design",
+    "ui",
+  ])(
+    "refuses reserved properties on foreign graph %s carriers and preserves nested content",
+    (section) => {
+      const names = [
+        "deliveryFacts",
+        "claim",
+        "nodeType",
+        "specKind",
+        "satisfies",
+        "verifies",
+        "belongsTo",
+        "models",
+        "IMPLEMENTED",
+        "hasverifier",
+        "HasVerifier",
+        "HAS-VERIFIER",
+        "Observed",
+      ];
+      const carrier = Object.fromEntries(names.map((name) => [name, ["implemented"]]));
+      const check = (record: Record<string, unknown>) =>
+        validateGraph(
+          syntheticGraph(
+            [
+              {
+                ...ideaPrimitive("spec:probe.reserved", "Keep facts derived."),
+                sections: { [section]: section === "constraints" ? [record] : record },
+              },
+            ],
+            [],
+          ),
+        ).findings.filter((f) => f.validatorId === graphValidatorIds.authoringShape);
+      expect(
+        check(carrier)
+          .map((f) => f.path)
+          .sort(),
+      ).toEqual(
+        names.map((name) => `${section}${section === "constraints" ? "[0]" : ""}.${name}`).sort(),
+      );
+      expect(check({ terms: carrier, has_verifier: true, delivery_facts: true })).toEqual([]);
+    },
+  );
+
+  it("refuses reserved properties on foreign graph Spec and Pack envelopes while keeping derived node fields", () => {
+    const names = [
+      "IMPLEMENTED",
+      "hasVerifier",
+      "Observed",
+      "satisfies",
+      "verifies",
+      "belongsTo",
+      "models",
+    ];
+    const extras = Object.fromEntries(names.map((name) => [name, true]));
+    const primitive = {
+      ...ideaPrimitive("spec:probe.envelope", "Keep facts derived."),
+      ...extras,
+    };
+    const pack = {
+      id: "pack:probe.envelope",
+      nodeType: "Pack",
+      claim: "declared",
+      title: "Probe aggregate",
+      members: [],
+      file: "specs/probe.pack.sdp.md",
+      ...extras,
+      deliveryFacts: ["implemented"],
+      specKind: "behavior",
+    } as unknown as GraphNode;
+
+    const findingsFor = (node: GraphNode) =>
+      validateGraph(syntheticGraph([node], [])).findings.filter(
+        (finding) => finding.validatorId === graphValidatorIds.authoringShape,
+      );
+
+    expect(
+      findingsFor(primitive)
+        .map((finding) => finding.path)
+        .sort(),
+    ).toEqual([...names].sort());
+    expect(
+      findingsFor(pack)
+        .map((finding) => finding.path)
+        .sort(),
+    ).toEqual([...names, "deliveryFacts", "specKind"].sort());
+  });
+
   it("fails closed on unratified descriptor values — a conformance error, never a crash or a silent floor skip", () => {
     const bogusKind = {
       ...ideaPrimitive("spec:orders.create-order", "Turn a valid cart into an order."),
@@ -815,13 +933,13 @@ describe("graph validators", () => {
     const bogusAltitude = {
       ...ideaPrimitive("spec:orders.order-management", "Define order management."),
       altitude: "initiative",
+      readiness: "ready",
     } as unknown as PrimitiveNode;
 
     // Evaluating the scoped floor over specKind "saga" used to dereference the evidence table;
     // the seam must report, never throw.
-    const findings = validateGraph(
-      syntheticGraph([bogusKind, bogusReadiness, bogusAltitude], []),
-    ).findings;
+    const graph = syntheticGraph([bogusKind, bogusReadiness, bogusAltitude], []);
+    const findings = validateGraph(graph).findings;
 
     const descriptorErrors = findings.filter(
       (finding) =>
@@ -835,15 +953,15 @@ describe("graph validators", () => {
     ]);
     expect(descriptorErrors.every((finding) => finding.severity === "error")).toBe(true);
 
-    // Fail closed: no floor evaluation over an unratified kind or readiness — the conformance
-    // error owns the finding, instead of a crash (bogus kind) or a silent skip (bogus readiness).
+    // Descriptor conformance owns the finding; no floor or derived rung is meaningful.
     expect(
-      findings.filter(
-        (finding) =>
-          finding.validatorId === graphValidatorIds.readinessFloor &&
-          (finding.subjectId === bogusKind.id || finding.subjectId === bogusReadiness.id),
-      ),
+      findings.filter((finding) => finding.validatorId === graphValidatorIds.readinessFloor),
     ).toEqual([]);
+    const reader = createReader(graph);
+    for (const node of [bogusKind, bogusAltitude]) {
+      expect(reader.specContext(node.id)?.derivedReadiness).toBeUndefined();
+      expect(reader.specContext(node.id)?.floorFailures).toEqual([]);
+    }
   });
 
   it("returns a valid empty aggregate report without throwing", () => {

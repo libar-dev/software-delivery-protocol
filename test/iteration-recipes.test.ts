@@ -61,7 +61,10 @@ async function runRecipe<T>(
       query: { extract: () => derived, isStdinTty: () => true },
     },
   );
-  expect({ exitCode, stderr: capture.readStderr() }).toEqual({ exitCode: 0, stderr: "" });
+  expect({ exitCode, stderr: capture.readStderr() }).toEqual({
+    exitCode: 0,
+    stderr: "",
+  });
   return JSON.parse(capture.readStdout()) as T;
 }
 function specDocument(id: string, body: string, relations = "{}", kind = "behavior"): string {
@@ -456,7 +459,9 @@ describe("iteration loop: design diff", () => {
         });
       rmSync(directory, { recursive: true, force: true });
     }
-  }, 60_000);
+    // A budget that holds when the whole suite runs in parallel on a loaded machine: the
+    // procedure makes a git worktree and runs a full build.
+  }, 300_000);
 
   it("compares a keyed rule that becomes a flow at the same address", async () => {
     await withCorpus(async (root, base) => {

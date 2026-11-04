@@ -1,4 +1,4 @@
-import { GHERKIN_KIND_LIE_REASONS } from "../extract/gherkin-kind-honesty.js";
+import { gherkinKindLieReason } from "../extract/gherkin-kind-honesty.js";
 import type { SpecKind } from "../model/descriptors.js";
 import type {
   BehaviorSection,
@@ -31,15 +31,17 @@ function compareCodeUnits(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
 }
 
-/** Escapes authored text so a generated Gherkin-shaped page cannot invent structure. */
+/**
+ * Escapes authored text so a generated Gherkin-shaped page cannot invent structure. Every line
+ * terminator, CRLF, CR, LF, U+2028 or U+2029, folds to one space, so the page never shows a line
+ * the graph does not state, even in an editor that breaks lines at U+2028 or U+2029.
+ */
 export function escapeGherkinViewText(value: string): string {
   return value
     .replaceAll("\\", "\\\\")
     .replaceAll("```", "'''")
     .replaceAll('"""', "'''")
-    .replaceAll("\r\n", "\n")
-    .replaceAll("\r", "\n")
-    .replaceAll("\n", " ");
+    .replace(/\r\n|[\n\r\u2028\u2029]/gu, " ");
 }
 
 function pagePathOf(id: string): string {
@@ -136,9 +138,10 @@ function keyedVerification(verification: VerificationSection | undefined): reado
 
 function narrativeLines(narrative: string | undefined): readonly string[] {
   if (narrative === undefined || narrative.trim().length === 0) return [];
+  // A blank line, LF or CRLF, ends a paragraph; the escape folds every other line terminator.
   return narrative
-    .split(/\n\n/u)
-    .map((paragraph) => `  ${escapeGherkinViewText(paragraph.replaceAll("\n", " "))}`);
+    .split(/(?:\r\n|\n){2}/u)
+    .map((paragraph) => `  ${escapeGherkinViewText(paragraph)}`);
 }
 
 function stepLines(phase: "Given" | "When" | "Then", steps: readonly string[]): readonly string[] {
@@ -298,7 +301,7 @@ function renderUnrepresentedSections(
 
 function renderSpecPage(context: SpecContext): GherkinViewPage {
   const kind = context.specKind;
-  const lieReason = (GHERKIN_KIND_LIE_REASONS as Readonly<Record<string, string>>)[kind];
+  const lieReason = gherkinKindLieReason(kind);
   const title = escapeGherkinViewText(context.title ?? context.id);
   const keyword = kind === "example" ? "Scenario" : "Feature";
   const lines = [
@@ -346,7 +349,7 @@ function renderIndex(specs: readonly SpecContext[], reader: Reader): GherkinView
     ...(specs.length === 0
       ? ["No Specs."]
       : specs.map((spec) => {
-          const lie = (GHERKIN_KIND_LIE_REASONS as Readonly<Record<string, string>>)[spec.specKind];
+          const lie = gherkinKindLieReason(spec.specKind);
           const marker = lie === undefined ? "" : " — LOSSY";
           return `- [\`${spec.id}\`](${pagePathOf(spec.id)})${marker}`;
         })),

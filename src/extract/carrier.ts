@@ -8,6 +8,7 @@ export { reifyGherkinCarrier } from "./gherkin.js";
 import { extractFindingIds, reifySourceFile } from "./reify.js";
 import type { ReifiedPack, ReifiedSpec } from "./reify.js";
 import type { ProtocolBindingScope } from "./protocol-bindings.js";
+import { compilerLine } from "./typescript-lines.js";
 
 export interface CarrierReification {
   readonly specs: readonly ReifiedSpec[];
@@ -86,7 +87,7 @@ export function reifyTypeScriptCarrier(
             extractFindingIds.parseError,
             `the file does not parse: ${typeof text === "string" ? text : text.getMessageText()} — the error-tolerant parse recovers by guessing, so the file cannot be reified faithfully and its content is excluded`,
             relativePath,
-            firstDiagnostic.getLineNumber(),
+            compilerLine(sourceFile, firstDiagnostic.getStart()),
           ),
         ],
       };

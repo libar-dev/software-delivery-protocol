@@ -1,12 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  renameSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
@@ -14,7 +6,7 @@ import { codeAnchor } from "../model/code-anchor.js";
 import { renderGherkinView } from "../projections/gherkin-view.js";
 import type { GherkinViewPage } from "../projections/gherkin-view.js";
 import { createReader } from "../reader/reader.js";
-import { removeArtifacts } from "./artifacts.js";
+import { guardedOutput, assertDistinctPagePaths, removeArtifacts } from "./artifacts.js";
 import type { BuildArgs } from "./build-args.js";
 import type { BuildOutcome } from "./build-command.js";
 import { errorMessage, writeStderr, writeStdout } from "./output.js";
@@ -79,8 +71,15 @@ export function prepareGherkinPublication(
   hooks: GherkinViewHooks,
   command = "gherkin",
 ): ((validated: BuildOutcome) => number) | undefined {
+  const {
+    rmSync: remove,
+    mkdirSync: mkdir,
+    writeFileSync: writeOutput,
+    renameSync: rename,
+    check,
+  } = guardedOutput(parsed.root, hooks);
   const render = hooks.renderGherkinView ?? renderGherkinView;
-  const recoveryRm = hooks.rmSync ?? rmSync;
+  const recoveryRm = remove;
   const viewPath = join(parsed.root, "generated", "gherkin");
   const temporaryPath = `${viewPath}.tmp`;
   let publishedBeforeBuild: readonly GherkinViewPage[] | undefined;
@@ -111,6 +110,7 @@ export function prepareGherkinPublication(
 
     try {
       const pages = render(createReader(validate.graph));
+      assertDistinctPagePaths(pages, ".feature.md");
 
       if (parsed.checkClean) {
         const second = render(createReader(validate.graph));
@@ -128,16 +128,17 @@ export function prepareGherkinPublication(
         }
       }
 
-      rmSync(temporaryPath, { recursive: true, force: true });
+      remove(temporaryPath, { recursive: true, force: true });
 
       for (const page of pages) {
         const target = join(temporaryPath, page.path);
-        mkdirSync(dirname(target), { recursive: true });
-        writeFileSync(target, page.content, "utf8");
+        mkdir(dirname(target), { recursive: true });
+        writeOutput(target, page.content, { encoding: "utf8", flag: "wx" });
       }
 
-      rmSync(viewPath, { recursive: true, force: true });
-      renameSync(temporaryPath, viewPath);
+      remove(viewPath, { recursive: true, force: true });
+      rename(temporaryPath, viewPath);
+      check(join(parsed.root, "generated", ".boundary"));
       writeStdout(output, `Wrote ${viewPath} (${String(pages.length)} pages)\n`);
       return validate.exitCode;
     } catch (error) {

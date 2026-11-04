@@ -126,7 +126,7 @@ export const extractionSpecs = [
       },
       behavior: {
         rules: [
-          "Discovery reads Spec and Pack carriers by the suffixes `.sdp.md`, `.sdp.gherkin` and `.sdp.ts`. Other `.ts` and `.tsx` files are anchor candidates, except `.d.ts` files. Discovery never descends into `node_modules`, `dist`, `generated`, `coverage` or a dot-directory, and configured exclusions apply to both lists.",
+          "Discovery reads Spec and Pack carriers by the suffixes `.sdp.md`, `.sdp.gherkin` and `.sdp.ts`. Other `.ts` and `.tsx` files are anchor candidates, except `.d.ts` files. Discovery never descends into `node_modules`, `dist`, `generated`, `coverage` or a dot-directory, and configured exclusions apply to both lists. Discovery never follows a symbolic link below the root, and a root named explicitly is resolved to its real directory first. A link that discovery reaches outside the configured exclusions gets one warning naming it when the entry it stands for would be read: a link to a directory warns unless discovery skips a directory of that name, and any other link, one with a missing target included, warns only when its name is a carrier or anchor-candidate filename, even one that starts with a dot.",
           "An exclusion is an exact root-relative POSIX path prefix applied to Spec-carrier and anchor-candidate discovery; a repeated exclusion counts once.",
           "A prefix excludes itself and slash-delimited descendants only; it never excludes a merely similar sibling path.",
           "Empty, absolute, Windows-drive, backslash and trailing-slash paths, and paths with an empty, `.` or `..` segment, are refused rather than normalized into a different meaning.",
@@ -390,6 +390,8 @@ export const extractionSpecs = [
           "A contract never holds two steps under one contract key. An example marker that disagrees with the key of its vocabulary step withholds the example's step contract with `contracts/conflicting-step-key`. A step or space contract whose steps would share a contract key, two skeletons under one key or a key equal to another step's skeleton, is withheld with `contracts/duplicate-step-key`, naming the key and both skeletons; a withheld space contract withholds every registrar of its children.",
           "Two contract paths differing only by letter case cannot coexist on a case-insensitive filesystem, so the contracts tree is withheld whole and the finding names the colliding pair.",
           "Every generation finding is a warning that describes what did not emit; gating belongs to graph validation alone, so a withheld contract never fails the build by itself.",
+          "A Then slot named `kind` withholds its space contract when declared in a vocabulary, or its step contract when carried by an example, with `contracts/reserved-then-slot` naming the reserved word; a withheld space contract also withholds its children's registrars. Outcome variants keep their flat shape, with `kind` as the discriminant and the other slots as sibling fields.",
+          "The contract key `unspecified` is reserved for the coverage-gap outcome, whether written as a step key or as unkeyed Then text. A Then using it is a `conformance/reserved-then-key` error. Generation withholds its space contract when declared in a vocabulary, or its step contract when carried by an example, with `contracts/reserved-then-key` naming the reserved key; a withheld space contract also withholds its children's registrars. Given and When keys remain unrestricted.",
         ],
         exampleSpace: {
           given: [
@@ -413,11 +415,13 @@ export const extractionSpecs = [
           outcomeIdentity: "rules[8]",
           keyConflicts: "rules[9]",
           caseCollision: "rules[10]",
+          reservedThenSlot: "rules[12]",
+          reservedThenKey: "rules[13]",
         },
       },
       design: {
         findingIds:
-          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key`, each at warning severity.",
+          "`contracts/undeclared-slot` · `contracts/off-dimension-value` · `contracts/conflicting-binding` · `contracts/conflicting-dimension` · `contracts/untyped-vocabulary-slot` · `contracts/multi-entry-example` · `contracts/unmatched-vocabulary-step` · `contracts/case-colliding-path` · `contracts/multiple-registrar-paths` · `contracts/conflicting-step-key` · `contracts/duplicate-step-key` · `contracts/reserved-then-slot` · `contracts/reserved-then-key`, each at warning severity.",
         duplicateStepKey:
           '`contracts/duplicate-step-key` is a warning on the parent at `behavior.exampleSpace` for a space collision, or on the example at `behavior.examples` for a step-contract collision. Its message is `contract key "<key>" names both "<first skeleton>" and "<second skeleton>"; <space|step> contract withheld`, with the skeletons in first-occurrence order.',
         contractStep:
@@ -427,7 +431,7 @@ export const extractionSpecs = [
         outcomeVariant:
           '`{ readonly kind: "<contract key>"; readonly <slot>: <type>; … }` is the Outcome variant of one Then step of the example space, one per Then step, beside `UnspecifiedOutcome`.',
         planDispatch:
-          "the runner's `planExample` runs each step through `bindings[step.key]`, carries `key` on each planned step beside `text` and `label`, and renders the label from `text` and `params`, so a red keyed step still names itself in the Spec's own words.",
+          "the runner's `planExample` dispatches each contract key to an own or inherited handler with the bindings as `this`, following the realm-independent prototype boundaries and refusals in `spec:extraction.example-runner#rule.handlerDispatch`. Built-in parent-class methods remain eligible before those boundaries; an inherited `constructor`, missing handler or non-function fails with `no handler bound for step key \"<key>\"`. Each planned step carries `key` beside `text` and `label`, and the label renders from `text` and `params`, so a red keyed step still names itself in the Spec's own words.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -556,13 +560,14 @@ export const extractionSpecs = [
           "Scenario-level invocation — the five-adapter interface carries one product `invoke` per example, so the first `When` occurrence invokes it and later `When` occurrences in the same lawful scenario do not repeat side effects.",
           "At the first Then, the comparator refuses an incomplete point before calling the oracle and otherwise evaluates and caches `expected(point)`. It finds the authored Then whose contract key equals `expected.kind`, compares that step's authored parameters with the oracle payload, reads `observe(world)`, compares observed and oracle outcomes, and runs additional assertions separately. Actual-equals-oracle alone is insufficient: a Spec parameter mutation must fail. The oracle accepts `Partial<Conditions>`; the registrar never casts a partial point to Conditions.",
           "Oracle payload versus Spec Then parameters and observed versus oracle outcomes use deep structural equality on the authored shape. Diagnostics name missing, extra or changed values by path and show expected and actual values. The comparator quotes authored Then parameters and skeleton text without rephrasing them.",
-          "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When the oracle selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and the contract keys of the available Then steps; preserve the original assertion as `cause`.",
-          "Bound unspecified outcome — `unspecified` names a coverage gap in the example space, but a bound executable example selecting it reddens because no authored Then may silently witness that gap.",
+          "Failure rendering reuses the contract's matching Then step plus the existing `renderContractStep` path. When a specified oracle outcome selected no authored Then, emit a scenario-level diagnostic quoting Spec ID, oracle kind, and the contract keys of the available Then steps; preserve the original assertion as `cause`.",
+          "The Then contract key `unspecified` is reserved under spec:extraction.executable-contracts#rule.reservedThenKey. An oracle returning `unspecified` names a coverage gap; a bound executable example selecting it reddens with a distinct coverage-gap diagnostic because no authored Then may witness that gap.",
           "The authored top-level `specTest` carries a non-empty `verifies` target naming the example. It remains the source of `has-verifier`; generated execution confers no delivery fact and records no pass state.",
           "Additive assertions — optional `assertions` may add domain checks the Outcome union cannot express; they never replace steps (3) or (5) of the three-way comparator and never silence a Spec-param or oracle mismatch.",
           "Case mapping and outlines — outline rows map one deterministic case per row in carrier order when a multi-row table sugar expands statically into sibling examples (point-per-example). Scenario Outlines and inline Examples tables stay refused as executable carrier constructs inside a single example; one example remains one point and earns exactly one generated registration.",
           "Registrars use no environment, global or module side channel, mutable global registry or singleton world shared across examples. Generated siblings export the registrar and never self-register. Generation derives no domain observation; the engine never loads or executes adopter code. Registrars do not become generated test harnesses. Scenario Outlines stay refused. The interface changes neither the claim taxonomy, anchor bindings nor the contract-key identity of steps.",
         ],
+        ruleKeys: { reservedThenKey: "rules[11]" },
       },
       design: {
         registrar:
@@ -577,6 +582,8 @@ export const extractionSpecs = [
           "`generated/registrars.json` carries the versioned, sorted extraction-root-relative registrar paths owed by the build.",
         thenBinding:
           '`compareContractOutcome(execution, { kind: "then", key, text, params })` is the generated binding of a Then step; it compares only the step whose `key` equals the oracle\'s `kind`.',
+        unspecifiedCoverageGap:
+          '`scenario <spec>: oracle selected "unspecified"; coverage gap cannot witness a bound example` is the diagnostic for an unspecified oracle outcome, with `oracle outcome "unspecified" names a coverage gap` as its cause.',
         noMatchingThen:
           '`scenario <spec>: oracle selected "<kind>"; available Then steps: "<key>", …` is the diagnostic when no authored Then matches, listing each Then step\'s contract key in contract order, with the original assertion as `cause`.',
       },
@@ -612,7 +619,7 @@ export const extractionSpecs = [
           "Once the Vitest adapter creates a world, it awaits the optional `after` hook whether the steps pass or fail. A step failure stays the test's failure and an error from `after` is then discarded; when the steps pass, an error from `after` fails the test. A world factory that throws creates no world, so `after` does not run.",
           "Duplicate step text within one example binds one handler, and every occurrence runs it; an occurrence that binds a slot to a different value is a conflicting re-binding, named at generation, and every occurrence runs with the first binding, because an example is one point.",
           "A red step names itself before the assertion detail: the failure message leads with the step's natural reading — the Spec's own words with bound values inlined — and the original error is preserved, carried as `cause` when it cannot be re-messaged, and wrapped when the thrown value is not an error.",
-          "A missing or stale step handler is a compile-time refusal rather than a silent skip: the bindings type covers every step and only the steps, so spec-side drift fails the typecheck instead of the run.",
+          'The bindings type covers every step and only the steps, so missing or stale handlers fail typechecking. At execution, dispatch looks up the contract key on the bindings and then their prototype chain, calling the first function found with the bindings as `this` and the world, parameters and contract step as arguments. An inherited owner is excluded, and traversal stops before it, when its prototype is null or when it is callable and its prototype\'s prototype is null; these boundaries exclude Object.prototype and Function.prototype from any realm while preserving inherited instance and static class methods. Own handlers remain eligible even on null-prototype or callable bindings. Methods of built-in parent classes such as Map, Array and Promise remain eligible before those boundaries. An inherited `constructor`, a missing handler or a first value that is not a function fails at execution with `no handler bound for step key "<key>"`; dispatch never skips that value to find a later function.',
           "The core contributes `unspecified`, the one outcome no Spec ever states, so an uncovered region of an example space has an honest answer rather than a manufactured one.",
         ],
         exampleSpace: {
@@ -633,6 +640,7 @@ export const extractionSpecs = [
           worldCleanup: "rules[1]",
           oneHandlerPerStep: "rules[2]",
           redStepNamesItself: "rules[3]",
+          handlerDispatch: "rules[4]",
         },
       },
     },
@@ -713,17 +721,19 @@ export const extractionSpecs = [
           "Turn authored carriers into one graph and the artifacts derived from it, with every command that checks reading that same graph.",
       },
       behavior: {
+        flows: [
+          "The build discovers carriers, reifies them, derives the graph, stops on any extraction error, and emits the graph, the executable contracts and the registrars without running the graph checks.",
+          "Validation runs the build, then checks the graph that build derived and reports every finding, exiting nonzero on an error.",
+          "Each projection verb runs validation, then renders its root from that same graph and publishes it whatever the findings, keeping validation's exit code unless publication is refused by the write boundary or a case-insensitive page-path collision.",
+          "A query discovers, reifies and derives in process, stops on any extraction error, checks the graph, and hands the body the reader, the raw graph and the report from that one derivation, writing nothing.",
+        ],
         rules: [
           "Every command that checks the graph checks the graph its own run derived, through the one validation seam; `sdp build` stops at extraction checks.",
           "`sdp build` publishes derived outputs only after extraction reports no error. A warning does not fail the build; a contract-generation warning may withhold the contract or registrar it names under the executable-contracts law.",
           "Before replacing current outputs, `sdp build` stages the graph, the owed contracts, the registrar manifest, each registrar sibling whose bytes differ from the file on disk, and the imports when `--imports` is supplied, in temporary locations; a sibling whose bytes are unchanged is left untouched, with no temporary write and no rename. It then publishes the staged set and removes registrar siblings no longer owed.",
-          "On failure, `sdp build` removes its graph, contracts, manifest, temporary outputs and the confined registrar siblings known from the previous and new manifests. It removes imports only when that invocation requested them. A failed removal names the surviving path and says it must not be read as current; an untrusted registrar path is outside generated ownership.",
-        ],
-        flows: [
-          "The build discovers carriers, reifies them, derives the graph, stops on any extraction error, and emits the graph, the executable contracts and the registrars without running the graph checks.",
-          "Validation runs the build, then checks the graph that build derived and reports every finding, exiting nonzero on an error.",
-          "Each projection verb runs validation, then renders its root from that same graph and publishes it whatever the findings, keeping validation's exit code.",
-          "A query discovers, reifies and derives in process, stops on any extraction error, checks the graph, and hands the body the reader, the raw graph and the report from that one derivation, writing nothing.",
+          "On failure, when output parents remain safe, `sdp build` removes its graph, contracts, manifest, temporary outputs and the confined registrar siblings known from the previous and new manifests. It removes imports only when that invocation requested them. A failed removal names the surviving path and says it must not be read as current; an untrusted registrar path is outside generated ownership.",
+          "Before each filesystem mutation, including failure cleanup, the build and publishers recheck that the output parent resolves inside the extraction root. An escaping or unresolvable parent refuses the operation with exit 1 and no cleanup through that parent. A linked `generated/` is refused even when its target is inside the root. The build records the directory identity of `generated/`, checks it between mutations and after publication, and refuses if it changes. This defends against planted links and detects intervening changes; Node has no openat-style operations, so these path checks do not provide race-free confinement against a concurrent writer inside the root.",
+          "A staged file is created exclusively after removing its stale temporary entry; publication replaces the destination entry rather than truncating through a symbolic or hard link.",
         ],
         exampleSpace: {
           given: ["an extraction root containing the isolated spec {specId:string}"],
@@ -739,6 +749,8 @@ export const extractionSpecs = [
           emitOnClean: "rules[1]",
           stagedPublication: "rules[2]",
           failedPublication: "rules[3]",
+          writeBoundary: "rules[4]",
+          exclusiveStaging: "rules[5]",
         },
       },
     },

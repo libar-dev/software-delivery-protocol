@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { runInNewContext } from "node:vm";
+
+import { describe, expect, it, vi } from "vitest";
 
 import {
   planExample,
@@ -7,7 +9,7 @@ import {
   stepKindLabel,
   unspecified,
 } from "../src/runner/index.js";
-import type { ExampleContract } from "../src/runner/index.js";
+import type { ExampleContract, ParamShape, StepFn } from "../src/runner/index.js";
 
 /**
  * The runner core, pinned framework-free: the plan (order, dedupe-to-one-handler, per-occurrence
@@ -175,5 +177,254 @@ describe("the runner core — plan, renderer, execution loop", () => {
 
   it("contributes the one outcome no spec ever states", () => {
     expect(unspecified).toEqual({ kind: "unspecified" });
+  });
+});
+
+describe("own step data", () => {
+  const names = [
+    "constructor",
+    "toString",
+    "valueOf",
+    "hasOwnProperty",
+    "isPrototypeOf",
+    "toLocaleString",
+    "propertyIsEnumerable",
+    "__proto__",
+  ];
+  it.each(names)("refuses a missing own handler for %s and accepts an own handler", async (key) => {
+    const step = { kind: "then" as const, key, text: key, params: {} };
+    const contract = { spec: "spec:probe.own", title: "Own handlers", steps: [step] };
+    await expect(runExamplePlan(planExample(contract, {}), {})).rejects.toThrow(
+      `at step: Then ${key}\nno handler bound for step key "${key}"`,
+    );
+    const handler = vi.fn<StepFn<object, ParamShape>>();
+    const world = {};
+    await runExamplePlan(planExample(contract, { [key]: handler }), world);
+    expect(handler).toHaveBeenCalledExactlyOnceWith(world, step.params, step);
+  });
+  it.each(names)("keeps missing %s parameters visible and renders own values", (key) => {
+    const step = { kind: "then" as const, text: `result {${key}}`, params: {} };
+    expect(renderContractStep(step)).toBe(`Then result {${key}}`);
+    expect(renderContractStep({ ...step, params: { [key]: 3 } })).toBe("Then result 3");
+  });
+});
+
+describe("class-instance step bindings", () => {
+  it("runs inherited class methods with the bindings instance as receiver", async () => {
+    class BaseSteps {
+      readonly amount = 42;
+      submit(world: { total: number }) {
+        world.total += this.amount;
+      }
+    }
+    class Steps extends BaseSteps {}
+    const bindings = new Steps();
+    const contract = {
+      spec: "spec:probe.class-handlers",
+      title: "Class handlers",
+      steps: [{ kind: "when" as const, key: "submit" as const, text: "submit", params: {} }],
+    };
+    const world = { total: 0 };
+    await runExamplePlan(planExample(contract, bindings), world);
+    expect(world.total).toBe(42);
+  });
+
+  it.each(["toString", "valueOf", "constructor"])(
+    "refuses inherited built-in handler %s on a class instance",
+    async (key) => {
+      class Steps {
+        readonly submit = () => undefined;
+      }
+      const contract = {
+        spec: "spec:probe.class-missing",
+        title: "Missing class handler",
+        steps: [{ kind: "then" as const, key, text: key, params: {} }],
+      };
+      await expect(
+        runExamplePlan(
+          planExample(
+            contract,
+            new Steps() as unknown as Record<string, StepFn<object, ParamShape>>,
+          ),
+          {},
+        ),
+      ).rejects.toThrow(`no handler bound for step key "${key}"`);
+    },
+  );
+
+  it("refuses a constructor-function prototype constructor but runs an own constructor handler", async () => {
+    const constructed = vi.fn();
+    function Steps() {
+      constructed();
+    }
+    const bindings = Reflect.construct(Steps, []) as Record<string, StepFn<object, ParamShape>>;
+    const step = { kind: "then" as const, key: "constructor", text: "constructor", params: {} };
+    const contract = {
+      spec: "spec:probe.constructor",
+      title: "Constructor handler",
+      steps: [step],
+    };
+    await expect(runExamplePlan(planExample(contract, bindings), {})).rejects.toThrow(
+      'no handler bound for step key "constructor"',
+    );
+    expect(constructed).toHaveBeenCalledTimes(1);
+
+    const handler = vi.fn<StepFn<object, ParamShape>>();
+    Object.defineProperty(bindings, "constructor", { value: handler });
+    const world = {};
+    await runExamplePlan(planExample(contract, bindings), world);
+    expect(handler).toHaveBeenCalledExactlyOnceWith(world, step.params, step);
+    expect(handler.mock.contexts).toEqual([bindings]);
+  });
+});
+
+describe("function-shaped step bindings", () => {
+  describe.each([
+    {
+      name: "static class",
+      create: () =>
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- exercise class-valued bindings
+        class Steps {
+          static submit = pass;
+        },
+    },
+    {
+      name: "function namespace",
+      create: () =>
+        Object.assign(
+          function Steps() {
+            return undefined;
+          },
+          { submit: pass },
+        ),
+    },
+  ])("$name", ({ create }) => {
+    it.each(["toString", "bind", "call", "apply"])(
+      "refuses inherited Function.prototype handler %s",
+      async (key) => {
+        const contract = {
+          spec: "spec:probe.function-missing",
+          title: "Missing function handler",
+          steps: [{ kind: "then" as const, key, text: key, params: {} }],
+        };
+        const bindings = create() as unknown as Record<string, StepFn<object, ParamShape>>;
+        await expect(runExamplePlan(planExample(contract, bindings), {})).rejects.toThrow(
+          `at step: Then ${key}\nno handler bound for step key "${key}"`,
+        );
+      },
+    );
+  });
+
+  it("runs inherited static methods with the bindings class as receiver", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- exercise static handler inheritance
+    class BaseSteps {
+      static amount = 1;
+      static submit(world: { total: number }) {
+        world.total += this.amount;
+      }
+    }
+    class Steps extends BaseSteps {
+      static override amount = 42;
+    }
+    const contract = {
+      spec: "spec:probe.static-handlers",
+      title: "Static handlers",
+      steps: [{ kind: "when" as const, key: "submit" as const, text: "submit", params: {} }],
+    };
+    const world = { total: 0 };
+    await runExamplePlan(planExample(contract, Steps), world);
+    expect(world.total).toBe(42);
+  });
+});
+
+describe("realm-independent handler dispatch", () => {
+  const contract = (key: string) => ({
+    spec: "spec:probe.realm-handlers",
+    title: "Realm-independent handlers",
+    steps: [{ kind: "then" as const, key, text: key, params: {} }],
+  });
+  const foreignBindings = (source: string) =>
+    runInNewContext(source) as Record<string, StepFn<object, ParamShape>>;
+
+  it.each([
+    ["({})", "toString"],
+    ["({})", "valueOf"],
+    ["(function Steps() {})", "bind"],
+    ["(function Steps() {})", "call"],
+    ["(function Steps() {})", "apply"],
+    ["new (class Steps {})()", "constructor"],
+  ])("refuses omitted foreign intrinsic handler %s / %s", async (source, key) => {
+    await expect(
+      runExamplePlan(planExample(contract(key), foreignBindings(source)), {}),
+    ).rejects.toThrow(`at step: Then ${key}\nno handler bound for step key "${key}"`);
+  });
+
+  it.each([
+    ["own", "({ amount: 42, toString(world) { world.total += this.amount; } })", "toString"],
+    [
+      "inherited instance",
+      `(() => {
+      class Base { submit(world) { world.total += this.amount; } }
+      class Steps extends Base { amount = 42; }
+      return new Steps();
+    })()`,
+      "submit",
+    ],
+    [
+      "inherited static",
+      `(() => {
+      class Base { static submit(world) { world.total += this.amount; } }
+      class Steps extends Base { static amount = 42; }
+      return Steps;
+    })()`,
+      "submit",
+    ],
+    [
+      "own null-prototype",
+      "({ __proto__: null, amount: 42, submit(world) { world.total += this.amount; } })",
+      "submit",
+    ],
+  ])("runs foreign %s handlers with the bindings as receiver", async (_name, source, key) => {
+    const world = { total: 0 };
+    await runExamplePlan(planExample(contract(key), foreignBindings(source)), world);
+    expect(world.total).toBe(42);
+  });
+
+  it("stops at an inherited null-prototype owner but accepts its handler as an own binding", async () => {
+    const handler = vi.fn<StepFn<object, ParamShape>>();
+    const owner = Object.assign(Object.create(null) as object, { submit: handler });
+    const bindings = Object.create(owner) as typeof owner;
+    await expect(runExamplePlan(planExample(contract("submit"), bindings), {})).rejects.toThrow(
+      'no handler bound for step key "submit"',
+    );
+    expect(handler).not.toHaveBeenCalled();
+    await runExamplePlan(planExample(contract("submit"), owner), {});
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it("runs a built-in parent class method with the bindings as receiver", async () => {
+    class Steps extends Map<string, number> {}
+    const bindings = new Steps([["item", 42]]);
+    await runExamplePlan(
+      planExample(
+        contract("clear"),
+        bindings as unknown as Record<string, StepFn<object, ParamShape>>,
+      ),
+      {},
+    );
+    expect(bindings.size).toBe(0);
+  });
+
+  it("refuses a non-function handler instead of looking past its owner", async () => {
+    const bindings = Object.assign(Object.create({ submit: pass }) as object, { submit: 42 });
+    await expect(
+      runExamplePlan(
+        planExample(
+          contract("submit"),
+          bindings as unknown as Record<string, StepFn<object, ParamShape>>,
+        ),
+        {},
+      ),
+    ).rejects.toThrow('no handler bound for step key "submit"');
   });
 });

@@ -21,6 +21,34 @@ export interface ExpectedAnchor {
 // re-measured under plan 41
 export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
+    id: "test:protocol.spec-scaffolder",
+    nodeType: "Anchor",
+    file: "test/cli-new-spec.test.ts",
+    site: 'describe("sdp new spec",',
+  },
+  {
+    id: "test:protocol.cli-write-boundaries",
+    nodeType: "Anchor",
+    file: "test/cli-write-boundaries.test.ts",
+    site: 'describe("publication boundary regressions",',
+  },
+  {
+    id: "test:protocol.markdown-body-grammar-regressions",
+    nodeType: "Anchor",
+    label: "checks Markdown body grammar refusals",
+    file: "test/markdown-reifier.test.ts",
+    constant: "markdownBodyGrammarTestAnchor",
+    site: 'describe("Markdown frontmatter reifier",',
+  },
+  {
+    id: "test:protocol.structural-anchor-regressions",
+    nodeType: "Anchor",
+    label: "checks structural anchor refusals and binding contradictions",
+    file: "test/structural-anchors.test.ts",
+    constant: "structuralAnchorsTestAnchor",
+    site: 'describe("structural code anchors",',
+  },
+  {
     id: "test:protocol.vault-priority",
     nodeType: "Anchor",
     file: "test/vault.test.ts",
@@ -3476,7 +3504,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
   {
     id: "impl:protocol.authored-honesty-shape",
     nodeType: "CodeNode",
-    label: "refuses delivery facts smuggled through authored section carriers",
+    label: "refuses derived properties smuggled through authored envelopes and section carriers",
     file: "src/validate/validators.ts",
     constant: "authoringShapeAnchor",
     site: "function checkAuthoringShape",
@@ -4816,6 +4844,13 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
 
 // re-measured under plan 41
 export const expectedBindingEdges = [
+  ["test:protocol.spec-scaffolder", "verifies", "spec:consumers.authoring-on-ramp"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:extraction.build-pipeline"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.projections-model"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.wholesale-view-rewrite"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.design-review"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.mermaid-view"],
+  ["test:protocol.cli-write-boundaries", "verifies", "spec:consumers.gherkin-view"],
   [
     "impl:protocol.studio-capability-diagrams",
     "satisfies",
@@ -6015,6 +6050,12 @@ export const expectedBindingEdges = [
   ["impl:protocol.gherkin-authoring", "satisfies", "spec:carrier.gherkin-authoring"],
   ["impl:protocol.markdown-parser", "satisfies", "spec:carrier.markdown-parser"],
   ["test:protocol.markdown-parser", "verifies", "spec:carrier.markdown-parser"],
+  [
+    "test:protocol.markdown-body-grammar-regressions",
+    "verifies",
+    "spec:carrier.markdown-body-grammar",
+  ],
+  ["test:protocol.structural-anchor-regressions", "verifies", "spec:model.anchors"],
   ["impl:protocol.envelope-contract", "satisfies", "spec:carrier.envelope-contract"],
   ["test:protocol.envelope-contract", "verifies", "spec:carrier.envelope-contract"],
   ["impl:protocol.markdown-body-grammar", "satisfies", "spec:carrier.prose-ownership-rule"],
@@ -6804,6 +6845,8 @@ export const expectedBindingEdges = [
 
 // re-measured under plan 41
 export const expectedCommentAnchorIds = [
+  "test:protocol.spec-scaffolder",
+  "test:protocol.cli-write-boundaries",
   "impl:protocol.studio-capabilities-page",
   "impl:protocol.studio-capability-diagrams",
   "impl:protocol.studio-roadmap-page",

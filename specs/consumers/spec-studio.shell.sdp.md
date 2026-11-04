@@ -29,7 +29,7 @@ The shell carries what every page shares, including the rules that keep a page r
 - rule: The rail's count of findings is the count of the validation report's findings, never a count the page derives.
 - rule: [#noRecentEdits] The shell shows no recent edits and no other history: git holds it.
 - rule: [#stamp] Served over http or https, the shell reads `stamp.json` beside the page set and, when it loads, shows the build context it names; a page opened through `file://` requests nothing and shows no stamp.
-- rule: [#rungBadge] A stated rung shows as a badge that carries the rung's word, colored from a palette of four that stays distinct under color blindness; the floor reached shows beside it as words with no color of its own, and only the divergence banner adds a warning color, beside its words.
+- rule: [#rungBadge] A stated rung shows as a badge that carries the rung's word, colored from a palette of four that stays distinct under color blindness; the floor reached shows beside it as words with no color of its own, and only the divergence banner adds a warning color, beside its words. A Spec whose floor is not evaluated shows `floor not evaluated`, and no page raises a divergence banner for it, counts it as stated above its floor or shows its stated next rung.
 - rule: [#wordsBesideColor] Every meaning a color conveys is also written in words, so no reading depends on color.
 - rule: [#keyboard] Every link and control is reachable from the keyboard in reading order and shows where the focus is.
 - rule: [#lineLength] Prose runs no wider than about 80 characters, and a table wider than the canvas scrolls inside its own box, never the page.

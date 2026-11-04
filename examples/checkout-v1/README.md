@@ -1,7 +1,8 @@
 # checkout-v1 — the worked example
 
-The MVP bounded context: **Order Management**, modeled as `pack:checkout-v1` — eleven `Spec`s, one
-`Pack`, five anchors. It exists to prove the loop end-to-end on one small, honest slice: author
+The MVP bounded context: **Order Management**, modeled as `pack:checkout-v1` — eleven `Spec`s and
+five anchors, with a second `Pack`, the worked roadmap `pack:checkout-roadmap`. It exists to prove
+the loop end-to-end on one small, honest slice: author
 delivery intent in its canonical carrier, bind the implementing code, the test, and the oracle with anchors,
 derive **the one graph**, generate the step and space contracts off it, run the conformance +
 honesty checks, execute the bound example, and read the generated Design Review. It is also the
@@ -59,7 +60,7 @@ npm run generate:example                              # publish all five project
 their `claim`, `declared`, `anchored`, or `inferred`, without collapsing them:
 
 ```
-11 specs · 1 packs · 5 anchors → 17 nodes · 32 edges (0 errors, 0 warnings)
+11 specs · 2 packs · 5 anchors → 18 nodes · 34 edges (0 errors, 0 warnings)
 ```
 
 Beside the graph it writes three modules in `generated/contracts/`: a step contract for each
