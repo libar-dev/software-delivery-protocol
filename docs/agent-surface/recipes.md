@@ -57,6 +57,7 @@
 | 53 | The roadmap | pack, decider | Read upcoming work in authored order and what each entry needs |
 | 54 | The design slice | pack or specs, members, detail | Read a set of Specs as one design |
 | 55 | The roadmap memo | pack, decider | Render a roadmap as a description's forward section |
+| 56 | The law a Spec rests on | spec | Open the law a Spec rests on: files, rule lines, addresses |
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -117,7 +118,7 @@ reason and expected input. Missing required input is never answered as empty, ex
 `files`, which reads as an empty change list.
 The samples name this repository's corpus, so every body runs as written here. The recipe check
 executes each one unchanged. Recipes report absent subjects in their documented result shape.
-Recipes 3, 5, 9, 14, 19, 21, 27, 29, 34 and 39 answer an absent subject with `found: false`. In
+Recipes 3, 5, 9, 14, 19, 21, 27, 29, 34, 39 and 56 answer an absent subject with `found: false`. In
 `diagnostics`, the design diff, context bundle, perspective filter, key-family register,
 example-space coverage, rule-key proposal, entry citations, roadmap, design slice and roadmap memo
 (recipes 35, 36, 37, 41, 44, 48, 51, 53, 54 and 55) report an absent Pack, the example-space
@@ -6315,3 +6316,85 @@ if (deferrals.length > 0) {
 while (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
 return { diagnostics: [], memo: `${lines.join("\n")}\n` };
 ```
+
+## 56. The law a Spec rests on
+
+*When you need this: you are about to change, review or teach one Spec and want the law it rests
+on as files to open and addresses to cite. For the rungs alone, run dependency footing (recipe
+21).*
+
+`params.spec` is the Spec; an unknown id returns `{ id, found: false }`. The answer composes recipe
+21 and keeps its fields.
+
+```js
+const accepts = ["spec"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const footing = await recipes(21, { spec: params.spec ?? "spec:consumers.reading-on-ramp" });
+if (!footing.found) return footing;
+
+const cap = 12;
+const leftOut = [];
+const count = { rules: 0, keyedRules: 0 };
+const size = (value) => Object.keys(value ?? {}).length;
+const entries = (section) => Object.keys(section ?? {}).filter((key) => key !== "description").length;
+const law = footing.footing.map((row) => {
+  const context = row.resolved ? g.specContext(row.id) : undefined;
+  if (context === undefined) {
+    return { ...row, file: null, decision: false, rules: [], unkeyedRules: 0, alsoHolds: {} };
+  }
+  const sections = context.sections;
+  const lines = new Map(context.entryLocations.map((location) => [location.entry, location.line]));
+  const keys = new Map(Object.entries(sections.behavior?.ruleKeys ?? {}).map(([key, slot]) => [slot, key]));
+  const rules = (sections.behavior?.rules ?? []).map((_, index) => {
+    const key = keys.get(`rules[${index}]`);
+    return { line: lines.get(`rule[${index}]`) ?? null, address: key === undefined ? null : `${row.id}#rule.${key}` };
+  });
+  const unkeyedRules = rules.filter((rule) => rule.address === null).length;
+  count.rules += rules.length;
+  count.keyedRules += rules.length - unkeyedRules;
+  if (rules.length > cap) leftOut.push(`${row.id}: ${rules.length - cap} rules after the first ${cap}`);
+  const held = {
+    terms: size(sections.model?.terms),
+    constraints: size(sections.constraints),
+    flows: size(sections.behavior?.flows),
+    design: entries(sections.design),
+    ui: entries(sections.ui),
+    decision: entries(sections.decision),
+  };
+  return {
+    ...row,
+    file: context.file,
+    decision: context.specKind === "decision",
+    rules: rules.slice(0, cap),
+    unkeyedRules,
+    alsoHolds: Object.fromEntries(Object.entries(held).filter(([, entryCount]) => entryCount > 0)),
+  };
+});
+
+return {
+  id: footing.id,
+  found: true,
+  statedReadiness: footing.statedReadiness,
+  floorReached: footing.floorReached,
+  totals: { ...footing.totals, decisions: law.filter((row) => row.decision).length, ...count },
+  law,
+  leftOut,
+};
+```
+
+`law` holds recipe 21's `footing` rows in its order, one hop, each with:
+
+- `file`, the target's carrier, or null when the target does not resolve to a Spec;
+- `decision`, true for a decision record, whose ruling sits in its file's Decision section with no
+  line in the graph;
+- `rules`, each behavior rule's `line` and its entry `address`, null for an unkeyed rule: cite
+  that one by file and line, or propose a key with the rule-key proposal (recipe 48). A target
+  with more than twelve rules lists the first twelve, and `leftOut` names the rest;
+- `unkeyedRules`, the count of the target's rules with no address;
+- `alsoHolds`, the count of entries in each section the answer does not list (`terms`,
+  `constraints`, `flows`, `design`, `ui`, `decision`), present only when not zero, so open the
+  file for law that lives outside the rules.
+
+`totals` keeps recipe 21's counts and adds `decisions`, `rules` and `keyedRules` across every
+target, the rules past a cap included. `leftOut` is an empty list when nothing was cut.

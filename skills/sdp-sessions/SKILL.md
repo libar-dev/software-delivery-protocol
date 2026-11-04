@@ -68,7 +68,7 @@ choose an epic's refinement scope and inspect its direct binding evidence; check
 Use promotion preflight (recipe 9) on the target; the planning slice (recipe 19), dependency
 footing (recipe 21) and dependency cycles (recipe 26) for what it rests on; and readiness
 divergence (recipe 7) across the corpus. Resolve the target's blocking open questions and review
-the carrying Specs. The open-question register (recipe 20) lists the neighbors' questions, and the
+the carrying Specs, which the law a Spec rests on (recipe 56) opens at their files and rule lines. The open-question register (recipe 20) lists the neighbors' questions, and the
 statement queue (recipe 46) orders waiting readiness statements and the selected decider's
 questions; it states no rung. A clear floor is evidence, not an automatic `ready` statement.
 Pinned declarations (recipe 24) and the key-family register (recipe 41) list the shapes a builder

@@ -2134,6 +2134,85 @@ const registerRecipesTestAnchor = specTest({
 });
 void registerRecipesTestAnchor;
 describe("register recipe semantics", () => {
+  it("opens the law a Spec rests on at its files, rule lines and addresses, capping long rule lists", async () => {
+    const ruleTexts = Array.from({ length: 14 }, (_, index) =>
+      index === 1 ? "[#second] Rule two." : index === 13 ? "[#last] Rule last." : "Rule.",
+    );
+    const lawCarrier = `---\nid: spec:probe.law\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Law\n\n## Intent\n- outcome: Hold many rules.\n\n## Behavior\n${ruleTexts.map((text) => `- rule: ${text}`).join("\n")}\n`;
+    const extraction = markdownProbe("sdp-law-recipe-", {
+      "law.sdp.md": lawCarrier,
+      "terms.sdp.md": `---\nid: spec:probe.terms\nkind: model\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Terms\n\n## Intent\n- outcome: Name two terms.\n\n## Model\n- **alpha** — The first term.\n- **beta** — The second term.\n\n## Design\n- shape: One shape.\n`,
+      "ruling.sdp.md": `---\nid: spec:probe.ruling\nkind: decision\naltitude: feature\nreadiness: idea\nrelations: {}\n---\n# Ruling\n\n## Intent\n- outcome: Rule once.\n\n## Decision\n- context: A question arose.\n- decision: Answer it.\n`,
+      "subject.sdp.md": `---\nid: spec:probe.subject\nkind: behavior\naltitude: story\nreadiness: idea\nrelations:\n  refines: spec:probe.law\n  dependsOn:\n    target: spec:probe.terms\n    reason: it speaks the terms\n  decidedBy: spec:probe.ruling\n---\n# Subject\n\n## Intent\n- outcome: Rest on law.\n`,
+    });
+    const subject = { spec: "spec:probe.subject" };
+    const recipe = recipeByOrdinal(56);
+    const answer = asRecord(await runRecipe(recipe, subject, extraction));
+    const footing = asRecord(await runRecipe(recipeByOrdinal(21), subject, extraction));
+    const law = asArray(answer.law).map(asRecord);
+    const added = new Set(["file", "decision", "rules", "unkeyedRules", "alsoHolds"]);
+
+    // Recipe 21's rows and order stay as they are; the recipe only adds where each law lives.
+    expect(
+      law.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) => !added.has(key)))),
+    ).toEqual(footing.footing);
+    expect(
+      law.map((row) => ({
+        id: row.id,
+        file: row.file,
+        decision: row.decision,
+        unkeyedRules: row.unkeyedRules,
+        alsoHolds: row.alsoHolds,
+      })),
+    ).toEqual([
+      {
+        id: "spec:probe.law",
+        file: "law.sdp.md",
+        decision: false,
+        unkeyedRules: 12,
+        alsoHolds: {},
+      },
+      {
+        id: "spec:probe.terms",
+        file: "terms.sdp.md",
+        decision: false,
+        unkeyedRules: 0,
+        alsoHolds: { terms: 2, design: 1 },
+      },
+      {
+        id: "spec:probe.ruling",
+        file: "ruling.sdp.md",
+        decision: true,
+        unkeyedRules: 0,
+        alsoHolds: { decision: 2 },
+      },
+    ]);
+    const ruleLines = lawCarrier
+      .split("\n")
+      .flatMap((line, index) => (line.startsWith("- rule:") ? [index + 1] : []));
+    expect(law[0]?.rules).toEqual(
+      ruleLines.slice(0, 12).map((line, index) => ({
+        line,
+        address: index === 1 ? "spec:probe.law#rule.second" : null,
+      })),
+    );
+    expect(answer.leftOut).toEqual(["spec:probe.law: 2 rules after the first 12"]);
+    expect(answer.totals).toEqual({
+      ...asRecord(footing.totals),
+      decisions: 1,
+      rules: 14,
+      keyedRules: 2,
+    });
+    expect(await runRecipe(recipe, { spec: "spec:probe.absent" }, extraction)).toEqual({
+      id: "spec:probe.absent",
+      found: false,
+    });
+    expect(await runRecipe(recipe, { sepc: "spec:probe.subject" }, extraction)).toEqual({
+      unknownParams: ["sepc"],
+      accepts: ["spec"],
+    });
+  });
+
   it("lists key families across the corpus in key, Spec and section order with the documented sample", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(41)));
     expect(result.prefixes).toEqual(["finding", "impact"]);

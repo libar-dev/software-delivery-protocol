@@ -14,6 +14,7 @@
 | Read a Pack or a set of Specs as one design                    | the design slice (recipe 54)                                                                               |
 | List open questions                                            | the open-question register (recipe 20)                                                                     |
 | See what a Spec rests on                                       | dependency footing (recipe 21); dependency cycles (recipe 26)                                              |
+| Open the law a Spec rests on, to cite or change it             | the law a Spec rests on (recipe 56)                                                                        |
 | Change a Spec others rest on                                   | design-change impact (recipe 30); the planning slice (recipe 19)                                           |
 | Check addresses written outside the Specs                      | address resolution (recipe 25)                                                                             |
 | List the signatures two parties share                          | pinned declarations (recipe 24)                                                                            |
