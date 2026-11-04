@@ -494,18 +494,18 @@ if (context === undefined) {
   return { id, found: false };
 }
 
-const byStatedReadiness = {};
+const byStatedReadiness = new Map();
 
 for (const member of context.members) {
   const rung = member.statedReadiness ?? "unresolved";
-  byStatedReadiness[rung] = (byStatedReadiness[rung] ?? 0) + 1;
+  byStatedReadiness.set(rung, (byStatedReadiness.get(rung) ?? 0) + 1);
 }
 
 return {
   id: context.id,
   title: context.title,
   memberCount: context.members.length,
-  byStatedReadiness,
+  byStatedReadiness: Object.fromEntries(byStatedReadiness),
   unresolvedMembers: context.members.filter((member) => !member.resolved).map((member) => member.id),
   implementedCount: context.members.filter((member) => member.deliveryFacts.includes("implemented"))
     .length,
@@ -1572,7 +1572,9 @@ const count = (key, value) => footing.filter((row) => row[key] === value).length
 const notEvaluated = count("floorReached", "not evaluated");
 const byStatedReadiness = new Map([...rungs, "unresolved", "nonSpec"].map((rung) => [rung, 0]));
 for (const row of footing) {
-  const key = !row.resolved ? "unresolved" : row.statedReadiness ?? "nonSpec";
+  const key = !row.resolved ? "unresolved"
+    : row.statedReadiness === null ? "nonSpec"
+    : rungs.includes(row.statedReadiness) ? row.statedReadiness : "unratified";
   byStatedReadiness.set(key, (byStatedReadiness.get(key) ?? 0) + 1);
 }
 
@@ -1604,7 +1606,7 @@ only when such a target exists. A target that does not resolve keeps its row
 with `resolved: false` and null readiness, and counts under `totals.byStatedReadiness.unresolved`.
 Resolved targets that are not Specs have null readiness and count under
 `totals.byStatedReadiness.nonSpec`. An unratified stated-readiness value on a resolved Spec
-counts under its own key; the four ratified rungs keep their keys even at zero. The recipe reports readiness and applies no threshold: which rung a target must state before this
+counts under `totals.byStatedReadiness.unratified`, present only when needed; its footing row keeps the original value. The structural `unresolved` and `nonSpec` buckets never count foreign readiness strings. The four ratified rungs keep their keys even at zero. The recipe reports readiness and applies no threshold: which rung a target must state before this
 Spec can state `ready` is the floor clause carried by `spec:validation.typed-dependency-floor`.
 `verifies` and `supersedes` stay out, because a Spec does not rest on what it verifies or replaces.
 
@@ -2768,13 +2770,13 @@ const rows = decisions
       packs: context.packs,
     };
   });
-const byRung = {};
-for (const row of rows) byRung[row.statedReadiness] = (byRung[row.statedReadiness] ?? 0) + 1;
+const byRung = new Map();
+for (const row of rows) byRung.set(row.statedReadiness, (byRung.get(row.statedReadiness) ?? 0) + 1);
 
 return {
   totals: {
     decisions: rows.length,
-    byRung,
+    byRung: Object.fromEntries(byRung),
     superseded: rows.filter((row) => row.supersededBy.length > 0).length,
     shapingNothing: rows.filter((row) => row.shapes.length === 0).length,
   },
