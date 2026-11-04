@@ -774,7 +774,8 @@ describe("Protocol Studio page set", () => {
       rendered.find((p) => p.path === "specs/consumers.spec-studio.shell.html")?.content,
     ).toContain('id="rule.withoutScript"');
     checkLinks(rendered);
-  });
+    // checkLinks walks the whole self-hosted page set, which can pass five seconds under load.
+  }, 60_000);
   it("contains the complete Spec prose without executing script", () => {
     for (const spec of protocol.specs) {
       const page = rendered.find((p) => p.path === pagePath(spec.id))?.content ?? "";

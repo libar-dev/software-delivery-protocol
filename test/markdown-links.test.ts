@@ -10,14 +10,22 @@ import {
   decodeMarkdownReferences,
   referenceCounts,
 } from "./helpers/character-references.js";
-import { danglingLinks, linkedPath, markdownLinkTargets } from "./helpers/markdown-links.js";
+import {
+  danglingLinks,
+  linkedFragment,
+  linkedPath,
+  markdownAnchors,
+  markdownLinkTargets,
+} from "./helpers/markdown-links.js";
 
 // Relative Markdown links in the documents an outsider reads must reach a file or directory of
-// the repository. Removing or renaming a document, such as a concept document the cleanup
-// dissolves, otherwise leaves links that dangle for every reader while the rest of the gate stays
-// green. Carriers are out of scope, because the graph checks what they cite, and so are the
-// restored lineage documents, which are verbatim historical exhibits. The reader in
-// `helpers/markdown-links.ts` finds the links as the forge renders them.
+// the repository, and a fragment on a link to a Markdown page must reach one of its headings or
+// HTML anchors. Removing or renaming a document or a section, as the cleanup does when it
+// dissolves concept documents, otherwise leaves links that dangle for every reader while the rest
+// of the gate stays green. Carriers are out of scope, because the graph checks what they cite,
+// and so is the v0 concept set under `docs/lineage/v0-design/`, which is restored verbatim as a
+// historical exhibit. The notes written for `docs/lineage/` are checked like any other document.
+// The reader in `helpers/markdown-links.ts` finds the links and anchors as the forge renders them.
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -25,8 +33,32 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 function isCheckedDocument(path: string): boolean {
   if (!path.endsWith(".md") || path.endsWith(".sdp.md")) return false;
   if (["README.md", "AGENTS.md", "CONTEXT.md"].includes(path)) return true;
-  if (path.startsWith("docs/")) return !path.startsWith("docs/lineage/");
+  if (path.startsWith("docs/")) return !path.startsWith("docs/lineage/v0-design/");
   return path.startsWith("jtbd-stories/") || path.startsWith(".agents/skills/");
+}
+
+/** A tree's paths, with every directory above them, and a reader for its files. */
+interface Tree {
+  readonly paths: ReadonlySet<string>;
+  readonly exists: (path: string) => boolean;
+  readonly read: (path: string) => string;
+}
+
+/** The documents the check reads in `tree`, and the links among them that miss. */
+function checkTree(tree: Tree): {
+  readonly checked: readonly string[];
+  readonly dangling: readonly string[];
+} {
+  const present = (path: string) => tree.paths.has(path) && tree.exists(path);
+  const documents = new Map(
+    [...tree.paths]
+      .filter((path) => isCheckedDocument(path) && present(path))
+      .sort()
+      .map((path) => [path, tree.read(path)] as const),
+  );
+  const page = (path: string) =>
+    /\.md$/iu.test(path) && present(path) ? tree.read(path) : undefined;
+  return { checked: [...documents.keys()], dangling: danglingLinks(documents, present, page) };
 }
 
 /**
@@ -61,28 +93,55 @@ function repositoryPaths(): ReadonlySet<string> {
 
 describe("relative Markdown links", () => {
   it("reach a repository path from every document an outsider reads", () => {
-    const paths = repositoryPaths();
-    const documents = new Map(
-      [...paths]
-        .filter((path) => isCheckedDocument(path) && existsSync(join(repoRoot, path)))
-        .sort()
-        .map((path) => [path, readFileSync(join(repoRoot, path), "utf8")] as const),
-    );
+    const { checked, dangling } = checkTree({
+      paths: repositoryPaths(),
+      exists: (path) => existsSync(join(repoRoot, path)),
+      read: (path) => readFileSync(join(repoRoot, path), "utf8"),
+    });
     for (const path of [
       "README.md",
       "AGENTS.md",
       "CONTEXT.md",
       "docs/agent-surface/recipes.md",
       "docs/concept/README.md",
+      "docs/lineage/README.md",
       "jtbd-stories/README.md",
       ".agents/skills/sdp-authoring/SKILL.md",
     ]) {
-      expect(documents.has(path)).toBe(true);
+      expect(checked).toContain(path);
     }
-    expect([...documents.keys()].filter((path) => path.startsWith("docs/lineage/"))).toEqual([]);
+    expect(checked.filter((path) => path.startsWith("docs/lineage/v0-design/"))).toEqual([]);
+    expect(dangling).toEqual([]);
+  });
 
-    const present = (path: string) => paths.has(path) && existsSync(join(repoRoot, path));
-    expect(danglingLinks(documents, present)).toEqual([]);
+  it("checks the notes written for docs/lineage and skips only the restored v0 concept set", () => {
+    const files = new Map([
+      ["docs/lineage/README.md", "Start with [the context](./annotation-context.md#why).\n"],
+      [
+        "docs/lineage/annotation-context.md",
+        "# Context\n\n[Gone](../../specs/decisions/gone.sdp.md)\n",
+      ],
+      ["docs/lineage/archived-scout.md", "[Decision](../../specs/decisions/removed.sdp.md)\n"],
+      ["docs/lineage/v0-design/README.md", "[Old](../../specs/old.md)\n"],
+      ["docs/lineage/v0-design/01-core-primitives.md", "[Old](./missing.md)\n"],
+    ]);
+    const paths = new Set<string>([".", "docs", "docs/lineage", "docs/lineage/v0-design"]);
+    for (const path of files.keys()) paths.add(path);
+    const { checked, dangling } = checkTree({
+      paths,
+      exists: (path) => paths.has(path),
+      read: (path) => files.get(path) ?? "",
+    });
+    expect(checked).toEqual([
+      "docs/lineage/README.md",
+      "docs/lineage/annotation-context.md",
+      "docs/lineage/archived-scout.md",
+    ]);
+    expect(dangling).toEqual([
+      "docs/lineage/README.md:1 ./annotation-context.md#why",
+      "docs/lineage/annotation-context.md:3 ../../specs/decisions/gone.sdp.md",
+      "docs/lineage/archived-scout.md:1 ../../specs/decisions/removed.sdp.md",
+    ]);
   });
 
   it("reads the links a Markdown reader follows and skips code and external targets", () => {
@@ -381,6 +440,179 @@ describe("relative Markdown links", () => {
     ).toBe("&\u2233<\u20D2\u{1D504}\uFFFD\uFFFD");
     expect(decodeMarkdownReferences("&amp &#000000040; &nope;")).toBe("&amp &#000000040; &nope;");
     expect(decodeHtmlReferences("&eacute;&lang;&AMP;&#40&#x29")).toBe("\u00E9\u2329&AMP;()");
+  });
+
+  it("checks a fragment against the headings and HTML anchors of the Markdown page it names", () => {
+    const guide = [
+      "# The guide",
+      "",
+      "## Setup & use",
+      "",
+      "## Setup & use",
+      "",
+      "Renamed section",
+      "---",
+      "",
+      '<a name="kept-name"></a> and <span id="kept-id"></span>',
+      "",
+      "```md",
+      "## Not a heading",
+      '<a id="not-an-anchor"></a>',
+      "```",
+      "",
+      "[self](#setup--use-1) and [self, gone](#setup) and [top](#top)",
+    ].join("\n");
+    const documents = new Map([
+      ["docs/guide.md", guide],
+      [
+        "jtbd-stories/story.md",
+        [
+          "[a](../docs/guide.md#the-guide) [b](../docs/guide.md#setup--use-1)",
+          "[c](../docs/guide.md#setup--use-2) [d](../docs/guide.md#old-section)",
+          "[e](../docs/guide.md#renamed-section) [f](../docs/guide.md#kept-name)",
+          "[g](../docs/guide.md#kept-id) [h](../docs/guide.md#not-a-heading)",
+          "[i](../docs/guide.md#not-an-anchor) [j](../docs/guide.md#user-content-the-guide)",
+          '<a href="../docs/guide.md#setup--use">k</a> <a href="../docs/guide.md#gone">l</a>',
+        ].join("\n"),
+      ],
+    ]);
+    const present = new Set(["docs/guide.md"]);
+    expect(danglingLinks(documents, (path) => present.has(path))).toEqual([
+      "docs/guide.md:17 #setup",
+      "jtbd-stories/story.md:2 ../docs/guide.md#setup--use-2",
+      "jtbd-stories/story.md:2 ../docs/guide.md#old-section",
+      "jtbd-stories/story.md:4 ../docs/guide.md#not-a-heading",
+      "jtbd-stories/story.md:5 ../docs/guide.md#not-an-anchor",
+      "jtbd-stories/story.md:6 ../docs/guide.md#gone",
+    ]);
+  });
+
+  it("counts no heading or anchor inside an HTML comment, which renders nothing", () => {
+    const page = [
+      "<!-- <h2>Old</h2> -->",
+      "",
+      "<!--",
+      "<h2>Older</h2>",
+      '<a id="hidden"></a>',
+      "-->",
+      "",
+      "<div>",
+      "<h2>Kept <!-- <span>x</span> -->heading</h2>",
+      "<!-- <h3>Not</h3> --><h3>After</h3>",
+      "<!--><h4>Abrupt</h4>",
+      "</div>",
+      "",
+      "[old](#old) [older](#older) [hidden](#hidden) [kept](#kept-heading) [not](#not)",
+      "[after](#after) [abrupt](#abrupt)",
+    ].join("\n");
+    expect([...markdownAnchors(page)].sort()).toEqual(["abrupt", "after", "kept-heading"]);
+    expect(danglingLinks(new Map([["docs/page.md", page]]), () => true)).toEqual([
+      "docs/page.md:14 #old",
+      "docs/page.md:14 #older",
+      "docs/page.md:14 #hidden",
+      "docs/page.md:14 #not",
+    ]);
+  });
+
+  it("checks the fragment of a link that names its own page by a query", () => {
+    expect(linkedPath("docs/guide.md", "?x=1#missing")).toBeUndefined();
+    expect(linkedPath("docs/guide.md", "?plain=1")).toBeUndefined();
+    const documents = new Map([
+      [
+        "docs/guide.md",
+        [
+          "# Kept",
+          "",
+          "[a](?x=1#missing) [b](?x=1#kept) [c](?plain=1#L5) [d](?x=1)",
+          "[e](guide.md?x=1#missing) [f](guide.md?plain=1#L5)",
+        ].join("\n"),
+      ],
+    ]);
+    // The page's folder is present too, as it is in the repository.
+    const present = new Set(["docs", "docs/guide.md"]);
+    expect(danglingLinks(documents, (path) => present.has(path))).toEqual([
+      "docs/guide.md:3 ?x=1#missing",
+      "docs/guide.md:4 guide.md?x=1#missing",
+    ]);
+  });
+
+  it("reports a fragment left behind when its heading is renamed", () => {
+    const story = "See [the section](../docs/guide.md#first-steps).\n";
+    const before = new Map([
+      ["docs/guide.md", "# Guide\n\n## First steps\n"],
+      ["jtbd-stories/story.md", story],
+    ]);
+    const after = new Map([
+      ["docs/guide.md", "# Guide\n\n## Getting started\n"],
+      ["jtbd-stories/story.md", story],
+    ]);
+    const present = () => true;
+    expect(danglingLinks(before, present)).toEqual([]);
+    expect(danglingLinks(after, present)).toEqual([
+      "jtbd-stories/story.md:1 ../docs/guide.md#first-steps",
+    ]);
+  });
+
+  it("derives a heading's anchor from its rendered text, as the forge does", () => {
+    const anchors = markdownAnchors(
+      [
+        "# Café `a_b` and _emphasis_ — [linked](other.md) ![pic](p.png) &amp; <b>bold</b> **x**",
+        "## snake_case stays and __init__ is strong",
+        "## Ref [text][r] and [missing][nope]",
+        "### Closing hashes ###",
+        "Two",
+        "lines  ",
+        "===",
+        "",
+        '<a id="repeat"></a>',
+        "",
+        "## Repeat",
+        "## Repeat",
+        "## Repeat 1",
+        "",
+        "<h2>Raw <em>HTML</em></h2>",
+        "",
+        "[r]: target.md",
+      ].join("\n"),
+    );
+    expect([...anchors].sort()).toEqual(
+      [
+        "café-a_b-and-emphasis--linked---bold-x",
+        "snake_case-stays-and-init-is-strong",
+        "ref-text-and-missingnope",
+        "closing-hashes",
+        "twolines",
+        "repeat",
+        "repeat-1",
+        "repeat-1-1",
+        "raw-html",
+      ].sort(),
+    );
+  });
+
+  it("decodes a percent-encoded fragment and leaves line anchors on source views unchecked", () => {
+    expect(linkedFragment("guide.md#caf%C3%A9")).toBe("café");
+    expect(linkedFragment("guide.md#bad%E0%A4%A")).toBe("bad%E0%A4%A");
+    expect(linkedFragment("guide.md?plain=1#L10")).toBeUndefined();
+    expect(linkedFragment("guide.md#")).toBeUndefined();
+    expect(linkedFragment("https://example.com/a.md#x")).toBeUndefined();
+    const documents = new Map([
+      ["docs/guide.md", "# Café\n"],
+      [
+        "jtbd-stories/story.md",
+        [
+          "[a](../docs/guide.md#caf%C3%A9) [b](../docs/guide.md#café) [c](../docs/guide.md#Café)",
+          "[d](../docs/guide.md#cafe) [e](../src/main.ts#L10) [f](../docs/guide.md?plain=1#L1)",
+          "[g](../docs/missing.md#x) [h](../docs/guide.md#caf%E9)",
+        ].join("\n"),
+      ],
+    ]);
+    const present = new Set(["docs/guide.md", "src/main.ts"]);
+    expect(danglingLinks(documents, (path) => present.has(path))).toEqual([
+      "jtbd-stories/story.md:2 ../docs/guide.md#cafe",
+      "jtbd-stories/story.md:3 ../docs/missing.md#x",
+      "jtbd-stories/story.md:3 ../docs/guide.md#caf%E9",
+    ]);
   });
 
   it("names each link whose target is missing, with its file and line", () => {

@@ -5,6 +5,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -303,6 +304,11 @@ function shimmedPoolRoot(
   };
 }
 
+/** The options with which a pass of a split run records its blob report. */
+function blob(pass: string): string[] {
+  return ["--reporter=blob", `--outputFile=<reports>/${pass}.json`];
+}
+
 function recordedSpawns(root: string): string[][] {
   return readFileSync(join(root, "spawns.log"), "utf8")
     .trim()
@@ -449,25 +455,221 @@ describe("pooled root generated-state sentinel", () => {
   });
 
   it.each([
-    [["--reporter=junit", "--outputFile=report.xml"]],
-    [["--coverage"]],
-    [["--reporter", "html"]],
-  ])("stops before a split run whose %j output one process would overwrite", (options) => {
+    [
+      ["--reporter=junit", "--outputFile=report.xml"],
+      [
+        ["--run", "--exclude", "test/cli.test.ts", ...blob("pooled")],
+        [
+          "--run",
+          "test/cli.test.ts",
+          "--pool",
+          "forks",
+          "--maxWorkers",
+          "1",
+          "--no-isolate",
+          ...blob("cli"),
+        ],
+        ["--run", "--merge-reports", "<reports>", "--reporter=junit", "--outputFile=report.xml"],
+      ],
+    ],
+    [
+      ["test/bootstrap.test.ts", "test/cli.test.ts", "--reporter", "html", "-t", "alpha"],
+      [
+        [
+          "--run",
+          "test/bootstrap.test.ts",
+          "test/cli.test.ts",
+          "-t",
+          "alpha",
+          "--exclude",
+          "test/cli.test.ts",
+          "--passWithNoTests",
+          ...blob("pooled"),
+        ],
+        [
+          "--run",
+          "-t",
+          "alpha",
+          "test/cli.test.ts",
+          "--pool",
+          "forks",
+          "--maxWorkers",
+          "1",
+          "--no-isolate",
+          "--passWithNoTests",
+          ...blob("cli"),
+        ],
+        ["--run", "--merge-reports", "<reports>", "--reporter", "html", "-t", "alpha"],
+      ],
+    ],
+  ])(
+    "records each pass of a split run writing %j as a blob report and merges them",
+    (options, expected) => {
+      // The shim writes the blob report a pass asks for, as Vitest's blob reporter would.
+      const { root, environment } = shimmedPoolRoot(
+        [
+          'const fs = require("node:fs");',
+          "const args = process.argv.slice(2);",
+          'fs.appendFileSync("spawns.log", JSON.stringify(args) + "\\n");',
+          'const output = args.find((arg) => arg.startsWith("--outputFile=") && args.includes("--reporter=blob"));',
+          'if (output !== undefined) fs.writeFileSync(output.slice("--outputFile=".length), "blob");',
+        ].join("\n"),
+        [selfHostingContracts, checkoutContracts],
+      );
+      const temporary = join(root, "tmp");
+      mkdirSync(temporary);
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+        cwd: root,
+        encoding: "utf8",
+        env: { ...environment, TMPDIR: temporary },
+      });
+
+      expect(result.stderr).toBe("");
+      expect(result.status).toBe(0);
+      const spawns = recordedSpawns(root);
+      const reports = spawns.at(-1)?.[2] ?? "";
+      expect(reports.startsWith(join(temporary, "sdp-test-reports-"))).toBe(true);
+      expect(spawns.map((spawn) => spawn.map((arg) => arg.replace(reports, "<reports>")))).toEqual(
+        expected,
+      );
+      expect(readdirSync(temporary)).toEqual([]);
+    },
+  );
+
+  it("refuses coverage in a split run and says no coverage provider is installed", () => {
     const { root, environment } = shimmedPoolRoot(
       'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
       [selfHostingContracts, checkoutContracts],
     );
-    const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+    const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), "--coverage"], {
       cwd: root,
       encoding: "utf8",
       env: environment,
     });
 
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain(
-      "This run executes test/cli.test.ts in its own Vitest process after the others, so one report file or coverage directory cannot hold both.",
+    expect(result.stderr).toBe(
+      "Coverage needs a Vitest coverage provider, and none is installed (@vitest/coverage-v8 or @vitest/coverage-istanbul).\n",
     );
     expect(existsSync(join(root, "spawns.log"))).toBe(false);
+  });
+
+  it.each([[["--reporter", "blob"]], [["--reporter=blob", "--outputFile=blob.json"]]])(
+    "refuses a split run writing the blob report %j, which Vitest cannot merge into",
+    (options) => {
+      const { root, environment } = shimmedPoolRoot(
+        'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+        [selfHostingContracts, checkoutContracts],
+      );
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+        cwd: root,
+        encoding: "utf8",
+        env: environment,
+      });
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        "This run executes test/cli.test.ts in its own Vitest process after the others, and Vitest cannot merge two runs into one blob report.",
+      );
+      expect(existsSync(join(root, "spawns.log"))).toBe(false);
+    },
+  );
+
+  it.each([
+    [
+      'reporters: ["blob"]',
+      "This run executes test/cli.test.ts in its own Vitest process after the others, and Vitest cannot merge two runs into one blob report.",
+    ],
+    [
+      "coverage: { enabled: true }",
+      "Coverage needs a Vitest coverage provider, and none is installed (@vitest/coverage-v8 or @vitest/coverage-istanbul).",
+    ],
+  ])("refuses a split run whose configuration sets %s", (setting, refusal) => {
+    const { root, environment } = shimmedPoolRoot(
+      'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+      [selfHostingContracts, checkoutContracts],
+    );
+    writeFileSync(join(root, "vitest.config.mjs"), `export default { test: { ${setting} } };\n`);
+    const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs")], {
+      cwd: root,
+      encoding: "utf8",
+      env: environment,
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(refusal);
+    expect(existsSync(join(root, "spawns.log"))).toBe(false);
+  });
+
+  it("leaves a configuration Vitest cannot load to the passes, reading the caller's options alone", () => {
+    const { root, environment } = shimmedPoolRoot(
+      'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+      [selfHostingContracts, checkoutContracts],
+    );
+    writeFileSync(join(root, "vitest.config.mjs"), 'throw new Error("broken configuration");\n');
+    const result = spawnSync(
+      process.execPath,
+      [join(repoRoot, "vitest-test.mjs"), "--reporter=junit", "--outputFile=report.xml"],
+      { cwd: root, encoding: "utf8", env: environment },
+    );
+
+    // The shim stands in for Vitest and records no blob report, so nothing is merged.
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    expect(recordedSpawns(root).map((spawn) => spawn.slice(0, 2))).toEqual([
+      ["--run", "--exclude"],
+      ["--run", "test/cli.test.ts"],
+    ]);
+    expect(recordedSpawns(root)[0]).toContain("--reporter=blob");
+  });
+
+  it("hands each pass the caller's environment, untouched by reading the configuration", () => {
+    // The wrapper sets the first three as Vitest does before it loads a configuration, and Vite
+    // sets the rest while it loads one.
+    const viteVariables = ["NODE_ENV", "VITEST", "TEST", "MODE", "DEV", "PROD", "BASE_URL"];
+    const { root, environment } = shimmedPoolRoot(
+      `require("node:fs").appendFileSync("spawns.log", JSON.stringify(${JSON.stringify(viteVariables)}.map((name) => process.env[name] ?? null)) + "\\n");`,
+      [selfHostingContracts, checkoutContracts],
+    );
+    writeFileSync(join(root, "vitest.config.mjs"), "export default { test: {} };\n");
+    const callerEnvironment = Object.fromEntries(
+      Object.entries(environment).filter(([name]) => !viteVariables.includes(name)),
+    );
+    const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs")], {
+      cwd: root,
+      encoding: "utf8",
+      env: callerEnvironment,
+    });
+
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    const unset = viteVariables.map(() => null);
+    expect(recordedSpawns(root)).toEqual([unset, unset]);
+  });
+
+  it("leaves each pass its configured reporters when none of them writes a report file", () => {
+    // The repository's CI reporter has this shape: an inline reporter that writes one file per
+    // process, with no output file configured.
+    const { root, environment } = shimmedPoolRoot(
+      'require("node:fs").appendFileSync("spawns.log", JSON.stringify(process.argv.slice(2)) + "\\n");',
+      [selfHostingContracts, checkoutContracts],
+    );
+    writeFileSync(
+      join(root, "vitest.config.mjs"),
+      'export default { test: { reporters: ["default", { onTestRunEnd() {} }] } };\n',
+    );
+    const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs")], {
+      cwd: root,
+      encoding: "utf8",
+      env: environment,
+    });
+
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    expect(recordedSpawns(root)).toEqual([
+      ["--run", "--exclude", "test/cli.test.ts"],
+      ["--run", "test/cli.test.ts", "--pool", "forks", "--maxWorkers", "1", "--no-isolate"],
+    ]);
   });
 
   it.each([[["list", "--filesOnly"]], [["--reporter", "verbose", "list", "test/cli.test.ts"]]])(
@@ -627,6 +829,156 @@ describe("the test wrapper over real Vitest", () => {
     },
     120_000,
   );
+
+  it.each([
+    [["--reporter", "junit", "--outputFile", "report.xml"]],
+    [["--reporter=junit", "--outputFile=report.xml"]],
+    [["--reporter=junit", "--outputFile.junit=report.xml", "-t", "a"]],
+  ])(
+    "writes one report holding both passes for %j",
+    (options) => {
+      const { root, environment } = realVitestRoot();
+      const temporary = join(root, "tmp");
+      mkdirSync(temporary);
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs"), ...options], {
+        cwd: root,
+        encoding: "utf8",
+        env: { ...environment, TMPDIR: temporary },
+      });
+
+      expect(result.status, result.stderr).toBe(0);
+      const ran = ["cli alpha", "cli beta", "other gamma"];
+      expect(readFileSync(join(root, "ran.log"), "utf8").trim().split("\n").sort()).toEqual(ran);
+      const report = readFileSync(join(root, "report.xml"), "utf8");
+      expect(
+        [...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort(),
+      ).toEqual(ran);
+      expect(readdirSync(temporary).filter((name) => name.startsWith("sdp-test-reports-"))).toEqual(
+        [],
+      );
+    },
+    120_000,
+  );
+
+  it.each([[["--config", "custom.config.mjs"]], [["-c", "custom.config.mjs"]]])(
+    "merges both passes with the configuration file %j they ran with",
+    (configuration) => {
+      // A configuration that names its project: the merge must read it to know the project.
+      const { root, environment } = realVitestRoot();
+      rmSync(join(root, "vitest.config.mjs"));
+      writeFileSync(
+        join(root, "custom.config.mjs"),
+        'export default { test: { name: "custom", globals: true, include: ["test/**/*.test.ts"] } };\n',
+      );
+      const result = spawnSync(
+        process.execPath,
+        [
+          join(repoRoot, "vitest-test.mjs"),
+          ...configuration,
+          "--reporter=junit",
+          "--outputFile=report.xml",
+        ],
+        { cwd: root, encoding: "utf8", env: environment },
+      );
+
+      expect(result.status, result.stderr).toBe(0);
+      const report = readFileSync(join(root, "report.xml"), "utf8");
+      expect(
+        [...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort(),
+      ).toEqual(["cli alpha", "cli beta", "other gamma"]);
+    },
+    120_000,
+  );
+
+  it.each([
+    ['reporters: ["junit"], outputFile: "report.xml"'],
+    ['reporters: [["junit", { outputFile: "report.xml" }]]'],
+  ])(
+    "merges both passes into the report file the configuration names with %s",
+    (reporting) => {
+      // No reporting option on the command line: the configuration file alone asks for the file.
+      const { root, environment } = realVitestRoot();
+      writeFileSync(
+        join(root, "vitest.config.mjs"),
+        `export default { test: { globals: true, include: ["test/**/*.test.ts"], ${reporting} } };\n`,
+      );
+      const temporary = join(root, "tmp");
+      mkdirSync(temporary);
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs")], {
+        cwd: root,
+        encoding: "utf8",
+        env: { ...environment, TMPDIR: temporary },
+      });
+
+      expect(result.status, result.stderr).toBe(0);
+      const ran = ["cli alpha", "cli beta", "other gamma"];
+      expect(readFileSync(join(root, "ran.log"), "utf8").trim().split("\n").sort()).toEqual(ran);
+      const report = readFileSync(join(root, "report.xml"), "utf8");
+      expect(
+        [...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort(),
+      ).toEqual(ran);
+      expect(readdirSync(temporary)).toEqual([]);
+    },
+    120_000,
+  );
+
+  it.each([
+    ['process.env.NODE_ENV === "test"', {}],
+    ['process.env.VITEST === "true"', {}],
+    ['process.env.TEST === "true"', {}],
+    ['process.env.NODE_ENV === "production"', { NODE_ENV: "production" }],
+  ])(
+    "reads a configuration that asks for a report file when %s as the passes read it",
+    (condition, callerVariables) => {
+      // Vitest sets these before it loads a configuration. A run started from a shell seldom has
+      // them, so the caller's environment leaves them unset, or sets the one the case names.
+      const testVariables = ["NODE_ENV", "VITEST", "TEST"];
+      const { root, environment } = realVitestRoot();
+      writeFileSync(
+        join(root, "vitest.config.mjs"),
+        `export default { test: { globals: true, include: ["test/**/*.test.ts"], ...(${condition} ? { reporters: ["junit"], outputFile: "report.xml" } : {}) } };\n`,
+      );
+      const callerEnvironment = {
+        ...Object.fromEntries(
+          Object.entries(environment).filter(([name]) => !testVariables.includes(name)),
+        ),
+        ...callerVariables,
+      };
+      const result = spawnSync(process.execPath, [join(repoRoot, "vitest-test.mjs")], {
+        cwd: root,
+        encoding: "utf8",
+        env: callerEnvironment,
+      });
+
+      expect(result.status, result.stderr).toBe(0);
+      const report = readFileSync(join(root, "report.xml"), "utf8");
+      expect(
+        [...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort(),
+      ).toEqual(["cli alpha", "cli beta", "other gamma"]);
+    },
+    120_000,
+  );
+
+  it("reports a failing pooled pass in the merged report and stops before the CLI pass", () => {
+    const { root, environment } = realVitestRoot();
+    writeFileSync(
+      join(root, "test", "fails.test.ts"),
+      'it("other fails", () => { throw new Error("boom"); });\n',
+    );
+    const result = spawnSync(
+      process.execPath,
+      [join(repoRoot, "vitest-test.mjs"), "--reporter=junit", "--outputFile=report.xml"],
+      { cwd: root, encoding: "utf8", env: environment },
+    );
+
+    expect(result.status).toBe(1);
+    expect(readFileSync(join(root, "ran.log"), "utf8")).toBe("other gamma\n");
+    const report = readFileSync(join(root, "report.xml"), "utf8");
+    expect([...report.matchAll(/<testcase [^>]*name="([^"]*)"/gu)].map((m) => m[1]).sort()).toEqual(
+      ["other fails", "other gamma"],
+    );
+    expect(report).toContain('<failure message="boom"');
+  }, 120_000);
 
   it.each([[["--", "--help"]], [["--", "-h"]]])(
     "prints usage for %j and runs no test",

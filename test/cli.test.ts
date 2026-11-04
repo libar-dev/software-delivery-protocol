@@ -2597,7 +2597,16 @@ describe("sdp --version", () => {
       execFileSync("tar", ["-xf", archive, "-C", archived]);
       expect(existsSync(join(archived, ".git"))).toBe(false);
       expect(readFileSync(join(archived, ".git-archive-commit"), "utf8").trim()).toBe(commit);
-      writeBuildArtifacts({ root: archived, outDir: join(archived, "dist") });
+      // A temporary directory inside a checkout would otherwise answer `git rev-parse HEAD`
+      // with that checkout's commit; the ceiling keeps git's discovery inside the scratch folder.
+      const ceiling = process.env.GIT_CEILING_DIRECTORIES;
+      process.env.GIT_CEILING_DIRECTORIES = scratch;
+      try {
+        writeBuildArtifacts({ root: archived, outDir: join(archived, "dist") });
+      } finally {
+        if (ceiling === undefined) delete process.env.GIT_CEILING_DIRECTORIES;
+        else process.env.GIT_CEILING_DIRECTORIES = ceiling;
+      }
       expect(JSON.parse(readFileSync(join(archived, "dist/cli/build-info.json"), "utf8"))).toEqual({
         commit,
       });

@@ -126,7 +126,7 @@ Current mismatches in item 1—retired tags still taught by skills, formally can
 
 **Today’s Gen 2 restricts source authoring to a small anchor constant; the owner-selected v0 design explicitly supported typed markers, JSDoc, richer architectural nodes, and three distinct edge provenances.**
 
-The operative text of [jsdoc-graph-extraction-refused](../../specs/decisions/jsdoc-graph-extraction-refused.sdp.md) is:
+The operative text of [jsdoc-graph-extraction-refused](https://github.com/libar-dev/software-delivery-protocol/blob/35539a0d76c2ae4b13fc7efcaaa91f4de64c21b0/specs/decisions/jsdoc-graph-extraction-refused.sdp.md) is:
 
 > “Ordinary JSDoc and local commentary never author graph content — no nodes, no relations, no component membership, no delivery facts, no Spec intent.”
 > “The only write path from source into the graph is the statically reified anchor constant under `spec:model.anchors`, and it is identity only.”
@@ -135,7 +135,7 @@ Its alternative explicitly includes structured tags in the refusal:
 
 > “Extracting identity tags from JSDoc (the v0 JSDoc marker style) stays refused with the decorator form — both are unextracted representations, and the anchor constant is the single binding syntax.”
 
-The operative parts of [architectural-significance-rides-primitives](../../specs/decisions/architectural-significance-rides-primitives.sdp.md) say:
+The operative parts of [architectural-significance-rides-primitives](https://github.com/libar-dev/software-delivery-protocol/blob/35539a0d76c2ae4b13fc7efcaaa91f4de64c21b0/specs/decisions/architectural-significance-rides-primitives.sdp.md) say:
 
 > “no ‘pattern’ term or kind is ratified.”
 > “code linkage rides the `satisfies` → `decidedBy` join”
