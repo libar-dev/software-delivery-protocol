@@ -51,7 +51,13 @@ const cliComponentAnchor = codeAnchor({
 export interface BuildHooks {
   readonly extract?: typeof extract;
   readonly generateContracts?: typeof generateContracts;
+  /**
+   * Replaces `rmSync` in every guarded removal the build and the publishers make, ordinary
+   * staging cleanup and recovery alike, not in recovery alone. A test that fails one removal
+   * must match the path it means and pass every other call through.
+   */
   readonly rmSync?: typeof rmSync;
+  /** Replaces `writeFileSync` in every guarded write the build and the publishers make. */
   readonly writeFileSync?: typeof writeFileSync;
 }
 

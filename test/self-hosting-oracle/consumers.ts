@@ -2063,7 +2063,7 @@ export const consumersSpecs = [
         rules: [
           "A build is shared by uploading its page set to a static host, such as S3, Vercel or GitHub Pages.",
           "The Studio's build writes no stamp, so every page and data file it writes stays a function of the graph and its named inputs; the stamp is written apart, after the build.",
-          "`sdp stamp [root] [--commit SHA] [--source TEMPLATE]` writes `stamp.json` into `<root>/generated/spec-studio/` and touches no other file: it derives no graph, renders no page, and refuses with exit 1 when the root holds no page set; a stamp without `--commit` names the commit `unknown`.",
+          "`sdp stamp [root] [--commit SHA] [--source TEMPLATE]` writes `stamp.json` into `<root>/generated/spec-studio/` and touches no other file but its staging file `stamp.json.tmp` beside it: it removes a leftover staging file, writes the stamp there and renames it into place, and removes it again when the stamp fails after writing it. It derives no graph, renders no page, and refuses with exit 1 when the root holds no page set or when `generated/` or the page set is a symbolic link; a stamp without `--commit` names the commit `unknown`.",
           "A later build removes the page set and its stamp together, so no stamp outlives the build it names.",
           "Publishing a preview and writing its stamp are a step the adopter's CI runs, never the Studio's build; the shell reads the stamp as `spec:consumers.spec-studio.shell#rule.stamp` states.",
           "The package's repository ships a reusable GitHub Actions workflow that, on a pull request, installs the caller's dependencies, runs `sdp studio` with the caller's root, exclusions and inputs, runs `sdp stamp` with the checked-out merge commit and the repository's source template, and uploads the page set as a CI artifact; it opens no pull request, writes no comment and holds no credential beyond the run's own token.",
@@ -2582,7 +2582,7 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "`sdp validate --watch [root]` installs its watcher first, then runs the same validate path `sdp validate` runs, from scratch, once at start and again after every carrier create, change, delete or rename under the root.",
-          "A carrier ends in `.sdp.md`, `.sdp.gherkin` or `.sdp.ts`. The watcher ignores the directories discovery skips, the configured exclusion prefixes and every non-carrier path other than the rules files and parameter files `--rules` names, which it watches wherever they live, as `spec:validation.corpus-rules#rule.watchReruns` and `spec:validation.corpus-rules#rule.watchedParams` state, and the symbolic links discovery warns about, as `spec:extraction.excludes#rule.canonicalDiscovery` states, because creating, removing or replacing one changes the warning list. The watcher never follows a link. A watched directory removed or replaced by a link or a file, and an event with no filename, each schedule a run because their affected carriers cannot be named.",
+          "A carrier ends in `.sdp.md`, `.sdp.gherkin` or `.sdp.ts`. The watcher ignores the directories discovery skips, the configured exclusion prefixes and every non-carrier path other than the rules files and parameter files `--rules` names, which it watches wherever they live, as `spec:validation.corpus-rules#rule.watchReruns` and `spec:validation.corpus-rules#rule.watchedParams` state, and the symbolic links discovery warns about, as `spec:extraction.excludes#rule.canonicalDiscovery` states, because creating, removing or replacing one changes the warning list. The watcher never follows a link. A watched directory removed or replaced by a link, a file or another directory, and an event with no filename, each schedule a run because their affected carriers cannot be named; a directory that replaces a watched one, the root included, is watched in its place, and a root that no longer resolves to a directory ends the watch with exit 1.",
           "Events that arrive while a run is in progress coalesce into one pending run.",
           "Findings print as `sdp validate` prints them and the process stays alive; operator SIGINT terminates the process with exit 0 even while a rules body is active, without waiting for it. No further rules file runs or output is written after the stop.",
           "For `sdp validate`, `--watch` cannot combine with `--check-clean`, and it re-runs on carrier edits and on edits to the files `--rules` names, and never on source edits, so an author re-runs validation after editing an anchor. This rule restricts no other verb's `--watch`, which its own Spec states.",
@@ -3191,6 +3191,7 @@ export const consumersSpecs = [
           "`sdp vault [root | --root PATH] [--exclude PATH]... [--out DIR] [--watch]` validates the graph as `sdp validate` does and then synchronizes the vault at `DIR`, by default `generated/obsidian-vault/` under the root; the root is given as an argument or by `--root`, never both, and defaults to the working directory, each exclusion is a root-relative path prefix as for the publishers, and `--out` resolves against the working directory; a root given both ways, `--root` or `--out` given twice or without a value, and any other option refuse the run.",
           "A vault directory inside the root must lie under a directory discovery skips or under an excluded prefix, so no file in the vault is ever read as a carrier or a source; any other vault directory inside the root refuses the run before the build, writing and removing nothing.",
           "A vault directory that is, lies inside or holds a path the shared build writes or removes, as `spec:consumers.obsidian-vault#design.buildOwnedPaths` lists, refuses the run before the build, writing and removing nothing, so no build ever removes a file in the vault.",
+          "When a run names no vault directory, the default `generated/obsidian-vault/` must resolve inside the root, following any symbolic link at or above it. A run checks this before the build and before each synchronization, and a watch checks it again before its closing cleanup: a default that resolves outside the root, or is a link that resolves nowhere, refuses the run or skips that cleanup, writing and removing nothing in the vault. A default that resolves inside the root, through a link or not, is held to `spec:consumers.obsidian-vault#rule.outsideExtraction` and `spec:consumers.obsidian-vault#rule.apartFromBuild` where it resolves; a vault outside the root is one the run names.",
           "The command writes only the generated folder `sdp/` inside the vault; Obsidian's settings, a person's intent notes and every other file of the vault lie outside it and are never written, moved or removed.",
           "Before the build and before any cleanup, a run inspects `sdp/` and every entry under it, names that begin with a dot included, and refuses when `sdp/` or an entry under it is a symbolic link or neither a file nor a directory, when the file list is not well formed, when a file other than the file list, the command's own temporaries and a `.DS_Store` file is one the list does not name, or when a listed file other than a `.base` file has bytes matching no content the list records for it; a refused run writes nothing, removes nothing, names each such path and exits 1. A `.DS_Store` file under `sdp/` is ignored. A listed `.base` file whose bytes a person changed is kept, even when it leaves the generated set; the run warns with its path and the words `delete it to regenerate`, keeps its recorded content in the list, and goes on. Without a file list, every file under `sdp/` other than `.DS_Store` is one the list does not name.",
           "A run that passes the guard first removes each file the list names that the new set no longer holds, except a changed `.base` file; then it writes each generated file whose bytes differ from the file on disk through a temporary sibling renamed into place, except a changed `.base` file, leaves every file whose bytes already match untouched, removes every directory under `sdp/` left empty, and writes the file list last.",
@@ -3230,17 +3231,18 @@ export const consumersSpecs = [
           verb: "rules[1]",
           outsideExtraction: "rules[2]",
           apartFromBuild: "rules[3]",
-          ownedFolder: "rules[4]",
-          guard: "rules[5]",
-          synchronize: "rules[6]",
-          interruptedRun: "rules[7]",
-          standsApart: "rules[8]",
-          deterministic: "rules[9]",
-          linksResolve: "rules[10]",
-          findingsShown: "rules[11]",
-          failedExtraction: "rules[12]",
-          plainNotes: "rules[13]",
-          openAsVault: "rules[14]",
+          defaultInsideRoot: "rules[4]",
+          ownedFolder: "rules[5]",
+          guard: "rules[6]",
+          synchronize: "rules[7]",
+          interruptedRun: "rules[8]",
+          standsApart: "rules[9]",
+          deterministic: "rules[10]",
+          linksResolve: "rules[11]",
+          findingsShown: "rules[12]",
+          failedExtraction: "rules[13]",
+          plainNotes: "rules[14]",
+          openAsVault: "rules[15]",
         },
         description:
           "The world writes a probe corpus of one Pack and its member Specs, runs the vault command with the vault under the root's `generated/` directory unless a point names another, and reads the vault from disk; a second run reads the same graph. The world leaves a stopped run's files by running the command with its first rename failing, which leaves the file list recording both contents and a whole temporary beside its target, and a failed run's files by running it while the member's carrier is one the extractor refuses, then repairing that carrier. A fresh vault is one the command writes into an empty directory from the same graph.",
@@ -3260,6 +3262,8 @@ export const consumersSpecs = [
           "one stderr line per refused path, with `<path>` relative to the vault: `sdp vault: <path> is not a file this command wrote (unknown)`, `sdp vault: <path> has changed since this command wrote it (changed)`, `sdp vault: <path> is a link or a special file, which this command never writes (not a file)` or `sdp vault: sdp/.sdp-vault.json is not a file list this command wrote (malformed)`; then `sdp vault: nothing was written or removed; keep what you wrote outside sdp/, then delete each refused path, or delete sdp/ whole`.",
         outsideExtractionMessage:
           "`sdp vault: the vault <out> lies inside the root and would be read as source; choose a directory under generated/, under an excluded prefix, or outside the root`.",
+        defaultVaultMessage:
+          "`sdp vault: the default vault <out> does not resolve inside the root; choose a vault directory explicitly to place it elsewhere`.",
         buildOwnedMessage:
           "`sdp vault: the vault <out> overlaps <path>, which every build rewrites or removes; choose another directory, such as generated/obsidian-vault/`, with `<path>` the first overlapping path in the order `spec:consumers.obsidian-vault#design.buildOwnedPaths` lists them.",
         summaryLine:
