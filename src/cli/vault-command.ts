@@ -1,5 +1,5 @@
 import { physicalPath as physical, pathWithin } from "./path-identity.js";
-import { lstatSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { generateContracts } from "../codegen/contracts.js";
 import { extract } from "../extract/index.js";
@@ -46,14 +46,17 @@ function checkVaultPublicationDirectory(
 ): void {
   assertOutputParent(parsed.root, join(parsed.root, "generated", "graph.json"));
   if (parsed.vault === undefined) {
+    // spec:consumers.obsidian-vault#rule.defaultInsideRoot: a link at the default folder may move
+    // the vault inside the root, where the placement checks below apply, never out of it.
     const out = vaultDirectory(parsed);
     try {
-      if (lstatSync(out).isSymbolicLink())
-        throw new Error(`default vault ${out} is a link; choose an explicit --out instead`);
+      assertOutputParent(parsed.root, join(out, "sdp"));
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      if ((error as NodeJS.ErrnoException).code !== undefined) throw error;
+      throw new Error(
+        `sdp vault: the default vault ${out} does not resolve inside the root; choose a vault directory explicitly to place it elsewhere`,
+      );
     }
-    assertOutputParent(parsed.root, join(out, "sdp"));
   }
   checkVaultDirectory(parsed, registrars);
 }

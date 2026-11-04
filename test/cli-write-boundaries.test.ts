@@ -381,8 +381,9 @@ describe("publication boundary regressions", () => {
     },
   );
 
+  // spec:consumers.obsidian-vault#rule.defaultInsideRoot
   it.each(["vault", "generate"])(
-    "%s refuses a linked default vault but allows an explicit outside vault",
+    "%s refuses a default vault linked outside the root but allows an explicit outside vault",
     async (command) => {
       const workspace = mkdtempSync(join(tmpdir(), "sdp-default-vault-"));
       const root = join(workspace, "root"),
@@ -393,7 +394,9 @@ describe("publication boundary regressions", () => {
       try {
         const refused = createCaptureOutput();
         expect(await runSdpCli([command, root], refused.output)).toBe(1);
-        expect(refused.readStderr()).toContain("explicit --out");
+        expect(refused.readStderr()).toMatch(
+          /sdp vault: the default vault \S*generated\/obsidian-vault does not resolve inside the root; choose a vault directory explicitly to place it elsewhere/u,
+        );
         expect(existsSync(join(outside, "sdp"))).toBe(false);
         const capture = createCaptureOutput();
         expect(
@@ -410,6 +413,51 @@ describe("publication boundary regressions", () => {
           capture.readStderr(),
         ).toBe(0);
         expect(existsSync(join(outside, "sdp/index.md"))).toBe(true);
+      } finally {
+        rmSync(workspace, { recursive: true, force: true });
+      }
+    },
+  );
+
+  // spec:consumers.obsidian-vault#rule.defaultInsideRoot
+  it.each(["vault", "generate"])(
+    "%s holds a default vault linked inside the root to the placement rules where it resolves",
+    async (command) => {
+      const workspace = mkdtempSync(join(tmpdir(), "sdp-default-vault-inside-"));
+      const root = join(workspace, "root");
+      const assets = {
+        studioAssets: {
+          script: join(process.cwd(), "dist/studio/studio.js"),
+          stylesheet: join(process.cwd(), "dist/studio/studio.css"),
+        },
+      };
+      mkdirSync(join(root, "generated"), { recursive: true });
+      mkdirSync(join(root, "vaults/main"), { recursive: true });
+      writeCarrier(root, "probe.sdp.md", "spec:probe.vault");
+      symlinkSync(join(root, "vaults/main"), join(root, "generated/obsidian-vault"));
+      try {
+        // Under an excluded prefix, the target is a lawful vault directory.
+        const accepted = createCaptureOutput();
+        expect(
+          await runSdpCli([command, root, "--exclude", "vaults"], accepted.output, assets),
+          accepted.readStderr(),
+        ).toBe(0);
+        expect(existsSync(join(root, "vaults/main/sdp/index.md"))).toBe(true);
+
+        // Read as source, the same target is refused as any vault directory there would be.
+        rmSync(join(root, "vaults/main/sdp"), { recursive: true });
+        const refused = createCaptureOutput();
+        expect(await runSdpCli([command, root], refused.output, assets)).toBe(1);
+        expect(refused.readStderr()).toContain("lies inside the root and would be read as source");
+        expect(existsSync(join(root, "vaults/main/sdp"))).toBe(false);
+
+        // A link that resolves nowhere is refused before anything is created through it.
+        rmSync(join(root, "generated/obsidian-vault"));
+        symlinkSync(join(workspace, "missing"), join(root, "generated/obsidian-vault"));
+        const dangling = createCaptureOutput();
+        expect(await runSdpCli([command, root], dangling.output, assets)).toBe(1);
+        expect(dangling.readStderr()).toContain("does not resolve inside the root");
+        expect(existsSync(join(workspace, "missing"))).toBe(false);
       } finally {
         rmSync(workspace, { recursive: true, force: true });
       }
