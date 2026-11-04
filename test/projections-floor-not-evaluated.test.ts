@@ -9,6 +9,8 @@ import { describe, expect, it } from "vitest";
 import { createReader, extract, renderCensus, renderDesignReview } from "../src/index.js";
 import type { GraphNode, GraphSchema } from "../src/index.js";
 import { renderVault } from "../src/projections/vault/notes.js";
+import { createStudioData } from "../src/projections/studio/data.js";
+import { renderStudio } from "./helpers/studio-render.js";
 import { notePath } from "../src/projections/vault/text.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -122,4 +124,28 @@ describe("the census over floors the reader does not evaluate", () => {
     expect(page).toContain("| not structurally reached | 0 |");
     expect(page).not.toContain(label);
   });
+});
+
+describe("foreign kinds named after Object.prototype properties", () => {
+  it.each(["constructor", "toString", "valueOf", "__proto__"])(
+    "renders raw kind %s without inheriting a display label",
+    async (specKind) => {
+      const id = kind.id;
+      const graph = foreignGraph({ [id]: { specKind } });
+      const reader = createReader(graph);
+      expect(reader.specContext(id)?.kindDisplayLabel).toBeUndefined();
+      const review = pageAt(renderDesignReview(reader), "spec/orders.order-model.md");
+      expect(review).toContain(specKind);
+      expect(review).toContain(label);
+      expect(pageAt(renderCensus(reader), "index.md")).toContain(specKind);
+      const vault = pageAt(renderVault(graph), notePath(id).slice("sdp/".length));
+      expect(vault).toContain(`\`${id}\` · ${specKind} · story`);
+      const studio = pageAt(
+        renderStudio(await createStudioData(reader)),
+        "specs/orders.order-model.html",
+      );
+      expect(studio).toContain(specKind);
+      expect(studio).toContain("floor not evaluated");
+    },
+  );
 });
