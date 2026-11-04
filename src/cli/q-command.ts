@@ -14,6 +14,12 @@ import { codeAnchor } from "../model/code-anchor.js";
 import { resolveExtractionRoot } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
+import {
+  packagePrefix,
+  queryHint,
+  recipeListing,
+  shippedRecipeCategories,
+} from "./recipe-catalog.js";
 
 /**
  * The agent front door (`spec:decisions.agent-front-door`): one evaluation sink over the same
@@ -184,8 +190,19 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
 }
 
 /**
+ * A call that brings no body learns what to bring: its refusal line is followed by the recipe
+ * catalog by category and the call forms. It derives no graph.
+ */
+function refuseWithoutBody(output: CliOutput, refusal: string): void {
+  writeStderr(
+    output,
+    `${refusal}\n\n${recipeListing(shippedRecipeCategories(), packagePrefix())}\n`,
+  );
+}
+
+/**
  * Body input is argv or stdin, and the choice is made by asking the file descriptor rather than by
- * probing a stream property: an interactive invocation with no body prints the usage line and
+ * probing a stream property: an interactive invocation with no body lists the recipes and
  * refuses instead of blocking on a terminal that will never send anything.
  */
 function resolveBody(parsed: QueryArgs, output: CliOutput, hooks: QueryHooks): string | undefined {
@@ -194,10 +211,7 @@ function resolveBody(parsed: QueryArgs, output: CliOutput, hooks: QueryHooks): s
   }
 
   if ((hooks.isStdinTty ?? defaultIsStdinTty)()) {
-    writeStderr(
-      output,
-      "sdp q: no body supplied and stdin is a terminal.\nPass the async function body as an argument or pipe it on stdin, for example: sdp q 'return g.specs().length'\n",
-    );
+    refuseWithoutBody(output, "sdp q: no body supplied and stdin is a terminal.");
     return undefined;
   }
 
@@ -234,7 +248,7 @@ export async function runQuery(
   }
 
   if (body.trim() === "") {
-    writeStderr(output, "sdp q: the body is empty — `return` is the output contract.\n");
+    refuseWithoutBody(output, "sdp q: the body is empty — `return` is the output contract.");
     return 1;
   }
 
@@ -272,12 +286,18 @@ export async function runQuery(
 
   // Rendering the return can throw too (a hostile custom-inspect method, a poisoned getter); it
   // reports through the one currency rather than escaping the sink as an unhandled rejection.
+  let exitCode: number;
   try {
-    return writeReturnValue(value, parsed.json, output);
+    exitCode = writeReturnValue(value, parsed.json, output);
   } catch (error) {
     writeStderr(output, `sdp q: ${errorMessage(error)}\n`);
     return 1;
   }
+
+  // An answered call teaches the catalog on stderr, so stdout keeps only the answer; a refusal
+  // keeps only its refusal.
+  if (exitCode === 0) writeStderr(output, `${queryHint(shippedRecipeCategories())}\n`);
+  return exitCode;
 }
 
 /**

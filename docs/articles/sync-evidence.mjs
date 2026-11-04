@@ -294,7 +294,8 @@ export function evidenceBlocks(sourceRoot, pinnedCommit) {
     "test/fixtures/import/parity",
   ];
 
-  function runCli(args) {
+  // A query answers on stdout; its stderr carries the hint and any extraction findings.
+  function runCli(args, { answerOnly = false } = {}) {
     const result = spawnSync(
       process.execPath,
       [path.join(sourceRoot, "dist/cli/sdp.js"), ...args],
@@ -308,12 +309,15 @@ export function evidenceBlocks(sourceRoot, pinnedCommit) {
     if (result.status !== 0) {
       throw new Error(`sdp ${args.join(" ")} failed:\n${output}`);
     }
-    return output.replaceAll(realSourceRoot, "<repo>").replaceAll(sourceRoot, "<repo>").trim();
+    return (answerOnly ? (result.stdout ?? "") : output)
+      .replaceAll(realSourceRoot, "<repo>")
+      .replaceAll(sourceRoot, "<repo>")
+      .trim();
   }
 
   function query(body, root = sourceRoot, selfHosting = true) {
     const args = ["q", body, "--root", root, "--json", ...(selfHosting ? exclusions : [])];
-    return JSON.parse(runCli(args));
+    return JSON.parse(runCli(args, { answerOnly: true }));
   }
 
   function recipe(number, parameters = {}, root = sourceRoot, selfHosting = true) {

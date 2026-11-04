@@ -41,6 +41,7 @@ import { renderVault } from "../src/projections/vault/notes.js";
 import { VaultGuardError } from "../src/projections/vault/sync.js";
 import { createReader } from "../src/reader/reader.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { answeredStderr } from "./helpers/query-hint.js";
 import { renderStudio } from "./helpers/studio-render.js";
 
 import { parse } from "yaml";
@@ -952,7 +953,7 @@ describe("the graph-reading on-ramp", () => {
       expect({ root, status: run.status, stderr: run.stderr }).toEqual({
         root,
         status: 0,
-        stderr: "",
+        stderr: answeredStderr,
       });
       const answers = JSON.parse(run.stdout) as {
         number: number;

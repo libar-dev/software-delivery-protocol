@@ -23,6 +23,7 @@ import { extract, serializeGraph } from "../src/index.js";
 import type { ExtractionResult, GraphSchema } from "../src/index.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { answeredStderr } from "./helpers/query-hint.js";
 
 const diffDocumentAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.design-diff-recipe"),
@@ -63,7 +64,7 @@ async function runRecipe<T>(
   );
   expect({ exitCode, stderr: capture.readStderr() }).toEqual({
     exitCode: 0,
-    stderr: "",
+    stderr: answeredStderr,
   });
   return JSON.parse(capture.readStdout()) as T;
 }
@@ -2074,7 +2075,7 @@ describe("iteration loop: comparison and budget edges", () => {
         capture.output,
         { query: { extract: () => derived, isStdinTty: () => true } },
       );
-      expect({ code, stderr: capture.readStderr() }).toEqual({ code: 0, stderr: "" });
+      expect({ code, stderr: capture.readStderr() }).toEqual({ code: 0, stderr: answeredStderr });
       const result = JSON.parse(capture.readStdout()) as ProposalCheck;
       expect(result.totals).toEqual({ changes: 1, moved: 0, unresolved: 0 });
       expect(result.changes[0]?.scope).toEqual([

@@ -27,6 +27,7 @@ import {
   testAnchorId,
 } from "@libar-dev/software-delivery-protocol";
 import { isOsMetadataFile } from "../src/projections/published-tree.js";
+import { answeredStderr } from "./helpers/query-hint.js";
 
 const packageName = "@libar-dev/software-delivery-protocol";
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -798,7 +799,7 @@ relations: {}
       );
       expect({ status: skillQuery.status, stderr: skillQuery.stderr }).toEqual({
         status: 0,
-        stderr: "",
+        stderr: answeredStderr,
       });
       expect(JSON.parse(skillQuery.stdout)).toEqual(["spec:package.own"]);
       const skillOrientation = spawnSync(
@@ -808,7 +809,7 @@ relations: {}
       );
       expect({ status: skillOrientation.status, stderr: skillOrientation.stderr }).toEqual({
         status: 0,
-        stderr: "",
+        stderr: answeredStderr,
       });
       const orientation = JSON.parse(skillOrientation.stdout) as {
         number: number;

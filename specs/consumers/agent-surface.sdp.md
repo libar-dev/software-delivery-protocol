@@ -31,7 +31,7 @@ Given an extraction root the front door derives in process on the invocation
 Given the corpus binds the spec {specId:string} to one anchored verifier and one declared-only verifier
 Given the agent holds the concept {concept:string}, the file {file:string}, and a changeset that also touches the unrecorded file {unrecordedFile:string}
 When the agent scripts a body {body:"composing that spec's verifier bindings"|"reaching every entry point the demand map names"} through the front door
-Then the front door exits {exitCode:number} with an empty error stream
+Then the front door exits {exitCode:number} with only the catalog hint on its error stream
 Then the printed answer is exactly the body's pre-shaped return {printedAnswer:string}
 Then the anchored verifier {anchoredVerifierId:string} decodes as enabled while the declared-only verifier {declaredVerifierId:string} does not
 Then the concept entry answers with the spec {conceptSpecId:string}

@@ -290,7 +290,7 @@ export const consumersSpecs = [
             'the agent scripts a body {body:"composing that spec\'s verifier bindings"|"reaching every entry point the demand map names"} through the front door',
           ],
           then: [
-            "the front door exits {exitCode:number} with an empty error stream",
+            "the front door exits {exitCode:number} with only the catalog hint on its error stream",
             "the printed answer is exactly the body's pre-shaped return {printedAnswer:string}",
             "the anchored verifier {anchoredVerifierId:string} decodes as enabled while the declared-only verifier {declaredVerifierId:string} does not",
             "the concept entry answers with the spec {conceptSpecId:string}",
@@ -924,7 +924,7 @@ export const consumersSpecs = [
               'the agent scripts a body {body: "composing that spec\'s verifier bindings"} through the front door',
             ],
             then: [
-              "the front door exits {exitCode: 0} with an empty error stream",
+              "the front door exits {exitCode: 0} with only the catalog hint on its error stream",
               'the printed answer is exactly the body\'s pre-shaped return {printedAnswer: "spec:orders.create-order.empty-cart is a declared verifier · spec:orders.create-order.valid-cart is an enabled verifier"}',
               'the anchored verifier {anchoredVerifierId: "spec:orders.create-order.valid-cart"} decodes as enabled while the declared-only verifier {declaredVerifierId: "spec:orders.create-order.empty-cart"} does not',
             ],
@@ -958,7 +958,7 @@ export const consumersSpecs = [
               'the agent scripts a body {body: "reaching every entry point the demand map names"} through the front door',
             ],
             then: [
-              "the front door exits {exitCode: 0} with an empty error stream",
+              "the front door exits {exitCode: 0} with only the catalog hint on its error stream",
               'the concept entry answers with the spec {conceptSpecId: "spec:orders.order-management"}',
               'the file entry answers with the spec {fileSpecId: "spec:orders.create-order"}',
               'the changeset entry answers with the impacted spec {changesetSpecId: "spec:orders.create-order"}',
@@ -4067,6 +4067,8 @@ export const consumersSpecs = [
           "A call names a recipe the catalog holds and passes one plain object or nothing; any other number or parameters reject the call with a message naming the recipe, and a recipe that throws rejects the call with its error, so a mistaken call fails loudly instead of answering for a sample.",
           "`sdp q`, the rules runner and the exported evaluator compile and run a body one way: the same compilation, the same parse error with its line and column, worded by each surface in its own pinned text, and the same five bindings.",
           "The package exports the body evaluator, so a script that holds a graph runs a body, or a shipped recipe through `recipes`, without deriving the graph again; the evaluator writes and prints nothing and claims no sandbox, as the sink claims none.",
+          "Every call whose body runs and whose answer prints, or whose body returns nothing, ends standard error with one hint line that points to the listing of the recipe catalog and to the `recipes` binding; standard output, `--json` included, holds only the answer, and a refusal prints no hint.",
+          "A call refused for an absent or empty body follows its refusal line with the recipe catalog by category, naming each category's first recipes, and with the call forms, all read from the catalog index of the package that runs the engine; it derives no graph and exits 1.",
         ],
         exampleSpace: {
           given: [
@@ -4088,6 +4090,8 @@ export const consumersSpecs = [
           callRefusals: "rules[7]",
           oneEvaluator: "rules[8]",
           exportedEvaluator: "rules[9]",
+          answerHint: "rules[10]",
+          listsCatalog: "rules[11]",
         },
       },
       design: {
@@ -4105,6 +4109,10 @@ export const consumersSpecs = [
           "`evaluateBody(body: string, input: { graph: GraphSchema; report?: ValidationReport; params?: Readonly<Record<string, unknown>> }): Promise<unknown>`, exported from the package's main entry, `@libar-dev/software-delivery-protocol`; it binds `g` to the reader over `graph`, `report` to the given report or, when absent, the validation report of `graph`, `params` to the given object or `{}`, and `recipes` over the same three, and resolves to the body's return.",
         evaluatorRejections:
           "a body that does not parse rejects with an Error whose message is `the body does not parse at line L, column C: <message>`, the text the sink prints after `sdp q: `; a body that throws rejects with what it threw; `params` that are not a plain object reject before the body runs.",
+        hintLine:
+          "`hint: run q with no body to list the <count> recipes by category; inside a body, await recipes(N, params) runs recipe N.`, where `<count>` counts the rows of the catalog's index; when the package's catalog cannot be read, the line is `hint: inside a body, await recipes(N, params) runs catalog recipe N.`",
+        catalogListing:
+          "After the refusal line and a blank line: `The recipes by category; <package>docs/agent-surface/recipes.md holds each one's parameters and answer:`, then one line per category in the index's order, `  <category>: <number> <name>; …`, naming its first four rows in the index's order and closing with `and <k> more` when it holds more; a blank line; then `Call forms:` and three lines, a body as the argument or on stdin, a shipped recipe file `<package>dist/recipes/NN-slug.js` run with `--params`, and a recipe called inside a body. `<package>` is the package directory as the working directory reaches it, empty at its root; without a readable catalog only the call forms print.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],

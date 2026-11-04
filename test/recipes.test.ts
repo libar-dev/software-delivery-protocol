@@ -34,6 +34,7 @@ import {
   expectedUsesEdges,
 } from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { answeredStderr } from "./helpers/query-hint.js";
 import { countMapSets } from "./helpers/map-sets.js";
 
 // The recipe corpus is executable documentation: every fenced `js` body in the catalog must run
@@ -188,7 +189,7 @@ async function runRecipe(
   ).toEqual({
     recipe: recipe.title,
     exitCode: 0,
-    stderr: "",
+    stderr: answeredStderr,
   });
 
   return JSON.parse(capture.readStdout()) as unknown;
@@ -2352,7 +2353,7 @@ describe("register recipe semantics", () => {
           queryHooks,
         ),
       ).toBe(0);
-      expect(capture.readStderr()).toBe("");
+      expect(capture.readStderr()).toBe(answeredStderr);
       expect(capture.readStdout()).toContain("totals:");
     },
   );
@@ -2386,7 +2387,7 @@ describe("register recipe semantics", () => {
         { query: { ...queryHooks.query, extract: () => probe } },
       ),
     ).toBe(0);
-    expect(capture.readStderr()).toBe("");
+    expect(capture.readStderr()).toBe(answeredStderr);
     expect(capture.readStdout()).not.toContain(text);
     expect(capture.readStdout()).toContain("... 1000 more characters");
     expect(capture.readStdout()).toContain("... 1013 more characters");
@@ -4826,7 +4827,7 @@ describe("recipe parameters and the shipped recipe files", () => {
       const run = await runShipped(shippedBody(recipeByOrdinal(4)), ["--params", `@${path}`]);
       expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
         exitCode: 0,
-        stderr: "",
+        stderr: answeredStderr,
       });
 
       const result = asRecord(JSON.parse(run.stdout));
@@ -4867,7 +4868,7 @@ describe("recipe parameters and the shipped recipe files", () => {
     ]);
     expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
       exitCode: 0,
-      stderr: "",
+      stderr: answeredStderr,
     });
 
     const result = asRecord(JSON.parse(run.stdout));
@@ -4898,7 +4899,7 @@ describe("recipe parameters and the shipped recipe files", () => {
       const run = await runShipped(body, ["--params", JSON.stringify({ pack: chosen })]);
       expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
         exitCode: 0,
-        stderr: "",
+        stderr: answeredStderr,
       });
 
       const result = asRecord(JSON.parse(run.stdout));

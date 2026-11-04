@@ -130,8 +130,9 @@ const commands = {
       "  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH | --params KEY=@PATH]... [--json]",
     paragraph: `The agent front door: derive the graph under --root (default: cwd) in process, then
              evaluate the supplied body and print what it returns. The body is the single
-             positional argument, or stdin when stdin is not a terminal; with neither, q refuses
-             with a usage note and exits 1 rather than waiting. It is a plain JavaScript async function
+             positional argument, or stdin when stdin is not a terminal; with neither, or with an
+             empty body, q lists the recipe catalog by category and the call forms on stderr and
+             exits 1 rather than waiting. It is a plain JavaScript async function
              body — no import/export, no TypeScript-only syntax — and \`return\` is the output
              contract. Five bindings are injected: \`g\`, the reader over the derived graph (the
              same createReader the package exports); \`graph\`, the raw graph schema object;
@@ -145,7 +146,8 @@ const commands = {
              catalog's sample. The graph is derived on every invocation, so a
              just-authored Spec is queryable immediately and no committed artifact answers in the
              graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);
-             --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
+             --json prints JSON.stringify instead, unbounded. A call that answers ends stderr with
+             one hint line; stdout holds only the answer. A body that throws exits 1, as does a
              graph that fails to derive.`,
   },
 } as const;

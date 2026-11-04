@@ -1,10 +1,10 @@
 import { readFileSync, readdirSync } from "node:fs";
 import type { Session } from "node:inspector";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { Script } from "node:vm";
 import { ts } from "ts-morph";
 import type { GraphSchema } from "../graph/schema.js";
+import { packageRoot } from "../package-root.js";
 import { createReader } from "./reader.js";
 import type { Reader } from "./reader.js";
 import type { ValidationReport } from "../validate/contracts.js";
@@ -189,24 +189,12 @@ function freezeAnswer(value: unknown, seen = new Set<object>()): unknown {
   return Object.freeze(value);
 }
 
-// Both source tests and bundled entries read this package's built bodies. Walking from the
-// module also works for the CommonJS main entry, whose bundle supplies __dirname.
+// Both source tests and bundled entries read this package's built bodies.
 function recipeDirectory(): string {
-  let directory =
-    typeof __dirname === "string" ? __dirname : dirname(fileURLToPath(import.meta.url));
-  for (;;) {
-    try {
-      const metadata = JSON.parse(readFileSync(join(directory, "package.json"), "utf8")) as {
-        name?: unknown;
-      };
-      if (metadata.name === "@libar-dev/software-delivery-protocol")
-        return join(directory, "dist", "recipes");
-    } catch {
-      // A nested module directory need not hold package metadata.
-    }
-    const parent = dirname(directory);
-    if (parent === directory) throw new Error("recipes: cannot locate the running package");
-    directory = parent;
+  try {
+    return join(packageRoot(), "dist", "recipes");
+  } catch (error) {
+    throw new Error(`recipes: ${errorMessage(error)}`);
   }
 }
 

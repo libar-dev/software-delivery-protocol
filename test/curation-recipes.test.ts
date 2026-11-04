@@ -22,6 +22,7 @@ import type {
   PrimitiveNode,
 } from "../src/index.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { answeredStderr } from "./helpers/query-hint.js";
 
 const slimmingImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.slimming-recipe"),
@@ -70,7 +71,7 @@ async function runRecipe(
       query: { extract: () => extraction, isStdinTty: () => true },
     },
   );
-  expect({ code, stderr: capture.readStderr() }).toEqual({ code: 0, stderr: "" });
+  expect({ code, stderr: capture.readStderr() }).toEqual({ code: 0, stderr: answeredStderr });
   return JSON.parse(capture.readStdout()) as Record<string, unknown>;
 }
 
@@ -573,7 +574,7 @@ describe("curation report recipe", () => {
           { query: { extract: () => extraction } },
         ),
       ).toBe(0);
-      expect(capture.readStderr()).toBe("");
+      expect(capture.readStderr()).toBe(answeredStderr);
       expect(JSON.parse(capture.readStdout())).toEqual({
         diagnostics: [
           Object.hasOwn(params, "limit")
