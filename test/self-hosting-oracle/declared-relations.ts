@@ -4906,4 +4906,17 @@ export const expectedDeclaredRelations: readonly (readonly [
     "spec:decisions.shipped-projections-frozen",
     "the shipped projections stay frozen",
   ],
+  ["spec:consumers.shipped-protocol-corpus", "decidedBy", "spec:decisions.agent-plugin-package"],
+  [
+    "spec:decisions.agent-plugin-package",
+    "refines",
+    "spec:consumers.shipped-protocol-corpus",
+    "settles the form in which the package ships its skills",
+  ],
+  [
+    "spec:decisions.agent-plugin-package",
+    "dependsOn",
+    "spec:decisions.mcp-deferred",
+    "the plugin declares no MCP server while MCP integration stays deferred",
+  ],
 ] as const;

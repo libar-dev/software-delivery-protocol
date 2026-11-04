@@ -8,6 +8,7 @@ relations:
   dependsOn:
     target: spec:extraction.excludes
     reason: the shipped corpus stays out of an adopter's graph under its canonical discovery rules
+  decidedBy: spec:decisions.agent-plugin-package
 ---
 # The package ships the Specs and on-ramps its skills cite
 
@@ -19,6 +20,7 @@ The skills and the recipe catalog also send their reader to the glossary, and th
 
 ## Behavior
 - rule: Beside the runtime and runnable recipe files in `dist/`, the package ships the Protocol's Spec and Pack carriers under `specs/`, the glossary `CONTEXT.md`, the decision registry `docs/concept/DECISIONS.md`, the Agent Plugin manifest `plugin.json` with the reading, authoring, session, Studio and vault skills under `skills/`, the recipe catalog and architecture walkthrough under `docs/agent-surface/`, and the change-proposal schema under `schemas/`; package metadata, README and license files also ship.
+- rule: [#agentPlugin] The package root is an Agent Plugin: `plugin.json` declares it under the Agent Plugins 1.0.0 schema with the package's unscoped name, version and license, and every skill under `skills/` keeps the Agent Skills name and description limits. No client-specific manifest and no `mcp.json` ship.
 - rule: An adopter reads a cited Spec through the front door by selecting the package's `specs/` directory, installed or checked out, as the root, or by opening the carrier file. `sdp --help` names that path, as `spec:consumers.adopter-on-ramp#rule.helpNamesOnRamps` requires.
 - rule: The shipped corpus stays outside an adopter's own graph under the canonical discovery rules in `spec:extraction.excludes`.
 - rule: The package ships no source anchors. A graph derived from the shipped corpus answers what the Protocol intends; its delivery facts are empty, and verifier-gap and example-verifier-linkage warnings caused by the absent bindings are not evidence about the Protocol's realization.

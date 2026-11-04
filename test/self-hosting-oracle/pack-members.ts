@@ -461,6 +461,7 @@ export const expectedPackMembers = [
   "spec:decisions.roadmap-priority",
   "spec:decisions.roadmap-over-plans",
   "spec:decisions.epics-of-any-kind",
+  "spec:decisions.agent-plugin-package",
 ] as const;
 
 export const expectedStudioPackMembers = [

@@ -460,6 +460,7 @@ specs:
   - spec:decisions.roadmap-priority
   - spec:decisions.roadmap-over-plans
   - spec:decisions.epics-of-any-kind
+  - spec:decisions.agent-plugin-package
 modelRefs:
   - spec:model.core-model
 ---
