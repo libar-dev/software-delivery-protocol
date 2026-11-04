@@ -1115,4 +1115,91 @@ describe("validate watch directory replacement", () => {
       rmSync(workspace, { recursive: true, force: true });
     }
   });
+
+  // A filename-less event reaches reconcileDirectory only when the directory still looked intact
+  // to the ancestor check a moment earlier; the injected lstat makes the two reads disagree.
+  it("reconciles a directory that became a skipped link after the ancestor check", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-reconcile-link-"));
+    const root = join(workspace, "root");
+    const outside = join(workspace, "outside");
+    const specs = join(root, "specs");
+    writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.watch-reconcile-link");
+    const opened = lstatSync(specs);
+    let stale = 0;
+    const watch = watchRoot(root, (path) => {
+      if (path === specs && stale > 0) {
+        stale -= 1;
+        return opened;
+      }
+      return lstatSync(path);
+    });
+
+    try {
+      await bounded(watch.cycles.cycle(1), "reconcile link first cycle");
+      const retired = watch.native.subscriptions.get(specs);
+      expect(retired).toBeDefined();
+
+      renameSync(specs, outside);
+      symlinkSync(outside, specs, "dir");
+      stale = 1;
+      await deliver(retired, "rename", "");
+      expect(stale).toBe(0);
+
+      await bounded(watch.cycles.cycle(2), "reconcile link rerun");
+      expect(retired?.closeCount).toBe(1);
+      expect(watch.cycleStderr(2)).toContain(linkWarning("specs"));
+      expect(graphText(root)).not.toContain("spec:tmp.watch-reconcile-link");
+
+      // The watch remembers the link, so removing it reruns and clears the warning.
+      unlinkSync(specs);
+      await deliver(watch.native.subscriptions.get(root), "rename", "specs");
+      await bounded(watch.cycles.cycle(3), "reconcile link removal rerun");
+      expect(watch.cycleStderr(3)).not.toContain("symbolic-link-skipped");
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "reconcile link watch exit")).toBe(0);
+      expect(watch.capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("reconciles a directory that vanished after the ancestor check", async () => {
+    const workspace = mkdtempSync(join(tmpdir(), "sdp-watch-reconcile-gone-"));
+    const root = join(workspace, "root");
+    const specs = join(root, "specs");
+    writeCarrier(join(specs, "probe.sdp.md"), "spec:tmp.watch-reconcile-gone");
+    const opened = lstatSync(specs);
+    let stale = 0;
+    const watch = watchRoot(root, (path) => {
+      if (path === specs && stale > 0) {
+        stale -= 1;
+        return opened;
+      }
+      return lstatSync(path);
+    });
+
+    try {
+      await bounded(watch.cycles.cycle(1), "reconcile gone first cycle");
+      const retired = watch.native.subscriptions.get(specs);
+      expect(retired).toBeDefined();
+
+      rmSync(specs, { recursive: true });
+      stale = 1;
+      await deliver(retired, "rename", "");
+      expect(stale).toBe(0);
+
+      await bounded(watch.cycles.cycle(2), "reconcile gone rerun");
+      expect(retired?.closeCount).toBe(1);
+      expect(graphText(root)).not.toContain("spec:tmp.watch-reconcile-gone");
+
+      watch.cycles.abort.abort();
+      expect(await bounded(watch.running, "reconcile gone watch exit")).toBe(0);
+      expect(watch.capture.readStderr()).not.toContain("watch failed");
+    } finally {
+      watch.cycles.abort.abort();
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
 });
