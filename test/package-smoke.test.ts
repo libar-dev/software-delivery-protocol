@@ -512,11 +512,12 @@ bindExample({
       const packedPaths = packed.files.map((file) => file.path);
       const adopterAssets = [
         "CONTEXT.md",
-        ".agents/skills/sdp-agent-surface/SKILL.md",
-        ".agents/skills/sdp-authoring/SKILL.md",
-        ".agents/skills/sdp-sessions/SKILL.md",
-        ".agents/skills/sdp-studio/SKILL.md",
-        ".agents/skills/sdp-vault/SKILL.md",
+        "plugin.json",
+        "skills/sdp-agent-surface/SKILL.md",
+        "skills/sdp-authoring/SKILL.md",
+        "skills/sdp-sessions/SKILL.md",
+        "skills/sdp-studio/SKILL.md",
+        "skills/sdp-vault/SKILL.md",
         "docs/agent-surface/recipes.md",
         "docs/agent-surface/upgrade-guide.md",
         "docs/agent-surface/architecture.md",
@@ -534,9 +535,26 @@ bindExample({
           (path) =>
             !["LICENSE", "README.md", "package.json", ...packedAssets].includes(path) &&
             !path.startsWith("dist/") &&
-            !path.startsWith("specs/"),
+            !path.startsWith("specs/") &&
+            !path.startsWith("skills/"),
         ),
       ).toEqual([]);
+      // Each skill ships whole, its references and scripts beside its SKILL.md, and nothing else.
+      const skillPaths: string[] = [];
+      const walkSkills = async (directory: string): Promise<void> => {
+        for (const entry of await readdir(join(repositoryRoot, directory), {
+          withFileTypes: true,
+        })) {
+          const path = `${directory}/${entry.name}`;
+          if (entry.isDirectory()) await walkSkills(path);
+          else if (entry.name !== ".DS_Store" && !entry.name.startsWith("._"))
+            skillPaths.push(path);
+        }
+      };
+      await walkSkills("skills");
+      expect(packedPaths.filter((path) => path.startsWith("skills/")).sort()).toEqual(
+        skillPaths.sort(),
+      );
       const carrierPaths: string[] = [];
       const walkCarriers = async (directory: string): Promise<void> => {
         for (const entry of await readdir(join(repositoryRoot, directory), {
@@ -784,7 +802,7 @@ relations: {}
           "node_modules",
           "@libar-dev",
           "software-delivery-protocol",
-          ".agents/skills/sdp-agent-surface/SKILL.md",
+          "skills/sdp-agent-surface/SKILL.md",
         ),
         "utf8",
       );
@@ -794,7 +812,7 @@ relations: {}
           "node_modules",
           "@libar-dev",
           "software-delivery-protocol",
-          ".agents/skills/sdp-authoring/SKILL.md",
+          "skills/sdp-authoring/SKILL.md",
         ),
         "utf8",
       );
@@ -804,7 +822,7 @@ relations: {}
           "node_modules",
           "@libar-dev",
           "software-delivery-protocol",
-          ".agents/skills/sdp-sessions/SKILL.md",
+          "skills/sdp-sessions/SKILL.md",
         ),
         "utf8",
       );
@@ -830,7 +848,7 @@ relations: {}
             "node_modules",
             "@libar-dev",
             "software-delivery-protocol",
-            `.agents/skills/${skill}/SKILL.md`,
+            `skills/${skill}/SKILL.md`,
           ),
           "utf8",
         );

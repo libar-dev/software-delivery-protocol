@@ -202,11 +202,12 @@ Agent skills and reference:
   Shipped in the package. Paths are relative to the package directory PKG, which is
   node_modules/@libar-dev/software-delivery-protocol in an adopter and the repository root in a
   source checkout.
-  .agents/skills/sdp-agent-surface/SKILL.md   the skill for reading the graph through q
-  .agents/skills/sdp-authoring/SKILL.md       the skill for authoring Specs, Packs, and anchors
-  .agents/skills/sdp-sessions/SKILL.md        the skill for routing a delivery session
-  .agents/skills/sdp-studio/SKILL.md          the skill for publishing and reading the Studio
-  .agents/skills/sdp-vault/SKILL.md           the skill for keeping an Obsidian vault of the graph
+  plugin.json                                 the Agent Plugin manifest: PKG loads as a plugin
+  skills/sdp-agent-surface/SKILL.md           the skill for reading the graph through q
+  skills/sdp-authoring/SKILL.md               the skill for authoring Specs, Packs, and anchors
+  skills/sdp-sessions/SKILL.md                the skill for routing a delivery session
+  skills/sdp-studio/SKILL.md                  the skill for publishing and reading the Studio
+  skills/sdp-vault/SKILL.md                   the skill for keeping an Obsidian vault of the graph
   docs/agent-surface/recipes.md               the recipe catalog: runnable q bodies
   dist/recipes/NN-slug.js                     each catalog body as a file, run as shipped with
                                               sdp q "$(cat PKG/dist/recipes/NN-slug.js)"

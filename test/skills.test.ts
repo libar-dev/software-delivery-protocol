@@ -9,6 +9,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -56,15 +57,15 @@ import {
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const skillPaths = [
-  ".agents/skills/sdp-agent-surface/SKILL.md",
-  ".agents/skills/sdp-authoring/SKILL.md",
-  ".agents/skills/sdp-sessions/SKILL.md",
+  "skills/sdp-agent-surface/SKILL.md",
+  "skills/sdp-authoring/SKILL.md",
+  "skills/sdp-sessions/SKILL.md",
 ] as const;
-const studioSkillPath = ".agents/skills/sdp-studio/SKILL.md";
-const vaultSkillPath = ".agents/skills/sdp-vault/SKILL.md";
+const studioSkillPath = "skills/sdp-studio/SKILL.md";
+const vaultSkillPath = "skills/sdp-vault/SKILL.md";
 
 it("discovers the design slice's summary and detail parameter", () => {
-  const { body } = readSkill(".agents/skills/sdp-agent-surface/SKILL.md");
+  const { body } = readSkill("skills/sdp-agent-surface/SKILL.md");
   const detail = body.slice(
     body.indexOf("A recipe that takes `params.detail`"),
     body.indexOf("To filter any shipped answer"),
@@ -104,7 +105,7 @@ function readSkill(path: string) {
 }
 
 it("teaches the named-file exception to both carrier-watch descriptions", () => {
-  const { body } = readSkill(".agents/skills/sdp-authoring/SKILL.md");
+  const { body } = readSkill("skills/sdp-authoring/SKILL.md");
   const discovery = body.slice(
     body.indexOf("The watcher ignores"),
     body.indexOf("Events during a run"),
@@ -120,7 +121,7 @@ it("teaches the named-file exception to both carrier-watch descriptions", () => 
 });
 
 it("teaches the optional priority field in the Pack manifest envelope", () => {
-  const { body } = readSkill(".agents/skills/sdp-authoring/SKILL.md");
+  const { body } = readSkill("skills/sdp-authoring/SKILL.md");
   const pack = body.split("## Author a Pack")[1]?.split("## Bind code")[0];
   expect(pack).toContain("optional `order`, whose one lawful value is `priority`");
 });
@@ -327,26 +328,85 @@ describe("Protocol skill assets", () => {
       assertPlanningHomes(withoutHome);
     }).toThrow();
   });
-  it("owns skills under .agents and exposes them to Claude through one relative symlink", () => {
-    const claudeSkills = join(repoRoot, ".claude", "skills");
-
-    expect(lstatSync(claudeSkills).isSymbolicLink()).toBe(true);
-    expect(readlinkSync(claudeSkills)).toBe("../.agents/skills");
+  it("owns skills at the plugin root and exposes them to project discovery through relative symlinks", () => {
+    expect(lstatSync(join(repoRoot, "skills")).isDirectory()).toBe(true);
+    for (const link of [".agents/skills", ".claude/skills"]) {
+      expect({ link, symlink: lstatSync(join(repoRoot, link)).isSymbolicLink() }).toEqual({
+        link,
+        symlink: true,
+      });
+      expect({ link, target: readlinkSync(join(repoRoot, link)) }).toEqual({
+        link,
+        target: "../skills",
+      });
+    }
   });
 
-  it("ships every skill folder in the package and indexes it in the help", () => {
+  it("ships the plugin manifest and every skill folder in the package and indexes them in the help", () => {
     const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       files: string[];
     };
-    const folders = readdirSync(join(repoRoot, ".agents", "skills"), { withFileTypes: true })
+    const folders = readdirSync(join(repoRoot, "skills"), { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
-      .map((entry) => `.agents/skills/${entry.name}/SKILL.md`)
+      .map((entry) => `skills/${entry.name}/SKILL.md`)
       .sort();
 
     expect(folders).toEqual([...allSkillPaths].sort());
+    expect(packageJson.files).toContain("plugin.json");
+    expect(packageJson.files).toContain("skills/**");
+    expect(SDP_HELP_TEXT).toContain("plugin.json");
     for (const path of folders) {
-      expect(packageJson.files).toContain(path);
       expect(SDP_HELP_TEXT).toContain(path);
+    }
+  });
+
+  it("declares the package as a portable Agent Plugin and nothing client-specific", () => {
+    // Ajv 6 reads draft-07; every keyword the 1.0.0 schema uses means the same there, so only the
+    // 2020-12 meta-schema tag is dropped before compiling.
+    const Ajv = createRequire(import.meta.url)("ajv") as new () => {
+      compile: (schema: unknown) => (value: unknown) => boolean;
+    };
+    const { $schema: _metaSchema, ...schema } = JSON.parse(
+      readFileSync(join(repoRoot, "test/fixtures/agent-plugins/1.0.0/plugin.schema.json"), "utf8"),
+    ) as Record<string, unknown>;
+    void _metaSchema;
+    const conforms = new Ajv().compile(schema);
+    const manifest = JSON.parse(readFileSync(join(repoRoot, "plugin.json"), "utf8")) as Record<
+      string,
+      unknown
+    >;
+    const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+      name: string;
+      version: string;
+      license: string;
+    };
+
+    expect(conforms(manifest)).toBe(true);
+    expect(conforms({ ...manifest, skills: "./skills" })).toBe(false);
+    expect(manifest.$schema).toBe("https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
+    // A client without a manifest of its own names the plugin after its directory, which is the
+    // package's unscoped name wherever it is installed or cloned.
+    expect(manifest.name).toBe(packageJson.name.split("/").pop());
+    expect(manifest.version).toBe(packageJson.version);
+    expect(manifest.license).toBe(packageJson.license);
+    expect(existsSync(join(repoRoot, ".claude-plugin"))).toBe(false);
+    expect(existsSync(join(repoRoot, "mcp.json"))).toBe(false);
+  });
+
+  it("keeps every skill within the Agent Skills frontmatter limits", () => {
+    for (const path of allSkillPaths) {
+      const { frontmatter } = readSkill(path);
+      const name = String(frontmatter.name);
+      const description = String(frontmatter.description);
+
+      expect({ path, name: /^(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u.test(name) }).toEqual({
+        path,
+        name: true,
+      });
+      expect({ path, description: description.length <= 1024 }).toEqual({
+        path,
+        description: true,
+      });
     }
   });
 
@@ -374,7 +434,7 @@ describe("Protocol skill assets", () => {
       expect(source).toContain("spec:");
     }
 
-    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
     for (const required of [
       "Place what is not settled",
       "Write the Markdown body",
@@ -421,7 +481,7 @@ describe("Protocol skill assets", () => {
       expect(authoring).toContain(required);
     }
 
-    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+    const surface = readSkill("skills/sdp-agent-surface/SKILL.md").source;
     for (const required of [
       "How delivery state derives",
       "declared",
@@ -438,7 +498,7 @@ describe("Protocol skill assets", () => {
   it("names the complete closed graph schema in the shape section", () => {
     // Lockstep with the engine: adding or removing a node type, edge type, or claim must
     // force this prose to move with it, as the task-sheet test does for the catalog.
-    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+    const surface = readSkill("skills/sdp-agent-surface/SKILL.md").source;
 
     expect(surface).toContain("The shape of the graph");
     for (const name of [...graphNodeTypes, ...graphEdgeTypes, ...graphClaims]) {
@@ -447,7 +507,7 @@ describe("Protocol skill assets", () => {
   });
 
   it("routes delivery sessions through the five advisory graph shapes", () => {
-    const sessions = readSkill(".agents/skills/sdp-sessions/SKILL.md").source;
+    const sessions = readSkill("skills/sdp-sessions/SKILL.md").source;
 
     for (const required of [
       "spec:consumers.delivery-session-on-ramp",
@@ -473,7 +533,7 @@ describe("Protocol skill assets", () => {
       expect(sessions).toContain(required);
     }
 
-    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
     for (const required of [
       "Capture a cheap idea",
       "readiness: idea",
@@ -676,7 +736,7 @@ void readingOnRampTestAnchor;
 
 describe("the graph-reading on-ramp", () => {
   it("maps a task to every catalog recipe in one sheet", () => {
-    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+    const surface = readSkill("skills/sdp-agent-surface/SKILL.md").source;
     const heading = "### Which recipe answers a task";
     const start = surface.indexOf(heading);
     expect(start).toBeGreaterThan(-1);
@@ -697,7 +757,7 @@ describe("the graph-reading on-ramp", () => {
   });
 
   it("links the Specs that own the graph contract, the claims and the sink", () => {
-    const surface = readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source;
+    const surface = readSkill("skills/sdp-agent-surface/SKILL.md").source;
     for (const owner of [
       "spec:consumers.agent-surface",
       "spec:decisions.agent-front-door",
@@ -726,7 +786,7 @@ void adopterOnRampTestAnchor;
 
 describe("adopter teaching", () => {
   it("teaches every Markdown section owner and links the carrying grammar", () => {
-    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
     const parser = readFileSync(join(repoRoot, "src/extract/markdown-body.ts"), "utf8");
     const ownerList = /const recognized = \[([\s\S]*?)\] as const;/u.exec(parser)?.[1];
     expect(ownerList).toBeDefined();
@@ -844,7 +904,7 @@ const grammarRows = [
 
 describe("adopter rule meanings", () => {
   it.each(adopterClauses)("teaches %s", (_clause, pattern) => {
-    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
     expect(teachingText(authoring)).toMatch(pattern);
   });
 
@@ -890,7 +950,7 @@ describe("adopter rule meanings", () => {
       "An open question goes outside Intent's ### Open questions.",
     ],
   ])("rejects the opposite teaching for %s: %s", (name, original, opposite) => {
-    const text = teachingText(readSkill(".agents/skills/sdp-authoring/SKILL.md").source);
+    const text = teachingText(readSkill("skills/sdp-authoring/SKILL.md").source);
     const pattern = adopterClauses.find(([clause]) => clause === name)?.[1];
     expect(pattern).toBeDefined();
     if (pattern === undefined) throw new Error("missing teaching clause");
@@ -902,7 +962,7 @@ describe("adopter rule meanings", () => {
   it("accepts a harmless open-question instruction frame", () => {
     const pattern = adopterClauses.find(([name]) => name === "open-question home")?.[1];
     if (pattern === undefined) throw new Error("missing home clause");
-    const text = teachingText(readSkill(".agents/skills/sdp-authoring/SKILL.md").source);
+    const text = teachingText(readSkill("skills/sdp-authoring/SKILL.md").source);
     expect(text.replace("An open question goes under", "Put an open question under")).toMatch(
       pattern,
     );
@@ -951,7 +1011,7 @@ describe("adopter rule meanings", () => {
   );
 
   it.each(grammarRows)("teaches the %s grammar row", (heading, pattern) => {
-    const authoring = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
     const rows = authoring.split("\n").filter((line) => line.startsWith(`| \`## ${heading}\``));
     expect(rows).toHaveLength(1);
     // Preserve Model's bold-term syntax while ignoring the table's code-span delimiters.
@@ -959,13 +1019,13 @@ describe("adopter rule meanings", () => {
   });
 
   it("keeps graph-reader verifier teaching about existence and CI outcomes", () => {
-    const surface = teachingText(readSkill(".agents/skills/sdp-agent-surface/SKILL.md").source);
+    const surface = teachingText(readSkill("skills/sdp-agent-surface/SKILL.md").source);
     expect(surface).toMatch(/It says a resolving verifier binding exists/u);
     expect(surface).toMatch(/Pass, fail, skip, and quarantine are CI's/u);
   });
 
   it("keeps session teaching advisory and separate from permission", () => {
-    const sessions = teachingText(readSkill(".agents/skills/sdp-sessions/SKILL.md").source);
+    const sessions = teachingText(readSkill("skills/sdp-sessions/SKILL.md").source);
     expect(sessions).toMatch(/All preflights are advisory/u);
     expect(sessions).toMatch(
       /They never authorize, block, scope, unlock, or advance delivery work/u,
@@ -1129,7 +1189,7 @@ describe("taught grammar agrees with parser behavior", () => {
  * says that marker has, read from the sentence that pairs them.
  */
 function taughtQuestionMarker(): { readonly marker: string; readonly address: string } {
-  const text = readSkill(".agents/skills/sdp-authoring/SKILL.md").source;
+  const text = readSkill("skills/sdp-authoring/SKILL.md").source;
   const taught = /`([^`]+)` is\s+addressed as\s+`(spec:<id>#question\.[^`]+)`/u.exec(text);
   const marker = taught?.[1];
   const address = taught?.[2];

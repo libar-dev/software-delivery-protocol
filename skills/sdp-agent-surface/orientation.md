@@ -1,6 +1,6 @@
 # Orient before work
 
-The orientation queries the repository handbook ([AGENTS.md](../../../AGENTS.md)) makes mandatory before work, disclosed from [SKILL.md](SKILL.md) so the skill stays short. They are written for the Protocol source checkout; the bodies are not run by the recipe tests, so a failing query is a finding to report.
+The orientation queries the repository handbook ([AGENTS.md](../../AGENTS.md)) makes mandatory before work, disclosed from [SKILL.md](SKILL.md) so the skill stays short. They are written for the Protocol source checkout; the bodies are not run by the recipe tests, so a failing query is a finding to report.
 
 Run these eleven queries in order before work of any kind, after `CONTEXT.md`. Together they present the corpus, its honesty, the next work and what is undecided, and they show the practice: a body over `g` and `graph`, the `report` as data, recipes composed with `recipes(n, params)`, subjects passed with `--params`, the entry adapters (`findByConcept`, `byFile`, `blastRadius`) and the frozen joins (`specContext`, `packContext`, `resolveEntryAddress`). The bodies also show where each answer keeps its rows, so copy those paths rather than guessing them.
 

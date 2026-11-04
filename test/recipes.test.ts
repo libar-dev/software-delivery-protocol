@@ -399,9 +399,9 @@ describe("the agent-surface recipe corpus", () => {
   it("keeps self-hosting and adopter invocation forms distinct", () => {
     const onRampSources = [
       recipesPath,
-      ".agents/skills/sdp-agent-surface/SKILL.md",
-      ".agents/skills/sdp-authoring/SKILL.md",
-      ".agents/skills/sdp-sessions/SKILL.md",
+      "skills/sdp-agent-surface/SKILL.md",
+      "skills/sdp-authoring/SKILL.md",
+      "skills/sdp-sessions/SKILL.md",
     ];
     const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
@@ -446,12 +446,9 @@ describe("the agent-surface recipe corpus", () => {
     const introProse = intro.replace(/\s+/gu, " ");
     const onRamps = {
       agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
-      agentSurface: readFileSync(
-        join(repoRoot, ".agents/skills/sdp-agent-surface/SKILL.md"),
-        "utf8",
-      ),
-      authoring: readFileSync(join(repoRoot, ".agents/skills/sdp-authoring/SKILL.md"), "utf8"),
-      sessions: readFileSync(join(repoRoot, ".agents/skills/sdp-sessions/SKILL.md"), "utf8"),
+      agentSurface: readFileSync(join(repoRoot, "skills/sdp-agent-surface/SKILL.md"), "utf8"),
+      authoring: readFileSync(join(repoRoot, "skills/sdp-authoring/SKILL.md"), "utf8"),
+      sessions: readFileSync(join(repoRoot, "skills/sdp-sessions/SKILL.md"), "utf8"),
     };
 
     // A parameter is data on `--params`, never source spliced into a body, and no recipe reads

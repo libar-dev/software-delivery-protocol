@@ -133,11 +133,12 @@ describe("sdp cli", () => {
 
   it("points operators to the shipped on-ramps and Protocol corpus", () => {
     for (const path of [
-      ".agents/skills/sdp-agent-surface/SKILL.md",
-      ".agents/skills/sdp-authoring/SKILL.md",
-      ".agents/skills/sdp-sessions/SKILL.md",
-      ".agents/skills/sdp-studio/SKILL.md",
-      ".agents/skills/sdp-vault/SKILL.md",
+      "plugin.json",
+      "skills/sdp-agent-surface/SKILL.md",
+      "skills/sdp-authoring/SKILL.md",
+      "skills/sdp-sessions/SKILL.md",
+      "skills/sdp-studio/SKILL.md",
+      "skills/sdp-vault/SKILL.md",
       "docs/agent-surface/recipes.md",
       "docs/agent-surface/architecture.md",
       "schemas/sdp-proposal-1.schema.json",
