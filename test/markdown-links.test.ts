@@ -23,8 +23,9 @@ import {
 // HTML anchors. Removing or renaming a document or a section, as the cleanup does when it
 // dissolves concept documents, otherwise leaves links that dangle for every reader while the rest
 // of the gate stays green. Carriers are out of scope, because the graph checks what they cite,
-// and so are the restored lineage documents, which are verbatim historical exhibits. The reader
-// in `helpers/markdown-links.ts` finds the links and anchors as the forge renders them.
+// and so is the v0 concept set under `docs/lineage/v0-design/`, which is restored verbatim as a
+// historical exhibit. The notes written for `docs/lineage/` are checked like any other document.
+// The reader in `helpers/markdown-links.ts` finds the links and anchors as the forge renders them.
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -32,7 +33,7 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 function isCheckedDocument(path: string): boolean {
   if (!path.endsWith(".md") || path.endsWith(".sdp.md")) return false;
   if (["README.md", "AGENTS.md", "CONTEXT.md"].includes(path)) return true;
-  if (path.startsWith("docs/")) return !path.startsWith("docs/lineage/");
+  if (path.startsWith("docs/")) return !path.startsWith("docs/lineage/v0-design/");
   return path.startsWith("jtbd-stories/") || path.startsWith(".agents/skills/");
 }
 
@@ -103,13 +104,44 @@ describe("relative Markdown links", () => {
       "CONTEXT.md",
       "docs/agent-surface/recipes.md",
       "docs/concept/README.md",
+      "docs/lineage/README.md",
       "jtbd-stories/README.md",
       ".agents/skills/sdp-authoring/SKILL.md",
     ]) {
       expect(checked).toContain(path);
     }
-    expect(checked.filter((path) => path.startsWith("docs/lineage/"))).toEqual([]);
+    expect(checked.filter((path) => path.startsWith("docs/lineage/v0-design/"))).toEqual([]);
     expect(dangling).toEqual([]);
+  });
+
+  it("checks the notes written for docs/lineage and skips only the restored v0 concept set", () => {
+    const files = new Map([
+      ["docs/lineage/README.md", "Start with [the context](./annotation-context.md#why).\n"],
+      [
+        "docs/lineage/annotation-context.md",
+        "# Context\n\n[Gone](../../specs/decisions/gone.sdp.md)\n",
+      ],
+      ["docs/lineage/archived-scout.md", "[Decision](../../specs/decisions/removed.sdp.md)\n"],
+      ["docs/lineage/v0-design/README.md", "[Old](../../specs/old.md)\n"],
+      ["docs/lineage/v0-design/01-core-primitives.md", "[Old](./missing.md)\n"],
+    ]);
+    const paths = new Set<string>([".", "docs", "docs/lineage", "docs/lineage/v0-design"]);
+    for (const path of files.keys()) paths.add(path);
+    const { checked, dangling } = checkTree({
+      paths,
+      exists: (path) => paths.has(path),
+      read: (path) => files.get(path) ?? "",
+    });
+    expect(checked).toEqual([
+      "docs/lineage/README.md",
+      "docs/lineage/annotation-context.md",
+      "docs/lineage/archived-scout.md",
+    ]);
+    expect(dangling).toEqual([
+      "docs/lineage/README.md:1 ./annotation-context.md#why",
+      "docs/lineage/annotation-context.md:3 ../../specs/decisions/gone.sdp.md",
+      "docs/lineage/archived-scout.md:1 ../../specs/decisions/removed.sdp.md",
+    ]);
   });
 
   it("reads the links a Markdown reader follows and skips code and external targets", () => {
