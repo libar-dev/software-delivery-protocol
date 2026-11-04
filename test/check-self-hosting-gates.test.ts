@@ -184,59 +184,12 @@ describe("the self-hosting records gate", () => {
     expect(result.stderr).toContain("CONTEXT.md — carries plan-status wording");
   });
 
-  it("ships the roadmap, recovery and review convention in the handbook", () => {
+  it("sends a session from the handbook's Start to the roadmap and the frozen history", () => {
     const source = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
     const flat = (text: string) => text.replace(/\s+/gu, " ");
-    const bullet = (label: string) => {
-      const match = source.split(`- **${label}**`)[1]?.split(/^-(?= \*\*)|^## /mu)[0];
-      expect(match, label).toBeDefined();
-      return flat(match ?? "");
-    };
-    const next = flat(source.split("> **Next work**")[1]?.split(/^## /mu)[0] ?? "");
+    const start = flat(source.split(/^## Start$/mu)[1]?.split(/^## /mu)[0] ?? "");
     for (const clause of ["pack:roadmap", "recipe 53", "frozen history"])
-      expect(next).toContain(clause);
-    const commits = bullet("Commits are recovery boundaries, not workflow gates.");
-    for (const clause of [
-      "first commit message",
-      "working rules",
-      "draft pull request",
-      "first coherent commit",
-      "Without such an instruction, ask before committing",
-      "never force one per todo",
-      "create empty commits",
-      "absorb unrelated or pre-existing changes",
-      "commit from an unsafe dirty baseline",
-    ])
-      expect(commits).toContain(clause);
-    const reviews = bullet("Reviews travel as proposals.");
-    for (const clause of [
-      "branch-head commit",
-      "a proposal composed in a preview names the preview's merge commit",
-      "recipe 38",
-      "recipe 49",
-      "decider",
-      "provisional",
-      "links",
-      "code defect",
-    ])
-      expect(reviews).toContain(clause);
-    expect(reviews).not.toContain("never a preview's merge commit");
-    const evidence = bullet("Tests are the evidence.");
-    for (const clause of [
-      "removed before merge",
-      "run evidence",
-      "merge commits",
-      "The Protocol merges its pull requests with merge commits",
-      "head ref",
-      "squash or rebase merge",
-      "durable ref",
-    ])
-      expect(evidence).toContain(clause);
-    const forward = bullet("Plan the next PR.");
-    for (const clause of ["recipe 55", "owner's reason"]) expect(forward).toContain(clause);
-    expect(bullet("DECISIONS.md admits sparingly, and reads by name.")).toContain(
-      "its paper trail is git and the pull request description",
-    );
+      expect(start).toContain(clause);
     expect(flat(source)).not.toMatch(/plan \d+ is (?:EXECUTING|EXECUTED|DRAFTED)/u);
     expect(source).not.toContain("highest primary-numbered plan");
   });

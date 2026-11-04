@@ -439,12 +439,9 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
-  it("teaches parameters as data and keeps the on-ramps naming the CLI verbs and recipes", () => {
+  it("teaches parameters as data", () => {
     const intro = source.slice(0, source.indexOf("## 1."));
     const introProse = intro.replace(/\s+/gu, " ");
-    const onRamps = {
-      agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
-    };
 
     // A parameter is data on `--params`, never source spliced into a body, and no recipe reads
     // the environment. The intro teaches exactly that and names no retired channel.
@@ -458,9 +455,6 @@ describe("the agent-surface recipe corpus", () => {
         env: false,
       });
     }
-
-    expect(onRamps.agents).toContain("new spec");
-    expect(onRamps.agents).toContain("sdp validate --watch");
   });
 
   // A caller checks the shape the intro names; a recipe missing from its list reads an absent

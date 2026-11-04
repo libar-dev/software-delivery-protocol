@@ -311,12 +311,22 @@ for carrier support.
 The installed package is an [Agent Plugin](https://agent-plugins.org/): its root `plugin.json`
 declares it, and its agent on-ramps are Agent Skills under
 `node_modules/@libar-dev/software-delivery-protocol/skills/`. Use `sdp-agent-surface` to read
-the graph, `sdp-authoring` to author intent, `sdp-sessions` for advisory delivery-session
-routing, `sdp-studio` to publish, share and read the Studio, and `sdp-vault` to keep an Obsidian
-vault. The same package includes the runnable recipe bodies at `docs/agent-surface/recipes.md`.
+the graph, `sdp-authoring` to author intent, `sdp-sessions` to do a session's delivery work on
+current graph evidence, `sdp-studio` to publish, stamp and read the Studio, and `sdp-vault` to
+keep an Obsidian vault. The same package includes the runnable recipe bodies at
+`docs/agent-surface/recipes.md`.
 
 Load `node_modules/@libar-dev/software-delivery-protocol` as a plugin in a client that reads
 Agent Plugins, or link its `skills/sdp-*` folders into your project's skills folder
 (`.agents/skills/`, or `.claude/skills/` for Claude Code). Either way the skills match the CLI you
 pinned. The reading skill's `scripts/orient.mjs` orients an agent in your corpus, and
 `scripts/q.mjs` runs `sdp q` through your installed package.
+
+To point every agent session in your project at the skills, add this to your own `AGENTS.md`:
+
+```markdown
+This project keeps its delivery intent as Specs under the Libar Software Delivery Protocol. Before
+corpus work, load the `sdp-agent-surface` skill and run its orientation; read findings through
+`sdp q`'s `report`, because `sdp validate`, `sdp build`, `sdp vault` and every publisher remove
+the generated pages.
+```
