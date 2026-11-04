@@ -40,6 +40,10 @@ checkout: `exec` resolves dependency binaries, while this package does not link 
 own `node_modules/.bin`; an unresolved `sdp` can select macOS's unrelated binary. Do not invoke a
 global `sdp` either.
 
+**Orient first in the source checkout.** Before any work there, run the eleven queries in
+[`orientation.md`](orientation.md), beside this file, in order. They present the corpus and show
+the practice. The file lives in the Protocol checkout only; the package does not ship it.
+
 The catalog of ready-made bodies is `docs/agent-surface/recipes.md` in the Protocol repository
 and `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md` in an
 adopter. Each recipe opens under a numbered heading that names it. Every body there runs verbatim
