@@ -1,3 +1,4 @@
+import { nodeLine } from "./typescript-lines.js";
 import { normalizeAuthoring, relationOptionsRefusal } from "./authoring-normalization.js";
 import { Node, SyntaxKind, VariableDeclarationKind } from "ts-morph";
 import type {
@@ -163,7 +164,7 @@ export type StaticResult =
   | { readonly ok: false; readonly failure: StaticFailure };
 
 function staticFailure(node: Node, path: string, reason: string): StaticResult {
-  return { ok: false, failure: { path, line: node.getStartLineNumber(), reason } };
+  return { ok: false, failure: { path, line: nodeLine(node), reason } };
 }
 
 function describeNonStatic(node: Node): string {
@@ -492,7 +493,7 @@ export function reifyStaticIdExpression(
   }
 
   const idText = stringResult.value as string;
-  const line = unwrapped.getStartLineNumber();
+  const line = nodeLine(unwrapped);
 
   // The wrapping builder's contract checks first: it is the narrower statement, and the one
   // evaluation would enforce (the builder throws on a foreign namespace).
@@ -828,7 +829,7 @@ function reifyObjectLossy(
       drops.push({
         droppedPath: `${path}.${name}`,
         failurePath: `${path}.${name}`,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
         reason:
           "only plain property assignments are static (no spreads, shorthand, methods, or accessors)",
       });
@@ -841,7 +842,7 @@ function reifyObjectLossy(
       drops.push({
         droppedPath: path,
         failurePath: path,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
         reason: "computed property names are non-static",
       });
       continue;
@@ -855,7 +856,7 @@ function reifyObjectLossy(
       drops.push({
         droppedPath: propertyPath,
         failurePath: propertyPath,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
         reason: duplicatePropertyMessage(
           name,
           "so the repeat drops and the first authored value survives",
@@ -878,7 +879,7 @@ function reifyObjectLossy(
       drops.push({
         droppedPath: propertyPath,
         failurePath: propertyPath,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
         reason: "property carries no initializer",
       });
       continue;
@@ -959,7 +960,7 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
         kind: "integer-like",
         name: memberName,
         path: `${path}.${memberName}`,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
       });
       continue;
     }
@@ -984,7 +985,7 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
         kind: "integer-like",
         name,
         path: propertyPath,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
       });
       continue;
     }
@@ -1004,7 +1005,7 @@ function sanitizeSectionValue(node: Node, value: unknown, path: string): Section
         kind: "unrecognized",
         name,
         path: propertyPath,
-        line: property.getStartLineNumber(),
+        line: nodeLine(property),
       });
       continue;
     }
@@ -1058,7 +1059,7 @@ function typeScriptEntryLines(
       if (key === "description") continue;
       const property = firstPropertyNamed(initializer, key);
       if (property !== undefined) {
-        lines.push({ entry: `${sectionName}.${key}`, line: property.getStartLineNumber() });
+        lines.push({ entry: `${sectionName}.${key}`, line: nodeLine(property) });
       }
     }
   }
@@ -1079,7 +1080,7 @@ function typeScriptEntryLines(
       array.getElements().forEach((element, index) =>
         lines.push({
           entry: `${field === "rules" ? "rule" : "flow"}[${String(index)}]`,
-          line: element.getStartLineNumber(),
+          line: nodeLine(element),
         }),
       );
     }
@@ -1092,7 +1093,7 @@ function typeScriptEntryLines(
     Object.keys(model.terms).forEach((term, index) => {
       const property = firstPropertyNamed(termsNode, term);
       if (property !== undefined)
-        lines.push({ entry: `term[${String(index)}]`, line: property.getStartLineNumber() });
+        lines.push({ entry: `term[${String(index)}]`, line: nodeLine(property) });
     });
   }
   const stepLines = (node: Node | undefined, path: string): void => {
@@ -1104,7 +1105,7 @@ function typeScriptEntryLines(
         array.getElements().forEach((element, index) =>
           lines.push({
             entry: `${path}.${phase}[${String(index)}]`,
-            line: element.getStartLineNumber(),
+            line: nodeLine(element),
           }),
         );
     }
@@ -1130,7 +1131,7 @@ function typeScriptEntryLines(
       if (relation !== undefined)
         lines.push({
           entry: `relation.${String(relation.type)}.${String(relation.target)}`,
-          line: element.getStartLineNumber(),
+          line: nodeLine(element),
         });
     });
   }
@@ -1152,14 +1153,14 @@ function typeScriptEntryLines(
       const question = firstPropertyNamed(element, "question");
       lines.push({
         entry: `question[${String(index)}]`,
-        line: (question ?? element).getStartLineNumber(),
+        line: nodeLine(question ?? element),
       });
       for (const field of ["decider", "links", "provisional", "trigger"]) {
         const property = firstPropertyNamed(element, field);
         if (property !== undefined)
           lines.push({
             entry: `question[${String(index)}].${field}`,
-            line: property.getStartLineNumber(),
+            line: nodeLine(property),
           });
       }
     }
@@ -1169,7 +1170,7 @@ function typeScriptEntryLines(
 
 /** The line of `openQuestions[<index>].key` in an authored Intent, or the Intent's own line. */
 function openQuestionKeyLine(intentNode: Node, index: number): number {
-  const fallback = intentNode.getStartLineNumber();
+  const fallback = nodeLine(intentNode);
   const questions = firstPropertyNamed(intentNode, "openQuestions")?.getInitializer();
   const array = questions === undefined ? undefined : unwrapTransparent(questions);
 
@@ -1180,7 +1181,7 @@ function openQuestionKeyLine(intentNode: Node, index: number): number {
   const element = array.getElements()[index];
   const key = element === undefined ? undefined : firstPropertyNamed(element, "key");
 
-  return key?.getStartLineNumber() ?? fallback;
+  return key === undefined ? fallback : nodeLine(key);
 }
 
 /**
@@ -1327,7 +1328,7 @@ function requireSingleObjectArgument(
       "error",
       `${builderName}(…) must take exactly one fresh object literal argument`,
       file,
-      call.getStartLineNumber(),
+      nodeLine(call),
     ),
   );
 
@@ -1410,7 +1411,7 @@ function reifyRelations(
         "error",
         `envelope field "relations" must be an array literal`,
         file,
-        unwrapped.getStartLineNumber(),
+        nodeLine(unwrapped),
         subjectId,
         "relations",
       ),
@@ -1433,7 +1434,7 @@ function reifyRelations(
           "error",
           `"${entryPath}" is not one of the six relation builders (${SPEC_RELATION_TYPES.join(" · ")}) — a raw relation entry can smuggle a derived edge, so it is rejected at the envelope tier`,
           file,
-          element.getStartLineNumber(),
+          nodeLine(element),
           subjectId,
           entryPath,
         ),
@@ -1452,7 +1453,7 @@ function reifyRelations(
           "error",
           `"${entryPath}" must wrap one spec id target and optional relation options`,
           file,
-          builderCall.call.getStartLineNumber(),
+          nodeLine(builderCall.call),
           subjectId,
           entryPath,
         ),
@@ -1483,7 +1484,7 @@ function reifyRelations(
             "error",
             refusal,
             file,
-            optionsNode.getStartLineNumber(),
+            nodeLine(optionsNode),
             subjectId,
             entryPath,
           ),
@@ -1504,7 +1505,7 @@ function reifyRelations(
           "error",
           "duplicate target within one relation type",
           file,
-          element.getStartLineNumber(),
+          nodeLine(element),
           subjectId,
           entryPath,
         ),
@@ -1580,7 +1581,7 @@ function reifySpecCall(
       }
 
       failEnvelope(
-        property.getStartLineNumber(),
+        nodeLine(property),
         "the spec object literal must be fresh: only plain property assignments are static (a spread or shorthand entry could carry envelope fields opaquely)",
       );
       continue;
@@ -1590,12 +1591,12 @@ function reifySpecCall(
 
     if (name === undefined) {
       sawOpaqueEntry = true;
-      failEnvelope(property.getStartLineNumber(), "computed property names are non-static");
+      failEnvelope(nodeLine(property), "computed property names are non-static");
       continue;
     }
 
     if (authoredNames.has(name)) {
-      failEnvelope(property.getStartLineNumber(), duplicatePropertyMessage(name), name);
+      failEnvelope(nodeLine(property), duplicatePropertyMessage(name), name);
       continue;
     }
 
@@ -1603,11 +1604,7 @@ function reifySpecCall(
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
-      failEnvelope(
-        property.getStartLineNumber(),
-        `property "${name}" carries no initializer`,
-        name,
-      );
+      failEnvelope(nodeLine(property), `property "${name}" carries no initializer`, name);
       continue;
     }
 
@@ -1642,7 +1639,7 @@ function reifySpecCall(
 
       if (!enumField.values.has(text)) {
         failEnvelope(
-          property.getStartLineNumber(),
+          nodeLine(property),
           `envelope field "${name}" reified to "${text}", which is not one of ${enumField.label} — the typed envelope cannot carry it`,
           name,
         );
@@ -1720,7 +1717,7 @@ function reifySpecCall(
           "error",
           'prose field "description" has no owning section',
           file,
-          property.getStartLineNumber(),
+          nodeLine(property),
           subjectId,
           name,
         ),
@@ -1736,7 +1733,7 @@ function reifySpecCall(
           "error",
           `spec field "${name}" states derived graph vocabulary — delivery facts and derived edges are computed by the extractor, never authored, so the spec is not extracted`,
           file,
-          property.getStartLineNumber(),
+          nodeLine(property),
           subjectId,
           name,
         ),
@@ -1752,7 +1749,7 @@ function reifySpecCall(
           "warning",
           `property "${name}" is outside the spec shape (the envelope plus the sections ${SPEC_SECTION_NAMES.join(" · ")}) and is dropped — authored content must never silently fall out of the graph (L2)`,
           file,
-          property.getStartLineNumber(),
+          nodeLine(property),
           subjectId,
           name,
         ),
@@ -1786,7 +1783,7 @@ function reifySpecCall(
             "error",
             'prose field "description" is not owned by constraints',
             file,
-            property.getStartLineNumber(),
+            nodeLine(property),
             subjectId,
             name,
           ),
@@ -1826,7 +1823,7 @@ function reifySpecCall(
   for (const required of ["id", "kind", "altitude", "readiness"]) {
     if (!authoredNames.has(required) && !sawOpaqueEntry) {
       failEnvelope(
-        call.getStartLineNumber(),
+        nodeLine(call),
         `envelope field "${required}" is missing — the typed envelope cannot be constructed without it`,
         required,
       );
@@ -1851,7 +1848,7 @@ function reifySpecCall(
       data,
       id: data.id as string,
       file,
-      line: call.getStartLineNumber(),
+      line: nodeLine(call),
       entryLines: typeScriptEntryLines(objectLiteral, data),
     },
     findings,
@@ -1875,7 +1872,7 @@ function reifyIdArray(
         "error",
         `envelope field "${fieldName}" must be an array literal`,
         file,
-        unwrapped.getStartLineNumber(),
+        nodeLine(unwrapped),
         subjectId,
         fieldName,
       ),
@@ -1947,7 +1944,7 @@ function reifyPackCall(
       }
 
       failEnvelope(
-        property.getStartLineNumber(),
+        nodeLine(property),
         "the pack object literal must be fresh: only plain property assignments are static (a spread or shorthand entry could carry envelope fields opaquely)",
       );
       continue;
@@ -1957,12 +1954,12 @@ function reifyPackCall(
 
     if (name === undefined) {
       sawOpaqueEntry = true;
-      failEnvelope(property.getStartLineNumber(), "computed property names are non-static");
+      failEnvelope(nodeLine(property), "computed property names are non-static");
       continue;
     }
 
     if (authoredNames.has(name)) {
-      failEnvelope(property.getStartLineNumber(), duplicatePropertyMessage(name), name);
+      failEnvelope(nodeLine(property), duplicatePropertyMessage(name), name);
       continue;
     }
 
@@ -1970,11 +1967,7 @@ function reifyPackCall(
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
-      failEnvelope(
-        property.getStartLineNumber(),
-        `property "${name}" carries no initializer`,
-        name,
-      );
+      failEnvelope(nodeLine(property), `property "${name}" carries no initializer`, name);
       continue;
     }
 
@@ -2012,7 +2005,7 @@ function reifyPackCall(
             "error",
             'order must be the static string "priority"',
             file,
-            property.getStartLineNumber(),
+            nodeLine(property),
             subjectId,
             name,
           ),
@@ -2055,7 +2048,7 @@ function reifyPackCall(
           "error",
           `pack field "${name}" states derived graph vocabulary — delivery facts and derived edges are computed by the extractor, never authored (a pack states no truth of its own), so the pack is not extracted`,
           file,
-          property.getStartLineNumber(),
+          nodeLine(property),
           subjectId,
           name,
         ),
@@ -2072,7 +2065,7 @@ function reifyPackCall(
         "warning",
         `property "${name}" is outside the pack manifest shape (id · specs · modelRefs · order · title · framing) and is dropped — authored content must never silently fall out of the graph (L2)`,
         file,
-        property.getStartLineNumber(),
+        nodeLine(property),
         subjectId,
         name,
       ),
@@ -2083,7 +2076,7 @@ function reifyPackCall(
   for (const required of ["id", "specs"]) {
     if (!authoredNames.has(required) && !sawOpaqueEntry) {
       failEnvelope(
-        call.getStartLineNumber(),
+        nodeLine(call),
         `envelope field "${required}" is missing — the pack manifest cannot be constructed without it`,
         required,
       );
@@ -2099,7 +2092,7 @@ function reifyPackCall(
       data,
       id: data.id as string,
       file,
-      line: call.getStartLineNumber(),
+      line: nodeLine(call),
     },
     findings,
   };
@@ -2156,7 +2149,7 @@ export function reifySourceFile(
       findings.push(
         unrecognizedStatement(
           relativePath,
-          statement.getStartLineNumber(),
+          nodeLine(statement),
           `import from "${statement.getModuleSpecifierValue()}" is not the protocol package — identifiers it binds are non-static wherever they appear`,
         ),
       );
@@ -2168,7 +2161,7 @@ export function reifySourceFile(
         findings.push(
           unrecognizedStatement(
             relativePath,
-            statement.getStartLineNumber(),
+            nodeLine(statement),
             "only const declarations are recognized",
           ),
         );
@@ -2205,7 +2198,7 @@ export function reifySourceFile(
         findings.push(
           unrecognizedStatement(
             relativePath,
-            declaration.getStartLineNumber(),
+            nodeLine(declaration),
             `const "${declaration.getName()}" is not initialized with a spec(…)/pack(…) call bound to the protocol package`,
           ),
         );
@@ -2217,7 +2210,7 @@ export function reifySourceFile(
     findings.push(
       unrecognizedStatement(
         relativePath,
-        statement.getStartLineNumber(),
+        nodeLine(statement),
         `${statement.getKindName()} is outside the authored grammar`,
       ),
     );

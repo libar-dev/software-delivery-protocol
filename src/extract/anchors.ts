@@ -1,3 +1,4 @@
+import { compilerLine, nodeLine } from "./typescript-lines.js";
 import { Node, VariableDeclarationKind, ts } from "ts-morph";
 import type { CallExpression, ObjectLiteralExpression, SourceFile } from "ts-morph";
 
@@ -598,7 +599,7 @@ function reifyStructuralId(
     return {
       ok: false,
       kind: "non-static",
-      line: node.getStartLineNumber(),
+      line: nodeLine(node),
       reason: `${path} must use ${allowedBuilders.map((name) => `${name}(…)`).join(" or ")} with one string literal`,
     };
   }
@@ -666,7 +667,7 @@ function constantFieldReader(
 
       if (!Node.isArrayLiteralExpression(unwrapped)) {
         envelope.failEnvelope(
-          initializer.getStartLineNumber(),
+          nodeLine(initializer),
           `anchor field "${path}" must be a fresh array literal of ${structuralBuilders === undefined ? "ref(…)" : structuralBuilders.map((name) => `${name}(…)`).join(" or ")} references`,
           path,
         );
@@ -734,7 +735,7 @@ function reifyAnchorCall(
         "error",
         `${builder}(…) must take exactly one fresh object literal argument`,
         file,
-        call.getStartLineNumber(),
+        nodeLine(call),
       ),
     );
 
@@ -742,7 +743,7 @@ function reifyAnchorCall(
   }
 
   const subjectId = peekId(objectLiteral, FLAVOR_ID_NAMESPACES[flavor], bindings);
-  const envelope = new AnchorEnvelope(flavor, file, call.getStartLineNumber(), subjectId, findings);
+  const envelope = new AnchorEnvelope(flavor, file, nodeLine(call), subjectId, findings);
 
   for (const property of objectLiteral.getProperties()) {
     if (!Node.isPropertyAssignment(property)) {
@@ -755,7 +756,7 @@ function reifyAnchorCall(
       }
 
       envelope.failEnvelope(
-        property.getStartLineNumber(),
+        nodeLine(property),
         "the anchor object literal must be fresh: only plain property assignments are static (a spread or shorthand entry could carry binding fields opaquely)",
       );
       continue;
@@ -765,19 +766,16 @@ function reifyAnchorCall(
 
     if (name === undefined) {
       envelope.sawOpaqueEntry = true;
-      envelope.failEnvelope(
-        property.getStartLineNumber(),
-        "computed property names are non-static",
-      );
+      envelope.failEnvelope(nodeLine(property), "computed property names are non-static");
       continue;
     }
 
     const initializer = property.getInitializer();
 
     if (initializer === undefined) {
-      if (envelope.markAuthored(name, property.getStartLineNumber())) {
+      if (envelope.markAuthored(name, nodeLine(property))) {
         envelope.failEnvelope(
-          property.getStartLineNumber(),
+          nodeLine(property),
           `property "${name}" carries no initializer`,
           name,
         );
@@ -785,11 +783,7 @@ function reifyAnchorCall(
       continue;
     }
 
-    envelope.field(
-      name,
-      property.getStartLineNumber(),
-      constantFieldReader(initializer, bindings, envelope),
-    );
+    envelope.field(name, nodeLine(property), constantFieldReader(initializer, bindings, envelope));
   }
 
   return envelope.finish();
@@ -941,11 +935,6 @@ function readCommentBlock(text: string, line: number): CommentBlock | undefined 
 function commentLineContent(rawLine: string): string {
   const opened = rawLine.trimStart();
   return (opened.startsWith("*") ? opened.slice(1) : opened).trim();
-}
-
-/** The one-based line of a position, by the TypeScript compiler's line map. */
-function compilerLine(sourceFile: SourceFile, position: number): number {
-  return ts.getLineAndCharacterOfPosition(sourceFile.compilerNode, position).line + 1;
 }
 
 function malformedTagMessage(tag: CommentTag): string {
@@ -1308,7 +1297,7 @@ export function reifyAnchorSourceFile(
         "warning",
         `"${builder}(…)" call is outside its recognized authoring surface and is not extracted — ${surface}`,
         relativePath,
-        node.getStartLineNumber(),
+        nodeLine(node),
       ),
     );
   });
