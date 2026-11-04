@@ -155,6 +155,11 @@ describe("sdp new spec", () => {
     expect(capture.readStdout()).toMatch(/constraint/u);
     expect(capture.readStdout()).toMatch(/no twin|Intent-only|without a twin/u);
     expect(capture.readStdout()).not.toMatch(/refused/u);
+    // spec:consumers.authoring-on-ramp#rule.scaffoldWriteBoundary, as the help states it.
+    const help = capture.readStdout().replace(/\s+/gu, " ");
+    expect(help).toContain("must not contain .. segments");
+    expect(help).toContain("Its parent must resolve inside the working directory");
+    expect(help).toContain("ends the command with exit 1 before anything is created");
     expect(capture.readStderr()).toBe("");
   });
 
