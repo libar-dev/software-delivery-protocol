@@ -1,5 +1,36 @@
 # Libar Software Delivery Protocol
 
+```markdown
+## Skills arc: run these first (temporary, mandatory and temporary, while we work on `feat/agent-plugin-1`, added by user)
+
+Before reading any file, load the `sdp-agent-surface` skill and run these three queries from the
+repository root. Read 1 and 2 with their notes in `skills/sdp-agent-surface/references/orientation.md`.
+They show, in a few hundred lines, what grep would assemble from dozens of carriers and test files:
+the graph's surface, the two on-ramp roots read through the frozen join, and every on-ramp's law,
+reasons and bindings. Pair them with your own tools: the graph says where truth lives, grep and
+file reads open the exact lines.
+
+1. The corpus and its surface (`g`, `graph`, what a row carries and does not, recipe parameters):
+
+   node skills/sdp-agent-surface/scripts/orient.mjs --only 1
+
+2. The two on-ramp roots through `g.specContext` (rules with lines, relations with claims, bindings):
+
+   node skills/sdp-agent-surface/scripts/orient.mjs --only 10 --subjects '{"10":{"specs":["spec:consumers.reading-on-ramp","spec:consumers.authoring-on-ramp"]}}'
+
+3. Every on-ramp Spec: the law its skill teaches (with the authored reasons), what refines it, and
+   the anchors that bind it (all from `test/skills.test.ts`; the `SKILL.md` files themselves are
+   outside the graph):
+
+   pnpm --silent sdp:q 'const ids = g.specs().filter((s) => /on-ramp|graph-first-planning|shipped-protocol-corpus/.test(s.id)).map((s) => s.id); const short = (id) => id.replace(/^spec:/, ""); return Object.fromEntries(ids.map((id) => { const c = g.specContext(id); const out = graph.edges.filter((e) => e.from === id && e.type !== "belongsTo"); const inn = graph.edges.filter((e) => e.to === id); return [short(id), { readiness: `stated ${c.statedReadiness}, derived ${c.derivedReadiness}`, teaches: out.map((e) => `${e.type} ${short(e.to)}${e.reason ? ` — ${e.reason}` : ""}`), refinedBy: inn.filter((e) => e.type === "refines").map((e) => short(e.from)), boundBy: inn.filter((e) => e.claim === "anchored").map((e) => `${e.from} ${e.type}`) }]; }))'
+
+Notice the compression: queries return in a few lines what grep would assemble from several
+carriers and a test file, already joined, with reasons and claims kept apart. That compression,
+pairs nicely with your own tools, since `sdp:q` is intended to be used with grep and other ad hoc
+tools and common methods for exploration; AI-friendly by design.
+
+```
+
 A **programmatic, AI-native software-delivery system**: model the *whole delivery lifecycle* as typed code in
 the repo, derive **one graph** from it, and generate every other artifact off that graph. A deliberate second
 take on `@libar-dev/architect` — a year of design thinking front-loaded, **zero back-compat, zero old sins
@@ -21,9 +52,10 @@ code behavior into intent.
 > follow each entry to its Packs and carrying Specs, and read the open arc's draft pull request for
 > its record. `plans/` and `reviews/` are frozen history of earlier arcs until a cleanup arc
 > removes or archives them; nothing is added to either. Corpus counts, readiness, and findings are
-> **derived, never quoted** — re-run
-> `pnpm --silent sdp validate . --exclude explorations --exclude examples --exclude test/fixtures/import/parity`
-> and read recipes 8 and 11. Recipe 1 is the operational backlog, not the census. Never invoke a bare `sdp`.
+> **derived, never quoted** — read them through `sdp:q`, which writes nothing: orientation answer 4
+> (`node skills/sdp-agent-surface/scripts/orient.mjs --only 4`), or the `report` binding and recipes
+> 8 and 11. `sdp validate`, `sdp build` and every publisher remove the five generated page roots
+> first. Recipe 1 is the operational backlog, not the census. Never invoke a bare `sdp`.
 
 ## Orient before work
 
