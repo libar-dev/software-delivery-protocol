@@ -185,7 +185,28 @@ function confinedRegistrarPath(
       return undefined;
     }
 
-    mkdirSync(lexicalParent, { recursive: true });
+    // Hold each directory while creating its next child, as `sdp new spec` does.
+    // Re-traversing a checked pathname with recursive mkdir could follow a swapped ancestor.
+    const restoreCwd = realpathSync.native(".");
+    try {
+      process.chdir(existingParentReal);
+      for (const segment of relative(existingParent, lexicalParent).split(sep)) {
+        if (!containedWithin(rootReal, realpathSync.native("."))) {
+          throw new Error(`unsafe registrar sibling path "${path}" escapes the extraction root`);
+        }
+        try {
+          mkdirSync(segment);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+        }
+        process.chdir(segment);
+      }
+      if (!containedWithin(rootReal, realpathSync.native("."))) {
+        throw new Error(`unsafe registrar sibling path "${path}" escapes the extraction root`);
+      }
+    } finally {
+      process.chdir(restoreCwd);
+    }
   }
 
   let parentReal: string;

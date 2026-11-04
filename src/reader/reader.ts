@@ -460,7 +460,9 @@ function titleOf(index: GraphIndex, id: string): string | undefined {
 
 /** The display label, total over foreign data: an unratified kind has no display coordinate. */
 function kindDisplayLabelOf(kind: string): string | undefined {
-  return (SPEC_KIND_DISPLAY_LABELS as Readonly<Record<string, string>>)[kind];
+  return Object.hasOwn(SPEC_KIND_DISPLAY_LABELS, kind)
+    ? (SPEC_KIND_DISPLAY_LABELS as Readonly<Record<string, string>>)[kind]
+    : undefined;
 }
 
 function relationEnd(index: GraphIndex, edge: GraphEdge, otherId: string): RelationEnd {

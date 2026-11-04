@@ -1570,6 +1570,11 @@ const footing = context.relationsOut
   );
 const count = (key, value) => footing.filter((row) => row[key] === value).length;
 const notEvaluated = count("floorReached", "not evaluated");
+const byStatedReadiness = new Map([...rungs, "unresolved", "nonSpec"].map((rung) => [rung, 0]));
+for (const row of footing) {
+  const key = !row.resolved ? "unresolved" : row.statedReadiness ?? "nonSpec";
+  byStatedReadiness.set(key, (byStatedReadiness.get(key) ?? 0) + 1);
+}
 
 return {
   id,
@@ -1579,11 +1584,7 @@ return {
   totals: {
     relations: footing.length,
     byType: Object.fromEntries(types.map((type) => [type, count("type", type)])),
-    byStatedReadiness: Object.fromEntries([
-      ...rungs.map((rung) => [rung, count("statedReadiness", rung)]),
-      ["unresolved", count("resolved", false)],
-      ["nonSpec", footing.filter((row) => row.resolved && row.statedReadiness === null).length],
-    ]),
+    byStatedReadiness: Object.fromEntries(byStatedReadiness),
     byFloorReached: Object.fromEntries([
       ...[...rungs, "none"].map((rung) => [rung, count("floorReached", rung)]),
       ...(notEvaluated === 0 ? [] : [["not evaluated", notEvaluated]]),
@@ -1602,7 +1603,8 @@ altitude is unratified, counted under `totals.byFloorReached["not evaluated"]`, 
 only when such a target exists. A target that does not resolve keeps its row
 with `resolved: false` and null readiness, and counts under `totals.byStatedReadiness.unresolved`.
 Resolved targets that are not Specs have null readiness and count under
-`totals.byStatedReadiness.nonSpec`. The recipe reports readiness and applies no threshold: which rung a target must state before this
+`totals.byStatedReadiness.nonSpec`. An unratified stated-readiness value on a resolved Spec
+counts under its own key; the four ratified rungs keep their keys even at zero. The recipe reports readiness and applies no threshold: which rung a target must state before this
 Spec can state `ready` is the floor clause carried by `spec:validation.typed-dependency-floor`.
 `verifies` and `supersedes` stay out, because a Spec does not rest on what it verifies or replaces.
 

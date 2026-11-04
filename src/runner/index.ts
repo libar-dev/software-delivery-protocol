@@ -143,11 +143,28 @@ export function planExample<W, S extends string, PM extends Record<S, ParamShape
       text: step.text,
       label: renderContractStep(step),
       run: (world: W) => {
-        const handler = Object.hasOwn(bindings, step.key) ? bindings[step.key] : undefined;
+        // Class methods are bindings too; prototype constructors, Object.prototype and
+        // Function.prototype are not.
+        let owner: object | null = bindings;
+        while (
+          owner !== null &&
+          owner !== Object.prototype &&
+          owner !== Function.prototype &&
+          !Object.hasOwn(owner, step.key)
+        ) {
+          owner = Object.getPrototypeOf(owner) as object | null;
+        }
+        const handler =
+          owner !== null &&
+          owner !== Object.prototype &&
+          owner !== Function.prototype &&
+          (owner === bindings || step.key !== "constructor")
+            ? bindings[step.key]
+            : undefined;
         if (typeof handler !== "function") {
           throw new Error(`no handler bound for step key "${step.key}"`);
         }
-        return handler(world, step.params, step);
+        return handler.call(bindings, world, step.params, step);
       },
     })),
   };

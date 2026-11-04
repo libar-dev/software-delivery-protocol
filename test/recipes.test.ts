@@ -8684,3 +8684,39 @@ describe("a floor the reader does not evaluate", () => {
     expect(memo).not.toContain("`null`");
   });
 });
+
+describe("dependency footing with unratified stated readiness", () => {
+  it.each(["done", "__proto__", "constructor", "unresolved", "nonSpec"])(
+    "counts foreign readiness %s under its own key without losing a relation",
+    async (readiness) => {
+      const example = extract({ root: join(repoRoot, "examples/checkout-v1") });
+      const foreign = {
+        ...example,
+        graph: {
+          ...example.graph,
+          nodes: example.graph.nodes.map((node) =>
+            node.id === "spec:orders.create-order"
+              ? ({ ...node, readiness } as unknown as GraphNode)
+              : node,
+          ),
+        },
+      };
+      const result = asRecord(
+        await runRecipe(
+          recipeByOrdinal(21),
+          {
+            spec: "spec:orders.order-placement-flow",
+          },
+          foreign,
+        ),
+      );
+      const totals = asRecord(result.totals);
+      const counts = asRecord(totals.byStatedReadiness);
+      expect(counts[readiness]).toBe(1);
+      expect(counts).toMatchObject({ idea: 0, scoped: 0, defined: 1, ready: 0 });
+      expect(Object.values(counts).reduce<number>((sum, value) => sum + Number(value), 0)).toBe(
+        totals.relations,
+      );
+    },
+  );
+});

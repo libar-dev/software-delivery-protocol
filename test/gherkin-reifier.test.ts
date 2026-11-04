@@ -38,6 +38,16 @@ function refusal(sourceText: string, validatorId: string = extractFindingIds.ghe
 }
 
 describe("Gherkin carrier reifier", () => {
+  it.each(["constructor", "toString", "valueOf", "__proto__"])(
+    "refuses @kind.%s without inheriting a kind explanation",
+    (kind) => {
+      const found = refusal(feature("", `${FEATURE_TAGS} @kind.${kind}`));
+      expect(found?.message).toBe(
+        `Gherkin tag "@kind.${kind}" is refused: kind is structural (Feature → behavior, Scenario → example)`,
+      );
+    },
+  );
+
   it("reifies the closed accepted grammar into carrier-neutral Spec data", () => {
     const source = `@wip ${FEATURE_TAGS} @depends-on.spec:probe.dependency @constrained-by.spec:probe.constraint @decided-by.spec:probe.decision @refines.spec:probe.parent-parent @verifies.spec:probe.verification
 Feature: Complete carrier
