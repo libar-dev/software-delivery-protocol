@@ -875,11 +875,24 @@ describe("article evidence arguments", () => {
     expect(install).not.toContain("CLI's declared Node `>=20`");
   });
 
-  it("distinguishes repository-path link checks from manual publication review", () => {
+  it("distinguishes path and Markdown fragment checks from manual publication review", () => {
     const playbook = readFileSync(path.join(repositoryRoot, "docs/articles/README.md"), "utf8");
     const verify = playbook.split("### Step 6:")[1];
     expect(verify).not.toContain("main gate does not check those links");
     expect(verify).toContain("Markdown link gate");
+    expect(verify).toContain("relative link target paths exist");
+    expect(verify).toContain("fragments on links to Markdown pages and same-page links");
+    expect(verify).toContain("match a heading or an HTML anchor");
+    const manual = verify?.split("Manually inspect")[1];
+    expect(manual).toBeDefined();
+    expect(manual).not.toContain("link fragments");
+    for (const check of [
+      "rendered Markdown",
+      "external and commit-pinned URLs",
+      "line anchors on non-Markdown source files",
+      "code fence structure",
+    ])
+      expect(manual).toContain(check);
   });
 
   it("does not offer an implicit source repository", () => {
