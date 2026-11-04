@@ -286,6 +286,25 @@ describe("publication boundary regressions", () => {
     },
   );
 
+  // spec:consumers.spec-studio.sharing#rule.stampVerb
+  it("a stamp that fails after staging leaves no staging file in the page set", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-stamp-failed-"));
+    const studio = join(root, "generated/spec-studio");
+    // A directory at stamp.json makes the final rename fail after the stamp was staged.
+    mkdirSync(join(studio, "stamp.json"), { recursive: true });
+    writeFileSync(join(studio, "index.html"), "page");
+    try {
+      const capture = createCaptureOutput();
+      expect(await runSdpCli(["stamp", root, "--commit", "abc"], capture.output)).toBe(1);
+      expect(capture.readStderr()).toMatch(/^sdp stamp: /u);
+      expect(existsSync(join(studio, "stamp.json.tmp"))).toBe(false);
+      expect(readFileSync(join(studio, "index.html"), "utf8")).toBe("page");
+      expect(lstatSync(join(studio, "stamp.json")).isDirectory()).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it.each(["view", "census", "mermaid", "gherkin", "studio", "vault", "generate"])(
     "%s recovery preserves outside output after a parent swap",
     async (command) => {

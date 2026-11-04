@@ -56,6 +56,10 @@ export function runStamp(args: readonly string[], output: CliOutput, engine: str
     writeStderr(output, "sdp stamp: root holds no Studio page set.\n");
     return 1;
   }
+  const fs = guardedOutput(resolved);
+  const destination = join(directory, "stamp.json");
+  const temporary = `${destination}.tmp`;
+  let staged = false;
   try {
     const stamp = {
       schemaVersion,
@@ -64,18 +68,25 @@ export function runStamp(args: readonly string[], output: CliOutput, engine: str
       builtAt: new Date().toISOString().replace(/\.\d{3}Z$/u, "Z"),
       ...(source === undefined ? {} : { source }),
     };
-    const fs = guardedOutput(resolved);
-    const destination = join(directory, "stamp.json");
-    const temporary = `${destination}.tmp`;
     fs.check(destination);
     if (!lstatSync(directory).isDirectory())
       throw new Error("Studio page set is not a real directory");
     fs.rmSync(temporary, { force: true });
+    staged = true;
     fs.writeFileSync(temporary, `${JSON.stringify(stamp)}\n`, { flag: "wx" });
     fs.renameSync(temporary, destination);
-    writeStdout(output, `Wrote ${join(directory, "stamp.json")}\n`);
+    writeStdout(output, `Wrote ${destination}\n`);
     return 0;
   } catch (error) {
+    // spec:consumers.spec-studio.sharing#rule.stampVerb: a failed stamp leaves no staging file in
+    // the page set. The removal goes through the same boundary check, so it never follows a
+    // parent that stopped resolving inside the root.
+    if (staged)
+      try {
+        fs.rmSync(temporary, { force: true });
+      } catch {
+        // The original failure is the one to report.
+      }
     writeStderr(output, `sdp stamp: ${errorMessage(error)}\n`);
     return 1;
   }
