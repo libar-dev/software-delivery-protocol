@@ -248,9 +248,9 @@ describe("article evidence CLI entry", () => {
         import cp from "node:child_process";
         import {syncBuiltinESMExports} from "node:module";
         if (process.send) {
-          // Keep the worker alive without running evidence commands. Only a kill
-          // may stop it; an invalid fixture must not make this test pass by exiting.
-          await new Promise(() => { setInterval(() => {}, 1000); });
+          // Stay alive past spawnSync's 5 s deadline, so a missing stop fails.
+          // Bound the lifetime in case the runner dies before its cleanup runs.
+          await new Promise(() => { setTimeout(() => process.exit(0), 60_000); });
         } else {
           const interrupt = () => {
             // A synchronous emit exercises the defensive startup boundaries;
@@ -917,7 +917,7 @@ describe("article evidence arguments", () => {
 // Small real git repositories exercise materialization, npm's lockfile install and the build
 // without reinstalling the Protocol's full dependency tree for every regression probe.
 describe("pinned evidence source", () => {
-  it.each([
+  it.for([
     "healthy",
     "missing .git",
     "locked as initializing",
@@ -926,7 +926,7 @@ describe("pinned evidence source", () => {
     "missing .git after an unrelated ENOTDIR entry",
     "missing directory",
     "never registered",
-  ])("cleans up a worktree %s without pruning unrelated registrations", (state) => {
+  ])("cleans up a worktree %s without pruning unrelated registrations", (state, ctx) => {
     const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-cleanup-"));
     const repo = path.join(temporary, "repository");
     const disposable = path.join(temporary, "disposable");
@@ -955,6 +955,13 @@ describe("pinned evidence source", () => {
       const original = obstructed ? path.join(parent, "aaa") : path.join(temporary, "other");
       const moved = path.join(temporary, "moved");
       git("worktree", "add", "-b", "other", original, "HEAD");
+      // Git before 2.48 ignores useRelativePaths. Probe its actual output once
+      // before damaging any worktree; the relative fixture must really be relative.
+      if (
+        state.includes("relative") &&
+        path.isAbsolute(readFileSync(path.join(repo, ".git/worktrees/other/gitdir"), "utf8").trim())
+      )
+        ctx.skip("Git does not write relative worktree paths (requires Git 2.48 or later)");
       writeFileSync(path.join(original, "staged.txt"), "keep staged contents\n");
       git("-C", original, "add", "staged.txt");
       renameSync(original, moved);
