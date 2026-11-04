@@ -718,10 +718,14 @@ describe("the graph-reading on-ramp", () => {
     expect(section(full.stdout, 10).match(/'line \d+ /gu)).toHaveLength(rules.length);
   }, 120_000);
 
-  it("refuses a malformed --subjects before deriving the graph, naming the form it takes", () => {
+  it("refuses a malformed or missing argument before deriving the graph, naming its form", () => {
     const script = join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs");
     const form = `such as '{"8":{"terms":["vault"]}}'`;
     const cases: [string[], string][] = [
+      // A flag that ends the line would otherwise answer on its default subject or corpus.
+      [["--subjects"], "orient: --subjects takes a JSON object keyed by answer number"],
+      [["--only"], "orient: --only takes answer numbers"],
+      [["--root"], "orient: --root takes a path"],
       [["--subjects", "vault"], "orient: --subjects is not readable JSON"],
       [["--subjects", '["vault"]'], form],
       [

@@ -104,6 +104,19 @@ export function compactAnswer(value) {
   return typeof value === "string" && value.length > 100 ? `${value.slice(0, 100)}…` : value;
 }
 
+const subjectsUsage =
+  `--subjects takes a JSON object keyed by answer number, each value an object of the parameters ` +
+  `that answer reads, such as '{"8":{"terms":["vault"]}}'.`;
+
+/** What each flag that takes a value says when it ends the line, where it would mean its default. */
+const valueUsage = new Map([
+  ["--timeout", "orient: --timeout takes a whole number of milliseconds"],
+  ["--only", "orient: --only takes answer numbers joined by commas, such as --only 1,5"],
+  ["--subjects", `orient: ${subjectsUsage}`],
+  ["--root", "orient: --root takes a path"],
+  ["--exclude", "orient: --exclude takes a path"],
+]);
+
 function parseArguments(args) {
   const options = {
     only: undefined,
@@ -114,6 +127,7 @@ function parseArguments(args) {
   };
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
+    if (valueUsage.has(arg) && index + 1 >= args.length) return { error: valueUsage.get(arg) };
     if (arg === "--json") options.json = true;
     else if (arg === "--timeout") {
       options.timeout = Number(args[++index]);
@@ -133,10 +147,6 @@ function parseArguments(args) {
 export function shellWord(value) {
   return /^[\w@%+=:,./-]+$/u.test(value) ? value : `'${value.replaceAll("'", `'\\''`)}'`;
 }
-
-const subjectsUsage =
-  `--subjects takes a JSON object keyed by answer number, each value an object of the parameters ` +
-  `that answer reads, such as '{"8":{"terms":["vault"]}}'.`;
 
 /**
  * The subjects `--subjects` gives, checked against the selected queries before the graph derives:
