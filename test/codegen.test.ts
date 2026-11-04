@@ -1,3 +1,4 @@
+import { decodeExampleSpaces } from "../src/notation/example-space.js";
 import { Script } from "node:vm";
 import ts from "typescript";
 import { format } from "prettier";
@@ -1251,13 +1252,15 @@ describe("reserved Then contract key unspecified", () => {
         let edgeReads = 0;
         const measured = {
           ...graph,
-          edges: graph.edges.map((edge) => ({
-            ...edge,
-            get from() {
-              edgeReads += 1;
-              return edge.from;
-            },
-          })),
+          edges: graph.edges.map(
+            (edge) =>
+              new Proxy(edge, {
+                get(target, key, receiver) {
+                  edgeReads += 1;
+                  return Reflect.get(target, key, receiver) as unknown;
+                },
+              }),
+          ),
         };
         run(measured);
         // Count graph work, not wall time: unrelated edges must not be read for every Spec.
@@ -1492,4 +1495,49 @@ it.each([
   );
   expect(generateContracts(graph).files.size).toBe(0);
   expect(generateContracts(graph).findings).toEqual([]);
+});
+
+describe("example-space decoding scale", () => {
+  it("reads edges and nodes linearly across many declared spaces", () => {
+    const count = 250;
+    const graph = deriveFixtureGraph({
+      specs: Array.from({ length: count }, (_, i) => {
+        const id = specId(`spec:probe.space-${String(i)}`);
+        return [
+          spec({ ...parent(VOCABULARY), id }),
+          spec({ ...child(BOUND_GWT, `${id}.example`), relations: [refines(id)] }),
+        ];
+      }).flat(),
+    });
+    let edgeReads = 0;
+    let nodeReads = 0;
+    const measured = {
+      ...graph,
+      edges: graph.edges.map(
+        (edge) =>
+          new Proxy(edge, {
+            get(target, key, receiver) {
+              edgeReads += 1;
+              return Reflect.get(target, key, receiver) as unknown;
+            },
+          }),
+      ),
+      nodes: graph.nodes.map(
+        (node) =>
+          new Proxy(node, {
+            get(target, key, receiver) {
+              nodeReads += 1;
+              return Reflect.get(target, key, receiver) as unknown;
+            },
+          }),
+      ),
+    };
+    const decoded = decodeExampleSpaces(measured);
+    expect(decoded.contexts.size).toBe(count);
+    expect([...decoded.contexts.values()].every((space) => space.points.length === 1)).toBe(true);
+    expect(decoded.findings).toEqual([]);
+    expect(edgeReads).toBeLessThan(count * 10);
+    expect(nodeReads).toBeLessThan(count * 100);
+    expect(decoded.contexts).toEqual(decodeExampleSpaces(graph).contexts);
+  });
 });

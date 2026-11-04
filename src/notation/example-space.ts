@@ -503,23 +503,28 @@ function decode(graph: GraphSchema) {
   const nodes = graph.nodes
     .filter((node): node is PrimitiveNode => node.nodeType === "Primitive")
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const nodesById = new Map(nodes.map((node) => [node.id, node]));
+  const childrenByParent = new Map<string, Set<string>>();
+  for (const edge of graph.edges) {
+    if (edge.type !== "refines" || edge.claim !== "declared") continue;
+    let children = childrenByParent.get(edge.to);
+    if (children === undefined) {
+      children = new Set();
+      childrenByParent.set(edge.to, children);
+    }
+    children.add(edge.from);
+  }
   for (const parent of nodes) {
     const vocabulary = vocabularyOf(parent, findings);
     if (vocabulary === undefined) continue;
     const space = buildSpaceModel(parent, vocabulary, findings);
     if (duplicateContractKeys(vocabulary, parent, "space", findings)) withheldSpaces.add(parent.id);
     spaces.set(parent.id, space);
-    const children = new Set(
-      graph.edges
-        .filter((e) => e.type === "refines" && e.claim === "declared" && e.to === parent.id)
-        .map((e) => e.from),
-    );
-    const bound = nodes
+    const bound = [...(childrenByParent.get(parent.id) ?? [])]
+      .map((id) => nodesById.get(id))
       .filter(
-        (child) =>
-          child.specKind === "example" &&
-          children.has(child.id) &&
-          structuredEntriesOf(child).length > 0,
+        (child): child is PrimitiveNode =>
+          child?.specKind === "example" && structuredEntriesOf(child).length > 0,
       )
       .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
       .map((child) => bindPoint(space, child, findings));
