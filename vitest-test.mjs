@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -201,12 +202,25 @@ const optionName = (argument) =>
     .split(/[=.]/u)[0]
     .replace(/^no-/u, "")
     .replace(/-([a-z])/gu, (_, letter) => letter.toUpperCase());
+// A reporter and its output file say what the run writes. In a split run that writes files, the
+// passes record blob reports instead, and the merge step takes these options.
+const reportOptions = new Set(["reporter", "outputFile"]);
 const forwardedOptions = [];
+const reportArguments = [];
+const isReportArgument = argv.map(() => false);
 let forwarding = false;
+let reporting = false;
 for (const [index, argument] of argv.entries()) {
   if (positional[index]) continue;
-  if (argument.startsWith("-")) forwarding = !ownedOptions.has(optionName(argument));
-  if (forwarding) forwardedOptions.push(argument);
+  if (argument.startsWith("-")) {
+    forwarding = !ownedOptions.has(optionName(argument));
+    reporting = reportOptions.has(optionName(argument));
+  }
+  if (forwarding) forwardedOptions.push({ argument, report: reporting });
+  if (reporting) {
+    reportArguments.push(argument);
+    isReportArgument[index] = true;
+  }
 }
 
 // A `file:line` filter names one file, so one that selects test/cli.test.ts goes to the dedicated
@@ -220,72 +234,124 @@ const cliSelection =
 const runsPooledPass =
   !hasPathFilter || pathFilters.some((filter) => !cliLocations.includes(filter));
 
-// A report file or a coverage directory belongs to one Vitest process: the dedicated pass would
-// replace what the pooled pass wrote, so the wrapper stops before either runs.
-const writesReportFiles =
-  options.outputFile !== undefined ||
-  options.coverage?.enabled === true ||
-  [options.reporter ?? []].flat().some((reporter) => reporter === "html" || reporter === "blob");
-
-if (runsPooledPass && writesReportFiles) {
+// Coverage would need the same merge across the two processes. Vitest's coverage provider is a
+// separate package, and while none is installed the refusal says so.
+const resolves = (specifier) => {
+  try {
+    import.meta.resolve(specifier);
+    return true;
+  } catch {
+    return false;
+  }
+};
+if (runsPooledPass && options.coverage?.enabled === true) {
+  const providers = ["@vitest/coverage-v8", "@vitest/coverage-istanbul"];
   console.error(
-    `This run executes ${cliTestPath} in its own Vitest process after the others, so one report file or coverage directory cannot hold both.\nSelect test files with a filter, or run the CLI suite alone with \`npx vitest run ${cliTestPath}\`.`,
+    providers.some(resolves)
+      ? `This run executes ${cliTestPath} in its own Vitest process after the others, and the wrapper does not merge coverage across the two.`
+      : `Coverage needs a Vitest coverage provider, and none is installed (${providers.join(" or ")}).`,
   );
   process.exit(1);
+}
+
+// A report file belongs to one Vitest process, so a split run that writes one records each pass
+// as a blob report in a folder of its own and merges them into the caller's reporters and files.
+// Vitest merges into any reporter but the blob reporter.
+const reporters = [options.reporter ?? []].flat();
+const mergesReports =
+  runsPooledPass &&
+  (options.outputFile !== undefined ||
+    reporters.some((reporter) => reporter === "html" || reporter === "blob"));
+
+if (mergesReports && reporters.includes("blob")) {
+  console.error(
+    `This run executes ${cliTestPath} in its own Vitest process after the others, and Vitest cannot merge two runs into one blob report.\nSelect test files with a filter, or run the CLI suite alone with \`npx vitest run ${cliTestPath}\`.`,
+  );
+  process.exit(1);
+}
+
+const reportDirectory = mergesReports ? mkdtempSync(join(tmpdir(), "sdp-test-reports-")) : "";
+const blobReport = (pass) =>
+  mergesReports ? ["--reporter=blob", `--outputFile=${join(reportDirectory, `${pass}.json`)}`] : [];
+const passArguments = (args, keep) =>
+  args.filter((_, index) => keep(index) && !(mergesReports && isReportArgument[index]));
+
+/** Merges the passes' blob reports into the caller's reporters, then removes them. */
+function finishRun(exitCode) {
+  if (!mergesReports) return exitCode;
+  try {
+    // A pass that stopped before reporting leaves nothing to merge; its exit code tells why.
+    if (readdirSync(reportDirectory).length === 0) return exitCode;
+    const mergeExitCode = runVitest([
+      "--run",
+      "--merge-reports",
+      reportDirectory,
+      ...reportArguments,
+    ]);
+    return exitCode === 0 ? mergeExitCode : exitCode;
+  } finally {
+    rmSync(reportDirectory, { recursive: true, force: true });
+  }
 }
 
 const passWithNoTests = options.passWithNoTests === true ? [] : ["--passWithNoTests"];
 
 function runCliPass() {
+  const cliOptions = forwardedOptions
+    .filter((option) => !(mergesReports && option.report))
+    .map((option) => option.argument);
   // A forwarded option (a shard, a project, an exclusion) may leave the file nothing to run;
   // that is the caller's selection, not a failure.
   return runVitest([
     "--run",
-    ...forwardedOptions,
+    ...cliOptions,
     ...cliSelection,
     "--pool",
     "forks",
     "--maxWorkers",
     "1",
     "--no-isolate",
-    ...(forwardedOptions.length > 0 || options.passWithNoTests === true
-      ? ["--passWithNoTests"]
-      : []),
+    ...(cliOptions.length > 0 || options.passWithNoTests === true ? ["--passWithNoTests"] : []),
+    ...blobReport("cli"),
   ]);
 }
 
 if (hasPathFilter) {
   if (runsPooledPass) {
-    const pooledArgv = argv.filter(
-      (argument, index) => !(positional[index] && cliLocations.includes(argument)),
+    const pooledArgv = passArguments(
+      argv,
+      (index) => !(positional[index] && cliLocations.includes(argv[index])),
     );
     const parallelExitCode = runPooledVitest([
       ...(pooledArgv.includes("--run") ? pooledArgv : ["--run", ...pooledArgv]),
       "--exclude",
       cliTestPath,
       ...passWithNoTests,
+      ...blobReport("pooled"),
     ]);
 
     if (parallelExitCode !== 0) {
-      process.exit(parallelExitCode);
+      process.exit(finishRun(parallelExitCode));
     }
   }
 
-  process.exit(runCliPass());
+  process.exit(finishRun(runCliPass()));
 }
 
 // The default-root CLI case owns repository-root generated/. Keep its whole file in a dedicated
 // process; every other test file remains in Vitest's normal parallel pool. `related` may reach
 // only test/cli.test.ts among its tests, so its pooled pass may find none.
+const pooledArgv = passArguments(argv, () => true);
 const parallelExitCode = runPooledVitest([
-  ...vitestArgs,
+  ...(pooledArgv.includes("--run") ? pooledArgv : ["--run", ...pooledArgv]),
   "--exclude",
   cliTestPath,
   ...(command === "related" ? passWithNoTests : []),
+  ...blobReport("pooled"),
 ]);
 
 if (parallelExitCode !== 0) {
-  process.exit(parallelExitCode);
+  process.exit(finishRun(parallelExitCode));
 }
 
-process.exit(runCliPass());
+process.exit(finishRun(runCliPass()));
