@@ -227,8 +227,8 @@ describe("class-instance step bindings", () => {
     expect(world.total).toBe(42);
   });
 
-  it.each(["toString", "valueOf"])(
-    "refuses Object.prototype handler %s on a class instance",
+  it.each(["toString", "valueOf", "constructor"])(
+    "refuses inherited built-in handler %s on a class instance",
     async (key) => {
       class Steps {
         readonly submit = () => undefined;
@@ -249,4 +249,29 @@ describe("class-instance step bindings", () => {
       ).rejects.toThrow(`no handler bound for step key "${key}"`);
     },
   );
+
+  it("refuses a constructor-function prototype constructor but runs an own constructor handler", async () => {
+    const constructed = vi.fn();
+    function Steps() {
+      constructed();
+    }
+    const bindings = Reflect.construct(Steps, []) as Record<string, StepFn<object, ParamShape>>;
+    const step = { kind: "then" as const, key: "constructor", text: "constructor", params: {} };
+    const contract = {
+      spec: "spec:probe.constructor",
+      title: "Constructor handler",
+      steps: [step],
+    };
+    await expect(runExamplePlan(planExample(contract, bindings), {})).rejects.toThrow(
+      'no handler bound for step key "constructor"',
+    );
+    expect(constructed).toHaveBeenCalledTimes(1);
+
+    const handler = vi.fn<StepFn<object, ParamShape>>();
+    Object.defineProperty(bindings, "constructor", { value: handler });
+    const world = {};
+    await runExamplePlan(planExample(contract, bindings), world);
+    expect(handler).toHaveBeenCalledExactlyOnceWith(world, step.params, step);
+    expect(handler.mock.contexts).toEqual([bindings]);
+  });
 });
