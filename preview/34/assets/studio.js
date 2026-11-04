@@ -192,6 +192,20 @@ ${fenced(JSON.stringify(proposal, null, 2), "json")}`;
       (k) => i[k] === void 0 || typeof i[k] === "string"
     );
   }
+  var composeLabels = {
+    "resolve-question": "Resolve question",
+    "promote-question": "Propose decision record",
+    "edit-example": "Edit example",
+    "propose-example": "Propose example",
+    "change-target": "Change target",
+    "propose-target": "Propose target",
+    "propose-values": "Propose examples for uncovered values",
+    "change-entry": "Propose new text"
+  };
+  function actionLabel(action) {
+    if (action === "change-pack") return "Change Pack membership or framing";
+    return Object.hasOwn(composeLabels, action) ? composeLabels[action] ?? action : action;
+  }
   function pageRootPath(root, page) {
     return new URL(root || "./", page).pathname;
   }
@@ -430,6 +444,7 @@ ${i.text}`}
         if (!this.model) return;
         const model = this.model;
         const open = this.querySelector("details")?.open ?? false;
+        let previewOpen = this.querySelector(".memo-preview")?.open ?? false;
         this.releaseUrls();
         this.replaceChildren();
         const doc = this.ownerDocument;
@@ -480,7 +495,7 @@ ${i.text}`}
           const row = doc.createElement("li");
           const scope = doc.createElement("code");
           scope.textContent = intent.pack ?? intent.scope.join(", ");
-          row.append(scope, ` ${intent.request} `);
+          row.append(scope, ` ${actionLabel(intent.action)}: ${intent.request} `);
           const discard = button(this, "Discard");
           discard.setAttribute("aria-label", `Discard intent ${String(index + 1)}`);
           discard.addEventListener("click", () => {
@@ -523,10 +538,20 @@ ${i.text}`}
         actions.className = "intent-actions";
         body.append(actions, output);
         const refreshActions = () => {
+          previewOpen = actions.querySelector(".memo-preview")?.open ?? previewOpen;
           this.releaseUrls();
           actions.replaceChildren();
           const handoff = model.handoff(stamped ?? this.base, this.reason, stamped);
           if (handoff.proposal && handoff.memo !== null) {
+            const preview = doc.createElement("details");
+            preview.className = "memo-preview";
+            preview.open = previewOpen;
+            const summary = doc.createElement("summary");
+            summary.textContent = "Preview memo";
+            const memo = doc.createElement("pre");
+            memo.textContent = handoff.memo;
+            preview.append(summary, memo);
+            actions.append(preview);
             const documents = [
               ["memo", handoff.memo, "proposal.md", "text/markdown"],
               [
@@ -585,16 +610,6 @@ ${i.text}`}
   }
 
   // src/studio-elements/compose.ts
-  var labels = {
-    "resolve-question": "Resolve question",
-    "promote-question": "Propose decision record",
-    "edit-example": "Edit example",
-    "propose-example": "Propose example",
-    "change-target": "Change target",
-    "propose-target": "Propose target",
-    "propose-values": "Propose examples for uncovered values",
-    "change-entry": "Propose new text"
-  };
   function registerCompose() {
     class Compose extends globalThis.HTMLElement {
       control;
@@ -602,7 +617,7 @@ ${i.text}`}
       connectedCallback() {
         if (this.control) return;
         const action = this.getAttribute("action") ?? "";
-        const label = labels[action];
+        const label = Object.hasOwn(composeLabels, action) ? composeLabels[action] : void 0;
         if (!label) return;
         this.control = button(this, label);
         this.control.addEventListener("click", () => {
@@ -1239,7 +1254,7 @@ ${i.text}`}
   }
 
   // src/studio-elements/search-results.ts
-  var tokensOf = (text) => text.replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2").replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((token) => token.length > 0);
+  var tokensOf = (text) => text.replace(/(\p{Lu})(?=\p{Lu}\p{Ll})/gu, "$1 ").replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((token) => token.length > 0);
   function hasTokens(text, wanted) {
     const tokens = tokensOf(text);
     return wanted.length > 0 && tokens.some(
