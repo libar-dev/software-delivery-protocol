@@ -220,6 +220,24 @@ function scriptUsage(script: "orient" | "q"): string {
   );
 }
 
+/**
+ * What follows a verb, up to its first command separator (`&&`, `||`, `|` or `;`) outside quotes,
+ * so an operator inside a quoted body stays part of the body.
+ */
+function firstCommand(rest: string): string {
+  let quote: string | undefined;
+  for (let index = 0; index < rest.length; index += 1) {
+    const char = rest.charAt(index);
+    if (quote !== undefined) {
+      if (char === quote) quote = undefined;
+      else if (char === "\\" && quote === '"') index += 1;
+    } else if (char === "'" || char === '"') quote = char;
+    else if (char === "\\") index += 1;
+    else if (/^\s(?:&&|\|\||\||;)\s/u.test(rest.slice(index))) return rest.slice(0, index);
+  }
+  return rest;
+}
+
 /** The commands a segment runs: the reading runners, `pnpm --silent sdp:q` and `sdp <verb>`. */
 function invocations(segment: Segment, verbs: ReadonlyMap<string, string>): Invocation[] {
   const found: Invocation[] = [];
@@ -230,7 +248,7 @@ function invocations(segment: Segment, verbs: ReadonlyMap<string, string>): Invo
       verb,
       runner,
       checkout,
-      rest: rest.split(/\s(?:&&|\|\||\||;)\s/u)[0] ?? "",
+      rest: firstCommand(rest),
     });
   };
   for (const match of segment.text.matchAll(
@@ -283,19 +301,25 @@ interface TaughtBody {
 /**
  * The `sdp q` bodies a skill teaches with their inline `--params` and root selection, a shipped
  * recipe file standing in for its catalog body. A placeholder body or subject, or parameters read
- * from a file, cannot run as written and is left to the reader.
+ * from a file, cannot run as written and is left to the reader. A quoted body that does not close
+ * is `unparsed`: no check could run it.
  */
 function taughtBodies(
   calls: readonly Invocation[],
   shipped: ReadonlyMap<string, string>,
-): TaughtBody[] {
+): { readonly bodies: TaughtBody[]; readonly unparsed: string[] } {
   const bodies: TaughtBody[] = [];
+  const unparsed: string[] = [];
   for (const call of calls.filter((entry) => entry.verb === "q")) {
     const rest = call.rest.trim();
     const quoted = /^'(?<body>[^']*)'/u.exec(rest)?.groups?.body;
     const file = /^"\$\(cat (?<path>[^)]+)\)"/u.exec(rest)?.groups?.path;
     const body =
       quoted ?? (file === undefined ? undefined : shipped.get(posix.basename(file))?.trimEnd());
+    if (body === undefined && /^['"]/u.test(rest) && file === undefined) {
+      unparsed.push(`${call.file}: ${call.segment}`);
+      continue;
+    }
     if (body === undefined || /^<[\w -]+>$/u.test(body)) continue;
     const values = [...rest.matchAll(/--params(?:\s+|=)(?<value>'[^']*'|\S+)/gu)].map(
       (match) => match.groups?.value ?? "",
@@ -310,7 +334,20 @@ function taughtBodies(
           ) as Record<string, unknown>);
     bodies.push({ file: call.file, body, params, root: rootSelection(call) });
   }
-  return bodies;
+  return { bodies, unparsed };
+}
+
+/** The bodies a teaching text's commands carry, and the quoted ones no check could read. */
+export function taughtQueryBodies(text: string): {
+  readonly bodies: readonly string[];
+  readonly unparsed: readonly string[];
+} {
+  const verbs = usageLines();
+  const { bodies, unparsed } = taughtBodies(
+    codeSegments({ path: "probe.md", text }).flatMap((segment) => invocations(segment, verbs)),
+    new Map(),
+  );
+  return { bodies: bodies.map((taught) => taught.body), unparsed };
 }
 
 let checkoutExtraction: ExtractionResult | undefined;
@@ -832,10 +869,11 @@ function describeContentChecks(teaching: () => Teaching): void {
         file.content,
       ]),
     );
-    const bodies = taughtBodies(
+    const { bodies, unparsed } = taughtBodies(
       files.flatMap(codeSegments).flatMap((segment) => invocations(segment, verbs)),
       shipped,
     );
+    expect(unparsed).toEqual([]);
     const checkout = await checkoutGraph();
     const failures: unknown[] = [];
 

@@ -46,6 +46,7 @@ import {
   describeHandbook,
   describeOnRamp,
   misnamedRecipes,
+  taughtQueryBodies,
   teachingText,
 } from "./helpers/on-ramp-checks.js";
 import { answeredStderr } from "./helpers/query-hint.js";
@@ -517,6 +518,20 @@ describe("the skill-shape checks' detectors", () => {
       `"recipe 21, ${title(53)}" names recipe 53`,
     ]);
     expect(misnamedRecipes(`${title(54).toLowerCase()} (recipe 29)`, headings)).toHaveLength(1);
+  });
+
+  it("reads a taught body whole, whatever operators it quotes, and reports one it cannot read", () => {
+    const fenced = (line: string) => `\`\`\`sh\n${line}\n\`\`\`\n`;
+
+    expect(
+      taughtQueryBodies(fenced("pnpm --silent sdp:q 'return false || missingFunction()'")),
+    ).toEqual({ bodies: ["return false || missingFunction()"], unparsed: [] });
+    expect(
+      taughtQueryBodies(
+        fenced("node <skill-dir>/scripts/q.mjs 'return a && b; c | d' --json && echo done"),
+      ),
+    ).toEqual({ bodies: ["return a && b; c | d"], unparsed: [] });
+    expect(taughtQueryBodies(fenced("pnpm --silent sdp:q 'return 1")).unparsed).toHaveLength(1);
   });
 
   it("refuses only a copied line that starts with a bare sdp", () => {
