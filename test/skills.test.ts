@@ -926,6 +926,58 @@ describe("the graph-reading on-ramp", () => {
     }
   }, 120_000);
 
+  it("keeps the checkout's exclusions whenever --root resolves to the checkout", async () => {
+    const runner = (await import(
+      pathToFileURL(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs")).href
+    )) as {
+      queryArguments: (
+        runtime: { cli: string; packageRoot: string; exclusions: readonly string[] },
+        args: readonly string[],
+        cwd?: string,
+      ) => string[];
+      sourceCheckoutExclusions: readonly string[];
+    };
+    const runtime = {
+      cli: join(repoRoot, "dist/cli/sdp.js"),
+      packageRoot: repoRoot,
+      exclusions: runner.sourceCheckoutExclusions,
+    };
+    const excluded = (args: readonly string[], cwd = repoRoot): boolean =>
+      // The runner appends its exclusions after the CLI path, the verb and the caller's arguments.
+      runner.queryArguments(runtime, args, cwd).length > args.length + 2;
+
+    expect(excluded(["return 1"])).toBe(true);
+    expect(excluded(["return 1", "--root", "."])).toBe(true);
+    expect(excluded(["return 1", "--root", "./"])).toBe(true);
+    expect(excluded(["return 1", "--root", repoRoot])).toBe(true);
+    expect(excluded(["return 1", "--root=."])).toBe(true);
+    expect(excluded(["return 1", "--root", ".."], join(repoRoot, "specs"))).toBe(true);
+    expect(excluded(["return 1", "--root", "examples/checkout-v1"])).toBe(false);
+    expect(excluded(["return 1", "--root", "specs"])).toBe(false);
+    expect(excluded(["return 1", "--exclude", "specs", "--root", "examples/checkout-v1"])).toBe(
+      false,
+    );
+
+    for (const root of [".", repoRoot]) {
+      const run = spawnSync(
+        process.execPath,
+        [
+          join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs"),
+          "return g.specs().length > 0",
+          "--root",
+          root,
+          "--json",
+        ],
+        { cwd: repoRoot, encoding: "utf8" },
+      );
+      expect({ root, status: run.status, stdout: run.stdout.trim() }).toEqual({
+        root,
+        status: 0,
+        stdout: "true",
+      });
+    }
+  }, 120_000);
+
   it("refuses with a named remedy where no runtime is installed", () => {
     const outside = mkdtempSync(join(tmpdir(), "sdp-runner-"));
     try {

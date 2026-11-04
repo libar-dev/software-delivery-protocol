@@ -15,7 +15,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { inspect } from "node:util";
 
-import { queryArguments, selectRuntime, skewWarning } from "./q.mjs";
+import { queryArguments, readsPackageRoot, selectRuntime, skewWarning } from "./q.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const bodies = join(here, "orientation");
@@ -99,10 +99,9 @@ function main(args) {
   const queries = orientationQueries().filter(
     (query) => options.only === undefined || options.only.includes(query.number),
   );
-  const ownRoot = options.pass.some((arg) => arg === "--root" || arg.startsWith("--root="));
   const subjects =
     readSubjects(options.subjects) ??
-    (runtime.mode === "source" && !ownRoot
+    (runtime.mode === "source" && readsPackageRoot(runtime, options.pass)
       ? JSON.parse(readFileSync(join(bodies, "protocol-checkout.json"), "utf8"))
       : {});
 

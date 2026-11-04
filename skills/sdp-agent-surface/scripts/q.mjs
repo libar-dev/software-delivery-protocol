@@ -5,8 +5,9 @@
 //
 //   node scripts/q.mjs '<body>' [--params JSON | @PATH | KEY=@PATH]... [--json] [--root PATH] [--exclude PATH]...
 //
-// In the Protocol source checkout it runs the built CLI with the checkout's fixture exclusions,
-// unless the caller names a --root of its own. Anywhere else it runs the project's installed
+// In the Protocol source checkout it runs the built CLI with the checkout's fixture exclusions
+// whenever the corpus is the checkout itself, a --root that resolves to it included; a --root
+// naming another corpus gets none. Anywhere else it runs the project's installed
 // @libar-dev/software-delivery-protocol. Arguments pass through to `sdp q` unchanged.
 
 import { spawnSync } from "node:child_process";
@@ -70,10 +71,44 @@ export function selectRuntime(cwd = process.cwd()) {
   };
 }
 
-/** The argument list for `sdp q`: the caller's arguments, plus the exclusions when no root is named. */
-export function queryArguments(runtime, args) {
-  const namesRoot = args.some((arg) => arg === "--root" || arg.startsWith("--root="));
-  const exclusions = namesRoot ? [] : runtime.exclusions.flatMap((path) => ["--exclude", path]);
+/** The `--root` value the caller names, or undefined; option values are skipped, never read as one. */
+export function namedRoot(args) {
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--root") return args[index + 1];
+    if (arg.startsWith("--root=")) return arg.slice("--root=".length);
+    if (arg === "--params" || arg === "--exclude") index += 1;
+  }
+  return undefined;
+}
+
+/**
+ * Whether the query reads the runtime's own package root: no root named, or a root that resolves,
+ * against `cwd`, to the same directory. Only then do the source checkout's exclusions apply.
+ */
+export function readsPackageRoot(runtime, args, cwd = process.cwd()) {
+  const root = namedRoot(args);
+  if (root === undefined) return realpathOrSelf(cwd) === realpathOrSelf(runtime.packageRoot);
+  return realpathOrSelf(resolve(cwd, root)) === realpathOrSelf(runtime.packageRoot);
+}
+
+function realpathOrSelf(path) {
+  try {
+    return realpathSync(path);
+  } catch {
+    return resolve(path);
+  }
+}
+
+/**
+ * The argument list for `sdp q`: the caller's arguments, plus the runtime's exclusions when the
+ * query reads its package root. A root naming another corpus gets none, since each exclusion is a
+ * path relative to the root.
+ */
+export function queryArguments(runtime, args, cwd = process.cwd()) {
+  const exclusions = readsPackageRoot(runtime, args, cwd)
+    ? runtime.exclusions.flatMap((path) => ["--exclude", path])
+    : [];
   return [runtime.cli, "q", ...args, ...exclusions];
 }
 
