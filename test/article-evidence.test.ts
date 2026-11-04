@@ -388,6 +388,27 @@ describe("article evidence structure", () => {
     expect(original.slice(range?.start, range?.end)).toBe(probeText);
   });
 
+  for (const fence of ["```", "~~~"]) {
+    it.each(["\u2028", "\u2029", "\u00a0", "\v", "\f"])(
+      `keeps ${fence} open with a non-CommonMark closing tail %j`,
+      (tail) => {
+        expect(() =>
+          evidenceMarkers(`${fence}\ncode\n${fence}${tail}\n${probeText}`, "article.md"),
+        ).toThrow("malformed or fenced evidence marker");
+      },
+    );
+    it.each(["", " ", "\t", " \t\r"])(
+      `closes ${fence} with a CommonMark closing tail %j`,
+      (tail) => {
+        expect(
+          evidenceMarkers(`${fence}\ncode\n${fence}${tail}\n${probeText}`, "article.md").has(
+            "probe",
+          ),
+        ).toBe(true);
+      },
+    );
+  }
+
   it("preserves nested carrier fences and detects edits independently of HEAD", () => {
     const temporary = mkdtempSync(path.join(tmpdir(), "sdp-article-carriers-"));
     try {
@@ -483,6 +504,15 @@ describe("article evidence arguments", () => {
       printPin: false,
       source: "/source",
     });
+  });
+
+  it.each(["-checkout", "--check", "--"])("accepts %s as an operand after --", (source) => {
+    expect(parseArguments(["--check", "--", source])).toEqual({
+      check: true,
+      printPin: false,
+      source,
+    });
+    expect(() => parseArguments(["--check", "--", source, "second"])).toThrow("Only one source");
   });
 
   it.each(

@@ -40,7 +40,7 @@ export function evidenceMarkers(original, file) {
       const run = delimiter[1];
       const rest = line.slice(delimiter[0].length);
       if (!fence) fence = run;
-      else if (run[0] === fence[0] && run.length >= fence.length && !rest.trim()) fence = undefined;
+      else if (run[0] === fence[0] && run.length >= fence.length && /^[ \t]*\r?$/.test(rest)) fence = undefined;
     }
     offset += line.length + 1;
   }
@@ -85,7 +85,7 @@ export function parseArguments(args) {
     if (argument === "--" && !separator) separator = true;
     else if (argument === "--check" && !separator && !check) check = true;
     else if (argument === "--print-pin" && !separator && !printPin) printPin = true;
-    else if (argument.startsWith("-"))
+    else if (!separator && argument.startsWith("-"))
       throw new Error(`Unknown or repeated option: ${argument}\n${usage}`);
     else if (source !== undefined)
       throw new Error(`Only one source repository is allowed.\n${usage}`);
