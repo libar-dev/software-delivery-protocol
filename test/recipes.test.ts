@@ -399,11 +399,7 @@ describe("the agent-surface recipe corpus", () => {
   // root and repeatable exclusions project-selected. The two contracts are checked separately so
   // portability cannot weaken the root's real invocation.
   it("keeps self-hosting and adopter invocation forms distinct", () => {
-    const onRampSources = [
-      recipesPath,
-      "skills/sdp-authoring/SKILL.md",
-      "skills/sdp-sessions/SKILL.md",
-    ];
+    const onRampSources = [recipesPath, "skills/sdp-sessions/SKILL.md"];
     const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
     };
@@ -448,7 +444,6 @@ describe("the agent-surface recipe corpus", () => {
     const introProse = intro.replace(/\s+/gu, " ");
     const onRamps = {
       agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
-      authoring: readFileSync(join(repoRoot, "skills/sdp-authoring/SKILL.md"), "utf8"),
       sessions: readFileSync(join(repoRoot, "skills/sdp-sessions/SKILL.md"), "utf8"),
     };
 
@@ -465,9 +460,6 @@ describe("the agent-surface recipe corpus", () => {
       });
     }
 
-    expect(onRamps.authoring).toContain("sdp new spec");
-    expect(onRamps.authoring).toContain("sdp validate --watch");
-    expect(onRamps.authoring).not.toContain("--dry-run");
     expect(onRamps.sessions).toContain("sdp new spec");
     expect(onRamps.sessions).toContain("validate --watch");
     expect(onRamps.agents).toContain("new spec");

@@ -177,13 +177,19 @@ describe("upgrade kit", () => {
     ])
       expect(records).toContain(clause);
   });
-  it("runs the guide's rules file on a clean corpus with no address parameters", async () => {
+  // The guide points to the authoring skill's rules file rather than carrying a copy of it.
+  it("runs the rules file the guide points to on a clean corpus with no address parameters", async () => {
     const root = mkdtempSync(join(tmpdir(), "sdp-guide-rules-"));
     try {
       writeFileSync(join(root, "first.sdp.md"), document("first", ["Probe rule."], "{}"));
-      const snippet = guide
-        .split("## Move rules files onto shipped recipes\n")[1]
-        ?.match(/```js\n([\s\S]*?)\n```/u)?.[1];
+      const named =
+        /`node_modules\/@libar-dev\/software-delivery-protocol\/(?<path>skills\/[^`]+\.md)`/u.exec(
+          guide.split("## Move rules files onto shipped recipes\n")[1] ?? "",
+        )?.groups?.path;
+      expect(named).toBe("skills/sdp-authoring/references/rules.md");
+      const snippet = /```js\n([\s\S]*?)\n```/u.exec(
+        readFileSync(new URL(`../${named ?? ""}`, import.meta.url), "utf8"),
+      )?.[1];
       expect(snippet).toBeDefined();
       const file = join(root, "rules.js");
       writeFileSync(file, snippet ?? "");

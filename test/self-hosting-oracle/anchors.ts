@@ -2574,7 +2574,7 @@ export const expectedAnchors: readonly ExpectedAnchor[] = [
     label: "skill-asset checks verify the authoring on-ramp",
     file: "test/skills.test.ts",
     constant: "authoringOnRampTestAnchor",
-    site: 'describe("Protocol skill assets"',
+    site: 'describe("the authoring on-ramp",',
   },
   {
     id: "test:protocol.delivery-session-on-ramp",

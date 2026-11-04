@@ -23,13 +23,11 @@ import {
   evaluateReadinessFloor,
   extract,
   generateContracts,
-  graphValidatorIds,
   refines,
   spec,
   specId,
   validateGraph,
 } from "../src/index.js";
-import type { PrimitiveNode } from "../src/index.js";
 import { deriveFixtureGraph } from "./helpers/fixture-graph.js";
 
 import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
@@ -116,73 +114,6 @@ function readSkill(path: string) {
   };
 }
 
-it("teaches the named-file exception to both carrier-watch descriptions", () => {
-  const { body } = readSkill("skills/sdp-authoring/SKILL.md");
-  const discovery = body.slice(
-    body.indexOf("The watcher ignores"),
-    body.indexOf("Events during a run"),
-  );
-  const anchors = body.slice(
-    body.indexOf("- `sdp validate --watch`"),
-    body.indexOf("The law is `spec:decisions.anchor-comment-form`"),
-  );
-  for (const paragraph of [discovery, anchors]) {
-    expect(paragraph).toContain("named rules and parameter files");
-    expect(paragraph).not.toContain("carrier edits only");
-  }
-});
-
-it("teaches the optional priority field in the Pack manifest envelope", () => {
-  const { body } = readSkill("skills/sdp-authoring/SKILL.md");
-  const pack = body.split("## Author a Pack")[1]?.split("## Bind code")[0];
-  expect(pack).toContain("optional `order`, whose one lawful value is `priority`");
-});
-
-it("teaches design rounds and curates bindings by responsibility", () => {
-  const rounds = flat(skillSection(skillPaths[1], "### Design in rounds"));
-  for (const clause of [
-    "recipe 54",
-    "`idea`",
-    "`scoped`",
-    "`defined`",
-    "`ready`",
-    "only the builder",
-    "second party",
-    "design columns",
-    "No check reads this guidance",
-  ])
-    expect(rounds).toContain(clause);
-  const binding = flat(skillSection(skillPaths[1], "### Curate the anchors"));
-  for (const clause of [
-    "contract or responsibility",
-    "export status or import rank alone",
-    "Mechanical wrappers",
-    "unless they own an independent contract or architectural responsibility",
-    "Several Specs realized by one responsibility normally share an anchor with plural targets",
-    "independent contracts, entry points and semantic policies",
-    "Before merging or dropping an identity, list every promise",
-    "name the surviving units",
-    "explicitly record a false claim being removed",
-    "value or type import",
-    "responsibility in its label",
-    "component's reading guidance",
-  ])
-    expect(binding).toContain(clause);
-});
-
-it("presents the Protocol engine roles and reviewed boundary as worked examples for adopters", () => {
-  const architecture = flat(
-    skillSection(skillPaths[1], "### Declare architecture where it is realized"),
-  );
-  expect(architecture).toContain(
-    "the Protocol's own engine roles (`spec:protocol.role-vocabulary`) are a worked example, not a list",
-  );
-  const curation = flat(skillSection(skillPaths[1], "### Curate the anchors"));
-  expect(curation).toContain(
-    "the Protocol's own reviewed boundary, `spec:protocol.significant-units-review`, is a worked example",
-  );
-});
-
 it("routes the next work and reviews through roadmap and proposal recipes", () => {
   const sessions = flat(readSkill(skillPaths[2]).body);
   for (const clause of [
@@ -263,23 +194,51 @@ function documentedCommand(line: string, commands: ReadonlySet<string>): string 
   return commands.has(first) ? first : undefined;
 }
 
-function assertPlanningHomes(authoring: string): void {
-  const placement = authoring
-    .split("### Place what is not settled\n")[1]
-    ?.split("\n### ")[0]
-    ?.replace(/\s+/gu, " ");
-  expect(placement).toBeDefined();
-  for (const home of [
-    "An open question goes under Intent's `### Open questions`.",
-    "A deferral is a `[blocking]` open question that names its re-entry trigger in a `trigger:` field, plus `dependsOn` when another Spec must hold first; `spec:decisions.planning-truths-placement` rules this home.",
-    "An unsettled fact that bounds other Specs is a `constraint` Spec whose `[blocking]` open question names the check that would settle it. Each Spec it bounds declares `constrainedBy`.",
-    "A ruling that awaits its owner is a `decision` Spec below `ready`, with `decidedBy` from each Spec it shapes.",
-    "A statement a test checks lives in the Spec that states it, plus an `example` Spec that `verifies` it.",
-    "Derive a count, a register, or a review scope each time you need it:",
-    "Group a body of work in a Pack named for its capability, never a number or a date; keep its Specs in reading order. Membership confers no readiness, delivery fact or gate; the Pack remains a review aggregate after the work ends.",
-    "Hold advisory priority over the next work in a roadmap, a Pack whose manifest states `order: priority`, and read it with recipe 53; its order confers nothing. Keep an arc's execution record in git and its pull request description. A corpus that keeps plan documents of its own lets them point to Packs and carrying Specs; they confer nothing.",
-  ])
-    expect(placement).toContain(home);
+const authoringDirectory = "skills/sdp-authoring";
+const authoringFile = (name: string) => join(authoringDirectory, name);
+
+/** The bodies of one file's fences in one language, in order. */
+function fencesIn(path: string, lang: string): readonly string[] {
+  const text = readFileSync(join(repoRoot, path), "utf8");
+  return [...text.matchAll(/^```(?<lang>\S+)\n(?<body>[\s\S]*?)\n```$/gmu)]
+    .filter((match) => match.groups?.lang === lang)
+    .map((match) => match.groups?.body ?? "");
+}
+
+/** The one fence a file carries in a language; a second or a missing one fails. */
+function onlyFence(path: string, lang: string): string {
+  const fences = fencesIn(path, lang);
+  expect({ path, lang, fences: fences.length }).toEqual({ path, lang, fences: 1 });
+  return fences[0] ?? "";
+}
+
+/** A lawful `idea` Spec standing in for a target the taught fences name. */
+function stubCarrier(id: string): string {
+  return `---\nid: ${id}\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Stub\n\n## Intent\n\n- outcome: Stand in for a target the taught fences name.\n`;
+}
+
+const taughtCarrier = () => onlyFence(authoringFile("references/carrier.md"), "sdp.md");
+
+/** The taught carrier and both taught anchors, their targets, and the two silent non-bindings. */
+function taughtCorpus(carrier = taughtCarrier()): Record<string, string> {
+  const [constant = "", comment = ""] = fencesIn(authoringFile("references/binding.md"), "ts");
+  return {
+    "specs/create-order.sdp.md": `${carrier}\n`,
+    "specs/checkout.sdp.md": stubCarrier("spec:orders.checkout"),
+    "specs/order-numbering.sdp.md": stubCarrier("spec:orders.order-numbering"),
+    "src/constant.ts": `${constant}\n`,
+    "src/comment.ts": `${comment}\n`,
+    // A builder imported from a lookalike module, and a comment opening with `/*`: neither binds.
+    "src/lookalike.ts":
+      'import { codeAnchor, codeAnchorId, ref } from "./my-anchors";\n\nconst lookalike = codeAnchor({ id: codeAnchorId("impl:orders.lookalike"), satisfies: ref("spec:orders.create-order") });\nvoid lookalike;\n',
+    "src/single-star.ts":
+      "/*\n * @sdpAnchor impl:orders.single-star\n * @sdpSatisfies spec:orders.create-order\n */\nexport const singleStar = 1;\n",
+  };
+}
+
+interface TaughtSections {
+  intent?: { openQuestions?: { key?: string; blocking?: boolean }[] };
+  behavior?: { ruleKeys?: Record<string, string> };
 }
 
 const authoringOnRampTestAnchor = specTest({
@@ -288,6 +247,142 @@ const authoringOnRampTestAnchor = specTest({
   verifies: ref("spec:consumers.authoring-on-ramp"),
 });
 void authoringOnRampTestAnchor;
+
+describeOnRamp("sdp-authoring", {
+  realizes: ["spec:consumers.authoring-on-ramp", "spec:consumers.adopter-on-ramp"],
+  capBytes: 17_000,
+});
+
+describe("the authoring on-ramp", () => {
+  const touched = [
+    "specs/create-order.sdp.md",
+    "src/constant.ts",
+    "src/comment.ts",
+    "src/lookalike.ts",
+    "src/single-star.ts",
+  ];
+
+  // spec:consumers.authoring-on-ramp#rule.opensOnGraph and #rule.capture: the loop checks an edit
+  // with a query that writes nothing, each rung against its floor. #rule.binding: both taught
+  // anchor forms bind, and the two silent non-bindings show as empty rows. The structural-binding
+  // rule: the taught `@sdpRole` extracts without a finding.
+  it("checks an edit as taught: each rung against its floor, the files' findings, what each file records", async () => {
+    const check = onlyFence(authoringFile("SKILL.md"), "js");
+    const lawful = probeGraph(taughtCorpus());
+    expect(lawful.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+    expect(await evaluateBody(check, { graph: lawful.graph, params: { files: touched } })).toEqual({
+      rungs: { "spec:orders.create-order": "stated scoped, floor scoped" },
+      findings: [],
+      recorded: [
+        ["src/constant.ts", ["impl:orders.create-order"]],
+        ["src/comment.ts", ["impl:orders.read-model-rebuild"]],
+        ["src/lookalike.ts", []],
+        ["src/single-star.ts", []],
+      ],
+      errors: 0,
+    });
+
+    const above = probeGraph(
+      taughtCorpus(taughtCarrier().replace("readiness: scoped", "readiness: defined")),
+    );
+    const answer = (await evaluateBody(check, {
+      graph: above.graph,
+      params: { files: touched },
+    })) as { rungs: Record<string, string>; findings: string[]; errors: number };
+    expect(answer.rungs["spec:orders.create-order"]).toBe("stated defined, floor scoped");
+    expect(answer.findings).toContain("error honesty/readiness-floor spec:orders.create-order");
+    expect(answer.errors).toBe(1);
+  });
+
+  // spec:model.open-question-keys, spec:model.rule-keys and spec:model.relation-reasons, as the
+  // carrier fence writes them; a key outside the marker is no key.
+  it("extracts the taught carrier with its question key, rule key and reason, and no key outside the marker", async () => {
+    const { graph } = probeGraph(taughtCorpus());
+    const sections = createReader(graph).specContext("spec:orders.create-order")?.sections as
+      | TaughtSections
+      | undefined;
+    expect(sections?.intent?.openQuestions?.[0]).toMatchObject({ key: "cartLock", blocking: true });
+    expect(sections?.behavior?.ruleKeys).toEqual({ onePerCart: "rules[0]" });
+    expect(
+      graph.edges.find(
+        (edge) => edge.type === "dependsOn" && edge.from === "spec:orders.create-order",
+      )?.reason,
+    ).toBe("each created order takes the next number");
+
+    const prose = readFileSync(join(repoRoot, authoringFile("references/carrier.md")), "utf8");
+    const address = /`(spec:<id>#question\.[A-Za-z0-9]+)`/u
+      .exec(prose)?.[1]
+      ?.replace("spec:<id>", "spec:orders.create-order");
+    expect(address).toBeDefined();
+    const resolution = (await evaluateBody("return recipes(25, params)", {
+      graph,
+      params: { addresses: [address] },
+    })) as { rows: { resolves: boolean }[] };
+    expect(resolution.rows.map((row) => row.resolves)).toEqual([true]);
+
+    const inverted = probeGraph(
+      taughtCorpus(taughtCarrier().replace(/\[blocking (#\w+)\]/u, "[blocking] $1")),
+    );
+    const invertedSections = createReader(inverted.graph).specContext("spec:orders.create-order")
+      ?.sections as TaughtSections | undefined;
+    expect(invertedSections?.intent?.openQuestions?.[0]?.key).toBeUndefined();
+  });
+
+  // The executable transition and the sole has-verifier source: the build places a registrar
+  // only beside an anchored suite.
+  it("emits a registrar only beside a suite whose top-level specTest anchor verifies the example", () => {
+    const step = "a cart with {items:number} items";
+    const point = "a cart with {items: 2} items";
+    const bare = generateContracts(probeGraph(exampleCarriers(step, point)).graph);
+    const anchored = generateContracts(
+      probeGraph({ ...exampleCarriers(step, point), "suites/probe.test.ts": anchoredSuite }).graph,
+    );
+    expect([...bare.registrars.keys()]).toEqual([]);
+    expect([...anchored.registrars.keys()]).toEqual(["suites/probe.child.test.generated.ts"]);
+  });
+
+  // spec:carrier.step-keys#rule.contractKey, as the examples reference teaches it.
+  it("keys a step in the vocabulary, as the step-key law and the contract generator agree", () => {
+    const examples = readFileSync(join(repoRoot, authoringFile("references/examples.md")), "utf8");
+    const [, marked, key, step] =
+      /`Given (\[#([a-z][A-Za-z0-9]*)\] ([^`]+))`/u.exec(examples) ?? [];
+    if (marked === undefined || key === undefined || step === undefined) {
+      throw new Error("the examples reference must teach one keyed Given step");
+    }
+    const point = step.replace(/\{(\w+):number\}/u, "{$1: 2}");
+    expect(point).not.toBe(step);
+
+    const keyed = generateContracts(probeGraph(exampleCarriers(marked, point)).graph);
+    expect(keyed.findings.filter((finding) => finding.subjectId === "spec:probe.child")).toEqual(
+      [],
+    );
+    expect(keyed.files.get("probe.child.contract.ts")).toContain(`"${key}"`);
+
+    const childOnly = generateContracts(
+      probeGraph(exampleCarriers(step, `[#${key}] ${point}`)).graph,
+    );
+    expect(childOnly.files.has("probe.child.contract.ts")).toBe(false);
+    expect(childOnly.findings.map((finding) => finding.validatorId)).toContain(
+      "contracts/conflicting-step-key",
+    );
+  });
+
+  // spec:validation.corpus-rules#rule.readsGraphOnly and #design.ruleFinding.
+  it("runs the taught rules file as a rules file runs, failing on a recipe's diagnostics", async () => {
+    const body = onlyFence(authoringFile("references/rules.md"), "js");
+    const { graph } = probeGraph(termCorpus);
+    const run = (params: Record<string, unknown>) =>
+      evaluateBody(body, { graph, params }) as Promise<{ findings: { validatorId: string }[] }>;
+
+    expect((await run({})).findings).toEqual([]);
+    expect(
+      (await run({ addresses: ["spec:probe.terms#term.missing"] })).findings.map(
+        (finding) => finding.validatorId,
+      ),
+    ).toEqual(["unresolved-address"]);
+    await expect(run({ severity: "warn" })).rejects.toThrow(/diagnostics/u);
+  });
+});
 
 const deliverySessionOnRampTestAnchor = specTest({
   id: testAnchorId("test:protocol.delivery-session-on-ramp"),
@@ -310,30 +405,32 @@ const graphFirstPlanningTestAnchor = specTest({
 void graphFirstPlanningTestAnchor;
 
 describe("Protocol skill assets", () => {
-  it("keeps planning truth in graph homes and session routing advisory", () => {
-    const authoring = readSkill(skillPaths[1]).body;
+  // spec:consumers.graph-first-planning and the adopter outcome: each ruled home is one line
+  // naming its carrying Spec, and that Spec resolves.
+  it("names a resolving carrying Spec on every ruled home", () => {
+    const entry = readFileSync(join(repoRoot, "skills/sdp-authoring/SKILL.md"), "utf8");
+    const homes = entry.split("\n## Ruled homes\n")[1]?.split("\n## ")[0] ?? "";
+    const bullets = homes.split(/\n(?=- )/u).filter((bullet) => bullet.startsWith("- "));
+    expect(bullets.length).toBeGreaterThan(0);
+    const reader = createReader(shippedCorpusGraph());
+    for (const bullet of bullets) {
+      const cited = [...bullet.matchAll(/`(spec:[a-z0-9.-]+)(?:#[a-z]+\.[A-Za-z0-9]+)?`/gu)].map(
+        (match) => match[1] ?? "",
+      );
+      expect({ bullet, cited: cited.length > 0 }).toEqual({ bullet, cited: true });
+      for (const id of cited) {
+        expect({ id, resolves: reader.specContext(id) !== undefined }).toEqual({
+          id,
+          resolves: true,
+        });
+      }
+    }
+  });
+  it("keeps session routing advisory", () => {
     const sessions = readSkill(skillPaths[2]).body;
-    assertPlanningHomes(authoring);
     expect(sessions).toContain("one current graph serves every work shape");
     expect(sessions).toContain("All preflights are advisory");
     expect(sessions).toContain('Never hand off a carried "verified" verdict');
-  });
-  it.each([
-    "An open question goes",
-    "A deferral is",
-    "An unsettled fact",
-    "A ruling that awaits",
-    "A statement a test checks",
-    "Derive a count",
-    "Group a body of work",
-    "Hold advisory priority",
-  ])("rejects missing planning guidance: %s", (opening) => {
-    const authoring = readSkill(skillPaths[1]).body;
-    const withoutHome = authoring.replace(new RegExp(`^- ${opening}[^]*?(?=^\\n|^- )`, "mu"), "");
-    expect(withoutHome).not.toBe(authoring);
-    expect(() => {
-      assertPlanningHomes(withoutHome);
-    }).toThrow();
   });
   it("owns skills at the plugin root and exposes them to project discovery through relative symlinks", () => {
     expect(lstatSync(join(repoRoot, "skills")).isDirectory()).toBe(true);
@@ -445,7 +542,9 @@ describe("Protocol skill assets", () => {
   });
 
   it("keeps every skill graph-first and the authoring law linked to carrying Specs", () => {
-    for (const path of allSkillPaths.filter((path) => path !== skillPaths[0])) {
+    for (const path of allSkillPaths.filter(
+      (path) => path !== skillPaths[0] && path !== skillPaths[1],
+    )) {
       const { source } = readSkill(path);
 
       expect(source).toContain("sdp q");
@@ -454,53 +553,6 @@ describe("Protocol skill assets", () => {
         "node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/recipes.md",
       );
       expect(source).toContain("spec:");
-    }
-
-    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
-    for (const required of [
-      "Place what is not settled",
-      "Write the Markdown body",
-      "spec:carrier.markdown-body-grammar",
-      "spec:validation.typed-dependency-floor",
-      "spec:decisions.planning-truths-placement",
-      "spec:decisions.decision-readiness-posture",
-      "spec:extraction.delivery-facts",
-      "recipe 20",
-      "recipe 22",
-      "sdp census",
-      "spec:validation.readiness-floor",
-      "spec:validation.kind-evidence",
-      "spec:validation.oracle-target-eligibility",
-      "spec:decisions.content-only-sections",
-      "spec:decisions.point-per-example",
-      "spec:decisions.binding-not-liveness",
-      "spec:decisions.architectural-annotation",
-      "spec:decisions.anchor-comment-form",
-      "spec:decisions.anchor-binding-grain",
-      "spec:decisions.adopted-registrars-committed",
-      "spec:extraction.runnable-modules",
-      "sdp build",
-      "generate:self-hosting",
-      "generate:example",
-      "bindExample",
-      "specTest",
-      "specOracle",
-      "codeAnchor",
-      "componentAnchorId",
-      "constant form",
-      "comment form",
-      "@sdpAnchor",
-      "@libar-dev/software-delivery-protocol/anchors",
-      "recipe 28",
-      ".test.generated.ts",
-      "mints nothing and reports nothing",
-      "document-realization",
-      "registrar",
-      "contract-dependent-suites.mjs",
-      "mutation",
-      "cannot detect",
-    ]) {
-      expect(authoring).toContain(required);
     }
   });
 
@@ -529,17 +581,6 @@ describe("Protocol skill assets", () => {
       "never create a process state machine",
     ]) {
       expect(sessions).toContain(required);
-    }
-
-    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
-    for (const required of [
-      "Capture a cheap idea",
-      "readiness: idea",
-      "relations: {}",
-      "promotion preflight (recipe 9)",
-      "If a fact straddles kinds",
-    ]) {
-      expect(authoring).toContain(required);
     }
   });
 
@@ -583,7 +624,9 @@ describe("Protocol skill assets", () => {
       expect(localQuery).toContain(`--exclude ${exclusion}`);
     }
 
-    for (const path of allSkillPaths.filter((path) => path !== skillPaths[0])) {
+    for (const path of allSkillPaths.filter(
+      (path) => path !== skillPaths[0] && path !== skillPaths[1],
+    )) {
       const documented = documentedCommands(readSkill(path).body);
       expect(documented.length).toBeGreaterThan(0);
 
@@ -1119,8 +1162,12 @@ const adopterOnRampTestAnchor = specTest({
 void adopterOnRampTestAnchor;
 
 describe("adopter teaching", () => {
+  // spec:consumers.adopter-on-ramp#rule.grammarTable: one row per section owner, citing the grammar.
   it("teaches every Markdown section owner and links the carrying grammar", () => {
-    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
+    const authoring = readFileSync(
+      join(repoRoot, "skills/sdp-authoring/references/carrier.md"),
+      "utf8",
+    );
     const parser = readFileSync(join(repoRoot, "src/extract/markdown-body.ts"), "utf8");
     const ownerList = /const recognized = \[([\s\S]*?)\] as const;/u.exec(parser)?.[1];
     expect(ownerList).toBeDefined();
@@ -1139,169 +1186,7 @@ function teachingText(source: string): string {
   return source.replaceAll(/[`*_]/gu, "").replaceAll(/\s+/gu, " ");
 }
 
-const adopterClauses = [
-  ["open-question home", /open question (?:goes )?under Intent's ### Open questions/u],
-  ["blocking floor", /A \[blocking\] entry holds the Spec below defined/u],
-  ["blocking deferral", /A deferral (?:is|belongs in) a \[blocking\] open question/u],
-  ["deferral trigger", /A deferral[^.]*that names its re-entry trigger/u],
-  ["deferral precondition", /plus dependsOn when another Spec must hold first/u],
-  ["independent defined floor", /defined floor does not read the parent's readiness/u],
-  [
-    "complete example children",
-    /example children can still state defined once their bound points are complete/u,
-  ],
-  [
-    "example vocabulary agreement",
-    /bound points are complete and match the parent's example vocabulary, when it has one/u,
-  ],
-  ["physical entry line", /a wrapped or indented continuation is refused/u],
-  [
-    "one leading prose owner",
-    /Leading prose may stand under that owner or under Example space, not both/u,
-  ],
-  ["Note is refused", /parser reads - Note: x as a key and refuses it/u],
-  ["ready reads parent", /ready floor does read the parent's readiness/u],
-  ["ready waits for defined parent", /their ready waits until the parent states defined/u],
-  ["unsettled constraint home", /An unsettled fact that bounds other Specs is a constraint Spec/u],
-  [
-    "unsettled blocking check",
-    /constraint Spec whose \[blocking\] open question names the check that would settle it/u,
-  ],
-  ["bounded relation", /Each Spec it bounds declares constrainedBy/u],
-  ["bounded defined allowed", /A bounded Spec can still state defined/u],
-  ["bounded ready waits", /the floor refuses its ready until the constraint states defined/u],
-  [
-    "pending decision below ready",
-    /A ruling that awaits its owner is a decision Spec below ready/u,
-  ],
-  ["shaping relation", /with decidedBy from each Spec it shapes/u],
-  ["owner states ready", /The owner's ratification is the edit that states ready/u],
-  ["checked statement home", /A statement a test checks lives in the Spec that states it/u],
-  ["checking example relation", /plus an example Spec that verifies it/u],
-  ["example test binding", /Bind the example with a specTest anchor/u],
-  ["derived verifier fact", /The graph (?:then )?derives has-verifier on the Spec/u],
-  [
-    "verifier existence versus passing",
-    /has-verifier (?:says|means) a bound verifier exists, not that it (?:passed|has passed)/u,
-  ],
-  ["CI owns outcomes", /pass and fail stay in CI/u],
-  ["no authored checked status", /Author no checked or verified status/u],
-  [
-    "fresh derived counts registers scope",
-    /Derive a count, a register, or a review scope each time you need it/u,
-  ],
-  ["census source", /census counts from sdp census/u],
-  ["open-question register source", /open questions from recipe 20/u],
-  ["dependency register source", /one Spec's dependencies from recipe 21/u],
-  ["mention register source", /prose mentions from recipe 22/u],
-  ["delta scope source", /a change's review scope from changed-file blast radius \(recipe 4\)/u],
-  ["no quoted counts", /In prose, name the recipe and leave the number out/u],
-  ["operator-selected policy", /operator-selected rules file through sdp validate --rules PATH/u],
-  ["per-file policy parameters", /Each --params follows its own --rules/u],
-  [
-    "separate policy findings",
-    /Corpus findings name their rule and rules file and print apart from Protocol/u,
-  ],
-  ["policy failures", /any Protocol error, corpus error or failed rules file exits 1/u],
-  ["watch policy rereads", /every cycle rereads rules and parameter files/u],
-  [
-    "Constraints leading-prose exception",
-    /A section may open with paragraphs, except Constraints, which takes its entries only/u,
-  ],
-  ["one primary owner", /A Spec carries at most one of Behavior, Rule, Workflow, and Contract/u],
-] as const;
-
-const grammarRows = [
-  ["Intent", /actor:, problem:, outcome:, value: at most once each/u],
-  ["Intent", /risk: and assumption: any number of times/u],
-  ["Behavior", /rule: and flow: entries/u],
-  ["Rule", /plain entries, one rule each/u],
-  ["Workflow", /plain entries, one flow each/u],
-  ["Workflow", /plus rule: entries/u],
-  ["Contract", /plain entries, one rule each/u],
-  ["Example space", /one gwt-vocabulary fence/u],
-  ["Example space", /and no entries/u],
-  ["Constraints", /one constraint:/u],
-  ["Constraints", /statement: \(required\)/u],
-  ["Constraints", /statement: \(required\), flavor:, target:, measurableBy:, once each/u],
-  ["Model", /\*\*term\*\* — definition/u],
-  ["Model", /terms (?:are|must be) unique/u],
-  ["Design", /lowerCamelKey: one-line value/u],
-  ["Design", /keys (?:are|must be) unique/u],
-  ["Decision", /context: and decision: once each/u],
-  ["Decision", /rationale:, alternative:, consequence: repeated/u],
-  ["UI", /the Design form/u],
-  ["Verification — <mode>", /plain entries, one criterion each/u],
-  ["Verification — <mode>", /the mode is manual, reviewed, contract, or executable/u],
-  ["Verification — <mode>", /after an em dash/u],
-] as const;
-
 describe("adopter rule meanings", () => {
-  it.each(adopterClauses)("teaches %s", (_clause, pattern) => {
-    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
-    expect(teachingText(authoring)).toMatch(pattern);
-  });
-
-  it.each([
-    [
-      "independent defined floor",
-      "defined floor does not read the parent's readiness",
-      "defined floor does not read the parent",
-    ],
-    [
-      "independent defined floor",
-      "defined floor does not read the parent's readiness",
-      "defined floor does read the parent's readiness",
-    ],
-    [
-      "example vocabulary agreement",
-      "complete and match the parent's example vocabulary, when it has one",
-      "complete even when they do not match the parent's example vocabulary",
-    ],
-    [
-      "ready reads parent",
-      "ready floor does read the parent's readiness",
-      "ready floor does not read the parent's readiness",
-    ],
-    [
-      "physical entry line",
-      "a wrapped or indented continuation is refused",
-      "a wrapped or indented continuation is accepted",
-    ],
-    [
-      "one leading prose owner",
-      "Leading prose may stand under that owner or under Example space, not both",
-      "Leading prose may sit under both the behavior owner and Example space",
-    ],
-    [
-      "Note is refused",
-      "The parser reads - Note: x as a key and refuses it",
-      "The parser accepts - Note: x",
-    ],
-    [
-      "open-question home",
-      "An open question goes under Intent's ### Open questions.",
-      "An open question goes outside Intent's ### Open questions.",
-    ],
-  ])("rejects the opposite teaching for %s: %s", (name, original, opposite) => {
-    const text = teachingText(readSkill("skills/sdp-authoring/SKILL.md").source);
-    const pattern = adopterClauses.find(([clause]) => clause === name)?.[1];
-    expect(pattern).toBeDefined();
-    if (pattern === undefined) throw new Error("missing teaching clause");
-    expect(text).toContain(original);
-    expect(text).toMatch(pattern);
-    expect(text.replace(original, opposite)).not.toMatch(pattern);
-  });
-
-  it("accepts a harmless open-question instruction frame", () => {
-    const pattern = adopterClauses.find(([name]) => name === "open-question home")?.[1];
-    if (pattern === undefined) throw new Error("missing home clause");
-    const text = teachingText(readSkill("skills/sdp-authoring/SKILL.md").source);
-    expect(text.replace("An open question goes under", "Put an open question under")).toMatch(
-      pattern,
-    );
-  });
-
   it.each([true, false])(
     "defined examples ignore parent readiness but read its vocabulary: matches=%s",
     (matches) => {
@@ -1343,14 +1228,6 @@ describe("adopter rule meanings", () => {
       expect(clauses).toEqual(matches ? [] : ["kind-evidence-complete"]);
     },
   );
-
-  it.each(grammarRows)("teaches the %s grammar row", (heading, pattern) => {
-    const authoring = readSkill("skills/sdp-authoring/SKILL.md").source;
-    const rows = authoring.split("\n").filter((line) => line.startsWith(`| \`## ${heading}\``));
-    expect(rows).toHaveLength(1);
-    // Preserve Model's bold-term syntax while ignoring the table's code-span delimiters.
-    expect((rows[0] ?? "").replaceAll("`", "").replaceAll(/\s+/gu, " ")).toMatch(pattern);
-  });
 
   it("keeps session teaching advisory and separate from permission", () => {
     const sessions = teachingText(readSkill("skills/sdp-sessions/SKILL.md").source);
@@ -1512,118 +1389,6 @@ describe("taught grammar agrees with parser behavior", () => {
   });
 });
 
-/**
- * The keyed open-question marker the authoring skill teaches, as one code span, and the address it
- * says that marker has, read from the sentence that pairs them.
- */
-function taughtQuestionMarker(): { readonly marker: string; readonly address: string } {
-  const text = readSkill("skills/sdp-authoring/SKILL.md").source;
-  const taught = /`([^`]+)` is\s+addressed as\s+`(spec:<id>#question\.[^`]+)`/u.exec(text);
-  const marker = taught?.[1];
-  const address = taught?.[2];
-  if (marker === undefined || address === undefined) {
-    throw new Error("the authoring skill must pair one keyed marker with its question address");
-  }
-  return { marker, address };
-}
-
-/**
- * Writes the marker on one open question of a Spec in a temporary corpus, beside a second Spec
- * that names the address and declares `dependsOn` on the first, then extracts and validates.
- */
-function probeQuestionMarker(marker: string, addressTemplate: string) {
-  const subjectId = "spec:probe.taught";
-  const address = addressTemplate.replace("spec:<id>", subjectId);
-  const root = mkdtempSync(join(tmpdir(), "sdp-taught-marker-"));
-  try {
-    writeFileSync(
-      join(root, "taught.sdp.md"),
-      `---
-id: ${subjectId}
-kind: rule
-altitude: story
-readiness: idea
-relations: {}
----
-# Taught marker probe
-
-## Intent
-- outcome: Carry the keyed question the authoring skill teaches.
-
-### Open questions
-- ${marker} Does the owner widen the aggregate?
-
-## Rule
-- The probe states one rule.
-`,
-    );
-    writeFileSync(
-      join(root, "citing.sdp.md"),
-      `---
-id: spec:probe.citing
-kind: rule
-altitude: story
-readiness: idea
-relations:
-  dependsOn: ${subjectId}
----
-# Citing probe
-
-The probe cites ${address} by its address.
-
-## Intent
-- outcome: Name the taught question by its address.
-
-## Rule
-- The probe states one rule.
-`,
-    );
-    const extraction = extract({ root });
-    const subject = extraction.graph.nodes.find(
-      (node): node is PrimitiveNode => node.nodeType === "Primitive" && node.id === subjectId,
-    );
-    const intent = (subject?.sections as Record<string, unknown> | undefined)?.intent;
-    const questions = (intent as Record<string, unknown> | undefined)?.openQuestions;
-    const first: unknown = Array.isArray(questions) ? questions[0] : undefined;
-    return {
-      address,
-      extractionErrors: extraction.report.findings.filter(
-        (finding) => finding.severity === "error",
-      ),
-      key: (first as Record<string, unknown> | undefined)?.key,
-      mentionFindings: validateGraph(extraction.graph).findings.filter(
-        (finding) => finding.validatorId === graphValidatorIds.proseMentions,
-      ),
-    };
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
-}
-
-describe("the taught question marker", () => {
-  it("extracts the key the skill's marker carries and resolves the address the skill gives it", () => {
-    const { marker, address } = taughtQuestionMarker();
-    const probe = probeQuestionMarker(marker, address);
-    expect(probe.address).toBe(address.replace("spec:<id>", "spec:probe.taught"));
-    expect(probe.extractionErrors).toEqual([]);
-    expect(probe.key).toBe(address.slice(address.indexOf("#question.") + "#question.".length));
-    expect(probe.mentionFindings).toEqual([]);
-  });
-
-  it("leaves the address unresolved when the key stands outside the brackets", () => {
-    const { marker, address } = taughtQuestionMarker();
-    const inverted = /^\[(\S+) (#\S+)\]$/u.exec(marker);
-    if (inverted?.[1] === undefined || inverted[2] === undefined) {
-      throw new Error("the taught marker must carry its flag and its key inside the brackets");
-    }
-    const probe = probeQuestionMarker(`[${inverted[1]}] ${inverted[2]}`, address);
-    expect(probe.key).toBeUndefined();
-    expect(probe.mentionFindings).toHaveLength(1);
-    expect(probe.mentionFindings[0]?.severity).toBe("error");
-    expect(probe.mentionFindings[0]?.message).toContain("points to missing entry");
-  });
-});
-
 /** The text from a heading up to the next heading of the same or a higher level. */
 /**
  * The section under a heading, found by its text at whatever level the skill now gives it (a
@@ -1709,70 +1474,9 @@ function usageLine(verb: string): string {
 
 describe("the reviewed skill teaching", () => {
   const surfacePath = skillPaths[0];
-  const authoringPath = skillPaths[1];
   const sessionsPath = skillPaths[2];
 
-  it("creates the anchored suite before generating, and the build places the registrar beside it", () => {
-    const steps = skillSection(authoringPath, "## Make an example executable");
-    const anchorFirst = steps.indexOf("top-level `specTest` anchor");
-    expect(anchorFirst).toBeGreaterThan(-1);
-    expect(anchorFirst).toBeLessThan(steps.indexOf("npm run generate:self-hosting"));
-    expect(shellFenceLines(steps).map((line) => line.trim())).not.toContainEqual(
-      expect.stringContaining("sdp build . --exclude"),
-    );
-
-    const step = "a cart with {items:number} items";
-    const point = "a cart with {items: 2} items";
-    const bare = generateContracts(probeGraph(exampleCarriers(step, point)).graph);
-    const anchored = generateContracts(
-      probeGraph({ ...exampleCarriers(step, point), "suites/probe.test.ts": anchoredSuite }).graph,
-    );
-    expect([...bare.registrars.keys()]).toEqual([]);
-    expect([...anchored.registrars.keys()]).toEqual(["suites/probe.child.test.generated.ts"]);
-  });
-
-  it("keys a step in the vocabulary, as the step-key law and the contract generator agree", () => {
-    const keying = skillSection(authoringPath, "### Key a step or a term");
-    const taught = /`Given (\[#([a-z][A-Za-z0-9]*)\] ([^`]+))`/u.exec(keying);
-    const [, marked, key, step] = taught ?? [];
-    if (marked === undefined || key === undefined || step === undefined) {
-      throw new Error("the authoring skill must teach one keyed Given step");
-    }
-    const point = step.replace(/\{(\w+):number\}/u, "{$1: 2}");
-    expect(point).not.toBe(step);
-
-    const keyed = generateContracts(probeGraph(exampleCarriers(marked, point)).graph);
-    expect(keyed.findings.filter((finding) => finding.subjectId === "spec:probe.child")).toEqual(
-      [],
-    );
-    expect(keyed.files.get("probe.child.contract.ts")).toContain(`"${key}"`);
-
-    const childOnly = generateContracts(
-      probeGraph(exampleCarriers(step, `[#${key}] ${point}`)).graph,
-    );
-    expect(childOnly.files.has("probe.child.contract.ts")).toBe(false);
-    expect(childOnly.findings.map((finding) => finding.validatorId)).toContain(
-      "contracts/conflicting-step-key",
-    );
-
-    const text = flat(keying);
-    for (const clause of [
-      "after the keyword in the parent's vocabulary",
-      "inherits the key",
-      "Keying only the child when the vocabulary step is unkeyed withholds its contract",
-      "Introducing a key changes the contract key from the skeleton to that key",
-      "the oracle's outcome `kind`",
-      "performs no step-key migration",
-    ]) {
-      expect(text).toContain(clause);
-    }
-  });
-
   it("teaches entry addresses, term addresses and anchored source citations as the engine derives them", async () => {
-    const citing = flat(skillSection(authoringPath, "### Cite an entry from source"));
-    expect(citing).toContain("recorded only when the source file carries a recognized anchor");
-    expect(citing).toContain("only when recipe 51 is selected through `validate --rules`");
-
     const { graph } = probeGraph(termCorpus);
     const report = validateGraph(graph);
     const search = (await evaluateBody('return recipes(23, { term: "step key" })', {
@@ -1798,40 +1502,14 @@ describe("the reviewed skill teaching", () => {
     expect(sessions).not.toMatch(/implemented, verified Specs?/u);
   });
 
-  it("keeps corpus rules in one section whose composed rules file runs as taught", async () => {
-    const rules = skillSection(authoringPath, "## Write and run corpus rules");
-    expect(rules).toContain("sdp validate --rules PATH [--params FORM]...");
-    expect(rules).toContain("spec:validation.corpus-rules#design.ruleFinding");
-    expect(rules).toContain("spec:validation.corpus-rules#rule.readsGraphOnly");
-    expect(skillSection(authoringPath, "### Place what is not settled")).not.toContain("--rules");
-    expect(skillSection(authoringPath, "### Author behavior and examples in Gherkin")).not.toMatch(
-      /recipe 5[01]|--rules/u,
-    );
-
-    const body = /```js\n([\s\S]*?)\n```/u.exec(rules)?.[1];
-    if (body === undefined) throw new Error("the corpus-rules section must carry a rules file");
-    const { graph } = probeGraph(termCorpus);
-    const run = (params: Record<string, unknown>) =>
-      evaluateBody(body, { graph, params }) as Promise<{ findings: { validatorId: string }[] }>;
-
-    expect((await run({})).findings).toEqual([]);
-    expect(
-      (await run({ addresses: ["spec:probe.terms#term.missing"] })).findings.map(
-        (finding) => finding.validatorId,
-      ),
-    ).toEqual(["unresolved-address"]);
-    await expect(run({ severity: "warn" })).rejects.toThrow(/diagnostics/u);
-  });
-
-  it("points every skill at the installed upgrade guide and triggers authoring on upgrades and rules", () => {
-    for (const path of skillPaths.filter((path) => path !== surfacePath)) {
+  it("points the sessions skill at the installed upgrade guide", () => {
+    for (const path of skillPaths.filter(
+      (path) => path !== surfacePath && path !== skillPaths[1],
+    )) {
       expect(flat(readSkill(path).source)).toContain(
         "`node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/upgrade-guide.md` in an adopter",
       );
     }
-    const description = String(readSkill(authoringPath).frontmatter.description);
-    expect(description).toContain("upgrading a corpus to new Protocol capabilities");
-    expect(description).toContain("corpus rules files");
   });
 
   it("orders the reader as a task route and leaves recipe contracts to the catalog", () => {
@@ -2001,7 +1679,7 @@ describe("the Studio on-ramp", () => {
     for (const trigger of ["pull-request previews", "Studio link", "composing panel"]) {
       expect(description).toContain(trigger);
     }
-    for (const path of skillPaths) {
+    for (const path of skillPaths.filter((path) => path !== skillPaths[1])) {
       expect(readSkill(path).source).toContain("`sdp-studio`");
     }
   });
@@ -2336,7 +2014,7 @@ describe("the vault on-ramp", () => {
     ]) {
       expect(description).toContain(trigger);
     }
-    for (const path of skillPaths) {
+    for (const path of skillPaths.filter((path) => path !== skillPaths[1])) {
       expect(readSkill(path).source).toContain("`sdp-vault`");
     }
   });

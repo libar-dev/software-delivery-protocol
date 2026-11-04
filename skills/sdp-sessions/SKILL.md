@@ -46,7 +46,7 @@ a checked change proposal.
 For a corpus upgrade, follow the shipped upgrade guide: `docs/agent-surface/upgrade-guide.md` in
 the Protocol checkout, or
 `node_modules/@libar-dev/software-delivery-protocol/docs/agent-surface/upgrade-guide.md` in an
-adopter, with `sdp-authoring`'s "Upgrade a corpus". It measures with capability adoption
+adopter, with `sdp-authoring`. It measures with capability adoption
 (recipe 47) and proposes keys with the rule-key proposal (recipe 48).
 
 ## Choose an advisory work shape
@@ -129,8 +129,8 @@ corpus means to leave as prose. Then add what the change touches:
 - External CI results: run evidence (recipe 45), which states no verdict.
 
 A corpus may select the rules-capable recipes as rules files under `sdp validate --rules`; follow
-`sdp-authoring`'s "Write and run corpus rules". Review findings and gaps as data; the review never
-becomes a workflow gate.
+`sdp-authoring`'s "Write corpus rules" (`references/rules.md`). Review findings and gaps as data;
+the review never becomes a workflow gate.
 
 Findings against Specs travel as one change proposal: use the branch-head commit the reviewer
 read as its base; a proposal composed in a preview names the stamp's merge commit. Recipe 38
