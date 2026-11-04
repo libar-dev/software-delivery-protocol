@@ -1,0 +1,188 @@
+# Change proposal
+
+Base: `b5e0a8bea1e3bedd48c616f96c9928e955792753`
+Reason: `From the whole-repository review: two ready consumer Specs have drifted behind the realized agent surface, and three provisional answers the owner accepted in PR #36 are recorded only in its description.`
+
+## Change 1
+
+Scope: `spec:consumers.agent-surface.answer-shapes#design.wrapIdiom`, `spec:consumers.agent-surface.evaluation-sink#rule.recipeCall`
+Request:
+
+```text
+Replace the value of the design entry wrapIdiom in specs/consumers/agent-surface.answer-shapes.sdp.md with the text below, keeping the `- wrapIdiom: ` label. In the same change, update the pinned wrapIdiom value in test/self-hosting-oracle/consumers.ts to the same text so the self-hosting oracle stays green.
+```
+
+Replaces: `spec:consumers.agent-surface.answer-shapes#design.wrapIdiom`
+Reason: ``The entry prescribes inlining the shipped body, which the catalog and the reading skill replaced with `await recipes(n, params)` after the fifth binding (#rule.recipeCall).``
+
+```
+to filter a shipped answer, the caller calls the recipe through the `recipes` binding with only the recipe's own parameters, `const answer = await recipes(<number>, { <the recipe's own parameters> });`, inside its own body, and returns a filtered value, so the caller's own parameters never reach the recipe as names it does not take and the shipped body is never inlined into the caller's; the catalog shows the shell form and states that the caller's part must hold no shell expansion.
+```
+
+## Change 2
+
+Scope: `spec:consumers.reader`
+Request:
+
+```text
+Replace the text of rule[1] of spec:consumers.reader, at specs/consumers/reader.sdp.gherkin line 74 (the unkeyed rule beginning "The reader exposes `graph`"), with the text below, keeping its `Rule: ` label. In the same change, update the pinned rule text in test/self-hosting-oracle/consumers.ts (line 420 at the base) to the same text.
+```
+
+Reason: `The realized Reader interface and createReader expose resolveEntryAddress, which recipe 51 and the vault projection call, yet the ready Spec's closed method list omits it.`
+
+```
+The reader exposes `graph`, the raw graph it reads, and the methods `specs`, `packs`, `findings`, `findByConcept`, `byFile`, `blastRadius`, `resolveEntryAddress`, `specContext` and `packContext`; a join is added only when a second machine consumer needs it and hand-rolled attempts get it wrong.
+```
+
+## Change 3
+
+Scope: `spec:consumers.reader`, `spec:consumers.reader#rule.conceptEntry`, `spec:extraction.entry-citations`, `spec:validation.prose-mentions`
+Request:
+
+```text
+Add a new rule to spec:consumers.reader in specs/consumers/reader.sdp.gherkin, as `Rule: ` followed by the text below, placed directly after rule[1] (the reader-surface rule at line 74) and before the rule keyed #conceptEntry. In the same change, add the new rule, without its key marker, to the pinned rules list for spec:consumers.reader in test/self-hosting-oracle/consumers.ts as rules[2], and shift that entry's ruleKeys by one: entryAddressResolution rules[2], conceptEntry rules[3], fileEntry rules[4], blastRadius rules[5], reasonsAsData rules[6].
+```
+
+Reason: `The public method has a shipped result shape (src/graph/entry-address.ts) but no stated contract, so an adopter cannot rely on it and a refactor could remove it unflagged.`
+
+```
+[#entryAddressResolution] `resolveEntryAddress` resolves one entry address with the grammar and entry rules that prose validation and entry citations use, and returns `{ entry, resolves, reason }`: `entry` names the resolved entry, such as `rule[2]`, `question[0]` or `design.wrapIdiom`, or is null; `reason` is null when the address resolves and otherwise `malformed`, `spec`, `section` or `entry`; recipe 51 and the vault projection are its machine consumers.
+```
+
+## Change 4
+
+Scope: `spec:protocol.delivery-record-cleanup`, `spec:protocol.delivery-record-cleanup#question.durableContent`
+Request:
+
+```text
+Record the method the owner accepted for answering #durableContent, which only PR #36's description records ("Answered since the memo was rendered"): the provisional answer stands, and the inventory is the arc's first commit and is checked by a review from another model family. In specs/protocol/delivery-record-cleanup.sdp.md, add a `## Behavior` section after Intent holding one entry, `- rule: ` followed by the text below. Keep the question itself: change 5 amends it. In the same change, add to the pinned entry for spec:protocol.delivery-record-cleanup in test/self-hosting-oracle/protocol.ts a behavior section with this rule, without its key marker, as rules[0] and the ruleKeys entry inventoryFirst rules[0]. State no readiness change.
+```
+
+Reason: `The owner accepted #durableContent's provisional answer in PR #36 with two details, the first-commit inventory and the cross-family review, that the graph does not hold.`
+
+```
+[#inventoryFirst] The arc that removes them opens with a measured inventory, in its first commit, of what `plans/`, `reviews/` and the concept documents still carry that no Spec, test, decision or recipe carries, each piece with its home; a review by another model family checks the inventory before anything is deleted.
+```
+
+## Change 5
+
+Scope: `spec:protocol.delivery-record-cleanup#question.durableContent`
+Request:
+
+```text
+Replace the open question #durableContent in specs/protocol/delivery-record-cleanup.sdp.md, its line and its two field lines, with the text below, which keeps the question, its flag, key and decider and changes only its provisional line. The question stays blocking: the owner accepted how it is answered, while the answer, the inventory's content, still awaits the owner's review. Once the owner has reviewed the inventory and each piece has moved to its home, the question leaves the Spec. In the same change, update the pinned provisional for this question in test/self-hosting-oracle/protocol.ts to the new provisional line. State no readiness change.
+```
+
+Replaces: `spec:protocol.delivery-record-cleanup#question.durableContent`
+Reason: `The graph's provisional predates the owner's acceptance and does not say that the owner's review of the inventory is what settles the question.`
+
+```
+- [blocking #durableContent] Which content in `plans/`, `reviews/` and the concept documents does no Spec, test, decision or recipe carry yet, and where does each piece belong?
+  - decider: owner
+  - provisional: the measured inventory this Spec's rule requires answers it once the owner has reviewed it; each piece then moves to its home and the question leaves the Spec
+```
+
+## Change 6
+
+Scope: `spec:consumers.spec-studio.cited-line-text`, `spec:consumers.spec-studio.cited-line-text#question.lineText`
+Request:
+
+```text
+Record the owner's acceptance of the provisional answer to #lineText, which only PR #36's description records. In specs/consumers/spec-studio.cited-line-text.sdp.md, add the rule below to Behavior directly after #withoutWords, as `- rule: ` followed by the text; remove the open question #lineText with its decider and provisional lines; and in the narrative paragraph replace "the choice is the owner's, because it puts source text in the graph for the first time" with "the owner chose it, though it puts source text in the graph for the first time". In the same change, update the pinned entry for spec:consumers.spec-studio.cited-line-text in test/self-hosting-oracle/consumers.ts: the narrative, the openQuestions list without lineText, the new rule, without its key marker, as rules[3] and the ruleKeys entry lineRecorded rules[3]. PR #36 planned to record this answer at the start of the cited-line arc (roadmap place 2): apply it then, or earlier at the owner's word. State no readiness change.
+```
+
+Follows: `spec:consumers.spec-studio.cited-line-text#rule.withoutWords`
+Reason: `The owner let #lineText's provisional answer stand in PR #36, yet the graph keeps it open and blocking, and the roadmap memo still lists it as waiting on the owner.`
+
+```
+[#lineRecorded] The extractor records the citing line's text, trimmed and bounded, on the citation row it already writes, as inferred data that confers nothing; the Studio reads no source to show it.
+```
+
+## Change 7
+
+Scope: `spec:consumers.spec-studio.cited-line-text`, `spec:consumers.spec-studio.cited-line-text#question.lineBound`
+Request:
+
+```text
+Record the owner's acceptance of the provisional answer to #lineBound, which only PR #36's description records. In specs/consumers/spec-studio.cited-line-text.sdp.md, add a `## Design` section after Behavior holding one entry, `- ` followed by the text below, and remove the open question #lineBound with its decider and provisional lines. Apply it with the #lineText change: once both questions are gone, remove the empty `### Open questions` heading. In the same change, update the pinned entry in test/self-hosting-oracle/consumers.ts: drop the openQuestions list and add a design section holding lineBound with the value after its label. The exact bound stays the builder's choice within the stated range. State no readiness change.
+```
+
+Reason: `The owner let #lineBound's delegated provisional answer stand in PR #36, yet the graph still shows the question open.`
+
+```
+lineBound: a recorded line holds at most a few hundred code units; a longer line is cut at a word boundary and marked as cut, and the whole line stays one source link away
+```
+
+## The proposal
+
+```json
+{
+  "schema": "sdp-proposal/1",
+  "base": "b5e0a8bea1e3bedd48c616f96c9928e955792753",
+  "reason": "From the whole-repository review: two ready consumer Specs have drifted behind the realized agent surface, and three provisional answers the owner accepted in PR #36 are recorded only in its description.",
+  "changes": [
+    {
+      "scope": [
+        "spec:consumers.agent-surface.answer-shapes#design.wrapIdiom",
+        "spec:consumers.agent-surface.evaluation-sink#rule.recipeCall"
+      ],
+      "request": "Replace the value of the design entry wrapIdiom in specs/consumers/agent-surface.answer-shapes.sdp.md with the text below, keeping the `- wrapIdiom: ` label. In the same change, update the pinned wrapIdiom value in test/self-hosting-oracle/consumers.ts to the same text so the self-hosting oracle stays green.",
+      "text": "to filter a shipped answer, the caller calls the recipe through the `recipes` binding with only the recipe's own parameters, `const answer = await recipes(<number>, { <the recipe's own parameters> });`, inside its own body, and returns a filtered value, so the caller's own parameters never reach the recipe as names it does not take and the shipped body is never inlined into the caller's; the catalog shows the shell form and states that the caller's part must hold no shell expansion.",
+      "replaces": "spec:consumers.agent-surface.answer-shapes#design.wrapIdiom",
+      "reason": "The entry prescribes inlining the shipped body, which the catalog and the reading skill replaced with `await recipes(n, params)` after the fifth binding (#rule.recipeCall)."
+    },
+    {
+      "scope": ["spec:consumers.reader"],
+      "request": "Replace the text of rule[1] of spec:consumers.reader, at specs/consumers/reader.sdp.gherkin line 74 (the unkeyed rule beginning \"The reader exposes `graph`\"), with the text below, keeping its `Rule: ` label. In the same change, update the pinned rule text in test/self-hosting-oracle/consumers.ts (line 420 at the base) to the same text.",
+      "text": "The reader exposes `graph`, the raw graph it reads, and the methods `specs`, `packs`, `findings`, `findByConcept`, `byFile`, `blastRadius`, `resolveEntryAddress`, `specContext` and `packContext`; a join is added only when a second machine consumer needs it and hand-rolled attempts get it wrong.",
+      "reason": "The realized Reader interface and createReader expose resolveEntryAddress, which recipe 51 and the vault projection call, yet the ready Spec's closed method list omits it."
+    },
+    {
+      "scope": [
+        "spec:consumers.reader",
+        "spec:consumers.reader#rule.conceptEntry",
+        "spec:extraction.entry-citations",
+        "spec:validation.prose-mentions"
+      ],
+      "request": "Add a new rule to spec:consumers.reader in specs/consumers/reader.sdp.gherkin, as `Rule: ` followed by the text below, placed directly after rule[1] (the reader-surface rule at line 74) and before the rule keyed #conceptEntry. In the same change, add the new rule, without its key marker, to the pinned rules list for spec:consumers.reader in test/self-hosting-oracle/consumers.ts as rules[2], and shift that entry's ruleKeys by one: entryAddressResolution rules[2], conceptEntry rules[3], fileEntry rules[4], blastRadius rules[5], reasonsAsData rules[6].",
+      "text": "[#entryAddressResolution] `resolveEntryAddress` resolves one entry address with the grammar and entry rules that prose validation and entry citations use, and returns `{ entry, resolves, reason }`: `entry` names the resolved entry, such as `rule[2]`, `question[0]` or `design.wrapIdiom`, or is null; `reason` is null when the address resolves and otherwise `malformed`, `spec`, `section` or `entry`; recipe 51 and the vault projection are its machine consumers.",
+      "reason": "The public method has a shipped result shape (src/graph/entry-address.ts) but no stated contract, so an adopter cannot rely on it and a refactor could remove it unflagged."
+    },
+    {
+      "scope": [
+        "spec:protocol.delivery-record-cleanup",
+        "spec:protocol.delivery-record-cleanup#question.durableContent"
+      ],
+      "request": "Record the method the owner accepted for answering #durableContent, which only PR #36's description records (\"Answered since the memo was rendered\"): the provisional answer stands, and the inventory is the arc's first commit and is checked by a review from another model family. In specs/protocol/delivery-record-cleanup.sdp.md, add a `## Behavior` section after Intent holding one entry, `- rule: ` followed by the text below. Keep the question itself: change 5 amends it. In the same change, add to the pinned entry for spec:protocol.delivery-record-cleanup in test/self-hosting-oracle/protocol.ts a behavior section with this rule, without its key marker, as rules[0] and the ruleKeys entry inventoryFirst rules[0]. State no readiness change.",
+      "text": "[#inventoryFirst] The arc that removes them opens with a measured inventory, in its first commit, of what `plans/`, `reviews/` and the concept documents still carry that no Spec, test, decision or recipe carries, each piece with its home; a review by another model family checks the inventory before anything is deleted.",
+      "reason": "The owner accepted #durableContent's provisional answer in PR #36 with two details, the first-commit inventory and the cross-family review, that the graph does not hold."
+    },
+    {
+      "scope": ["spec:protocol.delivery-record-cleanup#question.durableContent"],
+      "request": "Replace the open question #durableContent in specs/protocol/delivery-record-cleanup.sdp.md, its line and its two field lines, with the text below, which keeps the question, its flag, key and decider and changes only its provisional line. The question stays blocking: the owner accepted how it is answered, while the answer, the inventory's content, still awaits the owner's review. Once the owner has reviewed the inventory and each piece has moved to its home, the question leaves the Spec. In the same change, update the pinned provisional for this question in test/self-hosting-oracle/protocol.ts to the new provisional line. State no readiness change.",
+      "text": "- [blocking #durableContent] Which content in `plans/`, `reviews/` and the concept documents does no Spec, test, decision or recipe carry yet, and where does each piece belong?\n  - decider: owner\n  - provisional: the measured inventory this Spec's rule requires answers it once the owner has reviewed it; each piece then moves to its home and the question leaves the Spec",
+      "replaces": "spec:protocol.delivery-record-cleanup#question.durableContent",
+      "reason": "The graph's provisional predates the owner's acceptance and does not say that the owner's review of the inventory is what settles the question."
+    },
+    {
+      "scope": [
+        "spec:consumers.spec-studio.cited-line-text",
+        "spec:consumers.spec-studio.cited-line-text#question.lineText"
+      ],
+      "request": "Record the owner's acceptance of the provisional answer to #lineText, which only PR #36's description records. In specs/consumers/spec-studio.cited-line-text.sdp.md, add the rule below to Behavior directly after #withoutWords, as `- rule: ` followed by the text; remove the open question #lineText with its decider and provisional lines; and in the narrative paragraph replace \"the choice is the owner's, because it puts source text in the graph for the first time\" with \"the owner chose it, though it puts source text in the graph for the first time\". In the same change, update the pinned entry for spec:consumers.spec-studio.cited-line-text in test/self-hosting-oracle/consumers.ts: the narrative, the openQuestions list without lineText, the new rule, without its key marker, as rules[3] and the ruleKeys entry lineRecorded rules[3]. PR #36 planned to record this answer at the start of the cited-line arc (roadmap place 2): apply it then, or earlier at the owner's word. State no readiness change.",
+      "text": "[#lineRecorded] The extractor records the citing line's text, trimmed and bounded, on the citation row it already writes, as inferred data that confers nothing; the Studio reads no source to show it.",
+      "follows": "spec:consumers.spec-studio.cited-line-text#rule.withoutWords",
+      "reason": "The owner let #lineText's provisional answer stand in PR #36, yet the graph keeps it open and blocking, and the roadmap memo still lists it as waiting on the owner."
+    },
+    {
+      "scope": [
+        "spec:consumers.spec-studio.cited-line-text",
+        "spec:consumers.spec-studio.cited-line-text#question.lineBound"
+      ],
+      "request": "Record the owner's acceptance of the provisional answer to #lineBound, which only PR #36's description records. In specs/consumers/spec-studio.cited-line-text.sdp.md, add a `## Design` section after Behavior holding one entry, `- ` followed by the text below, and remove the open question #lineBound with its decider and provisional lines. Apply it with the #lineText change: once both questions are gone, remove the empty `### Open questions` heading. In the same change, update the pinned entry in test/self-hosting-oracle/consumers.ts: drop the openQuestions list and add a design section holding lineBound with the value after its label. The exact bound stays the builder's choice within the stated range. State no readiness change.",
+      "text": "lineBound: a recorded line holds at most a few hundred code units; a longer line is cut at a word boundary and marked as cut, and the whole line stays one source link away",
+      "reason": "The owner let #lineBound's delegated provisional answer stand in PR #36, yet the graph still shows the question open."
+    }
+  ]
+}
+```
