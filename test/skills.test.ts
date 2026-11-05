@@ -674,7 +674,8 @@ describe("the graph-reading on-ramp", () => {
 
   // A body copied from an answer reads what the answer printed: orientation 1 names the fields a
   // binding row carries (a `codeId` or a `verifierId`, never an edge's `from`), and orientation 6
-  // prints recipe 20's totals under the recipe's own field name.
+  // prints recipe 20's answer and recipe 46's each under that recipe's own field names, so a body
+  // reading `.specs` or `.statements` off the recipe finds what the answer showed.
   it("prints the field names a body reads: a binding row's, and a composed recipe's own", () => {
     const scripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
     const answer = (args: readonly string[]): unknown => {
@@ -684,16 +685,32 @@ describe("the graph-reading on-ramp", () => {
     };
     const answers = answer([join(scripts, "orient.mjs"), "--json", "--only", "1,6"]) as {
       number: number;
-      answer?: { surface?: { binding?: string }; totals?: unknown };
+      answer?: {
+        surface?: { binding?: string };
+        register?: Record<string, unknown>;
+        queue?: Record<string, unknown>;
+      };
     }[];
     const numbered = (number: number) => answers.find((entry) => entry.number === number)?.answer;
     const binding = numbered(1)?.surface?.binding?.split(" ") ?? [];
+    const recipesAnswered = answer([
+      join(scripts, "q.mjs"),
+      "const register = await recipes(20); const queue = await recipes(46, {}); return { register: { keys: Object.keys(register), totals: register.totals }, queue: { keys: Object.keys(queue), totals: queue.totals } }",
+      "--json",
+    ]) as Record<"register" | "queue", { keys: string[]; totals: unknown }>;
+    const undecided = numbered(6);
 
     expect(binding).toEqual(expect.arrayContaining(["codeId", "verifierId", "via", "enabled"]));
     expect(binding).not.toContain("from");
-    expect(numbered(6)?.totals).toEqual(
-      answer([join(scripts, "q.mjs"), "return (await recipes(20)).totals", "--json"]),
-    );
+    expect(Object.keys(undecided ?? {})).toEqual(["register", "queue"]);
+    for (const part of ["register", "queue"] as const) {
+      const printed = undecided?.[part] ?? {};
+      const foreign = Object.keys(printed).filter(
+        (key) => !recipesAnswered[part].keys.includes(key),
+      );
+      expect({ part, foreign }).toEqual({ part, foreign: [] });
+      expect(printed.totals).toEqual(recipesAnswered[part].totals);
+    }
   }, 120_000);
 
   it("prints what each query teaches and shortens an arrival query unless its subject is given", async () => {
