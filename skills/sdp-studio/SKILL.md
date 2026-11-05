@@ -25,23 +25,6 @@ commands from the project root; `<skill-dir>` is this skill's directory.
 
 ## Start from what you hold
 
-- **A repository: publish.** `sdp generate` writes every page root; `sdp studio` writes the
-  Studio alone, with a base graph or run reports. A base graph is the `generated/graph.json` a
-  worktree at the base commit builds with its own engine (recipe 35, The design diff:
-  `docs/agent-surface/recipes.md#35-the-design-diff`). Pass inputs from outside this checkout's
-  `generated/` (`spec:consumers.spec-studio.data.inputs#rule.inputPlacement`).
-- **A final build: stamp it** with the commit it read (`sdp stamp --commit`), then upload
-  `generated/spec-studio/`. Source links need the stamp's `--source` template and pages served
-  over http(s); otherwise file and line stay text (`spec:consumers.spec-studio.sharing#rule.sourceLinks`).
-- **CI run reports: check their commits** against the stamp's `corpusCommit` through recipe 45,
-  run evidence (`dist/recipes/45-run-evidence.js`), before `sdp studio --runs` or a `runs.html`
-  reading; a report from another commit says nothing about this one:
-
-  ```sh
-  node <skill-dir>/../sdp-agent-surface/scripts/q.mjs 'return (await recipes(45, params)).inputs.map(({ commit, sameCommit }) => ({ commit, sameCommit }))' --params runs=@ctrf.json --params '{"commit":"<corpusCommit>"}'
-  ```
-
-- **A CI workflow: set up previews** with [previews.md](references/previews.md).
 - **A page set or a link: read it**, no graph needed; [pages.md](references/pages.md) maps tasks
   to pages. A page states only what it shows: queue order sets no priority; roadmap order is
   advisory; a run row is no verdict; a folded diagram keeps a text equivalent of every box and edge
@@ -50,6 +33,25 @@ commands from the project root; `<skill-dir>` is this skill's directory.
   To ask past the pages, check out `stamp.json`'s `corpusCommit` in a worktree and, from its root,
   run orientation 10 on the page's ids
   (`<skill-dir>/../sdp-agent-surface/scripts/orient.mjs`).
+- **A repository: publish.** `sdp generate` writes every page root; `sdp studio` writes the
+  Studio alone, with a base graph or run reports. A base graph is the `generated/graph.json` a
+  worktree at the base commit builds with its own engine (recipe 35, The design diff:
+  `docs/agent-surface/recipes.md#35-the-design-diff`). Pass inputs from outside this checkout's
+  `generated/` (`spec:consumers.spec-studio.data.inputs#rule.inputPlacement`).
+  - **CI run reports: check their commits** against the stamp's `corpusCommit` through recipe 45,
+    run evidence (`dist/recipes/45-run-evidence.js`), before `sdp studio --runs` or a `runs.html`
+    reading; a report from another commit says nothing about this one:
+
+    ```sh
+    node <skill-dir>/../sdp-agent-surface/scripts/q.mjs 'return (await recipes(45, params)).inputs.map(({ commit, sameCommit }) => ({ commit, sameCommit }))' --params runs=@ctrf.json --params '{"commit":"<corpusCommit>"}'
+    ```
+
+  - **The final build: stamp it** with the commit it read (`sdp stamp --commit`), then upload
+    `generated/spec-studio/`. Source links need the stamp's `--source` template and pages served
+    over http(s); otherwise file and line stay text
+    (`spec:consumers.spec-studio.sharing#rule.sourceLinks`).
+
+- **A CI workflow: set up previews** with [previews.md](references/previews.md).
 - **Composed intent: receive it**, below.
 
 ## Receive composed intent

@@ -4332,7 +4332,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "The Studio is taught in its own shipped skill, beside the reading, authoring and session skills, and the reading skill points to it.",
+          "The Studio is taught in its own shipped skill, beside the reading, authoring, session and vault skills, and the reading skill points to it.",
           "The skill starts from what the agent holds: a repository to publish from, a page set or a link to read, composed intent to apply, or a CI workflow to set up; a reader holding only a link reads the pages without building a graph.",
           "The skill teaches `sdp studio` for a page set with a base graph or run records and `sdp generate` for every root without them; that every command entering the shared build removes the page set; and that supplied inputs lie outside every path the build writes or removes.",
           "The skill teaches stamping after the final build with the commit the build read, that a later build removes the stamp, and that source links need a stamp served over http or https, and cites `spec:consumers.spec-studio.sharing` for the preview workflow.",
