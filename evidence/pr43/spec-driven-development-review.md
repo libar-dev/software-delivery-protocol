@@ -1,6 +1,6 @@
 # Enabling spec-driven development: the short-term roadmap
 
-**Reviewed at `38d738bc`, the PR #43 head at review time · gaps, roadmap and queries re-measured at `4622e202` · companion: the [skills refactoring review][prior], the corrections the next session addresses**
+**Reviewed at `38d738bc`, the PR #43 head at review time · gaps, roadmap and queries re-measured at `4622e202` · owner resolutions recorded at `aba64958` · companion: the [skills refactoring review][prior], whose corrections landed in `3a0256b1..98b9573f`**
 
 The Spec is the prompt. Spec-driven development works when three routes work without a wrapper document:
 
@@ -8,7 +8,7 @@ The Spec is the prompt. Spec-driven development works when three routes work wit
 2. **Spec → evidence.** From a Spec id, a developer reaches its law, decisions, open questions, implementation, examples, the runnable test and its oracle, and proves a change with the project's own runner.
 3. **Change → Spec.** From a changeset, staged changes and deletions included, a reviewer recovers the promises it affects.
 
-Route 1 has had a trial round, and its re-run is the skills review's acceptance question. Routes 2 and 3 have reviewer probes only; the development trial below is their acceptance. [Original checkout scenario][vvision] · [Trace and impact jobs][jobs] · [Arc record][pr]
+Route 1 has had three trial rounds; the focused third, at `98b9573f`, judged all four of its runs faithful. Routes 2 and 3 have reviewer probes only; the development trial below is their acceptance. [Original checkout scenario][vvision] · [Trace and impact jobs][jobs] · [Arc record][pr]
 
 ## Where it stands
 
@@ -32,11 +32,11 @@ The graph answered the same in the red and green states: stated `defined`, deriv
 | A recipe without its subject answers for a sample | Recipe 56 with `{}` answers for `spec:consumers.reading-on-ramp` with `found: true`; recipe 3 answers for `spec:consumers.reader`, which an adopter's corpus lacks. Recipe 36 already refuses: "Supply exactly one of pack or specs." | 2 |
 | A parent's verifier rows stop at the example carriers | Both rows for `spec:orders.create-order` end at `specs/orders/create-order-*.sdp.md`. The runnable test, `test/orders/create-order.valid-cart.test.ts:13`, sits behind the child's own verifier; the body under "Reproduce the evidence" makes that hop. | 2 |
 | A Markdown deliverable has no file-to-Spec reach | Recipe 4 over `skills/sdp-sessions/SKILL.md` returns no impacted Spec and lists the file as coverage-unknown, though that file teaches an on-ramp. | 3 |
-| Recipe 4's documented selection sees unstaged tracked files only | Its catalog entry pipes `git diff --name-only -z`, which compares the working tree with the index. The reading skill's arrival reference now teaches the staged, branch and untracked selections beside it (`afe09ff0`, taken provisionally); the catalog entry still shows the unstaged form alone. | 3 |
+| Recipe 4's documented selection sees unstaged tracked files only | Its catalog entry pipes `git diff --name-only -z`, which compares the working tree with the index. The reading skill's arrival reference now teaches the staged, branch and untracked selections beside it (`afe09ff0`, confirmed by the owner); the catalog entry still shows the unstaged form alone. | 3 |
 
 ## Complete in PR #43
 
-**Already in scope.** The [skills refactoring review][prior] sets the correction scope, which the next session addresses: read back the changed promise or Pack, select the right corpus at startup, route Studio and vault intent correctly, respect commit authority, and align the reading guidance with recipe 56's rule-location coverage and the failure boundary for invalid question fields. Beside it stand the owner's four suggestions:
+**Already in scope, and landed.** The [skills refactoring review][prior] set the correction scope, which landed in `3a0256b1..98b9573f`: read back the changed promise or Pack, select the right corpus at startup, route Studio and vault intent correctly, respect commit authority, and align the reading guidance with recipe 56's rule-location coverage and the failure boundary for invalid question fields. Beside it stand the owner's four suggestions:
 
 <!-- prettier-ignore -->
 | Owner suggestion | Verified | Treatment |
@@ -59,8 +59,8 @@ pnpm --silent sdp:q --params '{"files":["test/skills.test.ts","skills/sdp-author
 | --- | --- | --- |
 | **Refuse a missing recipe subject** (follow-up 2) | With the Spec as the prompt, a substituted subject sends an agent to the wrong law without a warning. Overlaps finding 6 on recipe 56. [Recipe 56][r56] | A missing subject, an unknown id and a lawful whole-corpus request answer differently; orientation demonstrations stay labelled as such. [Context bundle][r36] |
 | **Run the development trial as route 2's acceptance** (follow-up 1) | The review's own probe stopped at the example carrier. | The trial below. A session-context recipe is earned only if agents stop at the carrier or keep rebuilding the same join. [Planning slice][r19] · [Session skill][sessions] |
-| **Reopen the Markdown-deliverable question** | This PR's deliverables are skills, and they read as coverage-unknown; the handbook's hazard about skills outside the graph is the manual workaround. | Decide first whether the need is navigational reach or a realization claim that confers `implemented`; keep the document-realization test anchor meanwhile. [Question and provisional reading][dmd] |
-| **Teach recipe 4's other git selections** (a slice of follow-up 9) | Gives PR review route 3 today with no engine change. | Teach the staged, branch and untracked selections beside the unstaged one, and label which tree the graph was derived from. Taken provisionally in `afe09ff0`, in the reading skill's arrival reference; the owner confirms it at the PR. [Recipe 4][r4] |
+| **Reopen the Markdown-deliverable question** | This PR's deliverables are skills, and they read as coverage-unknown; the handbook's hazard about skills outside the graph is the manual workaround. The question's trigger, a reviewer needing changed-file impact for a shipped skill, fired in this arc's own review (gap 3). | Decide first whether the need is navigational reach or a realization claim that confers `implemented`; keep the document-realization test anchor meanwhile. [Question and provisional reading][dmd] |
+| **Teach recipe 4's other git selections** (a slice of follow-up 9) | Gives PR review route 3 today with no engine change. | Teach the staged, branch and untracked selections beside the unstaged one, and label which tree the graph was derived from. Taken in `afe09ff0`, in the reading skill's arrival reference, and confirmed by the owner at `aba64958`. [Recipe 4][r4] |
 
 ### The development trial
 
@@ -113,7 +113,7 @@ Beside those lists:
 - **Maintained skill evals** stay separate from a one-time trial of the core promise; the round-one resume record (a local file) shows honest recovery and binding, not a repair proven by the project's runner. [Round-one resume record][round1]
 - **Mapping research output back to the graph:** sample real briefs and mark which answers came from a recipe, a join, a source read or human judgment; a repeated join is evidence for a session-context recipe. [On-ramp observations][observations]
 - **Host and repository housekeeping:** the vault's `.DS_Store` rule, the Node 24 `cpSync` case, the long-term `*.tmp.md` ignore and harness-agnostic worktrees. None blocks the Spec-to-code route. [Observations][observations]
-- **Owner decisions and acceptance** are listed in the skills review's "Decisions when work resumes"; the PR keeps its six recorded boundaries.
+- **Owner decisions and the remaining acceptance** are listed in the PR description's "Owner decisions still open": the hook decision, Gate B, the next design pass and Gate C. The owner resolved the rest at `65ae1f61` and `aba64958`.
 
 ## From this document to Specs
 
