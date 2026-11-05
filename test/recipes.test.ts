@@ -4714,6 +4714,19 @@ describe("recipe parameters and the shipped recipe files", () => {
     });
   });
 
+  // spec:consumers.agent-surface.recipe-parameters#rule.missingSubject: the glossary row an agent
+  // reads says what a recipe does without its subject, never that it answers a sample.
+  it("glosses a recipe parameter as refusing an absent subject", () => {
+    const rows = readFileSync(join(repoRoot, "CONTEXT.md"), "utf8")
+      .split("\n")
+      .filter((line) => line.startsWith("| **recipe parameter** |"));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toContain(
+      "refuses when that subject is absent and never substitutes a sample or a subject of its own",
+    );
+    expect(rows[0]).not.toMatch(/catalog's sample/u);
+  });
+
   it("reads and names each parameter, with a fallback only when the contract supplies one", () => {
     const parameterized = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
 
