@@ -457,6 +457,12 @@ The body is static and reads only the JSON value; neither the shell nor the read
 filenames. `--params` parses data, so quotes, shell metacharacters, spaces, Unicode, and embedded
 newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
 
+Name the change with the git selection that holds it. `git diff --name-only -z` above lists
+unstaged edits only: add `--cached` for staged edits, name `<base>...HEAD` for a branch, and add
+`git ls-files --others --exclude-standard -z` for new files. The graph is the working tree's, so a
+deleted file reaches nothing in it: the bindings it took with it show only in the design diff
+(recipe 35) against a graph written before the deletion.
+
 ```js
 const accepts = ["files", "detail"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
