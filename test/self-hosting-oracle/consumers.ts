@@ -3094,6 +3094,7 @@ export const consumersSpecs = [
               "Would the reference read pinned declarations, contract-kind Specs or `api:` code anchors, and does any of them hold enough to document an interface?",
             blocking: false,
             key: "referenceSource",
+            decider: "owner",
           },
         ],
       },
