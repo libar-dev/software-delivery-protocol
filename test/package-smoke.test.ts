@@ -917,10 +917,16 @@ relations: {}
         status: 0,
         stderr: "",
       });
-      expect(sessionStart.stdout).toMatch(/^Orientation answers 1 and 5 for the project at /u);
-      expect(sessionStart.stdout).toContain(`at ${consumer},`);
-      expect(sessionStart.stdout).toContain("specs: 1,");
-      expect(sessionStart.stdout).toContain("## 5. Next work");
+      // The hook prints additional-context JSON, the form every command-hook client reads.
+      const { hookSpecificOutput } = JSON.parse(sessionStart.stdout) as {
+        hookSpecificOutput: { hookEventName: string; additionalContext: string };
+      };
+      expect(hookSpecificOutput.hookEventName).toBe("SessionStart");
+      const context = hookSpecificOutput.additionalContext;
+      expect(context).toMatch(/^Orientation answers 1 and 5 for the project at /u);
+      expect(context).toContain(`at ${consumer},`);
+      expect(context).toContain("specs: 1,");
+      expect(context).toContain("## 5. Next work");
       await rm(join(consumer, "own.sdp.md"));
       await copyFile(importFixture, join(consumer, "behavior.sdp.ts"));
       const sdpImportDryRun = run(

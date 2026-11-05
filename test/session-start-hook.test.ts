@@ -16,10 +16,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { afterAll, describe, expect, it } from "vitest";
 
-// The session-start hook (spec:decisions.session-start-hook): the shared hooks file the plugin
-// ships, the checkout's temporary wiring, and what the one script prints for the session's project.
-// Whether Claude Code and Codex activate it is a live-session check; these tests prove the files
-// and the script.
+// The session-start hook (spec:decisions.session-start-hook) and its routes
+// (spec:consumers.agent-client-support): Codex's extension in `plugin.json`, the `hooks/hooks.json`
+// shim, the checkout's temporary wiring, and what the one script prints for the session's project.
+// Whether a client puts the answers in the model's context is a live-session check; these tests
+// prove the files and the script.
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const hook = join(repoRoot, "hooks/session-start.mjs");
@@ -58,12 +59,37 @@ function consumer(name: string, carriers: Record<string, string> = {}): string {
   return root;
 }
 
-function runHook(input: Record<string, unknown> | undefined, cwd = scratch) {
-  return spawnSync(process.execPath, [hook], {
+interface HookOutput {
+  readonly hookSpecificOutput: {
+    readonly hookEventName: string;
+    readonly additionalContext: string;
+  };
+}
+
+/** The text a client that reads the hook's JSON adds to the model's context, or "" for none. */
+function contextOf(stdout: string): string {
+  if (stdout === "") return "";
+  const output = JSON.parse(stdout) as HookOutput;
+  expect(Object.keys(output)).toEqual(["hookSpecificOutput"]);
+  return `${output.hookSpecificOutput.additionalContext}\n`;
+}
+
+/** One run of the hook; `stdout` is the context it adds, read as JSON unless `--text`; `raw` is what it printed. */
+function runHook(
+  input: Record<string, unknown> | undefined,
+  cwd = scratch,
+  args: readonly string[] = [],
+) {
+  const run = spawnSync(process.execPath, [hook, ...args], {
     cwd,
     encoding: "utf8",
     input: input === undefined ? "" : JSON.stringify(input),
   });
+  return {
+    ...run,
+    raw: run.stdout,
+    stdout: args.includes("--text") ? run.stdout : contextOf(run.stdout),
+  };
 }
 
 interface AsyncRun {
@@ -84,7 +110,7 @@ function startHook(input: Record<string, unknown>): AsyncRun {
     child.on("error", fail);
     child.on("close", (status) => {
       exited = true;
-      settle({ status: status ?? -1, stdout });
+      settle({ status: status ?? -1, stdout: contextOf(stdout) });
     });
     child.stdin.end(JSON.stringify(input));
   });
@@ -432,6 +458,64 @@ ${entries.map((id) => `  - ${id}`).join("\n")}
   }, 60_000);
 });
 
+describe("the session-start hook's output", () => {
+  it("prints its answers as additional-context JSON for the session-start event", () => {
+    const run = runHook({ cwd: ownProject, source: "startup" });
+    const output = JSON.parse(run.raw) as HookOutput;
+
+    expect(run.status).toBe(0);
+    expect(output.hookSpecificOutput.hookEventName).toBe("SessionStart");
+    expect(output.hookSpecificOutput.additionalContext).toMatch(
+      /^Orientation answers 1 and 5 for the project at .+, derived when this session started by /u,
+    );
+    expect(run.raw.trim().split("\n")).toHaveLength(1);
+  }, 60_000);
+
+  it("prints the text alone given --text, for a route that reads plain text", () => {
+    const run = runHook({ cwd: ownProject, source: "startup" }, scratch, ["--text"]);
+
+    expect(run.status).toBe(0);
+    expect(run.raw).toMatch(/^Orientation answers 1 and 5 for the project at /u);
+    expect(run.raw).toContain("specs: 1,");
+  }, 60_000);
+
+  it("answers another event once per session, as that event's additional context", () => {
+    const session = randomUUID();
+    const first = runHook({ cwd: ownProject, session_id: session, hook_event_name: "PreToolUse" });
+    const output = JSON.parse(first.raw) as HookOutput;
+
+    expect(output.hookSpecificOutput.hookEventName).toBe("PreToolUse");
+    expect(output.hookSpecificOutput.additionalContext).toContain(", derived for this session by ");
+    expect(output.hookSpecificOutput.additionalContext).toContain("specs: 1,");
+    // A tool call, or a prompt, later in the same session prints nothing.
+    expect(
+      runHook({ cwd: ownProject, session_id: session, hook_event_name: "PreToolUse" }).raw,
+    ).toBe("");
+    expect(
+      runHook(
+        { cwd: ownProject, session_id: session, hook_event_name: "UserPromptSubmit" },
+        scratch,
+        ["--text"],
+      ).raw,
+    ).toBe("");
+    // Another session's first prompt is answered, as text for a route that asks for it.
+    expect(
+      runHook(
+        { cwd: ownProject, session_id: randomUUID(), hook_event_name: "UserPromptSubmit" },
+        scratch,
+        ["--text"],
+      ).raw,
+    ).toContain("specs: 1,");
+  }, 60_000);
+
+  it("answers another event with nothing when no session id tells its first copy", () => {
+    expect(runHook({ cwd: ownProject, hook_event_name: "PreToolUse" })).toMatchObject({
+      status: 0,
+      raw: "",
+    });
+  }, 60_000);
+});
+
 describe("the session-start hook's wiring", () => {
   const readJson = (path: string) =>
     JSON.parse(readFileSync(join(repoRoot, path), "utf8")) as {
@@ -445,10 +529,43 @@ describe("the session-start hook's wiring", () => {
     );
 
   // Each wiring, resolved as its client resolves it, runs the one script in an installed project.
-  it("runs the one script from the plugin's hooks file and the checkout's temporary wiring", () => {
+  it("runs the one script from each route the plugin ships and the checkout's temporary wiring", () => {
     const input = JSON.stringify({ cwd: emptyProject, source: "startup" });
     const expected = `No Spec derives at ${emptyProject} yet, so the session-start hook has no orientation answers to add.\n`;
 
+    // Codex, through its Agent Plugins extension namespace: shell form through the standard's root.
+    const manifest = JSON.parse(readFileSync(join(repoRoot, "plugin.json"), "utf8")) as {
+      extensions: Record<string, { hooks: { hooks: Record<string, unknown> } }>;
+    };
+    expect(Object.keys(manifest.extensions)).toEqual(["com.openai"]);
+    const codexPlugin = Object.entries(
+      manifest.extensions["com.openai"]?.hooks.hooks as Record<
+        string,
+        { hooks: Record<string, unknown>[] }[]
+      >,
+    ).flatMap(([event, groups]) =>
+      groups.flatMap((group) => group.hooks.map((h): Record<string, unknown> => ({ event, ...h }))),
+    );
+    expect(codexPlugin).toEqual([
+      {
+        event: "SessionStart",
+        type: "command",
+        command: 'node "${PLUGIN_ROOT}/hooks/session-start.mjs"',
+        timeout: 30,
+        statusMessage: "Deriving orientation answers",
+      },
+    ]);
+    const codexPluginRun = spawnSync(String(codexPlugin[0]?.command), {
+      cwd: emptyProject,
+      encoding: "utf8",
+      env: { ...process.env, PLUGIN_ROOT: repoRoot },
+      input,
+      shell: true,
+    });
+    expect(codexPluginRun.status).toBe(0);
+    expect(contextOf(codexPluginRun.stdout)).toBe(expected);
+
+    // Claude Code and ZCode, through the compatibility shim at the plugin root.
     const [plugin] = handlers("hooks/hooks.json");
     expect(plugin).toMatchObject({
       event: "SessionStart",
@@ -462,7 +579,8 @@ describe("the session-start hook's wiring", () => {
       input,
       shell: true,
     });
-    expect(pluginRun).toMatchObject({ status: 0, stdout: expected });
+    expect(pluginRun.status).toBe(0);
+    expect(contextOf(pluginRun.stdout)).toBe(expected);
 
     // Claude Code, from project settings: exec form, the project-root placeholder substituted.
     const claude = handlers(".claude/settings.json");
@@ -481,7 +599,8 @@ describe("the session-start hook's wiring", () => {
       (claude[0]?.args as string[]).map((arg) => arg.replace("${CLAUDE_PROJECT_DIR}", repoRoot)),
       { cwd: emptyProject, encoding: "utf8", input },
     );
-    expect(claudeRun).toMatchObject({ status: 0, stdout: expected });
+    expect(claudeRun.status).toBe(0);
+    expect(contextOf(claudeRun.stdout)).toBe(expected);
 
     // Codex, from the project layer: shell form through the git root, run from a subdirectory.
     const codex = handlers(".codex/hooks.json");
@@ -500,7 +619,8 @@ describe("the session-start hook's wiring", () => {
       input,
       shell: true,
     });
-    expect(codexRun).toMatchObject({ status: 0, stdout: expected });
+    expect(codexRun.status).toBe(0);
+    expect(contextOf(codexRun.stdout)).toBe(expected);
   }, 60_000);
 
   it("ships the plugin's hooks file and keeps the checkout's wiring out of the package", () => {

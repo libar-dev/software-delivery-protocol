@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 // The session-start hook the package ships in its Agent Plugin (spec:decisions.session-start-hook).
-// Claude Code and Codex run it from `hooks/hooks.json` at the plugin root; the Protocol checkout
-// wires it for now from `.claude/settings.json` and `.codex/hooks.json`. Both clients add its
-// standard output to the model's context.
+// Each agent client runs this one script through its own route (spec:consumers.agent-client-support):
+// Codex through its extension namespace in `plugin.json`, Claude Code and ZCode through
+// `hooks/hooks.json`, and other clients through a named shim; the Protocol checkout wires it for now
+// from `.claude/settings.json` and `.codex/hooks.json`. It prints its answers as additional-context
+// JSON for the event that ran it, or, given `--text`, the text alone for a route that reads plain
+// text. At session start it prints once per event; for any other event, such as a prompt or a tool
+// call that a client fires again and again, once per session, and nothing without a session id.
 //
 // It orients the session's own project, never the plugin's: the Protocol checkout holding the hook
 // input's `cwd`, or else the nearest directory at or above it with a `package.json`, such as a
@@ -39,6 +43,8 @@ const runningClaimMs = 35_000;
 const finishedGraceMs = 2_000;
 // How long a copy waits for another to finish reading or writing the claim before it prints anyway.
 const lockWaitMs = 2_000;
+// The event a client runs the hook for when its input names none.
+const sessionStart = "SessionStart";
 
 function readJson(path) {
   try {
@@ -77,6 +83,33 @@ function findProject(cwd) {
     if (readJson(join(installed, "package.json"))?.name === packageName)
       return { root: boundary ?? dir, runner: join(installed, runnerPath) };
     if (dir === parse(dir).root) return undefined;
+  }
+}
+
+/** The hook event the client ran the script for, as its input names it. */
+function eventName(input) {
+  return typeof input.hook_event_name === "string" && input.hook_event_name !== ""
+    ? input.hook_event_name
+    : sessionStart;
+}
+
+/**
+ * Claims the session for an event other than session start, which a client fires again and again:
+ * true for the session's first copy only. Without a session id, or a writable temporary directory,
+ * nothing can tell the first copy, so none prints.
+ */
+export function claimSession(input, directory = join(tmpdir(), "sdp-session-start")) {
+  if (typeof input.session_id !== "string" || input.session_id === "") return false;
+  const key = createHash("sha256")
+    .update(`${input.session_id}\0session`)
+    .digest("hex")
+    .slice(0, 32);
+  try {
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, `${key}.session`), String(Date.now()), { flag: "wx" });
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -196,7 +229,7 @@ function failureReason(run) {
   );
 }
 
-function orientation(project) {
+function orientation(project, event) {
   const command = `node ${relative(project.root, project.runner)} --only ${answers}`;
   const failed = (reason) =>
     `Orientation did not run at session start (${clip(reason.replace(/\.$/u, ""), maxReason)}). From ${project.root}: ${command}`;
@@ -233,8 +266,9 @@ function orientation(project) {
       breakLength: 120,
     });
   const header =
-    `Orientation answers 1 and 5 for the project at ${project.root}, derived when this session ` +
-    `started by \`${command}\`. The sdp-agent-surface skill's references/orientation.md says how ` +
+    `Orientation answers 1 and 5 for the project at ${project.root}, derived ` +
+    `${event === sessionStart ? "when this session started" : "for this session"} by \`${command}\`. ` +
+    "The sdp-agent-surface skill's references/orientation.md says how " +
     "to read each; the same runner gives the other answers.";
   const sections = parsed.map((answer) =>
     [
@@ -255,11 +289,20 @@ function main() {
     const cwd = typeof input.cwd === "string" && input.cwd !== "" ? input.cwd : process.cwd();
     const project = findProject(resolve(cwd));
     if (project === undefined) return;
-    const event = claimEvent(input);
-    if (!event.print) return;
-    const text = orientation(project);
-    event.finish();
-    process.stdout.write(`${text}\n`);
+    const event = eventName(input);
+    let finish = () => undefined;
+    if (event === sessionStart) {
+      const claim = claimEvent(input);
+      if (!claim.print) return;
+      finish = claim.finish;
+    } else if (!claimSession(input)) return;
+    const text = orientation(project, event);
+    finish();
+    process.stdout.write(
+      process.argv.includes("--text")
+        ? `${text}\n`
+        : `${JSON.stringify({ hookSpecificOutput: { hookEventName: event, additionalContext: text } })}\n`,
+    );
   } catch {
     // Context is optional; the session starts without it.
   }
