@@ -42,10 +42,11 @@ The vault writes no carrier and no proposal
 (`spec:consumers.obsidian-vault.iteration#rule.handOff`): you write the proposal
 (`spec:consumers.intent-composition`) and, after its check, the edits.
 
-1. Before the person reads, commit pending carrier edits and record that commit in an intent note.
-   It is the proposal's base, never the latest synchronization: `--watch` refreshes the notes, and
-   a check against the newer graph reports an entry that moved under the person as unmoved.
-   Without a base the person confirms, ask for one.
+1. Before the person reads, record in an intent note the commit the vault shows them: `HEAD` on
+   a clean tree. Pending carrier edits are committed only under the session's commit authority;
+   without it, ask the person to commit them or to name the base. That commit is the proposal's
+   base, never the latest synchronization: `--watch` refreshes the notes, and a check against the
+   newer graph reports an entry that moved under the person as unmoved.
 2. Convert each link back to what it names
    (`spec:consumers.obsidian-vault.notes#rule.addressRoundTrip`): a note name restores the colon
    after its namespace (`spec.model.rule-keys` is `spec:model.rule-keys`), a term note

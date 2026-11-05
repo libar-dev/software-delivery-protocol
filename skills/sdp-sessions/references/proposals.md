@@ -32,7 +32,9 @@ addresses.
    - `moved` not `false` (`null`: not comparable), a `scope` row with `resolvesAtHead: false`, or
      a `relationTarget` with `resolvesAtHead: false`: send the change to the person;
    - apply the rest as ordinary carrier edits through `sdp-authoring`.
-5. The applying commit names the proposal's reason line and base. With commit authority, commit,
-   then rebuild and stamp the Studio or rerun `sdp vault`; without it, rebuild unstamped.
+5. The applying commit names the proposal's reason line and base, and is made only under the
+   session's commit authority. Refresh a projection only for a person who reads it: rebuild the
+   Studio, stamped after a commit and unstamped without one, or rerun `sdp vault`. A reviewer's
+   proposal needs neither, and every rebuild removes the five page roots.
 
 Done: every change applied, sent or returned; `report` (orientation 4) holds no error.
