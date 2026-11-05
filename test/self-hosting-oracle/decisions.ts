@@ -1570,17 +1570,6 @@ export const decisionsSpecs = [
       intent: {
         outcome:
           "Start each agent session in a Protocol project with the graph's current orientation answers already in context, while every rule, pointer and hazard stays in the handbook that every client and subagent reads.",
-        openQuestions: [
-          {
-            question:
-              "Does the hook print the owner's temporary arc block in the Protocol checkout, only while the arc's branch is checked out, in place of the block at the top of the handbook?",
-            blocking: false,
-            key: "arcBlock",
-            decider: "owner",
-            provisional:
-              "no while this arc is open; the block stays in the handbook until the owner removes it.",
-          },
-        ],
       },
       decision: {
         context:
