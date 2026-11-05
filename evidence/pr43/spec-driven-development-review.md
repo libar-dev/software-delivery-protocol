@@ -117,7 +117,17 @@ Beside those lists:
 
 ## From this document to Specs
 
-This file and the skills review are the last plans written in Markdown. The next session addresses the skills review's corrections, with the minor items that fit them. The session after authors the items selected here as Specs: a Spec, a question with its trigger on an existing Spec, or a roadmap entry. That is the first planning pass done in Specs. `evidence/` is committed on the branch and removed before merge, so only what lands in the graph outlives the PR. The PR description carries the queries that scope each item and show it done.
+This file and the skills review are the last plans written in Markdown. The skills review's corrections landed in `3a0256b1..98b9573f`. The next session authors the items selected here as Specs: a Spec, a question with its trigger on an existing Spec, or a roadmap entry. That is the first planning pass done in Specs.
+
+It opens with a triage of the open questions, in the graph:
+
+```sh
+pnpm --silent sdp:q 'const r = await recipes(20, {}); return r.specs.flatMap((s) => s.questions.map((q) => `${q.blocking ? "B" : "-"} ${(q.decider ?? "-").padEnd(9)} ${q.trigger ? "deferral" : "open    "} ${s.id ?? s.spec}#question.${q.key}`))'
+```
+
+Each question leaves the triage one of four ways: settled now as a carrier edit, still waiting on its trigger, delegated to its roadmap entry, or closing with its arc. A deferral is settled early only when its trigger has fired or the answer is to drop it. Three questions sit on the routes above: `spec:model.design-maturity#question.designColumnsSufficiency`, which asks whether a Spec can show settled design apart from intent; `spec:model.anchors.markdown-deliverable#question.markdownAnchor`; and `spec:observation.run-evidence.bound-file-freshness#question.freshness`.
+
+`evidence/` is committed on the branch and removed before merge, so only what lands in the graph outlives the PR. The PR description carries the queries that scope each item and show it done.
 
 ## Appendix: the starting design and the current ruling
 
