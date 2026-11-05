@@ -768,7 +768,7 @@ export const modelSpecs = [
         linksValue:
           "`links:` takes a comma-separated list, as an anchor comment's target tags do, non-empty and with no repeat.",
         fieldFindings:
-          "an unknown or repeated label, an empty value, a `decider` off the token grammar, and a `trigger` on a non-blocking question are conformance errors at the field's line.",
+          "an unknown or repeated label, an empty value, a `decider` off the token grammar, and a `trigger` on a non-blocking question are extraction errors at the field's line, as every carrier refusal is: the graph does not derive, and no query runs, until the author fixes the field.",
         fieldLocations:
           "each carrier that records entry lines records a row per field present, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger`; a link finding reads the `links` row, and a line the carrier did not record stays absent.",
         linkResolution:

@@ -619,25 +619,30 @@ describe("question fields", () => {
       graph.locations?.filter((row) => row.entry.includes("].")).map((row) => row.line),
     ).toEqual([3, 4, 5, 6]);
   });
+  // spec:model.open-question-fields#design.fieldFindings: an extraction error at the field's own
+  // line, which refuses the carrier, as every carrier refusal does. The question sits on line 13.
   it.each([
-    "  - decider: Owner",
-    "  - decider: ",
-    "  - decider: owner\n  - decider: delegated",
-    "  - links: ",
-    "  - links: spec:probe.parent, spec:probe.parent",
-    "  - provisional: ",
-    "  - trigger: ",
-    "  - status: waiting",
-    "    - decider: owner",
-    "  - decider: owner\n    continuation",
-  ])("refuses invalid Markdown field %s at its line", (field) => {
+    ["  - decider: Owner", 14],
+    ["  - decider: product team", 14],
+    ["  - decider: ", 14],
+    ["  - decider: owner\n  - decider: delegated", 15],
+    ["  - links: ", 14],
+    ["  - links: spec:probe.parent, spec:probe.parent", 14],
+    ["  - provisional: ", 14],
+    ["  - trigger: ", 14],
+    ["  - status: waiting", 14],
+    ["    - decider: owner", 14],
+    ["  - decider: owner\n    continuation", 15],
+  ] as const)("refuses invalid Markdown field %j at its line", (field, line) => {
     const result = reifyMarkdownCarrier(
       mdSpec(`## Intent\n- outcome: Probe.\n### Open questions\n- [blocking] Who?\n${field}`),
       "probe.sdp.md",
     );
     expect(
-      result.findings.some((finding) => finding.severity === "error" && (finding.line ?? 0) >= 14),
-    ).toBe(true);
+      result.findings
+        .filter((finding) => finding.severity === "error")
+        .map((finding) => [finding.validatorId.split("/")[0], finding.line]),
+    ).toEqual([["extract", line]]);
     expect(result.specs).toEqual([]);
   });
   it("refuses a trigger on a non-blocking question and a field outside a question", () => {
@@ -665,16 +670,17 @@ describe("question fields", () => {
     "decider: selectOwner()",
     'links: [ref("spec:probe.parent")]',
     'links: ["spec:probe.parent", ...others]',
-  ])("refuses invalid TypeScript field %s", (field) => {
-    const source = tsSpec(`intent: {openQuestions: [{question: "Who?", ${field}}]}`).replace(
+  ])("refuses invalid TypeScript field %s at its line", (field) => {
+    // The field sits alone on line 3, so its error names that line.
+    const source = tsSpec(`intent: {openQuestions: [{question: "Who?",\n${field}}]}`).replace(
       'intent: {outcome: "Probe"}, ',
       "",
     );
     expect(
-      reifyTypeScriptCarrier(source, "probe.sdp.ts").findings.some(
-        (finding) => finding.severity === "error" && finding.line !== undefined,
-      ),
-    ).toBe(true);
+      reifyTypeScriptCarrier(source, "probe.sdp.ts")
+        .findings.filter((finding) => finding.severity === "error")
+        .map((finding) => [finding.validatorId.split("/")[0], finding.line]),
+    ).toEqual([["extract", 3]]);
   });
   it("checks every link as a complete token and groups unbacked pairs with prose", () => {
     const parent = reifyMarkdownCarrier(mdSpec("## Rule\n- [#first] First text."), "parent.sdp.md");
