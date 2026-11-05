@@ -19,13 +19,9 @@ commands from the project root; `<skill-dir>` is this skill's directory.
   from the stamp.
 - **A missing page is a missing input:** `sdp generate` takes neither `--base` nor `--runs`, which
   `diff.html` and `runs.html` need.
-- **A run is evidence for its own commit only** (`spec:consumers.spec-studio.runs-page#rule.commitShown`).
-  Compare each report's commit with the stamp's `corpusCommit` through recipe 45, run evidence
-  (`dist/recipes/45-run-evidence.js`):
-
-  ```sh
-  node <skill-dir>/../sdp-agent-surface/scripts/q.mjs 'return (await recipes(45, params)).inputs.map(({ commit, sameCommit }) => ({ commit, sameCommit }))' --params runs=@ctrf.json --params '{"commit":"<corpusCommit>"}'
-  ```
+- **A run is evidence for its own commit only**
+  (`spec:consumers.spec-studio.runs-page#rule.commitShown`): check each report's commit against
+  the stamp's before you publish it or read a run row, as below.
 
 ## Start from what you hold
 
@@ -37,6 +33,14 @@ commands from the project root; `<skill-dir>` is this skill's directory.
 - **A final build: stamp it** with the commit it read (`sdp stamp --commit`), then upload
   `generated/spec-studio/`. Source links need the stamp's `--source` template and pages served
   over http(s); otherwise file and line stay text (`spec:consumers.spec-studio.sharing#rule.sourceLinks`).
+- **CI run reports: check their commits** against the stamp's `corpusCommit` through recipe 45,
+  run evidence (`dist/recipes/45-run-evidence.js`), before `sdp studio --runs` or a `runs.html`
+  reading; a report from another commit says nothing about this one:
+
+  ```sh
+  node <skill-dir>/../sdp-agent-surface/scripts/q.mjs 'return (await recipes(45, params)).inputs.map(({ commit, sameCommit }) => ({ commit, sameCommit }))' --params runs=@ctrf.json --params '{"commit":"<corpusCommit>"}'
+  ```
+
 - **A CI workflow: set up previews** with [previews.md](references/previews.md).
 - **A page set or a link: read it**, no graph needed; [pages.md](references/pages.md) maps tasks
   to pages. A page states only what it shows: queue order sets no priority; roadmap order is
@@ -50,21 +54,26 @@ commands from the project root; `<skill-dir>` is this skill's directory.
 
 ## Receive composed intent
 
-Ask the person for both parts the panel hands off
-(`spec:consumers.spec-studio.intent-panel#rule.textApart`):
+The panel hands off what its contract can carry
+(`spec:consumers.spec-studio.intent-panel#rule.textApart`): with a base and a reason, a change
+proposal and its memo, whose JSON sits under `## The proposal`; apart from it, under
+`Not in the proposal`, scoped-intent text for each intent a proposal cannot hold; without a base
+or a reason, that text alone. Ask the person for every part they hold, then route each intent once:
 
-- the change proposal and its memo, whose JSON sits under `## The proposal`;
-- the scoped-intent text under `Not in the proposal`: everything when no base or reason was given,
-  an unexpanded Pack request, and any Pack membership or framing change.
+- **The proposal.** A preview's base is GitHub's merge commit on `refs/pull/<number>/merge`, not
+  a branch: run `git fetch origin pull/<number>/merge` and confirm the fetched commit is the
+  proposal's `base`, else return the proposal. Then apply it through the
+  [receive procedure](../sdp-sessions/references/proposals.md)
+  (`spec:consumers.delivery-session-on-ramp#rule.receiveProposal`).
+- **Text naming Specs or entries**, everything when the person gave no base or reason: write it
+  into a proposal (`spec:consumers.intent-composition`) against a commit the person agrees is the
+  one they read, then the same procedure.
+- **Text naming a Pack's members**: confirm they are the Pack's members at that base
+  (`g.packContext`), then write them into that proposal as Spec changes; members that differ go
+  back to the person.
+- **A Pack's membership or framing**: no proposal can carry it
+  (`spec:consumers.spec-studio.intent-panel#rule.packScope`). Edit the manifest with the person's
+  agreement and check it with `sdp-authoring`'s loop, which reads the members and framing back.
 
-A Pack's membership and framing change in its manifest, with the person's agreement
-(`spec:consumers.spec-studio.intent-panel#rule.packScope`). Write scoped-intent text into a
-proposal (`spec:consumers.intent-composition`) against a commit you hold.
-
-A preview's base is GitHub's merge commit on `refs/pull/<number>/merge`, not a branch: run
-`git fetch origin pull/<number>/merge` and confirm the fetched commit is the proposal's `base`, else
-return the proposal.
-
-Then apply both through the [receive procedure](../sdp-sessions/references/proposals.md)
-(`spec:consumers.delivery-session-on-ramp#rule.receiveProposal`). Done when every intent is
-applied, sent to the person, or returned.
+Done when each intent is applied once, through the check or the manifest, sent to the person, or
+returned.

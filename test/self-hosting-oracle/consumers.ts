@@ -4286,7 +4286,7 @@ export const consumersSpecs = [
           "The skill teaches `sdp studio` for a page set with a base graph or run records and `sdp generate` for every root without them; that every command entering the shared build removes the page set; and that supplied inputs lie outside every path the build writes or removes.",
           "The skill teaches stamping after the final build with the commit the build read, that a later build removes the stamp, and that source links need a stamp served over http or https, and cites `spec:consumers.spec-studio.sharing` for the preview workflow.",
           "The skill maps a reviewer's task to the page that answers it, and states what a page does not: it shows values the build computed, its order sets no priority, a run row is no verdict, and a Pack export carries no stamp or composing panel.",
-          "The skill teaches what the composing panel hands off, the proposal with its memo and the scoped-intent text a proposal cannot carry, confirms a preview's base, and applies the hand-off through `spec:consumers.delivery-session-on-ramp#rule.receiveProposal`.",
+          "The skill teaches what the composing panel hands off, a proposal with its memo, scoped-intent text a proposal cannot carry, or that text alone, and routes each intent once by what the person supplied: a proposal, once a preview's base is confirmed, and text naming Specs, entries or a Pack's members, once written into a proposal against a base the person agrees to, through `spec:consumers.delivery-session-on-ramp#rule.receiveProposal`; a Pack's membership or framing as a manifest edit the person agrees to.",
         ],
         ruleKeys: {
           ownSkill: "rules[0]",

@@ -36,6 +36,7 @@ import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
 import { reportVaultError } from "../src/cli/vault-command.js";
 import { parseMarkdownBody } from "../src/extract/markdown-body.js";
 import { createStudioData } from "../src/projections/studio/data.js";
+import { IntentPanel } from "../src/studio-elements/intent-panel.js";
 import { VaultGuardError } from "../src/projections/vault/sync.js";
 import { createReader } from "../src/reader/reader.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
@@ -1753,6 +1754,85 @@ describe("the Studio on-ramp", () => {
       { commit: null, sameCommit: null },
       { commit: preview, sameCommit: true },
     ]);
+  });
+
+  // #rule.receiveIntent over the panel's own hand-off, Pack-only and mixed: each intent lands in
+  // exactly one part, the proposal passes the receive procedure's check at its base, and a Pack's
+  // framing, which no proposal can carry, is a manifest edit the authoring check reads back.
+  it("routes each intent the panel hands off once: a proposal to its check, a Pack's framing to its manifest", async () => {
+    const manifest = "---\nid: pack:probe\nspecs:\n  - spec:probe.s1\n---\n# Probe\n\nFraming.\n";
+    const corpus = {
+      "s1.sdp.md": probeCarrier("spec:probe.s1", "behavior", "## Behavior\n- rule: [#read] Read."),
+      "probe.pack.sdp.md": manifest,
+    };
+    const { graph } = probeGraph(corpus);
+    const framing = {
+      scope: ["spec:probe.s1"],
+      pack: "pack:probe",
+      request: "Reframe the Pack",
+      action: "change-pack",
+    };
+    const entry = {
+      scope: ["spec:probe.s1#rule.read"],
+      request: "Read twice",
+      text: "Read twice.",
+      replaces: "spec:probe.s1#rule.read",
+      action: "change-entry",
+    };
+    const handoff = (intents: readonly (typeof framing | typeof entry)[]) => {
+      const kept = new Map<string, string>();
+      const panel = new IntentPanel(
+        {
+          getItem: (key) => kept.get(key) ?? null,
+          setItem: (key, value) => void kept.set(key, value),
+        },
+        "/probe/",
+      );
+      for (const intent of intents) panel.gather(intent);
+      return panel.handoff("abc1234", "Reason", "abc1234");
+    };
+    const check = (proposal: unknown) =>
+      evaluateBody("return await recipes(38, params)", {
+        graph,
+        params: { proposal, base: graph },
+      }) as Promise<{ schemaProblems: unknown[]; totals: Record<string, number> }>;
+
+    // A Pack-only hand-off has no proposal at all: its one intent is scoped-intent text.
+    const packOnly = handoff([framing]);
+    expect({ proposal: packOnly.proposal, memo: packOnly.memo }).toEqual({
+      proposal: null,
+      memo: null,
+    });
+    expect(packOnly.apart).toEqual([framing]);
+    expect(packOnly.scopedText).toContain("pack:probe");
+
+    // A mixed hand-off splits once: the entry change in the proposal, the framing apart.
+    const mixed = handoff([entry, framing]);
+    expect(mixed.proposal?.changes.map((change) => change.scope)).toEqual([entry.scope]);
+    expect(mixed.apart).toEqual([framing]);
+    expect(await check(mixed.proposal)).toMatchObject({
+      schemaProblems: [],
+      totals: { changes: 1, moved: 0, unresolved: 0 },
+    });
+    // Written into a proposal, the framing change fails the check's schema.
+    const forced = await check({
+      ...mixed.proposal,
+      changes: [{ scope: ["pack:probe"], request: framing.request }],
+    });
+    expect(forced.schemaProblems.length).toBeGreaterThan(0);
+    // Made in the manifest, the authoring check reads the new framing back.
+    const edited = probeGraph({
+      ...corpus,
+      "probe.pack.sdp.md": manifest.replace("Framing.", "Reframed."),
+    });
+    expect(
+      await evaluateBody(onlyFence(authoringFile("SKILL.md"), "js"), {
+        graph: edited.graph,
+        params: { files: ["probe.pack.sdp.md"] },
+      }),
+    ).toMatchObject({
+      recorded: [["probe.pack.sdp.md", [{ pack: "pack:probe", framing: "Reframed." }]]],
+    });
   });
 
   it("maps each task to a page the Studio writes", async () => {
