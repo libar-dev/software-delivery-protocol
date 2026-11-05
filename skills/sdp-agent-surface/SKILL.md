@@ -76,8 +76,8 @@ node <skill-dir>/scripts/q.mjs 'const { nodes, specs } = g.byFile(params.file); 
 - Read open-world: an empty list or a zero covers only what its answer looked at. Read
   [answers.md](references/answers.md) before reporting absence.
 - A recipe that takes `detail` answers a summary; `leftOut` names what it dropped
-  (`spec:consumers.agent-surface.answer-shapes`). A recipe without its subject may answer the
-  catalog's sample.
+  (`spec:consumers.agent-surface.answer-shapes`). A recipe without its subject refuses with
+  `reason: "missing"` or `diagnostics`, naming what it expects.
 - `sdp q` writes nothing. `sdp validate`, `sdp build`, `sdp vault` and every publisher remove the
   five generated page roots (`spec:consumers.wholesale-view-rewrite#rule.buildInvalidates`):
   read findings through `report`, and restore the pages with `sdp generate`.

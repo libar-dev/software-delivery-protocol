@@ -148,22 +148,66 @@ const queryHooks = {
 };
 
 /**
+ * The subject each catalog check reads when a test names none. A recipe that answers for a
+ * subject refuses without one (`spec:consumers.agent-surface.recipe-parameters#rule.missingSubject`),
+ * so the samples live here, beside the checks that read this corpus, never in the bodies.
+ */
+const catalogSamples: Readonly<Record<number, Readonly<Record<string, unknown>>>> = {
+  3: { spec: "spec:consumers.reader" },
+  5: { pack: "pack:adopter-speed-v1" },
+  6: { term: "blast radius" },
+  9: { spec: "spec:model.enrichment-lifecycle" },
+  14: { component: "component:protocol.reader" },
+  19: { spec: "spec:consumers.agent-surface" },
+  21: { spec: "spec:extraction.derive-graph" },
+  23: { term: "suffix" },
+  25: {
+    addresses: [
+      "spec:consumers.design-review#ui.packPage",
+      "spec:consumers.design-review#ui.memberTable",
+      "spec:consumers.absent#design.anyKey",
+      "spec:consumers.design-review",
+    ],
+  },
+  27: { pack: "pack:spec-studio-v1" },
+  29: { pack: "pack:spec-studio-v1" },
+  30: { specs: ["spec:validation.readiness-floor"] },
+  56: { spec: "spec:consumers.reading-on-ramp" },
+  // Recipe 40 requires external input; the general checks supply an empty imports snapshot, and
+  // the curation tests build a fixture.
+  40: { imports: { schema: "sdp-imports/1", adapter: "typescript", files: [] } },
+};
+
+/** The one subject each of these recipes answers for, and the shape it refuses its absence in. */
+const subjectParameters: Readonly<
+  Record<number, { readonly name: string; readonly refusal: "found" | "diagnostics" }>
+> = {
+  3: { name: "spec", refusal: "found" },
+  5: { name: "pack", refusal: "found" },
+  6: { name: "term", refusal: "diagnostics" },
+  9: { name: "spec", refusal: "found" },
+  14: { name: "component", refusal: "found" },
+  19: { name: "spec", refusal: "found" },
+  21: { name: "spec", refusal: "found" },
+  23: { name: "term", refusal: "diagnostics" },
+  25: { name: "addresses", refusal: "diagnostics" },
+  27: { name: "pack", refusal: "found" },
+  29: { name: "pack", refusal: "found" },
+  30: { name: "specs", refusal: "diagnostics" },
+  56: { name: "spec", refusal: "found" },
+};
+
+/**
  * Runs one body through the real argv seam. A recipe parameter travels the way a caller passes
- * it, as JSON data on `--params`, never spliced into the body; without one the body runs exactly
- * as the catalog prints it and falls back to its sample.
+ * it, as JSON data on `--params`, never spliced into the body; without one the body reads the
+ * catalog sample above, and an explicit `{}` reaches its refusal.
  */
 async function runRecipe(
   recipe: Recipe,
   params?: Readonly<Record<string, unknown>>,
   extraction: ExtractionResult = derived,
 ): Promise<unknown> {
-  // Recipe 40 requires external input rather than a corpus-specific sample fallback.
-  // The general catalog checks supply an empty imports snapshot; curation tests build a fixture.
-  const suppliedParams =
-    params ??
-    (recipe.ordinal === 40
-      ? { imports: { schema: "sdp-imports/1", adapter: "typescript", files: [] } }
-      : undefined);
+  const suppliedParams = params ?? catalogSamples[recipe.ordinal];
   const capture = createCaptureOutput();
   const exitCode = await runSdpCli(
     [
@@ -1695,9 +1739,8 @@ describe("the agent-surface recipe corpus", () => {
   // Then: both dependency directions retain their ready decision neighbors.
   it("returns non-empty bidirectional dependencies for the binding-grain planning slice", async () => {
     const recipe = recipeByOrdinal(19);
-    const catalogId = "spec:consumers.agent-surface";
     const id = "spec:decisions.anchor-binding-grain";
-    expect(recipe.body).toContain(`const id = params.spec ?? "${catalogId}";`);
+    expect(id).not.toBe(catalogSamples[19]?.spec);
 
     const result = asRecord(await runRecipe(recipe, { spec: id }));
     const dependencies = asRecord(result.dependencies);
@@ -2319,7 +2362,15 @@ describe("register recipe semantics", () => {
       const capture = createCaptureOutput();
       expect(
         await runSdpCli(
-          ["q", recipeByOrdinal(ordinal).body, "--root", repoRoot],
+          [
+            "q",
+            recipeByOrdinal(ordinal).body,
+            "--root",
+            repoRoot,
+            ...(catalogSamples[ordinal] === undefined
+              ? []
+              : ["--params", JSON.stringify(catalogSamples[ordinal])]),
+          ],
           capture.output,
           queryHooks,
         ),
@@ -4634,6 +4685,34 @@ describe("recipe parameters and the shipped recipe files", () => {
     ).toEqual({ unknownParams: ["zzUnknown", "spec"], accepts: ["specs"] });
   });
 
+  // spec:consumers.agent-surface.recipe-parameters#rule.missingSubject and #rule.missingChecked:
+  // a subject left out is refused in the shape its recipe answers an unknown id with, never
+  // answered for a sample or a subject the recipe chose.
+  it("refuses each recipe's subject left out, naming the parameter it expects", async () => {
+    for (const [ordinal, subject] of Object.entries(subjectParameters)) {
+      const answer = asRecord(await runRecipe(recipeByOrdinal(Number(ordinal)), {}));
+      if (subject.refusal === "found") {
+        expect({ ordinal, answer }).toEqual({
+          ordinal,
+          answer: { found: false, reason: "missing", expected: `params.${subject.name}` },
+        });
+        continue;
+      }
+      const diagnostics = asArray(answer.diagnostics).map(asRecord);
+      expect({
+        ordinal,
+        keys: Object.keys(answer),
+        parameters: diagnostics.map((diagnostic) => diagnostic.parameter),
+        problems: diagnostics.every((diagnostic) => stringAt(diagnostic, "problem").length > 0),
+      }).toEqual({ ordinal, keys: ["diagnostics"], parameters: [subject.name], problems: true });
+    }
+    expect(await runRecipe(recipeByOrdinal(34), {})).toEqual({
+      found: false,
+      reason: "missing",
+      expected: "params.spec or params.pack",
+    });
+  });
+
   it("reads and names each parameter, with a fallback only when the contract supplies one", () => {
     const parameterized = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
 
@@ -4648,6 +4727,7 @@ describe("recipe parameters and the shipped recipe files", () => {
 
       for (const name of names) {
         const hasSample =
+          subjectParameters[recipe.ordinal]?.name !== name &&
           recipe.ordinal !== 34 &&
           recipe.ordinal !== 45 &&
           !(
@@ -4881,8 +4961,12 @@ describe("recipe parameters and the shipped recipe files", () => {
       expect(JSON.parse(absent.stdout)).toEqual({ id: "pack:absent-v1", found: false });
     }
 
-    // Without the parameter, recipe 5 falls back to its sample: the first Pack in the graph.
-    expect(asRecord(await runRecipe(recipeByOrdinal(5))).id).toBe(packIds[0]);
+    // Without the parameter, recipe 5 refuses rather than reading a Pack the caller never named.
+    expect(await runRecipe(recipeByOrdinal(5), {})).toEqual({
+      found: false,
+      reason: "missing",
+      expected: "params.pack",
+    });
   });
 });
 
@@ -7046,7 +7130,7 @@ describe("authoring grammar recipes", () => {
     const extraction = grammarRecipeProbe();
     expect(await runRecipe(recipeByOrdinal(34), undefined, extraction)).toEqual({
       found: false,
-      reason: "scope",
+      reason: "missing",
       expected: "params.spec or params.pack",
     });
     expect(

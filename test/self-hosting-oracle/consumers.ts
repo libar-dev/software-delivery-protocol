@@ -1531,12 +1531,12 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "Address resolution reads `params.addresses`, falling back to the catalog sample when absent, and returns one row per input in input order, repeats included; each row carries `address`, `resolves`, `id`, `section`, `key`, `value`, `file`, `line` and `reason`. A resolving row carries the entry text or value and its recorded file and line, null when unlocated, with `reason` null. A miss keeps `id`, `section` and `key` when parsed, keeps `value`, `file` and `line` null, and gives `reason` `malformed` for an input that is no entry address, a bare Spec id included, or `spec`, `section` or `entry` for an absent Spec, section or key; `malformed` carries `expected`, the grammar in one line, and `section` or `entry` carries `available`, the keys that section holds sorted in code-unit order.",
+          "Address resolution reads `params.addresses`, answering diagnostics when it is absent, and returns one row per input in input order, repeats included; each row carries `address`, `resolves`, `id`, `section`, `key`, `value`, `file`, `line` and `reason`. A resolving row carries the entry text or value and its recorded file and line, null when unlocated, with `reason` null. A miss keeps `id`, `section` and `key` when parsed, keeps `value`, `file` and `line` null, and gives `reason` `malformed` for an input that is no entry address, a bare Spec id included, or `spec`, `section` or `entry` for an absent Spec, section or key; `malformed` carries `expected`, the grammar in one line, and `section` or `entry` carries `available`, the keys that section holds sorted in code-unit order.",
           "Address resolution follows the checked-mentions address grammar: a `design` or `ui` key resolves as an own key other than `description`, a `question` key resolves when an open question carries it, a `rule` key resolves through `behavior.ruleKeys` to its rule or flow text, and a `term` key resolves through `model.termKeys` to its term's definition; totals count inputs, resolving rows and each miss reason.",
           "Dependency cycles take no parameter other than `severity` and read the whole graph. They report every set of two or more Specs in which each Spec reaches every other through declared `dependsOn` edges, and every Spec that declares `dependsOn` on itself and belongs to no such set. An edge whose target is not a Spec in the graph is ignored.",
           "Each reported set lists its members sorted by id in code-unit order and one cycle through it as a closed path that starts and ends at its first member. The cycle is the shortest such path, found by a breadth-first walk from the first member over targets in code-unit order and restricted to the set; a Spec that depends only on itself reports the path of that Spec twice. Sets are ordered by their first member, and the totals count the sets, the self-dependent Specs, and the Specs in any set.",
           "Both recipes report their answers and never refuse an authored dependency cycle.",
-          "Address resolution answers with `findings` beside its totals and rows: one finding for each row that does not resolve, in input order, the catalog sample's rows included, so the shipped file runs as a rules file over the addresses its `--params` names.",
+          "Address resolution answers with `findings` beside its totals and rows: one finding for each row that does not resolve, in input order, so the shipped file runs as a rules file over the addresses its `--params` names; run without them, its diagnostics answer carries no `findings` and reports as a rule execution failure.",
           "Dependency cycles answers with `findings` beside its totals and cycles: one finding for each entry of `cycles`, in that order, naming the first member and the closed path through the set.",
           'Both recipes take `params.severity`, `"error"` by default or `"warning"`, which every finding they return carries; another value returns `{ diagnostics }` and no findings, which fails the file as a rules file.',
           "Apart from `findings`, both answers keep their shapes: the totals, rows and cycles stated above.",
@@ -2566,7 +2566,7 @@ export const consumersSpecs = [
     file: "specs/consumers/agent-surface.recipe-parameters.sdp.md",
     title: "Recipes take parameters as data and ship as runnable files",
     narrative:
-      "A body reads its parameters by name, so a name it does not read would be dropped without a word, and a recipe with a sample would answer for the sample: a misspelled name would look like a successful call. A recipe therefore answers a name it does not take with that name and the names it does take, and nothing else. A body cannot import and the reader holds no recipe metadata, so each body declares its own names in its first statement, and the recipe check holds that declaration to the catalog.",
+      "A body reads its parameters by name, so a name it does not read would be dropped without a word, and a recipe that fell back to a sample would answer for the sample: a misspelled name, or a subject left out, would look like a successful call about a Spec, Pack or term the caller never named. A recipe therefore answers a name it does not take with that name and the names it does take, and nothing else, and answers a subject left out by naming the parameter it expects. A body cannot import and the reader holds no recipe metadata, so each body declares its own names in its first statement, and the recipe check holds that declaration to the catalog.",
     sections: {
       intent: {
         problem:
@@ -2579,16 +2579,19 @@ export const consumersSpecs = [
           "`sdp q` takes `--params` with a JSON object, or `--params @PATH` with a file holding one, the path resolved from the working directory, and injects it as a fourth binding, `params`, beside `g`, `graph` and `report`. Without the flag `params` is an empty object. In these two forms, a value that is not valid JSON, JSON that is not an object (null, an array, a string, a number or a boolean), or a file that cannot be read is refused before the body runs, with exit 1, one line on stderr and no output on stdout.",
           "`--params` is repeatable in three forms: a JSON object, `@PATH` naming a file that holds one, and `KEY=@PATH` binding the JSON value in the file, of any type, to `params.KEY`, with `KEY` on the lower-camel grammar. Objects merge at the top level from left to right, and a key given twice by any form is refused before the body runs, with exit 1, one line on stderr and no output on stdout, so a recipe takes a large file such as a base graph beside its other parameters.",
           "The bindings `g`, `graph` and `report` keep their names and meaning beside `params`. The sink evaluates one operator-supplied body and adds no query vocabulary: a parameter is input to a body, never a verb.",
-          "Every recipe reads its parameters under the names the catalog states. A parameter with a documented sample falls back to it when absent, so each body runs as written; a required input with no sample, such as a base graph, a proposal or an imports file, returns diagnostics when absent. Recipe 4 reads its changed files from `params.files`.",
+          'Every recipe reads its parameters under the names the catalog states. A recipe that answers for a subject the caller names, a Spec, Pack, component, term or list of them, refuses when that subject is absent and never substitutes a sample or a subject of its own: a recipe that answers an unknown id with `found: false` answers `{ found: false, reason: "missing", expected }`, and every other one answers `diagnostics` naming the parameter, as a recipe does for an absent required input such as a base graph, a proposal or an imports file. A parameter whose absence the catalog documents as the whole corpus or a default, such as a decider or a severity, stays optional, and recipe 4 reads an absent `params.files` as an empty change list.',
+          "The recipe check runs each recipe that answers for a subject without it and holds the answer to the refusal the `missingAnswer` Design entry names.",
           "Each catalog body opens by declaring the parameter names it takes, in the order the catalog's index lists them, and checks `params` against that list before it reads anything else; a recipe that takes no parameter declares an empty list.",
           "A recipe given a parameter name it does not take returns `{ unknownParams, accepts }` as its whole answer, and `sdp q` exits 0; it never answers for its sample, for an empty input or for the names it does take in that case.",
           "The recipe check holds each body's declared names to the catalog's index and to the `params` names the body reads, and runs each body with a name it does not take.",
           "The package build writes each catalog body to `dist/recipes/<NN>-<slug>.js`, where `NN` is the two-digit recipe number and the slug is the recipe's heading in lower kebab case, and the package ships that directory. The catalog stays the one owner of the bodies; the files are derived, and the recipe test checks that each file equals its catalog body byte for byte.",
         ],
         ruleKeys: {
-          declaredNames: "rules[4]",
-          unknownNames: "rules[5]",
-          namesChecked: "rules[6]",
+          missingSubject: "rules[3]",
+          missingChecked: "rules[4]",
+          declaredNames: "rules[5]",
+          unknownNames: "rules[6]",
+          namesChecked: "rules[7]",
         },
       },
       design: {
@@ -2596,6 +2599,8 @@ export const consumersSpecs = [
           "`const accepts = [...]; const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name)); if (unknownParams.length > 0) return { unknownParams, accepts };` opens every catalog body as three statements on three lines, with the recipe's names in the brackets as double-quoted strings.",
         unknownAnswer:
           "`{ unknownParams, accepts }` is the whole answer for a name a recipe does not take, where `unknownParams` lists every such name in the order `params` holds them, and `accepts` repeats the recipe's declared names.",
+        missingAnswer:
+          '`{ found: false, reason: "missing", expected: "params.<name>" }`, `expected` naming each parameter that would supply the subject joined by ` or `, is the whole answer of recipes 3, 5, 9, 14, 19, 21, 27, 29, 34 and 56 without their subject; `{ diagnostics: [{ parameter: "<name>", problem }] }` is the whole answer of recipes 6, 23, 25 and 30.',
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],

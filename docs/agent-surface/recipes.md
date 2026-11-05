@@ -157,13 +157,19 @@ pnpm --silent sdp:q '<body>' --params @params.json --json
 Repeat `--params` to merge objects at the top level from left to right. `--params @PATH` reads an
 object from a file. `--params KEY=@PATH` binds any JSON value from the file to one lower-camel key,
 for example `--params base=@graph.json --params '{"spec":"spec:model.anchors"}'`. A key given twice
-by any form is refused before the body runs. Without `--params`, `params` is `{}`. Bodies with a
-documented sample fall back to it. A required input without a sample returns diagnostic data in
-the shape its recipe documents: `diagnostics`, `schemaProblems`, or a `found: false` result with a
-reason and expected input. Missing required input is never answered as empty, except recipe 4's
-`files`, which reads as an empty change list.
-The samples name this repository's corpus, so every body runs as written here. The recipe check
-executes each one unchanged. Recipes report absent subjects in their documented result shape.
+by any form is refused before the body runs. Without `--params`, `params` is `{}`.
+
+A recipe that answers for a subject you name, a Spec, Pack, component, term or list of them,
+refuses when you leave it out and never answers for a sample instead
+(`spec:consumers.agent-surface.recipe-parameters#rule.missingSubject`): recipes 3, 5, 9, 14, 19, 21,
+27, 29, 34 and 56 answer `{ found: false, reason: "missing", expected }`, and recipes 6, 23, 25 and
+30 answer `diagnostics` naming the parameter. Any other required input, such as a base graph, a
+proposal or an imports file, returns diagnostic data in the shape its recipe documents:
+`diagnostics`, `schemaProblems`, or a `found: false` result with a reason and expected input.
+Missing required input is never answered as empty, except recipe 4's `files`, which reads as an
+empty change list. A parameter whose absence an entry documents as the whole corpus or a default,
+such as a decider or a severity, stays optional. The examples below name this repository's corpus.
+Recipes report a subject the graph does not hold in their documented result shape.
 Recipes 3, 5, 9, 14, 19, 21, 27, 29, 34, 39 and 56 answer an absent subject with `found: false`. In
 `diagnostics`, the design diff, context bundle, perspective filter, key-family register,
 example-space coverage, rule-key proposal, entry citations, roadmap, design slice and roadmap memo
@@ -351,13 +357,15 @@ rung. A hit *with* an unmet clause is the expensive one.
 relations, and bindings in one shot.*
 
 The parameter is `params.spec`, the Spec id to read; an unknown id returns `{ id, found: false }`
-rather than failing.
+rather than failing, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`.
 
 ```js
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.spec ?? "spec:consumers.reader";
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const id = params.spec;
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -523,14 +531,16 @@ coverage. File-level reach makes no claim about exhaustive symbol reach.
 *When you need this: you are reviewing a Pack as a unit and want its members' readiness, delivery
 facts, and verifier gaps.*
 
-The parameter is `params.pack`, the Pack to review; without it the body reads the first Pack in
-the graph. An unknown Pack returns `{ id, found: false }`.
+The parameter is `params.pack`, the Pack to review; without it the answer is
+`{ found: false, reason: "missing", expected: "params.pack" }`. An unknown Pack
+returns `{ id, found: false }`.
 
 ```js
 const accepts = ["pack"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.pack ?? g.packs()[0]?.id;
+if (params.pack === undefined) return { found: false, reason: "missing", expected: "params.pack" };
+const id = params.pack;
 
 if (id === undefined) {
   return { packs: 0 };
@@ -574,13 +584,17 @@ aggregate over Specs that do.
 
 *When you need this: you have a phrase and no id — the grep-to-graph bridge.*
 
-The parameter is `params.term`, the phrase to look for.
+The parameter is `params.term`, the phrase to look for; without it the recipe answers
+`diagnostics`.
 
 ```js
 const accepts = ["term"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const term = params.term ?? "blast radius";
+if (params.term === undefined) {
+  return { diagnostics: [{ parameter: "term", problem: "Supply the term to look for." }] };
+}
+const term = params.term;
 const matches = g.findByConcept(term);
 
 return {
@@ -683,11 +697,16 @@ refusals; a green corpus has no errors, but may carry intentional warnings.
 *When you need this: you are considering a readiness edit and want the current graph-visible floor
 evidence before touching the carrier.*
 
+The parameter is `params.spec`, the Spec whose rung you are weighing; an unknown id returns
+`{ id, found: false }`, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`.
+
 ```js
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.spec ?? "spec:model.enrichment-lifecycle";
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const id = params.spec;
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -898,13 +917,15 @@ map counts only crossings between different components.
 Specs satisfied by its member units.*
 
 The parameter is `params.component`, the component you are reviewing; an unknown component
-returns the exact not-found shape and does not throw.
+returns the exact not-found shape and does not throw, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.component" }`.
 
 ```js
 const accepts = ["component"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const subject = params.component ?? "component:protocol.reader";
+if (params.component === undefined) return { found: false, reason: "missing", expected: "params.component" };
+const subject = params.component;
 const component = graph.nodes.find((node) => node.nodeType === "CodeNode" && node.id === subject);
 
 if (component === undefined) {
@@ -1288,13 +1309,15 @@ is the absence of an edge; `decidedBy` subjects stay grouped by family.
 decisions, bound components, verifiers, and file-level entry points.*
 
 The parameter is `params.spec`, the Spec you are planning around; an unknown id returns
-`{ id, found: false }` rather than failing.
+`{ id, found: false }` rather than failing, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`.
 
 ```js
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.spec ?? "spec:consumers.agent-surface";
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const id = params.spec;
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -1580,14 +1603,16 @@ the rung each one states and the floor each one reaches. For the floor's verdict
 itself, run promotion preflight (recipe 9).*
 
 The parameter is `params.spec`, the Spec you are weighing; an unknown id returns
-`{ id, found: false }` rather than failing.
+`{ id, found: false }` rather than failing, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`.
 
 ```js
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-const id = params.spec ?? "spec:extraction.derive-graph";
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const id = params.spec;
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -1888,13 +1913,17 @@ ids or addresses.
 *When you need this: you hold a word or a key and want the entries that carry it, where concept
 search (recipe 6) stops at the section.*
 
-The parameter is `params.term`, your word or phrase; an empty term returns no matches.
+The parameter is `params.term`, your word or phrase; an empty term returns no matches, and an
+absent one `diagnostics`.
 
 ```js
 const accepts = ["term"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const term = params.term ?? "suffix";
+if (params.term === undefined) {
+  return { diagnostics: [{ parameter: "term", problem: "Supply the word or phrase to search for." }] };
+}
+const term = params.term;
 const tokensOf = (text) =>
   text
     .replace(/(\p{Lu})(?=\p{Lu}\p{Ll})/gu, "$1 ")
@@ -2129,10 +2158,11 @@ return { totals: { entries: rows.length, specs: new Set(rows.map((row) => row.sp
 or a page, and want to know which still resolve.*
 
 The parameter is `params.addresses`, the list of addresses you hold; an empty list returns no
-rows. A long list belongs in a file passed as `--params @PATH`.
+rows, and an absent one `diagnostics`. A long list belongs in a file passed as `--params @PATH`.
 `params.severity` is `"error"` by default or `"warning"`; another value returns diagnostics.
 Returns `{ totals, rows, findings }`; every unresolved row yields an `unresolved-address`
-finding. The shipped body also runs unchanged under `sdp validate --rules`.
+finding. The shipped body also runs unchanged under `sdp validate --rules`, with the addresses
+as its `--params`; without them it reports a rule execution failure.
 
 ```js
 const accepts = ["addresses", "severity"];
@@ -2142,12 +2172,10 @@ const severity = Object.hasOwn(params, "severity") ? params.severity : "error";
 if (severity !== "error" && severity !== "warning") {
   return { diagnostics: [{ parameter: "severity", problem: "Expected error or warning." }] };
 }
-const addresses = params.addresses ?? [
-  "spec:consumers.design-review#ui.packPage",
-  "spec:consumers.design-review#ui.memberTable",
-  "spec:consumers.absent#design.anyKey",
-  "spec:consumers.design-review",
-];
+if (params.addresses === undefined) {
+  return { diagnostics: [{ parameter: "addresses", problem: "Supply the entry addresses to resolve." }] };
+}
+const addresses = params.addresses;
 const expected = "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII";
 const pattern = /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*)$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
@@ -2363,13 +2391,15 @@ answers to it, which code realizes it, whether a verifier is bound, and which bu
 builds on, with no fact read as another.*
 
 The parameter is `params.pack`, the Pack you are reviewing; an unknown Pack returns
-`{ id, found: false }`.
+`{ id, found: false }`, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.pack" }`.
 
 ```js
 const accepts = ["pack"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.pack ?? "pack:spec-studio-v1";
+if (params.pack === undefined) return { found: false, reason: "missing", expected: "params.pack" };
+const id = params.pack;
 const pack = g.packContext(id);
 
 if (pack === undefined) {
@@ -2495,14 +2525,16 @@ answers to it, and what the Pack rests on, as data a page or a script renders.*
 
 The parameters are `params.pack`, the Pack you are designing, and `params.detail`, absent or false
 for summaries, true for full rows, or a list of member ids for those full rows. An unknown Pack returns
-`{ id, found: false }`.
+`{ id, found: false }`, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.pack" }`.
 
 ```js
 const accepts = ["pack", "detail"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 const detail = params.detail ?? false;
-const id = params.pack ?? "pack:spec-studio-v1";
+if (params.pack === undefined) return { found: false, reason: "missing", expected: "params.pack" };
+const id = params.pack;
 const pack = g.packContext(id);
 
 if (pack === undefined) {
@@ -2677,13 +2709,17 @@ same assembly. The laws are `spec:consumers.pack-design`, `spec:consumers.agent-
 with the code, verifiers and Packs the change asks to follow.*
 
 The parameter is `params.specs`, the Spec ids you are changing; an id the graph does not hold comes
-back in `changed` with `resolved: false` and reaches nothing.
+back in `changed` with `resolved: false` and reaches nothing, and without the parameter the recipe
+answers `diagnostics`.
 
 ```js
 const accepts = ["specs"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const changed = params.specs ?? ["spec:validation.readiness-floor"];
+if (params.specs === undefined) {
+  return { diagnostics: [{ parameter: "specs", problem: "Supply the Spec ids you are changing." }] };
+}
+const changed = params.specs;
 const followed = new Set(["refines", "dependsOn", "constrainedBy", "decidedBy"]);
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
@@ -3016,7 +3052,7 @@ const accepts = ["spec", "pack"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 if (params.spec === undefined && params.pack === undefined) {
-  return {found: false, reason: "scope", expected: "params.spec or params.pack"};
+  return {found: false, reason: "missing", expected: "params.spec or params.pack"};
 }
 if (params.spec !== undefined && params.pack !== undefined) {
   return {found: false, reason: "scope", expected: "one of params.spec or params.pack"};
@@ -6370,7 +6406,8 @@ return { diagnostics: [], memo: `${lines.join("\n")}\n` };
 on as files to open and addresses to cite. For the rungs alone, run dependency footing (recipe
 21).*
 
-`params.spec` is the Spec; an unknown id returns `{ id, found: false }`. `params.detail` defaults
+`params.spec` is the Spec; an unknown id returns `{ id, found: false }`, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`. `params.detail` defaults
 to `false`, which lists at most twelve rules a target; `true` lists every rule. The answer composes
 recipe 21 and keeps its fields.
 
@@ -6382,7 +6419,8 @@ const detail = params.detail ?? false;
 if (typeof detail !== "boolean") {
   return { diagnostics: [{ parameter: "detail", problem: "Expected true or false." }] };
 }
-const footing = await recipes(21, { spec: params.spec ?? "spec:consumers.reading-on-ramp" });
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const footing = await recipes(21, { spec: params.spec });
 if (!footing.found) return footing;
 
 const cap = 12;
