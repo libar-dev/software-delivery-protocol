@@ -64,5 +64,6 @@ a Spec, never an invented anchor.
 
 Entry citations (recipe 51, `dist/recipes/51-entry-citations.js`) lists addresses cited in
 anchored files, and as a rules file reports unresolved ones (`spec:extraction.entry-citations`).
-A Markdown deliverable cannot carry an anchor: the suite asserting that it ships carries one
-labelled for it, and the document stays coverage-unknown in blast radius.
+A Markdown file cannot carry an anchor and is never a deliverable alone. When it is a piece of
+one, such as a skill, the suite asserting that the deliverable ships carries the anchor, labelled
+for it, and the file stays coverage-unknown in blast radius.

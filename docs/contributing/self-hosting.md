@@ -27,8 +27,9 @@ or anchor change updates it in the same commit.
   of any other module, `src/index.ts` included, binds nothing and reports nothing.
 - Every suite that imports a generated contract, adopted registrars included, is listed in
   `contract-dependent-suites.mjs`, which the test wrapper and lint both read.
-- The skills are Markdown deliverables, bound through the document-realization convention in
-  `test/skills.test.ts`.
+- Each skill is a deliverable, and its Markdown files are pieces of it, never deliverables alone.
+  The anchors that bind each skill to its on-ramp Spec sit in `test/skills.test.ts`, under the
+  document-realization convention.
 - Before naming an engine component's role, read recipe 28
   (`dist/recipes/28-roles-layers-and-contexts.js`) and `spec:protocol.role-vocabulary`; the
   accepted set of significant units is `spec:protocol.significant-units-review`.

@@ -8,8 +8,8 @@ list or a zero covers only what its answer looked at:
 - Recipe 1, The build backlog, and recipe 33, The design backlog, leave out examples and
   decisions: an empty answer is absence within that selection only.
 - `coverageUnknownFiles`: the graph records nothing at those files, so their reach is unknown,
-  not empty. A Markdown deliverable such as a skill or a handbook is one: its realization anchor,
-  when it has one, sits in a test file.
+  not empty. A skill's Markdown files are among them: the anchors that bind the skill sit in a
+  test file.
 - `found: false`: the id is not in this graph. In a project, the Protocol's own Specs answer under
   the runner's `--protocol` (`adopter.md`).
 - `floorReached: "ready"`: the floor allows `ready`; `statedReadiness` says whether anyone stated

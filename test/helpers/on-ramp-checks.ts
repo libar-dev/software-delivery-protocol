@@ -572,8 +572,9 @@ interface Teaching {
   readonly shipped: boolean;
 }
 
-// The checks below are the executable suite that asserts the shared skill shape on every shipped
-// skill document, so they carry its realization anchor (`spec:model.anchors`, document realization).
+// The checks below are the executable suite that asserts the shape every shipped skill keeps in its
+// documents, so they carry the skill shape's realization anchor (`spec:model.anchors`, document
+// realization). The skill is the deliverable; its Markdown files are pieces of it.
 const skillShapeImplementationAnchor = codeAnchor({
   id: codeAnchorId("impl:protocol.skill-shape"),
   label: "asserts realization of the shape every shipped skill document keeps",
