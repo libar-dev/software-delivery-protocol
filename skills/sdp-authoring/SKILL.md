@@ -2,7 +2,7 @@
 name: sdp-authoring
 description: Author Specs and Packs in their carriers and check each edit against the graph. Use when creating or editing `.sdp.md`, `.sdp.gherkin` or Pack manifests, stating a readiness rung, binding code or tests, making an example executable, writing corpus rules, or upgrading a corpus.
 metadata:
-  realizes: spec:consumers.authoring-on-ramp spec:consumers.adopter-on-ramp
+  realizes: spec:consumers.authoring-on-ramp spec:consumers.adopter-on-ramp spec:consumers.graph-first-planning
 ---
 
 # Author Specs in their carriers
@@ -101,7 +101,7 @@ Each truth has one home the floor and recipes read; no tag, status or side table
 - A body of work: a Pack named for its capability; membership confers nothing
   (`spec:carrier.markdown-pack-authoring`).
 - Priority: a Pack stating `order: priority`, read with the roadmap (recipe 53); advisory
-  (`spec:decisions.roadmap-priority`).
+  (`spec:decisions.roadmap-priority`), never permission (`spec:consumers.delivery-session-on-ramp`).
 
 ## Silent hazards
 

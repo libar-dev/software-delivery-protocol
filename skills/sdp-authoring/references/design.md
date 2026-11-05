@@ -14,6 +14,8 @@ and a reviewer, another Spec's author, an adopter.
 - The build owns private names, decomposition, file layout and the algorithm behind a stated
   outcome. A question only the builder can answer goes to the build, or `[non-blocking]` with
   `decider: delegated` and a `provisional:` reading.
+- Counts and delivery state are derived, and the order work is built in is the build's: none is
+  written as design.
 
 ## Rounds
 

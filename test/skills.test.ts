@@ -203,7 +203,11 @@ const authoringOnRampTestAnchor = specTest({
 void authoringOnRampTestAnchor;
 
 describeOnRamp("sdp-authoring", {
-  realizes: ["spec:consumers.authoring-on-ramp", "spec:consumers.adopter-on-ramp"],
+  realizes: [
+    "spec:consumers.authoring-on-ramp",
+    "spec:consumers.adopter-on-ramp",
+    "spec:consumers.graph-first-planning",
+  ],
 });
 
 describe("the authoring on-ramp", () => {
