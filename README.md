@@ -322,7 +322,8 @@ Agent Plugins, or link its `skills/sdp-*` folders into your project's skills fol
 pinned. The reading skill's `scripts/orient.mjs` orients an agent in your corpus, and
 `scripts/q.mjs` runs `sdp q` through your installed package. Loaded as a plugin in Claude Code or
 Codex, the package also runs `hooks/session-start.mjs` when a session starts, once you trust its
-hooks: it adds orientation answers 1 and 5 for your project to the agent's context, and prints
+hooks: it adds orientation answers 1 and 5 for your project to the agent's context (in a
+workspace, for the member the session starts in, as a query run there reads it), and prints
 nothing in a project without the package.
 
 To point every agent session in your project at the skills, add this to your own `AGENTS.md`:

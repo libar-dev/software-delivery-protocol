@@ -164,6 +164,53 @@ describe("the session-start hook", () => {
     ).toEqual([]);
   }, 60_000);
 
+  it("orients the workspace member a session starts in, as a query from that member reads it", () => {
+    // One installation at the workspace root serves two members, each with its own corpus.
+    const workspace = consumer("workspace");
+    const members = {
+      one: join(workspace, "packages", "one"),
+      two: join(workspace, "packages", "two"),
+    };
+    for (const [name, member] of Object.entries(members)) {
+      mkdirSync(join(member, "src"), { recursive: true });
+      writeFileSync(join(member, "package.json"), JSON.stringify({ name, private: true }));
+      writeFileSync(
+        join(member, `${name}.sdp.md`),
+        carrier(`spec:${name}.intent`, `${name} intent`),
+      );
+    }
+    const runner = join(workspace, "node_modules", ...packageName.split("/"), "skills");
+    const query = (cwd: string) =>
+      spawnSync(
+        process.execPath,
+        [
+          join(runner, "sdp-agent-surface/scripts/q.mjs"),
+          "return g.specs().map((s) => s.id)",
+          "--json",
+        ],
+        { cwd, encoding: "utf8" },
+      );
+
+    for (const [cwd, project, ids] of [
+      [members.one, members.one, ["spec:one.intent"]],
+      [join(members.one, "src"), members.one, ["spec:one.intent"]],
+      [members.two, members.two, ["spec:two.intent"]],
+      [workspace, workspace, ["spec:one.intent", "spec:two.intent"]],
+    ] as const) {
+      const run = runHook({ cwd, source: "startup" });
+      const direct = query(project);
+
+      expect(direct.status).toBe(0);
+      expect(JSON.parse(direct.stdout)).toEqual(ids);
+      expect(run.status).toBe(0);
+      expect(run.stdout).toContain(`for the project at ${project}, `);
+      expect(run.stdout).toContain(`specs: ${String(ids.length)},`);
+      expect(run.stdout).toContain(
+        `byFamily: { ${ids.map((id) => `${id.slice(5, 8)}: 1`).join(", ")} }`,
+      );
+    }
+  }, 120_000);
+
   it("prints one short line where the package is installed but no Spec derives", () => {
     const run = runHook({ cwd: emptyProject });
 

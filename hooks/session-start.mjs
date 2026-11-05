@@ -4,9 +4,10 @@
 // wires it for now from `.claude/settings.json` and `.codex/hooks.json`. Both clients add its
 // standard output to the model's context.
 //
-// It orients the session's own project, never the plugin's: the nearest directory, at or above the
-// hook input's `cwd`, that is the Protocol checkout or holds the installed package. That project's
-// own reading-skill runner prints orientation answers 1 and 5, within a bounded size. It prints
+// It orients the session's own project, never the plugin's: the Protocol checkout holding the hook
+// input's `cwd`, or else the nearest directory at or above it with a `package.json`, such as a
+// workspace member. The reading-skill runner of the nearest installed package, run from that
+// directory, prints orientation answers 1 and 5, within a bounded size. It prints
 // answers, never rules. It prints one short line when the runner fails or no Spec derives, nothing
 // where no package is installed, and nothing for a second copy of the same session event, such as
 // the plugin's and the checkout's wiring both firing. Clients pass no event id, so a copy is told
@@ -58,15 +59,23 @@ function hookInput() {
   }
 }
 
-/** The session's project, `{ root, runner }`: the Protocol checkout or a directory holding the package. */
+/**
+ * The session's project, `{ root, runner }`. The Protocol checkout is its own project. Elsewhere the
+ * root is the nearest directory at or above `cwd` with a `package.json`, so a workspace member reads
+ * its own corpus, and the runner is the nearest installed package's at or above it, which a
+ * workspace may hold at its root; without a `package.json` below the installation, the root is the
+ * directory holding it.
+ */
 function findProject(cwd) {
+  let boundary;
   for (let dir = cwd; ; dir = dirname(dir)) {
     const own = readJson(join(dir, "package.json"));
     if (own?.name === packageName && existsSync(join(dir, "src", "cli", "sdp.ts")))
       return { root: dir, runner: join(dir, runnerPath) };
+    if (boundary === undefined && existsSync(join(dir, "package.json"))) boundary = dir;
     const installed = join(dir, "node_modules", ...packageName.split("/"));
     if (readJson(join(installed, "package.json"))?.name === packageName)
-      return { root: dir, runner: join(installed, runnerPath) };
+      return { root: boundary ?? dir, runner: join(installed, runnerPath) };
     if (dir === parse(dir).root) return undefined;
   }
 }
