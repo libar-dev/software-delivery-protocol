@@ -5125,10 +5125,28 @@ export const expectedDeclaredRelations: readonly (readonly [
     "the plugin declares no MCP server while MCP integration stays deferred",
   ],
   [
+    "spec:consumers.agent-client-support",
+    "refines",
+    "spec:consumers.shipped-protocol-corpus",
+    "the package the shipped corpus describes reaches each served agent client by the route this Spec names",
+  ],
+  [
+    "spec:consumers.agent-client-support",
+    "decidedBy",
+    "spec:decisions.agent-plugin-package",
+    "the skills reach a client through the portable layout, and a client-specific file ships only where a served client cannot load it",
+  ],
+  [
+    "spec:consumers.agent-client-support",
+    "decidedBy",
+    "spec:decisions.session-start-hook",
+    "every orientation route runs the one hook script that decision ships",
+  ],
+  [
     "spec:decisions.session-start-hook",
     "refines",
     "spec:decisions.agent-plugin-package",
-    "narrows the plugin's contents to one hooks file that both clients read and the session-start script it runs",
+    "narrows the plugin's contents to the session-start script and each client's wiring to it, in the client's namespace or a compatibility shim",
   ],
   [
     "spec:decisions.session-start-hook",

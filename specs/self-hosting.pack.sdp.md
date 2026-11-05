@@ -238,6 +238,7 @@ specs:
   - spec:consumers.graph-first-planning
   - spec:consumers.adopter-on-ramp
   - spec:consumers.shipped-protocol-corpus
+  - spec:consumers.agent-client-support
   - spec:consumers.derived-readiness-banner
   - spec:consumers.derived-readiness-banner.dishonest-divergence
   - spec:consumers.derived-readiness-banner.honest-headroom

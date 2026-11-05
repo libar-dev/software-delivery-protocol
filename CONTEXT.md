@@ -275,6 +275,10 @@ delivery fact, workflow state, or graph state.
   external `doc:` ADR is a **named deferral** (MD-16, stated in `spec:decisions.carried-evidence`);
   revisit when `doc:`-target
   relations or pack-targeting arrive.
+- **"harness"** names two things: the interactive example harness of the executable half, and,
+  in the wider tooling world, an agent client such as Codex or OpenCode. The corpus writes
+  **agent client** for the second (`spec:consumers.agent-client-support`); a ratified noun is an
+  open item.
 
 The vault ambiguity is resolved by adopting Obsidian's established noun in the glossary above.
 Its owned-folder decision, the vault owns one folder (MD-45), is ratified.
