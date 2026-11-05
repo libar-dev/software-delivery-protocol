@@ -387,6 +387,7 @@ const relation = (end) => ({
 return {
   id: context.id,
   title: context.title,
+  narrative: context.narrative ?? null,
   kind: context.specKind,
   altitude: context.altitude,
   statedReadiness: context.statedReadiness,

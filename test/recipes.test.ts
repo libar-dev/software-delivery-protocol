@@ -634,6 +634,7 @@ describe("the agent-surface recipe corpus", () => {
     expect(result.sections).toEqual(
       JSON.parse(JSON.stringify(reader.specContext(String(result.id))?.sections)),
     );
+    expect(result.narrative).toEqual(reader.specContext(String(result.id))?.narrative ?? null);
     expect(result.designColumns).toEqual(reader.specContext(String(result.id))?.designColumns);
     expect(result.packs).toEqual(reader.specContext(String(result.id))?.packs);
     // The binding-language guard: a verifier binding is existence, and the recipe says so.

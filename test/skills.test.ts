@@ -331,6 +331,18 @@ describe("the authoring on-ramp", () => {
     expect(settled.whole).not.toEqual(requested.whole);
     expect(JSON.stringify(settled.whole)).toContain("the cart locks at checkout");
     expect(JSON.stringify(settled.whole)).toContain("two hours");
+    // A narrative edit, prose under the title, reads back too.
+    const narrated = probeGraph(
+      taughtCorpus(
+        taughtCarrier().replace("# Create an order\n", "# Create an order\n\nCarts close here.\n"),
+      ),
+    );
+    expect(
+      await evaluateBody("return recipes(3, params)", {
+        graph: narrated.graph,
+        params: { spec: "spec:orders.create-order" },
+      }),
+    ).toMatchObject({ narrative: "Carts close here." });
   });
 
   // spec:model.open-question-keys, spec:model.rule-keys and spec:model.relation-reasons, as the
@@ -2088,6 +2100,10 @@ describe("the Studio on-ramp", () => {
       recipes: [...(cells[3] ?? "").matchAll(/(?:^|; )(\d+),/gu)].map((match) => Number(match[1])),
     }));
     expect(pages.filter((row) => row.recipes.length > 0).length).toBeGreaterThan(10);
+    const unparsed = rows
+      .map((cells) => cells[3] ?? "")
+      .filter((cell) => cell !== "none" && !/^\d+, [^;]+(?:; \d+, [^;]+)*$/u.test(cell));
+    expect(unparsed).toEqual([]);
     const unread = (rowsToCheck: typeof pages) =>
       rowsToCheck.flatMap(({ page, recipes: named }) =>
         named
