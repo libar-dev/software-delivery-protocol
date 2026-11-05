@@ -18,5 +18,7 @@ return {
   unresolvedUses: arch.unresolvedUses.length,
   layerDirection: crossings.totals.byLayerPair,
   decisions: register.totals,
+  // The widest eight, and how many recipe 18 ranks.
   mostShaping: map.ranking.slice(0, 8).map((r) => `${r.fanIn} ${r.id}: ${titles.get(r.id)}`),
+  ranked: map.ranking.length,
 };

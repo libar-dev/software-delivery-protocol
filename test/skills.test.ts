@@ -36,11 +36,9 @@ import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
 import { reportVaultError } from "../src/cli/vault-command.js";
 import { parseMarkdownBody } from "../src/extract/markdown-body.js";
 import { createStudioData } from "../src/projections/studio/data.js";
-import { studioRecipeAnswers } from "../src/projections/studio/recipes.js";
 import { IntentPanel } from "../src/studio-elements/intent-panel.js";
 import { VaultGuardError } from "../src/projections/vault/sync.js";
 import { createReader } from "../src/reader/reader.js";
-import { graphReportId } from "../src/validate/validators.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import {
   bareInvocation,
@@ -310,6 +308,29 @@ describe("the authoring on-ramp", () => {
         ],
       ],
     ]);
+
+    // A Spec entry reads back whole through recipe 3, which the done criterion names. The outline,
+    // orientation 10, shows question keys and Design keys, so a settled reading or a changed value
+    // would hide there.
+    const outline = readFileSync(
+      join(repoRoot, "skills/sdp-agent-surface/scripts/orientation/10-read-specs.js"),
+      "utf8",
+    );
+    const readSpec = async (provisional: string, holdWindow: string) => {
+      const carrier = `${taughtCarrier().replace("the cart stays editable until payment", provisional)}\n\n## Design\n\n- holdWindow: ${holdWindow}`;
+      const { graph } = probeGraph(taughtCorpus(carrier));
+      const spec = "spec:orders.create-order";
+      return {
+        whole: await evaluateBody("return recipes(3, params)", { graph, params: { spec } }),
+        outline: await evaluateBody(outline, { graph, params: { specs: [spec] } }),
+      };
+    };
+    const requested = await readSpec("the cart stays editable until payment", "sixty minutes");
+    const settled = await readSpec("the cart locks at checkout", "two hours");
+    expect(settled.outline).toEqual(requested.outline);
+    expect(settled.whole).not.toEqual(requested.whole);
+    expect(JSON.stringify(settled.whole)).toContain("the cart locks at checkout");
+    expect(JSON.stringify(settled.whole)).toContain("two hours");
   });
 
   // spec:model.open-question-keys, spec:model.rule-keys and spec:model.relation-reasons, as the
@@ -829,6 +850,17 @@ describe("the graph-reading on-ramp", () => {
 
     const [words, fromFiles] = arrive({ "8": { terms: ["anchor"] }, "9": { files: [skillFile] } });
     const [, fromFile] = arrive({ "9": { file: codeFile } });
+    const [, emptied] = arrive({ "9": { files: [] } });
+    expect(emptied).toMatchObject({ file: null, changeset: { files: [] } });
+    // Answer 7 prints the widest decisions and says how many recipe 18 ranks.
+    const ranked = run("q.mjs", ["return (await recipes(18)).ranking.length", "--json"]);
+    const decisions = (
+      run("orient.mjs", ["--json", "--only", "7"]) as {
+        answer: { mostShaping: unknown[]; ranked: number };
+      }[]
+    )[0]?.answer;
+    expect(decisions?.ranked).toBe(ranked);
+    expect(decisions?.mostShaping.length).toBeLessThanOrEqual(Number(ranked));
     expect(fromFiles).toMatchObject({
       file: { path: skillFile },
       changeset: { files: [skillFile] },
@@ -1935,15 +1967,15 @@ describe("the Studio on-ramp", () => {
   });
 
   // spec:consumers.spec-studio.data.recipe-answers#design.pageRecipes: each row's recipe is one
-  // whose answer the build hands that kind of page, so the table cannot name a recipe the page
-  // never renders.
-  it("names for each page a recipe whose answer the build hands that page", async () => {
+  // the page itself reads. A page's renderer reads its answers while it renders, so each read is
+  // attributed to the renderer on the stack; a Pack page's totals and a slice page's answer are
+  // handed to it whole, before it renders.
+  it("names for each page a recipe whose answer that page reads", async () => {
     const { graph } = probeGraph({
       "a.sdp.md": probeCarrier("spec:probe.a", "behavior", "## Behavior\n- rule: One rule."),
       "probe.pack.sdp.md":
         "---\nid: pack:probe.review\norder: priority\nspecs:\n  - spec:probe.a\n---\n# Probe review\n\nFraming.\n",
     });
-    const reader = createReader(graph);
     const run = {
       results: {
         tool: { name: "vitest" },
@@ -1960,18 +1992,90 @@ describe("the Studio on-ramp", () => {
         tests: [],
       },
     };
-    const answers = await studioRecipeAnswers(
-      reader,
-      { validatorId: graphReportId, findings: reader.findings() },
-      { base: { graph, label: "last design pass" }, runs: [run] },
-    );
+    const data = await createStudioData(createReader(graph), undefined, {
+      base: { graph, label: "last design pass" },
+      runs: [run],
+    });
+    const renderers = new Map([
+      ["index.html", "indexPage"],
+      ["capabilities.html", "capabilitiesPage"],
+      ["architecture.html", "architecturePage"],
+      ["tests.html", "testsPage"],
+      ["evidence.html", "evidencePage"],
+      ["search.html", "searchPage"],
+      ["roadmap.html", "roadmapPage"],
+      ["questions.html", "questionsPage"],
+      ["decisions.html", "decisionsPage"],
+      ["declarations.html", "declarationsPage"],
+      ["backlog.html", "backlogPage"],
+      ["queue.html", "queuePage"],
+      ["glossary.html", "glossaryPage"],
+      ["diff.html", "diffPage"],
+      ["runs.html", "runsPage"],
+      ["specs/<name>.html", "specPage"],
+    ]);
+    const reads = new Map<string, Set<number>>();
+    // A Map's own methods run against the Map itself, never the proxy around it.
+    const bound = (target: object, property: string | symbol): unknown => {
+      const value = Reflect.get(target, property, target) as unknown;
+      return typeof value === "function"
+        ? (value as (...args: unknown[]) => unknown).bind(target)
+        : value;
+    };
+    const record = (recipe: number) => {
+      const frames = new Error().stack?.split("\n") ?? [];
+      const page = frames
+        .map((frame) => /at (\w+) \(/u.exec(frame)?.[1] ?? "")
+        .find((name) => [...renderers.values()].includes(name));
+      if (page !== undefined) reads.set(page, (reads.get(page) ?? new Set()).add(recipe));
+    };
+    const recording = <K, V>(
+      map: ReadonlyMap<K, V>,
+      recipeOf: (key: K) => number,
+      wrap = (value: V) => value,
+    ) =>
+      new Proxy(map, {
+        get: (target, property) =>
+          property === "get"
+            ? (key: K) => {
+                record(recipeOf(key));
+                const value = target.get(key);
+                return value === undefined ? value : wrap(value);
+              }
+            : property === "has"
+              ? (key: K) => target.has(key)
+              : bound(target, property),
+      });
+    const recipes = data.recipes;
+    const watched = {
+      ...data,
+      recipes: {
+        ...recipes,
+        all: recording(recipes.all, (recipe) => recipe),
+        roadmapMemos: recording(recipes.roadmapMemos, () => 55),
+        packDiffs: recording(recipes.packDiffs, () => 35),
+        specs: new Proxy(recipes.specs, {
+          get: (target, property) =>
+            property === "get"
+              ? (id: string) => {
+                  const answers = target.get(id);
+                  return answers === undefined ? answers : recording(answers, (recipe) => recipe);
+                }
+              : bound(target, property),
+        }),
+      },
+    };
+    const limit = Error.stackTraceLimit;
+    Error.stackTraceLimit = 100;
+    try {
+      renderStudio(watched);
+    } finally {
+      Error.stackTraceLimit = limit;
+    }
     const handed = (page: string): ReadonlySet<number> => {
-      if (page.startsWith("specs/"))
-        return new Set([...answers.specs.values()].flatMap((byRecipe) => [...byRecipe.keys()]));
-      if (page.startsWith("packs/")) return new Set(answers.packs.size > 0 ? [29] : []);
-      if (page.startsWith("slices/")) return new Set(answers.slices.size > 0 ? [54] : []);
-      const memos = answers.roadmapMemos.size > 0 ? [55] : [];
-      return new Set([...answers.all.keys(), ...(page === "roadmap.html" ? memos : [])]);
+      if (page.startsWith("packs/")) return new Set([29]);
+      if (page.startsWith("slices/")) return new Set([54]);
+      return reads.get(renderers.get(page) ?? "") ?? new Set();
     };
     // The search page builds its index from the reader; entry search answers the same question.
     const rerunOnly = new Map([["search.html", 23]]);
@@ -1984,12 +2088,15 @@ describe("the Studio on-ramp", () => {
       recipes: [...(cells[3] ?? "").matchAll(/(?:^|; )(\d+),/gu)].map((match) => Number(match[1])),
     }));
     expect(pages.filter((row) => row.recipes.length > 0).length).toBeGreaterThan(10);
-    const unhanded = pages.flatMap(({ page, recipes }) =>
-      recipes
-        .filter((recipe) => !handed(page).has(recipe) && rerunOnly.get(page) !== recipe)
-        .map((recipe) => `${page}: recipe ${String(recipe)}`),
-    );
-    expect(unhanded).toEqual([]);
+    const unread = (rowsToCheck: typeof pages) =>
+      rowsToCheck.flatMap(({ page, recipes: named }) =>
+        named
+          .filter((recipe) => !handed(page).has(recipe) && rerunOnly.get(page) !== recipe)
+          .map((recipe) => `${page}: recipe ${String(recipe)}`),
+      );
+    expect(unread(pages)).toEqual([]);
+    // A row naming a recipe the build computes for another page still fails.
+    expect(unread([{ page: "backlog.html", recipes: [20] }])).toEqual(["backlog.html: recipe 20"]);
   });
 
   it("receives the composing panel's hand-off through the proposal check", async () => {

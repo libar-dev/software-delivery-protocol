@@ -6,7 +6,8 @@
 // Subject: {"files":["<a path you changed>"]}
 const codeFile = graph.nodes.find((n) => n.nodeType === "CodeNode" && n.file)?.file;
 const carrier = g.specs()[0]?.file;
-const fileParam = params.file ?? params.files?.[0] ?? codeFile;
+// A subject given, even an empty list, is never swapped for the sample.
+const fileParam = params.file ?? (params.files === undefined ? codeFile : params.files[0]);
 const files =
   params.files ??
   (params.file !== undefined ? [params.file] : [codeFile, carrier].filter((f) => f !== undefined));

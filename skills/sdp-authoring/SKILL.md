@@ -31,8 +31,7 @@ follows `docs/agent-surface/upgrade-guide.md`.
 2. **Edit the carrier** faithfully: the person's meaning, in their terms. A choice their words
    leave open, such as a value, a mechanism or an output's shape, stays open: unstated, or an
    open question with their lean as its `provisional` reading, each as they put it; an example
-   that needs it uses that reading. Hand-written forms and refusals:
-   [carrier.md](references/carrier.md).
+   that needs it uses that reading. Forms and refusals: [carrier.md](references/carrier.md).
 3. **Check** with this body, passing every file you touched as `--params '{"files":[…]}'`:
 
 ```js
@@ -62,9 +61,10 @@ return {
 ```
 
 Done when each touched Spec states the rung you mean, at or below its floor; each finding is one
-you expect; `errors` is 0; and the change reads back as the person asked: each anchor's targets
-and edge types, a Pack's members in order and its framing, each changed Spec entry (orientation
-10), with nothing they left open settled and nothing added.
+you expect; `errors` is 0; and the change reads back as the person asked, nothing they left open
+settled and nothing added: each anchor's targets and edge types, a Pack's members in order and
+its framing, and each changed Spec entry whole (recipe 3,
+`dist/recipes/03-what-does-this-spec-guarantee-and-who-verifies-it.js`).
 
 A refused carrier stops every query in its root and names each refusal's `file:line`. The loop
 runs no `sdp validate`, `sdp build` or publisher, each of which removes the five generated page
