@@ -9,7 +9,10 @@ metadata:
 
 The Studio (`spec:consumers.spec-studio`) is a projection: static pages of values the build
 computed from the one graph; a person's change leaves it as scoped intent for a carrier. Run
-commands from the project root; `<skill-dir>` is this skill's directory.
+commands from the project root; `<skill-dir>` is this skill's directory. Recipes not named here sit
+in the catalog's categories under the installed package root, such as
+`docs/agent-surface/recipes.md#change-and-proposals` and
+`docs/agent-surface/recipes.md#evidence-and-coverage`.
 
 ## Hazards
 
@@ -30,9 +33,11 @@ commands from the project root; `<skill-dir>` is this skill's directory.
   advisory; a run row is no verdict; a folded diagram keeps a text equivalent of every box and edge
   (`spec:consumers.spec-studio.diagrams#rule.textEquivalent`); `search.html` needs its script; a
   Pack export carries no stamp or composing panel, so name its commit when you send one.
-  To ask past the pages, check out `stamp.json`'s `corpusCommit` in a worktree and, from its root,
-  run orientation 10 on the page's ids
-  (`<skill-dir>/../sdp-agent-surface/scripts/orient.mjs`).
+  To ask past the pages, add a worktree at `stamp.json`'s `corpusCommit` and prepare it as
+  recipe 35, The design diff, prepares its base
+  (`docs/agent-surface/recipes.md#35-the-design-diff`): link the project's `node_modules` into it
+  and, in the Protocol checkout, build its `dist/`. From the worktree's root, run orientation 10
+  on the page's ids (`<skill-dir>/../sdp-agent-surface/scripts/orient.mjs`).
 - **A repository: publish.** `sdp generate` writes every page root; `sdp studio` writes the
   Studio alone, with a base graph or run reports. A base graph is the `generated/graph.json` a
   worktree at the base commit builds with its own engine (recipe 35, The design diff:
@@ -40,10 +45,11 @@ commands from the project root; `<skill-dir>` is this skill's directory.
   `generated/` (`spec:consumers.spec-studio.data.inputs#rule.inputPlacement`).
   - **CI run reports: check their commits** against the stamp's `corpusCommit` through recipe 45,
     run evidence (`dist/recipes/45-run-evidence.js`), before `sdp studio --runs` or a `runs.html`
-    reading; a report from another commit says nothing about this one:
+    reading; a report from another commit says nothing about this one, and a report under
+    `diagnostics` was not read:
 
     ```sh
-    node <skill-dir>/../sdp-agent-surface/scripts/q.mjs 'return (await recipes(45, params)).inputs.map(({ commit, sameCommit }) => ({ commit, sameCommit }))' --params runs=@ctrf.json --params '{"commit":"<corpusCommit>"}'
+    node <skill-dir>/../sdp-agent-surface/scripts/q.mjs 'const { inputs = [], diagnostics } = await recipes(45, params); return { diagnostics, inputs: inputs.map(({ index, commit, sameCommit }) => ({ index, commit, sameCommit })) }' --params runs=@ctrf.json --params '{"commit":"<corpusCommit>"}'
     ```
 
   - **The final build: stamp it** with the commit it read (`sdp stamp --commit`), then upload
@@ -62,9 +68,11 @@ proposal and its memo, whose JSON sits under `## The proposal`; apart from it, u
 `Not in the proposal`, scoped-intent text for each intent a proposal cannot hold; without a base
 or a reason, that text alone. Ask the person for every part they hold, then route each intent once:
 
-- **The proposal.** A preview's base is GitHub's merge commit on `refs/pull/<number>/merge`, not
-  a branch: run `git fetch origin pull/<number>/merge` and confirm the fetched commit is the
-  proposal's `base`, else return the proposal. Then apply it through the
+- **The proposal.** A preview's base is a merge commit GitHub made for the pull request, which
+  `refs/pull/<number>/merge` holds only until the next push to either branch. Fetch the
+  proposal's `base` by its id, `git fetch origin <base>`, and return the proposal only when that
+  fails: a base the pull request has since moved past is still checked, and the check sends each
+  change whose scope moved to the person. Then apply it through the
   [receive procedure](../sdp-sessions/references/proposals.md)
   (`spec:consumers.delivery-session-on-ramp#rule.receiveProposal`).
 - **Text naming Specs or entries**, everything when the person gave no base or reason: write it

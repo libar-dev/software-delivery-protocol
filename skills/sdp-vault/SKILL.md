@@ -11,7 +11,9 @@ metadata:
 vault (`spec:decisions.vault-owned-folder`). Everything else is the person's: notes, intent
 notes under `intent/`, Obsidian's settings. The vault is a projection: edit the carrier, Pack
 manifest or source file a note's banner names. Flags, where a vault may lie and what the watch
-follows: `sdp vault --help`.
+follows: `sdp vault --help`. Recipes not named here sit in the catalog's categories under the
+installed package root, such as `docs/agent-surface/recipes.md#citations-and-checks` and
+`docs/agent-surface/recipes.md#change-and-proposals`.
 
 ## Hazards
 

@@ -28,7 +28,8 @@ addresses.
    `return await recipes(38, params)` with
    `--params proposal=@proposal.json --params base=@<base graph> --json`.
 4. Route each change:
-   - non-empty `schemaProblems`: no change rows; return the proposal to its author;
+   - non-empty `schemaProblems`: no change rows. A problem at `params.base` is your base graph:
+     write it again (step 2). Any other problem returns the proposal to its author;
    - `moved` not `false` (`null`: not comparable), a `scope` row with `resolvesAtHead: false`, or
      a `relationTarget` with `resolvesAtHead: false`: send the change to the person;
    - apply the rest as ordinary carrier edits through `sdp-authoring`.

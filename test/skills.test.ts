@@ -780,7 +780,8 @@ void readingOnRampTestAnchor;
 // - `#protocolRoot`: "selects the Protocol's own Specs with --protocol, and only the root";
 // - `#orientation` and `#orientationOutput`: "runs every orientation query…", "prints what each
 //   query teaches…", "orients over a draft decision…", "prints the field names a body reads…";
-// - `#taskIndex`: G4 (the catalog index path resolves and ships);
+// - `#taskIndex`: G4 (the catalog index path resolves and ships) and "is pointed into, at a
+//   category of the catalog's index…";
 // - `#pairing` and `#stateAndLaw`: meaning, audited by a reader; no token pin.
 describe("the graph-reading on-ramp", () => {
   describeOnRamp("sdp-agent-surface", { realizes: ["spec:consumers.reading-on-ramp"] });
@@ -1352,6 +1353,66 @@ describe("the graph-reading on-ramp", () => {
     } finally {
       rmSync(outside, { force: true, recursive: true });
     }
+  });
+
+  // Each count the arrival note compares is a number in entry search's answer, whose top-level
+  // `matches` is the list of rows.
+  it("compares the entry-search counts its arrival note names", async () => {
+    const note = flat(
+      readFileSync(join(repoRoot, "skills/sdp-agent-surface/references/arrive.md"), "utf8"),
+    );
+    const sentence = note.split(/\.\s/u).find((text) => text.includes("Entry search shows")) ?? "";
+    const fields = [...sentence.matchAll(/`(?<path>[a-z][\w.]*)`/gu)].map(
+      (match) => match.groups?.path ?? "",
+    );
+    const answer = await evaluateBody("return recipes(23, params)", {
+      graph: probeGraph(termCorpus).graph,
+      params: { term: "step" },
+    });
+
+    expect(fields.length).toBe(2);
+    for (const field of fields) {
+      const value = field
+        .split(".")
+        .reduce<unknown>((at, key) => (at as Record<string, unknown> | undefined)?.[key], answer);
+      expect({ field, type: typeof value }).toEqual({ field, type: "number" });
+    }
+  });
+
+  // #taskIndex: the catalog's index is the one task map, and every other shipped skill points
+  // into one of its categories for the recipes it does not name at a step.
+  it("is pointed into, at a category of the catalog's index, by every other shipped skill", () => {
+    const catalog = readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8");
+    const index = catalog.split("\n## Recipes by category\n")[1]?.split("\n## ")[0] ?? "";
+    const categories = new Set(
+      [...index.matchAll(/^### (?<title>.+)$/gmu)].map((match) =>
+        (match.groups?.title ?? "").toLowerCase().replaceAll(" ", "-"),
+      ),
+    );
+
+    expect(categories.size).toBeGreaterThan(0);
+    for (const path of allSkillPaths.filter((entry) => entry !== skillPaths[0])) {
+      const pointed = [
+        ...readSkill(path).source.matchAll(/docs\/agent-surface\/recipes\.md#(?<anchor>[a-z-]+)/gu),
+      ].filter((match) => categories.has(match.groups?.anchor ?? ""));
+      expect({ path, category: pointed.length > 0 }).toEqual({ path, category: true });
+    }
+  });
+
+  // The worked byFile call names the worked example's route, which the checkout's root does not
+  // hold, so the skill names the root that does.
+  it("names the root that holds the file its byFile call names", () => {
+    const entry = readFileSync(join(repoRoot, skillPaths[0]), "utf8");
+    const call = shellFenceLines(entry).find((line) => line.includes("g.byFile("));
+    const { file = "" } = JSON.parse(/--params '([^']+)'/u.exec(call ?? "")?.[1] ?? "{}") as {
+      file?: string;
+    };
+    const root = /`--root (?<root>[^`\s]+)`/u.exec(flat(entry))?.groups?.root ?? "";
+
+    expect(file).not.toBe("");
+    expect(existsSync(join(repoRoot, file))).toBe(false);
+    expect(root).not.toBe("");
+    expect(existsSync(join(repoRoot, root, file))).toBe(true);
   });
 });
 
@@ -1956,19 +2017,127 @@ describe("the Studio on-ramp", () => {
       },
     });
     const preview = "aaaaaaa";
+    const { graph } = probeGraph({});
+    const check = (runs: unknown) =>
+      evaluateBody(body, { graph, params: { runs, commit: preview } });
     expect(
-      await evaluateBody(body, {
-        graph: probeGraph({}).graph,
-        params: {
-          runs: [report({ commit: "bbbbbbb" }), report(), report({ commit: preview })],
-          commit: preview,
-        },
-      }),
-    ).toEqual([
-      { commit: "bbbbbbb", sameCommit: false },
-      { commit: null, sameCommit: null },
-      { commit: preview, sameCommit: true },
-    ]);
+      await check([report({ commit: "bbbbbbb" }), report(), report({ commit: preview })]),
+    ).toEqual({
+      diagnostics: [],
+      inputs: [
+        { index: 0, commit: "bbbbbbb", sameCommit: false },
+        { index: 1, commit: null, sameCommit: null },
+        { index: 2, commit: preview, sameCommit: true },
+      ],
+    });
+    // A report recipe 45 cannot read reaches the agent as its diagnostic, alone or beside a
+    // readable one, as the runs page shows it (#rule.diagnosticsShown).
+    const junit = { reportFormat: "JUnit", results: { tests: [] } };
+    const unread = { input: 0, problem: "Run input requires reportFormat: CTRF." };
+    expect(await check(junit)).toEqual({ diagnostics: [unread], inputs: [] });
+    expect(await check([junit, report({ commit: preview })])).toEqual({
+      diagnostics: [unread],
+      inputs: [{ index: 1, commit: preview, sameCommit: true }],
+    });
+  });
+
+  // #rule.receiveIntent confirms a preview's base. GitHub recomputes `refs/pull/<number>/merge`
+  // on every push to either branch, so the taught commands fetch the base by its id, and a later
+  // merge commit never stands in for it.
+  it("confirms a preview's base after the pull request has moved past it", () => {
+    const receive = flat(skillSection(studioSkillPath, "## Receive composed intent"));
+    const bullet = receive.split("- **The proposal.**")[1]?.split(" - **")[0] ?? "";
+    const commands = [...bullet.matchAll(/`(git [^`]+)`/gu)].map((match) => match[1] ?? "");
+    expect(commands.length).toBeGreaterThan(0);
+
+    const root = mkdtempSync(join(tmpdir(), "sdp-preview-base-"));
+    const env = {
+      ...process.env,
+      GIT_CONFIG_GLOBAL: "/dev/null",
+      GIT_CONFIG_NOSYSTEM: "1",
+      GIT_AUTHOR_NAME: "Test",
+      GIT_AUTHOR_EMAIL: "test@example.invalid",
+      GIT_COMMITTER_NAME: "Test",
+      GIT_COMMITTER_EMAIL: "test@example.invalid",
+    };
+    const git = (cwd: string, ...args: string[]) => {
+      const run = spawnSync("git", args, { cwd, encoding: "utf8", env });
+      expect(run.status, run.stderr).toBe(0);
+      return run.stdout.trim();
+    };
+    try {
+      const work = join(root, "work");
+      const origin = join(root, "origin.git");
+      const clone = join(root, "clone");
+      mkdirSync(work);
+      git(work, "init", "-q", "-b", "main");
+      const commit = (text: string) => {
+        writeFileSync(join(work, "a.txt"), text);
+        git(work, "add", "a.txt");
+        git(work, "commit", "-q", "-m", text);
+        return git(work, "rev-parse", "HEAD");
+      };
+      const base = commit("base");
+      const merge = (head: string) =>
+        git(work, "commit-tree", `${head}^{tree}`, "-p", base, "-p", head, "-m", "merge");
+      // The preview stamped the first merge commit; a push then moved the ref to a second.
+      const stamped = merge(commit("head one"));
+      const moved = merge(commit("head two"));
+      git(root, "init", "-q", "--bare", origin);
+      git(work, "push", "-q", origin, "HEAD:refs/heads/main", `${stamped}:refs/pull/1/merge`);
+      git(work, "push", "-q", "-f", origin, `${moved}:refs/pull/1/merge`);
+      // GitHub serves a commit by its full id.
+      git(origin, "config", "uploadpack.allowAnySHA1InWant", "true");
+      git(root, "clone", "-q", `file://${origin}`, clone);
+      const present = () =>
+        spawnSync("git", ["cat-file", "-e", `${stamped}^{commit}`], { cwd: clone, env }).status;
+      expect(present()).not.toBe(0);
+
+      for (const command of commands) {
+        const run = spawnSync(command.replaceAll("<base>", stamped).replaceAll("<number>", "1"), {
+          cwd: clone,
+          encoding: "utf8",
+          env,
+          shell: true,
+        });
+        expect(run.status, `${command}: ${run.stderr}`).toBe(0);
+      }
+      expect(present()).toBe(0);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  // A worktree tracks neither `node_modules` nor `dist/`, so the runner refuses at its root until
+  // the worktree is prepared; the step that reads past the pages names both remedies.
+  it("prepares the worktree it reads past the pages from, where the runner otherwise refuses", async () => {
+    const runner = (await import(
+      pathToFileURL(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs")).href
+    )) as { selectRuntime: (cwd: string) => { error?: string } };
+    const tracked = spawnSync("git", ["ls-files", "node_modules", "dist"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    });
+    expect({ status: tracked.status, files: tracked.stdout }).toEqual({ status: 0, files: "" });
+
+    const fresh = mkdtempSync(join(tmpdir(), "sdp-studio-worktree-"));
+    try {
+      // An adopter's worktree outside its project: no package installed at or above it.
+      writeFileSync(join(fresh, "package.json"), JSON.stringify({ name: "adopter" }));
+      expect(runner.selectRuntime(fresh).error).toContain("is not installed");
+      // A worktree of the Protocol checkout: its own CLI, unbuilt.
+      const checkout = join(fresh, "checkout");
+      mkdirSync(join(checkout, "src", "cli"), { recursive: true });
+      copyFileSync(join(repoRoot, "package.json"), join(checkout, "package.json"));
+      writeFileSync(join(checkout, "src", "cli", "sdp.ts"), "");
+      expect(runner.selectRuntime(checkout).error).toContain("dist/ is absent");
+    } finally {
+      rmSync(fresh, { recursive: true, force: true });
+    }
+
+    const step = flat(studio().entry).split("To ask past the pages")[1]?.split(" - **")[0] ?? "";
+    expect(step).toContain("`node_modules`");
+    expect(step).toContain("`dist/`");
   });
 
   // #rule.receiveIntent over the panel's own hand-off, Pack-only and mixed: each intent lands in
@@ -2482,6 +2651,35 @@ describe("the delivery-session on-ramp", () => {
 
   it("checks a received proposal with the body and fields the proposal check has", async () => {
     await assertProposalRouting(read("references/proposals.md"));
+  });
+
+  // The check reports a base graph that is no graph where it reports the proposal's own schema
+  // problems; the routing sends that one back to the receiver's base, never a valid proposal to
+  // its author.
+  it("routes a problem with the receiver's base graph to the base, not to the proposal's author", async () => {
+    const routing =
+      read("references/proposals.md")
+        .split(/^\d+\. /mu)
+        .find((step) => step.includes("schemaProblems")) ?? "";
+    const { graph } = probeGraph({ "a.sdp.md": probeCarrier("spec:probe.a", "behavior", "") });
+    const proposal = {
+      schema: "sdp-proposal/1",
+      base: "0123456",
+      reason: "Probe the base.",
+      changes: [{ scope: ["spec:probe.a"], request: "Add an example." }],
+    };
+    const { schemaProblems } = (await evaluateBody("return await recipes(38, params)", {
+      graph,
+      params: { proposal, base: {} },
+    })) as { schemaProblems: { path: string }[] };
+    const paths = schemaProblems.map((problem) => problem.path);
+
+    expect(paths).toEqual(["params.base"]);
+    for (const path of paths)
+      expect({ path, routed: flat(routing).includes(`\`${path}\``) }).toEqual({
+        path,
+        routed: true,
+      });
   });
 
   it("names in the design pass only parameters and fields its recipes take and return", async () => {

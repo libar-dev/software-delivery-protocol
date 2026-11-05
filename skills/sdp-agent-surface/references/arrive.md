@@ -8,9 +8,9 @@ Run orientation 8 on your term. Two matchers answer, and each misses what the ot
 `g.findByConcept` matches a case-insensitive substring of ids, titles, labels, Pack framing,
 narrative and sections; recipe 23, Entry search (`dist/recipes/23-entry-search.js`), matches whole
 tokens, splits camelCase and returns addresses and lines. A spaced phrase can miss a hyphenated id:
-try both forms. Entry search shows at most 50 rows, so compare `shown` with `matches` and narrow the
-term, not the rows. `line: null` means not located, never absent. Neither reads outside the graph:
-grep `CONTEXT.md`, the project's docs, job stories and skills.
+try both forms. Entry search shows at most 50 rows, so compare `totals.shown` with `totals.matches`
+and narrow the term, not the rows. `line: null` means not located, never absent. Neither reads
+outside the graph: grep `CONTEXT.md`, the project's docs, job stories and skills.
 
 ## A file or a changeset
 

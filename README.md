@@ -338,12 +338,15 @@ your project's `node_modules`.
 | Grok Build   | the plugin (`grok plugin install … --trust`), or `.agents/skills/`                                | the hook below, in `.grok/hooks/sdp.json` or `~/.grok/hooks/sdp.json`                              |
 
 Kimi Code and Grok Build, at the versions checked, keep a session-start hook's output from the
-model, so each runs the script on a later event, once per session: Kimi Code's answers arrive with the session's first prompt, and Grok Build's with the agent's first tool call, so a Grok Build session that calls no tool goes without them. For Kimi Code:
+model, so each runs the script on a later event, once per session: Kimi Code's answers arrive with the session's first prompt, and Grok Build's with the agent's first tool call, so a Grok Build session that calls no tool goes without them.
+Settings in your home directory reach every project, so each command runs the script only where it
+finds it: in the `node_modules` of the session's directory for Kimi Code, and of the project for
+Grok Build. For Kimi Code:
 
 ```toml
 [[hooks]]
 event = "UserPromptSubmit"
-command = "node node_modules/@libar-dev/software-delivery-protocol/hooks/session-start.mjs --text"
+command = 'f=node_modules/@libar-dev/software-delivery-protocol/hooks/session-start.mjs; test ! -f "$f" || node "$f" --text'
 timeout = 30
 ```
 
@@ -357,7 +360,7 @@ For Grok Build:
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/node_modules/@libar-dev/software-delivery-protocol/hooks/session-start.mjs\"",
+            "command": "f=\"$CLAUDE_PROJECT_DIR/node_modules/@libar-dev/software-delivery-protocol/hooks/session-start.mjs\"; test ! -f \"$f\" || node \"$f\"",
             "timeout": 30
           }
         ]

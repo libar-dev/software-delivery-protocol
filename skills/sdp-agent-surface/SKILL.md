@@ -41,7 +41,9 @@ node <skill-dir>/scripts/q.mjs 'return await recipes(56, params)' --params '{"sp
 ```
 
 Each answer ends at a file, a line or an address for your own reader to open. A file you hold
-gives the units anchored in it, with their lines, and the Specs they reach, with their carriers:
+gives the units anchored in it, with their lines, and the Specs they reach, with their carriers.
+This file is the worked example's route: name yours, or in the Protocol checkout add
+`--root examples/checkout-v1`:
 
 ```sh
 node <skill-dir>/scripts/q.mjs 'const { nodes, specs } = g.byFile(params.file); return { units: nodes.map((n) => `${n.id} at line ${n.line}`), specs: specs.map((id) => `${id} in ${g.specContext(id).file}`) }' --params '{"file":"src/orders/create-order.route.ts"}' --json

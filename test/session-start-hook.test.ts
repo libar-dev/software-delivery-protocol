@@ -796,6 +796,62 @@ describe("the session-start hook's wiring", () => {
     expect(contextOf(codexRun.stdout)).toBe(expected);
   }, 60_000);
 
+  // The README's Kimi Code and Grok Build wiring can sit in a person's own settings, which every
+  // project shares: it runs the script where the project holds the package, and nothing elsewhere.
+  it("runs the README's Kimi Code and Grok Build commands only where the project holds the package", () => {
+    const readme = readFileSync(join(repoRoot, "README.md"), "utf8");
+    const fenceAfter = (lead: string, lang: string): string => {
+      const at = readme.indexOf(lead);
+      expect({ lead, found: at >= 0 }).toEqual({ lead, found: true });
+      return (
+        new RegExp(`\`\`\`${lang}\\n([\\s\\S]*?)\\n\`\`\``, "u").exec(readme.slice(at))?.[1] ?? ""
+      );
+    };
+    const line = /^command = (?:'(?<literal>[^']*)'|"(?<basic>(?:[^"\\]|\\.)*)")$/mu.exec(
+      fenceAfter("For Kimi Code:", "toml"),
+    )?.groups;
+    const kimi =
+      line?.literal ?? (line?.basic === undefined ? "" : (JSON.parse(`"${line.basic}"`) as string));
+    const grok = String(
+      (
+        JSON.parse(fenceAfter("For Grok Build:", "json")) as {
+          hooks: { PreToolUse: { hooks: { command: string }[] }[] };
+        }
+      ).hooks.PreToolUse[0]?.hooks[0]?.command,
+    );
+    expect(kimi).not.toBe("");
+
+    const bare = join(scratch, "readme-bare");
+    mkdirSync(bare, { recursive: true });
+    const run = (command: string, cwd: string, event: string) =>
+      spawnSync(command, {
+        cwd,
+        encoding: "utf8",
+        env: { ...process.env, CLAUDE_PROJECT_DIR: cwd },
+        input: JSON.stringify({ cwd, session_id: randomUUID(), hook_event_name: event }),
+        shell: true,
+      });
+    const noSpec = `No Spec derives at ${emptyProject} yet`;
+
+    for (const [client, command, event] of [
+      ["Kimi Code", kimi, "UserPromptSubmit"],
+      ["Grok Build", grok, "PreToolUse"],
+    ] as const) {
+      const elsewhere = run(command, bare, event);
+      expect({
+        client,
+        status: elsewhere.status,
+        out: elsewhere.stdout + elsewhere.stderr,
+      }).toEqual({ client, status: 0, out: "" });
+    }
+    const kimiRun = run(kimi, emptyProject, "UserPromptSubmit");
+    expect(kimiRun.status).toBe(0);
+    expect(kimiRun.stdout).toContain(noSpec);
+    const grokRun = run(grok, emptyProject, "PreToolUse");
+    expect(grokRun.status).toBe(0);
+    expect(contextOf(grokRun.stdout)).toContain(noSpec);
+  }, 60_000);
+
   it("ships the plugin's hooks file and keeps the checkout's wiring out of the package", () => {
     const { files } = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       files: string[];
