@@ -465,12 +465,42 @@ function packed(path: string, patterns: readonly string[]): boolean {
 }
 
 /**
- * The catalog's size, in digits or in words up to ninety-nine, followed within three words by
- * `recipes`: a quoted size goes stale when the catalog grows. Any other count is a subset, such as
- * "five shipped recipes", and passes. A number that names recipes, after `recipe` or `recipes` or
+ * A count that reads as the catalog's size, current or stale: any number from half the catalog's
+ * size up, in digits, or in words up to ninety-nine. A quoted size goes stale when the catalog
+ * grows, so the older total it left behind is caught as the current one is. A smaller count is a
+ * subset, such as "five shipped recipes", and passes.
+ */
+function catalogCounts(size: number): string {
+  const floor = Math.max(1, Math.ceil(size / 2));
+  const counts: string[] = [];
+  for (let count = floor; count <= 99; count++) {
+    const word = spelledCount(count);
+    counts.push(String(count), ...(word === undefined ? [] : [word]));
+  }
+  // Any number of three digits or more is past every two-digit floor.
+  return [...counts, String.raw`[1-9]\d{2,}`].join("|");
+}
+
+/**
+ * A recipe count followed within three words by `recipes` that reads as the catalog's size,
+ * current or stale (`catalogCounts`). A number that names recipes, after `recipe` or `recipes` or
  * after another such number through a list or range joiner, is the recipe's own number.
  */
 export function catalogSizePattern(size: number): RegExp {
+  const recipeOwnNumber = String.raw`(?<!\brecipes?\s+(?:\d+\s*(?:,|-|–|to|and|or)\s*)*)`;
+  return new RegExp(
+    `${recipeOwnNumber}\\b(?:${catalogCounts(size)})\\b(?:\\s+[\\w-]+){0,3}?\\s+recipes\\b`,
+    "iu",
+  );
+}
+
+/** "recipes 1–N" with N a count that reads as the catalog's size, current or stale. */
+export function catalogRangePattern(size: number): RegExp {
+  return new RegExp(String.raw`\brecipes 1 ?(?:-|–|to) ?(?:${catalogCounts(size)})\b`, "iu");
+}
+
+/** A count from one to ninety-nine in words, as a pattern; `undefined` outside that range. */
+function spelledCount(size: number): string | undefined {
   const ones = [
     "one",
     "two",
@@ -495,20 +525,13 @@ export function catalogSizePattern(size: number): RegExp {
   const tens = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
   const ten = tens[Math.floor(size / 10) - 2];
   const one = ones[(size % 10) - 1];
-  const word =
-    size >= 1 && size < 20
-      ? ones[size - 1]
-      : ten === undefined
-        ? undefined
-        : one === undefined
-          ? ten
-          : String.raw`${ten}[- ]${one}`;
-  const spelled = [String(size), ...(word === undefined ? [] : [word])].join("|");
-  const recipeOwnNumber = String.raw`(?<!\brecipes?\s+(?:\d+\s*(?:,|-|–|to|and|or)\s*)*)`;
-  return new RegExp(
-    `${recipeOwnNumber}\\b(?:${spelled})\\b(?:\\s+[\\w-]+){0,3}?\\s+recipes\\b`,
-    "iu",
-  );
+  return size >= 1 && size < 20
+    ? ones[size - 1]
+    : ten === undefined
+      ? undefined
+      : one === undefined
+        ? ten
+        : String.raw`${ten}[- ]${one}`;
 }
 
 /**
@@ -928,7 +951,7 @@ function describeContentChecks(teaching: () => Teaching): void {
     const { files } = teaching();
     const size = catalogHeadings().size;
     const sizeStatement = catalogSizePattern(size);
-    const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
+    const wholeRange = catalogRangePattern(size);
     for (const file of files) {
       const text = teachingText(file.text);
       expect({

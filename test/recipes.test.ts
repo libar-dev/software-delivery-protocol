@@ -2138,7 +2138,7 @@ describe("register recipe semantics", () => {
     const extraction = markdownProbe("sdp-law-recipe-", {
       "law.sdp.md": lawCarrier,
       "terms.sdp.md": `---\nid: spec:probe.terms\nkind: model\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Terms\n\n## Intent\n- outcome: Name two terms.\n\n## Model\n- **alpha** — The first term.\n- **beta** — The second term.\n\n## Design\n- shape: One shape.\n`,
-      "ruling.sdp.md": `---\nid: spec:probe.ruling\nkind: decision\naltitude: feature\nreadiness: idea\nrelations: {}\n---\n# Ruling\n\n## Intent\n- outcome: Rule once.\n\n## Decision\n- context: A question arose.\n- decision: Answer it.\n`,
+      "ruling.sdp.md": `---\nid: spec:probe.ruling\nkind: decision\naltitude: feature\nreadiness: idea\nrelations: {}\n---\n# Ruling\n\n## Intent\n- outcome: Rule once.\n\n## Decision\n- context: A question arose.\n- decision: Answer it.\n- rationale: It is hard to reverse.\n- rationale: It surprises without context.\n- alternative: Leave it open.\n`,
       "subject.sdp.md": `---\nid: spec:probe.subject\nkind: behavior\naltitude: story\nreadiness: idea\nrelations:\n  refines: spec:probe.law\n  dependsOn:\n    target: spec:probe.terms\n    reason: it speaks the terms\n  decidedBy: spec:probe.ruling\n---\n# Subject\n\n## Intent\n- outcome: Rest on law.\n`,
     });
     const subject = { spec: "spec:probe.subject" };
@@ -2180,7 +2180,8 @@ describe("register recipe semantics", () => {
         file: "ruling.sdp.md",
         decision: true,
         unkeyedRules: 0,
-        alsoHolds: { intent: 1, decision: 2 },
+        // Two scalar entries, two rationales and one alternative: entries, never properties.
+        alsoHolds: { intent: 1, decision: 5 },
       },
     ]);
     const ruleLines = lawCarrier

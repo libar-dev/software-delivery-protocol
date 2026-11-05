@@ -6442,6 +6442,10 @@ const count = { rules: 0, keyedRules: 0 };
 const size = (value) => Object.keys(value ?? {}).length;
 const entries = (section) => Object.keys(section ?? {}).filter((key) => key !== "description").length;
 const length = (list) => (Array.isArray(list) ? list.length : 0);
+// A Decision section repeats rationale, alternative and consequence entries as lists.
+const decisionEntries = (section) => Object.entries(section ?? {})
+  .filter(([key]) => key !== "description")
+  .reduce((count, [, value]) => count + (Array.isArray(value) ? value.length : 1), 0);
 const law = footing.footing.map((row) => {
   const context = row.resolved ? g.specContext(row.id) : undefined;
   if (context === undefined) {
@@ -6470,7 +6474,7 @@ const law = footing.footing.map((row) => {
     exampleSpace: sections.behavior?.exampleSpace === undefined ? 0 : 1,
     design: entries(sections.design),
     ui: entries(sections.ui),
-    decision: entries(sections.decision),
+    decision: decisionEntries(sections.decision),
     verification: length(sections.verification?.criteria),
   };
   return {

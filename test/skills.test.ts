@@ -43,6 +43,7 @@ import { createCaptureOutput } from "./helpers/cli-capture.js";
 import {
   bareInvocation,
   catalogHeadings,
+  catalogRangePattern,
   catalogSizePattern,
   emptyHanded,
   describeHandbook,
@@ -596,7 +597,7 @@ describe("Protocol skill assets", () => {
   it("states no recipe-catalog size in the handbook or the README", () => {
     const size = catalogHeadings().size;
     const sizeStatement = catalogSizePattern(size);
-    const wholeRange = new RegExp(`\\brecipes 1 ?(?:-|–|to) ?${String(size)}\\b`, "iu");
+    const wholeRange = catalogRangePattern(size);
     for (const path of ["AGENTS.md", "README.md"]) {
       const text = teachingText(readFileSync(join(repoRoot, path), "utf8"));
       expect({
@@ -624,6 +625,12 @@ describe("the skill-shape checks' detectors", () => {
     expect(flagged("all fifty-six shipped recipes")).toBe("fifty-six shipped recipes");
     expect(flagged("Fifty six recipes ship.")).toBe("Fifty six recipes");
     expect(catalogSizePattern(13).exec("thirteen recipes")?.[0]).toBe("thirteen recipes");
+    // A total left behind by a grown catalog is stale too, and is read as truth all the same.
+    expect(flagged("The catalog holds 55 recipes.")).toBe("55 recipes");
+    expect(flagged("all fifty-five shipped recipes")).toBe("fifty-five shipped recipes");
+    expect(catalogSizePattern(57).exec("The catalog holds 56 recipes.")?.[0]).toBe("56 recipes");
+    expect(catalogRangePattern(56).exec("read recipes 1–55 in order")?.[0]).toBe("recipes 1–55");
+    expect(catalogRangePattern(56).exec("recipes 1 to 3 orient")?.[0] ?? null).toBeNull();
   });
 
   it("reads a refusal as no answer, whether it names a parameter, a subject or only diagnostics", () => {
