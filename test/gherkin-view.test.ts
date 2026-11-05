@@ -16,6 +16,7 @@ import type { Reader, SpecContext, SpecSummary } from "../src/reader/reader.js";
 import type { Finding } from "../src/validate/contracts.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const gherkinViewTestAnchor = specTest({
   id: testAnchorId("test:protocol.gherkin-view"),
@@ -109,7 +110,7 @@ function publishedTree(root: string): ReadonlyMap<string, string> {
   const tree = new Map<string, string>();
 
   for (const entry of readdirSync(projectionRoot, { recursive: true, withFileTypes: true })) {
-    if (entry.isFile()) {
+    if (entry.isFile() && !isOsMetadataFile(entry)) {
       const absolute = join(entry.parentPath, entry.name);
       tree.set(
         absolute.slice(projectionRoot.length + 1).replaceAll("\\", "/"),

@@ -22,6 +22,14 @@ Everything in this document set is downstream of this. If any document conflicts
 
 ---
 
+## The bets (why this shape)
+
+- **Shared language is a performance feature.** A ratified ubiquitous language measurably leans out reasoning and lifts quality, in solo and subagent work as much as in conversation between a person and an agent. Terminology rigor *is* throughput.
+- **The spec is the prompt is the design.** One language spans intent → spec → design → code; you *enrich the same typed `Spec`* until it is implementable. Implementation becomes near-autopilot ("implement `spec:…`"); the real, iterative work is maturing and **reviewing** Specs, alone and in related sets (the `Pack` and its **Design Review**).
+- **Maturity guides implementation; the graph is AI-native.** A typed graph of related Specs is the shape an LLM already reasons in: feed the agent the graph, don't narrate at it. Notice the compression: queries return in a few lines what grep would assemble from several carriers and a test file, already joined, with reasons and claims kept apart. That compression pairs nicely with an agent's own tools, since `sdp q` is intended to be used with grep and other ad hoc tools and common methods for exploration; AI-friendly by design. Readiness is evidence the graph hands that work, never a gate on it: new behavior is built against a `ready` Spec, `implemented ∧ ¬ready` raises the **drift alarm**, fixes, refactors and added tests are ordinary work, and ready unimplemented examples and decisions stay out of the operational build backlog under the example realization posture (MD-24) and the decision readiness posture (MD-26).
+
+---
+
 ## How to read this set
 
 These documents are deliberately principle-led and lean. The single most important distinction they make is **Principle vs Representation**:
@@ -33,7 +41,7 @@ Every load-bearing claim is named as one or the other, on purpose — so a Repre
 
 | # | Document | What it covers |
 |---|---|---|
-| — | [README](./README.md) | This index: definition, Founding Principle, reading guide, the MVP legend. |
+| — | [README](./README.md) | This index: definition, Founding Principle, the bets, reading guide, the MVP legend. |
 | — | [Ubiquitous Language](../../CONTEXT.md) | The ratified **glossary** (`CONTEXT.md`, repo root): terms, descriptor values, relations, a worked dialogue, flagged ambiguities. The terminology base for every doc below. |
 | 00 | [Vision, Scope & MVP Boundary](./00-vision-scope-and-mvp-boundary.md) | The honest full ambition **and** the sharp MVP line, in one place. |
 | 01 | [Founding Principles & Invariants](./01-founding-principles-and-invariants.md) | The load-bearing laws, each tagged Principle/Representation and CORE/ASPIRATIONAL. Git-as-event-log. The `claim` epistemics. |

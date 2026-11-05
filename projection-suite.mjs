@@ -1,13 +1,5 @@
 import { spawnSync } from "node:child_process";
-import {
-  cpSync,
-  existsSync,
-  lstatSync,
-  mkdirSync,
-  realpathSync,
-  renameSync,
-  rmSync,
-} from "node:fs";
+import { existsSync, lstatSync, mkdirSync, realpathSync, renameSync, rmSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 const projectionCommands = [
@@ -58,19 +50,14 @@ function check(path) {
 }
 function remove(path, options) {
   check(path);
-  rmSync(path, options);
+  // A tree removal retries when a folder gains an entry mid-removal, as Finder does with .DS_Store.
+  rmSync(path, options?.recursive ? { maxRetries: 5, retryDelay: 50, ...options } : options);
   check(path);
 }
 function mkdir(path, options) {
   check(join(path, ".boundary"));
   mkdirSync(path, options);
   check(join(path, ".boundary"));
-}
-function copy(from, to, options) {
-  check(from);
-  check(to);
-  cpSync(from, to, options);
-  check(to);
 }
 function rename(from, to) {
   check(from);
@@ -106,10 +93,14 @@ try {
   mkdir(beforeRoot, { recursive: true });
   mkdir(afterRoot, { recursive: true });
 
-  for (const [, name] of projectionCommands) {
-    const live = projectionPath(name);
-    if (existsSync(live)) {
-      copy(live, join(beforeRoot, name), { recursive: true });
+  // Under --check-clean, each published root moves aside before any build invalidates it, and
+  // moves back just before its own publisher reads it. Renames, never copies: a rename cannot race
+  // a folder gaining a file, as Finder does with .DS_Store. A plain run reads no prior root, so it
+  // stages none.
+  if (checkClean) {
+    for (const [, name] of projectionCommands) {
+      const live = projectionPath(name);
+      if (existsSync(live)) rename(live, join(beforeRoot, name));
     }
   }
 
@@ -120,7 +111,7 @@ try {
         fail(`projection-suite: ${name} has no published tree to certify`);
       }
       remove(projectionPath(name), { recursive: true, force: true });
-      copy(prior, projectionPath(name), { recursive: true });
+      rename(prior, projectionPath(name));
     }
 
     const result = spawnSync(

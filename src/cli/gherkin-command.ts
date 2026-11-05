@@ -1,8 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join } from "node:path";
 
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
+import { readPublishedTextPages } from "../projections/published-tree.js";
 import { renderGherkinView } from "../projections/gherkin-view.js";
 import type { GherkinViewPage } from "../projections/gherkin-view.js";
 import { createReader } from "../reader/reader.js";
@@ -18,37 +18,8 @@ export interface GherkinViewHooks extends ValidationViewHooks {
   readonly renderGherkinView?: typeof renderGherkinView;
 }
 
-function compareCodeUnits(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
-}
-
 function readPublishedPages(root: string): readonly GherkinViewPage[] | undefined {
-  if (!existsSync(root)) {
-    return undefined;
-  }
-
-  const pages: GherkinViewPage[] = [];
-  const visit = (directory: string): void => {
-    const entries = readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
-      compareCodeUnits(left.name, right.name),
-    );
-
-    for (const entry of entries) {
-      const path = join(directory, entry.name);
-
-      if (entry.isDirectory()) {
-        visit(path);
-      } else if (entry.isFile()) {
-        pages.push({
-          path: relative(root, path).replaceAll("\\", "/"),
-          content: readFileSync(path, "utf8"),
-        });
-      }
-    }
-  };
-  visit(root);
-
-  return pages.sort((left, right) => compareCodeUnits(left.path, right.path));
+  return readPublishedTextPages(root);
 }
 
 function pagesEqual(left: readonly GherkinViewPage[], right: readonly GherkinViewPage[]): boolean {

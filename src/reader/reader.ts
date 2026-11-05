@@ -152,6 +152,20 @@ export interface VerifierBinding {
   readonly label?: string;
   readonly file?: string;
   readonly line?: number;
+  /**
+   * On an example row only: the resolving test anchors that verify the example, sorted by id, so
+   * the runnable test behind a parent Spec is one call away (`spec:consumers.reader#rule.exampleTests`).
+   * Empty when no test anchor binds the example; absent on a test-anchor row, which is the test.
+   */
+  readonly tests?: readonly VerifierTest[];
+}
+
+/** A test anchor that binds an example, as an example's verifier row lists it. */
+export interface VerifierTest {
+  readonly verifierId: string;
+  readonly label?: string;
+  readonly file: string;
+  readonly line: number;
 }
 
 /** An oracle anchor's binding (`models`, anchored): the graph records that an expected-outcome
@@ -822,6 +836,25 @@ export function createReader(graph: GraphSchema, report?: ValidationReport): Rea
       isResolvingTestAnchorVerify(edge, index.nodesById),
     );
 
+  // The same resolving-test-anchor rule that decides `enabled`, kept as rows: one predicate, so
+  // an example listed as enabled always names the test that enables it.
+  const testsOf = (exampleId: string): readonly VerifierTest[] =>
+    (index.edgesByTo.get(exampleId) ?? [])
+      .filter((edge) => isResolvingTestAnchorVerify(edge, index.nodesById))
+      .flatMap((edge): VerifierTest[] => {
+        const anchor = index.nodesById.get(edge.from);
+        if (anchor?.nodeType !== "Anchor") return [];
+        return [
+          {
+            verifierId: edge.from,
+            ...(anchor.label === undefined ? {} : { label: anchor.label }),
+            file: anchor.file,
+            line: anchor.line,
+          },
+        ];
+      })
+      .sort((left, right) => compareCodeUnits(left.verifierId, right.verifierId));
+
   const verifierBindingsTo = (id: string): readonly VerifierBinding[] =>
     (index.edgesByTo.get(id) ?? [])
       .filter((edge) => edge.type === "verifies")
@@ -855,6 +888,7 @@ export function createReader(graph: GraphSchema, report?: ValidationReport): Rea
           enabled,
           ...(example?.title === undefined ? {} : { label: example.title }),
           ...(example === undefined ? {} : { file: example.file }),
+          tests: testsOf(edge.from),
         };
       })
       .sort((left, right) => compareCodeUnits(left.verifierId, right.verifierId));

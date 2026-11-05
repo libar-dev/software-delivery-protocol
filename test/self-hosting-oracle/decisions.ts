@@ -1521,4 +1521,87 @@ export const decisionsSpecs = [
     deliveryFacts: [],
     file: "specs/decisions/epics-of-any-kind.sdp.md",
   },
+  {
+    id: "spec:decisions.agent-plugin-package",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/agent-plugin-package.sdp.md",
+    title: "The package is a portable Agent Plugin",
+    narrative: null,
+    sections: {
+      intent: {
+        outcome:
+          "Let any agent client that reads the open Agent Plugins format load the Protocol's skills from the installed package, at the version the project pinned, with no client-specific copy to keep in step.",
+      },
+      decision: {
+        context:
+          "The skills shipped under a dot-directory that no client loads as a plugin and that discovery skips. Each agent client has its own plugin format, and the open Agent Plugins standard, version 1.0.0, defines one portable floor: a root `plugin.json`, Agent Skills under `skills/`, and an optional `mcp.json`.",
+        decision:
+          "The package root is the Agent Plugin root. A root `plugin.json` declares it under the Agent Plugins 1.0.0 schema, named after the package's unscoped name, and the skills live under `skills/` in the Agent Skills format. The package adds a client-specific file, such as a client's own manifest or marketplace entry, only when a client it serves cannot load the portable layout. A file that more than one client it serves reads at the plugin root in one shape, such as `hooks/hooks.json`, is shared, not client-specific, and may ship. The package declares no `mcp.json` while MCP integration stays deferred.",
+        rationale: [
+          "Hard to reverse: adopters load the skills from the paths this ruling fixes, and their client settings name the plugin root and the plugin's name. Surprising without context: the repository root reads as a plugin, and the client-specific manifest a reader might expect is absent on purpose. A real trade-off: one directory that keeps every cited path inside the plugin, with skill and CLI always at one version, against a root that carries `plugin.json` and `skills/` beside the source tree.",
+          "One directory is the repository, the npm package and the plugin, so every path a skill cites stays inside the plugin root, and a skill loaded from the installed package always matches the CLI beside it.",
+          "Claude Code loads the portable layout without a manifest of its own and names the plugin after its directory, which is the package's unscoped name wherever the package is installed or cloned.",
+        ],
+        alternatives: [
+          "A plugin folder below the root keeps the root uncluttered, but puts the glossary, the recipe catalog and the shipped recipes outside the plugin, where the standard denies access.",
+          "A client-specific manifest beside the portable one is a second copy that a client reading the portable layout does not need, and it drifts from the first.",
+        ],
+        consequences: [
+          "The repository root carries `plugin.json` and `skills/`; in the source checkout, `.agents/skills` and `.claude/skills` are relative links to `skills/` for project discovery.",
+          "A skill loaded from another copy of the package than the CLI it runs can teach a different version, so the reading skill's runner warns when the two differ.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:decisions.session-start-hook",
+    specKind: "decision",
+    altitude: "feature",
+    readiness: "ready",
+    file: "specs/decisions/session-start-hook.sdp.md",
+    title:
+      "The plugin ships a session-start hook that delivers live orientation answers; the handbook keeps every instruction",
+    narrative:
+      "Claude Code and Codex can run a command when a session starts and add its output to the model's context. That output can be the graph's own orientation answers for the session's project, derived at that moment, where a handbook can only ask an agent to fetch them. A hook reaches fewer readers than a handbook, though, so it carries answers and the handbook keeps every instruction. Neither holds law: the law stays in the Specs.",
+    sections: {
+      intent: {
+        outcome:
+          "Start each agent session in a Protocol project with the graph's current orientation answers already in context, while every instruction, pointer and hazard stays in the handbook that every client and subagent reads.",
+      },
+      decision: {
+        context:
+          "Agent Plugins 1.0.0 defines skills and MCP servers as its only portable components and keeps hooks out of v1 as too client-specific. It gives each client a reverse-domain extension namespace for its own manifest data and files, and names the plugin root `PLUGIN_ROOT`. Codex implements the namespace `com.openai` and reads a hooks entry from it in the root `plugin.json`, falling back to `hooks/hooks.json`; Claude Code implements no namespace, reads no root `plugin.json`, and reads `hooks/hooks.json` at the plugin root. Both run SessionStart command hooks and add their output to the model's context, as plain text or as JSON additional context, and both read project hooks, from `.claude/settings.json` and `.codex/hooks.json`. Hook output reaches only the main session of a client that runs hooks; the handbook reaches every client and, in Claude Code, every subagent except Explore and Plan.",
+        decision:
+          "The owner answered that the plugin ships the hook by default, on the Agent Plugins standard. One dependency-free Node script, `hooks/session-start.mjs`, ships under the plugin root, and every client runs that one script at every session start. Each client's wiring is client-specific under the standard: in the client's extension namespace where it implements one, and otherwise in a compatibility shim, a file in the client's own layout that only runs the script. Codex is wired through its namespace in `plugin.json`, through `PLUGIN_ROOT`; Claude Code through `hooks/hooks.json`, its compatibility shim, through its own plugin-root variable. Claude Code and Codex are the floor; the agent clients the Protocol serves, and each one's route, are `spec:consumers.agent-client-support`'s. The script takes the session's project from the hook input's working directory: the Protocol checkout holding it, or else the nearest directory at or above it with a `package.json`, so that a workspace member reads its own corpus. From that directory it runs the orientation runner of the nearest installed package at or above it, for the corpus-and-surface and next-work answers, within a bounded size; the reading skill's runner reads the same corpus from there. It prints the answers, or one short line when the runner fails or no Spec derives, as the session-start additional-context JSON every command-hook client reads; it prints nothing where no package is installed, and nothing for a second copy of the same session event. It exits 0 on every path and never validates, builds or publishes. It prints answers and never instructions: every instruction, pointer and hazard stays in the handbook, which keeps its one-line orientation step for the readers the hook does not reach.",
+        rationale: [
+          "Hard to reverse: a hook published in the plugin runs in adopter sessions the Protocol cannot recall, and once a handbook drops an instruction because a hook printed it, every subagent, untrusted workspace and client without hooks silently loses that instruction. Surprising without context: the handbook still names an orientation step the hook already ran, and the plugin carries hook wiring although Agent Plugins names no hook component. A real trade-off: answers that arrive without an agent's compliance, in every enabled session, against a channel that only some clients run, only after trust, only in the main session, adding a graph derivation before the first response.",
+          "Orientation answers are derived per commit and go stale in prose; a session-start hook is the one channel that delivers them current, unasked. A failed run costs one printed command, while an instruction printed only by a hook vanishes whenever the hook does not run.",
+          "The standard keeps hooks out of its portable core and gives each client a namespace of its own, so wiring a client where the standard puts client-specific data, and naming every other client file a compatibility shim, keeps the portable layout the plugin's one contract and each client-specific file visible as one.",
+        ],
+        alternatives: [
+          "A repository hook only, with the plugin shipping none. Adopter sessions pay nothing, but their agents start without the answers the Protocol's own sessions get.",
+          "The hook prints the orientation pointer and the handbook drops it. That saves one handbook line for a client's main session, and loses the pointer for subagents, for sessions without trusted hooks and for every other client.",
+          "The script resolves the project from its own location. That is right in the Protocol checkout, but loaded from an installed plugin it would print the Protocol's corpus in an adopter's session.",
+          "The directory holding the installation as the project. In a workspace whose root holds the one installation, a session started in a member received the whole workspace's corpus, while every query the agent then ran from that member read the member's corpus alone.",
+          "One `hooks/hooks.json` for every client. Codex reads it only as a fallback, so the one client that implements the standard's namespace would run Claude Code's shim instead of its own standard route.",
+          "An extension directory per client, such as `com.anthropic.claude-code/hooks/`. The standard allows it, but no served client reads one: Codex reads its namespace from the manifest, and Claude Code implements no namespace.",
+          "No hook, the handbook alone. No hooks file ships, and orientation stays an instruction an agent may skip.",
+        ],
+        consequences: [
+          "The package's published files include `hooks/`. Every session where the plugin is enabled and its hook trusted pays one graph derivation before the first response, and a user-scope install fires in projects without the package, where it prints nothing.",
+          "Codex keeps plugins with hooks out of its public plugin directory, and reviews each hook by a hash of the plugin's contents, so each release needs a person's review again; installing the plugin is Claude Code's trust decision.",
+          "The Protocol checkout, which its own sessions do not load as a plugin, wires the same script from `.claude/settings.json` and `.codex/hooks.json`. That wiring is temporary: it goes when the checkout loads itself as a plugin or a client reads the shared form from a project, and neither file ships. A session that runs both the plugin's hook and the checkout's wiring prints the answers once.",
+          "Neither client gives a session event an id, so the script tells a second copy from the session's next event by time alone: a copy that starts while another copy of the same session and source runs, or within two seconds after it ends, prints nothing. The same source arriving again that quickly prints nothing either, and the session keeps the answers the first copy printed moments before.",
+          "A corpus kept for a whole workspace is oriented by a session started at the workspace root; a session started in a member orients that member's corpus, and says so when none derives there.",
+          "A session started where the runner cannot run, such as a fresh worktree without `dist/`, receives the one-line remedy in place of answers.",
+          "The heads-up display the owner named for later extends this hook with branch and changeset context.",
+          "An agent client without a channel from session start to the model, such as Kimi Code or Grok Build at the versions checked, receives the answers once per session on a later event, its first prompt or its first tool call, by the route `spec:consumers.agent-client-support` states.",
+        ],
+      },
+    },
+    deliveryFacts: [],
+  },
 ] as const;

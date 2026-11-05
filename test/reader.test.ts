@@ -516,6 +516,7 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           enabled: false,
           label: "Invalid cart is rejected",
           file: "specs/orders/create-order-invalid-cart.sdp.md",
+          tests: [],
         },
         {
           verifierId: "spec:orders.create-order.valid-cart",
@@ -524,6 +525,15 @@ describe("the reader — the thin typed loader behind the agent surface", () => 
           enabled: true,
           label: "Valid cart creates an order",
           file: "specs/orders/create-order-valid-cart.sdp.md",
+          // spec:consumers.reader#rule.exampleTests: the test that enables the example.
+          tests: [
+            {
+              verifierId: "test:orders.create-order.valid-cart",
+              label: "valid cart verifies the create-order happy path",
+              file: "test/orders/create-order.valid-cart.test.ts",
+              line: 13,
+            },
+          ],
         },
       ]);
 

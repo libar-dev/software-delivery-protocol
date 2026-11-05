@@ -1,5 +1,14 @@
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { isatty } from "node:tty";
@@ -9,9 +18,18 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
+import { verbHelpText } from "../src/cli/help.js";
+import {
+  packagePrefix,
+  queryCommand,
+  queryHint,
+  recipeListing,
+} from "../src/cli/recipe-catalog.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { answeredStderr } from "./helpers/query-hint.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -33,6 +51,7 @@ function fingerprintTree(root: string): string {
     );
 
     for (const entry of entries) {
+      if (isOsMetadataFile(entry)) continue;
       const path = join(directory, entry.name);
 
       if (entry.isDirectory()) {
@@ -101,7 +120,7 @@ describe("sdp q — the agent front door", () => {
 
     expect(exitCode).toBe(0);
     expect(capture.readStdout()).toBe(`[ '${parentId}', '${exampleId}' ]\n`);
-    expect(capture.readStderr()).toBe("");
+    expect(capture.readStderr()).toBe(answeredStderr);
   });
 
   it("reads the body from stdin when stdin is not a terminal", async () => {
@@ -147,6 +166,175 @@ describe("sdp q — the agent front door", () => {
 
     expect(exitCode).toBe(1);
     expect(capture.readStderr()).toContain("the body is empty");
+  });
+
+  it("lists the catalog's categories and the call forms when no body arrives, deriving no graph", async () => {
+    // Read apart from the engine's parser: each category heading and the first row under it.
+    const index = readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8").split(
+      /^## 1\. /mu,
+    )[0];
+    const firstRows = [
+      ...(index ?? "").matchAll(
+        /^### (.+)\n\n\| No\.[^\n]*\n\| -[^\n]*\n\| (\d+) \| ([^|]+) \|/gmu,
+      ),
+    ].map((match) => `  ${match[1] ?? ""}: ${match[2] ?? ""} ${(match[3] ?? "").trim()}`);
+    expect(firstRows.length).toBeGreaterThan(1);
+    const noGraph = { extract: () => expect.unreachable("a call with no body derives no graph") };
+
+    for (const [args, stdin, refusal] of [
+      [[], { isStdinTty: () => true }, "sdp q: no body supplied and stdin is a terminal."],
+      [[], { isStdinTty: () => false, readStdin: () => "" }, "sdp q: the body is empty"],
+      [["  \n"], { isStdinTty: () => true }, "sdp q: the body is empty"],
+    ] as const) {
+      const capture = createCaptureOutput();
+      const exitCode = await runQ([...args, "--root", corpusRoot], capture, {
+        query: { ...stdin, ...noGraph },
+      });
+      const stderr = capture.readStderr();
+
+      expect({ exitCode, stdout: capture.readStdout() }).toEqual({ exitCode: 1, stdout: "" });
+      expect(stderr.startsWith(refusal)).toBe(true);
+      expect(stderr).toContain("docs/agent-surface/recipes.md holds each one's parameters");
+      for (const row of firstRows) expect(stderr).toContain(row);
+      expect(stderr).toContain("dist/recipes/NN-slug.js");
+      expect(stderr).toContain("await recipes(N, {})");
+      expect(stderr).not.toContain("hint:");
+    }
+  });
+
+  // spec:consumers.agent-surface.recipe-parameters#rule.missingSubject: the help an agent reads
+  // for the verb says what a recipe does without its subject, never that it answers a sample.
+  it("states in its help that a recipe refuses an absent subject", () => {
+    const help = (verbHelpText("q") ?? "").replaceAll(/\s+/gu, " ");
+
+    expect(help).toContain(
+      "one that answers for a subject refuses, naming the parameter, when that subject is absent",
+    );
+    expect(help).not.toMatch(/falls back to the catalog's sample/u);
+  });
+
+  it("ends an answered call's stderr with one hint line and keeps stdout to the answer", async () => {
+    const recipeCount = (
+      readFileSync(join(repoRoot, "docs/agent-surface/recipes.md"), "utf8").match(
+        /^## \d+\. /gmu,
+      ) ?? []
+    ).length;
+    const answered = createCaptureOutput();
+    expect(await runQ(["return 1", "--root", corpusRoot, "--json"], answered, terminalStdin)).toBe(
+      0,
+    );
+    expect(answered.readStdout()).toBe("1\n");
+    expect(answered.readStderr()).toBe(
+      `hint: run q with no body to list the ${String(recipeCount)} recipes by category; inside a body, await recipes(N, params) runs recipe N.\n`,
+    );
+
+    const nothing = createCaptureOutput();
+    expect(await runQ(["return undefined", "--root", corpusRoot], nothing, terminalStdin)).toBe(0);
+    expect(nothing.readStderr()).toBe(
+      `sdp q: the body returned nothing — \`return\` is the output contract.\n${answeredStderr}`,
+    );
+
+    const refused = createCaptureOutput();
+    expect(
+      await runQ(["throw new Error('no')", "--root", corpusRoot], refused, terminalStdin),
+    ).toBe(1);
+    expect(refused.readStderr()).toBe("sdp q: no\n");
+  });
+
+  it("falls back to the call forms and a shorter hint when the catalog cannot be read", () => {
+    expect(queryHint([])).toBe(
+      "hint: inside a body, await recipes(N, params) runs catalog recipe N.",
+    );
+    expect(recipeListing([], "", "sdp q").startsWith("Call forms:\n")).toBe(true);
+    const prefixed = recipeListing(
+      [{ name: "Probe", recipes: [{ number: 7, name: "One", parameters: "none", use: "Use" }] }],
+      "node_modules/pkg/",
+      "sdp q",
+    );
+    expect(prefixed).toContain("node_modules/pkg/docs/agent-surface/recipes.md");
+    expect(prefixed).toContain("  Probe: 7 One\n");
+    expect(prefixed).toContain('"$(cat node_modules/pkg/dist/recipes/NN-slug.js)"');
+  });
+
+  it("quotes a package path a shell would split or expand in the recipe call form", () => {
+    const place = mkdtempSync(join(tmpdir(), "sdp-catalog-quote-"));
+    try {
+      const prefix = "My SDK/it's $HOME `x`/";
+      mkdirSync(join(place, prefix, "dist", "recipes"), { recursive: true });
+      writeFileSync(join(place, prefix, "dist", "recipes", "NN-slug.js"), "return 1;");
+      const form = /"\$\(cat .+?\)"/u.exec(recipeListing([], prefix, "sdp q"))?.[0] ?? "";
+
+      expect(form).toBe(`"$(cat 'My SDK/it'\\''s $HOME \`x\`/dist/recipes/NN-slug.js')"`);
+      // Copied into a shell as printed, the substitution reads the one file.
+      const copied = spawnSync(`printf %s ${form}`, { cwd: place, encoding: "utf8", shell: true });
+      expect({ status: copied.status, stdout: copied.stdout }).toEqual({
+        status: 0,
+        stdout: "return 1;",
+      });
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  });
+
+  it("leads the package's paths from the working directory, never as an option", () => {
+    expect(packagePrefix("/work/app", "/work/app")).toBe("");
+    expect(packagePrefix("/work/app/examples/checkout-v1", "/work/app")).toBe("../../");
+    expect(packagePrefix("/work/sibling", "/work/app")).toBe("../app/");
+    expect(
+      packagePrefix(
+        "/work/consumer",
+        "/work/consumer/node_modules/@libar-dev/software-delivery-protocol",
+      ),
+    ).toBe("node_modules/@libar-dev/software-delivery-protocol/");
+    expect(packagePrefix("/work", "/work/-sdp")).toBe("./-sdp/");
+  });
+
+  it("reads the one file through a package path that starts with a hyphen", () => {
+    const place = mkdtempSync(join(tmpdir(), "sdp-catalog-hyphen-"));
+    try {
+      mkdirSync(join(place, "-sdp", "dist", "recipes"), { recursive: true });
+      writeFileSync(join(place, "-sdp", "dist", "recipes", "NN-slug.js"), "return 1;");
+      const form =
+        /"\$\(cat .+?\)"/u.exec(
+          recipeListing([], packagePrefix(place, join(place, "-sdp")), "sdp q"),
+        )?.[0] ?? "";
+
+      expect(form).toBe('"$(cat ./-sdp/dist/recipes/NN-slug.js)"');
+      // Copied into a shell as printed, `cat` reads the path as a file, never as options.
+      const copied = spawnSync(`printf %s ${form}`, { cwd: place, shell: true, encoding: "utf8" });
+      expect({ status: copied.status, stdout: copied.stdout }).toEqual({
+        status: 0,
+        stdout: "return 1;",
+      });
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  });
+
+  it("starts each call form with the command a runner names, else sdp q", () => {
+    expect(queryCommand({})).toBe("sdp q");
+    expect(queryCommand({ SDP_Q_COMMAND: "  " })).toBe("sdp q");
+    expect(queryCommand({ SDP_Q_COMMAND: "node skills/sdp-agent-surface/scripts/q.mjs" })).toBe(
+      "node skills/sdp-agent-surface/scripts/q.mjs",
+    );
+    const forms = recipeListing([], "", "node q.mjs").split("\n").slice(1);
+    expect(forms).toHaveLength(3);
+    for (const form of forms) expect(form.startsWith("  node q.mjs ")).toBe(true);
+  });
+
+  it("lists the package's paths from a working directory below the package root", () => {
+    const listed = spawnSync(process.execPath, [join(repoRoot, "dist/cli/sdp.js"), "q"], {
+      cwd: join(repoRoot, "examples/checkout-v1"),
+      encoding: "utf8",
+      input: "",
+      env: { ...process.env, SDP_Q_COMMAND: "" },
+    });
+
+    expect(listed.status).toBe(1);
+    expect(listed.stderr).toContain(
+      "The recipes by category; ../../docs/agent-surface/recipes.md holds each one's parameters and answer:",
+    );
+    expect(listed.stderr).toContain(`  sdp q "$(cat ../../dist/recipes/NN-slug.js)" --params JSON`);
   });
 
   it("prints JSON for --json", async () => {
@@ -556,7 +744,7 @@ describe("sdp q --params — a recipe parameter as data", () => {
     );
 
     expect(exitCode).toBe(0);
-    expect(capture.readStderr()).toBe("");
+    expect(capture.readStderr()).toBe(answeredStderr);
     expect(JSON.parse(capture.readStdout())).toEqual({
       params: { spec: parentId, files: ["a b.ts"], depth: 2 },
       g: "function",
@@ -617,7 +805,7 @@ describe("sdp q --params — a recipe parameter as data", () => {
     );
 
     expect(exitCode).toBe(0);
-    expect(capture.readStderr()).toBe("");
+    expect(capture.readStderr()).toBe(answeredStderr);
     expect(JSON.parse(capture.readStdout())).toBe(parentId);
   });
 
@@ -895,7 +1083,7 @@ describe("query body positions and merged parameters", () => {
     expect(
       await runQ(["return params", "--root", scratch, "--params", text, "--json"], capture),
     ).toBe(0);
-    expect(capture.readStderr()).toBe("");
+    expect(capture.readStderr()).toBe(answeredStderr);
     expect(JSON.parse(capture.readStdout())).toEqual(JSON.parse(text));
   });
 
@@ -931,7 +1119,7 @@ describe("query body positions and merged parameters", () => {
         second: { b: 2 },
         baseGraph: value,
       });
-      expect(capture.readStderr()).toBe("");
+      expect(capture.readStderr()).toBe(answeredStderr);
     },
   );
 
@@ -1041,7 +1229,7 @@ describe("query body positions and merged parameters", () => {
       spaced: "a=@b",
       fromFile: "x=@y",
     });
-    expect(capture.readStderr()).toBe("");
+    expect(capture.readStderr()).toBe(answeredStderr);
   });
 
   it("refuses a keyed file holding invalid JSON before extraction", async () => {

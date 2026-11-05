@@ -34,7 +34,7 @@ function isCheckedDocument(path: string): boolean {
   if (!path.endsWith(".md") || path.endsWith(".sdp.md")) return false;
   if (["README.md", "AGENTS.md", "CONTEXT.md"].includes(path)) return true;
   if (path.startsWith("docs/")) return !path.startsWith("docs/lineage/v0-design/");
-  return path.startsWith("jtbd-stories/") || path.startsWith(".agents/skills/");
+  return path.startsWith("jtbd-stories/") || path.startsWith("skills/");
 }
 
 /** A tree's paths, with every directory above them, and a reader for its files. */
@@ -106,7 +106,7 @@ describe("relative Markdown links", () => {
       "docs/concept/README.md",
       "docs/lineage/README.md",
       "jtbd-stories/README.md",
-      ".agents/skills/sdp-authoring/SKILL.md",
+      "skills/sdp-authoring/SKILL.md",
     ]) {
       expect(checked).toContain(path);
     }

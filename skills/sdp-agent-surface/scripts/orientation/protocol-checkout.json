@@ -1,0 +1,22 @@
+{
+  "5": { "pack": "pack:roadmap" },
+  "6": { "decider": "owner" },
+  "8": { "terms": ["statement queue", "localStorage", "accessib"] },
+  "9": {
+    "file": "src/reader/reader.ts",
+    "files": [
+      "src/projections/studio/pages/roadmap-page.ts",
+      "specs/consumers/roadmap.sdp.md",
+      "AGENTS.md"
+    ]
+  },
+  "10": { "specs": ["spec:consumers.agent-surface", "spec:decisions.agent-front-door"] },
+  "11": {
+    "addresses": [
+      "spec:consumers.agent-surface#rule.entryAdapters",
+      "spec:consumers.spec-studio.index-page#rule.packList",
+      "spec:consumers.spec-studio.index-page#ui.packList",
+      "spec:consumers.agent-surface"
+    ]
+  }
+}

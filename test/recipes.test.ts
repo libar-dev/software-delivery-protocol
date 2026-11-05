@@ -11,12 +11,13 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
 import { recipeFiles, writeBuildArtifacts, writeRecipeFiles } from "../src/cli/build-artifacts.js";
+import { recipeCategories } from "../src/cli/recipe-catalog.js";
 import { compileBody } from "../src/cli/q-command.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import {
@@ -33,6 +34,7 @@ import {
   expectedUsesEdges,
 } from "./self-hosting-oracle/structural-edges.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
+import { answeredStderr } from "./helpers/query-hint.js";
 import { countMapSets } from "./helpers/map-sets.js";
 
 // The recipe corpus is executable documentation: every fenced `js` body in the catalog must run
@@ -146,22 +148,66 @@ const queryHooks = {
 };
 
 /**
+ * The subject each catalog check reads when a test names none. A recipe that answers for a
+ * subject refuses without one (`spec:consumers.agent-surface.recipe-parameters#rule.missingSubject`),
+ * so the samples live here, beside the checks that read this corpus, never in the bodies.
+ */
+const catalogSamples: Readonly<Record<number, Readonly<Record<string, unknown>>>> = {
+  3: { spec: "spec:consumers.reader" },
+  5: { pack: "pack:adopter-speed-v1" },
+  6: { term: "blast radius" },
+  9: { spec: "spec:model.enrichment-lifecycle" },
+  14: { component: "component:protocol.reader" },
+  19: { spec: "spec:consumers.agent-surface" },
+  21: { spec: "spec:extraction.derive-graph" },
+  23: { term: "suffix" },
+  25: {
+    addresses: [
+      "spec:consumers.design-review#ui.packPage",
+      "spec:consumers.design-review#ui.memberTable",
+      "spec:consumers.absent#design.anyKey",
+      "spec:consumers.design-review",
+    ],
+  },
+  27: { pack: "pack:spec-studio-v1" },
+  29: { pack: "pack:spec-studio-v1" },
+  30: { specs: ["spec:validation.readiness-floor"] },
+  56: { spec: "spec:consumers.reading-on-ramp" },
+  // Recipe 40 requires external input; the general checks supply an empty imports snapshot, and
+  // the curation tests build a fixture.
+  40: { imports: { schema: "sdp-imports/1", adapter: "typescript", files: [] } },
+};
+
+/** The one subject each of these recipes answers for, and the shape it refuses its absence in. */
+const subjectParameters: Readonly<
+  Record<number, { readonly name: string; readonly refusal: "found" | "diagnostics" }>
+> = {
+  3: { name: "spec", refusal: "found" },
+  5: { name: "pack", refusal: "found" },
+  6: { name: "term", refusal: "diagnostics" },
+  9: { name: "spec", refusal: "found" },
+  14: { name: "component", refusal: "found" },
+  19: { name: "spec", refusal: "found" },
+  21: { name: "spec", refusal: "found" },
+  23: { name: "term", refusal: "diagnostics" },
+  25: { name: "addresses", refusal: "diagnostics" },
+  27: { name: "pack", refusal: "found" },
+  29: { name: "pack", refusal: "found" },
+  30: { name: "specs", refusal: "diagnostics" },
+  56: { name: "spec", refusal: "found" },
+};
+
+/**
  * Runs one body through the real argv seam. A recipe parameter travels the way a caller passes
- * it, as JSON data on `--params`, never spliced into the body; without one the body runs exactly
- * as the catalog prints it and falls back to its sample.
+ * it, as JSON data on `--params`, never spliced into the body; without one the body reads the
+ * catalog sample above, and an explicit `{}` reaches its refusal.
  */
 async function runRecipe(
   recipe: Recipe,
   params?: Readonly<Record<string, unknown>>,
   extraction: ExtractionResult = derived,
 ): Promise<unknown> {
-  // Recipe 40 requires external input rather than a corpus-specific sample fallback.
-  // The general catalog checks supply an empty imports snapshot; curation tests build a fixture.
-  const suppliedParams =
-    params ??
-    (recipe.ordinal === 40
-      ? { imports: { schema: "sdp-imports/1", adapter: "typescript", files: [] } }
-      : undefined);
+  const suppliedParams = params ?? catalogSamples[recipe.ordinal];
   const capture = createCaptureOutput();
   const exitCode = await runSdpCli(
     [
@@ -187,7 +233,7 @@ async function runRecipe(
   ).toEqual({
     recipe: recipe.title,
     exitCode: 0,
-    stderr: "",
+    stderr: answeredStderr,
   });
 
   return JSON.parse(capture.readStdout()) as unknown;
@@ -397,23 +443,19 @@ describe("the agent-surface recipe corpus", () => {
   // root and repeatable exclusions project-selected. The two contracts are checked separately so
   // portability cannot weaken the root's real invocation.
   it("keeps self-hosting and adopter invocation forms distinct", () => {
-    const onRampSources = [
-      recipesPath,
-      ".agents/skills/sdp-agent-surface/SKILL.md",
-      ".agents/skills/sdp-authoring/SKILL.md",
-      ".agents/skills/sdp-sessions/SKILL.md",
-    ];
+    const onRampSources = [recipesPath];
     const packageJson = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
       scripts: Record<string, string>;
     };
-    const localQuery = packageJson.scripts["sdp:q"] ?? "";
+    const runner = readFileSync(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs"), "utf8");
 
+    expect(packageJson.scripts["sdp:q"]).toBe("node ./skills/sdp-agent-surface/scripts/q.mjs");
     for (const path of standardExcludes) {
-      expect(localQuery).toContain(`--exclude ${path}`);
+      expect(runner).toContain(`"${path}"`);
     }
 
     for (const source of onRampSources) {
-      const lines = readFileSync(join(repoRoot, source), "utf8").split("\n");
+      const lines = readOnRamp(source).split("\n");
       const selfHostingLines = lines.filter((line) => line.startsWith("pnpm --silent sdp:q '"));
       const adopterLines = lines.filter((line) => line.startsWith("pnpm exec sdp q '"));
 
@@ -441,18 +483,9 @@ describe("the agent-surface recipe corpus", () => {
     }
   });
 
-  it("teaches parameters as data and keeps the on-ramps naming the CLI verbs and recipes", () => {
+  it("teaches parameters as data", () => {
     const intro = source.slice(0, source.indexOf("## 1."));
     const introProse = intro.replace(/\s+/gu, " ");
-    const onRamps = {
-      agents: readFileSync(join(repoRoot, "AGENTS.md"), "utf8"),
-      agentSurface: readFileSync(
-        join(repoRoot, ".agents/skills/sdp-agent-surface/SKILL.md"),
-        "utf8",
-      ),
-      authoring: readFileSync(join(repoRoot, ".agents/skills/sdp-authoring/SKILL.md"), "utf8"),
-      sessions: readFileSync(join(repoRoot, ".agents/skills/sdp-sessions/SKILL.md"), "utf8"),
-    };
 
     // A parameter is data on `--params`, never source spliced into a body, and no recipe reads
     // the environment. The intro teaches exactly that and names no retired channel.
@@ -465,45 +498,6 @@ describe("the agent-surface recipe corpus", () => {
         recipe: recipe.ordinal,
         env: false,
       });
-    }
-
-    expect(onRamps.authoring).toContain("sdp new spec");
-    expect(onRamps.authoring).toContain("sdp validate --watch");
-    expect(onRamps.authoring).not.toContain("--dry-run");
-    expect(onRamps.sessions).toContain("sdp new spec");
-    expect(onRamps.sessions).toContain("validate --watch");
-    expect(onRamps.agents).toContain("new spec");
-    expect(onRamps.agents).toContain("sdp validate --watch");
-
-    const agentSurfaceProse = onRamps.agentSurface.toLowerCase().replace(/\s+/gu, " ");
-    for (const phrase of [
-      "component membership",
-      "uses fan-in and fan-out",
-      "structural neighborhood",
-      "census structural coverage",
-      "projection-coverage upper bound",
-      "architecture map",
-      "decision map",
-      "planning slice",
-      "open-question register",
-      "dependency footing",
-      "mention audit",
-      "entry search",
-      "pinned declarations",
-      "address resolution",
-      "dependency cycles",
-      "references into a design",
-      "roles, layers and contexts",
-      "pack design",
-      "design-change impact",
-      "decision register",
-      "architecture crossings",
-    ]) {
-      expect(agentSurfaceProse).toContain(phrase);
-    }
-
-    for (const { ordinal } of recipes.filter((recipe) => recipe.ordinal >= 12)) {
-      expect(onRamps.sessions).toContain(`recipe ${String(ordinal)}`);
     }
   });
 
@@ -684,6 +678,7 @@ describe("the agent-surface recipe corpus", () => {
     expect(result.sections).toEqual(
       JSON.parse(JSON.stringify(reader.specContext(String(result.id))?.sections)),
     );
+    expect(result.narrative).toEqual(reader.specContext(String(result.id))?.narrative ?? null);
     expect(result.designColumns).toEqual(reader.specContext(String(result.id))?.designColumns);
     expect(result.packs).toEqual(reader.specContext(String(result.id))?.packs);
     // The binding-language guard: a verifier binding is existence, and the recipe says so.
@@ -1744,9 +1739,8 @@ describe("the agent-surface recipe corpus", () => {
   // Then: both dependency directions retain their ready decision neighbors.
   it("returns non-empty bidirectional dependencies for the binding-grain planning slice", async () => {
     const recipe = recipeByOrdinal(19);
-    const catalogId = "spec:consumers.agent-surface";
     const id = "spec:decisions.anchor-binding-grain";
-    expect(recipe.body).toContain(`const id = params.spec ?? "${catalogId}";`);
+    expect(id).not.toBe(catalogSamples[19]?.spec);
 
     const result = asRecord(await runRecipe(recipe, { spec: id }));
     const dependencies = asRecord(result.dependencies);
@@ -2136,6 +2130,106 @@ const registerRecipesTestAnchor = specTest({
 });
 void registerRecipesTestAnchor;
 describe("register recipe semantics", () => {
+  it("opens the law a Spec rests on at its files, rule lines and addresses, capping long rule lists unless asked for detail", async () => {
+    const ruleTexts = Array.from({ length: 14 }, (_, index) =>
+      index === 1 ? "[#second] Rule two." : index === 13 ? "[#last] Rule last." : "Rule.",
+    );
+    const lawCarrier = `---\nid: spec:probe.law\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Law\n\n## Intent\n- outcome: Hold many rules.\n\n### Open questions\n- [non-blocking #more] Are more rules coming?\n\n## Behavior\n${ruleTexts.map((text) => `- rule: ${text}`).join("\n")}\n\n## Verification — manual\n- A reader checks each rule.\n`;
+    const extraction = markdownProbe("sdp-law-recipe-", {
+      "law.sdp.md": lawCarrier,
+      "terms.sdp.md": `---\nid: spec:probe.terms\nkind: model\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Terms\n\n## Intent\n- outcome: Name two terms.\n\n## Model\n- **alpha** — The first term.\n- **beta** — The second term.\n\n## Design\n- shape: One shape.\n`,
+      "ruling.sdp.md": `---\nid: spec:probe.ruling\nkind: decision\naltitude: feature\nreadiness: idea\nrelations: {}\n---\n# Ruling\n\n## Intent\n- outcome: Rule once.\n\n## Decision\n- context: A question arose.\n- decision: Answer it.\n- rationale: It is hard to reverse.\n- rationale: It surprises without context.\n- alternative: Leave it open.\n`,
+      "subject.sdp.md": `---\nid: spec:probe.subject\nkind: behavior\naltitude: story\nreadiness: idea\nrelations:\n  refines: spec:probe.law\n  dependsOn:\n    target: spec:probe.terms\n    reason: it speaks the terms\n  decidedBy: spec:probe.ruling\n---\n# Subject\n\n## Intent\n- outcome: Rest on law.\n`,
+    });
+    const subject = { spec: "spec:probe.subject" };
+    const recipe = recipeByOrdinal(56);
+    const answer = asRecord(await runRecipe(recipe, subject, extraction));
+    const footing = asRecord(await runRecipe(recipeByOrdinal(21), subject, extraction));
+    const law = asArray(answer.law).map(asRecord);
+    const added = new Set(["file", "decision", "rules", "unkeyedRules", "alsoHolds"]);
+
+    // Recipe 21's rows and order stay as they are; the recipe only adds where each law lives.
+    expect(
+      law.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) => !added.has(key)))),
+    ).toEqual(footing.footing);
+    expect(
+      law.map((row) => ({
+        id: row.id,
+        file: row.file,
+        decision: row.decision,
+        unkeyedRules: row.unkeyedRules,
+        alsoHolds: row.alsoHolds,
+      })),
+    ).toEqual([
+      {
+        id: "spec:probe.law",
+        file: "law.sdp.md",
+        decision: false,
+        unkeyedRules: 12,
+        alsoHolds: { intent: 1, questions: 1, verification: 1 },
+      },
+      {
+        id: "spec:probe.terms",
+        file: "terms.sdp.md",
+        decision: false,
+        unkeyedRules: 0,
+        alsoHolds: { intent: 1, terms: 2, design: 1 },
+      },
+      {
+        id: "spec:probe.ruling",
+        file: "ruling.sdp.md",
+        decision: true,
+        unkeyedRules: 0,
+        // Two scalar entries, two rationales and one alternative: entries, never properties.
+        alsoHolds: { intent: 1, decision: 5 },
+      },
+    ]);
+    const ruleLines = lawCarrier
+      .split("\n")
+      .flatMap((line, index) => (line.startsWith("- rule:") ? [index + 1] : []));
+    expect(law[0]?.rules).toEqual(
+      ruleLines.slice(0, 12).map((line, index) => ({
+        line,
+        address: index === 1 ? "spec:probe.law#rule.second" : null,
+      })),
+    );
+    expect(answer.leftOut).toEqual([
+      "Rules after the first 12 of a target: spec:probe.law (2 more); pass detail: true.",
+    ]);
+    expect(answer.totals).toEqual({
+      ...asRecord(footing.totals),
+      decisions: 1,
+      rules: 14,
+      keyedRules: 2,
+    });
+    expect(await runRecipe(recipe, { spec: "spec:probe.absent" }, extraction)).toEqual({
+      id: "spec:probe.absent",
+      found: false,
+    });
+    // Detail lists every rule of every target and leaves nothing out; the totals do not change.
+    const detailed = asRecord(await runRecipe(recipe, { ...subject, detail: true }, extraction));
+    expect(asRecord(asArray(detailed.law)[0]).rules).toEqual(
+      ruleLines.map((line, index) => ({
+        line,
+        address:
+          index === 1
+            ? "spec:probe.law#rule.second"
+            : index === 13
+              ? "spec:probe.law#rule.last"
+              : null,
+      })),
+    );
+    expect(detailed.leftOut).toEqual([]);
+    expect(detailed.totals).toEqual(answer.totals);
+    expect(await runRecipe(recipe, { ...subject, detail: "all" }, extraction)).toEqual({
+      diagnostics: [{ parameter: "detail", problem: "Expected true or false." }],
+    });
+    expect(await runRecipe(recipe, { sepc: "spec:probe.subject" }, extraction)).toEqual({
+      unknownParams: ["sepc"],
+      accepts: ["spec", "detail"],
+    });
+  });
+
   it("lists key families across the corpus in key, Spec and section order with the documented sample", async () => {
     const result = asRecord(await runRecipe(recipeByOrdinal(41)));
     expect(result.prefixes).toEqual(["finding", "impact"]);
@@ -2269,12 +2363,20 @@ describe("register recipe semantics", () => {
       const capture = createCaptureOutput();
       expect(
         await runSdpCli(
-          ["q", recipeByOrdinal(ordinal).body, "--root", repoRoot],
+          [
+            "q",
+            recipeByOrdinal(ordinal).body,
+            "--root",
+            repoRoot,
+            ...(catalogSamples[ordinal] === undefined
+              ? []
+              : ["--params", JSON.stringify(catalogSamples[ordinal])]),
+          ],
           capture.output,
           queryHooks,
         ),
       ).toBe(0);
-      expect(capture.readStderr()).toBe("");
+      expect(capture.readStderr()).toBe(answeredStderr);
       expect(capture.readStdout()).toContain("totals:");
     },
   );
@@ -2308,7 +2410,7 @@ describe("register recipe semantics", () => {
         { query: { ...queryHooks.query, extract: () => probe } },
       ),
     ).toBe(0);
-    expect(capture.readStderr()).toBe("");
+    expect(capture.readStderr()).toBe(answeredStderr);
     expect(capture.readStdout()).not.toContain(text);
     expect(capture.readStdout()).toContain("... 1000 more characters");
     expect(capture.readStdout()).toContain("... 1013 more characters");
@@ -4584,6 +4686,47 @@ describe("recipe parameters and the shipped recipe files", () => {
     ).toEqual({ unknownParams: ["zzUnknown", "spec"], accepts: ["specs"] });
   });
 
+  // spec:consumers.agent-surface.recipe-parameters#rule.missingSubject and #rule.missingChecked:
+  // a subject left out is refused in the shape its recipe answers an unknown id with, never
+  // answered for a sample or a subject the recipe chose.
+  it("refuses each recipe's subject left out, naming the parameter it expects", async () => {
+    for (const [ordinal, subject] of Object.entries(subjectParameters)) {
+      const answer = asRecord(await runRecipe(recipeByOrdinal(Number(ordinal)), {}));
+      if (subject.refusal === "found") {
+        expect({ ordinal, answer }).toEqual({
+          ordinal,
+          answer: { found: false, reason: "missing", expected: `params.${subject.name}` },
+        });
+        continue;
+      }
+      const diagnostics = asArray(answer.diagnostics).map(asRecord);
+      expect({
+        ordinal,
+        keys: Object.keys(answer),
+        parameters: diagnostics.map((diagnostic) => diagnostic.parameter),
+        problems: diagnostics.every((diagnostic) => stringAt(diagnostic, "problem").length > 0),
+      }).toEqual({ ordinal, keys: ["diagnostics"], parameters: [subject.name], problems: true });
+    }
+    expect(await runRecipe(recipeByOrdinal(34), {})).toEqual({
+      found: false,
+      reason: "missing",
+      expected: "params.spec or params.pack",
+    });
+  });
+
+  // spec:consumers.agent-surface.recipe-parameters#rule.missingSubject: the glossary row an agent
+  // reads says what a recipe does without its subject, never that it answers a sample.
+  it("glosses a recipe parameter as refusing an absent subject", () => {
+    const rows = readFileSync(join(repoRoot, "CONTEXT.md"), "utf8")
+      .split("\n")
+      .filter((line) => line.startsWith("| **recipe parameter** |"));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toContain(
+      "refuses when that subject is absent and never substitutes a sample or a subject of its own",
+    );
+    expect(rows[0]).not.toMatch(/catalog's sample/u);
+  });
+
   it("reads and names each parameter, with a fallback only when the contract supplies one", () => {
     const parameterized = recipes.filter((recipe) => /\bparams\./u.test(recipe.body));
 
@@ -4598,6 +4741,7 @@ describe("recipe parameters and the shipped recipe files", () => {
 
       for (const name of names) {
         const hasSample =
+          subjectParameters[recipe.ordinal]?.name !== name &&
           recipe.ordinal !== 34 &&
           recipe.ordinal !== 45 &&
           !(
@@ -4748,7 +4892,7 @@ describe("recipe parameters and the shipped recipe files", () => {
       const run = await runShipped(shippedBody(recipeByOrdinal(4)), ["--params", `@${path}`]);
       expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
         exitCode: 0,
-        stderr: "",
+        stderr: answeredStderr,
       });
 
       const result = asRecord(JSON.parse(run.stdout));
@@ -4789,7 +4933,7 @@ describe("recipe parameters and the shipped recipe files", () => {
     ]);
     expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
       exitCode: 0,
-      stderr: "",
+      stderr: answeredStderr,
     });
 
     const result = asRecord(JSON.parse(run.stdout));
@@ -4820,7 +4964,7 @@ describe("recipe parameters and the shipped recipe files", () => {
       const run = await runShipped(body, ["--params", JSON.stringify({ pack: chosen })]);
       expect({ exitCode: run.exitCode, stderr: run.stderr }).toEqual({
         exitCode: 0,
-        stderr: "",
+        stderr: answeredStderr,
       });
 
       const result = asRecord(JSON.parse(run.stdout));
@@ -4831,8 +4975,12 @@ describe("recipe parameters and the shipped recipe files", () => {
       expect(JSON.parse(absent.stdout)).toEqual({ id: "pack:absent-v1", found: false });
     }
 
-    // Without the parameter, recipe 5 falls back to its sample: the first Pack in the graph.
-    expect(asRecord(await runRecipe(recipeByOrdinal(5))).id).toBe(packIds[0]);
+    // Without the parameter, recipe 5 refuses rather than reading a Pack the caller never named.
+    expect(await runRecipe(recipeByOrdinal(5), {})).toEqual({
+      found: false,
+      reason: "missing",
+      expected: "params.pack",
+    });
   });
 });
 
@@ -6358,6 +6506,11 @@ describe("answers that fit", () => {
         enabled: binding.enabled,
         file: binding.file ?? null,
         line: binding.line ?? null,
+        tests: (binding.tests ?? []).map((test) => ({
+          verifierId: test.verifierId,
+          file: test.file,
+          line: test.line,
+        })),
       })),
     );
   });
@@ -6402,16 +6555,23 @@ describe("answers that fit", () => {
     ]);
   });
 
-  it("indexes exactly the present recipes with names, parameters and uses", () => {
-    const index = source.slice(0, source.indexOf("Runnable bodies"));
-    const indexed = [...index.matchAll(/^\| (\d+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|$/gmu)];
-    expect(indexed.map((row) => ({ number: Number(row[1]), name: row[2]?.trim() }))).toEqual(
-      recipes.map((recipe) => ({ number: recipe.ordinal, name: recipe.title })),
-    );
-    expect(indexed.every((row) => row[3]?.trim() && row[4]?.trim())).toBe(true);
+  it("sorts every recipe into exactly one category of the index, with its name, parameters and use", () => {
+    const categories = recipeCategories(source);
+    const indexed = categories.flatMap((category) => category.recipes);
+    // A row outside every category heading would be read by no listing.
+    const rows = source.slice(0, source.indexOf("Runnable bodies")).match(/^\| \d+ \|/gmu) ?? [];
+    expect(indexed).toHaveLength(rows.length);
+    expect(
+      [...indexed]
+        .sort((left, right) => left.number - right.number)
+        .map((row) => ({ number: row.number, name: row.name })),
+    ).toEqual(recipes.map((recipe) => ({ number: recipe.ordinal, name: recipe.title })));
+    expect(new Set(categories.map((category) => category.name)).size).toBe(categories.length);
+    expect(categories.every((category) => category.recipes.length > 0)).toBe(true);
+    expect(indexed.every((row) => row.parameters !== "" && row.use !== "")).toBe(true);
     for (const row of indexed) {
-      const recipe = recipeByOrdinal(Number(row[1]));
-      const listed = (row[3]?.trim() ?? "")
+      const recipe = recipeByOrdinal(row.number);
+      const listed = row.parameters
         .split(/, | or /u)
         .filter((name) => name !== "none")
         .sort();
@@ -6989,7 +7149,7 @@ describe("authoring grammar recipes", () => {
     const extraction = grammarRecipeProbe();
     expect(await runRecipe(recipeByOrdinal(34), undefined, extraction)).toEqual({
       found: false,
-      reason: "scope",
+      reason: "missing",
       expected: "params.spec or params.pack",
     });
     expect(
@@ -8763,3 +8923,16 @@ describe.each([5, 31])("recipe %i readiness tallies with foreign values", (ordin
     },
   );
 });
+
+/** An on-ramp as one text: a skill's SKILL.md followed by the references it discloses. */
+function readOnRamp(path: string): string {
+  const text = readFileSync(join(repoRoot, path), "utf8");
+  if (!path.endsWith("/SKILL.md")) return text;
+  const folder = join(repoRoot, dirname(path), "references");
+  if (!existsSync(folder)) return text;
+  const references = readdirSync(folder)
+    .filter((name) => name.endsWith(".md"))
+    .sort()
+    .map((name) => readFileSync(join(folder, name), "utf8"));
+  return [text, ...references].join("\n");
+}

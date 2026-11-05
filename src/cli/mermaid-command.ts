@@ -1,8 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join } from "node:path";
 
 import { codeAnchorId, componentAnchorId, ref } from "../ids.js";
 import { codeAnchor } from "../model/code-anchor.js";
+import { readPublishedTextPages } from "../projections/published-tree.js";
 import { renderMermaid } from "../projections/mermaid.js";
 import { createReader } from "../reader/reader.js";
 import type { Reader } from "../reader/reader.js";
@@ -31,32 +31,7 @@ function compareCodeUnits(left: string, right: string): number {
 }
 
 function readPublishedPages(root: string): readonly MermaidPage[] | undefined {
-  if (!existsSync(root)) {
-    return undefined;
-  }
-
-  const pages: MermaidPage[] = [];
-  const visit = (directory: string): void => {
-    const entries = readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
-      compareCodeUnits(left.name, right.name),
-    );
-
-    for (const entry of entries) {
-      const path = join(directory, entry.name);
-
-      if (entry.isDirectory()) {
-        visit(path);
-      } else if (entry.isFile()) {
-        pages.push({
-          path: relative(root, path).replaceAll("\\", "/"),
-          content: readFileSync(path, "utf8"),
-        });
-      }
-    }
-  };
-  visit(root);
-
-  return pages.sort((left, right) => compareCodeUnits(left.path, right.path));
+  return readPublishedTextPages(root);
 }
 
 function normalizePages(output: MermaidOutput): readonly MermaidPage[] {

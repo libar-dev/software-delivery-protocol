@@ -32,6 +32,7 @@ import { registerVerbHelpTouchesNothing } from "./consumers.command-line.verb-he
 import { runSdpCli, SDP_HELP_TEXT } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { writeProbeCorpus } from "./helpers/probe-corpus.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const hooks = {
   studioAssets: {
@@ -47,6 +48,7 @@ function files(root: string): Record<string, string> {
   if (!existsSync(root)) return result;
   const visit = (directory: string) => {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (isOsMetadataFile(entry)) continue;
       const path = join(directory, entry.name);
       if (entry.isDirectory()) visit(path);
       else result[relative(root, path)] = readFileSync(path, "utf8");

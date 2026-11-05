@@ -1,62 +1,109 @@
 # Agent-surface recipes
 
+## Recipes by category
+
+Each recipe sits in one category. A row gives the recipe's number, name, parameters and use; the
+numbered entry below holds its contract, and the build ships its body as
+`dist/recipes/<NN>-<slug>.js`. `sdp q` run with no body lists every category with its first four
+rows.
+
+### Orient and plan
+
 | No. | Recipe | Parameters | Use |
 | --- | --- | --- | --- |
-| 1 | The build backlog | none | Pick ready implementation work |
+| 53 | The roadmap | pack, decider | Read upcoming work in authored order and what each entry needs |
+| 52 | The capability map | epic, detail | Read capability epics, distinct descendants and direct binding evidence |
+| 1 | The build backlog | none | Pick ready implementation work; recipe 33 for designed, unbuilt Specs |
+| 20 | Open-question register | none | List open questions |
+| 46 | The statement queue | decider | Order waiting readiness statements and questions |
+| 33 | The design backlog | none | Pick defined design work |
+| 55 | The roadmap memo | pack, decider | Render a roadmap as a description's forward section |
+| 47 | Capability adoption | detail, perspectives | Measure capability use and possible places |
+
+### Readiness and honesty
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 9 | Promotion preflight | spec | Check both next rungs before a readiness edit; recipe 11 across the corpus |
 | 2 | The drift alarm | none | Find implementation ahead of intent |
-| 3 | What does this Spec guarantee, and who verifies it | spec | Read guarantees and bindings |
-| 4 | What breaks if I change these files | files, detail | Review changed-file reach |
-| 5 | The Pack review backbone | pack | Review Pack readiness and gaps |
-| 6 | Where is this concept | term | Locate a concept |
 | 7 | Readiness divergence | none | Compare stated readiness to its floor |
-| 8 | Orphans and gaps | none | Read warnings and exemptions |
-| 9 | Promotion preflight | spec | Check both next rungs |
-| 10 | Declared versus enabled verifiers | none | Compare verifier declarations and bindings |
+| 8 | Orphans and gaps | none | Read warnings and exemptions; recipe 10 for verifier health |
 | 11 | The lower ladder | none | Read non-ready Specs |
+
+### Find and read
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 6 | Where is this concept | term | Locate a concept; recipe 23 for the entry and its line |
+| 3 | What does this Spec guarantee, and who verifies it | spec | Read guarantees and bindings |
+| 56 | The law a Spec rests on | spec, detail | Open the law a Spec rests on: files, rule lines, addresses |
+| 21 | Dependency footing | spec | Read dependency footing; recipe 26 for cycles |
+| 23 | Entry search | term | Find entries by term |
+| 19 | Planning slice | spec | Read a planning slice |
+
+### Design and review
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 54 | The design slice | pack or specs, members, detail | Read a set of Specs as one design |
+| 29 | Pack design | pack, detail | Review Pack design; recipe 27 for the code answering to it |
+| 5 | The Pack review backbone | pack | Review Pack readiness and gaps |
+| 36 | The context bundle | pack or specs, members, budget, declarations, part | Compose one pass within a budget; recipe 37 narrows it to a perspective |
+| 37 | The perspective filter | pack, perspective | Select and order Pack members |
+| 24 | Pinned declarations | none | List pinned declarations |
+| 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
+| 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
+
+### Change and proposals
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 4 | What breaks if I change these files | files, detail | Review changed-file reach; then recipe 22 over its scope |
+| 30 | Design-change impact | specs | Follow a design change; recipe 19 for its neighborhood |
+| 35 | The design diff | base, pack, detail | Compare design at entry grain |
+| 38 | The proposal check | proposal, base | Resolve proposal scopes and compare intent |
+| 49 | The proposal memo | proposal | Render a proposal as the memo the composing panel hands off |
+| 48 | The rule-key proposal | commit, pack or specs | Propose keys for unkeyed rules and flows; check them with recipe 38 |
+
+### Architecture and decisions
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 17 | Architecture map | none | Read the architecture map; compose it, since its whole answer floods |
+| 32 | Architecture crossings | none | Read architecture crossings |
+| 18 | Decision map | none | Rank shaping decisions |
+| 31 | Decision register | none | Read decision relations |
 | 12 | Component membership | none | List component members |
 | 13 | Uses fan-in and fan-out | none | Count uses reach |
 | 14 | Structural neighborhood | component | Read a structural neighborhood |
-| 15 | Census structural coverage | none | Measure structural coverage |
-| 16 | Projection coverage upper bound | none | Bound projection coverage |
-| 17 | Architecture map | none | Read the architecture map |
-| 18 | Decision map | none | Rank shaping decisions |
-| 19 | Planning slice | spec | Read a planning slice |
-| 20 | Open-question register | none | List open questions |
-| 21 | Dependency footing | spec | Read dependency footing |
-| 22 | Mention audit | scope, intended | Audit prose mentions |
-| 23 | Entry search | term | Find entries by term |
-| 24 | Pinned declarations | none | List pinned declarations |
-| 25 | Address resolution | addresses, severity | Resolve entry addresses |
-| 26 | Dependency cycles | severity | Find dependency cycles |
-| 27 | References into a design | pack | Read code references into a Pack |
 | 28 | Roles, layers and contexts | none | List architecture vocabulary |
-| 29 | Pack design | pack, detail | Review Pack design |
-| 30 | Design-change impact | specs | Follow a design change |
-| 31 | Decision register | none | Read decision relations |
-| 32 | Architecture crossings | none | Read architecture crossings |
-| 33 | The design backlog | none | Pick defined design work |
-| 34 | Rule coverage | spec or pack | Find keyed rules no example exercises |
-| 35 | The design diff | base, pack, detail | Compare design at entry grain |
-| 36 | The context bundle | pack or specs, members, budget, declarations, part | Compose one pass within a budget |
-| 37 | The perspective filter | pack, perspective | Select and order Pack members |
-| 38 | The proposal check | proposal, base | Resolve proposal scopes and compare intent |
-| 39 | Slimming candidates | pack | Compare pinned declarations with bound code |
-| 40 | Curation report | imports, limit | Find curation gaps from file imports |
-| 41 | The key-family register | prefixes, pack or specs | List a key family's entries |
 | 42 | The architecture walk | forbidden, isolated, severity | Check anchored architecture rules |
 | 43 | Planned against realized components | none | Compare component designs with anchors |
+| 40 | Curation report | imports, limit | Find curation gaps from file imports |
+
+### Evidence and coverage
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 27 | References into a design | pack | Read code references into a Pack |
+| 10 | Declared versus enabled verifiers | none | Compare verifier declarations and bindings |
+| 34 | Rule coverage | spec or pack | Find keyed rules no example exercises |
 | 44 | Example-space coverage | spec or pack | Report covered and uncovered slot values from decoded example spaces |
 | 45 | Run evidence | runs, commit, spec | Join external CTRF results at test-file grain |
-| 46 | The statement queue | decider | Order waiting readiness statements and questions |
-| 47 | Capability adoption | detail, perspectives | Measure capability use and possible places |
-| 48 | The rule-key proposal | commit, pack or specs | Propose keys for unkeyed rules and flows |
-| 49 | The proposal memo | proposal | Render a proposal as the memo the composing panel hands off |
-| 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
+| 15 | Census structural coverage | none | Measure structural coverage |
+| 16 | Projection coverage upper bound | none | Bound projection coverage |
+
+### Citations and checks
+
+| No. | Recipe | Parameters | Use |
+| --- | --- | --- | --- |
+| 25 | Address resolution | addresses, severity | Resolve entry addresses before citing one |
+| 22 | Mention audit | scope, intended | Audit prose mentions |
 | 51 | Entry citations | pack or specs, severity | Find anchored citations and unresolved addresses |
-| 52 | The capability map | epic, detail | Read capability epics, distinct descendants and direct binding evidence |
-| 53 | The roadmap | pack, decider | Read upcoming work in authored order and what each entry needs |
-| 54 | The design slice | pack or specs, members, detail | Read a set of Specs as one design |
-| 55 | The roadmap memo | pack, decider | Render a roadmap as a description's forward section |
+| 50 | External registers | register, pattern, severity, uncited | Check prose tokens against a supplied register |
+| 26 | Dependency cycles | severity | Find dependency cycles |
+
+## Running a recipe
 
 Runnable bodies for the agent front door. Each recipe below is a body you can pass verbatim to
 `sdp q`, unchanged. In the Protocol source checkout, pass one to the repository wrapper:
@@ -110,14 +157,20 @@ pnpm --silent sdp:q '<body>' --params @params.json --json
 Repeat `--params` to merge objects at the top level from left to right. `--params @PATH` reads an
 object from a file. `--params KEY=@PATH` binds any JSON value from the file to one lower-camel key,
 for example `--params base=@graph.json --params '{"spec":"spec:model.anchors"}'`. A key given twice
-by any form is refused before the body runs. Without `--params`, `params` is `{}`. Bodies with a
-documented sample fall back to it. A required input without a sample returns diagnostic data in
-the shape its recipe documents: `diagnostics`, `schemaProblems`, or a `found: false` result with a
-reason and expected input. Missing required input is never answered as empty, except recipe 4's
-`files`, which reads as an empty change list.
-The samples name this repository's corpus, so every body runs as written here. The recipe check
-executes each one unchanged. Recipes report absent subjects in their documented result shape.
-Recipes 3, 5, 9, 14, 19, 21, 27, 29, 34 and 39 answer an absent subject with `found: false`. In
+by any form is refused before the body runs. Without `--params`, `params` is `{}`.
+
+A recipe that answers for a subject you name, a Spec, Pack, component, term or list of them,
+refuses when you leave it out and never answers for a sample instead
+(`spec:consumers.agent-surface.recipe-parameters#rule.missingSubject`): recipes 3, 5, 9, 14, 19, 21,
+27, 29, 34 and 56 answer `{ found: false, reason: "missing", expected }`, and recipes 6, 23, 25 and
+30 answer `diagnostics` naming the parameter. Any other required input, such as a base graph, a
+proposal or an imports file, returns diagnostic data in the shape its recipe documents:
+`diagnostics`, `schemaProblems`, or a `found: false` result with a reason and expected input.
+Missing required input is never answered as empty, except recipe 4's `files`, which reads as an
+empty change list. A parameter whose absence an entry documents as the whole corpus or a default,
+such as a decider or a severity, stays optional. The examples below name this repository's corpus.
+Recipes report a subject the graph does not hold in their documented result shape.
+Recipes 3, 5, 9, 14, 19, 21, 27, 29, 34, 39 and 56 answer an absent subject with `found: false`. In
 `diagnostics`, the design diff, context bundle, perspective filter, key-family register,
 example-space coverage, rule-key proposal, entry citations, roadmap, design slice and roadmap memo
 (recipes 35, 36, 37, 41, 44, 48, 51, 53, 54 and 55) report an absent Pack, the example-space
@@ -173,8 +226,8 @@ not suppress `console.*`, so a body a machine reads, every recipe below included
 to the console. Returning a conclusion costs a fraction of returning a dump, so every recipe
 below returns counts, ids, and decoded reasons rather than whole nodes.
 
-Changed-file impact, Pack design, the design diff and the design slice, recipes 4, 29, 35 and 54,
-accept `detail: true` and default to summaries that preserve every total and name omitted detail
+Changed-file impact, Pack design, the design diff, the design slice and the law a Spec rests on,
+recipes 4, 29, 35, 54 and 56, accept `detail: true` and default to summaries that preserve every total and name omitted detail
 in `leftOut`. Pack design and the design slice also accept member ids in `detail` for selected
 full rows. Other recipes follow their own documented result shapes.
 
@@ -304,13 +357,15 @@ rung. A hit *with* an unmet clause is the expensive one.
 relations, and bindings in one shot.*
 
 The parameter is `params.spec`, the Spec id to read; an unknown id returns `{ id, found: false }`
-rather than failing.
+rather than failing, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`.
 
 ```js
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.spec ?? "spec:consumers.reader";
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const id = params.spec;
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -340,6 +395,7 @@ const relation = (end) => ({
 return {
   id: context.id,
   title: context.title,
+  narrative: context.narrative ?? null,
   kind: context.specKind,
   altitude: context.altitude,
   statedReadiness: context.statedReadiness,
@@ -359,6 +415,7 @@ return {
     enabled: binding.enabled,
     file: binding.file ?? null,
     line: binding.line ?? null,
+    tests: (binding.tests ?? []).map((test) => ({verifierId: test.verifierId, file: test.file, line: test.line})),
   })),
   verifierBindingMeans: "a resolving verifier exists; the graph never records pass or fail",
   findings: context.findings.map((finding) => ({
@@ -373,7 +430,10 @@ Every relation carries its `claim` and the claim is never collapsed, and a relat
 a reason carries `reason`, as a declared `verifies` naming rule keys carries `exercises`: `declared` is authored intent,
 `anchored` is a human binding from source, `inferred` is machine-derived structure. `has-verifier`
 rides an *enabled* verifier — a resolving test anchor — and states that a verifier **exists**, not
-that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
+that it passed. Pass/fail is CI's, exactly as skip and quarantine are. A verifier reached through an
+example lists in `tests` the test anchors that bind that example, with the file and line to run
+(`spec:consumers.reader#rule.exampleTests`); a test-anchor verifier's `tests` is empty, since it is
+the test.
 
 ## 4. What breaks if I change these files
 
@@ -396,6 +456,12 @@ rm -f "$changed"
 The body is static and reads only the JSON value; neither the shell nor the reader reevaluates
 filenames. `--params` parses data, so quotes, shell metacharacters, spaces, Unicode, and embedded
 newlines remain filenames rather than JavaScript or shell syntax. The reader never shells to git.
+
+Name the change with the git selection that holds it. `git diff --name-only -z` above lists
+unstaged edits only: add `--cached` for staged edits, name `<base>...HEAD` for a branch, and add
+`git ls-files --others --exclude-standard -z` for new files. The graph is the working tree's, so a
+deleted file reaches nothing in it: the bindings it took with it show only in the design diff
+(recipe 35) against a graph written before the deletion.
 
 ```js
 const accepts = ["files", "detail"];
@@ -475,14 +541,16 @@ coverage. File-level reach makes no claim about exhaustive symbol reach.
 *When you need this: you are reviewing a Pack as a unit and want its members' readiness, delivery
 facts, and verifier gaps.*
 
-The parameter is `params.pack`, the Pack to review; without it the body reads the first Pack in
-the graph. An unknown Pack returns `{ id, found: false }`.
+The parameter is `params.pack`, the Pack to review; without it the answer is
+`{ found: false, reason: "missing", expected: "params.pack" }`. An unknown Pack
+returns `{ id, found: false }`.
 
 ```js
 const accepts = ["pack"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.pack ?? g.packs()[0]?.id;
+if (params.pack === undefined) return { found: false, reason: "missing", expected: "params.pack" };
+const id = params.pack;
 
 if (id === undefined) {
   return { packs: 0 };
@@ -526,13 +594,17 @@ aggregate over Specs that do.
 
 *When you need this: you have a phrase and no id — the grep-to-graph bridge.*
 
-The parameter is `params.term`, the phrase to look for.
+The parameter is `params.term`, the phrase to look for; without it the recipe answers
+`diagnostics`.
 
 ```js
 const accepts = ["term"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const term = params.term ?? "blast radius";
+if (params.term === undefined) {
+  return { diagnostics: [{ parameter: "term", problem: "Supply the term to look for." }] };
+}
+const term = params.term;
 const matches = g.findByConcept(term);
 
 return {
@@ -635,11 +707,16 @@ refusals; a green corpus has no errors, but may carry intentional warnings.
 *When you need this: you are considering a readiness edit and want the current graph-visible floor
 evidence before touching the carrier.*
 
+The parameter is `params.spec`, the Spec whose rung you are weighing; an unknown id returns
+`{ id, found: false }`, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`.
+
 ```js
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.spec ?? "spec:model.enrichment-lifecycle";
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const id = params.spec;
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -850,13 +927,15 @@ map counts only crossings between different components.
 Specs satisfied by its member units.*
 
 The parameter is `params.component`, the component you are reviewing; an unknown component
-returns the exact not-found shape and does not throw.
+returns the exact not-found shape and does not throw, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.component" }`.
 
 ```js
 const accepts = ["component"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const subject = params.component ?? "component:protocol.reader";
+if (params.component === undefined) return { found: false, reason: "missing", expected: "params.component" };
+const subject = params.component;
 const component = graph.nodes.find((node) => node.nodeType === "CodeNode" && node.id === subject);
 
 if (component === undefined) {
@@ -1240,13 +1319,15 @@ is the absence of an edge; `decidedBy` subjects stay grouped by family.
 decisions, bound components, verifiers, and file-level entry points.*
 
 The parameter is `params.spec`, the Spec you are planning around; an unknown id returns
-`{ id, found: false }` rather than failing.
+`{ id, found: false }` rather than failing, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`.
 
 ```js
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.spec ?? "spec:consumers.agent-surface";
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const id = params.spec;
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -1357,6 +1438,7 @@ for (const binding of implementations) {
 }
 for (const binding of verifiers) {
   addEntryPoint("verifier", binding.verifierId, binding.file, binding.line);
+  for (const test of binding.tests ?? []) addEntryPoint("verifier", test.verifierId, test.file, test.line);
 }
 for (const component of components) {
   addEntryPoint("component", component.id, component.file, component.line);
@@ -1398,6 +1480,7 @@ return {
     enabled: binding.enabled,
     file: binding.file ?? null,
     line: binding.line ?? null,
+    tests: (binding.tests ?? []).map((test) => ({id: test.verifierId, file: test.file, line: test.line})),
   })),
   entryPoints: uniqueEntryPoints,
   entryPointsLimit: "file-level graph-recorded paths only; no symbol-level impact graph",
@@ -1405,7 +1488,8 @@ return {
 ```
 
 `entryPoints` is file-level graph-recorded paths only — carrier, implementation, verifier, and
-component files. It is not the impact contract; whole-corpus blast radius over changed files stays
+component files, a verifying example's file followed by the test files that bind it, which each
+verifier row also lists in `tests` (`spec:consumers.reader#rule.exampleTests`). It is not the impact contract; whole-corpus blast radius over changed files stays
 recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
 neighborhood; a decision record that also `refines` the subject appears both as a refinement child
 and as a shaping decision. `reasons` lists every authored relation into or out of the subject
@@ -1532,14 +1616,16 @@ the rung each one states and the floor each one reaches. For the floor's verdict
 itself, run promotion preflight (recipe 9).*
 
 The parameter is `params.spec`, the Spec you are weighing; an unknown id returns
-`{ id, found: false }` rather than failing.
+`{ id, found: false }` rather than failing, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`.
 
 ```js
 const accepts = ["spec"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-const id = params.spec ?? "spec:extraction.derive-graph";
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const id = params.spec;
 const context = g.specContext(id);
 
 if (context === undefined) {
@@ -1840,13 +1926,17 @@ ids or addresses.
 *When you need this: you hold a word or a key and want the entries that carry it, where concept
 search (recipe 6) stops at the section.*
 
-The parameter is `params.term`, your word or phrase; an empty term returns no matches.
+The parameter is `params.term`, your word or phrase; an empty term returns no matches, and an
+absent one `diagnostics`.
 
 ```js
 const accepts = ["term"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const term = params.term ?? "suffix";
+if (params.term === undefined) {
+  return { diagnostics: [{ parameter: "term", problem: "Supply the word or phrase to search for." }] };
+}
+const term = params.term;
 const tokensOf = (text) =>
   text
     .replace(/(\p{Lu})(?=\p{Lu}\p{Ll})/gu, "$1 ")
@@ -2081,10 +2171,11 @@ return { totals: { entries: rows.length, specs: new Set(rows.map((row) => row.sp
 or a page, and want to know which still resolve.*
 
 The parameter is `params.addresses`, the list of addresses you hold; an empty list returns no
-rows. A long list belongs in a file passed as `--params @PATH`.
+rows, and an absent one `diagnostics`. A long list belongs in a file passed as `--params @PATH`.
 `params.severity` is `"error"` by default or `"warning"`; another value returns diagnostics.
 Returns `{ totals, rows, findings }`; every unresolved row yields an `unresolved-address`
-finding. The shipped body also runs unchanged under `sdp validate --rules`.
+finding. The shipped body also runs unchanged under `sdp validate --rules`, with the addresses
+as its `--params`; without them it reports a rule execution failure.
 
 ```js
 const accepts = ["addresses", "severity"];
@@ -2094,12 +2185,10 @@ const severity = Object.hasOwn(params, "severity") ? params.severity : "error";
 if (severity !== "error" && severity !== "warning") {
   return { diagnostics: [{ parameter: "severity", problem: "Expected error or warning." }] };
 }
-const addresses = params.addresses ?? [
-  "spec:consumers.design-review#ui.packPage",
-  "spec:consumers.design-review#ui.memberTable",
-  "spec:consumers.absent#design.anyKey",
-  "spec:consumers.design-review",
-];
+if (params.addresses === undefined) {
+  return { diagnostics: [{ parameter: "addresses", problem: "Supply the entry addresses to resolve." }] };
+}
+const addresses = params.addresses;
 const expected = "spec:<id>#<section>.<key>, section design, ui, question, rule, or term; key lower-camel ASCII";
 const pattern = /^(spec:[A-Za-z0-9][A-Za-z0-9-]*(?:\.[A-Za-z0-9][A-Za-z0-9-]*)*)#(design|ui|question|rule|term)\.([a-z][A-Za-z0-9]*)$/u;
 const specIds = new Set(g.specs().map((spec) => spec.id));
@@ -2315,13 +2404,15 @@ answers to it, which code realizes it, whether a verifier is bound, and which bu
 builds on, with no fact read as another.*
 
 The parameter is `params.pack`, the Pack you are reviewing; an unknown Pack returns
-`{ id, found: false }`.
+`{ id, found: false }`, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.pack" }`.
 
 ```js
 const accepts = ["pack"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const id = params.pack ?? "pack:spec-studio-v1";
+if (params.pack === undefined) return { found: false, reason: "missing", expected: "params.pack" };
+const id = params.pack;
 const pack = g.packContext(id);
 
 if (pack === undefined) {
@@ -2447,14 +2538,16 @@ answers to it, and what the Pack rests on, as data a page or a script renders.*
 
 The parameters are `params.pack`, the Pack you are designing, and `params.detail`, absent or false
 for summaries, true for full rows, or a list of member ids for those full rows. An unknown Pack returns
-`{ id, found: false }`.
+`{ id, found: false }`, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.pack" }`.
 
 ```js
 const accepts = ["pack", "detail"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 const detail = params.detail ?? false;
-const id = params.pack ?? "pack:spec-studio-v1";
+if (params.pack === undefined) return { found: false, reason: "missing", expected: "params.pack" };
+const id = params.pack;
 const pack = g.packContext(id);
 
 if (pack === undefined) {
@@ -2629,13 +2722,17 @@ same assembly. The laws are `spec:consumers.pack-design`, `spec:consumers.agent-
 with the code, verifiers and Packs the change asks to follow.*
 
 The parameter is `params.specs`, the Spec ids you are changing; an id the graph does not hold comes
-back in `changed` with `resolved: false` and reaches nothing.
+back in `changed` with `resolved: false` and reaches nothing, and without the parameter the recipe
+answers `diagnostics`.
 
 ```js
 const accepts = ["specs"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
-const changed = params.specs ?? ["spec:validation.readiness-floor"];
+if (params.specs === undefined) {
+  return { diagnostics: [{ parameter: "specs", problem: "Supply the Spec ids you are changing." }] };
+}
+const changed = params.specs;
 const followed = new Set(["refines", "dependsOn", "constrainedBy", "decidedBy"]);
 const specIds = new Set(g.specs().map((spec) => spec.id));
 const byCodeUnit = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
@@ -2968,7 +3065,7 @@ const accepts = ["spec", "pack"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
 if (params.spec === undefined && params.pack === undefined) {
-  return {found: false, reason: "scope", expected: "params.spec or params.pack"};
+  return {found: false, reason: "missing", expected: "params.spec or params.pack"};
 }
 if (params.spec !== undefined && params.pack !== undefined) {
   return {found: false, reason: "scope", expected: "one of params.spec or params.pack"};
@@ -4005,8 +4102,8 @@ the parameters is a problem with no change rows.
 
 The rows carry facts about declared intent, with anchored changes excluded from scope movement.
 They confer no status or approval. A caller routes a moved change to a person and applies other
-changes through ordinary source edits on a worktree checked by `sdp validate`. This recipe does
-neither step. The check's law is `spec:consumers.intent-composition.proposal`; routing and applying
+changes through ordinary source edits on a worktree whose validation report, read through `sdp q`'s
+`report` or `sdp validate`, holds no error. This recipe does neither step. The check's law is `spec:consumers.intent-composition.proposal`; routing and applying
 are `spec:consumers.intent-composition`.
 
 ## 39. Slimming candidates
@@ -6315,3 +6412,107 @@ if (deferrals.length > 0) {
 while (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
 return { diagnostics: [], memo: `${lines.join("\n")}\n` };
 ```
+
+## 56. The law a Spec rests on
+
+*When you need this: you are about to change, review or teach one Spec and want the law it rests
+on as files to open and addresses to cite. For the rungs alone, run dependency footing (recipe
+21).*
+
+`params.spec` is the Spec; an unknown id returns `{ id, found: false }`, and without it the answer is
+`{ found: false, reason: "missing", expected: "params.spec" }`. `params.detail` defaults
+to `false`, which lists at most twelve rules a target; `true` lists every rule. The answer composes
+recipe 21 and keeps its fields.
+
+```js
+const accepts = ["spec", "detail"];
+const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
+if (unknownParams.length > 0) return { unknownParams, accepts };
+const detail = params.detail ?? false;
+if (typeof detail !== "boolean") {
+  return { diagnostics: [{ parameter: "detail", problem: "Expected true or false." }] };
+}
+if (params.spec === undefined) return { found: false, reason: "missing", expected: "params.spec" };
+const footing = await recipes(21, { spec: params.spec });
+if (!footing.found) return footing;
+
+const cap = 12;
+const clipped = [];
+const count = { rules: 0, keyedRules: 0 };
+const size = (value) => Object.keys(value ?? {}).length;
+const entries = (section) => Object.keys(section ?? {}).filter((key) => key !== "description").length;
+const length = (list) => (Array.isArray(list) ? list.length : 0);
+// A Decision section repeats rationale, alternative and consequence entries as lists.
+const decisionEntries = (section) => Object.entries(section ?? {})
+  .filter(([key]) => key !== "description")
+  .reduce((count, [, value]) => count + (Array.isArray(value) ? value.length : 1), 0);
+const law = footing.footing.map((row) => {
+  const context = row.resolved ? g.specContext(row.id) : undefined;
+  if (context === undefined) {
+    return { ...row, file: null, decision: false, rules: [], unkeyedRules: 0, alsoHolds: {} };
+  }
+  const sections = context.sections;
+  const lines = new Map(context.entryLocations.map((location) => [location.entry, location.line]));
+  const keys = new Map(Object.entries(sections.behavior?.ruleKeys ?? {}).map(([key, slot]) => [slot, key]));
+  const rules = (sections.behavior?.rules ?? []).map((_, index) => {
+    const key = keys.get(`rules[${index}]`);
+    return { line: lines.get(`rule[${index}]`) ?? null, address: key === undefined ? null : `${row.id}#rule.${key}` };
+  });
+  const unkeyedRules = rules.filter((rule) => rule.address === null).length;
+  count.rules += rules.length;
+  count.keyedRules += rules.length - unkeyedRules;
+  if (!detail && rules.length > cap) clipped.push(`${row.id} (${rules.length - cap} more)`);
+  const intent = sections.intent ?? {};
+  const held = {
+    intent: ["actor", "problem", "outcome", "value"].filter((field) => intent[field] !== undefined).length +
+      length(intent.risks) + length(intent.assumptions),
+    questions: length(intent.openQuestions),
+    terms: size(sections.model?.terms),
+    constraints: size(sections.constraints),
+    flows: size(sections.behavior?.flows),
+    examples: length(sections.behavior?.examples),
+    exampleSpace: sections.behavior?.exampleSpace === undefined ? 0 : 1,
+    design: entries(sections.design),
+    ui: entries(sections.ui),
+    decision: decisionEntries(sections.decision),
+    verification: length(sections.verification?.criteria),
+  };
+  return {
+    ...row,
+    file: context.file,
+    decision: context.specKind === "decision",
+    rules: detail ? rules : rules.slice(0, cap),
+    unkeyedRules,
+    alsoHolds: Object.fromEntries(Object.entries(held).filter(([, entryCount]) => entryCount > 0)),
+  };
+});
+
+return {
+  id: footing.id,
+  found: true,
+  statedReadiness: footing.statedReadiness,
+  floorReached: footing.floorReached,
+  totals: { ...footing.totals, decisions: law.filter((row) => row.decision).length, ...count },
+  law,
+  leftOut: clipped.length === 0 ? [] : [`Rules after the first ${cap} of a target: ${clipped.join(", ")}; pass detail: true.`],
+};
+```
+
+`law` holds recipe 21's `footing` rows in its order, one hop, each with:
+
+- `file`, the target's carrier, or null when the target does not resolve to a Spec;
+- `decision`, true for a decision record, whose ruling sits in its file's Decision section with no
+  line in the graph;
+- `rules`, each behavior rule's `line` and its entry `address`, null for an unkeyed rule: cite
+  that one by file and line, or propose a key with the rule-key proposal (recipe 48). Without
+  `detail`, a target with more than twelve rules lists the first twelve, and `leftOut` names each
+  such target with the count it left out;
+- `unkeyedRules`, the count of the target's rules with no address;
+- `alsoHolds`, the count of entries in each section the answer does not list (`intent`,
+  `questions`, `terms`, `constraints`, `flows`, `examples`, `exampleSpace`, `design`, `ui`,
+  `decision`, `verification`), present only when not zero, so open the file for law that lives
+  outside the rules. `intent` counts its actor, problem, outcome, value, risks and assumptions;
+  `questions` its open questions.
+
+`totals` keeps recipe 21's counts and adds `decisions`, `rules` and `keyedRules` across every
+target, the rules past a cap included. `leftOut` is an empty list when nothing was cut.

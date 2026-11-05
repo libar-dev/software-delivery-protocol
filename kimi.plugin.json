@@ -1,0 +1,6 @@
+{
+  "name": "software-delivery-protocol",
+  "version": "0.0.0",
+  "description": "Agent skills for the Libar Software Delivery Protocol: read the Spec graph through sdp q, author Specs and Packs, route delivery sessions, publish the Spec Studio and keep an Obsidian vault of the graph.",
+  "skills": "./skills/"
+}

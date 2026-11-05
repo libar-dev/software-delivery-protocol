@@ -8,6 +8,7 @@ import {
   mkdtemp,
   readFile,
   readdir,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -26,6 +27,9 @@ import {
   specTest,
   testAnchorId,
 } from "@libar-dev/software-delivery-protocol";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
+import { emptyOrientationAnswers } from "./helpers/on-ramp-checks.js";
+import { answeredStderr } from "./helpers/query-hint.js";
 
 const packageName = "@libar-dev/software-delivery-protocol";
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -217,7 +221,7 @@ async function packBuiltPackage(destination: string): Promise<PackedPackage> {
 function distFiles(): Record<string, { inode: string; size: string; mtime: string }> {
   return Object.fromEntries(
     readdirSync(join(repositoryRoot, "dist"), { recursive: true, withFileTypes: true })
-      .filter((entry) => entry.isFile())
+      .filter((entry) => entry.isFile() && !isOsMetadataFile(entry))
       .map((entry) => {
         const path = join(entry.parentPath, entry.name);
         const stats = statSync(path, { bigint: true });
@@ -502,7 +506,8 @@ bindExample({
   }, 60_000);
 
   it("proves the installed tarball lists import, dry-runs conversion without writes, and exposes the barrel", async () => {
-    const packageRoot = await mkdtemp(join(tmpdir(), "sdp-package-smoke-"));
+    // The physical path, as the session-start hook reads a session's directory.
+    const packageRoot = await realpath(await mkdtemp(join(tmpdir(), "sdp-package-smoke-")));
     const consumer = join(packageRoot, "consumer");
 
     try {
@@ -512,18 +517,25 @@ bindExample({
       const packedPaths = packed.files.map((file) => file.path);
       const adopterAssets = [
         "CONTEXT.md",
-        ".agents/skills/sdp-agent-surface/SKILL.md",
-        ".agents/skills/sdp-authoring/SKILL.md",
-        ".agents/skills/sdp-sessions/SKILL.md",
-        ".agents/skills/sdp-studio/SKILL.md",
-        ".agents/skills/sdp-vault/SKILL.md",
+        "plugin.json",
+        "skills/sdp-agent-surface/SKILL.md",
+        "skills/sdp-authoring/SKILL.md",
+        "skills/sdp-sessions/SKILL.md",
+        "skills/sdp-studio/SKILL.md",
+        "skills/sdp-vault/SKILL.md",
         "docs/agent-surface/recipes.md",
         "docs/agent-surface/upgrade-guide.md",
         "docs/agent-surface/architecture.md",
       ];
 
+      // The plugin's session-start hook ships whole: its hooks file and the script it runs.
+      const hookAssets = ["hooks/hooks.json", "hooks/session-start.mjs"];
+      // The compatibility shims for agent clients that do not load the portable layout.
+      const shimAssets = [".zcode-plugin/plugin.json", "kimi.plugin.json", "opencode/server.js"];
       const packedAssets = [
         ...adopterAssets,
+        ...hookAssets,
+        ...shimAssets,
         "schemas/sdp-proposal-1.schema.json",
         "docs/concept/DECISIONS.md",
       ];
@@ -534,9 +546,27 @@ bindExample({
           (path) =>
             !["LICENSE", "README.md", "package.json", ...packedAssets].includes(path) &&
             !path.startsWith("dist/") &&
-            !path.startsWith("specs/"),
+            !path.startsWith("specs/") &&
+            !path.startsWith("skills/"),
         ),
       ).toEqual([]);
+      expect(packedPaths.filter((path) => path.startsWith("hooks/")).sort()).toEqual(hookAssets);
+      // Each skill ships whole, its references and scripts beside its SKILL.md, and nothing else.
+      const skillPaths: string[] = [];
+      const walkSkills = async (directory: string): Promise<void> => {
+        for (const entry of await readdir(join(repositoryRoot, directory), {
+          withFileTypes: true,
+        })) {
+          const path = `${directory}/${entry.name}`;
+          if (entry.isDirectory()) await walkSkills(path);
+          else if (entry.name !== ".DS_Store" && !entry.name.startsWith("._"))
+            skillPaths.push(path);
+        }
+      };
+      await walkSkills("skills");
+      expect(packedPaths.filter((path) => path.startsWith("skills/")).sort()).toEqual(
+        skillPaths.sort(),
+      );
       const carrierPaths: string[] = [];
       const walkCarriers = async (directory: string): Promise<void> => {
         for (const entry of await readdir(join(repositoryRoot, directory), {
@@ -762,6 +792,207 @@ relations: {}
       expect(
         JSON.parse(run(installedCli, ["q", "return g.specs().map(s => s.id)", "--json"], consumer)),
       ).toEqual(["spec:package.own"]);
+      // The reading skill's scripts, run from the installed plugin, select the project's own
+      // package and stay silent about version skew: skill and CLI are one copy.
+      const installedSkill = join(
+        consumer,
+        "node_modules",
+        "@libar-dev",
+        "software-delivery-protocol",
+        "skills",
+        "sdp-agent-surface",
+      );
+      const skillQuery = spawnSync(
+        process.execPath,
+        [join(installedSkill, "scripts", "q.mjs"), "return g.specs().map(s => s.id)", "--json"],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect({ status: skillQuery.status, stderr: skillQuery.stderr }).toEqual({
+        status: 0,
+        stderr: answeredStderr,
+      });
+      expect(JSON.parse(skillQuery.stdout)).toEqual(["spec:package.own"]);
+      // --protocol reads the Protocol's own Specs from the installed package: intent only.
+      const protocolQuery = spawnSync(
+        process.execPath,
+        [
+          join(installedSkill, "scripts", "q.mjs"),
+          'const c = g.specContext("spec:consumers.reading-on-ramp"); return c && c.deliveryFacts',
+          "--protocol",
+          "--json",
+        ],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect({ status: protocolQuery.status, stdout: protocolQuery.stdout.trim() }).toEqual({
+        status: 0,
+        stdout: "[]",
+      });
+      // Every call the installed reading skill prints runs as printed from the project; its
+      // worked law call answers there although the project's own corpus lacks its subject, one
+      // of the Protocol's own Specs.
+      const workedCalls = [
+        ...(await readFile(join(installedSkill, "SKILL.md"), "utf8")).matchAll(
+          /^```sh\n(?<call>[\s\S]*?)\n```$/gmu,
+        ),
+      ].map((match) =>
+        (match.groups?.call ?? "").replaceAll("<skill-dir>", JSON.stringify(installedSkill)),
+      );
+      const workedRuns = workedCalls.map((call) => ({
+        call,
+        run: spawnSync(call, { cwd: consumer, encoding: "utf8", shell: true }),
+      }));
+      for (const { call, run } of workedRuns) {
+        expect({ call, status: run.status, stderr: run.stderr }).toEqual({
+          call,
+          status: 0,
+          stderr: answeredStderr,
+        });
+      }
+      const workedCall = workedRuns.find(({ call }) => call.includes("recipes(56"))?.run;
+      expect(workedCall).toBeDefined();
+      const workedAnswer = JSON.parse(workedCall?.stdout ?? "{}") as Record<string, unknown>;
+      expect({
+        found: workedAnswer.found,
+        unknownParams: workedAnswer.unknownParams,
+        law: Array.isArray(workedAnswer.law) && workedAnswer.law.length > 0,
+      }).toEqual({ found: true, unknownParams: undefined, law: true });
+      // The vault skill's example, copied as printed, resolves both of its links, which name
+      // the Protocol's own Specs.
+      const vaultSkill = join(installedSkill, "..", "sdp-vault");
+      const vaultCall =
+        /^ *(?<call>node <skill-dir>\/\.\.\/sdp-agent-surface\/scripts\/q\.mjs .+)$/mu.exec(
+          await readFile(join(vaultSkill, "SKILL.md"), "utf8"),
+        )?.groups?.call ?? "";
+      const vaultCheck = spawnSync(
+        vaultCall.replaceAll("<skill-dir>", JSON.stringify(vaultSkill)),
+        { cwd: consumer, encoding: "utf8", shell: true },
+      );
+      expect({ status: vaultCheck.status, stderr: vaultCheck.stderr }).toEqual({
+        status: 0,
+        stderr: answeredStderr,
+      });
+      expect(vaultCheck.stdout).toContain("'spec:model.rule-keys: found'");
+      expect(vaultCheck.stdout).toMatch(
+        /'spec:consumers\.obsidian-vault#rule\.guard: consumers\/obsidian-vault\.sdp\.md:\d+'/u,
+      );
+      const skillOrientation = spawnSync(
+        process.execPath,
+        [join(installedSkill, "scripts", "orient.mjs"), "--json"],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect({ status: skillOrientation.status, stderr: skillOrientation.stderr }).toEqual({
+        status: 0,
+        stderr: answeredStderr,
+      });
+      const orientation = JSON.parse(skillOrientation.stdout) as {
+        number: number;
+        answer?: unknown;
+        error?: string;
+      }[];
+      expect(orientation.map((answer) => answer.number)).toEqual([
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+      ]);
+      expect(orientation.filter((answer) => answer.error !== undefined)).toEqual([]);
+      // A project gives no subject, so answers 8 to 11 demonstrate on what their bodies derive
+      // from its one Spec.
+      expect(emptyOrientationAnswers(orientation)).toEqual([]);
+      // A call with no body through the installed runner, as the catalog that ends a printed
+      // orientation run takes it, lists call forms that run through that runner and reach the
+      // installed package's files from the project; each runs as printed.
+      const installedPath = "node_modules/@libar-dev/software-delivery-protocol/";
+      const runnerCall = `node ${installedPath}skills/sdp-agent-surface/scripts/q.mjs`;
+      const listed = spawnSync(process.execPath, [join(installedSkill, "scripts", "q.mjs")], {
+        cwd: consumer,
+        encoding: "utf8",
+        input: "",
+      });
+      expect(listed.status).toBe(1);
+      expect(listed.stderr).toContain(
+        `The recipes by category; ${installedPath}docs/agent-surface/recipes.md holds each one's parameters and answer:`,
+      );
+      const callForms = (listed.stderr.split("Call forms:\n")[1] ?? "")
+        .trimEnd()
+        .split("\n")
+        .map((line) => line.trim().split(/ {2,}/u)[0] ?? "");
+      expect(callForms).toEqual([
+        `${runnerCall} '<body>' [--params JSON] [--json]`,
+        `${runnerCall} "$(cat ${installedPath}dist/recipes/NN-slug.js)" --params JSON`,
+        `${runnerCall} 'const answer = await recipes(N, {}); return answer'`,
+      ]);
+      const listedRuns = [
+        (callForms[1] ?? "").replace("NN-slug", "02-the-drift-alarm").replace(/JSON$/u, "'{}'"),
+        (callForms[2] ?? "").replace("recipes(N,", "recipes(2,"),
+      ].map((call) => ({
+        call,
+        ran: spawnSync(call, { cwd: consumer, encoding: "utf8", shell: true }),
+      }));
+      for (const { call, ran } of listedRuns) {
+        expect({ call, status: ran.status, stderr: ran.stderr }).toEqual({
+          call,
+          status: 0,
+          stderr: answeredStderr,
+        });
+      }
+      expect(listedRuns[0]?.ran.stdout).toBe(listedRuns[1]?.ran.stdout);
+      // A CommonJS script that imports the package's ESM entry finds the shipped recipes: the
+      // engine locates its package from its own module, never from the script's `__dirname`.
+      const commonJsEval = spawnSync(
+        process.execPath,
+        [
+          "--input-type=commonjs",
+          "-e",
+          `import(${JSON.stringify(packageName)}).then(async ({ extract, evaluateBody }) => { const { graph } = extract({ root: process.cwd() }); process.stdout.write(JSON.stringify(await evaluateBody("return await recipes(2, {})", { graph }))); });`,
+        ],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect({ status: commonJsEval.status, stderr: commonJsEval.stderr }).toEqual({
+        status: 0,
+        stderr: "",
+      });
+      expect(JSON.parse(commonJsEval.stdout)).toEqual(
+        JSON.parse(run(installedCli, ["q", "return await recipes(2, {})", "--json"], consumer)),
+      );
+      // The installed plugin's session-start hook, run as a client runs its hooks file: the
+      // command through a shell with the plugin root in the environment, the session's working
+      // directory on standard input. It orients the consumer's corpus, never the package's.
+      const installedPackage = join(
+        consumer,
+        "node_modules",
+        "@libar-dev",
+        "software-delivery-protocol",
+      );
+      const hooksFile = JSON.parse(
+        await readFile(join(installedPackage, "hooks", "hooks.json"), "utf8"),
+      ) as { hooks: { SessionStart: { hooks: { command: string }[] }[] } };
+      const hookCommands = hooksFile.hooks.SessionStart.flatMap((group) =>
+        group.hooks.map((handler) => handler.command),
+      );
+      expect(hookCommands).toHaveLength(1);
+      const sessionStart = spawnSync(hookCommands[0] ?? "", {
+        cwd: consumer,
+        encoding: "utf8",
+        env: { ...process.env, CLAUDE_PLUGIN_ROOT: installedPackage },
+        input: JSON.stringify({
+          cwd: consumer,
+          hook_event_name: "SessionStart",
+          source: "startup",
+        }),
+        shell: true,
+      });
+      expect({ status: sessionStart.status, stderr: sessionStart.stderr }).toEqual({
+        status: 0,
+        stderr: "",
+      });
+      // The hook prints additional-context JSON, the form every command-hook client reads.
+      const { hookSpecificOutput } = JSON.parse(sessionStart.stdout) as {
+        hookSpecificOutput: { hookEventName: string; additionalContext: string };
+      };
+      expect(hookSpecificOutput.hookEventName).toBe("SessionStart");
+      const context = hookSpecificOutput.additionalContext;
+      expect(context).toMatch(/^\$ cd .+ --only 1,5\n/u);
+      expect(context).toContain(`$ cd ${consumer} && `);
+      expect(context).toContain("specs: 1,");
+      expect(context).toContain("## 5. Next work");
       await rm(join(consumer, "own.sdp.md"));
       await copyFile(importFixture, join(consumer, "behavior.sdp.ts"));
       const sdpImportDryRun = run(
@@ -784,7 +1015,7 @@ relations: {}
           "node_modules",
           "@libar-dev",
           "software-delivery-protocol",
-          ".agents/skills/sdp-agent-surface/SKILL.md",
+          "skills/sdp-agent-surface/SKILL.md",
         ),
         "utf8",
       );
@@ -794,7 +1025,7 @@ relations: {}
           "node_modules",
           "@libar-dev",
           "software-delivery-protocol",
-          ".agents/skills/sdp-authoring/SKILL.md",
+          "skills/sdp-authoring/SKILL.md",
         ),
         "utf8",
       );
@@ -804,7 +1035,7 @@ relations: {}
           "node_modules",
           "@libar-dev",
           "software-delivery-protocol",
-          ".agents/skills/sdp-sessions/SKILL.md",
+          "skills/sdp-sessions/SKILL.md",
         ),
         "utf8",
       );
@@ -830,7 +1061,7 @@ relations: {}
             "node_modules",
             "@libar-dev",
             "software-delivery-protocol",
-            `.agents/skills/${skill}/SKILL.md`,
+            `skills/${skill}/SKILL.md`,
           ),
           "utf8",
         );

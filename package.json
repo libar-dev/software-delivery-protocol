@@ -18,11 +18,12 @@
     "docs/agent-surface/upgrade-guide.md",
     "schemas/sdp-proposal-1.schema.json",
     "docs/agent-surface/architecture.md",
-    ".agents/skills/sdp-agent-surface/SKILL.md",
-    ".agents/skills/sdp-authoring/SKILL.md",
-    ".agents/skills/sdp-sessions/SKILL.md",
-    ".agents/skills/sdp-studio/SKILL.md",
-    ".agents/skills/sdp-vault/SKILL.md"
+    "plugin.json",
+    "skills/**",
+    "hooks/**",
+    "kimi.plugin.json",
+    ".zcode-plugin/**",
+    "opencode/**"
   ],
   "bin": {
     "sdp": "./dist/cli/sdp.js"
@@ -81,7 +82,7 @@
     "check:git-install": "node ./check-git-install.mjs",
     "test:watch": "vitest",
     "sdp": "node ./dist/cli/sdp.js",
-    "sdp:q": "node ./dist/cli/sdp.js q --exclude explorations --exclude examples --exclude test/fixtures/import/parity",
+    "sdp:q": "node ./skills/sdp-agent-surface/scripts/q.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -115,6 +116,7 @@
   "dependencies": {
     "@cucumber/gherkin": "42.0.1",
     "@cucumber/messages": "34.2.1",
+    "junk": "4.0.1",
     "ts-morph": "~28.0.0",
     "yaml": "2.9.0"
   }

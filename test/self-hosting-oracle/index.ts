@@ -73,6 +73,7 @@ export { expectedAnchors, expectedBindingEdges, expectedCommentAnchorIds } from 
 export { expectedDeclaredRelations } from "./declared-relations.js";
 export {
   expectedAdopterSpeedPackMembers,
+  expectedAgentOnRampsPackMembers,
   expectedCorpusChecksPackMembers,
   expectedDesignIterationPackMembers,
   expectedObsidianVaultPackMembers,

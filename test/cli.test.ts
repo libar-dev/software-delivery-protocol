@@ -52,6 +52,7 @@ import {
   materializeGherkinCorpus,
   removeMaterializedCorpus,
 } from "./helpers/extract-corpus.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const regenerationTestAnchor = specTest({
   id: testAnchorId("test:protocol.regenerability"),
@@ -105,7 +106,7 @@ function readGeneratedTree(root: string): ReadonlyMap<string, string> {
   const generatedRoot = join(root, "generated");
 
   for (const entry of readdirSync(generatedRoot, { recursive: true, withFileTypes: true })) {
-    if (entry.isFile()) {
+    if (entry.isFile() && !isOsMetadataFile(entry)) {
       const absolute = join(entry.parentPath, entry.name);
       tree.set(absolute.slice(generatedRoot.length + 1), readFileSync(absolute, "utf8"));
     }
@@ -133,11 +134,12 @@ describe("sdp cli", () => {
 
   it("points operators to the shipped on-ramps and Protocol corpus", () => {
     for (const path of [
-      ".agents/skills/sdp-agent-surface/SKILL.md",
-      ".agents/skills/sdp-authoring/SKILL.md",
-      ".agents/skills/sdp-sessions/SKILL.md",
-      ".agents/skills/sdp-studio/SKILL.md",
-      ".agents/skills/sdp-vault/SKILL.md",
+      "plugin.json",
+      "skills/sdp-agent-surface/SKILL.md",
+      "skills/sdp-authoring/SKILL.md",
+      "skills/sdp-sessions/SKILL.md",
+      "skills/sdp-studio/SKILL.md",
+      "skills/sdp-vault/SKILL.md",
       "docs/agent-surface/recipes.md",
       "docs/agent-surface/architecture.md",
       "schemas/sdp-proposal-1.schema.json",

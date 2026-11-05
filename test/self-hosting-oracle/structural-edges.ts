@@ -66,6 +66,7 @@ export const structuralMembershipExceptions = [
   "impl:protocol.reading-on-ramp",
   "impl:protocol.studio-on-ramp",
   "impl:protocol.vault-on-ramp",
+  "impl:protocol.skill-shape",
   "impl:protocol.design-diff-recipe",
   "impl:protocol.perspective-filter-recipe",
   "impl:protocol.context-bundle-recipe",

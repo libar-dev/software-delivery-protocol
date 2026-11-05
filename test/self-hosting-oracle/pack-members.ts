@@ -74,6 +74,7 @@ export const expectedPackMembers = [
   "spec:model.anchors",
   "spec:model.anchors.lookalike-refusal",
   "spec:model.anchors.physical-identity",
+  "spec:model.anchors.markdown-deliverable",
   "spec:model.structural-patterns",
   "spec:model.open-question-keys",
   "spec:model.open-question-keys.keyed-question-resolves",
@@ -238,6 +239,7 @@ export const expectedPackMembers = [
   "spec:consumers.graph-first-planning",
   "spec:consumers.adopter-on-ramp",
   "spec:consumers.shipped-protocol-corpus",
+  "spec:consumers.agent-client-support",
   "spec:consumers.derived-readiness-banner",
   "spec:consumers.derived-readiness-banner.dishonest-divergence",
   "spec:consumers.derived-readiness-banner.honest-headroom",
@@ -249,6 +251,7 @@ export const expectedPackMembers = [
   "spec:consumers.wholesale-view-rewrite.late-stale-page",
   "spec:consumers.wholesale-view-rewrite.failed-run-view-removed",
   "spec:consumers.wholesale-view-rewrite.build-invalidates-view",
+  "spec:consumers.wholesale-view-rewrite.validate-page-roots",
   "spec:consumers.agent-surface.address-and-cycle-recipes",
   "spec:consumers.agent-surface.address-and-cycle-recipes.cycle-fails-a-rules-run",
   "spec:consumers.agent-surface.address-and-cycle-recipes.unresolved-address-fails-a-rules-run",
@@ -413,7 +416,6 @@ export const expectedPackMembers = [
   "spec:protocol.role-vocabulary",
   "spec:protocol.capability-epics",
   "spec:protocol.roadmap-replaces-plans",
-  "spec:protocol.delivery-record-cleanup",
   "spec:decisions.plain-language-references",
   "spec:decisions.concept-docs-dissolve",
   "spec:decisions.one-validation-path",
@@ -461,6 +463,8 @@ export const expectedPackMembers = [
   "spec:decisions.roadmap-priority",
   "spec:decisions.roadmap-over-plans",
   "spec:decisions.epics-of-any-kind",
+  "spec:decisions.agent-plugin-package",
+  "spec:decisions.session-start-hook",
 ] as const;
 
 export const expectedStudioPackMembers = [
@@ -655,7 +659,6 @@ export const expectedRoadmapsAndSlicesPackMembers = [
 
 // The authored membership of `pack:roadmap`, in manifest order: the Protocol's proposed priority.
 export const expectedRoadmapPackMembers = [
-  "spec:protocol.delivery-record-cleanup",
   "spec:consumers.spec-studio.cited-line-text",
   "spec:consumers.spec-studio.register-input",
   "spec:consumers.edit-model",
@@ -743,6 +746,32 @@ export const expectedAdopterSpeedPackMembers = [
   "spec:consumers.upgrade-kit.rule-key-proposal.proposal-applies-clean",
 ] as const;
 
+// The authored membership of `pack:agent-on-ramps-v1`, in manifest order.
+export const expectedAgentOnRampsPackMembers = [
+  "spec:consumers.shipped-protocol-corpus",
+  "spec:decisions.agent-plugin-package",
+  "spec:decisions.session-start-hook",
+  "spec:consumers.agent-client-support",
+  "spec:consumers.reading-on-ramp",
+  "spec:consumers.agent-surface.register-recipes",
+  "spec:consumers.agent-surface.answer-shapes",
+  "spec:consumers.agent-surface.evaluation-sink",
+  "spec:consumers.agent-surface",
+  "spec:consumers.agent-surface.demand-map-entries",
+  "spec:consumers.agent-surface.scripted-context-body",
+  "spec:consumers.authoring-on-ramp",
+  "spec:consumers.adopter-on-ramp",
+  "spec:model.open-question-fields",
+  "spec:consumers.delivery-session-on-ramp",
+  "spec:consumers.graph-first-planning",
+  "spec:consumers.intent-composition",
+  "spec:consumers.studio-on-ramp",
+  "spec:consumers.vault-on-ramp",
+  "spec:consumers.wholesale-view-rewrite",
+  "spec:consumers.wholesale-view-rewrite.validate-page-roots",
+  "spec:model.anchors.markdown-deliverable",
+] as const;
+
 export const expectedPacks = [
   {
     id: "pack:adopter-speed-v1",
@@ -753,6 +782,16 @@ export const expectedPacks = [
       "What a corpus needs to move onto the Protocol's capabilities at scale and keep designing fast. First the reach of a body and a rules file: shipped recipes called as functions, recipes that answer as rules files, rules and parameter files watched, outside registers checked by pattern, help on every verb and one verb that writes every projection root. Then keys that survive rewording, for example steps and for Model terms, and the test lines that cite a pinned declaration. Then reading material that fits a budget in parts. Last, the order a person makes the waiting statements in, and the kit that shows a corpus what it could adopt next. Each Spec is followed by the examples that verify it.",
     file: "specs/adopter-speed.pack.sdp.md",
     members: expectedAdopterSpeedPackMembers,
+  },
+  {
+    id: "pack:agent-on-ramps-v1",
+    nodeType: "Pack",
+    claim: "declared",
+    title: "Agent on-ramps",
+    framing:
+      "The on-ramps that let an agent turn intent straight into Specs, with no prose specification in between: five skills shipped with the package, one each for reading the graph, authoring Specs, doing a session's delivery work, publishing the Studio and keeping the vault. First the package as a portable Agent Plugin: what it ships and the one shape every skill keeps, the ruling that the package root is the plugin, the session-start hook that puts the graph's orientation answers in a session's context, and the agent clients the plugin serves, each through the standard or a named shim. Then the reading skill and the engine it teaches: the law a Spec rests on, recipe 56; the recipe catalog sorted into categories; and the hint and catalog listing `sdp q` prints, with the agent surface and its two examples that now expect that hint. Then the authoring skill, an adopter's path through it and the open-question fields it teaches, whose refusals the arc names extraction errors; the sessions skill, with the planning rules and the step that applies a received change proposal; and the Studio and vault skills. Then the rule that every build removes the generated page roots, which each skill warns about, with its new rule for files an operating system writes there. Last, two questions the arc leaves to the owner: whether a validate run should keep or name the page roots it removes, and whether a Markdown deliverable, such as a skill, should carry its own anchor. Pack design, recipe 29, shows each member's rungs, design columns and code bindings; the design diff, recipe 35, shows what the arc changed from its base.",
+    file: "specs/agent-on-ramps.pack.sdp.md",
+    members: expectedAgentOnRampsPackMembers,
   },
   {
     id: "pack:spec-studio-v1",
@@ -812,7 +851,7 @@ export const expectedPacks = [
     claim: "declared",
     title: "The Protocol's roadmap",
     framing:
-      "The Protocol's next work, first entry first. The order is a preference: it dates, gates and sequences nothing, and what each entry still needs is read from the graph each time.\n\nFirst the cleanup that removes the frozen plans, review reports and superseded concept material, as the roadmap and the pull request record make possible. Then the two steps a reader of the Studio's pages could not take, the words of a test line that checks a declaration and an outside register's entries, and then the composed-intent model the build backlog holds. What the first adopter's mass update asks for joins when the owner selects it; a capture landing adds nothing here. An entry leaves by an edit to this manifest once its selected work is complete or no longer belongs among the next work.",
+      "The Protocol's next work, first entry first. The order is a preference: it dates, gates and sequences nothing, and what each entry still needs is read from the graph each time.\n\nFirst the two steps a reader of the Studio's pages could not take, the words of a test line that checks a declaration and an outside register's entries, and then the composed-intent model the build backlog holds. What the first adopter's mass update asks for joins when the owner selects it; a capture landing adds nothing here. An entry leaves by an edit to this manifest once its selected work is complete or no longer belongs among the next work.",
     file: "specs/roadmap.pack.sdp.md",
     members: expectedRoadmapPackMembers,
     order: "priority",
