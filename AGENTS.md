@@ -165,7 +165,8 @@ description, read `docs/contributing/arc-record.md`.
 The `check:self-hosting` step emits one intentional warning kind, `honesty/gaps`, one per
 owner-ratified `ready` Spec, decisions aside, without a resolving verifier binding. `check:example`
 reports 0 errors and 0 warnings; its unbound `defined` example is deliberate. Any other warning,
-`conformance/prose-mentions` included, is a regression. `npm test` reaches the npm registry.
+`conformance/prose-mentions` included, is a regression; for a prose mention, declare the relation
+that holds or name the Spec in words instead of by id. `npm test` reaches the npm registry.
 
 Tracer bullets: author an example's Specs and anchored code before the carrier or extractor work
 they exercise is finished, and when `examples/checkout-v1` stops extracting or validating, fix the
@@ -173,7 +174,9 @@ carrier or the extractor, not the example.
 
 Where to look: `docs/concept/` (principle-led design and its reading conventions),
 `docs/concept/DECISIONS.md` (decision names), `jtbd-stories/` (the jobs) and `examples/checkout-v1`
-(the worked example). Checkout-only practice: `docs/contributing/self-hosting.md`.
+(the worked example). Checkout-only practice: `docs/contributing/self-hosting.md`. Read it before
+an edit to anything the self-hosting oracle pins, a Spec, Pack member, anchor or retained warning,
+existing ones included: the oracle changes in the same commit.
 
 ## Lineage (temporary: Specs and queries replace it)
 
