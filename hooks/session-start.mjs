@@ -217,16 +217,17 @@ function readClaim(claim) {
  * Claims this session event for this copy of the hook. Returns `{ print, finish }`: `print` is
  * false when another copy holds the event, running now or finished within the grace; `finish`
  * records that this copy's run ended. Expiry is read and the claim replaced under the lock, so two
- * copies that find one expired claim never both win.
+ * copies that find one expired claim never both win. `clock` times the claim; the wait for the lock
+ * runs on real time.
  */
-export function claimEvent(input, paths = eventPaths(input)) {
+export function claimEvent(input, paths = eventPaths(input), clock = Date.now) {
   const open = { print: true, finish: () => undefined };
   if (paths === undefined) return open;
   try {
     // A directory someone else could write to coordinates nothing: print rather than trust it.
     if (!ownDirectory(paths.directory)) return open;
     const claimed = whileLocked(paths.lock, () => {
-      const now = Date.now();
+      const now = clock();
       const current = readClaim(paths.claim);
       const held =
         current !== undefined &&
@@ -245,7 +246,7 @@ export function claimEvent(input, paths = eventPaths(input)) {
         whileLocked(paths.lock, () => {
           const current = readClaim(paths.claim);
           if (current?.token === claimed.value)
-            replaceFile(paths.claim, JSON.stringify({ ...current, finished: Date.now() }));
+            replaceFile(paths.claim, JSON.stringify({ ...current, finished: clock() }));
         });
       } catch {
         // The claim stays running and lapses after its window.

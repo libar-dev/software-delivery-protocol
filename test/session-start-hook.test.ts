@@ -17,6 +17,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { inspect } from "node:util";
 
 import { afterAll, describe, expect, it } from "vitest";
 
@@ -28,6 +29,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const hook = join(repoRoot, "hooks/session-start.mjs");
+const lockSignal = join(repoRoot, "test/helpers/hook-lock-signal.mjs");
 const packageName = "@libar-dev/software-delivery-protocol";
 // Claude Code caps hook output at 10,000 characters; Codex spills one hook's context past about
 // 2,500 tokens. The script bounds its output under both.
@@ -37,6 +39,19 @@ const scratch = mkdtempSync(join(tmpdir(), "sdp-session-start-"));
 afterAll(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
+
+// Each copy of the hook the suite runs gets a temporary directory inside the scratch one, so its
+// claims never reach the directory where live sessions coordinate.
+const temporary = join(scratch, "tmp");
+mkdirSync(temporary);
+const hookEnv = { ...process.env, TMPDIR: temporary, TMP: temporary, TEMP: temporary };
+// The claim directory the hook makes under that temporary directory.
+const claims = join(
+  temporary,
+  typeof process.getuid === "function"
+    ? `sdp-session-start-${String(process.getuid())}`
+    : "sdp-session-start",
+);
 
 function carrier(id: string, title: string): string {
   return `---
@@ -87,6 +102,7 @@ function runHook(
   const run = spawnSync(process.execPath, [hook, ...args], {
     cwd,
     encoding: "utf8",
+    env: hookEnv,
     input: input === undefined ? "" : JSON.stringify(input),
   });
   return {
@@ -96,17 +112,26 @@ function runHook(
   };
 }
 
-interface AsyncRun {
+interface WaitingRun {
+  /** Settles once the copy has found the event's lock held. */
+  readonly waiting: Promise<void>;
   /** Settles when the copy exits. */
   readonly done: Promise<{ status: number; stdout: string }>;
-  /** True once the copy has exited. */
-  readonly exited: () => boolean;
 }
 
-function startHook(input: Record<string, unknown>): AsyncRun {
+/**
+ * Starts one copy of the hook while the test holds the event's lock. The copy is preloaded with
+ * `test/helpers/hook-lock-signal.mjs`, which writes a signal file the first time the copy finds the
+ * lock held, so the test changes the claim or releases the lock only once the copy waits on it.
+ */
+function startWaiting(input: Record<string, unknown>): WaitingRun {
+  const signal = join(scratch, `lock-signal-${randomUUID()}`);
   let exited = false;
   const done = new Promise<{ status: number; stdout: string }>((settle, fail) => {
-    const child = spawn(process.execPath, [hook], { cwd: scratch });
+    const child = spawn(process.execPath, ["--import", pathToFileURL(lockSignal).href, hook], {
+      cwd: scratch,
+      env: { ...hookEnv, SDP_TEST_LOCK_SIGNAL: signal },
+    });
     let stdout = "";
     child.stdout.setEncoding("utf8").on("data", (chunk: string) => {
       stdout += chunk;
@@ -118,11 +143,13 @@ function startHook(input: Record<string, unknown>): AsyncRun {
     });
     child.stdin.end(JSON.stringify(input));
   });
-  return { done, exited: () => exited };
-}
-
-function runHookAsync(input: Record<string, unknown>): Promise<{ status: number; stdout: string }> {
-  return startHook(input).done;
+  const reachLock = async () => {
+    while (!existsSync(signal)) {
+      if (exited) throw new Error("the copy exited before it found the lock held");
+      await sleep(10);
+    }
+  };
+  return { waiting: reachLock(), done };
 }
 
 interface EventPaths {
@@ -136,6 +163,7 @@ interface HookModule {
   claimEvent: (
     input: Record<string, unknown>,
     paths?: EventPaths,
+    clock?: () => number,
   ) => { print: boolean; finish: () => void };
   claimSession: (input: Record<string, unknown>, directory?: string) => boolean;
 }
@@ -145,7 +173,7 @@ async function hookModule(): Promise<HookModule> {
 }
 
 /** The claim and lock files the hook coordinates one session event's copies through. */
-async function eventPaths(input: Record<string, unknown>, directory?: string): Promise<EventPaths> {
+async function eventPaths(input: Record<string, unknown>, directory = claims): Promise<EventPaths> {
   const paths = (await hookModule()).eventPaths(input, directory);
   if (paths === undefined) throw new Error("an input with a session id has event paths");
   mkdirSync(paths.directory, { recursive: true, mode: 0o700 });
@@ -422,18 +450,66 @@ ${entries.map((id) => `  - ${id}`).join("\n")}
     );
   }, 60_000);
 
-  it("prints once for copies of one session event, run together or one after another", async () => {
-    const session = randomUUID();
-    const copies = await Promise.all([
-      runHookAsync({ cwd: ownProject, session_id: session, source: "startup" }),
-      runHookAsync({ cwd: ownProject, session_id: session, source: "startup" }),
-    ]);
+  it("prints once for copies of one session event that run together", async () => {
+    const input = { cwd: ownProject, session_id: randomUUID(), source: "startup" };
+    const paths = await eventPaths(input);
 
-    expect(copies.map((copy) => copy.status)).toEqual([0, 0]);
-    expect(copies.filter((copy) => copy.stdout !== "")).toHaveLength(1);
-    // A client that runs its copies in turn starts the next as soon as the first exits.
-    expect(runHook({ cwd: ownProject, session_id: session, source: "startup" }).stdout).toBe("");
+    // Both copies wait on one lock, so neither claims the event before the other has arrived.
+    writeFileSync(paths.lock, "held");
+    const copies = [startWaiting(input), startWaiting(input)];
+    await Promise.all(copies.map((copy) => copy.waiting));
+    rmSync(paths.lock);
+    const runs = await Promise.all(copies.map((copy) => copy.done));
+
+    expect(runs.map((run) => run.status)).toEqual([0, 0]);
+    expect(runs.filter((run) => run.stdout !== "")).toHaveLength(1);
   }, 60_000);
+
+  it("holds an event while its copy runs and for two seconds after it ends", async () => {
+    const module = await hookModule();
+    const directory = mkdtempSync(join(scratch, "claims-"));
+    let now = 1_000_000;
+    const clock = () => now;
+
+    // A client that runs its copies in turn starts the next as soon as the first ends.
+    const ended = { cwd: ownProject, session_id: randomUUID(), source: "startup" };
+    const endedPaths = await eventPaths(ended, directory);
+    const first = module.claimEvent(ended, endedPaths, clock);
+    expect(first.print).toBe(true);
+    now += 500;
+    first.finish();
+    now += 1_999;
+    expect(module.claimEvent(ended, endedPaths, clock).print).toBe(false);
+    now += 1;
+    expect(module.claimEvent(ended, endedPaths, clock).print).toBe(true);
+
+    // A copy killed mid-run never ends its claim, which lapses 35 seconds after it started.
+    const killed = { cwd: ownProject, session_id: randomUUID(), source: "startup" };
+    const killedPaths = await eventPaths(killed, directory);
+    now = 1_000_000;
+    expect(module.claimEvent(killed, killedPaths, clock).print).toBe(true);
+    now += 34_999;
+    expect(module.claimEvent(killed, killedPaths, clock).print).toBe(false);
+    now += 1;
+    expect(module.claimEvent(killed, killedPaths, clock).print).toBe(true);
+  });
+
+  it("prints when the lock stays held past its wait, and leaves that lock alone", async () => {
+    const module = await hookModule();
+    const input = { cwd: ownProject, session_id: randomUUID(), source: "startup" };
+    const paths = await eventPaths(input, mkdtempSync(join(scratch, "claims-")));
+    // A copy killed while it held the lock leaves the lock behind.
+    writeFileSync(paths.lock, "held");
+
+    const started = Date.now();
+    const claimed = module.claimEvent(input, paths);
+    claimed.finish();
+
+    expect(claimed.print).toBe(true);
+    expect(Date.now() - started).toBeGreaterThanOrEqual(2_000);
+    expect(readFileSync(paths.lock, "utf8")).toBe("held");
+    expect(existsSync(paths.claim)).toBe(false);
+  }, 10_000);
 
   it("prints again for the session's next event, of the same source or another", async () => {
     const session = randomUUID();
@@ -444,6 +520,8 @@ ${entries.map((id) => `  - ${id}`).join("\n")}
     // A second resume a few seconds after the first one's answers is another event.
     await sleep(2_500);
     expect(runHook(input).stdout).toContain("specs: 1,");
+    // The suite's copies keep their claims inside its scratch directory.
+    expect(existsSync((await eventPaths(input)).claim)).toBe(true);
   }, 60_000);
 
   it("lets exactly one copy replace an expired claim, however the copies interleave", async () => {
@@ -455,9 +533,8 @@ ${entries.map((id) => `  - ${id}`).join("\n")}
     // that takes the lock first replaces the claim and the other finds it fresh.
     writeFileSync(paths.claim, expired);
     writeFileSync(paths.lock, "held");
-    const racing = [startHook(input), startHook(input)];
-    await sleep(500);
-    expect(racing.map((copy) => copy.exited())).toEqual([false, false]);
+    const racing = [startWaiting(input), startWaiting(input)];
+    await Promise.all(racing.map((copy) => copy.waiting));
     rmSync(paths.lock);
     const raced = await Promise.all(racing.map((copy) => copy.done));
     expect(raced.filter((copy) => copy.stdout !== "")).toHaveLength(1);
@@ -465,9 +542,8 @@ ${entries.map((id) => `  - ${id}`).join("\n")}
     // A copy waiting on the lock reads the claim the holder wrote, never the one it found first.
     writeFileSync(paths.claim, expired);
     writeFileSync(paths.lock, "held");
-    const waiting = startHook(input);
-    await sleep(500);
-    expect(waiting.exited()).toBe(false);
+    const waiting = startWaiting(input);
+    await waiting.waiting;
     writeFileSync(paths.claim, JSON.stringify({ started: Date.now(), token: "holder" }));
     rmSync(paths.lock);
     expect(await waiting.done).toEqual({ status: 0, stdout: "" });
@@ -532,16 +608,38 @@ describe("the session-start hook's output", () => {
   it("prints its answers as additional-context JSON for the session-start event", () => {
     const run = runHook({ cwd: ownProject, source: "startup" });
     const output = JSON.parse(run.raw) as HookOutput;
+    const runner = `node_modules/${packageName}/skills/sdp-agent-surface/scripts/orient.mjs`;
+    const derived = spawnSync(
+      process.execPath,
+      [join(ownProject, runner), "--only", "1,5", "--json"],
+      { cwd: ownProject, encoding: "utf8" },
+    );
+    const answers = JSON.parse(derived.stdout) as {
+      number: number;
+      title: string;
+      answer: unknown;
+    }[];
+    const rendered = (value: unknown) =>
+      inspect(value, {
+        depth: Infinity,
+        maxArrayLength: Infinity,
+        maxStringLength: Infinity,
+        breakLength: 120,
+      });
 
     expect(run.status).toBe(0);
+    expect(derived.status).toBe(0);
+    expect(answers.map((answer) => answer.number)).toEqual([1, 5]);
     expect(output.hookSpecificOutput.hookEventName).toBe("SessionStart");
-    expect(output.hookSpecificOutput.additionalContext).toMatch(
-      /^\$ cd .+ && node .+orient\.mjs --only 1,5\n\n## 1\. /u,
-    );
-    // spec:decisions.session-start-hook: answers, never instructions. The command is the
-    // explanation; no line points the reader elsewhere for how to read it.
-    expect(output.hookSpecificOutput.additionalContext).not.toMatch(
-      /Read it with|says how to read|derived when this session started/u,
+    // spec:decisions.session-start-hook: answers, never instructions. The text is the command that
+    // derived the answers, then each answer under its heading, and nothing else.
+    expect(output.hookSpecificOutput.additionalContext).toBe(
+      [
+        `$ cd ${ownProject} && node ${runner} --only 1,5`,
+        ...answers.map(
+          (answer) => `## ${String(answer.number)}. ${answer.title}\n\n${rendered(answer.answer)}`,
+        ),
+      ].join("\n\n"),
     );
     expect(run.raw.trim().split("\n")).toHaveLength(1);
   }, 60_000);
