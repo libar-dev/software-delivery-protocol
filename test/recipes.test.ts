@@ -6492,6 +6492,11 @@ describe("answers that fit", () => {
         enabled: binding.enabled,
         file: binding.file ?? null,
         line: binding.line ?? null,
+        tests: (binding.tests ?? []).map((test) => ({
+          verifierId: test.verifierId,
+          file: test.file,
+          line: test.line,
+        })),
       })),
     );
   });

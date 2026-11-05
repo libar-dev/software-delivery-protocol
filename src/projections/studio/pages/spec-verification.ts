@@ -83,12 +83,9 @@ export function verificationPanel(ctx: PageContext, spec: SpecContext): string {
   const renderedFiles = new Set<string>();
   const verifiers = list(
     spec.verifiers.map((v) => {
+      // An example row names the test anchors that bind it (spec:consumers.reader#rule.exampleTests).
       const anchors =
-        v.via === "test-anchor"
-          ? [v.verifierId]
-          : (ctx.data.specs.find((s) => s.id === v.verifierId)?.verifiers ?? [])
-              .filter((binding) => binding.via === "test-anchor")
-              .map((binding) => binding.verifierId);
+        v.via === "test-anchor" ? [v.verifierId] : (v.tests ?? []).map((test) => test.verifierId);
       const runs = anchors
         .map((id) => runRows(ctx, spec.id, id, undefined, renderedFiles))
         .join("");

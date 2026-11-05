@@ -415,6 +415,7 @@ return {
     enabled: binding.enabled,
     file: binding.file ?? null,
     line: binding.line ?? null,
+    tests: (binding.tests ?? []).map((test) => ({verifierId: test.verifierId, file: test.file, line: test.line})),
   })),
   verifierBindingMeans: "a resolving verifier exists; the graph never records pass or fail",
   findings: context.findings.map((finding) => ({
@@ -429,7 +430,10 @@ Every relation carries its `claim` and the claim is never collapsed, and a relat
 a reason carries `reason`, as a declared `verifies` naming rule keys carries `exercises`: `declared` is authored intent,
 `anchored` is a human binding from source, `inferred` is machine-derived structure. `has-verifier`
 rides an *enabled* verifier — a resolving test anchor — and states that a verifier **exists**, not
-that it passed. Pass/fail is CI's, exactly as skip and quarantine are.
+that it passed. Pass/fail is CI's, exactly as skip and quarantine are. A verifier reached through an
+example lists in `tests` the test anchors that bind that example, with the file and line to run
+(`spec:consumers.reader#rule.exampleTests`); a test-anchor verifier's `tests` is empty, since it is
+the test.
 
 ## 4. What breaks if I change these files
 
@@ -1428,6 +1432,7 @@ for (const binding of implementations) {
 }
 for (const binding of verifiers) {
   addEntryPoint("verifier", binding.verifierId, binding.file, binding.line);
+  for (const test of binding.tests ?? []) addEntryPoint("verifier", test.verifierId, test.file, test.line);
 }
 for (const component of components) {
   addEntryPoint("component", component.id, component.file, component.line);
@@ -1469,6 +1474,7 @@ return {
     enabled: binding.enabled,
     file: binding.file ?? null,
     line: binding.line ?? null,
+    tests: (binding.tests ?? []).map((test) => ({id: test.verifierId, file: test.file, line: test.line})),
   })),
   entryPoints: uniqueEntryPoints,
   entryPointsLimit: "file-level graph-recorded paths only; no symbol-level impact graph",
@@ -1476,7 +1482,8 @@ return {
 ```
 
 `entryPoints` is file-level graph-recorded paths only — carrier, implementation, verifier, and
-component files. It is not the impact contract; whole-corpus blast radius over changed files stays
+component files, a verifying example's file followed by the test files that bind it, which each
+verifier row also lists in `tests` (`spec:consumers.reader#rule.exampleTests`). It is not the impact contract; whole-corpus blast radius over changed files stays
 recipe 4 (`g.blastRadius`). Shaping decisions are the `decidedBy` targets across the refinement
 neighborhood; a decision record that also `refines` the subject appears both as a refinement child
 and as a shaping decision. `reasons` lists every authored relation into or out of the subject

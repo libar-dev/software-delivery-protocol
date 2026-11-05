@@ -56,7 +56,10 @@ return ids.map((id) => {
     ),
     references: c.references.length,
     verifiers: c.verifiers.map(
-      (v) => `${v.verifierId} via ${v.via}${v.enabled ? "" : ", not enabled"}`,
+      (v) =>
+        `${v.verifierId} via ${v.via}${v.enabled ? "" : ", not enabled"}${(v.tests ?? [])
+          .map((t) => `, run by ${t.verifierId} at ${t.file}:${t.line}`)
+          .join("")}`,
     ),
   };
 });

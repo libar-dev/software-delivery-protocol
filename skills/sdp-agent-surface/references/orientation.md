@@ -72,7 +72,8 @@ Run the printed call on your files; `arrive.md` reads the answer.
 
 Pass `specs` (a list or one id) or `pack`; a large Pack floods, so pass a list. Read the outline,
 then fetch exact wording by address (answer 11): rule text is clipped. Only `implementations`
-confers `implemented`; a verifier through an example counts only when that example is enabled.
+confers `implemented`; a verifier through an example counts only when that example is enabled,
+and names the test that runs it, with its file and line.
 Recipe 3, What does this Spec guarantee, and who verifies it
 (`dist/recipes/03-what-does-this-spec-guarantee-and-who-verifies-it.js`), adds every section's
 entries and floor clauses for one Spec.
