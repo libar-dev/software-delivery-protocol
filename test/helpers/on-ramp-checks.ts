@@ -429,12 +429,24 @@ async function runBody(
   };
 }
 
-/** A taught body's answer that is no answer: a refused parameter or a subject the graph lacks. */
-function emptyHanded(answer: unknown): string | undefined {
-  if (typeof answer !== "object" || answer === null || Array.isArray(answer)) return undefined;
+/**
+ * A taught body's answer that is no answer: a refused parameter, a subject the graph lacks, a
+ * refusal that answers with its diagnostics alone, or a list whose every row is one of those.
+ */
+export function emptyHanded(answer: unknown): string | undefined {
+  if (Array.isArray(answer)) {
+    const rows = answer.map(emptyHanded);
+    return rows.length > 0 && rows.every((row) => row !== undefined)
+      ? `every row: ${rows[0] ?? ""}`
+      : undefined;
+  }
+  if (typeof answer !== "object" || answer === null) return undefined;
   const record = answer as Record<string, unknown>;
   if ("unknownParams" in record) return "unknownParams";
   if (record.found === false) return "found: false";
+  const keys = Object.keys(record);
+  if (keys.length === 1 && Array.isArray(record.diagnostics) && record.diagnostics.length > 0)
+    return "diagnostics";
   return undefined;
 }
 

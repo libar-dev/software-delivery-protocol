@@ -36,14 +36,17 @@ import { SDP_HELP_TEXT, runSdpCli } from "../src/cli/sdp.js";
 import { reportVaultError } from "../src/cli/vault-command.js";
 import { parseMarkdownBody } from "../src/extract/markdown-body.js";
 import { createStudioData } from "../src/projections/studio/data.js";
+import { studioRecipeAnswers } from "../src/projections/studio/recipes.js";
 import { IntentPanel } from "../src/studio-elements/intent-panel.js";
 import { VaultGuardError } from "../src/projections/vault/sync.js";
 import { createReader } from "../src/reader/reader.js";
+import { graphReportId } from "../src/validate/validators.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import {
   bareInvocation,
   catalogHeadings,
   catalogSizePattern,
+  emptyHanded,
   describeHandbook,
   describeOnRamp,
   misnamedRecipes,
@@ -570,6 +573,24 @@ describe("the skill-shape checks' detectors", () => {
     expect(flagged("all fifty-six shipped recipes")).toBe("fifty-six shipped recipes");
     expect(flagged("Fifty six recipes ship.")).toBe("Fifty six recipes");
     expect(catalogSizePattern(13).exec("thirteen recipes")?.[0]).toBe("thirteen recipes");
+  });
+
+  it("reads a refusal as no answer, whether it names a parameter, a subject or only diagnostics", () => {
+    expect(emptyHanded({ unknownParams: ["sepc"], accepts: ["spec"] })).toBe("unknownParams");
+    expect(emptyHanded({ id: "spec:probe.absent", found: false })).toBe("found: false");
+    expect(
+      emptyHanded({ diagnostics: [{ parameter: "detail", problem: "Expected true or false." }] }),
+    ).toBe("diagnostics");
+    expect(
+      emptyHanded([
+        { id: "spec:a", found: false },
+        { id: "spec:b", found: false },
+      ]),
+    ).toBe("every row: found: false");
+    // An answer that also carries diagnostics, or a list with one real row, still answers.
+    expect(emptyHanded({ rows: [], diagnostics: [{ part: "schemaVersion" }] })).toBeUndefined();
+    expect(emptyHanded([{ id: "spec:a", found: false }, { id: "spec:b" }])).toBeUndefined();
+    expect(emptyHanded({ diagnostics: [] })).toBeUndefined();
   });
 
   it("flags a recipe's number only beside another recipe's name", () => {
@@ -1911,6 +1932,64 @@ describe("the Studio on-ramp", () => {
         return match === null || headings.get(Number(match.groups?.ordinal)) !== match.groups?.name;
       });
     expect(unnamed).toEqual([]);
+  });
+
+  // spec:consumers.spec-studio.data.recipe-answers#design.pageRecipes: each row's recipe is one
+  // whose answer the build hands that kind of page, so the table cannot name a recipe the page
+  // never renders.
+  it("names for each page a recipe whose answer the build hands that page", async () => {
+    const { graph } = probeGraph({
+      "a.sdp.md": probeCarrier("spec:probe.a", "behavior", "## Behavior\n- rule: One rule."),
+      "probe.pack.sdp.md":
+        "---\nid: pack:probe.review\norder: priority\nspecs:\n  - spec:probe.a\n---\n# Probe review\n\nFraming.\n",
+    });
+    const reader = createReader(graph);
+    const run = {
+      results: {
+        tool: { name: "vitest" },
+        summary: {
+          tests: 0,
+          passed: 0,
+          failed: 0,
+          pending: 0,
+          skipped: 0,
+          other: 0,
+          start: 0,
+          stop: 0,
+        },
+        tests: [],
+      },
+    };
+    const answers = await studioRecipeAnswers(
+      reader,
+      { validatorId: graphReportId, findings: reader.findings() },
+      { base: { graph, label: "last design pass" }, runs: [run] },
+    );
+    const handed = (page: string): ReadonlySet<number> => {
+      if (page.startsWith("specs/"))
+        return new Set([...answers.specs.values()].flatMap((byRecipe) => [...byRecipe.keys()]));
+      if (page.startsWith("packs/")) return new Set(answers.packs.size > 0 ? [29] : []);
+      if (page.startsWith("slices/")) return new Set(answers.slices.size > 0 ? [54] : []);
+      const memos = answers.roadmapMemos.size > 0 ? [55] : [];
+      return new Set([...answers.all.keys(), ...(page === "roadmap.html" ? memos : [])]);
+    };
+    // The search page builds its index from the reader; entry search answers the same question.
+    const rerunOnly = new Map([["search.html", 23]]);
+    const rows = read(pagesPath)
+      .split("\n")
+      .filter((line) => line.startsWith("| ") && !/^\| (?:Task|-)/u.test(line))
+      .map((line) => line.split("|").map((cell) => cell.trim()));
+    const pages = rows.map((cells) => ({
+      page: /`([^`]+)`/u.exec(cells[2] ?? "")?.[1] ?? "",
+      recipes: [...(cells[3] ?? "").matchAll(/(?:^|; )(\d+),/gu)].map((match) => Number(match[1])),
+    }));
+    expect(pages.filter((row) => row.recipes.length > 0).length).toBeGreaterThan(10);
+    const unhanded = pages.flatMap(({ page, recipes }) =>
+      recipes
+        .filter((recipe) => !handed(page).has(recipe) && rerunOnly.get(page) !== recipe)
+        .map((recipe) => `${page}: recipe ${String(recipe)}`),
+    );
+    expect(unhanded).toEqual([]);
   });
 
   it("receives the composing panel's hand-off through the proposal check", async () => {
