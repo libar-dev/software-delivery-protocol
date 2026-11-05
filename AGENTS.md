@@ -41,6 +41,32 @@ Specs and ratified decisions say what the Protocol claims; `src/` and tests are 
 realizes. A disagreement between them is drift: fix the stale side deliberately, never promote code
 behavior into intent and never invent a third behavior.
 
+## Active development
+
+Enable full **transition to spec-driven development** and completely eliminate planning in Markdown
+files and prose. This will require some adjustments because plain Markdown will be completely eliminated
+and the effort should not be duplicated. Specs are much closer to actual code and tests and will require
+less "translation" from prose to code. A properly prepared and designed spec will almost
+completely replace standard prompts in plain English.
+
+## Focus / Owner's words
+
+**The Spec is the prompt** and detailed design — once we enable spec-driven development,
+wrappers are gone: "context", or "session-prep" document or "design-brief" documents.
+Finalized specs go through numerous spec/design review iterations before a person states `ready`.
+
+SDP is an **event-sourced system**: Git is the **event log.** **The graph is the truth; everything else is a projection.**
+
+### Native skills
+
+| Skill | When to use it |
+|---|---|
+| `sdp-agent-surface` | Start here to query the graph and find the exact Specs, files and lines to read. |
+| `sdp-authoring` | Create or change a Spec or Pack, bind code and tests, or make an example executable. |
+| `sdp-sessions` | Carry out, review, resume or hand off delivery work using current graph evidence. |
+| `sdp-studio` | Publish or read the Studio and handle a change someone requests from a page. |
+| `sdp-vault` | Keep an Obsidian vault in sync and turn a person's intent notes into checked edits. |
+
 ## Start
 
 Load the `sdp-agent-surface` skill and run orientation from the repository root, passing what you
@@ -119,14 +145,12 @@ commercial.
   boundary, commit the work in progress saying what is incomplete, since git cannot recover
   uncommitted work. Push only on the user's explicit request; never use `git stash`.
 - Reviews travel as change proposals (`sdp-sessions`). Briefs and prompts stay in the session.
+
+## Notes
 - `docs/concept/DECISIONS.md` admits an entry only past the ADR three-part test: hard to reverse,
   surprising without context, a real trade-off. A Why the base already forced is drift repair, kept
   in git and the pull request description. This is authoring guidance, never a validator.
-- `.omo/` belongs to OmO: only OmO sessions read or write it. Every other agent adds no plan, draft
-  or evidence there and never deletes, prunes or overwrites what is there; keep your working
-  material in your own scratchpad.
-- The `~/dev-admin/oh-my-openagent` clone and `~/.omo/omo.jsonc` are the user's: inspect and report
-  their state, and check out, pull, build, install globally or edit only when the user asks.
+    - Technical debt: **Decisions will move to SDP specs** in a planned and controlled fashion.
 
 Before opening or resuming an arc, committing evidence, posting a review or writing a pull request
 description, read `docs/contributing/arc-record.md`.
@@ -148,8 +172,12 @@ Where to look: `docs/concept/` (principle-led design and its reading conventions
 `docs/concept/DECISIONS.md` (decision names), `jtbd-stories/` (the jobs) and `examples/checkout-v1`
 (the worked example). Checkout-only practice: `docs/contributing/self-hosting.md`.
 
-## Lineage
+## Lineage (temporary: Specs and queries replace it)
 
 `docs/lineage/` is the initial, carefully crafted specification made before implementation
 started. It carries the system's functionality, architecture and design in a relatively compact
-form, so it is still very good for reference; the ruled Specs say what holds now.
+form, so it is still very good for reference; the ruled Specs say what holds now. It is prose, and
+like all planning prose here (Active development) it gives way to Specs and queries. Before
+reading a lineage document, read [the lineage README](docs/lineage/README.md): the why the
+[v0 vision](docs/lineage/v0-design/00-vision-and-product.md) still carries, its terms translated,
+and the queries that already answer most of what lineage holds.
