@@ -152,8 +152,7 @@ commercial.
   in git and the pull request description. This is authoring guidance, never a validator.
     - Technical debt: **Decisions will move to SDP specs** in a planned and controlled fashion.
 - Technical debt: `docs/design/` is Markdown design material that consolidates into Specs once
-  spec-driven development is enabled; where each piece lands is a scope question for
-  `spec:protocol.delivery-record-cleanup#question.durableContent`.
+  spec-driven development is enabled.
 
 Before opening or resuming an arc, committing evidence, posting a review or writing a pull request
 description, read `docs/contributing/arc-record.md`.

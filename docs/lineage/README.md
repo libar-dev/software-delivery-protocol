@@ -57,4 +57,4 @@ pnpm --silent sdp:q 'return await recipes(6, params)' --params '{"term":"patch"}
 
 ### Not in the graph yet
 
-The problem statement above and the non-goal "the membrane, not a replacement" ([concept 00](../concept/00-vision-scope-and-mvp-boundary.md), §1 and §5) have no Spec yet; `spec:protocol.delivery-record-cleanup#question.durableContent` asks where such content belongs, and that Spec removes superseded concept material once the graph holds its durable content.
+The problem statement above and the non-goal "the membrane, not a replacement" ([concept 00](../concept/00-vision-scope-and-mvp-boundary.md), §1 and §5) have no Spec yet.
