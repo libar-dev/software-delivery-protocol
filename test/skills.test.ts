@@ -225,8 +225,18 @@ describe("the authoring on-ramp", () => {
       rungs: { "spec:orders.create-order": "stated scoped, floor scoped" },
       findings: [],
       recorded: [
-        ["src/constant.ts", ["impl:orders.create-order"]],
-        ["src/comment.ts", ["impl:orders.read-model-rebuild"]],
+        [
+          "src/constant.ts",
+          [
+            "impl:orders.create-order satisfies spec:orders.create-order, references spec:orders.checkout",
+          ],
+        ],
+        [
+          "src/comment.ts",
+          [
+            "impl:orders.read-model-rebuild satisfies spec:orders.create-order, references spec:orders.checkout",
+          ],
+        ],
         ["src/lookalike.ts", []],
         ["src/single-star.ts", []],
       ],
@@ -243,6 +253,59 @@ describe("the authoring on-ramp", () => {
     expect(answer.rungs["spec:orders.create-order"]).toBe("stated defined, floor scoped");
     expect(answer.findings).toContain("error honesty/readiness-floor spec:orders.create-order");
     expect(answer.errors).toBe(1);
+  });
+
+  // #rule.opensOnGraph: the check reads back what an edit changed, so two lawful edits that differ
+  // only in what the person asked for, a Pack's order or an anchor's target, answer differently.
+  it("reads back what an edit changed: a Pack's members in order and its framing, each anchor's edges", async () => {
+    const check = onlyFence(authoringFile("SKILL.md"), "js");
+    const packFile = "specs/checkout-flow.pack.sdp.md";
+    const pack = (members: readonly string[]) =>
+      `---\nid: pack:orders.checkout-flow\nspecs:\n${members.map((id) => `  - ${id}`).join("\n")}\n---\n# Checkout flow\n\nThe order a reviewer reads them in.\n`;
+    const readBack = async (corpus: Record<string, string>, files: readonly string[]) => {
+      const { graph, report } = probeGraph(corpus);
+      expect(report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+      const answer = (await evaluateBody(check, { graph, params: { files } })) as {
+        recorded: unknown;
+      };
+      return answer.recorded;
+    };
+    const order = ["spec:orders.create-order", "spec:orders.checkout"];
+
+    const asked = await readBack({ ...taughtCorpus(), [packFile]: pack(order) }, [packFile]);
+    expect(asked).toEqual([
+      [
+        packFile,
+        [
+          {
+            pack: "pack:orders.checkout-flow",
+            title: "Checkout flow",
+            members: order,
+            framing: "The order a reviewer reads them in.",
+          },
+        ],
+      ],
+    ]);
+    expect(
+      await readBack({ ...taughtCorpus(), [packFile]: pack([...order].reverse()) }, [packFile]),
+    ).not.toEqual(asked);
+
+    const corpus = taughtCorpus();
+    const retargeted = {
+      ...corpus,
+      "src/comment.ts": (corpus["src/comment.ts"] ?? "").replace(
+        "@sdpSatisfies spec:orders.create-order",
+        "@sdpSatisfies spec:orders.order-numbering",
+      ),
+    };
+    expect(await readBack(retargeted, ["src/comment.ts"])).toEqual([
+      [
+        "src/comment.ts",
+        [
+          "impl:orders.read-model-rebuild satisfies spec:orders.order-numbering, references spec:orders.checkout",
+        ],
+      ],
+    ]);
   });
 
   // spec:model.open-question-keys, spec:model.rule-keys and spec:model.relation-reasons, as the

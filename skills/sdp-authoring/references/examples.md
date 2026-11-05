@@ -18,6 +18,8 @@ For an example's bound point, contracts and runner, in this order.
 6. Import the registrar and activate it once with `createWorld`, `invoke`, `observe`, `expected`
    and optional `assertions` (`spec:extraction.runnable-modules`); `bindExample` from `./vitest`
    is the adapter beneath it.
-7. Commit a registrar once tracked code imports it (`spec:decisions.adopted-registrars-committed`).
+7. A registrar that tracked code imports belongs in version control
+   (`spec:decisions.adopted-registrars-committed`): include it in the change, which is committed
+   only under the session's commit authority.
 8. Before a person states `ready`, mutate one expected result, see the point go red through the
    comparator, and restore it.

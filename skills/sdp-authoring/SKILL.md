@@ -12,14 +12,12 @@ read model (`spec:consumers.edit-model`). Law lives in the Specs cited where it 
 project they ship with the package (`spec:consumers.shipped-protocol-corpus`): add the runner's
 `--protocol` to query them.
 
-Run every command from the project root, since the runner reads the corpus at the working
-directory: bodies through `<skill-dir>/../sdp-agent-surface/scripts/q.mjs`, where `<skill-dir>`
-is this skill's directory, and other verbs through the project's package runner. Under the
-installed package root, recipe N ships as `dist/recipes/<NN>-<slug>.js`; the recipes this skill
-does not name sit in the catalog's categories, such as
-`docs/agent-surface/recipes.md#readiness-and-honesty` and
-`docs/agent-surface/recipes.md#citations-and-checks`; and upgrading a corpus follows
-`docs/agent-surface/upgrade-guide.md`.
+Run every command from the project root, where the runner reads the corpus: bodies through
+`<skill-dir>/../sdp-agent-surface/scripts/q.mjs`, `<skill-dir>` being this skill's directory, and
+other verbs through the project's package runner. Under the installed package root, recipe N
+ships as `dist/recipes/<NN>-<slug>.js`, the recipes not named here sit in the catalog's
+categories, such as `docs/agent-surface/recipes.md#readiness-and-honesty`, and upgrading a corpus
+follows `docs/agent-surface/upgrade-guide.md`.
 
 ## The loop
 
@@ -46,17 +44,27 @@ for (const s of specs) {
   rungs[s.id] = `stated ${s.statedReadiness}, floor ${floorReached}`;
 }
 const mine = report.findings.filter((f) => files.includes(f.file) || f.subjectId in rungs);
+const readBack = (n) => {
+  if (n.nodeType === "Pack") {
+    const { title, members, framing } = g.packContext(n.id);
+    return { pack: n.id, title, members: members.map((m) => m.id), framing };
+  }
+  const edges = graph.edges.filter((e) => e.from === n.id && e.claim === "anchored");
+  return `${n.id} ${edges.map((e) => `${e.type} ${e.to}`).join(", ")}`.trim();
+};
 const others = files.filter((f) => !specs.some((s) => s.file === f));
 return {
   rungs,
   findings: mine.map((f) => `${f.severity} ${f.validatorId} ${f.subjectId ?? f.file}`),
-  recorded: others.map((f) => [f, g.byFile(f).nodes.map((n) => n.id)]),
+  recorded: others.map((f) => [f, g.byFile(f).nodes.map(readBack)]),
   errors: report.findings.filter((f) => f.severity === "error").length,
 };
 ```
 
 Done when each touched Spec states the rung you mean, at or below its floor; each finding is one
-you expect; `errors` is 0; and each other file records the anchors you wrote.
+you expect; `errors` is 0; and the change reads back as the person asked: each anchor's targets
+and edge types, a Pack's members in order and its framing, each changed Spec entry (orientation
+10), with nothing they left open settled and nothing added.
 
 A refused carrier stops every query in its root and names each refusal's `file:line`. The loop
 runs no `sdp validate`, `sdp build` or publisher, each of which removes the five generated page
@@ -66,10 +74,11 @@ report outside `report`.
 
 ## State the honest rung
 
-Before any readiness edit, run promotion preflight (recipe 9,
-`dist/recipes/09-promotion-preflight.js`) and state no higher than `floorReached`
-(`spec:validation.readiness-floor`). A person states `ready`; the Design Review informs that
-statement and gates nothing. Reviews and hand-offs: load `sdp-sessions`.
+A captured Spec states `idea`; every later readiness edit is a person's statement
+(`spec:consumers.authoring-on-ramp#rule.capture`). Run promotion preflight (recipe 9,
+`dist/recipes/09-promotion-preflight.js`), report `floorReached` and what holds the next rung,
+and write the rung the person states, never above the floor (`spec:validation.readiness-floor`).
+The Design Review informs it and gates nothing. Reviews and hand-offs: load `sdp-sessions`.
 
 ## Ruled homes
 
@@ -99,12 +108,11 @@ Each truth has one home the floor and recipes read; no tag, status or side table
 Writing or reviewing an anchor: [binding.md](references/binding.md).
 
 - A relation lives in the frontmatter; `dependsOn:` under Design or UI is plain content.
-- A constant-form anchor binds only through a builder imported from the Protocol package or its
-  `/anchors` subpath; a lookalike import mints nothing.
+- In a project, a constant-form anchor binds only through a builder imported from the Protocol
+  package or its `/anchors` subpath; a lookalike import mints nothing (`spec:model.anchors`).
 - A comment anchor opens with `/**` (a `/*` block is never read) and binds by file and line:
   code moved or deleted beneath it keeps conferring, so review a block with its code.
-- A promise added after the anchors reads as covered: rerun the promise test after a design
-  change.
+- A promise added after the anchors reads as covered: rerun the promise test on a design change.
 - An entry address cited in source is recorded only in a file that carries an anchor.
 - A generated registrar no suite activates runs nowhere, and the graph cannot tell.
 - The generated Gherkin root is a page: an edit there is lost at the next build.
