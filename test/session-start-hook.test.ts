@@ -634,3 +634,56 @@ describe("the session-start hook's wiring", () => {
     );
   });
 });
+
+describe("OpenCode's compatibility shim", () => {
+  interface ContextEvent {
+    readonly sessionID: string;
+    readonly system: { type: string; text: string }[];
+  }
+
+  // OpenCode runs no command hooks; its shim runs the one script and adds the text to the context
+  // of each model call. A stand-in context proves the module; a live OpenCode session proves the
+  // answers reach the model.
+  it("adds the script's answers to a top-level session's context, once per session", async () => {
+    const { default: plugin } = (await import(
+      pathToFileURL(join(repoRoot, "opencode", "server.js")).href
+    )) as { default: { id: string; setup: (ctx: unknown) => Promise<void> } };
+    const sessions: Record<string, { parentID?: string; location: { directory: string } }> = {
+      top: { location: { directory: ownProject } },
+      child: { parentID: "top", location: { directory: ownProject } },
+    };
+    const hooks: Record<string, (event: ContextEvent) => Promise<void>> = {};
+    let lookups = 0;
+    await plugin.setup({
+      session: {
+        get: ({ sessionID }: { sessionID: string }) => {
+          lookups += 1;
+          return Promise.resolve(sessions[sessionID]);
+        },
+        hook: (name: string, handler: (event: ContextEvent) => Promise<void>) => {
+          hooks[name] = handler;
+          return Promise.resolve();
+        },
+      },
+    });
+    expect(Object.keys(hooks)).toEqual(["context"]);
+
+    const first: ContextEvent = { sessionID: "top", system: [] };
+    await hooks.context?.(first);
+    expect(first.system).toHaveLength(1);
+    expect(first.system[0]?.type).toBe("text");
+    expect(first.system[0]?.text).toMatch(/^Orientation answers 1 and 5 for the project at /u);
+    expect(first.system[0]?.text).toContain("specs: 1,");
+
+    // Every later model call of the session carries the same answers; the script ran once.
+    const second: ContextEvent = { sessionID: "top", system: [] };
+    await hooks.context?.(second);
+    expect(second.system).toEqual(first.system);
+    expect(lookups).toBe(1);
+
+    // A subagent's session starts inside one that already carries them.
+    const child: ContextEvent = { sessionID: "child", system: [] };
+    await hooks.context?.(child);
+    expect(child.system).toEqual([]);
+  }, 60_000);
+});

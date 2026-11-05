@@ -320,11 +320,52 @@ Load `node_modules/@libar-dev/software-delivery-protocol` as a plugin in a clien
 Agent Plugins, or link its `skills/sdp-*` folders into your project's skills folder
 (`.agents/skills/`, or `.claude/skills/` for Claude Code). Either way the skills match the CLI you
 pinned. The reading skill's `scripts/orient.mjs` orients an agent in your corpus, and
-`scripts/q.mjs` runs `sdp q` through your installed package. Loaded as a plugin in Claude Code or
-Codex, the package also runs `hooks/session-start.mjs` when a session starts, once you trust its
-hooks: it adds orientation answers 1 and 5 for your project to the agent's context (in a
-workspace, for the member the session starts in, as a query run there reads it), and prints
-nothing in a project without the package.
+`scripts/q.mjs` runs `sdp q` through your installed package.
+
+The package also runs `hooks/session-start.mjs` for each session: it adds orientation answers 1
+and 5 for your project to the agent's context (in a workspace, for the member the session starts
+in, as a query run there reads it), and prints nothing in a project without the package. Each
+agent client gets the skills and the answers its own way; the paths below assume the package in
+your project's `node_modules`.
+
+| Agent client | Skills                                                                                            | Orientation answers                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Codex        | the plugin, through `plugin.json`, or `.agents/skills/`                                           | the plugin's `com.openai` hooks entry; approve it in `/hooks`, again after each update             |
+| Claude Code  | the plugin (`claude --plugin-dir …` or a marketplace), or `.claude/skills/`                       | the plugin's `hooks/hooks.json`                                                                    |
+| ZCode        | the plugin, through `.zcode-plugin/plugin.json`, once its folder is in ZCode's plugin directories | the plugin's `hooks/hooks.json`                                                                    |
+| OpenCode     | `"skills": ["./node_modules/@libar-dev/software-delivery-protocol/skills"]` in `opencode.jsonc`   | `"plugins": ["./node_modules/@libar-dev/software-delivery-protocol/opencode"]` in `opencode.jsonc` |
+| Kimi Code    | the plugin, through `kimi.plugin.json` (`/plugins install`), or `.agents/skills/`                 | the hook below, in `~/.kimi-code/config.toml`                                                      |
+| Grok Build   | the plugin (`grok plugin install … --trust`), or `.agents/skills/`                                | the hook below, in `.grok/hooks/sdp.json` or `~/.grok/hooks/sdp.json`                              |
+
+Kimi Code and Grok Build, at the versions checked, keep a session-start hook's output from the
+model, so each runs the script on a later event, once per session. For Kimi Code:
+
+```toml
+[[hooks]]
+event = "UserPromptSubmit"
+command = "node node_modules/@libar-dev/software-delivery-protocol/hooks/session-start.mjs --text"
+timeout = 30
+```
+
+For Grok Build:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/node_modules/@libar-dev/software-delivery-protocol/hooks/session-start.mjs\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 To point every agent session in your project at the skills, add this to your own `AGENTS.md`:
 

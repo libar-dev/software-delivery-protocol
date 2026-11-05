@@ -527,9 +527,12 @@ bindExample({
 
       // The plugin's session-start hook ships whole: its hooks file and the script it runs.
       const hookAssets = ["hooks/hooks.json", "hooks/session-start.mjs"];
+      // The compatibility shims for agent clients that do not load the portable layout.
+      const shimAssets = [".zcode-plugin/plugin.json", "kimi.plugin.json", "opencode/server.js"];
       const packedAssets = [
         ...adopterAssets,
         ...hookAssets,
+        ...shimAssets,
         "schemas/sdp-proposal-1.schema.json",
         "docs/concept/DECISIONS.md",
       ];

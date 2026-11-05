@@ -20,7 +20,10 @@
     "docs/agent-surface/architecture.md",
     "plugin.json",
     "skills/**",
-    "hooks/**"
+    "hooks/**",
+    "kimi.plugin.json",
+    ".zcode-plugin/**",
+    "opencode/**"
   ],
   "bin": {
     "sdp": "./dist/cli/sdp.js"

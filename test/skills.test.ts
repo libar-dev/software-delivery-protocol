@@ -510,7 +510,7 @@ describe("Protocol skill assets", () => {
     }
   });
 
-  it("declares the package as a portable Agent Plugin and nothing client-specific", () => {
+  it("declares the package as a portable Agent Plugin, each client-specific file a named shim", () => {
     // Ajv 6 reads draft-07; every keyword the 1.0.0 schema uses means the same there, so only the
     // 2020-12 meta-schema tag is dropped before compiling.
     const Ajv = createRequire(import.meta.url)("ajv") as new () => {
@@ -551,9 +551,23 @@ describe("Protocol skill assets", () => {
         .filter((entry) => entry.isDirectory() && /^[a-z0-9-]+\.[a-z0-9.-]+$/u.test(entry.name))
         .map((entry) => entry.name),
     ).toEqual([]);
-    // The one hooks file is shared: Claude Code and Codex both read `hooks/hooks.json` at the plugin
-    // root, so it holds one SessionStart handler whose every field both read, in shell form through
-    // the plugin-root variable both set, running a script inside the plugin.
+    // Client data sits under the standard's extension namespaces: Codex's hook wiring alone.
+    expect(Object.keys(manifest.extensions as Record<string, unknown>)).toEqual(["com.openai"]);
+    // Each other client-specific file is a compatibility shim named for its client, carrying only
+    // the wiring to the shared skills and script (spec:consumers.agent-client-support).
+    const shim = (path: string) =>
+      JSON.parse(readFileSync(join(repoRoot, path), "utf8")) as Record<string, unknown>;
+    const identity = {
+      name: manifest.name,
+      version: manifest.version,
+      description: manifest.description,
+    };
+    expect(shim(".zcode-plugin/plugin.json")).toEqual(identity);
+    expect(shim("kimi.plugin.json")).toEqual({ ...identity, skills: "./skills/" });
+    expect(existsSync(join(repoRoot, "opencode", "server.js"))).toBe(true);
+    // The hooks file is Claude Code's compatibility shim, which ZCode also reads: one SessionStart
+    // handler in shell form through Claude Code's plugin-root variable, running a script inside the
+    // plugin. Codex runs the same script through its extension.
     const hooksFile = JSON.parse(readFileSync(join(repoRoot, "hooks/hooks.json"), "utf8")) as {
       description: string;
       hooks: Record<string, { matcher?: string; hooks: Record<string, unknown>[] }[]>;
