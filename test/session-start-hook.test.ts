@@ -845,11 +845,14 @@ describe("the session-start hook's wiring", () => {
       spawnSync(command, {
         cwd,
         encoding: "utf8",
-        env: { ...process.env, CLAUDE_PROJECT_DIR: cwd },
+        env: { ...hookEnv, CLAUDE_PROJECT_DIR: cwd },
         input: JSON.stringify({ cwd, session_id: randomUUID(), hook_event_name: event }),
         shell: true,
       });
     const noSpec = `No Spec derives at ${emptyProject} yet`;
+    const sessionClaims = () =>
+      existsSync(claims) ? readdirSync(claims).filter((name) => name.endsWith(".session")) : [];
+    const claimed = sessionClaims().length;
 
     for (const [client, command, event] of [
       ["Kimi Code", kimi, "UserPromptSubmit"],
@@ -868,6 +871,8 @@ describe("the session-start hook's wiring", () => {
     const grokRun = run(grok, emptyProject, "PreToolUse");
     expect(grokRun.status).toBe(0);
     expect(contextOf(grokRun.stdout)).toContain(noSpec);
+    // The two copies that answered claimed their sessions inside the suite's scratch directory.
+    expect(sessionClaims().length - claimed).toBe(2);
   }, 60_000);
 
   it("ships the plugin's hooks file and keeps the checkout's wiring out of the package", () => {
