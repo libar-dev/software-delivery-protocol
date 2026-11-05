@@ -188,6 +188,21 @@ export function readSubjects(value, queries, selected) {
   return { subjects: parsed };
 }
 
+// The recipe catalog by category and the call forms, as the CLI prints them after refusing a call
+// with no body: one source, so the listing is the installed package's own. It derives no graph.
+function recipeCatalog(runtime) {
+  const listed = spawnSync(process.execPath, [runtime.cli, "q"], {
+    encoding: "utf8",
+    input: "",
+    timeout: 30_000,
+  });
+  const text = listed.stderr ?? "";
+  const start = text.indexOf("\n\n");
+  return start === -1 || !text.includes("The recipes by category")
+    ? undefined
+    : text.slice(start + 2).trimEnd();
+}
+
 function main(args) {
   const options = parseArguments(args);
   if ("error" in options) {
@@ -293,6 +308,8 @@ function main(args) {
         );
       process.stdout.write(`\nRead it with ${query?.notes}\n\n`);
     }
+    const catalog = recipeCatalog(runtime);
+    if (catalog !== undefined) process.stdout.write(`## Recipes\n\n${catalog}\n`);
   }
   // Extraction warnings reach stderr even when the graph derives, and the query's hint closes the
   // run: an agent must see both.

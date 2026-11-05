@@ -955,6 +955,17 @@ describe("the graph-reading on-ramp", () => {
       );
     }
     expect(section(demonstration.stdout, 4)).not.toContain("A shortened demonstration");
+    // #rule.orientationOutput: a printed run, `--only` included, ends with the catalog by category
+    // and the call forms, exactly as the CLI prints them for a call with no body.
+    const empty = spawnSync(process.execPath, [join(repoRoot, "dist/cli/sdp.js"), "q"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      input: "",
+    });
+    const listing = empty.stderr.slice(empty.stderr.indexOf("\n\n") + 2).trimEnd();
+    expect(listing).toContain("The recipes by category");
+    expect(listing).toContain("Call forms:");
+    expect(demonstration.stdout.endsWith(`## Recipes\n\n${listing}\n`)).toBe(true);
     const shortened = section(demonstration.stdout, 10);
     expect(shortened).toMatch(/'… \d+ more'/u);
     expect(shortened).toContain(`--only 10 --subjects '{"10":{"specs":["<a Spec id>"]}}'`);

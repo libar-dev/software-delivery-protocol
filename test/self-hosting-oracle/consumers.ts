@@ -4340,7 +4340,7 @@ export const consumersSpecs = [
           "The skill answers a state question from current graph data and a question of intended truth from the carrying Spec.",
           "The skill points at the recipe catalog's index as the one map from a task to its recipe, and the other shipped skills point into that index for every recipe they do not name at a step.",
           "The runner's `--protocol` selects the root that holds the Protocol's own Specs and nothing else: in the Protocol source checkout its root, with the checkout's exclusions and bindings; anywhere else the installed package's `specs/`, which holds intent only; beside `--root` it refuses.",
-          "The orientation runner prints each answer under its title with the one line its body says the query teaches. A query whose body names the subject an agent arrives with prints a shortened demonstration and the call that runs it in full on that subject, unless `--subjects` names the query; `--json` prints every answer in full.",
+          "The orientation runner prints each answer under its title with the one line its body says the query teaches. A query whose body names the subject an agent arrives with prints a shortened demonstration and the call that runs it in full on that subject, unless `--subjects` names the query; `--json` prints every answer in full. A printed run, `--only` included, ends with the recipe catalog by category and the call forms, as `sdp q` prints them for a call with no body, taken from the CLI the run used so the listing matches the installed package.",
         ],
         ruleKeys: {
           schemaPointer: "rules[0]",
