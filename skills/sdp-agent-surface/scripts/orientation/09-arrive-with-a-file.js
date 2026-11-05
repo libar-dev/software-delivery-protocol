@@ -1,12 +1,15 @@
 // 9. Arrive with a file or a changeset: the nodes recorded at `params.file` and the Specs
-// reachable from them; then the impact of `params.files`. Without them, the first anchored code
-// file and the first carrier stand in.
+// reachable from them; then the impact of `params.files`. Either one alone stands for both, the
+// first of `params.files` as the file. Without them, the first anchored code file and the first
+// carrier stand in.
 // Teaches: the file entry `g.byFile(path)` and the changeset entry `g.blastRadius` through recipe 4's summary
 // Subject: {"files":["<a path you changed>"]}
 const codeFile = graph.nodes.find((n) => n.nodeType === "CodeNode" && n.file)?.file;
 const carrier = g.specs()[0]?.file;
-const fileParam = params.file ?? codeFile;
-const files = params.files ?? [codeFile, carrier].filter((f) => f !== undefined);
+const fileParam = params.file ?? params.files?.[0] ?? codeFile;
+const files =
+  params.files ??
+  (params.file !== undefined ? [params.file] : [codeFile, carrier].filter((f) => f !== undefined));
 const file = fileParam === undefined ? null : g.byFile(fileParam);
 const change = await recipes(4, { files });
 return {
@@ -22,7 +25,7 @@ return {
     totals: change.totals,
     impactedSpecs: change.impactedSpecs,
     impactedPacks: change.impactedPacks,
-    atRiskOther: change.atRisk.other,
+    atRisk: change.atRisk,
     coverageUnknownFiles: change.coverageUnknownFiles,
     unlinkedUnits: change.unlinkedUnits,
     leftOut: change.leftOut,

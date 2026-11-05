@@ -713,6 +713,63 @@ describe("the graph-reading on-ramp", () => {
     }
   }, 120_000);
 
+  // An arrival answer describes the subject the agent passed, says how much of a long list it
+  // prints, and keeps every list the recipe beneath it returns; both runners read an option
+  // written with `=` as the two-word form.
+  it("answers arrival on the subject given, counting what it prints, with either option spelling", () => {
+    const scripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
+    const run = (script: string, args: readonly string[]) => {
+      const result = spawnSync(process.execPath, [join(scripts, script), ...args], {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+      expect(result.status, result.stderr).toBe(0);
+      return JSON.parse(result.stdout) as unknown;
+    };
+    const arrive = (subjects: unknown) =>
+      (
+        run("orient.mjs", ["--json", "--only", "8,9", "--subjects", JSON.stringify(subjects)]) as {
+          number: number;
+          answer: Record<string, unknown>;
+        }[]
+      ).map((entry) => entry.answer);
+    const skillFile = "skills/sdp-vault/SKILL.md";
+    const codeFile = "src/cli/q-command.ts";
+    const impact = run("q.mjs", [
+      "return (await recipes(4, params)).atRisk",
+      "--params",
+      JSON.stringify({ files: [codeFile] }),
+      "--json",
+    ]);
+
+    const [words, fromFiles] = arrive({ "8": { terms: ["anchor"] }, "9": { files: [skillFile] } });
+    const [, fromFile] = arrive({ "9": { file: codeFile } });
+    expect(fromFiles).toMatchObject({
+      file: { path: skillFile },
+      changeset: { files: [skillFile] },
+    });
+    expect(fromFile).toMatchObject({
+      file: { path: codeFile },
+      changeset: { files: [codeFile], atRisk: impact },
+    });
+    const search = String((words?.anchor as { entrySearch?: string } | undefined)?.entrySearch);
+    const printed = search.split(": ").slice(1).join(": ").split("; ").length;
+    expect(search).toMatch(
+      new RegExp(`; the first ${String(printed)} of the \\d+ rows recipe 23 returns: `, "u"),
+    );
+
+    const specCount = "return g.specs().length";
+    expect(run("q.mjs", [specCount, "--root=examples/checkout-v1", "--json"])).toEqual(
+      run("q.mjs", [specCount, "--root", "examples/checkout-v1", "--json"]),
+    );
+    const corpus = (args: readonly string[]) =>
+      (run("orient.mjs", ["--json", "--only", "1", ...args]) as { answer: { specs: number } }[])[0]
+        ?.answer.specs;
+    expect(corpus(["--root=examples/checkout-v1"])).toBe(
+      corpus(["--root", "examples/checkout-v1"]),
+    );
+  }, 120_000);
+
   it("prints what each query teaches and shortens an arrival query unless its subject is given", async () => {
     const script = join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs");
     const orient = (await import(pathToFileURL(script).href)) as {

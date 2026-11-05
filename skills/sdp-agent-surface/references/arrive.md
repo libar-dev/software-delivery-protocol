@@ -21,6 +21,12 @@ or handbook edit. A unit bound to no Spec is a lawful identity-only anchor. `imp
 only changed Pack manifests; a Pack holding an impacted Spec is at risk, and at-risk is one hop that
 asserts no dependency.
 
+Name the change with the git selection that holds it. The pipeline in recipe 4's entry reads
+`git diff --name-only -z`, unstaged edits only: add `--cached` for staged edits, name
+`<base>...HEAD` for a branch, and add `git ls-files --others --exclude-standard -z` for new files.
+The graph is the working tree's, so a deleted file reaches nothing in it: the bindings it took
+with it show only in the design diff (recipe 35) against a graph written before the deletion.
+
 ## An address to cite
 
 An entry address names one keyed entry: `spec:<id>#rule.<key>` (a rule or flow), `#design.<key>`,

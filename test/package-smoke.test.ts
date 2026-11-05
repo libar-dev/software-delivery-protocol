@@ -821,8 +821,9 @@ relations: {}
         status: 0,
         stdout: "[]",
       });
-      // The reading skill's worked call, copied from the installed SKILL.md as printed, answers
-      // in a project whose own corpus lacks its subject, one of the Protocol's own Specs.
+      // Every call the installed reading skill prints runs as printed from the project; its
+      // worked law call answers there although the project's own corpus lacks its subject, one
+      // of the Protocol's own Specs.
       const workedCalls = [
         ...(await readFile(join(installedSkill, "SKILL.md"), "utf8")).matchAll(
           /^```sh\n(?<call>[\s\S]*?)\n```$/gmu,
@@ -830,17 +831,20 @@ relations: {}
       ].map((match) =>
         (match.groups?.call ?? "").replaceAll("<skill-dir>", JSON.stringify(installedSkill)),
       );
-      expect(workedCalls).toHaveLength(1);
-      const workedCall = spawnSync(workedCalls[0] ?? "", {
-        cwd: consumer,
-        encoding: "utf8",
-        shell: true,
-      });
-      expect({ status: workedCall.status, stderr: workedCall.stderr }).toEqual({
-        status: 0,
-        stderr: answeredStderr,
-      });
-      const workedAnswer = JSON.parse(workedCall.stdout) as Record<string, unknown>;
+      const workedRuns = workedCalls.map((call) => ({
+        call,
+        run: spawnSync(call, { cwd: consumer, encoding: "utf8", shell: true }),
+      }));
+      for (const { call, run } of workedRuns) {
+        expect({ call, status: run.status, stderr: run.stderr }).toEqual({
+          call,
+          status: 0,
+          stderr: answeredStderr,
+        });
+      }
+      const workedCall = workedRuns.find(({ call }) => call.includes("recipes(56"))?.run;
+      expect(workedCall).toBeDefined();
+      const workedAnswer = JSON.parse(workedCall?.stdout ?? "{}") as Record<string, unknown>;
       expect({
         found: workedAnswer.found,
         unknownParams: workedAnswer.unknownParams,

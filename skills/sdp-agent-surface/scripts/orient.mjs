@@ -21,6 +21,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { inspect } from "node:util";
 
 import {
+  optionArguments,
   protocolArguments,
   queryArguments,
   readsPackageRoot,
@@ -117,7 +118,9 @@ const valueUsage = new Map([
   ["--exclude", "orient: --exclude takes a path"],
 ]);
 
-function parseArguments(args) {
+function parseArguments(given) {
+  // `--name=value` reads as `--name value`, as the query runner reads it.
+  const args = optionArguments(given, [...valueUsage.keys()]);
   const options = {
     only: undefined,
     subjects: undefined,
@@ -137,7 +140,6 @@ function parseArguments(args) {
     else if (arg === "--subjects") options.subjects = args[++index];
     else if (arg === "--root" || arg === "--exclude") options.pass.push(arg, args[++index] ?? "");
     else if (arg === "--protocol") options.pass.push(arg);
-    else if (arg.startsWith("--root=") || arg.startsWith("--exclude=")) options.pass.push(arg);
     else return { error: `orient: unknown argument ${arg}` };
   }
   return options;

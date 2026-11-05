@@ -10,7 +10,8 @@
 // naming another corpus gets none. Anywhere else it runs the project's installed
 // @libar-dev/software-delivery-protocol. Arguments pass through to `sdp q` unchanged, except
 // --protocol, which selects the root holding the Protocol's own Specs: the checkout's root, with
-// its exclusions and bindings, or the installed package's specs/, which holds intent only.
+// its exclusions and bindings, or the installed package's specs/, which holds intent only, and
+// --root=PATH, --exclude=PATH and --params=VALUE, which pass as the two-word forms `sdp q` reads.
 
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
@@ -71,6 +72,26 @@ export function selectRuntime(cwd = process.cwd()) {
   return {
     error: `sdp q: ${packageName} is not installed in ${cwd} or above it. Install it (see its README for a commit pin), or run from the Protocol checkout.`,
   };
+}
+
+/**
+ * The caller's arguments in the form `sdp q` reads: `--root=PATH`, `--exclude=PATH` and
+ * `--params=VALUE` become two arguments each, and an option's value is never split.
+ */
+export function optionArguments(args, options = ["--root", "--exclude", "--params"]) {
+  const out = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    const equals = arg.indexOf("=");
+    const name = equals > 0 ? arg.slice(0, equals) : arg;
+    if (equals > 0 && options.includes(name)) {
+      out.push(name, arg.slice(equals + 1));
+      continue;
+    }
+    out.push(arg);
+    if (options.includes(arg) && index + 1 < args.length) out.push(args[++index]);
+  }
+  return out;
 }
 
 /** The `--root` value the caller names, or undefined; option values are skipped, never read as one. */
@@ -180,7 +201,7 @@ function main(args) {
   }
   const warning = skewWarning(runtime);
   if (warning !== undefined) console.error(warning);
-  const selected = protocolArguments(runtime, args);
+  const selected = protocolArguments(runtime, optionArguments(args));
   if ("error" in selected) {
     console.error(selected.error);
     return 2;

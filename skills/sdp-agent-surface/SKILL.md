@@ -40,6 +40,13 @@ the project root: the runner derives the graph at the working directory.
 node <skill-dir>/scripts/q.mjs 'return await recipes(56, params)' --params '{"spec":"spec:consumers.reading-on-ramp"}' --protocol --json
 ```
 
+Each answer ends at a file, a line or an address for your own reader to open. A file you hold
+gives the units anchored in it, with their lines, and the Specs they reach, with their carriers:
+
+```sh
+node <skill-dir>/scripts/q.mjs 'const { nodes, specs } = g.byFile(params.file); return { units: nodes.map((n) => `${n.id} at line ${n.line}`), specs: specs.map((id) => `${id} in ${g.specContext(id).file}`) }' --params '{"file":"src/orders/create-order.route.ts"}' --json
+```
+
 ## Write the body
 
 - A plain JavaScript async function body, no imports; `return` is the answer: counts, ids and
@@ -80,8 +87,11 @@ node <skill-dir>/scripts/q.mjs 'return await recipes(56, params)' --params '{"sp
 
 - A word, a file or a changeset: orientation 8 or 9 on your subject, then
   [arrive.md](references/arrive.md). A zero from one word matcher is no absence: run the other.
-- A Spec or a Pack: orientation 10 for its outline and recipe 56 for its law; open the carrier at
-  the printed line, and fetch clipped rule text by address before quoting.
+- A Spec: orientation 10 for its outline and recipe 56 for its law; open the carrier at the
+  printed line, and fetch clipped rule text by address before quoting.
+- A Pack: orientation 10 with `pack` for its members' outlines, `g.packContext(id)` for their
+  order and the framing, then recipe 56 on the member whose law you need; recipe 56 reads Specs
+  only.
 - An address to cite: orientation 11 before you write it.
 - A large scope, or a body others will run: [contract.md](references/contract.md) (a refused
   bundle is not partial).
