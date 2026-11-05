@@ -59,7 +59,9 @@ node <skill-dir>/scripts/q.mjs 'return await recipes(56, params)' --params '{"sp
 
 - Bindings state existence, not liveness (`spec:decisions.binding-not-liveness`): `implemented`
   says a code anchor satisfies the Spec, `has-verifier` that a verifier binding resolves (CI owns
-  pass and fail), and `references` confers neither (`spec:extraction.delivery-facts`).
+  pass and fail), and `references` confers neither (`spec:extraction.delivery-facts`). A search
+  finds anchor text; the graph says what binds a file (`g.byFile(path)`) and which examples
+  exercise each rule (rule coverage, recipe 34, `dist/recipes/34-rule-coverage.js`).
 - Report stated and derived readiness side by side; `floorNotEvaluated` means no floor, never one
   below `idea`.
 - Carry each fact's claim (`spec:extraction.claim-taxonomy`), and mark as yours a conclusion no

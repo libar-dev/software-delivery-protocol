@@ -55,15 +55,16 @@ or under Example space, never both. An example's one concrete `gwt` fence closes
 
 - The question above is `spec:<id>#question.cartLock` (`spec:model.open-question-keys`). Its
   fields are `decider:`, one lowercase kebab token such as `owner` or `product-owner`; `links:`,
-  Spec ids or entry addresses such as `spec:<id>#rule.<key>`, separated by commas;
-  `provisional:`; and, on a blocking question only, `trigger:`. None moves a floor
-  (`spec:model.open-question-fields`).
+  the Spec ids or entry addresses the question rests on, such as `spec:<id>#rule.<key>`,
+  separated by commas; `provisional:`; and, on a blocking question only, `trigger:`. None moves a
+  floor (`spec:model.open-question-fields`).
 - Key a rule that something outside the Spec cites, as `spec:<id>#rule.<key>`; the rule-key
   proposal (recipe 48, `dist/recipes/48-the-rule-key-proposal.js`) drafts keys. An example names
   the rules it exercises on its target:
   `verifies: { target: spec:<parent>, exercises: [onePerCart] }` (`spec:model.rule-keys`).
-- A relation reason confers nothing (`spec:model.relation-reasons`). A decision `refines` the
-  Spec whose question it settles, and that Spec names it through `decidedBy`.
+- Relation types and their directions: `spec:model.relations`. A relation reason confers nothing
+  (`spec:model.relation-reasons`). A decision `refines` the Spec whose question it settles, and
+  that Spec names it through `decidedBy`.
 
 ## Gherkin and Packs
 
