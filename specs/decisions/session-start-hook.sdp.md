@@ -2,7 +2,7 @@
 id: spec:decisions.session-start-hook
 kind: decision
 altitude: feature
-readiness: defined
+readiness: ready
 relations:
   refines:
     target: spec:decisions.agent-plugin-package

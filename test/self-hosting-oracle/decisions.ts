@@ -1560,7 +1560,7 @@ export const decisionsSpecs = [
     id: "spec:decisions.session-start-hook",
     specKind: "decision",
     altitude: "feature",
-    readiness: "defined",
+    readiness: "ready",
     file: "specs/decisions/session-start-hook.sdp.md",
     title:
       "The plugin ships a session-start hook that delivers live orientation answers; the handbook keeps every rule",
