@@ -8,7 +8,8 @@ a finding to report. A number belongs to the commit it ran at: re-run it, never 
 
 Readiness here is stated; answer 4 reads the floor. Kind and altitude are tallied apart, never
 crossed. A missing key means none exists at that commit. `surface` lists the reader's methods,
-the fields a Spec row and an edge carry, and recipe parameters (`none`: the recipe takes none).
+the fields a Spec row, an edge and a `g.specContext` binding row carry, and recipe parameters
+(`none`: the recipe takes none).
 
 ## 2. The capabilities
 

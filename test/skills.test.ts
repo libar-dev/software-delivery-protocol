@@ -564,7 +564,7 @@ void readingOnRampTestAnchor;
 //   named remedy…", "passes the runner's exclusions…");
 // - `#protocolRoot`: "selects the Protocol's own Specs with --protocol, and only the root";
 // - `#orientation` and `#orientationOutput`: "runs every orientation query…", "prints what each
-//   query teaches…", "orients over a draft decision…";
+//   query teaches…", "orients over a draft decision…", "prints the field names a body reads…";
 // - `#taskIndex`: G4 (the catalog index path resolves and ships);
 // - `#pairing` and `#stateAndLaw`: meaning, audited by a reader; no token pin.
 describe("the graph-reading on-ramp", () => {
@@ -670,6 +670,30 @@ describe("the graph-reading on-ramp", () => {
         );
       }
     }
+  }, 120_000);
+
+  // A body copied from an answer reads what the answer printed: orientation 1 names the fields a
+  // binding row carries (a `codeId` or a `verifierId`, never an edge's `from`), and orientation 6
+  // prints recipe 20's totals under the recipe's own field name.
+  it("prints the field names a body reads: a binding row's, and a composed recipe's own", () => {
+    const scripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
+    const answer = (args: readonly string[]): unknown => {
+      const run = spawnSync(process.execPath, args, { cwd: repoRoot, encoding: "utf8" });
+      expect(run.status, run.stderr).toBe(0);
+      return JSON.parse(run.stdout);
+    };
+    const answers = answer([join(scripts, "orient.mjs"), "--json", "--only", "1,6"]) as {
+      number: number;
+      answer?: { surface?: { binding?: string }; totals?: unknown };
+    }[];
+    const numbered = (number: number) => answers.find((entry) => entry.number === number)?.answer;
+    const binding = numbered(1)?.surface?.binding?.split(" ") ?? [];
+
+    expect(binding).toEqual(expect.arrayContaining(["codeId", "verifierId", "via", "enabled"]));
+    expect(binding).not.toContain("from");
+    expect(numbered(6)?.totals).toEqual(
+      answer([join(scripts, "q.mjs"), "return (await recipes(20)).totals", "--json"]),
+    );
   }, 120_000);
 
   it("prints what each query teaches and shortens an arrival query unless its subject is given", async () => {

@@ -7,7 +7,7 @@ const queue = await recipes(46, { decider: params.decider });
 if (queue.diagnostics) return queue;
 const kind = (q) => (q.deferral ? "deferred" : q.blocking ? "holds" : "non-blocking");
 return {
-  questions: register.totals,
+  totals: register.totals,
   rows: register.specs.flatMap((s) =>
     s.questions.map(
       (q) =>
