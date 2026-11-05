@@ -1418,21 +1418,21 @@ export const consumersSpecs = [
         outcome:
           "Let a person use the Protocol's skills, and start each session with its orientation answers in context, in every agent client the Protocol serves: through the Agent Plugins standard wherever the client implements it, and through a named compatibility shim elsewhere, with each client's route and gaps readable from the graph.",
         risks: [
-          "The ZCode manifest and the OpenCode module are client-specific files that the shipped corpus's `#agentPlugin` rule does not allow yet, so shipping them amends that rule in the same change.",
+          "The ZCode and Kimi Code manifests and the OpenCode module are client-specific files that the shipped corpus's `#agentPlugin` rule does not allow yet, so shipping them amends that rule in the same change.",
         ],
         openQuestions: [
           {
             question:
-              "Kimi Code discards a session-start hook's output and passes hooks no working directory; only a prompt-submit hook's output reaches the model. Does the package ship a per-user shim that adds the orientation answers at each session's first prompt, or does Kimi Code go without them until it adds a session-start channel?",
+              "Kimi Code 2.4.1 discards a session-start hook's output and passes hooks no working directory, although its current documentation describes both; only a prompt-submit hook's output reaches the model. Does the package ship a per-user shim that adds the orientation answers at each session's first prompt, or wait for a Kimi Code version that delivers a session-start hook's output with the working directory?",
             blocking: true,
             key: "kimiCode",
             decider: "owner",
             provisional:
-              "the skills through a project's `.agents/skills`, and no orientation answers until Kimi Code adds a session-start hook's output to the model's context",
+              "ship `kimi.plugin.json` naming `skills/` now, and add its session-start hook when a Kimi Code version is shown to pass the working directory and deliver the hook's output to the model's context",
           },
           {
             question:
-              "Grok Build loads the plugin from its root `plugin.json` and runs its session-start hook, but shows the output to the person and never to the model; only tool-event hooks and its `--rules` option reach the model. Does the package ship a per-user shim, such as a launcher that passes the answers through `--rules`, or does Grok Build go without them until it adds a session-start channel?",
+              "Grok Build 1.0.70 loads the plugin from its root `plugin.json` and runs its session-start hook, but shows the output to the person and never to the model; only tool-event hooks and its `--rules` option reach the model. Does the package ship a per-user shim, such as a launcher that passes the answers through `--rules`, or does Grok Build go without them until it adds a session-start channel?",
             blocking: true,
             key: "grokBuild",
             decider: "owner",
@@ -1457,6 +1457,7 @@ export const consumersSpecs = [
           "A route uses the standard wherever the client implements it: the root `plugin.json` and `skills/` for the skills, and the client's extension namespace for its hook wiring. A file the package ships for one client outside the standard is a compatibility shim: it names its client, carries only the wiring to the shared skills and script, and holds no rule, answer or skill text of its own.",
           "Every orientation route runs the one script, `hooks/session-start.mjs`, from the plugin root in the session's project. The script prints its answers once, as the session-start additional-context JSON that Claude Code, Codex and ZCode all read; a shim for a client without command hooks adds the same text to that session's context.",
           "A route that needs a step in a person's own client settings, such as naming the plugin's folder, names that step in the README; the package never writes a client's settings.",
+          "A route is served only when the orientation answers reach the model's context in that client, checked at the version its Design entry names; output the client shows the person, keeps in a log or discards does not count, and neither does the script's own output.",
         ],
         ruleKeys: {
           servedClients: "rules[0]",
@@ -1464,6 +1465,7 @@ export const consumersSpecs = [
           standardFirst: "rules[2]",
           oneScript: "rules[3]",
           personSteps: "rules[4]",
+          reachesContext: "rules[5]",
         },
       },
       design: {
@@ -1476,9 +1478,9 @@ export const consumersSpecs = [
         openCode:
           "OpenCode 2.2.5. Skills: a project's `.claude/skills` or `.agents/skills`, or the package's `skills/` named in the project's OpenCode config. Orientation: a compatibility shim, a plugin module that runs the script when a session is created and adds its text through the session's context hook, alike in the terminal, in `opencode run` and in the background service; a person names the module in the project's OpenCode config.",
         kimiCode:
-          "Kimi Code 2.4.1. Skills: a project's `.agents/skills`. Orientation: not served yet, as `#kimiCode` asks.",
+          "Kimi Code 2.4.1. Skills: a project's `.agents/skills`, or `kimi.plugin.json` naming `skills/`, its compatibility shim. Orientation: not served at this version, whose bundle discards a session-start hook's output and passes hooks no working directory, though Kimi Code's current documentation describes both, as `#kimiCode` asks.",
         grokBuild:
-          "Grok Build 1.0.70. Skills: the root `plugin.json` and `skills/`, which Grok Build reads first, or a project's `.claude/skills` or `.agents/skills`. Orientation: not served yet; the plugin's hook runs and its output reaches only the screen, as `#grokBuild` asks.",
+          "Grok Build 1.0.70. Skills: the root `plugin.json` and `skills/`, the first manifest this version looks for, measured and never a published Agent Plugins claim, or a project's `.claude/skills` or `.agents/skills`. Orientation: not served yet; the plugin's hook runs and its output reaches only the screen, as `#grokBuild` asks.",
       },
     },
     deliveryFacts: [],
