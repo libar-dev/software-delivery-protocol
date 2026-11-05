@@ -142,8 +142,9 @@ const commands = {
              body over the same graph and report. Repeat --params with JSON objects, @PATH for a file
              holding one, or KEY=@PATH for any JSON value under a lower-camel key. Objects merge
              at the top level; a repeated key, invalid JSON or an unreadable file refuses before
-             the body runs. A recipe reads its parameter from \`params\` and falls back to the
-             catalog's sample. The graph is derived on every invocation, so a
+             the body runs. A recipe reads its parameters from \`params\`, and one that answers
+             for a subject refuses, naming the parameter, when that subject is absent. The graph
+             is derived on every invocation, so a
              just-authored Spec is queryable immediately and no committed artifact answers in the
              graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);
              --json prints JSON.stringify instead, unbounded. A call that answers ends stderr with

@@ -18,6 +18,7 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
+import { verbHelpText } from "../src/cli/help.js";
 import { queryHint, recipeListing } from "../src/cli/recipe-catalog.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
@@ -194,6 +195,17 @@ describe("sdp q — the agent front door", () => {
       expect(stderr).toContain("await recipes(N, {})");
       expect(stderr).not.toContain("hint:");
     }
+  });
+
+  // spec:consumers.agent-surface.recipe-parameters#rule.missingSubject: the help an agent reads
+  // for the verb says what a recipe does without its subject, never that it answers a sample.
+  it("states in its help that a recipe refuses an absent subject", () => {
+    const help = (verbHelpText("q") ?? "").replaceAll(/\s+/gu, " ");
+
+    expect(help).toContain(
+      "one that answers for a subject refuses, naming the parameter, when that subject is absent",
+    );
+    expect(help).not.toMatch(/falls back to the catalog's sample/u);
   });
 
   it("ends an answered call's stderr with one hint line and keeps stdout to the answer", async () => {
