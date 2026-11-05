@@ -20,7 +20,16 @@
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, parse, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -52,6 +61,47 @@ function readJson(path) {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Where copies of the hook coordinate: a directory of this user's own under the temporary
+ * directory, since the system's temporary directory is shared on many hosts.
+ */
+function claimDirectory() {
+  const user = typeof process.getuid === "function" ? `-${String(process.getuid())}` : "";
+  return join(tmpdir(), `sdp-session-start${user}`);
+}
+
+/**
+ * Creates the claim directory owner-only, and answers whether it is safe to coordinate in: a real
+ * directory, not a link, owned by this user and writable by no one else. Another user can create
+ * the name first in a shared temporary directory, and its files could then be links to ours.
+ */
+function ownDirectory(directory) {
+  mkdirSync(directory, { recursive: true, mode: 0o700 });
+  const stats = lstatSync(directory);
+  if (!stats.isDirectory()) return false;
+  if (typeof process.getuid !== "function") return true;
+  return stats.uid === process.getuid() && (stats.mode & 0o022) === 0;
+}
+
+function isLink(path) {
+  try {
+    return lstatSync(path).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Replaces the file at `path` with `text` without writing through a link at that path: the text
+ * goes to a new file created exclusively, which then replaces the directory entry.
+ */
+function replaceFile(path, text) {
+  const staged = `${path}.${String(process.pid)}.tmp`;
+  rmSync(staged, { force: true });
+  writeFileSync(staged, text, { flag: "wx", mode: 0o600 });
+  renameSync(staged, path);
 }
 
 /** The JSON object both clients write to standard input, or `{}` when there is none. */
@@ -98,15 +148,18 @@ function eventName(input) {
  * true for the session's first copy only. Without a session id, or a writable temporary directory,
  * nothing can tell the first copy, so none prints.
  */
-export function claimSession(input, directory = join(tmpdir(), "sdp-session-start")) {
+export function claimSession(input, directory = claimDirectory()) {
   if (typeof input.session_id !== "string" || input.session_id === "") return false;
   const key = createHash("sha256")
     .update(`${input.session_id}\0session`)
     .digest("hex")
     .slice(0, 32);
   try {
-    mkdirSync(directory, { recursive: true });
-    writeFileSync(join(directory, `${key}.session`), String(Date.now()), { flag: "wx" });
+    if (!ownDirectory(directory)) return false;
+    writeFileSync(join(directory, `${key}.session`), String(Date.now()), {
+      flag: "wx",
+      mode: 0o600,
+    });
     return true;
   } catch {
     return false;
@@ -117,7 +170,7 @@ export function claimSession(input, directory = join(tmpdir(), "sdp-session-star
  * The files that coordinate the copies of one session event: the claim, and the lock under which
  * one copy at a time reads or writes it. None without a session id, where every copy prints.
  */
-export function eventPaths(input, directory = join(tmpdir(), "sdp-session-start")) {
+export function eventPaths(input, directory = claimDirectory()) {
   if (typeof input.session_id !== "string" || input.session_id === "") return undefined;
   const key = createHash("sha256")
     .update(`${input.session_id}\0${String(input.source ?? "")}`)
@@ -154,6 +207,8 @@ function whileLocked(lock, step) {
 }
 
 function readClaim(claim) {
+  // A link is never this hook's claim: it is replaced, and what it points at is never read.
+  if (isLink(claim)) return undefined;
   const value = readJson(claim);
   return typeof value?.started === "number" ? value : undefined;
 }
@@ -168,7 +223,8 @@ export function claimEvent(input, paths = eventPaths(input)) {
   const open = { print: true, finish: () => undefined };
   if (paths === undefined) return open;
   try {
-    mkdirSync(paths.directory, { recursive: true });
+    // A directory someone else could write to coordinates nothing: print rather than trust it.
+    if (!ownDirectory(paths.directory)) return open;
     const claimed = whileLocked(paths.lock, () => {
       const now = Date.now();
       const current = readClaim(paths.claim);
@@ -179,7 +235,7 @@ export function claimEvent(input, paths = eventPaths(input)) {
           : now - current.started < runningClaimMs);
       if (held) return undefined;
       const token = `${String(process.pid)}-${String(now)}`;
-      writeFileSync(paths.claim, JSON.stringify({ started: now, token }));
+      replaceFile(paths.claim, JSON.stringify({ started: now, token }));
       return token;
     });
     if (claimed.timedOut === true) return open;
@@ -189,7 +245,7 @@ export function claimEvent(input, paths = eventPaths(input)) {
         whileLocked(paths.lock, () => {
           const current = readClaim(paths.claim);
           if (current?.token === claimed.value)
-            writeFileSync(paths.claim, JSON.stringify({ ...current, finished: Date.now() }));
+            replaceFile(paths.claim, JSON.stringify({ ...current, finished: Date.now() }));
         });
       } catch {
         // The claim stays running and lapses after its window.

@@ -1,11 +1,15 @@
 import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import {
+  chmodSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -127,14 +131,24 @@ interface EventPaths {
   readonly lock: string;
 }
 
+interface HookModule {
+  eventPaths: (input: Record<string, unknown>, directory?: string) => EventPaths | undefined;
+  claimEvent: (
+    input: Record<string, unknown>,
+    paths?: EventPaths,
+  ) => { print: boolean; finish: () => void };
+  claimSession: (input: Record<string, unknown>, directory?: string) => boolean;
+}
+
+async function hookModule(): Promise<HookModule> {
+  return (await import(pathToFileURL(hook).href)) as HookModule;
+}
+
 /** The claim and lock files the hook coordinates one session event's copies through. */
-async function eventPaths(input: Record<string, unknown>): Promise<EventPaths> {
-  const module = (await import(pathToFileURL(hook).href)) as {
-    eventPaths: (input: Record<string, unknown>) => EventPaths | undefined;
-  };
-  const paths = module.eventPaths(input);
+async function eventPaths(input: Record<string, unknown>, directory?: string): Promise<EventPaths> {
+  const paths = (await hookModule()).eventPaths(input, directory);
   if (paths === undefined) throw new Error("an input with a session id has event paths");
-  mkdirSync(paths.directory, { recursive: true });
+  mkdirSync(paths.directory, { recursive: true, mode: 0o700 });
   return paths;
 }
 
@@ -456,6 +470,60 @@ ${entries.map((id) => `  - ${id}`).join("\n")}
     rmSync(paths.lock);
     expect(await waiting.done).toEqual({ status: 0, stdout: "" });
   }, 60_000);
+
+  it("never writes through a link planted at a claim, and replaces the link with its claim", async () => {
+    const module = await hookModule();
+    const input = { cwd: ownProject, session_id: randomUUID(), source: "startup" };
+    const paths = await eventPaths(input, mkdtempSync(join(scratch, "claims-")));
+    const target = join(scratch, `target-${randomUUID()}.txt`);
+    writeFileSync(target, "bytes the hook must not touch\n");
+    symlinkSync(target, paths.claim);
+
+    const claimed = module.claimEvent(input, paths);
+    claimed.finish();
+
+    expect(readFileSync(target, "utf8")).toBe("bytes the hook must not touch\n");
+    expect(claimed.print).toBe(true);
+    expect(lstatSync(paths.claim).isSymbolicLink()).toBe(false);
+    // The claim written in the link's place holds the event for the next copy.
+    expect(module.claimEvent(input, paths).print).toBe(false);
+  });
+
+  it.skipIf(process.platform === "win32")(
+    "coordinates nothing in a claim directory others can write to, and prints",
+    async () => {
+      const module = await hookModule();
+      const shared = mkdtempSync(join(scratch, "shared-claims-"));
+      chmodSync(shared, 0o777);
+      const input = { cwd: ownProject, session_id: randomUUID(), source: "startup" };
+      const paths = module.eventPaths(input, shared);
+      if (paths === undefined) throw new Error("an input with a session id has event paths");
+
+      expect(module.claimEvent(input, paths).print).toBe(true);
+      expect(module.claimEvent(input, paths).print).toBe(true);
+      expect(module.claimSession(input, shared)).toBe(false);
+      expect(readdirSync(shared)).toEqual([]);
+    },
+  );
+
+  it.skipIf(process.platform === "win32")(
+    "keeps its claims in a directory of the user's own under the temporary directory, owner-only",
+    () => {
+      const temporary = mkdtempSync(join(scratch, "tmp-"));
+      const run = spawnSync(process.execPath, [hook], {
+        cwd: scratch,
+        encoding: "utf8",
+        env: { ...process.env, TMPDIR: temporary },
+        input: JSON.stringify({ cwd: ownProject, session_id: randomUUID(), source: "startup" }),
+      });
+
+      expect(run.status).toBe(0);
+      const own = `sdp-session-start-${String(process.getuid?.())}`;
+      expect(readdirSync(temporary)).toEqual([own]);
+      expect(statSync(join(temporary, own)).mode & 0o777).toBe(0o700);
+    },
+    60_000,
+  );
 });
 
 describe("the session-start hook's output", () => {
@@ -685,5 +753,47 @@ describe("OpenCode's compatibility shim", () => {
     const child: ContextEvent = { sessionID: "child", system: [] };
     await hooks.context?.(child);
     expect(child.system).toEqual([]);
+  }, 60_000);
+
+  it("asks again on the session's next model call after a failed lookup, sharing a running one", async () => {
+    const { default: plugin } = (await import(
+      pathToFileURL(join(repoRoot, "opencode", "server.js")).href
+    )) as { default: { id: string; setup: (ctx: unknown) => Promise<void> } };
+    const hooks: Record<string, (event: ContextEvent) => Promise<void>> = {};
+    let lookups = 0;
+    await plugin.setup({
+      session: {
+        get: () => {
+          lookups += 1;
+          return lookups === 1
+            ? Promise.reject(new Error("the session is not readable yet"))
+            : Promise.resolve({ location: { directory: ownProject } });
+        },
+        hook: (name: string, handler: (event: ContextEvent) => Promise<void>) => {
+          hooks[name] = handler;
+          return Promise.resolve();
+        },
+      },
+    });
+
+    const failed: ContextEvent = { sessionID: "top", system: [] };
+    await hooks.context?.(failed);
+    expect(failed.system).toEqual([]);
+    const recovered: ContextEvent = { sessionID: "top", system: [] };
+    await hooks.context?.(recovered);
+    expect(recovered.system[0]?.text).toContain("specs: 1,");
+    expect(lookups).toBe(2);
+
+    // Calls that arrive while a lookup runs share it, and the answer it gives stays.
+    const together: ContextEvent[] = [
+      { sessionID: "other", system: [] },
+      { sessionID: "other", system: [] },
+    ];
+    const context = hooks.context;
+    if (context === undefined) throw new Error("the shim registers a context hook");
+    await Promise.all(together.map((event) => context(event)));
+    expect(lookups).toBe(3);
+    expect(together[1]?.system).toEqual(together[0]?.system);
+    expect(together[0]?.system[0]?.text).toContain("specs: 1,");
   }, 60_000);
 });

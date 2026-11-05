@@ -31,17 +31,22 @@ export default {
   id: "libar-dev.software-delivery-protocol",
   async setup(ctx) {
     const answers = new Map();
-    // Each top-level session runs the script once; a subagent's session starts inside one.
+    // Each top-level session runs the script once; a subagent's session starts inside one. Calls
+    // that arrive while the lookup runs share it. A lookup that fails is no answer: it is
+    // forgotten, so the session's next model call asks again.
     const forSession = (sessionID) => {
-      if (!answers.has(sessionID))
-        answers.set(
-          sessionID,
-          Promise.resolve(ctx.session.get({ sessionID }))
-            .then((session) =>
-              session?.parentID ? "" : orient(session?.location?.directory ?? process.cwd()),
-            )
-            .catch(() => ""),
-        );
+      if (!answers.has(sessionID)) {
+        const pending = Promise.resolve()
+          .then(() => ctx.session.get({ sessionID }))
+          .then((session) =>
+            session?.parentID ? "" : orient(session?.location?.directory ?? process.cwd()),
+          )
+          .catch(() => {
+            if (answers.get(sessionID) === pending) answers.delete(sessionID);
+            return "";
+          });
+        answers.set(sessionID, pending);
+      }
       return answers.get(sessionID);
     };
     await ctx.session.hook("context", async (event) => {
