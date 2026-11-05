@@ -49,6 +49,27 @@ and the effort should not be duplicated. Specs are much closer to actual code an
 less "translation" from prose to code. A properly prepared and designed spec will almost
 completely replace standard prompts in plain English.
 
+The Markdown written to bootstrap the Protocol (`plans/`, `reviews/`, `docs/concept/`,
+`docs/design/`, `docs/lineage/`, `jtbd-stories/`, `docs/articles/`) has no meaning in the Protocol
+and sits outside the SDP state: a Spec states its own reasons, and a Spec you write or change
+cites none of these files. Leaving the state is not a bulk deletion. The files stay in the
+repository while their value moves into Specs, over months:
+
+- **Transfer the value, then delete.** Before a file goes, list what it holds that no Spec, test,
+  decision or recipe carries, give each piece its home, and have a reviewer from another model
+  family check the list. Delete the file in its own change, after the carrying work lands.
+- **Most files go; publishing material stays.** Most of these files are deleted once their value
+  is in Specs. Articles for publishing and README files stay in the repository, still outside the
+  state.
+- **Documentation moves toward projections:** the important documentation-like artifacts become
+  pages generated from the graph, live, or generated documentation where that fits.
+- `docs/concept/DECISIONS.md` admits an entry only past the ADR three-part test: hard to reverse,
+  surprising without context, a real trade-off. A Why the base already forced is drift repair, kept
+  in git and the pull request description. This is authoring guidance, never a validator.
+    - Technical debt: **Decisions will move to SDP specs** in a planned and controlled fashion.
+- Technical debt: `docs/design/` is Markdown design material that consolidates into Specs once
+  spec-driven development is enabled.
+
 ## Focus / Owner's words
 
 **The Spec is the prompt** and detailed design — once we enable spec-driven development,
@@ -145,14 +166,6 @@ commercial.
   boundary, commit the work in progress saying what is incomplete, since git cannot recover
   uncommitted work. Push only on the user's explicit request; never use `git stash`.
 - Reviews travel as change proposals (`sdp-sessions`). Briefs and prompts stay in the session.
-
-## Notes
-- `docs/concept/DECISIONS.md` admits an entry only past the ADR three-part test: hard to reverse,
-  surprising without context, a real trade-off. A Why the base already forced is drift repair, kept
-  in git and the pull request description. This is authoring guidance, never a validator.
-    - Technical debt: **Decisions will move to SDP specs** in a planned and controlled fashion.
-- Technical debt: `docs/design/` is Markdown design material that consolidates into Specs once
-  spec-driven development is enabled.
 
 Before opening or resuming an arc, committing evidence, posting a review or writing a pull request
 description, read `docs/contributing/arc-record.md`.
