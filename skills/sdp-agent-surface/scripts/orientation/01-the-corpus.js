@@ -3,7 +3,12 @@
 // and the parameters ten recipes accept.
 // Teaches: an ad-hoc body pre-shaped into counts; field names gathered across every row; the parameter probe `recipes(n, { "?": 1 }).accepts`
 const specs = g.specs();
-const tally = (xs) => xs.reduce((t, x) => ({ ...t, [x]: (t[x] ?? 0) + 1 }), {});
+// Counted in a Map, so a name an object inherits, such as `constructor`, counts from zero.
+const tally = (xs) => {
+  const counts = new Map();
+  for (const x of xs) counts.set(x, (counts.get(x) ?? 0) + 1);
+  return Object.fromEntries(counts);
+};
 const keys = (rows) => [...new Set(rows.flatMap((r) => Object.keys(r)))].join(" ");
 const byKind = {};
 for (const s of specs) {

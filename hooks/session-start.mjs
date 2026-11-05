@@ -11,8 +11,8 @@
 // It orients the session's own project, never the plugin's: the Protocol checkout holding the hook
 // input's `cwd`, or else the nearest directory at or above it with a `package.json`, such as a
 // workspace member. The reading-skill runner of the nearest installed package, run from that
-// directory, prints orientation answers 1 and 5, within a bounded size. It prints
-// answers, never rules. It prints one short line when the runner fails or no Spec derives, nothing
+// directory, prints orientation answers 1 and 5, within a bounded size. It prints answers, never
+// instructions. It prints one short line when the runner fails or no Spec derives, nothing
 // where no package is installed, and nothing for a second copy of the same session event, such as
 // the plugin's and the checkout's wiring both firing. Clients pass no event id, so a copy is told
 // from the next event by time: a copy that starts while another runs, or within two seconds after

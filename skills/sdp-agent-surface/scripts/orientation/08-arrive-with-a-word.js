@@ -11,7 +11,8 @@ if (terms.length === 0)
 const count = (k, one, many = `${one}s`) => `${k} ${k === 1 ? one : many}`;
 // A list printed in part says how much of it shows, so a count is never read as the rows.
 const listed = (head, rows, cut) => `${head}${cut}${rows.length > 0 ? ": " : ""}${rows.join("; ")}`;
-const out = {};
+// Keyed through a Map, so a term an object inherits, such as `__proto__`, keeps its own key.
+const out = new Map();
 for (const term of terms) {
   const nodes = g.findByConcept(term);
   const entries = await recipes(23, { term });
@@ -19,7 +20,7 @@ for (const term of terms) {
   const found = entries.matches
     .slice(0, 4)
     .map((m) => `${m.address ?? `${m.id} ${m.entry ?? m.section}`} line ${m.line}`);
-  out[term] = {
+  out.set(term, {
     findByConcept: listed(
       count(nodes.length, "node"),
       named,
@@ -32,6 +33,6 @@ for (const term of terms) {
         ? `; the first ${found.length} of the ${entries.totals.shown} rows recipe 23 returns`
         : "",
     ),
-  };
+  });
 }
-return out;
+return Object.fromEntries(out);

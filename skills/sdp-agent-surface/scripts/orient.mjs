@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Runs the orientation queries over one graph derivation and prints each answer under its
-// heading and the line its body teaches, with the pointer to the notes that say how to read it.
+// Runs the orientation queries over one graph derivation and prints each answer as its number
+// and title, the command that runs it, and its answer.
 //
 //   node scripts/orient.mjs [--only N[,N]...] [--subjects JSON | @PATH] [--json] [--root PATH | --protocol] [--exclude PATH]... [--timeout MS]
 //
@@ -8,7 +8,8 @@
 // graph when none is given, so the queries run in any corpus. In the Protocol source checkout,
 // orientation/protocol-checkout.json supplies the subjects the notes were written against.
 // `--subjects` replaces them, keyed by query number: '{"10":{"specs":["spec:example.id"]}}'.
-// A subject that names no selected query, or a parameter its body does not read, is refused.
+// A subject that names no selected query, a parameter its body does not read, or a value outside
+// that parameter's form is refused.
 // A body with a `// Subject:` line takes what the agent arrives with; unless `--subjects` names
 // it, its answer prints shortened, as a demonstration, beside the call that runs it in full.
 // `--json` prints every answer in full. `--protocol` selects the root as the runner does.
@@ -34,6 +35,30 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const bodies = join(here, "orientation");
 
+const isText = (value) => typeof value === "string";
+const isTexts = (value) => Array.isArray(value) && value.every(isText);
+const text = { form: "a string", fits: isText };
+const texts = { form: "a list of strings", fits: isTexts };
+const textOrTexts = {
+  form: "a string or a list of strings",
+  fits: (value) => isText(value) || isTexts(value),
+};
+
+/**
+ * The form of each parameter an orientation body reads, checked before the graph derives. A body
+ * that reads a parameter this map does not name does not load.
+ */
+const parameterForms = new Map([
+  ["addresses", textOrTexts],
+  ["decider", text],
+  ["file", text],
+  ["files", texts],
+  ["pack", text],
+  ["specs", textOrTexts],
+  ["term", text],
+  ["terms", textOrTexts],
+]);
+
 /** The orientation queries in order: number, title, what each teaches, its subject, notes anchor and body. */
 export function orientationQueries() {
   return readdirSync(bodies)
@@ -56,6 +81,11 @@ export function orientationQueries() {
       const accepts = [
         ...new Set([...source.matchAll(/\bparams\.(?<key>[A-Za-z_]\w*)/gu)].map((m) => m[1])),
       ].sort();
+      const formless = accepts.filter((key) => !parameterForms.has(key));
+      if (formless.length > 0)
+        throw new Error(
+          `orientation/${name} reads ${formless.map((key) => `params.${key}`).join(", ")}, which parameterForms gives no form`,
+        );
       return {
         number,
         title: heading.title,
@@ -181,6 +211,10 @@ export function readSubjects(value, queries, selected) {
       return {
         error: `orient: answer ${key} reads ${query.accepts.length === 0 ? "no parameters" : query.accepts.join(" or ")}, not ${unread.join(", ")}.`,
       };
+    for (const [name, value] of Object.entries(subject)) {
+      const { form, fits } = parameterForms.get(name);
+      if (!fits(value)) return { error: `orient: answer ${key} takes ${name} as ${form}.` };
+    }
   }
   return { subjects: parsed };
 }
@@ -240,11 +274,12 @@ function main(args) {
     return 2;
   }
   const given = read.subjects;
-  const subjects =
-    given ??
-    (runtime.mode === "source" && readsPackageRoot(runtime, selected.args)
+  // The subjects the notes were written against, which a call without --subjects reads here.
+  const defaults =
+    runtime.mode === "source" && readsPackageRoot(runtime, selected.args)
       ? JSON.parse(readFileSync(join(bodies, "protocol-checkout.json"), "utf8"))
-      : {});
+      : {};
+  const subjects = given ?? defaults;
 
   const result = spawnSync(
     process.execPath,
@@ -265,6 +300,14 @@ function main(args) {
   if (result.error?.code === "ETIMEDOUT") {
     console.error(
       `orient: the graph query did not finish within ${String(options.timeout)} ms and was stopped; run orientation again without --timeout.`,
+    );
+    return 1;
+  }
+  if (result.error !== undefined) {
+    console.error(
+      result.error.code === "E2BIG"
+        ? "orient: the subjects are too long to pass to the graph query; give fewer or shorter subjects."
+        : `orient: the graph query did not run (${result.error.message}).`,
     );
     return 1;
   }
@@ -299,12 +342,17 @@ function main(args) {
       const key = String(answer.number);
       const own = given?.[key];
       const demonstration = query?.subject !== undefined && own === undefined;
+      // An answer --subjects leaves out ran on no subject; where the checkout supplies one, the
+      // command says so, or as printed it would read the checkout's subject instead.
+      const leftOut = given !== undefined && own === undefined && Object.hasOwn(defaults, key);
       const subject =
         own !== undefined
           ? JSON.stringify({ [key]: own })
           : demonstration
             ? `{"${key}":${query.subject}}`
-            : undefined;
+            : leftOut
+              ? JSON.stringify({ [key]: {} })
+              : undefined;
       const command = `node ${shellWord(script)} --only ${key}${subject === undefined ? "" : ` --subjects ${shellWord(subject)}`}${corpus}`;
       process.stdout.write(`## ${key}. ${query?.title}\n\n$ ${command}\n`);
       if (answer.error !== undefined) process.stdout.write(`FAILED: ${answer.error}\n\n`);
@@ -332,5 +380,12 @@ if (
   process.argv[1] !== undefined &&
   import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
+  // A reader that stops early, as `orient.mjs | head` does, closes stdout: nobody reads the rest,
+  // so the run ends quietly with the status it reached. Any other output error stays fatal.
+  process.stdout.on("error", (error) => {
+    if (error.code !== "EPIPE") throw error;
+    // A hard exit: a pending write would raise the same error again.
+    process.exit(process.exitCode ?? 0);
+  });
   process.exitCode = main(process.argv.slice(2));
 }

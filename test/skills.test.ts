@@ -776,10 +776,11 @@ void readingOnRampTestAnchor;
 //   them `spec:extraction.derive-graph`, `spec:extraction.claim-taxonomy`,
 //   `spec:extraction.delivery-facts`) and G6 (recipe numbers, names and files);
 // - `#runner`: G7 and the runner tests below ("keeps the checkout's exclusions…", "refuses with a
-//   named remedy…", "passes the runner's exclusions…");
+//   named remedy…", "passes the runner's exclusions…", "reads every value option written with =…");
 // - `#protocolRoot`: "selects the Protocol's own Specs with --protocol, and only the root";
-// - `#orientation` and `#orientationOutput`: "runs every orientation query…", "prints what each
-//   query teaches…", "orients over a draft decision…", "prints the field names a body reads…";
+// - `#orientation` and `#orientationOutput`: "runs every orientation query…", "prints each answer
+//   as its command and its output…", "prints a call that answers as the run did…", "orients over
+//   a draft decision…", "prints the field names a body reads…";
 // - `#taskIndex`: G4 (the catalog index path resolves and ships) and "is pointed into, at a
 //   category of the catalog's index…";
 // - `#pairing` and `#stateAndLaw`: meaning, audited by a reader; no token pin.
@@ -1091,6 +1092,19 @@ describe("the graph-reading on-ramp", () => {
       ],
       [["--subjects", '{"8":["vault"]}'], "orient: answer 8 takes an object of parameters"],
       [["--subjects", '{"8":{"word":"vault"}}'], "orient: answer 8 reads term or terms, not word."],
+      // A value outside its parameter's form would otherwise fail inside the body.
+      [
+        ["--subjects", '{"8":{"terms":[42]}}'],
+        "orient: answer 8 takes terms as a string or a list of strings.",
+      ],
+      [["--subjects", '{"8":{"term":null}}'], "orient: answer 8 takes term as a string."],
+      [
+        ["--only", "9", "--subjects", '{"9":{"files":"src/reader/reader.ts"}}'],
+        "orient: answer 9 takes files as a list of strings.",
+      ],
+      // A misspelled flag would otherwise answer on the checkout's subjects.
+      [["--subject", '{"8":{"terms":["vault"]}}'], "orient: unknown argument --subject"],
+      [["--timeout", "soon"], "orient: --timeout takes a whole number of milliseconds"],
       [["--only", "12"], "orient: --only names no answer 12"],
     ];
     for (const [args, message] of cases) {
@@ -1107,6 +1121,182 @@ describe("the graph-reading on-ramp", () => {
       }).toEqual({ args, status: 2, stdout: "", refused: true, derived: false });
     }
   });
+
+  // #rule.runner: both runners read every value option written with `=` as its two-word form.
+  it("reads every value option written with = as its two-word form, in both runners", () => {
+    const scripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
+    const run = (script: string, args: readonly string[]) => {
+      const result = spawnSync(process.execPath, [join(scripts, script), ...args], {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+      expect(result.status, result.stderr).toBe(0);
+      return JSON.parse(result.stdout) as unknown;
+    };
+    const body = "return { params, specs: g.specs().length }";
+    const twoWord = run("q.mjs", [
+      body,
+      "--params",
+      '{"a":1}',
+      "--exclude",
+      "specs/consumers",
+      "--json",
+    ]);
+    expect(twoWord).toMatchObject({ params: { a: 1 } });
+    expect(run("q.mjs", [body, '--params={"a":1}', "--exclude=specs/consumers", "--json"])).toEqual(
+      twoWord,
+    );
+
+    const place = mkdtempSync(join(tmpdir(), "sdp-orient-spelled-"));
+    const subjects = join(place, "subjects.json");
+    writeFileSync(subjects, '{"8":{"terms":["vault"]}}');
+    try {
+      const answers = run("orient.mjs", [
+        "--json",
+        "--only=8",
+        `--subjects=@${subjects}`,
+        "--timeout=600000",
+      ]) as { number: number; answer: Record<string, unknown> }[];
+      expect(answers.map((entry) => entry.number)).toEqual([8]);
+      expect(Object.keys(answers[0]?.answer ?? {})).toEqual(["vault"]);
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  // A query that throws prints FAILED under its heading, and the run exits 1 asking for a finding.
+  it("prints a query that throws as FAILED and exits 1, asking for a finding", () => {
+    const scripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
+    // A copy of the runner beside a probe body that throws, so no shipped body needs to fail.
+    const place = mkdtempSync(join(tmpdir(), "sdp-orient-failing-"));
+    mkdirSync(join(place, "orientation"));
+    for (const file of ["orient.mjs", "q.mjs"]) {
+      copyFileSync(join(scripts, file), join(place, file));
+    }
+    for (const file of readdirSync(join(scripts, "orientation"))) {
+      copyFileSync(join(scripts, "orientation", file), join(place, "orientation", file));
+    }
+    writeFileSync(
+      join(place, "orientation/12-a-failing-probe.js"),
+      '// 12. A failing probe: a body that throws.\n// Teaches: nothing; the runner reports it\nthrow new Error("the probe fails");\n',
+    );
+    try {
+      const run = spawnSync(process.execPath, [join(place, "orient.mjs"), "--only", "3,12"], {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+      const section = (number: number) =>
+        run.stdout.split(/^## /mu).find((part) => part.startsWith(`${String(number)}. `)) ?? "";
+      expect(run.status, run.stderr).toBe(1);
+      expect(section(3)).not.toContain("FAILED");
+      expect(section(12)).toContain("FAILED: Error: the probe fails");
+      expect(run.stderr).toContain("orient: 1 of 2 queries failed: report each as a finding.\n");
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  // A reader that stops early, as `| head` does, keeps what it read, and the run ends at its own
+  // status rather than on an unhandled EPIPE.
+  it("ends quietly when a reader closes its output early", () => {
+    const run = spawnSync(
+      "bash",
+      [
+        "-o",
+        "pipefail",
+        "-c",
+        '"$NODE" skills/sdp-agent-surface/scripts/orient.mjs --only 3 | head -n 1',
+      ],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, NODE: process.execPath } },
+    );
+    expect({
+      status: run.status,
+      stdout: run.stdout,
+      crashed: /EPIPE|Unhandled 'error' event/u.test(run.stderr),
+    }).toEqual({ status: 0, stdout: "## 3. The Packs\n", crashed: false });
+  }, 120_000);
+
+  it("names the remedy when the subjects are too long to pass to the graph query", () => {
+    const place = mkdtempSync(join(tmpdir(), "sdp-orient-long-"));
+    const subjects = join(place, "subjects.json");
+    // Two megabytes in one argument: past the argument limit of Linux and of macOS.
+    writeFileSync(subjects, JSON.stringify({ "8": { terms: ["x".repeat(2_000_000)] } }));
+    try {
+      const run = spawnSync(
+        process.execPath,
+        [
+          join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs"),
+          "--only",
+          "8",
+          "--subjects",
+          `@${subjects}`,
+        ],
+        { cwd: repoRoot, encoding: "utf8" },
+      );
+      expect({ status: run.status, stdout: run.stdout, stderr: run.stderr }).toEqual({
+        status: 1,
+        stdout: "",
+        stderr:
+          "orient: the subjects are too long to pass to the graph query; give fewer or shorter subjects.\n",
+      });
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  });
+
+  // #rule.orientationOutput: an answer a given --subjects leaves out ran on no subject; where the
+  // checkout supplies one, the printed call keeps it out, so it answers as the run did.
+  it("prints a call that answers as the run did when --subjects leaves out a checkout subject", () => {
+    const script = "skills/sdp-agent-surface/scripts/orient.mjs";
+    const section = (stdout: string, number: number) =>
+      stdout.split(/^## /mu).find((part) => part.startsWith(`${String(number)}. `)) ?? "";
+    // Without the roadmap Pack, the checkout's subject for answer 5 names no Pack in the graph.
+    const run = spawnSync(
+      process.execPath,
+      [script, "--only", "3,5", "--subjects", "{}", "--exclude", "specs/roadmap.pack.sdp.md"],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+    expect(run.status, run.stderr).toBe(0);
+    expect(section(run.stdout, 3)).toContain(
+      `$ node ${script} --only 3 --exclude specs/roadmap.pack.sdp.md\n`,
+    );
+    const printed = /^\$ (node .+)$/mu.exec(section(run.stdout, 5))?.[1] ?? "";
+    expect(printed).toBe(
+      `node ${script} --only 5 --subjects '{"5":{}}' --exclude specs/roadmap.pack.sdp.md`,
+    );
+
+    const copied = spawnSync(printed, { cwd: repoRoot, encoding: "utf8", shell: true });
+    expect(copied.status, copied.stderr).toBe(0);
+    expect(section(copied.stdout, 5)).toBe(section(run.stdout, 5));
+  }, 120_000);
+
+  // A term or a Spec family named like a property every object inherits keeps its own key.
+  it("keys a name every object inherits as any other: a __proto__ term, a constructor family", () => {
+    const script = join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs");
+    const answer = (args: readonly string[]) => {
+      const run = spawnSync(process.execPath, [script, "--json", ...args], {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+      expect(run.status, run.stderr).toBe(0);
+      return (JSON.parse(run.stdout) as { answer: Record<string, unknown> }[])[0]?.answer ?? {};
+    };
+    const words = answer(["--only", "8", "--subjects", '{"8":{"terms":["__proto__","vault"]}}']);
+    expect(Object.keys(words)).toEqual(["__proto__", "vault"]);
+
+    const corpus = mkdtempSync(join(tmpdir(), "sdp-orient-inherited-"));
+    mkdirSync(join(corpus, "specs"));
+    writeFileSync(
+      join(corpus, "specs/model.sdp.md"),
+      "---\nid: spec:constructor.model\nkind: rule\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# A family named like an inherited property\n\n## Intent\n\n- outcome: Count a family whose name every object inherits.\n\n## Rule\n",
+    );
+    try {
+      const byFamily = answer(["--only", "1", "--root", corpus]).byFamily ?? {};
+      expect(Object.entries(byFamily)).toEqual([["constructor", 1]]);
+    } finally {
+      rmSync(corpus, { recursive: true, force: true });
+    }
+  }, 120_000);
 
   it("prints a full-answer call that reads the corpus this run read, runnable as printed", () => {
     // The runner reached through a path with a space, as a client's cache may place it.
