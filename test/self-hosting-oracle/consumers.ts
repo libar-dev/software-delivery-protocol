@@ -1448,7 +1448,7 @@ export const consumersSpecs = [
         kimiCode:
           "Kimi Code 2.4.1. Skills: `kimi.plugin.json` naming `skills/`, its compatibility shim, or a project's `.agents/skills`. Orientation: a prompt-submit hook in the person's Kimi Code settings, which runs in the session's project and asks the script for the text alone, once per session, since this version discards a session-start hook's output and passes a plugin's hooks no working directory, though Kimi Code's current documentation describes both.",
         grokBuild:
-          "Grok Build 1.0.70. Skills: the root `plugin.json` and `skills/`, the first manifest this version looks for, measured and never a published Agent Plugins claim, or a project's `.claude/skills` or `.agents/skills`. Orientation: a pre-tool hook in the person's or the project's Grok Build hooks, answered once per session as that event's additional context, since this version shows a session-start hook's output only on the screen.",
+          "Grok Build 1.0.70. Skills: the root `plugin.json` and `skills/`, the first manifest this version looks for, measured and never a published Agent Plugins claim, or a project's `.claude/skills` or `.agents/skills`. Orientation: a pre-tool hook in the person's or the project's Grok Build hooks, answered once per session as that event's additional context, so the answers reach the model with its first tool call, never before its first reply, since this version shows a session-start hook's output only on the screen.",
       },
     },
     deliveryFacts: [],

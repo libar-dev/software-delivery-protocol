@@ -338,7 +338,7 @@ your project's `node_modules`.
 | Grok Build   | the plugin (`grok plugin install … --trust`), or `.agents/skills/`                                | the hook below, in `.grok/hooks/sdp.json` or `~/.grok/hooks/sdp.json`                              |
 
 Kimi Code and Grok Build, at the versions checked, keep a session-start hook's output from the
-model, so each runs the script on a later event, once per session. For Kimi Code:
+model, so each runs the script on a later event, once per session: Kimi Code's answers arrive with the session's first prompt, and Grok Build's with the agent's first tool call, so a Grok Build session that calls no tool goes without them. For Kimi Code:
 
 ```toml
 [[hooks]]
