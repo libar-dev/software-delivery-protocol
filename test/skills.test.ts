@@ -689,7 +689,7 @@ const readingOnRampTestAnchor = specTest({
 void readingOnRampTestAnchor;
 
 // What holds each rule of `spec:consumers.reading-on-ramp`:
-// - `#schemaPointer`, `#factLimits` and the recipe-naming rule: G5 (every law target cited, among
+// - `#schemaPointer`, `#factLimits` and `#recipeNaming`: G5 (every law target cited, among
 //   them `spec:extraction.derive-graph`, `spec:extraction.claim-taxonomy`,
 //   `spec:extraction.delivery-facts`) and G6 (recipe numbers, names and files);
 // - `#runner`: G7 and the runner tests below ("keeps the checkout's exclusions…", "refuses with a
