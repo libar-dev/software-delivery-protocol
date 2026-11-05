@@ -889,6 +889,62 @@ relations: {}
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
       ]);
       expect(orientation.filter((answer) => answer.error !== undefined)).toEqual([]);
+      // A call with no body through the installed runner, as the catalog that ends a printed
+      // orientation run takes it, lists call forms that run through that runner and reach the
+      // installed package's files from the project; each runs as printed.
+      const installedPath = "node_modules/@libar-dev/software-delivery-protocol/";
+      const runnerCall = `node ${installedPath}skills/sdp-agent-surface/scripts/q.mjs`;
+      const listed = spawnSync(process.execPath, [join(installedSkill, "scripts", "q.mjs")], {
+        cwd: consumer,
+        encoding: "utf8",
+        input: "",
+      });
+      expect(listed.status).toBe(1);
+      expect(listed.stderr).toContain(
+        `The recipes by category; ${installedPath}docs/agent-surface/recipes.md holds each one's parameters and answer:`,
+      );
+      const callForms = (listed.stderr.split("Call forms:\n")[1] ?? "")
+        .trimEnd()
+        .split("\n")
+        .map((line) => line.trim().split(/ {2,}/u)[0] ?? "");
+      expect(callForms).toEqual([
+        `${runnerCall} '<body>' [--params JSON] [--json]`,
+        `${runnerCall} "$(cat ${installedPath}dist/recipes/NN-slug.js)" --params JSON`,
+        `${runnerCall} 'const answer = await recipes(N, {}); return answer'`,
+      ]);
+      const listedRuns = [
+        (callForms[1] ?? "").replace("NN-slug", "02-the-drift-alarm").replace(/JSON$/u, "'{}'"),
+        (callForms[2] ?? "").replace("recipes(N,", "recipes(2,"),
+      ].map((call) => ({
+        call,
+        ran: spawnSync(call, { cwd: consumer, encoding: "utf8", shell: true }),
+      }));
+      for (const { call, ran } of listedRuns) {
+        expect({ call, status: ran.status, stderr: ran.stderr }).toEqual({
+          call,
+          status: 0,
+          stderr: answeredStderr,
+        });
+      }
+      expect(listedRuns[0]?.ran.stdout).toBe(listedRuns[1]?.ran.stdout);
+      // A CommonJS script that imports the package's ESM entry finds the shipped recipes: the
+      // engine locates its package from its own module, never from the script's `__dirname`.
+      const commonJsEval = spawnSync(
+        process.execPath,
+        [
+          "--input-type=commonjs",
+          "-e",
+          `import(${JSON.stringify(packageName)}).then(async ({ extract, evaluateBody }) => { const { graph } = extract({ root: process.cwd() }); process.stdout.write(JSON.stringify(await evaluateBody("return await recipes(2, {})", { graph }))); });`,
+        ],
+        { cwd: consumer, encoding: "utf8" },
+      );
+      expect({ status: commonJsEval.status, stderr: commonJsEval.stderr }).toEqual({
+        status: 0,
+        stderr: "",
+      });
+      expect(JSON.parse(commonJsEval.stdout)).toEqual(
+        JSON.parse(run(installedCli, ["q", "return await recipes(2, {})", "--json"], consumer)),
+      );
       // The installed plugin's session-start hook, run as a client runs its hooks file: the
       // command through a shell with the plugin root in the environment, the session's working
       // directory on standard input. It orients the consumer's corpus, never the package's.

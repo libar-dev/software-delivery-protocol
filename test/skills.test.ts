@@ -962,15 +962,19 @@ describe("the graph-reading on-ramp", () => {
       "$ node skills/sdp-agent-surface/scripts/orient.mjs --only 4\n",
     );
     // #rule.orientationOutput: a printed run, `--only` included, ends with the catalog by category
-    // and the call forms, exactly as the CLI prints them for a call with no body.
-    const empty = spawnSync(process.execPath, [join(repoRoot, "dist/cli/sdp.js"), "q"], {
-      cwd: repoRoot,
-      encoding: "utf8",
-      input: "",
-    });
+    // and the call forms, exactly as the query runner prints them for a call with no body; each
+    // form runs through that runner, never a global `sdp` (#rule.runner).
+    const empty = spawnSync(
+      process.execPath,
+      [join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs")],
+      { cwd: repoRoot, encoding: "utf8", input: "" },
+    );
     const listing = empty.stderr.slice(empty.stderr.indexOf("\n\n") + 2).trimEnd();
     expect(listing).toContain("The recipes by category");
-    expect(listing).toContain("Call forms:");
+    const callForms = listing.split("Call forms:\n")[1]?.split("\n") ?? [];
+    expect(callForms).toHaveLength(3);
+    for (const form of callForms)
+      expect(form).toMatch(/^ {2}node skills\/sdp-agent-surface\/scripts\/q\.mjs /u);
     expect(demonstration.stdout.endsWith(`## Recipes\n\n${listing}\n`)).toBe(true);
     const shortened = section(demonstration.stdout, 10);
     expect(shortened).toMatch(/'… \d+ more'/u);
@@ -1094,6 +1098,30 @@ describe("the graph-reading on-ramp", () => {
       expect(runner.skewWarning({ packageRoot: cli })).toContain("their teaching may differ");
       rmSync(buildInfo);
       expect(runner.skewWarning({ packageRoot: cli })).toContain("their teaching may differ");
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  });
+
+  it("names itself as the command that runs it from the working directory", async () => {
+    const place = realpathSync(mkdtempSync(join(tmpdir(), "sdp-runner-command-")));
+    try {
+      // A runner copied where its path from the working directory starts with `-` and holds a space.
+      const scripts = join(place, "-my skill", "scripts");
+      mkdirSync(scripts, { recursive: true });
+      copyFileSync(
+        join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs"),
+        join(scripts, "q.mjs"),
+      );
+      const runner = (await import(pathToFileURL(join(scripts, "q.mjs")).href)) as {
+        runnerCommand: (cwd: string) => string;
+      };
+
+      expect(runner.runnerCommand(place)).toBe("node './-my skill/scripts/q.mjs'");
+      expect(runner.runnerCommand(join(place, "-my skill"))).toBe("node scripts/q.mjs");
+      expect(runner.runnerCommand(join(place, "project"))).toBe(
+        "node '../-my skill/scripts/q.mjs'",
+      );
     } finally {
       rmSync(place, { recursive: true, force: true });
     }

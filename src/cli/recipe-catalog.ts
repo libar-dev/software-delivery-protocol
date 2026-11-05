@@ -69,17 +69,39 @@ export function shippedRecipeCategories(): readonly RecipeCategory[] {
 }
 
 /**
- * The package directory as the working directory reaches it, ending in `/`; empty at the package
- * root, or when the package cannot be found.
+ * The package directory `root` as `cwd` reaches it, ending in `/`: empty at the package root, and
+ * led by `./` when it would start with `-`, so a command never reads the path as an option.
  */
-export function packagePrefix(cwd: string = process.cwd()): string {
-  let path: string;
+export function packagePrefix(cwd: string, root: string): string {
+  const path = relative(cwd, root).split(sep).join("/");
+  if (path === "") return "";
+  return path.startsWith("-") ? `./${path}/` : `${path}/`;
+}
+
+/**
+ * The running package's directory as the working directory reaches it; empty when it cannot be
+ * found.
+ */
+export function runningPackagePrefix(): string {
+  let root: string;
   try {
-    path = relative(cwd, packageRoot()).split(sep).join("/");
+    root = packageRoot();
   } catch {
     return "";
   }
-  return path === "" ? "" : `${path}/`;
+  return packagePrefix(process.cwd(), root);
+}
+
+/**
+ * The environment variable in which a runner, such as the reading skill's `scripts/q.mjs`, names
+ * the command that runs `sdp q` through it; the call forms then start with that command.
+ */
+const QUERY_COMMAND_VARIABLE = "SDP_Q_COMMAND";
+
+/** The command the call forms start with: the one a runner names in `env`, else `sdp q`. */
+export function queryCommand(env: Readonly<Record<string, string | undefined>>): string {
+  const named = env[QUERY_COMMAND_VARIABLE]?.trim() ?? "";
+  return named === "" ? "sdp q" : named;
 }
 
 /** The line that ends the standard error of every `sdp q` call that answers. */
@@ -100,9 +122,14 @@ const namedPerCategory = 4;
 
 /**
  * What a call with no body prints after its refusal line: each category with its first recipes,
- * then the call forms. `prefix` leads the package's paths so they open from the working directory.
+ * then the call forms. `prefix` leads the package's paths so they open from the working directory,
+ * and `command` starts each call form.
  */
-export function recipeListing(categories: readonly RecipeCategory[], prefix: string): string {
+export function recipeListing(
+  categories: readonly RecipeCategory[],
+  prefix: string,
+  command: string,
+): string {
   const lines: string[] = [];
 
   if (categories.length > 0) {
@@ -122,12 +149,15 @@ export function recipeListing(categories: readonly RecipeCategory[], prefix: str
   }
 
   const forms = [
-    ["sdp q '<body>' [--params JSON] [--json]", "a body, as the argument or on stdin"],
+    [`${command} '<body>' [--params JSON] [--json]`, "a body, as the argument or on stdin"],
     [
-      `sdp q "$(cat ${shellWord(`${prefix}dist/recipes/NN-slug.js`)})" --params JSON`,
+      `${command} "$(cat ${shellWord(`${prefix}dist/recipes/NN-slug.js`)})" --params JSON`,
       "a recipe as shipped",
     ],
-    ["sdp q 'const answer = await recipes(N, {}); return answer'", "a recipe inside your body"],
+    [
+      `${command} 'const answer = await recipes(N, {}); return answer'`,
+      "a recipe inside your body",
+    ],
   ] as const;
   const width = Math.max(...forms.map(([form]) => form.length));
   lines.push("Call forms:", ...forms.map(([form, what]) => `  ${form.padEnd(width)}  ${what}`));

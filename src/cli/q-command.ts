@@ -15,9 +15,10 @@ import { resolveExtractionRoot } from "./build-args.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, formatFinding, writeStderr, writeStdout } from "./output.js";
 import {
-  packagePrefix,
+  queryCommand,
   queryHint,
   recipeListing,
+  runningPackagePrefix,
   shippedRecipeCategories,
 } from "./recipe-catalog.js";
 
@@ -191,12 +192,13 @@ export function parseQueryArgs(args: readonly string[], output: CliOutput): Quer
 
 /**
  * A call that brings no body learns what to bring: its refusal line is followed by the recipe
- * catalog by category and the call forms. It derives no graph.
+ * catalog by category and the call forms, which start with the command a runner names in
+ * `SDP_Q_COMMAND`, else `sdp q`. It derives no graph.
  */
 function refuseWithoutBody(output: CliOutput, refusal: string): void {
   writeStderr(
     output,
-    `${refusal}\n\n${recipeListing(shippedRecipeCategories(), packagePrefix())}\n`,
+    `${refusal}\n\n${recipeListing(shippedRecipeCategories(), runningPackagePrefix(), queryCommand(process.env))}\n`,
   );
 }
 

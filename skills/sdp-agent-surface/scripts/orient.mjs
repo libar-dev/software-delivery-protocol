@@ -25,7 +25,9 @@ import {
   protocolArguments,
   queryArguments,
   readsPackageRoot,
+  runnerEnvironment,
   selectRuntime,
+  shellWord,
   skewWarning,
 } from "./q.mjs";
 
@@ -145,11 +147,6 @@ function parseArguments(given) {
   return options;
 }
 
-/** A shell word for `value`: as written when every character is safe, else single-quoted. */
-export function shellWord(value) {
-  return /^[\w@%+=:,./-]+$/u.test(value) ? value : `'${value.replaceAll("'", `'\\''`)}'`;
-}
-
 /**
  * The subjects `--subjects` gives, checked against the selected queries before the graph derives:
  * `{ subjects }`, with `undefined` when none are given, or `{ error }`.
@@ -189,10 +186,12 @@ export function readSubjects(value, queries, selected) {
 }
 
 // The recipe catalog by category and the call forms, as the CLI prints them after refusing a call
-// with no body: one source, so the listing is the installed package's own. It derives no graph.
+// with no body, each form run through the query runner beside this script: one source, so the
+// listing is the installed package's own. It derives no graph.
 function recipeCatalog(runtime) {
   const listed = spawnSync(process.execPath, [runtime.cli, "q"], {
     encoding: "utf8",
+    env: runnerEnvironment(),
     input: "",
     timeout: 30_000,
   });

@@ -19,7 +19,12 @@ import { afterAll, describe, expect, it } from "vitest";
 import { ref, specTest, testAnchorId } from "@libar-dev/software-delivery-protocol";
 
 import { verbHelpText } from "../src/cli/help.js";
-import { queryHint, recipeListing } from "../src/cli/recipe-catalog.js";
+import {
+  packagePrefix,
+  queryCommand,
+  queryHint,
+  recipeListing,
+} from "../src/cli/recipe-catalog.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { answeredStderr } from "./helpers/query-hint.js";
@@ -240,10 +245,11 @@ describe("sdp q — the agent front door", () => {
     expect(queryHint([])).toBe(
       "hint: inside a body, await recipes(N, params) runs catalog recipe N.",
     );
-    expect(recipeListing([], "").startsWith("Call forms:\n")).toBe(true);
+    expect(recipeListing([], "", "sdp q").startsWith("Call forms:\n")).toBe(true);
     const prefixed = recipeListing(
       [{ name: "Probe", recipes: [{ number: 7, name: "One", parameters: "none", use: "Use" }] }],
       "node_modules/pkg/",
+      "sdp q",
     );
     expect(prefixed).toContain("node_modules/pkg/docs/agent-surface/recipes.md");
     expect(prefixed).toContain("  Probe: 7 One\n");
@@ -256,7 +262,7 @@ describe("sdp q — the agent front door", () => {
       const prefix = "My SDK/it's $HOME `x`/";
       mkdirSync(join(place, prefix, "dist", "recipes"), { recursive: true });
       writeFileSync(join(place, prefix, "dist", "recipes", "NN-slug.js"), "return 1;");
-      const form = /"\$\(cat .+?\)"/u.exec(recipeListing([], prefix))?.[0] ?? "";
+      const form = /"\$\(cat .+?\)"/u.exec(recipeListing([], prefix, "sdp q"))?.[0] ?? "";
 
       expect(form).toBe(`"$(cat 'My SDK/it'\\''s $HOME \`x\`/dist/recipes/NN-slug.js')"`);
       // Copied into a shell as printed, the substitution reads the one file.
@@ -268,6 +274,67 @@ describe("sdp q — the agent front door", () => {
     } finally {
       rmSync(place, { recursive: true, force: true });
     }
+  });
+
+  it("leads the package's paths from the working directory, never as an option", () => {
+    expect(packagePrefix("/work/app", "/work/app")).toBe("");
+    expect(packagePrefix("/work/app/examples/checkout-v1", "/work/app")).toBe("../../");
+    expect(packagePrefix("/work/sibling", "/work/app")).toBe("../app/");
+    expect(
+      packagePrefix(
+        "/work/consumer",
+        "/work/consumer/node_modules/@libar-dev/software-delivery-protocol",
+      ),
+    ).toBe("node_modules/@libar-dev/software-delivery-protocol/");
+    expect(packagePrefix("/work", "/work/-sdp")).toBe("./-sdp/");
+  });
+
+  it("reads the one file through a package path that starts with a hyphen", () => {
+    const place = mkdtempSync(join(tmpdir(), "sdp-catalog-hyphen-"));
+    try {
+      mkdirSync(join(place, "-sdp", "dist", "recipes"), { recursive: true });
+      writeFileSync(join(place, "-sdp", "dist", "recipes", "NN-slug.js"), "return 1;");
+      const form =
+        /"\$\(cat .+?\)"/u.exec(
+          recipeListing([], packagePrefix(place, join(place, "-sdp")), "sdp q"),
+        )?.[0] ?? "";
+
+      expect(form).toBe('"$(cat ./-sdp/dist/recipes/NN-slug.js)"');
+      // Copied into a shell as printed, `cat` reads the path as a file, never as options.
+      const copied = spawnSync(`printf %s ${form}`, { cwd: place, shell: true, encoding: "utf8" });
+      expect({ status: copied.status, stdout: copied.stdout }).toEqual({
+        status: 0,
+        stdout: "return 1;",
+      });
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  });
+
+  it("starts each call form with the command a runner names, else sdp q", () => {
+    expect(queryCommand({})).toBe("sdp q");
+    expect(queryCommand({ SDP_Q_COMMAND: "  " })).toBe("sdp q");
+    expect(queryCommand({ SDP_Q_COMMAND: "node skills/sdp-agent-surface/scripts/q.mjs" })).toBe(
+      "node skills/sdp-agent-surface/scripts/q.mjs",
+    );
+    const forms = recipeListing([], "", "node q.mjs").split("\n").slice(1);
+    expect(forms).toHaveLength(3);
+    for (const form of forms) expect(form.startsWith("  node q.mjs ")).toBe(true);
+  });
+
+  it("lists the package's paths from a working directory below the package root", () => {
+    const listed = spawnSync(process.execPath, [join(repoRoot, "dist/cli/sdp.js"), "q"], {
+      cwd: join(repoRoot, "examples/checkout-v1"),
+      encoding: "utf8",
+      input: "",
+      env: { ...process.env, SDP_Q_COMMAND: "" },
+    });
+
+    expect(listed.status).toBe(1);
+    expect(listed.stderr).toContain(
+      "The recipes by category; ../../docs/agent-surface/recipes.md holds each one's parameters and answer:",
+    );
+    expect(listed.stderr).toContain(`  sdp q "$(cat ../../dist/recipes/NN-slug.js)" --params JSON`);
   });
 
   it("prints JSON for --json", async () => {

@@ -12,10 +12,12 @@
 // --protocol, which selects the root holding the Protocol's own Specs: the checkout's root, with
 // its exclusions and bindings, or the installed package's specs/, which holds intent only, and
 // --root=PATH, --exclude=PATH and --params=VALUE, which pass as the two-word forms `sdp q` reads.
+// With no body the CLI lists call forms that run through this runner, which names itself in
+// SDP_Q_COMMAND.
 
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, join, parse, resolve } from "node:path";
+import { dirname, join, parse, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const packageName = "@libar-dev/software-delivery-protocol";
@@ -24,6 +26,7 @@ export const packageName = "@libar-dev/software-delivery-protocol";
 export const sourceCheckoutExclusions = ["explorations", "examples", "test/fixtures/import/parity"];
 
 const skillPackageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const runnerScript = fileURLToPath(import.meta.url);
 
 function readJson(path) {
   try {
@@ -149,6 +152,26 @@ function realpathOrSelf(path) {
   }
 }
 
+/** A shell word for `value`: as written when every character is safe, else single-quoted. */
+export function shellWord(value) {
+  return /^[\w@%+=:,./-]+$/u.test(value) ? value : `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
+/**
+ * The command that runs this runner from `cwd`, `node <path>`: the path relative, with `/`
+ * separators, led by `./` when it would start with `-`, and quoted for a shell. A call with no
+ * body lists its call forms starting with it, so a copied form never reaches a global `sdp`.
+ */
+export function runnerCommand(cwd = process.cwd()) {
+  const path = relative(realpathOrSelf(cwd), runnerScript).split(sep).join("/");
+  return `node ${shellWord(path.startsWith("-") ? `./${path}` : path)}`;
+}
+
+/** The environment a runner gives the CLI: the caller's, naming this runner as the q command. */
+export function runnerEnvironment(cwd = process.cwd()) {
+  return { ...process.env, SDP_Q_COMMAND: runnerCommand(cwd) };
+}
+
 /**
  * The argument list for `sdp q`: the caller's arguments, plus the runtime's exclusions when the
  * query reads its package root. A root naming another corpus gets none, since each exclusion is a
@@ -208,6 +231,7 @@ function main(args) {
   }
   const result = spawnSync(process.execPath, queryArguments(runtime, selected.args), {
     stdio: "inherit",
+    env: runnerEnvironment(),
   });
   if (result.error !== undefined) {
     console.error(`sdp q: ${result.error.message}`);
