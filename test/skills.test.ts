@@ -776,7 +776,8 @@ void readingOnRampTestAnchor;
 //   them `spec:extraction.derive-graph`, `spec:extraction.claim-taxonomy`,
 //   `spec:extraction.delivery-facts`) and G6 (recipe numbers, names and files);
 // - `#runner`: G7 and the runner tests below ("keeps the checkout's exclusions…", "refuses with a
-//   named remedy…", "passes the runner's exclusions…", "reads every value option written with =…");
+//   named remedy…", "names the checkout's root…", "passes the runner's exclusions…", "reads every
+//   value option written with =…");
 // - `#protocolRoot`: "selects the Protocol's own Specs with --protocol, and only the root";
 // - `#orientation` and `#orientationOutput`: "runs every orientation query…", "prints each answer
 //   as its command and its output…", "prints a call that answers as the run did…", "orients over
@@ -1394,6 +1395,35 @@ describe("the graph-reading on-ramp", () => {
     }
   });
 
+  it("warns of skew when the skill sits outside any copy of the package", async () => {
+    const place = realpathSync(mkdtempSync(join(tmpdir(), "sdp-skew-copied-")));
+    try {
+      // The skill folder copied on its own into a project's skills folder.
+      const skill = join(place, "project", ".claude", "skills", "sdp-agent-surface");
+      mkdirSync(join(skill, "scripts"), { recursive: true });
+      copyFileSync(
+        join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs"),
+        join(skill, "scripts", "q.mjs"),
+      );
+      const runner = (await import(pathToFileURL(join(skill, "scripts", "q.mjs")).href)) as {
+        skewWarning: (runtime: { packageRoot: string }) => string | undefined;
+      };
+      const cli = join(
+        place,
+        "project",
+        "node_modules",
+        "@libar-dev",
+        "software-delivery-protocol",
+      );
+
+      expect(runner.skewWarning({ packageRoot: cli })).toBe(
+        `sdp q: this skill comes from ${skill}, outside any copy of the package, but the CLI from ${cli}; their teaching may differ. Load the plugin, or link the skill folders from the installed package.`,
+      );
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  });
+
   it("selects the Protocol's own Specs with --protocol, and only the root", async () => {
     const runner = (await import(
       pathToFileURL(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs")).href
@@ -1543,6 +1573,18 @@ describe("the graph-reading on-ramp", () => {
     } finally {
       rmSync(outside, { force: true, recursive: true });
     }
+  });
+
+  it("names the checkout's root when run from below it", async () => {
+    const runner = (await import(
+      pathToFileURL(join(repoRoot, "skills/sdp-agent-surface/scripts/q.mjs")).href
+    )) as { selectRuntime: (cwd: string) => { error?: string } };
+    const below = join(repoRoot, "src", "cli");
+    const root = dirname(dirname(below));
+
+    expect(runner.selectRuntime(below)).toEqual({
+      error: `sdp q: ${below} is inside the Protocol checkout; run from its root, ${root}, where the graph derives.`,
+    });
   });
 
   // Each count the arrival note compares is a number in entry search's answer, whose top-level

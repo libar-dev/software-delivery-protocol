@@ -25,7 +25,10 @@ export const packageName = "@libar-dev/software-delivery-protocol";
 /** The fixture exclusions the Protocol source checkout needs; an adopter's corpus needs none. */
 export const sourceCheckoutExclusions = ["explorations", "examples", "test/fixtures/import/parity"];
 
-const skillPackageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+// This skill's folder, and the package root that holds it when the skill ships in a copy of the
+// package.
+const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const skillPackageRoot = resolve(skillRoot, "../..");
 const runnerScript = fileURLToPath(import.meta.url);
 
 function readJson(path) {
@@ -41,13 +44,21 @@ function binOf(packageRoot, manifest) {
   return bin === undefined ? undefined : join(packageRoot, bin);
 }
 
+/** The manifest of the Protocol source checkout whose root is `dir`, or undefined. */
+function checkoutManifest(dir) {
+  const own = readJson(join(dir, "package.json"));
+  return own?.name === packageName && existsSync(join(dir, "src", "cli", "sdp.ts"))
+    ? own
+    : undefined;
+}
+
 /**
  * Selects the CLI for a working directory. Returns `{ mode, cli, packageRoot, exclusions }`, or
  * `{ error }` naming what to do when no runtime is available.
  */
 export function selectRuntime(cwd = process.cwd()) {
-  const own = readJson(join(cwd, "package.json"));
-  if (own?.name === packageName && existsSync(join(cwd, "src", "cli", "sdp.ts"))) {
+  const own = checkoutManifest(cwd);
+  if (own !== undefined) {
     const cli = binOf(cwd, own);
     if (cli === undefined || !existsSync(cli)) {
       return {
@@ -69,6 +80,15 @@ export function selectRuntime(cwd = process.cwd()) {
         error: `sdp q: ${packageRoot} has no built CLI; reinstall the package so its prepare script builds dist/.`,
       };
     }
+    if (dir === parse(dir).root) break;
+  }
+
+  // Below the checkout's root, the remedy is that root: every command runs there.
+  for (let dir = dirname(cwd); ; dir = dirname(dir)) {
+    if (checkoutManifest(dir) !== undefined)
+      return {
+        error: `sdp q: ${cwd} is inside the Protocol checkout; run from its root, ${dir}, where the graph derives.`,
+      };
     if (dir === parse(dir).root) break;
   }
 
@@ -196,12 +216,15 @@ export function buildIdentity(root) {
 }
 
 /**
- * Warns when this skill comes from another build of the package than the CLI it runs. A client's
- * cached copy of the same build stays silent; without a build on record, another copy warns.
+ * Warns when this skill may teach another version than the CLI it runs: it comes from another
+ * build of the package, or from a folder outside any copy of the package, whose build is unknown.
+ * A client's cached copy of the same build stays silent; without a build on record, another copy
+ * warns.
  */
 export function skewWarning(runtime) {
   const manifest = readJson(join(skillPackageRoot, "package.json"));
-  if (manifest?.name !== packageName) return undefined;
+  if (manifest?.name !== packageName)
+    return `sdp q: this skill comes from ${skillRoot}, outside any copy of the package, but the CLI from ${runtime.packageRoot}; their teaching may differ. Load the plugin, or link the skill folders from the installed package.`;
   const same = (left, right) => {
     try {
       return realpathSync(left) === realpathSync(right);

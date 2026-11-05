@@ -8,6 +8,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -27,7 +28,8 @@ import { afterAll, describe, expect, it } from "vitest";
 // Whether a client puts the answers in the model's context is a live-session check; these tests
 // prove the files and the script.
 
-const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
+// Physical paths: the hook reads a session's directory through every link, as a process does.
+const repoRoot = realpathSync(resolve(fileURLToPath(new URL("..", import.meta.url))));
 const hook = join(repoRoot, "hooks/session-start.mjs");
 const lockSignal = join(repoRoot, "test/helpers/hook-lock-signal.mjs");
 const packageName = "@libar-dev/software-delivery-protocol";
@@ -35,7 +37,7 @@ const packageName = "@libar-dev/software-delivery-protocol";
 // 2,500 tokens. The script bounds its output under both.
 const maxCharacters = 7_500;
 
-const scratch = mkdtempSync(join(tmpdir(), "sdp-session-start-"));
+const scratch = realpathSync(mkdtempSync(join(tmpdir(), "sdp-session-start-")));
 afterAll(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
@@ -280,6 +282,22 @@ describe("the session-start hook", () => {
       );
     }
   }, 120_000);
+
+  it("orients the project a session reaches through a link into one of its directories", () => {
+    // A link outside the project to a directory inside it: the hook reads the directory as a
+    // process started there does, and finds the project a query from there would.
+    const nested = join(ownProject, "nested", "deeper");
+    mkdirSync(nested, { recursive: true });
+    const linked = join(scratch, "links", "into-own");
+    mkdirSync(join(scratch, "links"), { recursive: true });
+    symlinkSync(nested, linked, "dir");
+
+    const run = runHook({ cwd: linked, source: "startup" });
+
+    expect(run.status).toBe(0);
+    expect(run.stdout).toContain(`$ cd ${ownProject} && `);
+    expect(run.stdout).toContain("specs: 1,");
+  }, 60_000);
 
   it("prints one short line where the package is installed but no Spec derives", () => {
     const run = runHook({ cwd: emptyProject });
@@ -956,5 +974,51 @@ describe("OpenCode's compatibility shim", () => {
     expect(lookups).toBe(3);
     expect(together[1]?.system).toEqual(together[0]?.system);
     expect(together[0]?.system[0]?.text).toContain("specs: 1,");
+  }, 60_000);
+
+  it("runs the script again on the session's next model call when it could not start", async () => {
+    const { default: plugin } = (await import(
+      pathToFileURL(join(repoRoot, "opencode", "server.js")).href
+    )) as { default: { id: string; setup: (ctx: unknown) => Promise<void> } };
+    // The session's directory appears only after its first model call, so the first run cannot
+    // start; a directory without the package runs the script, which prints nothing.
+    const later = join(ownProject, `later-${randomUUID()}`);
+    const bare = join(scratch, "opencode-bare");
+    mkdirSync(bare, { recursive: true });
+    const sessions: Record<string, { location: { directory: string } }> = {
+      top: { location: { directory: later } },
+      bare: { location: { directory: bare } },
+    };
+    const hooks: Record<string, (event: ContextEvent) => Promise<void>> = {};
+    let lookups = 0;
+    await plugin.setup({
+      session: {
+        get: ({ sessionID }: { sessionID: string }) => {
+          lookups += 1;
+          return Promise.resolve(sessions[sessionID]);
+        },
+        hook: (name: string, handler: (event: ContextEvent) => Promise<void>) => {
+          hooks[name] = handler;
+          return Promise.resolve();
+        },
+      },
+    });
+
+    const failed: ContextEvent = { sessionID: "top", system: [] };
+    await hooks.context?.(failed);
+    expect(failed.system).toEqual([]);
+    mkdirSync(later);
+    const recovered: ContextEvent = { sessionID: "top", system: [] };
+    await hooks.context?.(recovered);
+    expect(recovered.system[0]?.text).toContain("specs: 1,");
+    expect(lookups).toBe(2);
+
+    // A run that printed nothing settles the session: later calls do not run the script again.
+    const quiet: ContextEvent = { sessionID: "bare", system: [] };
+    const quietLater: ContextEvent = { sessionID: "bare", system: [] };
+    await hooks.context?.(quiet);
+    await hooks.context?.(quietLater);
+    expect([quiet.system, quietLater.system]).toEqual([[], []]);
+    expect(lookups).toBe(3);
   }, 60_000);
 });

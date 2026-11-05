@@ -8,6 +8,7 @@ import {
   mkdtemp,
   readFile,
   readdir,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -505,7 +506,8 @@ bindExample({
   }, 60_000);
 
   it("proves the installed tarball lists import, dry-runs conversion without writes, and exposes the barrel", async () => {
-    const packageRoot = await mkdtemp(join(tmpdir(), "sdp-package-smoke-"));
+    // The physical path, as the session-start hook reads a session's directory.
+    const packageRoot = await realpath(await mkdtemp(join(tmpdir(), "sdp-package-smoke-")));
     const consumer = join(packageRoot, "consumer");
 
     try {

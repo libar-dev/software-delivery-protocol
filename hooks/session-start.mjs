@@ -10,8 +10,9 @@
 //
 // It orients the session's own project, never the plugin's: the Protocol checkout holding the hook
 // input's `cwd`, or else the nearest directory at or above it with a `package.json`, such as a
-// workspace member. The reading-skill runner of the nearest installed package, run from that
-// directory, prints orientation answers 1 and 5, within a bounded size. It prints answers, never
+// workspace member; `cwd` is read through every link, as a process started there reads it. The
+// reading-skill runner of the nearest installed package, run from that directory, prints
+// orientation answers 1 and 5, within a bounded size. It prints answers, never
 // instructions. It prints one short line when the runner fails or no Spec derives, nothing
 // where no package is installed, and nothing for a second copy of the same session event, such as
 // the plugin's and the checkout's wiring both firing. Clients pass no event id, so a copy is told
@@ -133,6 +134,17 @@ function findProject(cwd) {
     if (readJson(join(installed, "package.json"))?.name === packageName)
       return { root: boundary ?? dir, runner: join(installed, runnerPath) };
     if (dir === parse(dir).root) return undefined;
+  }
+}
+
+/**
+ * `path` as a process started there sees it, through every link; as given when it is missing.
+ */
+function physical(path) {
+  try {
+    return realpathSync(path);
+  } catch {
+    return path;
   }
 }
 
@@ -346,7 +358,7 @@ function main() {
   try {
     const input = hookInput();
     const cwd = typeof input.cwd === "string" && input.cwd !== "" ? input.cwd : process.cwd();
-    const project = findProject(resolve(cwd));
+    const project = findProject(physical(resolve(cwd)));
     if (project === undefined) return;
     const event = eventName(input);
     let finish = () => undefined;
