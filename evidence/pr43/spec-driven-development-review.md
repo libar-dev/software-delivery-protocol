@@ -1,6 +1,6 @@
 # Enabling spec-driven development: the short-term roadmap
 
-**Reviewed at `38d738bc`, the PR #43 head at review time · gaps, roadmap and queries re-measured at `fdd9dd37` · companion: the [skills refactoring review][prior], the corrections the next session addresses**
+**Reviewed at `38d738bc`, the PR #43 head at review time · gaps, roadmap and queries re-measured at `4622e202` · companion: the [skills refactoring review][prior], the corrections the next session addresses**
 
 The Spec is the prompt. Spec-driven development works when three routes work without a wrapper document:
 
@@ -24,7 +24,7 @@ Route 1 has had a trial round, and its re-run is the skills review's acceptance 
 
 The graph answered the same in the red and green states: stated `defined`, derived `ready`, `implemented` and `has-verifier`, zero errors. Those answers describe bindings and the floor; the red run supplied the behavioral evidence. In reverse, recipe 4 mapped `src/orders/create-order.route.ts` to the Spec; once the file was deleted, a query over the new tree listed the path as coverage-unknown, and only recipe 35 over the earlier graph named the deleted `api:orders.post` binding. A reviewer needs both revisions to tell a deleted binding from a file that was never bound. [Total rule][totalrule] · [Use case][usecase] · [Authored point][validpoint] · [Executable test][validtest] · [Independent oracle][oracle] · [Changed-file impact][r4] · [Design diff][r35]
 
-**The gaps, re-measured at `fdd9dd37`.**
+**The gaps, re-measured at `4622e202`.**
 
 <!-- prettier-ignore -->
 | Gap | Observed | Route |
@@ -32,7 +32,7 @@ The graph answered the same in the red and green states: stated `defined`, deriv
 | A recipe without its subject answers for a sample | Recipe 56 with `{}` answers for `spec:consumers.reading-on-ramp` with `found: true`; recipe 3 answers for `spec:consumers.reader`, which an adopter's corpus lacks. Recipe 36 already refuses: "Supply exactly one of pack or specs." | 2 |
 | A parent's verifier rows stop at the example carriers | Both rows for `spec:orders.create-order` end at `specs/orders/create-order-*.sdp.md`. The runnable test, `test/orders/create-order.valid-cart.test.ts:13`, sits behind the child's own verifier; the body under "Reproduce the evidence" makes that hop. | 2 |
 | A Markdown deliverable has no file-to-Spec reach | Recipe 4 over `skills/sdp-sessions/SKILL.md` returns no impacted Spec and lists the file as coverage-unknown, though that file teaches an on-ramp. | 3 |
-| Recipe 4's documented selection sees unstaged tracked files only | Its catalog entry pipes `git diff --name-only -z`, which compares the working tree with the index. Staged, branch and untracked changes need other selections. | 3 |
+| Recipe 4's documented selection sees unstaged tracked files only | Its catalog entry pipes `git diff --name-only -z`, which compares the working tree with the index. The reading skill's arrival reference now teaches the staged, branch and untracked selections beside it (`afe09ff0`, taken provisionally); the catalog entry still shows the unstaged form alone. | 3 |
 
 ## Complete in PR #43
 
@@ -60,7 +60,7 @@ pnpm --silent sdp:q --params '{"files":["test/skills.test.ts","skills/sdp-author
 | **Refuse a missing recipe subject** (follow-up 2) | With the Spec as the prompt, a substituted subject sends an agent to the wrong law without a warning. Overlaps finding 6 on recipe 56. [Recipe 56][r56] | A missing subject, an unknown id and a lawful whole-corpus request answer differently; orientation demonstrations stay labelled as such. [Context bundle][r36] |
 | **Run the development trial as route 2's acceptance** (follow-up 1) | The review's own probe stopped at the example carrier. | The trial below. A session-context recipe is earned only if agents stop at the carrier or keep rebuilding the same join. [Planning slice][r19] · [Session skill][sessions] |
 | **Reopen the Markdown-deliverable question** | This PR's deliverables are skills, and they read as coverage-unknown; the handbook's hazard about skills outside the graph is the manual workaround. | Decide first whether the need is navigational reach or a realization claim that confers `implemented`; keep the document-realization test anchor meanwhile. [Question and provisional reading][dmd] |
-| **Teach recipe 4's other git selections** (a slice of follow-up 9) | Gives PR review route 3 today with no engine change. | Teach the staged, branch and untracked selections beside the unstaged one, and label which tree the graph was derived from. [Recipe 4][r4] |
+| **Teach recipe 4's other git selections** (a slice of follow-up 9) | Gives PR review route 3 today with no engine change. | Teach the staged, branch and untracked selections beside the unstaged one, and label which tree the graph was derived from. Taken provisionally in `afe09ff0`, in the reading skill's arrival reference; the owner confirms it at the PR. [Recipe 4][r4] |
 
 ### The development trial
 
@@ -92,7 +92,7 @@ The remaining follow-ups:
 | 8. Branch and working-tree heads-up display | The on-demand changeset answer is useful and the hook's workspace-root case is fixed. [Hook decision][hook] |
 | 10. An Agent Plugins client | A named development tool needs to **host** plugins, with a discovery or compatibility test. [Plugin decision][plugin] · [Package entry points][readme] · [Client guide][clientguide] · [Conformance][clientcheck] · [Specification][pluginspec] |
 
-The graph-recorded deferrals, each with an owner decider, re-listed by recipes 20 and 25 at `fdd9dd37`; the eleventh, Markdown-deliverable anchors, is proposed above:
+The graph-recorded deferrals, each with an owner decider, re-listed by recipe 20 at `4622e202`; the eleventh, Markdown-deliverable anchors, is proposed above:
 
 <!-- prettier-ignore -->
 | Deferred question | Reopen when |
@@ -145,7 +145,7 @@ Lineage is the design written before implementation; the ruled Specs say what ho
 
 ## Reproduce the evidence
 
-From the Protocol checkout, this body joins a Spec to its examples' runnable tests over the worked example. It re-ran at `fdd9dd37` and reached `test/orders/create-order.valid-cart.test.ts:13`. It is an ordinary graph query and adds no session format.
+From the Protocol checkout, this body joins a Spec to its examples' runnable tests over the worked example. It re-ran at `4622e202` and reached `test/orders/create-order.valid-cart.test.ts:13`. It is an ordinary graph query and adds no session format.
 
 ```sh
 pnpm --silent sdp:q 'const s = g.specContext(params.spec);
@@ -175,7 +175,7 @@ pnpm --silent sdp:q 'const rows=(await recipes(20)).specs.flatMap(s=>s.questions
 pnpm --silent sdp:q 'return (await recipes(53,params)).roadmaps[0].entries.map(e=>[e.id,e.need])' --params '{"pack":"pack:roadmap"}' --json
 ```
 
-**Verification basis.** The lineage comparisons, code links and experiments are pinned to `38d738bc`. In a disposable checkout of `a23cdec2`, all 258 tests across the eight suites below passed. At `fdd9dd37`, the gaps table, the roadmap, the deferral list, recipe 53's refusal of `specs`, recipes 3, 36 and 56 without a subject, and the join body above were re-run.
+**Verification basis.** The lineage comparisons, code links and experiments are pinned to `38d738bc`. In a disposable checkout of `a23cdec2`, all 258 tests across the eight suites below passed. At `4622e202`, the gaps table, the roadmap, the deferral list, recipe 53's refusal of `specs`, recipes 3, 36 and 56 without a subject, and the join body above were re-run.
 
 ```sh
 node_modules/.bin/vitest run test/builders.test.ts test/graph-schema.test.ts test/anchor-forms.test.ts test/structural-anchors.test.ts test/readiness.test.ts test/studio-s5.test.ts test/cli-q.test.ts test/runner.test.ts
