@@ -30,10 +30,10 @@ does not name sit in the catalog's categories, such as
    design slice (recipe 54, `dist/recipes/54-the-design-slice.js`), read as
    [design.md](references/design.md) says. Resuming after a break or compaction, first run step
    3's check over every file the work touched: the files, not a summary, say what exists.
-2. **Edit the carrier** faithfully: the person's meaning, in their terms. A choice their request
-   leaves open, such as a value, a mechanism or an output's shape, stays open: unstated, or an
-   open question with their lean as its `provisional` reading; an example that needs it uses that
-   reading. Hand-written forms and refusals: [carrier.md](references/carrier.md).
+2. **Edit the carrier** faithfully: the person's meaning, in their terms. A choice their words
+   leave open, such as a value, a mechanism or an output's shape, stays open: unstated, or an
+   open question whose `provisional` reading is their lean as they put it; an example that needs
+   it uses that reading. Hand-written forms and refusals: [carrier.md](references/carrier.md).
 3. **Check** with this body, passing every file you touched as `--params '{"files":[…]}'`:
 
 ```js

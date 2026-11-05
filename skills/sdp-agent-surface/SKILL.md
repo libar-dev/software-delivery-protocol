@@ -62,7 +62,8 @@ node <skill-dir>/scripts/q.mjs 'return await recipes(56, params)' --params '{"sp
   pass and fail), and `references` confers neither (`spec:extraction.delivery-facts`).
 - Report stated and derived readiness side by side; `floorNotEvaluated` means no floor, never one
   below `idea`.
-- Carry each fact's claim (`spec:extraction.claim-taxonomy`).
+- Carry each fact's claim (`spec:extraction.claim-taxonomy`), and mark as yours a conclusion no
+  answer states, such as a comparison, a forecast or an absence.
 - Read open-world: an empty list or a zero covers only what its answer looked at. Read
   [answers.md](references/answers.md) before reporting absence.
 - A recipe that takes `detail` answers a summary; `leftOut` names what it dropped
