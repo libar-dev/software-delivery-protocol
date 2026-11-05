@@ -36,7 +36,7 @@ A corpus keeps registers of its own values, such as its limits, its error messag
 - rule: Pinned declarations reports each keyed Design entry whose value opens with a code span, giving the Spec, the key, and the span content as authored with the count of entries and of Specs, and parses no language inside the span.
 - rule: [#keyFamily] The key-family register lists every keyed Design and UI entry whose key starts with one of the given prefixes, across the corpus, the members of one Pack, or a list of Specs, each with its Spec, section, key, value as the graph holds it, file and line, with no row cap.
 - rule: [#familySections] The key-family register never lists a rule, flow or question key, or the `description` entry.
-- rule: [#specLaw] The law a Spec rests on composes the dependency footing and adds, for each target that resolves to a Spec, its carrier file, each behavior rule's line with its entry address when keyed, whether the target is a decision, and how many entries its other sections hold.
+- rule: [#specLaw] The law a Spec rests on composes the dependency footing and adds, for each target that resolves to a Spec, its carrier file, each behavior rule's line with its entry address when keyed, whether the target is a decision, and how many entries each of its other sections holds, its open questions counted apart. Its summary lists at most twelve rules a target, and `detail: true` lists every one.
 - rule: Each body composes the reader and adds no reader join or CLI verb.
 - rule: The recipe check executes each catalog body as written, and the on-ramps point to the catalog for its contents.
 

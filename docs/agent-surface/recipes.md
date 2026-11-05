@@ -36,7 +36,7 @@ rows.
 | --- | --- | --- | --- |
 | 6 | Where is this concept | term | Locate a concept; recipe 23 for the entry and its line |
 | 3 | What does this Spec guarantee, and who verifies it | spec | Read guarantees and bindings |
-| 56 | The law a Spec rests on | spec | Open the law a Spec rests on: files, rule lines, addresses |
+| 56 | The law a Spec rests on | spec, detail | Open the law a Spec rests on: files, rule lines, addresses |
 | 21 | Dependency footing | spec | Read dependency footing; recipe 26 for cycles |
 | 23 | Entry search | term | Find entries by term |
 | 19 | Planning slice | spec | Read a planning slice |
@@ -220,8 +220,8 @@ not suppress `console.*`, so a body a machine reads, every recipe below included
 to the console. Returning a conclusion costs a fraction of returning a dump, so every recipe
 below returns counts, ids, and decoded reasons rather than whole nodes.
 
-Changed-file impact, Pack design, the design diff and the design slice, recipes 4, 29, 35 and 54,
-accept `detail: true` and default to summaries that preserve every total and name omitted detail
+Changed-file impact, Pack design, the design diff, the design slice and the law a Spec rests on,
+recipes 4, 29, 35, 54 and 56, accept `detail: true` and default to summaries that preserve every total and name omitted detail
 in `leftOut`. Pack design and the design slice also accept member ids in `detail` for selected
 full rows. Other recipes follow their own documented result shapes.
 
@@ -6369,21 +6369,27 @@ return { diagnostics: [], memo: `${lines.join("\n")}\n` };
 on as files to open and addresses to cite. For the rungs alone, run dependency footing (recipe
 21).*
 
-`params.spec` is the Spec; an unknown id returns `{ id, found: false }`. The answer composes recipe
-21 and keeps its fields.
+`params.spec` is the Spec; an unknown id returns `{ id, found: false }`. `params.detail` defaults
+to `false`, which lists at most twelve rules a target; `true` lists every rule. The answer composes
+recipe 21 and keeps its fields.
 
 ```js
-const accepts = ["spec"];
+const accepts = ["spec", "detail"];
 const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name));
 if (unknownParams.length > 0) return { unknownParams, accepts };
+const detail = params.detail ?? false;
+if (typeof detail !== "boolean") {
+  return { diagnostics: [{ parameter: "detail", problem: "Expected true or false." }] };
+}
 const footing = await recipes(21, { spec: params.spec ?? "spec:consumers.reading-on-ramp" });
 if (!footing.found) return footing;
 
 const cap = 12;
-const leftOut = [];
+const clipped = [];
 const count = { rules: 0, keyedRules: 0 };
 const size = (value) => Object.keys(value ?? {}).length;
 const entries = (section) => Object.keys(section ?? {}).filter((key) => key !== "description").length;
+const length = (list) => (Array.isArray(list) ? list.length : 0);
 const law = footing.footing.map((row) => {
   const context = row.resolved ? g.specContext(row.id) : undefined;
   if (context === undefined) {
@@ -6399,20 +6405,27 @@ const law = footing.footing.map((row) => {
   const unkeyedRules = rules.filter((rule) => rule.address === null).length;
   count.rules += rules.length;
   count.keyedRules += rules.length - unkeyedRules;
-  if (rules.length > cap) leftOut.push(`${row.id}: ${rules.length - cap} rules after the first ${cap}`);
+  if (!detail && rules.length > cap) clipped.push(`${row.id} (${rules.length - cap} more)`);
+  const intent = sections.intent ?? {};
   const held = {
+    intent: ["actor", "problem", "outcome", "value"].filter((field) => intent[field] !== undefined).length +
+      length(intent.risks) + length(intent.assumptions),
+    questions: length(intent.openQuestions),
     terms: size(sections.model?.terms),
     constraints: size(sections.constraints),
     flows: size(sections.behavior?.flows),
+    examples: length(sections.behavior?.examples),
+    exampleSpace: sections.behavior?.exampleSpace === undefined ? 0 : 1,
     design: entries(sections.design),
     ui: entries(sections.ui),
     decision: entries(sections.decision),
+    verification: length(sections.verification?.criteria),
   };
   return {
     ...row,
     file: context.file,
     decision: context.specKind === "decision",
-    rules: rules.slice(0, cap),
+    rules: detail ? rules : rules.slice(0, cap),
     unkeyedRules,
     alsoHolds: Object.fromEntries(Object.entries(held).filter(([, entryCount]) => entryCount > 0)),
   };
@@ -6425,7 +6438,7 @@ return {
   floorReached: footing.floorReached,
   totals: { ...footing.totals, decisions: law.filter((row) => row.decision).length, ...count },
   law,
-  leftOut,
+  leftOut: clipped.length === 0 ? [] : [`Rules after the first ${cap} of a target: ${clipped.join(", ")}; pass detail: true.`],
 };
 ```
 
@@ -6435,12 +6448,15 @@ return {
 - `decision`, true for a decision record, whose ruling sits in its file's Decision section with no
   line in the graph;
 - `rules`, each behavior rule's `line` and its entry `address`, null for an unkeyed rule: cite
-  that one by file and line, or propose a key with the rule-key proposal (recipe 48). A target
-  with more than twelve rules lists the first twelve, and `leftOut` names the rest;
+  that one by file and line, or propose a key with the rule-key proposal (recipe 48). Without
+  `detail`, a target with more than twelve rules lists the first twelve, and `leftOut` names each
+  such target with the count it left out;
 - `unkeyedRules`, the count of the target's rules with no address;
-- `alsoHolds`, the count of entries in each section the answer does not list (`terms`,
-  `constraints`, `flows`, `design`, `ui`, `decision`), present only when not zero, so open the
-  file for law that lives outside the rules.
+- `alsoHolds`, the count of entries in each section the answer does not list (`intent`,
+  `questions`, `terms`, `constraints`, `flows`, `examples`, `exampleSpace`, `design`, `ui`,
+  `decision`, `verification`), present only when not zero, so open the file for law that lives
+  outside the rules. `intent` counts its actor, problem, outcome, value, risks and assumptions;
+  `questions` its open questions.
 
 `totals` keeps recipe 21's counts and adds `decisions`, `rules` and `keyedRules` across every
 target, the rules past a cap included. `leftOut` is an empty list when nothing was cut.

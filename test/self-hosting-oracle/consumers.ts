@@ -22,7 +22,7 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "Changed-file impact, Pack design, design diff and the design slice, recipes 4, 29, 35 and 54, accept `detail: true` and default to summaries preserving every total and explicitly naming omitted detail.",
+          "Changed-file impact, Pack design, design diff, the design slice and the law a Spec rests on, recipes 4, 29, 35, 54 and 56, accept `detail: true` and default to summaries preserving every total and explicitly naming omitted detail.",
           "The guarantees recipe (recipe 3) returns each section's entries as the Spec states them and the binding fields the Spec context carries, not only the names of the sections.",
           "The orphans and gaps recipe (recipe 8) reports each kind the verifier-gap signal exempts and how many ready Specs it exempts, as the build backlog reports its exclusions.",
           "A design-backlog recipe lists the Specs stated `defined` that no code realizes, with their design columns, excluding examples and decisions as the build backlog does.",
@@ -35,7 +35,7 @@ export const consumersSpecs = [
       },
       design: {
         detailParameter:
-          "recipes 4, 29, 35 and 54 read `params.detail`, absent or `false` for the summary and `true` for every row in full; recipe 29's and recipe 54's `detail` may also be a list of member ids, which returns full rows for those members and summary rows for the rest of the Pack, and an id that is not a member is a diagnostic in the result. A summary keeps `totals` as the full answer counts them and adds `leftOut`, one line for each kind of detail it omits.",
+          "recipes 4, 29, 35, 54 and 56 read `params.detail`, absent or `false` for the summary and `true` for every row in full; recipe 29's and recipe 54's `detail` may also be a list of member ids, which returns full rows for those members and summary rows for the rest of the Pack, and an id that is not a member is a diagnostic in the result. A summary keeps `totals` as the full answer counts them and adds `leftOut`, one line for each kind of detail it omits.",
         impactSummary:
           "`{ changedFiles, totals, impactedSpecs: [id], impactedPacks: [id], atRisk: { incomingSpecs: [id], outgoingSpecs: [id], other: [id] }, coverageUnknownFiles, unlinkedUnits: [id], leftOut }` is recipe 4's summary. Incoming and outgoing name the connecting edge's direction relative to the impacted node and assert no dependency, since the edge may be any type; a Spec reached both ways is listed in both, and `other` holds the at-risk nodes that are not Specs.",
         impactDetail:
@@ -1383,7 +1383,7 @@ export const consumersSpecs = [
           "Pinned declarations reports each keyed Design entry whose value opens with a code span, giving the Spec, the key, and the span content as authored with the count of entries and of Specs, and parses no language inside the span.",
           "The key-family register lists every keyed Design and UI entry whose key starts with one of the given prefixes, across the corpus, the members of one Pack, or a list of Specs, each with its Spec, section, key, value as the graph holds it, file and line, with no row cap.",
           "The key-family register never lists a rule, flow or question key, or the `description` entry.",
-          "The law a Spec rests on composes the dependency footing and adds, for each target that resolves to a Spec, its carrier file, each behavior rule's line with its entry address when keyed, whether the target is a decision, and how many entries its other sections hold.",
+          "The law a Spec rests on composes the dependency footing and adds, for each target that resolves to a Spec, its carrier file, each behavior rule's line with its entry address when keyed, whether the target is a decision, and how many entries each of its other sections holds, its open questions counted apart. Its summary lists at most twelve rules a target, and `detail: true` lists every one.",
           "Each body composes the reader and adds no reader join or CLI verb.",
           "The recipe check executes each catalog body as written, and the on-ramps point to the catalog for its contents.",
         ],

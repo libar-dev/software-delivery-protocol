@@ -2086,11 +2086,11 @@ const registerRecipesTestAnchor = specTest({
 });
 void registerRecipesTestAnchor;
 describe("register recipe semantics", () => {
-  it("opens the law a Spec rests on at its files, rule lines and addresses, capping long rule lists", async () => {
+  it("opens the law a Spec rests on at its files, rule lines and addresses, capping long rule lists unless asked for detail", async () => {
     const ruleTexts = Array.from({ length: 14 }, (_, index) =>
       index === 1 ? "[#second] Rule two." : index === 13 ? "[#last] Rule last." : "Rule.",
     );
-    const lawCarrier = `---\nid: spec:probe.law\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Law\n\n## Intent\n- outcome: Hold many rules.\n\n## Behavior\n${ruleTexts.map((text) => `- rule: ${text}`).join("\n")}\n`;
+    const lawCarrier = `---\nid: spec:probe.law\nkind: behavior\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Law\n\n## Intent\n- outcome: Hold many rules.\n\n### Open questions\n- [non-blocking #more] Are more rules coming?\n\n## Behavior\n${ruleTexts.map((text) => `- rule: ${text}`).join("\n")}\n\n## Verification — manual\n- A reader checks each rule.\n`;
     const extraction = markdownProbe("sdp-law-recipe-", {
       "law.sdp.md": lawCarrier,
       "terms.sdp.md": `---\nid: spec:probe.terms\nkind: model\naltitude: story\nreadiness: idea\nrelations: {}\n---\n# Terms\n\n## Intent\n- outcome: Name two terms.\n\n## Model\n- **alpha** — The first term.\n- **beta** — The second term.\n\n## Design\n- shape: One shape.\n`,
@@ -2122,21 +2122,21 @@ describe("register recipe semantics", () => {
         file: "law.sdp.md",
         decision: false,
         unkeyedRules: 12,
-        alsoHolds: {},
+        alsoHolds: { intent: 1, questions: 1, verification: 1 },
       },
       {
         id: "spec:probe.terms",
         file: "terms.sdp.md",
         decision: false,
         unkeyedRules: 0,
-        alsoHolds: { terms: 2, design: 1 },
+        alsoHolds: { intent: 1, terms: 2, design: 1 },
       },
       {
         id: "spec:probe.ruling",
         file: "ruling.sdp.md",
         decision: true,
         unkeyedRules: 0,
-        alsoHolds: { decision: 2 },
+        alsoHolds: { intent: 1, decision: 2 },
       },
     ]);
     const ruleLines = lawCarrier
@@ -2148,7 +2148,9 @@ describe("register recipe semantics", () => {
         address: index === 1 ? "spec:probe.law#rule.second" : null,
       })),
     );
-    expect(answer.leftOut).toEqual(["spec:probe.law: 2 rules after the first 12"]);
+    expect(answer.leftOut).toEqual([
+      "Rules after the first 12 of a target: spec:probe.law (2 more); pass detail: true.",
+    ]);
     expect(answer.totals).toEqual({
       ...asRecord(footing.totals),
       decisions: 1,
@@ -2159,9 +2161,27 @@ describe("register recipe semantics", () => {
       id: "spec:probe.absent",
       found: false,
     });
+    // Detail lists every rule of every target and leaves nothing out; the totals do not change.
+    const detailed = asRecord(await runRecipe(recipe, { ...subject, detail: true }, extraction));
+    expect(asRecord(asArray(detailed.law)[0]).rules).toEqual(
+      ruleLines.map((line, index) => ({
+        line,
+        address:
+          index === 1
+            ? "spec:probe.law#rule.second"
+            : index === 13
+              ? "spec:probe.law#rule.last"
+              : null,
+      })),
+    );
+    expect(detailed.leftOut).toEqual([]);
+    expect(detailed.totals).toEqual(answer.totals);
+    expect(await runRecipe(recipe, { ...subject, detail: "all" }, extraction)).toEqual({
+      diagnostics: [{ parameter: "detail", problem: "Expected true or false." }],
+    });
     expect(await runRecipe(recipe, { sepc: "spec:probe.subject" }, extraction)).toEqual({
       unknownParams: ["sepc"],
-      accepts: ["spec"],
+      accepts: ["spec", "detail"],
     });
   });
 
