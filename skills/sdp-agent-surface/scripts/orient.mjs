@@ -294,19 +294,25 @@ function main(args) {
         maxStringLength: Infinity,
         breakLength: 120,
       });
+    // Each answer is its command and what that command prints: the command is the explanation.
     for (const answer of answers) {
       const query = queries.find((q) => q.number === answer.number);
-      const demonstration =
-        query?.subject !== undefined && given?.[String(answer.number)] === undefined;
-      process.stdout.write(`## ${answer.number}. ${query?.title}\nTeaches: ${query?.teaches}\n\n`);
-      if (answer.error !== undefined) process.stdout.write(`FAILED: ${answer.error}\n`);
-      else if (!demonstration) process.stdout.write(`${render(answer.answer)}\n`);
+      const key = String(answer.number);
+      const own = given?.[key];
+      const demonstration = query?.subject !== undefined && own === undefined;
+      const subject =
+        own !== undefined
+          ? JSON.stringify({ [key]: own })
+          : demonstration
+            ? `{"${key}":${query.subject}}`
+            : undefined;
+      const command = `node ${shellWord(script)} --only ${key}${subject === undefined ? "" : ` --subjects ${shellWord(subject)}`}${corpus}`;
+      process.stdout.write(`## ${key}. ${query?.title}\n\n$ ${command}\n`);
+      if (answer.error !== undefined) process.stdout.write(`FAILED: ${answer.error}\n\n`);
       else
         process.stdout.write(
-          `${render(compactAnswer(answer.answer))}\n\nA shortened demonstration. In full, on what you hold:\n` +
-            `node ${shellWord(script)} --only ${answer.number} --subjects ${shellWord(`{"${answer.number}":${query.subject}}`)}${corpus}\n`,
+          `${render(demonstration ? compactAnswer(answer.answer) : answer.answer)}\n\n`,
         );
-      process.stdout.write(`\nRead it with ${query?.notes}\n\n`);
     }
     const catalog = recipeCatalog(runtime);
     if (catalog !== undefined) process.stdout.write(`## Recipes\n\n${catalog}\n`);

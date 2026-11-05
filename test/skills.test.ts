@@ -924,7 +924,8 @@ describe("the graph-reading on-ramp", () => {
     );
   }, 120_000);
 
-  it("prints what each query teaches and shortens an arrival query unless its subject is given", async () => {
+  // #rule.orientationOutput: the command is the explanation; no prose restates it.
+  it("prints each answer as its command and its output, shortening an arrival answer unless given its subject", async () => {
     const script = join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs");
     const orient = (await import(pathToFileURL(script).href)) as {
       orientationQueries: () => {
@@ -950,11 +951,16 @@ describe("the graph-reading on-ramp", () => {
     const demonstration = run([]);
     expect(demonstration.status, demonstration.stderr).toBe(0);
     for (const query of queries.filter((candidate) => [4, 10].includes(candidate.number))) {
-      expect(section(demonstration.stdout, query.number)).toContain(
-        `${String(query.number)}. ${query.title}\nTeaches: ${query.teaches}\n`,
+      const printed = section(demonstration.stdout, query.number);
+      expect(printed).toContain(
+        `${String(query.number)}. ${query.title}\n\n$ node skills/sdp-agent-surface/scripts/orient.mjs --only ${String(query.number)}`,
       );
+      expect(printed).not.toContain(query.teaches);
+      expect(printed).not.toContain("Read it with");
     }
-    expect(section(demonstration.stdout, 4)).not.toContain("A shortened demonstration");
+    expect(section(demonstration.stdout, 4)).toContain(
+      "$ node skills/sdp-agent-surface/scripts/orient.mjs --only 4\n",
+    );
     // #rule.orientationOutput: a printed run, `--only` included, ends with the catalog by category
     // and the call forms, exactly as the CLI prints them for a call with no body.
     const empty = spawnSync(process.execPath, [join(repoRoot, "dist/cli/sdp.js"), "q"], {
@@ -977,7 +983,10 @@ describe("the graph-reading on-ramp", () => {
       .split("\n")
       .filter((line) => line.startsWith("- rule: "));
     expect(rules.length).toBeGreaterThan(1);
-    expect(section(full.stdout, 10)).not.toContain("A shortened demonstration");
+    expect(section(full.stdout, 10)).toContain(
+      `--only 10 --subjects '{"10":{"specs":["spec:consumers.agent-surface"]}}'`,
+    );
+    expect(section(full.stdout, 10)).not.toMatch(/'… \d+ more'/u);
     expect(section(full.stdout, 10).match(/'line \d+ /gu)).toHaveLength(rules.length);
   }, 120_000);
 
@@ -1030,7 +1039,8 @@ describe("the graph-reading on-ramp", () => {
         { cwd: repoRoot, encoding: "utf8" },
       );
       expect(run.status, run.stderr).toBe(0);
-      const printed = /^node .+$/mu.exec(run.stdout)?.[0] ?? "";
+      // The answer's command, after its `$ ` prompt.
+      const printed = /^\$ (node .+)$/mu.exec(run.stdout)?.[1] ?? "";
       expect(printed).toMatch(/^node '[^']+\/my scripts\/orient\.mjs' --only 10 /u);
       expect(printed.endsWith(" --root examples/checkout-v1")).toBe(true);
 
