@@ -262,9 +262,14 @@ function clip(text, limit) {
   return text.length <= limit ? text : `${text.slice(0, limit - 1)}…`;
 }
 
-function bounded(text, command) {
+/** A shell word for `value`: as written when every character is safe, else single-quoted. */
+function shellWord(value) {
+  return /^[\w@%+=:,./-]+$/u.test(value) ? value : `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
+function bounded(text) {
   if (text.length <= maxCharacters) return text;
-  const note = `\n… shortened to ${String(maxCharacters)} characters; \`${command}\` prints both answers in full.`;
+  const note = `\n… shortened to ${String(maxCharacters)} characters`;
   const room = maxCharacters - note.length;
   const cut = text.lastIndexOf("\n", room);
   return `${text.slice(0, cut > 0 ? cut : room)}${note}`;
@@ -285,7 +290,7 @@ function failureReason(run) {
   );
 }
 
-function orientation(project, event) {
+function orientation(project) {
   const command = `node ${relative(project.root, project.runner)} --only ${answers}`;
   const failed = (reason) =>
     `Orientation did not run at session start (${clip(reason.replace(/\.$/u, ""), maxReason)}). From ${project.root}: ${command}`;
@@ -321,19 +326,16 @@ function orientation(project, event) {
       maxStringLength: Infinity,
       breakLength: 120,
     });
-  const header =
-    `Orientation answers 1 and 5 for the project at ${project.root}, derived ` +
-    `${event === sessionStart ? "when this session started" : "for this session"} by \`${command}\`. ` +
-    "The sdp-agent-surface skill's references/orientation.md says how " +
-    "to read each; the same runner gives the other answers.";
+  // The command that derived the answers, from the project it read, then the answers: the command
+  // is the explanation, and nothing restates it.
+  const header = `$ cd ${shellWord(project.root)} && ${command}`;
   const sections = parsed.map((answer) =>
     [
       `## ${String(answer.number)}. ${String(answer.title)}`,
       answer.error === undefined ? render(answer.answer) : `FAILED: ${String(answer.error)}`,
-      `Read it with ${String(answer.notes)}`,
     ].join("\n\n"),
   );
-  return bounded([header, ...sections].join("\n\n"), command);
+  return bounded([header, ...sections].join("\n\n"));
 }
 
 function main() {
@@ -352,7 +354,7 @@ function main() {
       if (!claim.print) return;
       finish = claim.finish;
     } else if (!claimSession(input)) return;
-    const text = orientation(project, event);
+    const text = orientation(project);
     finish();
     process.stdout.write(
       process.argv.includes("--text")

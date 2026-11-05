@@ -170,9 +170,11 @@ describe("the session-start hook", () => {
     const run = runHook({ cwd: join(repoRoot, "specs"), source: "startup" });
 
     expect(run.status).toBe(0);
-    expect(run.stdout).toMatch(/^Orientation answers 1 and 5 for the project at /u);
-    expect(run.stdout).toContain(`for the project at ${repoRoot}, `);
-    expect(run.stdout).toContain("`node skills/sdp-agent-surface/scripts/orient.mjs --only 1,5`");
+    expect(run.stdout).toMatch(/^\$ cd .+ && node .+orient\.mjs --only 1,5\n/u);
+    expect(run.stdout).toContain(`$ cd ${repoRoot} && `);
+    expect(run.stdout).toContain(
+      "&& node skills/sdp-agent-surface/scripts/orient.mjs --only 1,5\n",
+    );
     expect(run.stdout).toContain("## 1. The corpus and its surface");
     expect(run.stdout).toContain("## 5. Next work");
     expect(run.stdout).toContain("pack:roadmap");
@@ -192,9 +194,9 @@ describe("the session-start hook", () => {
       const run = runHook({ cwd, source: "startup" });
 
       expect(run.status).toBe(0);
-      expect(run.stdout).toContain(`for the project at ${ownProject}, `);
+      expect(run.stdout).toContain(`$ cd ${ownProject} && `);
       expect(run.stdout).toContain(
-        "`node node_modules/@libar-dev/software-delivery-protocol/skills/sdp-agent-surface/scripts/orient.mjs --only 1,5`",
+        "&& node node_modules/@libar-dev/software-delivery-protocol/skills/sdp-agent-surface/scripts/orient.mjs --only 1,5\n",
       );
       expect(run.stdout).toContain("specs: 1,");
       expect(run.stdout).not.toContain("pack:roadmap");
@@ -243,7 +245,7 @@ describe("the session-start hook", () => {
       expect(direct.status).toBe(0);
       expect(JSON.parse(direct.stdout)).toEqual(ids);
       expect(run.status).toBe(0);
-      expect(run.stdout).toContain(`for the project at ${project}, `);
+      expect(run.stdout).toContain(`$ cd ${project} && `);
       expect(run.stdout).toContain(`specs: ${String(ids.length)},`);
       expect(run.stdout).toContain(
         `byFamily: { ${ids.map((id) => `${id.slice(5, 8)}: 1`).join(", ")} }`,
@@ -416,7 +418,7 @@ ${entries.map((id) => `  - ${id}`).join("\n")}
     expect(run.stdout.length).toBeLessThanOrEqual(maxCharacters + 1);
     expect(run.stdout).toContain("## 5. Next work");
     expect(run.stdout).toMatch(
-      /\n… shortened to 7500 characters; `node node_modules\/@libar-dev\/software-delivery-protocol\/skills\/sdp-agent-surface\/scripts\/orient\.mjs --only 1,5` prints both answers in full\.\n$/u,
+      /^\$ cd .+ && node node_modules\/@libar-dev\/software-delivery-protocol\/skills\/sdp-agent-surface\/scripts\/orient\.mjs --only 1,5\n[\s\S]*\n… shortened to 7500 characters\n$/u,
     );
   }, 60_000);
 
@@ -534,7 +536,12 @@ describe("the session-start hook's output", () => {
     expect(run.status).toBe(0);
     expect(output.hookSpecificOutput.hookEventName).toBe("SessionStart");
     expect(output.hookSpecificOutput.additionalContext).toMatch(
-      /^Orientation answers 1 and 5 for the project at .+, derived when this session started by /u,
+      /^\$ cd .+ && node .+orient\.mjs --only 1,5\n\n## 1\. /u,
+    );
+    // spec:decisions.session-start-hook: answers, never instructions. The command is the
+    // explanation; no line points the reader elsewhere for how to read it.
+    expect(output.hookSpecificOutput.additionalContext).not.toMatch(
+      /Read it with|says how to read|derived when this session started/u,
     );
     expect(run.raw.trim().split("\n")).toHaveLength(1);
   }, 60_000);
@@ -543,7 +550,7 @@ describe("the session-start hook's output", () => {
     const run = runHook({ cwd: ownProject, source: "startup" }, scratch, ["--text"]);
 
     expect(run.status).toBe(0);
-    expect(run.raw).toMatch(/^Orientation answers 1 and 5 for the project at /u);
+    expect(run.raw).toMatch(/^\$ cd .+ && node .+ --only 1,5\n/u);
     expect(run.raw).toContain("specs: 1,");
   }, 60_000);
 
@@ -553,7 +560,7 @@ describe("the session-start hook's output", () => {
     const output = JSON.parse(first.raw) as HookOutput;
 
     expect(output.hookSpecificOutput.hookEventName).toBe("PreToolUse");
-    expect(output.hookSpecificOutput.additionalContext).toContain(", derived for this session by ");
+    expect(output.hookSpecificOutput.additionalContext).toMatch(/^\$ cd .+ --only 1,5\n/u);
     expect(output.hookSpecificOutput.additionalContext).toContain("specs: 1,");
     // A tool call, or a prompt, later in the same session prints nothing.
     expect(
@@ -740,7 +747,7 @@ describe("OpenCode's compatibility shim", () => {
     await hooks.context?.(first);
     expect(first.system).toHaveLength(1);
     expect(first.system[0]?.type).toBe("text");
-    expect(first.system[0]?.text).toMatch(/^Orientation answers 1 and 5 for the project at /u);
+    expect(first.system[0]?.text).toMatch(/^\$ cd .+ --only 1,5\n/u);
     expect(first.system[0]?.text).toContain("specs: 1,");
 
     // Every later model call of the session carries the same answers; the script ran once.

@@ -926,8 +926,8 @@ relations: {}
       };
       expect(hookSpecificOutput.hookEventName).toBe("SessionStart");
       const context = hookSpecificOutput.additionalContext;
-      expect(context).toMatch(/^Orientation answers 1 and 5 for the project at /u);
-      expect(context).toContain(`at ${consumer},`);
+      expect(context).toMatch(/^\$ cd .+ --only 1,5\n/u);
+      expect(context).toContain(`$ cd ${consumer} && `);
       expect(context).toContain("specs: 1,");
       expect(context).toContain("## 5. Next work");
       await rm(join(consumer, "own.sdp.md"));
