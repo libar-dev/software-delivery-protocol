@@ -46,11 +46,14 @@ import {
   catalogRangePattern,
   catalogSizePattern,
   emptyHanded,
+  emptyOrientationAnswers,
   describeHandbook,
   describeOnRamp,
+  invocationMisses,
   misnamedRecipes,
   taughtQueryBodies,
   teachingText,
+  unresolvedPointers,
 } from "./helpers/on-ramp-checks.js";
 import { answeredStderr } from "./helpers/query-hint.js";
 import { renderStudio } from "./helpers/studio-render.js";
@@ -651,6 +654,75 @@ describe("the skill-shape checks' detectors", () => {
     expect(emptyHanded({ diagnostics: [] })).toBeUndefined();
   });
 
+  // The sink's output contract answers a body without `return` with exit 0 and an empty stdout,
+  // which a taught body's run reads as no answer at all.
+  it("reads a body that returns nothing as no answer, though the sink exits 0", async () => {
+    const capture = createCaptureOutput();
+    const exitCode = await runSdpCli(
+      ["q", "await recipes(1, {})", "--root", join(repoRoot, "examples/checkout-v1"), "--json"],
+      capture.output,
+      { query: { isStdinTty: () => true } },
+    );
+    const stdout = capture.readStdout();
+
+    expect({ exitCode, stdout }).toEqual({ exitCode: 0, stdout: "" });
+    expect(emptyHanded(stdout === "" ? undefined : (JSON.parse(stdout) as unknown))).toBe(
+      "nothing returned",
+    );
+  });
+
+  it("reads an orientation answer that holds nothing, and leaves a failed one to the error check", () => {
+    expect(
+      emptyOrientationAnswers([
+        { number: 1, answer: { specs: 11 } },
+        { number: 10, answer: [{ id: "spec:none.absent", found: false }] },
+        { number: 11, answer: { totals: { addresses: 0 }, rows: [] } },
+        { number: 8, answer: { diagnostics: [{ parameter: "terms" }] } },
+        { number: 9, error: "TypeError" },
+      ]),
+    ).toEqual([
+      "answer 10: every row: found: false",
+      "answer 11: no rows",
+      "answer 8: diagnostics",
+    ]);
+    expect(
+      emptyOrientationAnswers([
+        { number: 9, answer: { file: null, changeset: { files: ["own.sdp.md"] } } },
+        { number: 11, answer: { rows: ["spec:package.own UNRESOLVED (malformed)"] } },
+      ]),
+    ).toEqual([]);
+  });
+
+  it("resolves every package file a command names, bare or under the installed package", () => {
+    const installed = "node_modules/@libar-dev/software-delivery-protocol/";
+    const misses = (line: string, shipped = false) =>
+      unresolvedPointers({
+        files: [{ path: "probe.md", text: `\`\`\`sh\n${line}\n\`\`\`\n` }],
+        shipped,
+      });
+
+    expect(misses("node skills/sdp-agent-surface/scripts/orient.mjs")).toEqual([]);
+    expect(misses(`node ${installed}hooks/session-start.mjs`, true)).toEqual([]);
+    expect(misses("node skills/sdp-agent-surfac/scripts/orient.mjs")).toEqual([
+      "probe.md: package file skills/sdp-agent-surfac/scripts/orient.mjs",
+    ]);
+    expect(misses(`node ${installed}hooks/session-strat.mjs`, true)).toEqual([
+      `probe.md: package file ${installed}hooks/session-strat.mjs`,
+    ]);
+    expect(misses("node opencode/servr.js")).toEqual(["probe.md: package file opencode/servr.js"]);
+  });
+
+  it("passes --help only to a call that takes it: an sdp verb or the query runner", () => {
+    const misses = (line: string) =>
+      invocationMisses([{ path: "probe.md", text: `\`\`\`sh\n${line}\n\`\`\`\n` }], []);
+
+    expect(misses("npx sdp validate --help")).toEqual([]);
+    expect(misses("node <skill-dir>/scripts/q.mjs --help")).toEqual([]);
+    expect(misses("node <skill-dir>/scripts/orient.mjs --help")).toEqual([
+      "probe.md: orient takes no --help",
+    ]);
+  });
+
   it("flags a recipe's number only beside another recipe's name", () => {
     const headings = catalogHeadings();
     const title = (ordinal: number) => headings.get(ordinal) ?? "";
@@ -797,6 +869,7 @@ describe("the graph-reading on-ramp", () => {
         title: string;
         teaches: string;
         notes: string;
+        answer?: unknown;
         error?: string;
       }[];
       expect(answers.map((answer) => `${String(answer.number)}. ${answer.title}`)).toEqual(
@@ -812,6 +885,9 @@ describe("the graph-reading on-ramp", () => {
           `references/orientation.md#${slug(`${String(answer.number)}. ${answer.title}`)}`,
         );
       }
+      // No answer holds nothing: in the checkout each answers the subject pinned for it, and over
+      // the worked example answers 8 to 11 demonstrate on subjects their bodies derive.
+      expect({ root, empty: emptyOrientationAnswers(answers) }).toEqual({ root, empty: [] });
     }
   }, 120_000);
 

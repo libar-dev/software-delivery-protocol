@@ -27,6 +27,7 @@ import {
   testAnchorId,
 } from "@libar-dev/software-delivery-protocol";
 import { isOsMetadataFile } from "../src/projections/published-tree.js";
+import { emptyOrientationAnswers } from "./helpers/on-ramp-checks.js";
 import { answeredStderr } from "./helpers/query-hint.js";
 
 const packageName = "@libar-dev/software-delivery-protocol";
@@ -883,12 +884,16 @@ relations: {}
       });
       const orientation = JSON.parse(skillOrientation.stdout) as {
         number: number;
+        answer?: unknown;
         error?: string;
       }[];
       expect(orientation.map((answer) => answer.number)).toEqual([
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
       ]);
       expect(orientation.filter((answer) => answer.error !== undefined)).toEqual([]);
+      // A project gives no subject, so answers 8 to 11 demonstrate on what their bodies derive
+      // from its one Spec.
+      expect(emptyOrientationAnswers(orientation)).toEqual([]);
       // A call with no body through the installed runner, as the catalog that ends a printed
       // orientation run takes it, lists call forms that run through that runner and reach the
       // installed package's files from the project; each runs as printed.

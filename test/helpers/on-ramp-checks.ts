@@ -65,7 +65,7 @@ const limits = {
 /** The relations whose targets carry law a realized on-ramp rests on; each is cited in place. */
 const lawRelations = new Set(["dependsOn", "decidedBy", "constrainedBy"]);
 
-interface SkillFile {
+export interface SkillFile {
   /** Repository-relative, POSIX separators. */
   readonly path: string;
   readonly text: string;
@@ -430,10 +430,12 @@ async function runBody(
 }
 
 /**
- * A taught body's answer that is no answer: a refused parameter, a subject the graph lacks, a
- * refusal that answers with its diagnostics alone, or a list whose every row is one of those.
+ * A taught body's answer that is no answer: nothing returned, which the sink answers with exit 0
+ * and an empty stdout; a refused parameter; a subject the graph lacks; a refusal that answers
+ * with its diagnostics alone; or a list whose every row is one of those.
  */
 export function emptyHanded(answer: unknown): string | undefined {
+  if (answer === undefined) return "nothing returned";
   if (Array.isArray(answer)) {
     const rows = answer.map(emptyHanded);
     return rows.length > 0 && rows.every((row) => row !== undefined)
@@ -448,6 +450,55 @@ export function emptyHanded(answer: unknown): string | undefined {
   if (keys.length === 1 && Array.isArray(record.diagnostics) && record.diagnostics.length > 0)
     return "diagnostics";
   return undefined;
+}
+
+/** One answer as `orient.mjs --json` prints it. */
+export interface OrientationAnswer {
+  readonly number: number;
+  readonly answer?: unknown;
+  readonly error?: string;
+}
+
+/** `value[key]` when `value` is an object, else `undefined`. */
+function field(value: unknown, key: string): unknown {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)[key]
+    : undefined;
+}
+
+/**
+ * The list each arrival answer demonstrates on: the terms searched (8), the changeset's files (9),
+ * the Specs read (10) and the addresses checked (11). Given no subject, each body derives one
+ * from the graph, and a fallback that derives none prints a demonstration of nothing.
+ */
+const demonstrationRows: ReadonlyMap<number, (answer: unknown) => unknown> = new Map([
+  [
+    8,
+    (answer: unknown) => (typeof answer === "object" && answer !== null ? Object.keys(answer) : []),
+  ],
+  [9, (answer: unknown) => field(field(answer, "changeset"), "files")],
+  [10, (answer: unknown) => answer],
+  [11, (answer: unknown) => field(answer, "rows")],
+]);
+
+/**
+ * The answers of an orientation run that hold nothing: one that is no answer (`emptyHanded`),
+ * and an arrival answer whose demonstration has no row. A failed answer is the error check's.
+ */
+export function emptyOrientationAnswers(answers: readonly OrientationAnswer[]): readonly string[] {
+  const empty: string[] = [];
+  for (const { number, answer, error } of answers) {
+    if (error !== undefined) continue;
+    const reason = emptyHanded(answer);
+    const rows = demonstrationRows.get(number);
+    if (reason !== undefined) empty.push(`answer ${String(number)}: ${reason}`);
+    else if (rows !== undefined) {
+      const list = rows(answer);
+      if (!Array.isArray(list) || list.length === 0)
+        empty.push(`answer ${String(number)}: no rows`);
+    }
+  }
+  return empty;
 }
 
 /** True when a `files` entry of package.json packs the path or something beneath it. */
@@ -585,7 +636,7 @@ export function catalogHeadings(): ReadonlyMap<number, string> {
  * What the content checks read: the files taken as one teaching text, where `<skill-dir>/` paths
  * resolve, the on-ramp Specs whose law must be cited, and whether the files ship in the package.
  */
-interface Teaching {
+export interface Teaching {
   readonly files: readonly SkillFile[];
   /** The skill folder `<skill-dir>/` stands for; a file outside the skills has none. */
   readonly skillName?: string;
@@ -593,6 +644,129 @@ interface Teaching {
   readonly realized: readonly string[];
   /** A shipped file names only package files that ship; a checkout file names what exists here. */
   readonly shipped: boolean;
+}
+
+/**
+ * The pointers a teaching names that miss: a link, a `<skill-dir>/` or sibling-skill path, a skill
+ * name, or a package file. A package file is a path under a top-level entry of package.json's
+ * `files`, bare or under the installed package's prefix; it must exist, and a shipped teaching
+ * names only package files that ship.
+ */
+export function unresolvedPointers(
+  teaching: Pick<Teaching, "files" | "skillName" | "shipped">,
+): readonly string[] {
+  const { files, skillName, shipped } = teaching;
+  const patterns = (
+    JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+      files: string[];
+    }
+  ).files;
+  // The top-level names the package ships: the first segment of each `files` entry.
+  const shippedRoots = [...new Set(patterns.map((pattern) => pattern.split("/")[0] ?? pattern))]
+    .map((root) => root.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
+    .join("|");
+  const packageFile = new RegExp(
+    String.raw`^(?:${shippedRoots})(?:\/[^\s<>*#]*)?(?:#[^\s<>*#]+)?$`,
+    "u",
+  );
+  const exists = (path: string) => existsSync(join(repoRoot, path));
+  const misses: string[] = [
+    ...danglingLinks(new Map(files.map((file) => [file.path, file.text])), exists, (path) =>
+      /\.md$/iu.test(path) && exists(path) ? readFileSync(join(repoRoot, path), "utf8") : undefined,
+    ),
+  ];
+
+  for (const segment of files.flatMap(codeSegments)) {
+    if (
+      /^sdp-[a-z]+(?:-[a-z]+)*$/u.test(segment.text) &&
+      !exists(`skills/${segment.text}/SKILL.md`)
+    ) {
+      misses.push(`${segment.file}: skill ${segment.text}`);
+    }
+    for (const raw of segment.text.split(/\s+/u).map(bareToken)) {
+      // `<skill-dir>` stands for the calling skill's own directory, as the reading skill defines it.
+      const token = raw.replace(/^<skill-dir>\//u, "");
+      if (
+        raw !== token &&
+        !token.startsWith("../") &&
+        (skillName === undefined || !exists(`skills/${skillName}/${token}`))
+      ) {
+        misses.push(`${segment.file}: skill path ${raw}`);
+      }
+      const sibling = /^\.\.\/(?<skill>sdp-[a-z-]+)\/(?<path>\S+)$/u.exec(token)?.groups;
+      if (sibling !== undefined && !exists(`skills/${sibling.skill ?? ""}/${sibling.path ?? ""}`)) {
+        misses.push(`${segment.file}: sibling path ${token}`);
+      }
+      const named = token.startsWith(packagePrefix) ? token.slice(packagePrefix.length) : token;
+      if (named.includes("<") || !packageFile.test(named)) continue;
+      const [file = named, fragment] = named.split("#");
+      const path = file.replace(/\/$/u, "");
+      if (!exists(path) || (shipped && !packed(path, patterns))) {
+        misses.push(`${segment.file}: package file ${token}`);
+      } else if (fragment !== undefined && /\.md$/iu.test(path)) {
+        // A category or entry of the catalog, or a section of another page, by its anchor.
+        const anchors = markdownAnchors(readFileSync(join(repoRoot, path), "utf8"));
+        if (!anchors.has(fragment) && !anchors.has(fragment.toLowerCase()))
+          misses.push(`${segment.file}: package anchor ${token}`);
+      }
+    }
+  }
+  return misses;
+}
+
+/**
+ * The calls a teaching writes that would not run as written: a copied line that starts with a
+ * bare `sdp`, a body in double quotes, an unknown verb, a flag the call's usage does not state,
+ * and this checkout's own `sdp` script without the runner's fixture `exclusions`. Every `sdp`
+ * verb takes `--help`, and so does the query runner, which hands it to `sdp q`; orientation's
+ * runner takes only the flags its header states.
+ */
+export function invocationMisses(
+  files: readonly SkillFile[],
+  exclusions: readonly string[],
+): readonly string[] {
+  const verbs = usageLines();
+  const orient = scriptUsage("orient");
+  const runner = scriptUsage("q");
+  const misses: string[] = [];
+
+  for (const segment of files.flatMap(codeSegments)) {
+    // A copied line runs as written, and `sdp` alone may be macOS's unrelated binary.
+    if (segment.fenced && bareInvocation(segment.text)) {
+      misses.push(`${segment.file}: bare invocation ${segment.text}`);
+    }
+    if (/(?:sdp:q|\bq\.mjs|\bsdp q) "(?!\$\(cat )/u.test(segment.text)) {
+      misses.push(`${segment.file}: double-quoted body ${segment.text}`);
+    }
+    for (const call of invocations(segment, verbs)) {
+      // The runner takes its own flags (`--protocol`) beside the `sdp q` it wraps.
+      const usage =
+        call.verb === "orient"
+          ? orient
+          : call.runner
+            ? `${runner} ${verbs.get("q") ?? ""}`
+            : verbs.get(call.verb);
+      if (usage === undefined) {
+        misses.push(`${call.file}: unknown verb sdp ${call.verb}`);
+        continue;
+      }
+      for (const flag of flagsOf(call.rest)) {
+        const helped = flag === "--help" && call.verb !== "orient";
+        if (!helped && !new RegExp(`${flag}(?![a-z-])`, "u").test(usage)) {
+          misses.push(`${call.file}: ${call.verb} takes no ${flag}`);
+        }
+      }
+      // This checkout's own `sdp` script at its root needs the runner's fixture exclusions.
+      if (segment.text.startsWith("pnpm --silent sdp ") && /\s\.(?:\s|$)/u.test(call.rest)) {
+        for (const path of exclusions) {
+          if (!call.rest.includes(`--exclude ${path}`)) {
+            misses.push(`${call.file}: checkout form lacks --exclude ${path}`);
+          }
+        }
+      }
+    }
+  }
+  return misses;
 }
 
 // The checks below are the executable suite that asserts the shape every shipped skill keeps in its
@@ -697,62 +871,7 @@ export function describeHandbook(path: string): void {
 function describeContentChecks(teaching: () => Teaching): void {
   // G4: a pointer that misses leaves the disclosed material unreachable, and nothing reports it.
   it("resolves every link, sibling-skill path, skill name and package file it names", () => {
-    const { files, skillName, shipped } = teaching();
-    const patterns = (
-      JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
-        files: string[];
-      }
-    ).files;
-    const exists = (path: string) => existsSync(join(repoRoot, path));
-    const misses: string[] = [
-      ...danglingLinks(new Map(files.map((file) => [file.path, file.text])), exists, (path) =>
-        /\.md$/iu.test(path) && exists(path)
-          ? readFileSync(join(repoRoot, path), "utf8")
-          : undefined,
-      ),
-    ];
-
-    for (const segment of files.flatMap(codeSegments)) {
-      if (
-        /^sdp-[a-z]+(?:-[a-z]+)*$/u.test(segment.text) &&
-        !exists(`skills/${segment.text}/SKILL.md`)
-      ) {
-        misses.push(`${segment.file}: skill ${segment.text}`);
-      }
-      for (const raw of segment.text.split(/\s+/u).map(bareToken)) {
-        // `<skill-dir>` stands for the calling skill's own directory, as the reading skill defines it.
-        const token = raw.replace(/^<skill-dir>\//u, "");
-        if (
-          raw !== token &&
-          !token.startsWith("../") &&
-          (skillName === undefined || !exists(`skills/${skillName}/${token}`))
-        ) {
-          misses.push(`${segment.file}: skill path ${raw}`);
-        }
-        const sibling = /^\.\.\/(?<skill>sdp-[a-z-]+)\/(?<path>\S+)$/u.exec(token)?.groups;
-        if (
-          sibling !== undefined &&
-          !exists(`skills/${sibling.skill ?? ""}/${sibling.path ?? ""}`)
-        ) {
-          misses.push(`${segment.file}: sibling path ${token}`);
-        }
-        const named = token.startsWith(packagePrefix) ? token.slice(packagePrefix.length) : token;
-        const packageFile =
-          /^(?:CONTEXT\.md|plugin\.json|(?:docs|dist|schemas|specs)(?:\/[^\s<>*#]*)?)(?:#[^\s<>*#]+)?$/u;
-        if (named.includes("<") || !packageFile.test(named)) continue;
-        const [file = named, fragment] = named.split("#");
-        const path = file.replace(/\/$/u, "");
-        if (!exists(path) || (shipped && !packed(path, patterns))) {
-          misses.push(`${segment.file}: package file ${token}`);
-        } else if (fragment !== undefined && /\.md$/iu.test(path)) {
-          // A category or entry of the catalog, or a section of another page, by its anchor.
-          const anchors = markdownAnchors(readFileSync(join(repoRoot, path), "utf8"));
-          if (!anchors.has(fragment) && !anchors.has(fragment.toLowerCase()))
-            misses.push(`${segment.file}: package anchor ${token}`);
-        }
-      }
-    }
-    expect(misses).toEqual([]);
+    expect(unresolvedPointers(teaching())).toEqual([]);
   });
 
   // G5: a stale citation sends the reader to law that is gone; an uncited relation target is law
@@ -849,49 +968,7 @@ function describeContentChecks(teaching: () => Teaching): void {
   // double quotes is shell-expanded before the sink sees it; a checkout form without the
   // fixture exclusions derives another graph.
   it("invokes only public verbs and their flags through a runner, bodies quoted as data", async () => {
-    const { files } = teaching();
-    const verbs = usageLines();
-    const orient = scriptUsage("orient");
-    const runner = scriptUsage("q");
-    const exclusions = await checkoutExclusions();
-    const misses: string[] = [];
-
-    for (const segment of files.flatMap(codeSegments)) {
-      // A copied line runs as written, and `sdp` alone may be macOS's unrelated binary.
-      if (segment.fenced && bareInvocation(segment.text)) {
-        misses.push(`${segment.file}: bare invocation ${segment.text}`);
-      }
-      if (/(?:sdp:q|\bq\.mjs|\bsdp q) "(?!\$\(cat )/u.test(segment.text)) {
-        misses.push(`${segment.file}: double-quoted body ${segment.text}`);
-      }
-      for (const call of invocations(segment, verbs)) {
-        // The runner takes its own flags (`--protocol`) beside the `sdp q` it wraps.
-        const usage =
-          call.verb === "orient"
-            ? orient
-            : call.runner
-              ? `${runner} ${verbs.get("q") ?? ""}`
-              : verbs.get(call.verb);
-        if (usage === undefined) {
-          misses.push(`${call.file}: unknown verb sdp ${call.verb}`);
-          continue;
-        }
-        for (const flag of flagsOf(call.rest)) {
-          if (flag !== "--help" && !new RegExp(`${flag}(?![a-z-])`, "u").test(usage)) {
-            misses.push(`${call.file}: ${call.verb} takes no ${flag}`);
-          }
-        }
-        // This checkout's own `sdp` script at its root needs the runner's fixture exclusions.
-        if (segment.text.startsWith("pnpm --silent sdp ") && /\s\.(?:\s|$)/u.test(call.rest)) {
-          for (const path of exclusions) {
-            if (!call.rest.includes(`--exclude ${path}`)) {
-              misses.push(`${call.file}: checkout form lacks --exclude ${path}`);
-            }
-          }
-        }
-      }
-    }
-    expect(misses).toEqual([]);
+    expect(invocationMisses(teaching().files, await checkoutExclusions())).toEqual([]);
   });
 
   // G8: a taught body that no longer runs teaches nothing, and no reader notices; one that runs
