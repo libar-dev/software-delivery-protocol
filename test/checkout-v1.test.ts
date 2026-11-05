@@ -66,7 +66,36 @@ describe("checkout-v1 tracer bullet (extractor-fed)", () => {
       enabled: false,
       label: "Invalid cart is rejected",
       file: "specs/orders/create-order-invalid-cart.sdp.md",
+      tests: [],
     });
+  });
+
+  // spec:consumers.reader#rule.exampleTests: from the parent, the enabled example's row names the
+  // runnable test with its file and line, so a developer reaches it without a second query.
+  it("reaches the runnable test behind an enabled example from the parent's verifiers", () => {
+    const reader = createReader(extraction.graph);
+    expect(reader.specContext("spec:orders.create-order")?.verifiers).toContainEqual({
+      verifierId: "spec:orders.create-order.valid-cart",
+      via: "example",
+      claim: "declared",
+      enabled: true,
+      label: "Valid cart creates an order",
+      file: "specs/orders/create-order-valid-cart.sdp.md",
+      tests: [
+        {
+          verifierId: "test:orders.create-order.valid-cart",
+          label: "valid cart verifies the create-order happy path",
+          file: "test/orders/create-order.valid-cart.test.ts",
+          line: 13,
+        },
+      ],
+    });
+    // The example's own row is the test anchor itself, and carries no `tests` of its own.
+    expect(
+      reader
+        .specContext("spec:orders.create-order.valid-cart")
+        ?.verifiers.map((verifier) => [verifier.via, verifier.tests]),
+    ).toEqual([["test-anchor", undefined]]);
   });
 
   it("drops no sections: the example survives static extraction whole", () => {

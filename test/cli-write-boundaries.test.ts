@@ -4,6 +4,7 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -19,6 +20,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { runSdpCli } from "../src/cli/sdp.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 
 function writeCarrier(root: string, file: string, id: string): void {
@@ -668,3 +670,155 @@ it.each(["direct-empty", "direct-managed", "checkout-empty", "checkout-managed",
     }
   },
 );
+
+// spec:consumers.wholesale-view-rewrite#rule.osMetadata: Finder's `.DS_Store` is never a page.
+describe("operating-system metadata under a published root", () => {
+  const studioAssets = {
+    studioAssets: {
+      script: join(process.cwd(), "dist/studio/studio.js"),
+      stylesheet: join(process.cwd(), "dist/studio/studio.css"),
+    },
+  };
+  const roots: Record<string, readonly string[]> = {
+    census: ["census"],
+    mermaid: ["mermaid"],
+    gherkin: ["gherkin"],
+    studio: ["spec-studio"],
+    generate: ["census", "mermaid", "gherkin", "spec-studio"],
+  };
+
+  /**
+   * Plants operating-system files in every folder of a published root, as Finder does in each one
+   * shown: its `.DS_Store`, an AppleDouble `._` file and Windows's `Thumbs.db`.
+   */
+  function plantEverywhere(directory: string): number {
+    for (const name of [".DS_Store", "._index.md", "Thumbs.db"])
+      writeFileSync(join(directory, name), "operating-system metadata\n");
+    let planted = 1;
+    for (const entry of readdirSync(directory, { withFileTypes: true }))
+      if (entry.isDirectory()) planted += plantEverywhere(join(directory, entry.name));
+    return planted;
+  }
+
+  it.each([false, true])(
+    "the projection suite certifies roots holding OS files (stray page: %s)",
+    (stray) => {
+      const root = mkdtempSync(join(tmpdir(), "sdp-os-metadata-suite-"));
+      writeCarrier(root, "probe.sdp.md", "spec:probe.metadata");
+      const suite = (...flags: string[]) =>
+        spawnSync(process.execPath, ["projection-suite.mjs", root, ...flags], {
+          encoding: "utf8",
+        });
+      try {
+        expect(suite().status).toBe(0);
+        for (const name of ["design-review", "census", "mermaid", "gherkin", "spec-studio"])
+          plantEverywhere(join(root, "generated", name));
+        if (stray) writeFileSync(join(root, "generated/census/stray.md"), "no run wrote this\n");
+        const certified = suite("--check-clean");
+        expect(certified.status, certified.stderr).toBe(stray ? 1 : 0);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+    120_000,
+  );
+
+  it.each(Object.keys(roots))(
+    "sdp %s --check-clean certifies a root holding .DS_Store and still refuses a stray page",
+    async (command) => {
+      const root = mkdtempSync(join(tmpdir(), "sdp-os-metadata-"));
+      writeCarrier(root, "probe.sdp.md", "spec:probe.metadata");
+      try {
+        const published = createCaptureOutput();
+        expect(await runSdpCli([command, root], published.output, studioAssets)).toBe(0);
+        const folders = (roots[command] ?? []).map((name) => join(root, "generated", name));
+        expect(folders.map((folder) => plantEverywhere(folder) > 0)).toEqual(
+          folders.map(() => true),
+        );
+
+        const certified = createCaptureOutput();
+        expect(
+          await runSdpCli([command, root, "--check-clean"], certified.output, studioAssets),
+          certified.readStderr(),
+        ).toBe(0);
+        for (const folder of folders) expect(existsSync(folder)).toBe(true);
+
+        const stray = join(folders[0] ?? root, "stray.md");
+        writeFileSync(stray, "a page no run wrote\n");
+        const refused = createCaptureOutput();
+        expect(
+          await runSdpCli([command, root, "--check-clean"], refused.output, studioAssets),
+        ).toBe(1);
+        expect(existsSync(stray)).toBe(false);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+    60_000,
+  );
+
+  it("counts only a whole-name match on the junk list as metadata", () => {
+    const metadata = (name: string) => isOsMetadataFile({ name, isFile: () => true });
+    expect(
+      [".DS_Store", "Thumbs.db", "._index.md", ".Trashes", "desktop.ini"].map(metadata),
+    ).toEqual([true, true, true, true, true]);
+    // The list's patterns `\.Trashes`, `~$` and `@eaDir$` also match inside a name.
+    expect(
+      ["filesystem.Trashes.feature.md", "notes~", "x@eaDir", "index.md"].map(metadata),
+    ).toEqual([false, false, false, false]);
+  });
+
+  it("certifies a lawful page whose name contains a junk pattern", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-os-metadata-lawful-"));
+    writeCarrier(root, "trashes.sdp.md", "spec:filesystem.Trashes");
+    try {
+      expect(await runSdpCli(["generate", root], createCaptureOutput().output, studioAssets)).toBe(
+        0,
+      );
+      const certified = createCaptureOutput();
+      expect(
+        await runSdpCli(["generate", root, "--check-clean"], certified.output, studioAssets),
+        certified.readStderr(),
+      ).toBe(0);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("reads a directory named .DS_Store as content, never as metadata", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-os-metadata-dir-"));
+    writeCarrier(root, "probe.sdp.md", "spec:probe.metadata");
+    try {
+      expect(await runSdpCli(["census", root], createCaptureOutput().output)).toBe(0);
+      mkdirSync(join(root, "generated/census/.DS_Store"));
+      writeFileSync(join(root, "generated/census/.DS_Store/page.md"), "not metadata\n");
+      expect(await runSdpCli(["census", root, "--check-clean"], createCaptureOutput().output)).toBe(
+        1,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("removes every published tree with bounded retries", async () => {
+    const root = mkdtempSync(join(tmpdir(), "sdp-os-metadata-retries-"));
+    const recursive: { path: string; maxRetries: unknown }[] = [];
+    writeCarrier(root, "probe.sdp.md", "spec:probe.metadata");
+    try {
+      expect(
+        await runSdpCli(["generate", root], createCaptureOutput().output, {
+          ...studioAssets,
+          rmSync: (path, options) => {
+            if (options?.recursive === true)
+              recursive.push({ path: String(path), maxRetries: options.maxRetries });
+            rmSync(path, options);
+          },
+        }),
+      ).toBe(0);
+      expect(recursive.length).toBeGreaterThan(0);
+      expect(recursive.filter((call) => call.maxRetries === undefined)).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});

@@ -16,6 +16,7 @@ import {
   renderMermaid,
 } from "../src/projections/mermaid.js";
 import { createReader } from "../src/reader/reader.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const mermaidTestAnchor = specTest({
   id: testAnchorId("test:protocol.mermaid-view"),
@@ -57,7 +58,7 @@ function rendered(input: GraphSchema): ReadonlyMap<string, string> {
 function goldenPages(): ReadonlyMap<string, string> {
   const pages = new Map<string, string>();
   for (const entry of readdirSync(goldenRoot, { recursive: true, withFileTypes: true })) {
-    if (entry.isFile()) {
+    if (entry.isFile() && !isOsMetadataFile(entry)) {
       const absolute = join(entry.parentPath, entry.name);
       pages.set(
         relative(goldenRoot, absolute).replaceAll("\\", "/"),

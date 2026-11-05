@@ -306,43 +306,4 @@ export const protocolSpecs = [
     },
     deliveryFacts: ["implemented", "has-verifier"],
   },
-  {
-    id: "spec:protocol.delivery-record-cleanup",
-    specKind: "behavior",
-    altitude: "feature",
-    readiness: "idea",
-    file: "specs/protocol/delivery-record-cleanup.sdp.md",
-    title: "The Protocol removes its frozen plans, review reports and superseded concept material",
-    narrative:
-      "Since the roadmap and each pull request carry the Protocol's delivery record, `plans/` and `reviews/` stand as frozen history, and the concept documents keep material the Specs already carry. Before they go, the durable content they still hold that no Spec, test, decision or recipe carries moves into the graph; git keeps the rest.",
-    sections: {
-      intent: {
-        outcome:
-          "Remove `plans/`, `reviews/` and the superseded concept material from the tree, after moving into the graph the durable content they still hold, so the repository keeps one delivery record: the graph, git and the pull requests.",
-        risks: [
-          "The self-hosting gate's frozen historical checks read three plan files, and the temporal guard exempts both folders, so the removal changes those checks in the same change.",
-        ],
-        openQuestions: [
-          {
-            question:
-              "Which content in `plans/`, `reviews/` and the concept documents does no Spec, test, decision or recipe carry yet, and where does each piece belong?",
-            blocking: true,
-            key: "durableContent",
-            decider: "owner",
-            provisional:
-              "the owner accepted the whole-repository review's measured inventory, with its row rulings, as the answer; the question leaves the Spec when the cleanup arc lands that inventory in its first commit",
-          },
-        ],
-      },
-      behavior: {
-        rules: [
-          "The arc that removes them opens with a measured inventory, in its first commit, of what `plans/`, `reviews/` and the concept documents still carry that no Spec, test, decision or recipe carries, each piece with its home; a review by another model family checks the inventory before anything is deleted.",
-        ],
-        ruleKeys: {
-          inventoryFirst: "rules[0]",
-        },
-      },
-    },
-    deliveryFacts: [],
-  },
 ] as const;

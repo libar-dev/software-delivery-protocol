@@ -49,7 +49,7 @@ research backlog, worked through over at least six months of iterative cycles
 This repository is self-hosted: its own delivery intent is a corpus, and the derived graph is how it
 is explored. Every design session, and every agent a design session briefs, works in this order:
 
-1. **Load the reading skill** (`.agents/skills/sdp-agent-surface/`) before any question about the corpus.
+1. **Load the reading skill** (`skills/sdp-agent-surface/`) before any question about the corpus.
 2. **Ask the graph** through `pnpm --silent sdp:q` and the shipped recipes: the entry adapters for
    a word, a file or a changeset (`findByConcept`, `byFile`, `blastRadius`); `specContext`,
    `packContext` and `resolveEntryAddress` for one Spec, Pack or entry; recipes for recurring

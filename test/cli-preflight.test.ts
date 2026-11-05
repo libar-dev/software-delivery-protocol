@@ -36,7 +36,9 @@ function fixture(sourcePath: string, source: string): string {
   writeFileSync(join(root, "package.json"), '{"type":"module"}\n');
   writeFileSync(
     join(root, ".gitignore"),
-    "generated/\ndist/\nnode_modules/\n**/*.test.generated.ts\n",
+    // The fixture lives inside the checkout, where Finder may write; it ignores what the
+    // repository's own .gitignore ignores for the same reason.
+    ".DS_Store\ngenerated/\ndist/\nnode_modules/\n**/*.test.generated.ts\n",
   );
   // Isolate preflight's Git-index guard from the independent regeneration check.
   writeFileSync(

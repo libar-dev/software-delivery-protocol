@@ -147,19 +147,13 @@ The law is `spec:consumers.review-perspectives`.
 
 ## Move rules files onto shipped recipes
 
-Replace local copies of recipe bodies with calls through `recipes(number, parameters)`.
-Select address resolution, recipe 25, dependency cycles, recipe 26, the architecture walk,
-recipe 42, external registers, recipe 50, or entry citations, recipe 51, where they answer your
-corpus's policy. Pass each call its own parameters. A rules file can combine their findings:
-
-```js
-const addresses = await recipes(25, { addresses: params.addresses ?? [] });
-const citations = await recipes(51);
-return { findings: [...addresses.findings, ...citations.findings] };
-```
-
-Run the file with `sdp validate --rules PATH`, with each `--params` after the rules file it
-belongs to. Follow `spec:validation.corpus-rules` and
+Replace local copies of recipe bodies with calls through `recipes(number, parameters)`, or run a
+shipped recipe file as the rules file, passing its subject as `--params`. Address resolution,
+recipe 25, dependency cycles, recipe 26, the architecture walk, recipe 42, external registers,
+recipe 50, and entry citations, recipe 51, run unchanged as rules files.
+`node_modules/@libar-dev/software-delivery-protocol/skills/sdp-authoring/references/rules.md`
+teaches both forms, the throw that fails the file on a recipe's diagnostics, and the run through
+`sdp validate --rules PATH`. Follow `spec:validation.corpus-rules` and
 `spec:consumers.agent-surface.evaluation-sink` for that execution contract.
 
 ## Read large Packs and waiting statements

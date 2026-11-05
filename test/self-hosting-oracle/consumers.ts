@@ -22,12 +22,12 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "Changed-file impact, Pack design, design diff and the design slice, recipes 4, 29, 35 and 54, accept `detail: true` and default to summaries preserving every total and explicitly naming omitted detail.",
+          "Changed-file impact, Pack design, design diff, the design slice and the law a Spec rests on, recipes 4, 29, 35, 54 and 56, accept `detail: true` and default to summaries preserving every total and explicitly naming omitted detail.",
           "The guarantees recipe (recipe 3) returns each section's entries as the Spec states them and the binding fields the Spec context carries, not only the names of the sections.",
           "The orphans and gaps recipe (recipe 8) reports each kind the verifier-gap signal exempts and how many ready Specs it exempts, as the build backlog reports its exclusions.",
           "A design-backlog recipe lists the Specs stated `defined` that no code realizes, with their design columns, excluding examples and decisions as the build backlog does.",
           "A recipe that reports a Spec's floor reached reports `not evaluated`, never `none`, for a Spec over whose unratified kind or altitude the reader evaluates no floor, with no stated next rung and no unmet clause; readiness divergence leaves such a Spec out, and a count by floor reached counts it under a `not evaluated` key, present only when such a Spec is counted.",
-          "The catalog opens with an index, one row per recipe, and shows how to run a shipped body inside a caller's own body to filter its answer.",
+          "The catalog opens with an index that sorts every recipe into exactly one of a small set of categories, one row per recipe, and shows how to run a shipped body inside a caller's own body to filter its answer.",
         ],
         ruleKeys: {
           floorNotEvaluated: "rules[4]",
@@ -35,7 +35,7 @@ export const consumersSpecs = [
       },
       design: {
         detailParameter:
-          "recipes 4, 29, 35 and 54 read `params.detail`, absent or `false` for the summary and `true` for every row in full; recipe 29's and recipe 54's `detail` may also be a list of member ids, which returns full rows for those members and summary rows for the rest of the Pack, and an id that is not a member is a diagnostic in the result. A summary keeps `totals` as the full answer counts them and adds `leftOut`, one line for each kind of detail it omits.",
+          "recipes 4, 29, 35, 54 and 56 read `params.detail`, absent or `false` for the summary and `true` for every row in full; recipe 29's and recipe 54's `detail` may also be a list of member ids, which returns full rows for those members and summary rows for the rest of the Pack, and an id that is not a member is a diagnostic in the result. A summary keeps `totals` as the full answer counts them and adds `leftOut`, one line for each kind of detail it omits.",
         impactSummary:
           "`{ changedFiles, totals, impactedSpecs: [id], impactedPacks: [id], atRisk: { incomingSpecs: [id], outgoingSpecs: [id], other: [id] }, coverageUnknownFiles, unlinkedUnits: [id], leftOut }` is recipe 4's summary. Incoming and outgoing name the connecting edge's direction relative to the impacted node and assert no dependency, since the edge may be any type; a Spec reached both ways is listed in both, and `other` holds the at-risk nodes that are not Specs.",
         impactDetail:
@@ -43,7 +43,7 @@ export const consumersSpecs = [
         packDesignSummary:
           "`{ id, specKind, statedReadiness, floorReached, statedNextRung, holds: [{ clauseId, targets: [id] }], openQuestions, blockingQuestions, implementedBy, referencedBy }` is recipe 29's summary row, with counts for the last four; the summary's boundary lists ids per direction, and `totals` is unchanged. `holds` is the summary of `statedNextRungFailures`, retaining each `clauseId` and target ids.",
         guaranteeShape:
-          "Recipe 3 returns `sections` as the graph holds them, `designColumns`, `packs`, `implementations` and `references` in recipe 29's unit shape, with id, file, line, role and component with its layer and context, plus each verifier with its `line`, relations with claims and reasons, and findings.",
+          "Recipe 3 returns its narrative, null when it has none, and `sections` as the graph holds them, `designColumns`, `packs`, `implementations` and `references` in recipe 29's unit shape, with id, file, line, role and component with its layer and context, plus each verifier with its `line`, relations with claims and reasons, and findings.",
         gapExemptions:
           "Recipe 8 returns `exemptions` as `{ validatorId, exemptKind, readySpecs }`, one row for each exempt kind, and `leftOut` when more signals exist than the 25 listed.",
         preflightRungs:
@@ -51,7 +51,7 @@ export const consumersSpecs = [
         designBacklog:
           "recipe 33, the design backlog, takes no parameter and returns `{ totals: { specs, byFamily, excludedExamples, excludedDecisions, withReferences }, rows }`, each row `{ id, specKind, altitude, floorReached, statedNextRungFailures: [clauseId], design: { entries, declarations, openQuestions, blockingQuestions }, referencedBy, packs }`, sorted by id.",
         catalogIndex:
-          "the catalog opens with a table of every recipe, its number, name, parameters and a one-line use, before the contract; the build writes one file per body and none for the index.",
+          "the catalog opens with its index before the contract: one `###` heading per category, and under it a table of that category's recipes, each row giving the recipe's number, name, parameters and a one-line use that may name a recipe it pairs with; every recipe has exactly one row, in one category; the build writes one file per body and none for the index.",
         wrapIdiom:
           "to filter a shipped answer, the caller calls the recipe through the `recipes` binding with only the recipe's own parameters, `const answer = await recipes(<number>, { <the recipe's own parameters> });`, inside its own body, and returns a filtered value, so the caller's own parameters never reach the recipe as names it does not take and the shipped body is never inlined into the caller's; the catalog shows the shell form and states that the caller's part must hold no shell expansion.",
       },
@@ -290,7 +290,7 @@ export const consumersSpecs = [
             'the agent scripts a body {body:"composing that spec\'s verifier bindings"|"reaching every entry point the demand map names"} through the front door',
           ],
           then: [
-            "the front door exits {exitCode:number} with an empty error stream",
+            "the front door exits {exitCode:number} with only the catalog hint on its error stream",
             "the printed answer is exactly the body's pre-shaped return {printedAnswer:string}",
             "the anchored verifier {anchoredVerifierId:string} decodes as enabled while the declared-only verifier {declaredVerifierId:string} does not",
             "the concept entry answers with the spec {conceptSpecId:string}",
@@ -445,6 +445,7 @@ export const consumersSpecs = [
           "Every reason is data; a direct impact names the changed file and, when it travelled through a binding, that binding's id, edge type and claim, and an at-risk neighbor names the connecting edge with both its ends and its claim, so its impacted end leads back to that impact's reasons.",
           "File-level blast radius reports curated graph reach without claiming exhaustive symbol-level usage reach.",
           "`specContext` returns `undefined` for an id that is no Spec; otherwise it returns the Spec summary and sections, design columns, failures of the stated rung's floor, failures at the stated next rung and at the rung above the floor reached, relations both ways with claims and optional reasons, realizing and referencing code units, decoded verifiers, an optional usable oracle binding, entry locations and findings naming the Spec.",
+          "A decoded verifier that reaches the Spec through an example lists, as `tests`, the resolving test anchors that verify that example, each with its id, file and line, sorted by id, so the runnable test behind a parent Spec is one call away; the list is empty when no test anchor binds the example, and a test-anchor verifier carries none, since it is the test.",
           "`packContext` returns `undefined` for an id that is no Pack; otherwise it returns the Pack summary, one row per manifest entry in authored order, the Pack design on resolved rows, verifier gaps, boundary and findings naming the Pack.",
           "`packContext` lists one member row per manifest entry in the manifest's authored order, and its verifier gaps follow that order.",
           "`packContext` lists a verifier gap for each resolved non-decision member that carries no `has-verifier`; a member stated `ready` has priority true, and the list is informative, never a gate.",
@@ -476,6 +477,7 @@ export const consumersSpecs = [
           fileEntry: "rules[4]",
           blastRadius: "rules[5]",
           reasonsAsData: "rules[6]",
+          exampleTests: "rules[9]",
         },
       },
     },
@@ -740,6 +742,7 @@ export const consumersSpecs = [
           "Validation findings never withhold the view; publication refusals remain separate. A run whose checks report findings still writes the current view and returns the checks' own exit code, because the view is where those findings are read in context.",
           "A case-insensitive page-path collision refuses the publisher's whole page set, names both ids and paths, removes its stale live and temporary roots when their parents are safe, and exits 1 regardless of validation's exit code. Renderers retain their page names and bytes.",
           "Publication and failure cleanup recheck the physical output parent before each mutation; an escaping, unresolvable or linked `generated/` parent is refused without cleanup through it.",
+          "A file an operating system or a tool writes for its own use anywhere under a projection root, one whose whole name matches the `junk` package's list, such as Finder's `.DS_Store` or Windows's `Thumbs.db`, is never a page: `--check-clean` leaves it out when it reads the published root, so a root a file browser has shown still certifies, while any other file the run did not write, a file inside a directory of such a name included, still fails the check. Removing a root retries a bounded number of times when a folder gains such a file during the removal.",
         ],
         exampleSpace: {
           given: [
@@ -759,6 +762,7 @@ export const consumersSpecs = [
           buildInvalidates: "rules[3]",
           portablePublication: "rules[6]",
           safeCleanup: "rules[7]",
+          osMetadata: "rules[8]",
         },
       },
     },
@@ -922,7 +926,7 @@ export const consumersSpecs = [
               'the agent scripts a body {body: "composing that spec\'s verifier bindings"} through the front door',
             ],
             then: [
-              "the front door exits {exitCode: 0} with an empty error stream",
+              "the front door exits {exitCode: 0} with only the catalog hint on its error stream",
               'the printed answer is exactly the body\'s pre-shaped return {printedAnswer: "spec:orders.create-order.empty-cart is a declared verifier · spec:orders.create-order.valid-cart is an enabled verifier"}',
               'the anchored verifier {anchoredVerifierId: "spec:orders.create-order.valid-cart"} decodes as enabled while the declared-only verifier {declaredVerifierId: "spec:orders.create-order.empty-cart"} does not',
             ],
@@ -956,7 +960,7 @@ export const consumersSpecs = [
               'the agent scripts a body {body: "reaching every entry point the demand map names"} through the front door',
             ],
             then: [
-              "the front door exits {exitCode: 0} with an empty error stream",
+              "the front door exits {exitCode: 0} with only the catalog hint on its error stream",
               'the concept entry answers with the spec {conceptSpecId: "spec:orders.order-management"}',
               'the file entry answers with the spec {fileSpecId: "spec:orders.create-order"}',
               'the changeset entry answers with the impacted spec {changesetSpecId: "spec:orders.create-order"}',
@@ -1115,23 +1119,38 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "An author starts from the build-backlog and drift-alarm recipes, reads carrying Specs for law, and edits the canonical carrier.",
-          "Cheap capture starts with `sdp new spec` (or the equivalent hand-authored idea carrier) in the family found through concept search; the scaffolder emits envelope, Intent outcome, and the kind's bare typed heading, never invented content, and for `constraint` emits envelope, title, and Intent only with no twin section. Every later readiness edit is preceded by the promotion-preflight recipe and remains a human statement.",
+          "An author opens on the query the work needs, reads carrying Specs for law, edits the canonical carrier, and checks each edit with queries that write nothing, reading back what the edit changed against the request: each changed entry of a Spec, a Pack's members in order and its framing, and each anchor's targets and edge types.",
+          "Cheap capture starts with `sdp new spec` in the family found through concept search; the scaffolder emits envelope, Intent outcome, and the kind's bare typed heading, never invented content, and for `constraint` emits envelope, title, and Intent only with no twin section. Every later readiness edit is preceded by the promotion-preflight recipe and remains a human statement.",
           "`sdp new spec` uses the original working directory as the boundary for parent creation and the scaffold write. It refuses an escaping or unresolvable parent with exit 1, before creating anything through a statically planted escaping link. It creates parents and the scaffold through held directories, rechecks containment before each creation and after entering each parent, and rechecks the scaffold's location before reporting success; a detected relocation removes the scaffold and refuses. This defends against planted links and detects intervening changes; Node has no openat-style operations, so re-verification does not provide race-free confinement against a concurrent writer inside the working directory.",
           "The skill teaches question keys and their optional fields through `spec:model.open-question-keys` and `spec:model.open-question-fields`, rule keys and an example's `exercises` through `spec:model.rule-keys`, and optional relation reasons through `spec:model.relation-reasons`.",
           "The skill teaches the least design two parties need to agree: keyed Design entries for shared names and shapes, code spans for pinned declarations, rule keys for outside citations, one prose owner for why, and no derived counts, delivery state or implementation sequence authored as design.",
           "The skill teaches design in rounds over a design slice: what each rung's design typically settles, that a detail only the builder reads and a question only the builder answers belong to the build, and how a reviewer reads the design columns beside each rung; no check reads this guidance.",
           "The skill points behavior and example authors to `spec:carrier.gherkin-authoring` for the lawful Gherkin alternative and Pack authors to `spec:carrier.markdown-pack-authoring` for namespace routing, framing and ordered membership.",
-          "Binding is taught for code, test and oracle anchors in the constant form and the comment form, following `spec:decisions.anchor-comment-form` and `spec:decisions.anchor-binding-grain`. The constant builders are `codeAnchor`, `specTest` and `specOracle`; a code anchor's `satisfies` is optional and plural, a test anchor's `verifies` is non-empty and plural, and an oracle anchor has one `models` target. The skill teaches `references` as the code-to-design binding that claims no realization, and names the two silent non-binding hazards, a constant builder without a Protocol builder binding and a comment that does not open with `/**`.",
+          "The skill teaches code, test and oracle anchors in both forms with one worked anchor each, cites `spec:model.anchors`, `spec:decisions.anchor-comment-form` and `spec:decisions.anchor-binding-grain` for the law, and names in place the two silent non-binding hazards: an untrusted builder, and a comment that does not open with `/**`.",
           "The skill teaches the collective promise test for `satisfies` and the one-way meaning of `references`, following `spec:decisions.anchor-binding-grain`; every promise is realized by the satisfying units together, and each satisfying unit realizes at least one promise.",
-          "Structural binding is taught through `component`, `uses` and optional `role` on a code anchor, and optional `layer` and `context` on a `component:` anchor, in either form, following `spec:decisions.architectural-annotation`. The skill teaches closed graph-ID targets, at most one component per source, no `implements` field, cycles as data, and no conferral of intent, delivery facts or readiness by structural fields.",
+          "The skill teaches structural binding by citing `spec:decisions.architectural-annotation` and the roles, layers and contexts recipe, and states that structural fields confer no intent, delivery fact or readiness.",
           "The executable transition is taught as parent example space, child bound point, generated contracts, the oracle bound by a `specOracle` anchor, and one generated-registrar activation beside the authored suite's top-level `specTest` anchor, with `bindExample` named as the low-level adapter and a mutation-probed red result required before the human states `ready`.",
           "Contract-generation refusals are diagnosed through `sdp build`; query-time validation does not claim to report codegen findings.",
           "Verifier-binding queries report graph-visible anchors; the `specTest` anchor remains the sole `has-verifier` source, and the graph cannot detect a generated contract or registrar that no authored suite activates.",
           "An anchor carries identity, an optional label, its flavor's targets and optional structure, never intent; a code anchor with neither `satisfies` nor `references` is identity-only and lawful. A Markdown deliverable binds through the document-realization convention: the suite asserting the shipped document carries the code anchor, and blast radius stays coverage-unknown for the Markdown file.",
           "Design Review supplies context for the human readiness statement without becoming a workflow gate.",
         ],
-        ruleKeys: { scaffoldWriteBoundary: "rules[2]", designRounds: "rules[5]" },
+        ruleKeys: {
+          opensOnGraph: "rules[0]",
+          capture: "rules[1]",
+          scaffoldWriteBoundary: "rules[2]",
+          keysAndReasons: "rules[3]",
+          leastDesign: "rules[4]",
+          designRounds: "rules[5]",
+          carrierPointers: "rules[6]",
+          binding: "rules[7]",
+          promiseTest: "rules[8]",
+          structuralBinding: "rules[9]",
+          executableTransition: "rules[10]",
+          codegenRefusals: "rules[11]",
+          verifierSource: "rules[12]",
+          designReview: "rules[14]",
+        },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -1142,29 +1161,36 @@ export const consumersSpecs = [
     altitude: "story",
     readiness: "ready",
     file: "specs/consumers/delivery-session-on-ramp.sdp.md",
-    title: "Delivery sessions route work from current graph state",
+    title: "Delivery sessions do the requested work on current graph evidence",
     narrative:
       "A handoff names the Specs that carry the work, so the next session re-measures them from the graph instead of inheriting register state or a verification verdict from the handoff.",
     sections: {
       intent: {
         outcome:
-          "Let an agent enter capture, design, implementation, review, or close work from current graph evidence without inventing workflow state or gates.",
+          "Let an agent do the requested delivery work (capture, design, implement, fix, refactor, test, review, close, hand off) on current graph evidence, without inventing workflow state or gates.",
       },
       behavior: {
         rules: [
-          "Work shapes are advisory entries over the same current graph; they are neither phases nor a required sequence, and a session may enter or revisit any shape.",
-          "Capture or refinement uses concept search, the lower ladder, and promotion preflight; design uses promotion preflight and readiness divergence. The listed recipes are starting points, not exhaustive recipe sets.",
+          "Work shapes are advisory entries over one current graph, never phases or a required sequence, and a session may enter or revisit any shape; no shape or preflight authorizes, blocks, scopes or advances delivery work.",
+          "The requested task selects the work shape. The roadmap's need and a Spec's promotion preflight are evidence about unfinished realization, never permission: a fix, a refactor, an added test or a change to a built Spec is ordinary work. The skill names the recipes a shape starts from and points into the catalog's index for the rest.",
           "The skill teaches an advisory Pack design loop: read the design diff from the last pass, compose a context bundle within a stated budget, narrow by perspective when needed, and return a change proposal for a base check before an agent applies it.",
-          "Implementation uses the build backlog and the target Spec context; review uses the Pack backbone and warn-level signals, or the target Spec context and warn-level signals when no Pack exists. The listed recipes are starting points, not exhaustive recipe sets.",
-          "The skill teaches a Spec proposal report as a numbered list ordered by severity, with each item naming one entry address or Spec section, stating the gap in one sentence, and proposing exact text with the address it replaces or follows. Findings against code or other files stay review comments on their lines; a review proposing no Spec edit has no proposal.",
+          "Findings against Specs leave as one change proposal in the shape `spec:consumers.intent-composition.proposal` states, most severe first, with its memo; findings against code or other files stay review comments on their lines, and a review proposing no Spec edit has no proposal.",
+          "The skill carries the one procedure for applying a received change proposal: it checks the proposal against the graph at its base and routes each change from that check, as `spec:consumers.intent-composition#rule.changedScope` states, and the Studio and vault skills point into it.",
           "Close uses the drift alarm and changed-file blast radius; slimming is optional and preserves durable law and one prose owner. For a Design entry, the skill teaches the distillation boundary stated by `spec:model.enrichment-lifecycle`, compares the entry with its bound artifact before removal, and keeps every explanation of why.",
-          "A handoff names targets, changed files, current readiness, findings or open questions, and commands or evidence locations to re-run; it never carries an inherited verification verdict.",
+          "A handoff, or a brief to another agent, names its targets, changed files, current readiness, findings or open questions, and the exact recipe files or bodies, with their parameters, that scope the work and re-measure it; it never carries an inherited verification verdict.",
           "An arc-scale handoff names the Spec ids that carry the arc's standing refusals, guarantees and holds in the homes ruled by `spec:decisions.planning-truths-placement`: tradeoff refusals in decision Specs, already-homed guarantees on their carrying Specs, and deferrals or holds in their blocking open questions.",
           "The skill names tripwires that ask a session to reconsider its chosen work shape; they are guidance and create no required sequence or authorization.",
-          "Every preflight informs human or agent judgment and never authorizes, blocks, scopes, or advances delivery work.",
         ],
         ruleKeys: {
+          advisoryShapes: "rules[0]",
+          taskSelectsShape: "rules[1]",
+          designLoop: "rules[2]",
+          findingsProposal: "rules[3]",
+          receiveProposal: "rules[4]",
+          close: "rules[5]",
+          handoff: "rules[6]",
           arcHandoff: "rules[7]",
+          tripwires: "rules[8]",
         },
       },
     },
@@ -1208,14 +1234,21 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "`spec:consumers.delivery-session-on-ramp` owns per-session routing from graph state; this Spec owns how the next body of work's intent enters the corpus and is read back.",
-          "Planning remains advisory reading of the graph; no recipe, preflight, or plan document authorizes, blocks, or sequences delivery work.",
+          "`spec:consumers.delivery-session-on-ramp` owns how a session's requested task meets current graph evidence; this Spec owns how the next body of work's intent enters the corpus and is read back.",
+          "Planning remains advisory reading of the graph: heuristics for choosing work live as behavior rules here or as recipes, and no recipe, heuristic, preflight or plan document authorizes, blocks or sequences delivery work.",
           "Each planning truth lives in the home `spec:decisions.planning-truths-placement` rules for it; a deferred Spec carries its re-entry trigger in the `trigger:` field of its blocking open question, plus `dependsOn` when another Spec must hold first, as `spec:model.open-question-fields` states.",
           "A body of work is grouped in a Pack named for the capability it designs, never for a plan number, listing its Specs in reading order; membership confers no readiness, delivery fact or gate, and the Pack remains a review aggregate after the work ends.",
-          "Heuristics for choosing work remain advisory behavior rules here or recipes; they authorize, block and sequence nothing.",
           "Session law re-measures from the graph first; a session never inherits readiness, backlog, or placement state from a prior plan, register, or summary.",
           "A corpus that keeps plan documents lets each point to its Packs and carrying Specs for intended truth and derived state; a plan document confers nothing, and plan numbering, recorded work order and staleness never become graph structure or workflow authority. Advisory priority over the next work lives in a roadmap Pack.",
         ],
+        ruleKeys: {
+          ownership: "rules[0]",
+          advisory: "rules[1]",
+          placement: "rules[2]",
+          capabilityPack: "rules[3]",
+          remeasure: "rules[4]",
+          planDocuments: "rules[5]",
+        },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -1298,7 +1331,7 @@ export const consumersSpecs = [
         rules: [
           "Every surface that composes scoped intent, including the Studio's composing panel, hands off on the one change-proposal contract, `spec:consumers.intent-composition.proposal`.",
           "A composing surface writes no source.",
-          "A composed proposal is applied after its proposal check: the applying caller sends a change whose scope changed since the base to a person instead of applying it and applies every other change as an ordinary edit, so one changed scope never holds back the whole proposal; the edit lands only from a worktree on which `sdp validate` reports no error, and the conformance and honesty checks stay the only gate.",
+          "A composed proposal is applied after its proposal check: the applying caller sends a change whose scope changed since the base to a person instead of applying it and applies every other change as an ordinary edit, so one changed scope never holds back the whole proposal; the edit lands only from a worktree whose validation report, read through `sdp q`'s `report` or `sdp validate`, holds no error, and the conformance and honesty checks stay the only gate.",
         ],
         ruleKeys: {
           changedScope: "rules[2]",
@@ -1328,12 +1361,12 @@ export const consumersSpecs = [
           "An adopter can pin the package to a git commit, and the package's `prepare` script builds the CLI, subpath exports and shipped recipes before installation completes. While the package version is `0.0.0`, the installation guidance uses a commit pin rather than an npm prerelease.",
           "The shipped README teaches a commit install with npm and pnpm, the source-qualified build approval each needs, and a check that the installed CLI's `sdp --version` names the pinned full commit, for a git clone or a hosted git archive install. It teaches that the `./vitest` subpath needs Vitest 2 or later installed beside the package.",
           "The upgrade guidance teaches a recipe caller to pass the recipe's subject as `--params` data and run the shipped recipe file, never to rewrite the recipe body.",
-          "The authoring skill teaches a deferral as a blocking open question whose `trigger:` field names what brings the Spec back, plus `dependsOn` for a true precondition. Its blocking question holds the Spec below `defined` without an adopter-specific tag. Example children may still state `defined` once their bound points are complete and match the parent's example vocabulary when it has one; their `ready` waits until the parent states at least `defined`.",
-          "It teaches an unsettled fact as a constraint Spec whose blocking open question names the check that would settle it. Specs bounded by it declare `constrainedBy`; they may state `defined` when their own floor clears, and their `ready` waits until the constraint states at least `defined`.",
-          "It teaches a ruling that awaits its owner as a decision Spec below `ready`, with `decidedBy` from each Spec the ruling shapes.",
-          "It teaches that a fact is checked by an example that `verifies` it. `has-verifier` is derived once a test anchor binds the example, and a checked status is never authored.",
-          "It carries a short table of the Markdown body grammar, one row per section, that points at `spec:carrier.markdown-body-grammar`, so the grammar is found from the skill and not by probing.",
-          "It teaches that counts, registers, and review scope are derived. Census counts come from `sdp census`, open-question and mention registers from catalog recipes, and a change's review scope from changed-file blast radius. None is quoted into prose.",
+          "The authoring skill teaches a deferral as a blocking open question whose `trigger:` field names what brings the Spec back, plus `dependsOn` for a true precondition, in one line citing `spec:decisions.planning-truths-placement`.",
+          "The authoring skill teaches an unsettled fact as a constraint Spec whose blocking open question names the check that would settle it, with `constrainedBy` from each Spec it bounds, in one line citing `spec:validation.typed-dependency-floor`.",
+          "The authoring skill teaches a ruling that awaits its owner as a decision Spec below `ready`, with `decidedBy` from each Spec the ruling shapes.",
+          "The authoring skill teaches that a fact is checked by an example that `verifies` it. `has-verifier` is derived once a test anchor binds the example, and a checked status is never authored.",
+          "The authoring skill keeps a short table of the Markdown body grammar, one row per section owner, citing `spec:carrier.markdown-body-grammar`, for the moment a refused carrier stops every query.",
+          "The authoring skill teaches that counts, registers, and review scope are derived. Census counts come from `sdp census`, open-question and mention registers from catalog recipes, and a change's review scope from changed-file blast radius. None is quoted into prose.",
           "`sdp --help` names the shipped skills, the recipe catalog, and the Protocol's own `specs/` by package-relative path.",
           "The skills teach and never check. No validator reads an adopter's own tags, and an adopter's own policy checks stay the adopter's.",
         ],
@@ -1341,7 +1374,14 @@ export const consumersSpecs = [
           commitInstall: "rules[0]",
           installGuidance: "rules[1]",
           recipeUpgrade: "rules[2]",
+          deferral: "rules[3]",
+          unsettledFact: "rules[4]",
+          pendingRuling: "rules[5]",
+          checkedFact: "rules[6]",
+          grammarTable: "rules[7]",
+          derivedCounts: "rules[8]",
           helpNamesOnRamps: "rules[9]",
+          teachNeverCheck: "rules[10]",
         },
       },
     },
@@ -1375,12 +1415,14 @@ export const consumersSpecs = [
           "Pinned declarations reports each keyed Design entry whose value opens with a code span, giving the Spec, the key, and the span content as authored with the count of entries and of Specs, and parses no language inside the span.",
           "The key-family register lists every keyed Design and UI entry whose key starts with one of the given prefixes, across the corpus, the members of one Pack, or a list of Specs, each with its Spec, section, key, value as the graph holds it, file and line, with no row cap.",
           "The key-family register never lists a rule, flow or question key, or the `description` entry.",
+          "The law a Spec rests on composes the dependency footing and adds, for each target that resolves to a Spec, its carrier file, each behavior rule's line with its entry address when keyed, whether the target is a decision, and how many entries each of its other sections holds, its open questions counted apart. Its summary lists at most twelve rules a target, and `detail: true` lists every one.",
           "Each body composes the reader and adds no reader join or CLI verb.",
           "The recipe check executes each catalog body as written, and the on-ramps point to the catalog for its contents.",
         ],
         ruleKeys: {
           keyFamily: "rules[8]",
           familySections: "rules[9]",
+          specLaw: "rules[10]",
         },
       },
       design: {
@@ -1393,6 +1435,56 @@ export const consumersSpecs = [
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
+  },
+  {
+    id: "spec:consumers.agent-client-support",
+    specKind: "behavior",
+    altitude: "feature",
+    readiness: "idea",
+    title:
+      "Each agent client the Protocol serves loads its skills and orientation through the standard or a named shim",
+    narrative:
+      "The package is an Agent Plugin under the Agent Plugins 1.0.0 standard. The standard's portable core is skills and MCP servers. It keeps hooks out of that core and gives each client a reverse-domain extension namespace for its own manifest data and files. So the skills reach a client through the standard wherever the client reads the portable layout, and the orientation hook reaches it through the client's own namespace where the client implements one. Any other file the package ships for one client is a compatibility shim. Each client was checked at the version its Design entry names; a later version that changes a route changes that entry.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a person use the Protocol's skills, and start each session with its orientation answers in context, in every agent client the Protocol serves: through the Agent Plugins standard wherever the client implements it, and through a named compatibility shim elsewhere, with each client's route and gaps readable from the graph.",
+      },
+      behavior: {
+        rules: [
+          "The Protocol serves six agent clients: Claude Code, Codex, Kimi Code, Grok Build, ZCode and OpenCode. Each has one Design entry naming the version it was checked at, its route for the skills and its route for the orientation answers; a route not yet served is an open question.",
+          "Claude Code and Codex are served in full: each loads the skills and adds the orientation answers to the session's context, in an interactive session and in a headless one, Codex's `exec` and `app-server` threads included.",
+          "A route uses the standard wherever the client implements it: the root `plugin.json` and `skills/` for the skills, and the client's extension namespace for its hook wiring. A file the package ships for one client outside the standard is a compatibility shim: it names its client, carries only the wiring to the shared skills and script, and holds no rule, answer or skill text of its own.",
+          "Every orientation route runs the one script, `hooks/session-start.mjs`, from the plugin root in the session's project. The script prints its answers as additional-context JSON for the event that ran it, which Claude Code, Codex and ZCode read at session start: once per event at session start, and once per session for any other event. A route whose client reads plain text, or has no command hooks, asks the script for the text alone.",
+          "A route that needs a step in a person's own client settings, such as naming the plugin's folder, names that step in the README; the package never writes a client's settings.",
+          "A route is served only when the orientation answers reach the model's context in that client, checked at the version its Design entry names; output the client shows the person, keeps in a log or discards does not count, and neither does the script's own output.",
+        ],
+        ruleKeys: {
+          servedClients: "rules[0]",
+          floor: "rules[1]",
+          standardFirst: "rules[2]",
+          oneScript: "rules[3]",
+          personSteps: "rules[4]",
+          reachesContext: "rules[5]",
+        },
+      },
+      design: {
+        claudeCode:
+          "Claude Code 2.1.318. Skills: the plugin root, loaded without a manifest of its own and named after its directory, or a project's `.claude/skills`. Orientation: the root `hooks/hooks.json`, Claude Code's own plugin layout and its compatibility shim, through `${CLAUDE_PLUGIN_ROOT}`; Claude Code reads no root `plugin.json` and implements no extension namespace. Installing the plugin is the trust decision.",
+        codex:
+          "Codex 0.166.0. Skills: the root `plugin.json` and `skills/`, which Codex reads as a conformant client, or a project's `.agents/skills`. Orientation: the `hooks` entry under the `com.openai` namespace in `plugin.json`, the standard's client-extension route, through `${PLUGIN_ROOT}`; that entry replaces the default `hooks/hooks.json`, so Codex never runs the Claude Code shim. Codex reviews each hook by a hash of the plugin's contents, so each release needs the person's review again, and a plugin with hooks stays out of its public directory.",
+        zcode:
+          "ZCode runtime 0.17.0, through the `zcode-app-cli` 3.16.2 terminal client. Skills: a project's `.agents/skills`, or the plugin's `skills/`. Plugin: ZCode finds a plugin only through a client manifest, so `.zcode-plugin/plugin.json`, naming the plugin and nothing else, is its compatibility shim, and a person adds the package's folder to ZCode's plugin directories. Orientation: the root `hooks/hooks.json`, read in Claude Code's shape; ZCode adds only the JSON additional context, never plain text.",
+        openCode:
+          "OpenCode 2.2.5. Skills: a project's `.claude/skills` or `.agents/skills`, or the package's `skills/` named in the project's OpenCode config. Orientation: a compatibility shim, a plugin module that runs the script when a session is created and adds its text through the session's context hook, alike in the terminal, in `opencode run` and in the background service; a person names the module in the project's OpenCode config.",
+        kimiCode:
+          "Kimi Code 2.4.1. Skills: `kimi.plugin.json` naming `skills/`, its compatibility shim, or a project's `.agents/skills`. Orientation: a prompt-submit hook in the person's Kimi Code settings, which runs in the session's project and asks the script for the text alone, once per session, since this version discards a session-start hook's output and passes a plugin's hooks no working directory, though Kimi Code's current documentation describes both.",
+        grokBuild:
+          "Grok Build 1.0.70. Skills: the root `plugin.json` and `skills/`, the first manifest this version looks for, measured and never a published Agent Plugins claim, or a project's `.claude/skills` or `.agents/skills`. Orientation: a pre-tool hook in the person's or the project's Grok Build hooks, answered once per session as that event's additional context, so the answers reach the model with its first tool call, never before its first reply, since this version shows a session-start hook's output only on the screen.",
+      },
+    },
+    deliveryFacts: [],
+    file: "specs/consumers/agent-client-support.sdp.md",
   },
   {
     id: "spec:consumers.shipped-protocol-corpus",
@@ -1412,11 +1504,14 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "Beside the runtime and runnable recipe files in `dist/`, the package ships the Protocol's Spec and Pack carriers under `specs/`, the glossary `CONTEXT.md`, the decision registry `docs/concept/DECISIONS.md`, the reading, authoring, session, Studio and vault skills under `.agents/skills/`, the recipe catalog and architecture walkthrough under `docs/agent-surface/`, and the change-proposal schema under `schemas/`; package metadata, README and license files also ship.",
+          "Beside the runtime and runnable recipe files in `dist/`, the package ships the Protocol's Spec and Pack carriers under `specs/`, the glossary `CONTEXT.md`, the decision registry `docs/concept/DECISIONS.md`, the Agent Plugin manifest `plugin.json` with the reading, authoring, session, Studio and vault skills under `skills/` and the session-start hook under `hooks/`, the recipe catalog and architecture walkthrough under `docs/agent-surface/`, and the change-proposal schema under `schemas/`; package metadata, README and license files also ship.",
+          "The package root is an Agent Plugin: `plugin.json` declares it under the Agent Plugins 1.0.0 schema with the package's unscoped name, version and license, and every skill under `skills/` keeps the Agent Skills name and description limits. A client's hook wiring sits in its extension namespace in `plugin.json` where the client implements one; every other client-specific file is a compatibility shim that `spec:consumers.agent-client-support` names, and no `mcp.json` ships.",
+          "Every shipped skill keeps early in its `SKILL.md` the steps every branch needs and the hazards that can bite before a reference is read, and discloses the rest one level below. It names the on-ramp Specs it realizes, and leaves law to the Specs that carry it, flags to each verb's `--help` and reusable queries to the catalog recipes, each named by number and name, with its shipped file where the skill first tells the agent to run it.",
           "An adopter reads a cited Spec through the front door by selecting the package's `specs/` directory, installed or checked out, as the root, or by opening the carrier file. `sdp --help` names that path, as `spec:consumers.adopter-on-ramp#rule.helpNamesOnRamps` requires.",
           "The shipped corpus stays outside an adopter's own graph under the canonical discovery rules in `spec:extraction.excludes`.",
           "The package ships no source anchors. A graph derived from the shipped corpus answers what the Protocol intends; its delivery facts are empty, and verifier-gap and example-verifier-linkage warnings caused by the absent bindings are not evidence about the Protocol's realization.",
         ],
+        ruleKeys: { agentPlugin: "rules[1]", skillShape: "rules[2]" },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -1438,12 +1533,12 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "Address resolution reads `params.addresses`, falling back to the catalog sample when absent, and returns one row per input in input order, repeats included; each row carries `address`, `resolves`, `id`, `section`, `key`, `value`, `file`, `line` and `reason`. A resolving row carries the entry text or value and its recorded file and line, null when unlocated, with `reason` null. A miss keeps `id`, `section` and `key` when parsed, keeps `value`, `file` and `line` null, and gives `reason` `malformed` for an input that is no entry address, a bare Spec id included, or `spec`, `section` or `entry` for an absent Spec, section or key; `malformed` carries `expected`, the grammar in one line, and `section` or `entry` carries `available`, the keys that section holds sorted in code-unit order.",
+          "Address resolution reads `params.addresses`, answering diagnostics when it is absent, and returns one row per input in input order, repeats included; each row carries `address`, `resolves`, `id`, `section`, `key`, `value`, `file`, `line` and `reason`. A resolving row carries the entry text or value and its recorded file and line, null when unlocated, with `reason` null. A miss keeps `id`, `section` and `key` when parsed, keeps `value`, `file` and `line` null, and gives `reason` `malformed` for an input that is no entry address, a bare Spec id included, or `spec`, `section` or `entry` for an absent Spec, section or key; `malformed` carries `expected`, the grammar in one line, and `section` or `entry` carries `available`, the keys that section holds sorted in code-unit order.",
           "Address resolution follows the checked-mentions address grammar: a `design` or `ui` key resolves as an own key other than `description`, a `question` key resolves when an open question carries it, a `rule` key resolves through `behavior.ruleKeys` to its rule or flow text, and a `term` key resolves through `model.termKeys` to its term's definition; totals count inputs, resolving rows and each miss reason.",
           "Dependency cycles take no parameter other than `severity` and read the whole graph. They report every set of two or more Specs in which each Spec reaches every other through declared `dependsOn` edges, and every Spec that declares `dependsOn` on itself and belongs to no such set. An edge whose target is not a Spec in the graph is ignored.",
           "Each reported set lists its members sorted by id in code-unit order and one cycle through it as a closed path that starts and ends at its first member. The cycle is the shortest such path, found by a breadth-first walk from the first member over targets in code-unit order and restricted to the set; a Spec that depends only on itself reports the path of that Spec twice. Sets are ordered by their first member, and the totals count the sets, the self-dependent Specs, and the Specs in any set.",
           "Both recipes report their answers and never refuse an authored dependency cycle.",
-          "Address resolution answers with `findings` beside its totals and rows: one finding for each row that does not resolve, in input order, the catalog sample's rows included, so the shipped file runs as a rules file over the addresses its `--params` names.",
+          "Address resolution answers with `findings` beside its totals and rows: one finding for each row that does not resolve, in input order, so the shipped file runs as a rules file over the addresses its `--params` names; run without them, its diagnostics answer carries no `findings` and reports as a rule execution failure.",
           "Dependency cycles answers with `findings` beside its totals and cycles: one finding for each entry of `cycles`, in that order, naming the first member and the closed path through the set.",
           'Both recipes take `params.severity`, `"error"` by default or `"warning"`, which every finding they return carries; another value returns `{ diagnostics }` and no findings, which fails the file as a rules file.',
           "Apart from `findings`, both answers keep their shapes: the totals, rows and cycles stated above.",
@@ -2473,7 +2568,7 @@ export const consumersSpecs = [
     file: "specs/consumers/agent-surface.recipe-parameters.sdp.md",
     title: "Recipes take parameters as data and ship as runnable files",
     narrative:
-      "A body reads its parameters by name, so a name it does not read would be dropped without a word, and a recipe with a sample would answer for the sample: a misspelled name would look like a successful call. A recipe therefore answers a name it does not take with that name and the names it does take, and nothing else. A body cannot import and the reader holds no recipe metadata, so each body declares its own names in its first statement, and the recipe check holds that declaration to the catalog.",
+      "A body reads its parameters by name, so a name it does not read would be dropped without a word, and a recipe that fell back to a sample would answer for the sample: a misspelled name, or a subject left out, would look like a successful call about a Spec, Pack or term the caller never named. A recipe therefore answers a name it does not take with that name and the names it does take, and nothing else, and answers a subject left out by naming the parameter it expects. A body cannot import and the reader holds no recipe metadata, so each body declares its own names in its first statement, and the recipe check holds that declaration to the catalog.",
     sections: {
       intent: {
         problem:
@@ -2486,16 +2581,19 @@ export const consumersSpecs = [
           "`sdp q` takes `--params` with a JSON object, or `--params @PATH` with a file holding one, the path resolved from the working directory, and injects it as a fourth binding, `params`, beside `g`, `graph` and `report`. Without the flag `params` is an empty object. In these two forms, a value that is not valid JSON, JSON that is not an object (null, an array, a string, a number or a boolean), or a file that cannot be read is refused before the body runs, with exit 1, one line on stderr and no output on stdout.",
           "`--params` is repeatable in three forms: a JSON object, `@PATH` naming a file that holds one, and `KEY=@PATH` binding the JSON value in the file, of any type, to `params.KEY`, with `KEY` on the lower-camel grammar. Objects merge at the top level from left to right, and a key given twice by any form is refused before the body runs, with exit 1, one line on stderr and no output on stdout, so a recipe takes a large file such as a base graph beside its other parameters.",
           "The bindings `g`, `graph` and `report` keep their names and meaning beside `params`. The sink evaluates one operator-supplied body and adds no query vocabulary: a parameter is input to a body, never a verb.",
-          "Every recipe reads its parameters under the names the catalog states. A parameter with a documented sample falls back to it when absent, so each body runs as written; a required input with no sample, such as a base graph, a proposal or an imports file, returns diagnostics when absent. Recipe 4 reads its changed files from `params.files`.",
+          'Every recipe reads its parameters under the names the catalog states. A recipe that answers for a subject the caller names, a Spec, Pack, component, term or list of them, refuses when that subject is absent and never substitutes a sample or a subject of its own: a recipe that answers an unknown id with `found: false` answers `{ found: false, reason: "missing", expected }`, and every other one answers `diagnostics` naming the parameter, as a recipe does for an absent required input such as a base graph, a proposal or an imports file. A parameter whose absence the catalog documents as the whole corpus or a default, such as a decider or a severity, stays optional, and recipe 4 reads an absent `params.files` as an empty change list.',
+          "The recipe check runs each recipe that answers for a subject without it and holds the answer to the refusal the `missingAnswer` Design entry names.",
           "Each catalog body opens by declaring the parameter names it takes, in the order the catalog's index lists them, and checks `params` against that list before it reads anything else; a recipe that takes no parameter declares an empty list.",
           "A recipe given a parameter name it does not take returns `{ unknownParams, accepts }` as its whole answer, and `sdp q` exits 0; it never answers for its sample, for an empty input or for the names it does take in that case.",
           "The recipe check holds each body's declared names to the catalog's index and to the `params` names the body reads, and runs each body with a name it does not take.",
           "The package build writes each catalog body to `dist/recipes/<NN>-<slug>.js`, where `NN` is the two-digit recipe number and the slug is the recipe's heading in lower kebab case, and the package ships that directory. The catalog stays the one owner of the bodies; the files are derived, and the recipe test checks that each file equals its catalog body byte for byte.",
         ],
         ruleKeys: {
-          declaredNames: "rules[4]",
-          unknownNames: "rules[5]",
-          namesChecked: "rules[6]",
+          missingSubject: "rules[3]",
+          missingChecked: "rules[4]",
+          declaredNames: "rules[5]",
+          unknownNames: "rules[6]",
+          namesChecked: "rules[7]",
         },
       },
       design: {
@@ -2503,6 +2601,8 @@ export const consumersSpecs = [
           "`const accepts = [...]; const unknownParams = Object.keys(params).filter((name) => !accepts.includes(name)); if (unknownParams.length > 0) return { unknownParams, accepts };` opens every catalog body as three statements on three lines, with the recipe's names in the brackets as double-quoted strings.",
         unknownAnswer:
           "`{ unknownParams, accepts }` is the whole answer for a name a recipe does not take, where `unknownParams` lists every such name in the order `params` holds them, and `accepts` repeats the recipe's declared names.",
+        missingAnswer:
+          '`{ found: false, reason: "missing", expected: "params.<name>" }`, `expected` naming each parameter that would supply the subject joined by ` or `, is the whole answer of recipes 3, 5, 9, 14, 19, 21, 27, 29, 34 and 56 without their subject; `{ diagnostics: [{ parameter: "<name>", problem }] }` is the whole answer of recipes 6, 23, 25 and 30.',
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -3081,6 +3181,7 @@ export const consumersSpecs = [
               "Would the reference read pinned declarations, contract-kind Specs or `api:` code anchors, and does any of them hold enough to document an interface?",
             blocking: false,
             key: "referenceSource",
+            decider: "owner",
           },
         ],
       },
@@ -4061,6 +4162,8 @@ export const consumersSpecs = [
           "A call names a recipe the catalog holds and passes one plain object or nothing; any other number or parameters reject the call with a message naming the recipe, and a recipe that throws rejects the call with its error, so a mistaken call fails loudly instead of answering for a sample.",
           "`sdp q`, the rules runner and the exported evaluator compile and run a body one way: the same compilation, the same parse error with its line and column, worded by each surface in its own pinned text, and the same five bindings.",
           "The package exports the body evaluator, so a script that holds a graph runs a body, or a shipped recipe through `recipes`, without deriving the graph again; the evaluator writes and prints nothing and claims no sandbox, as the sink claims none.",
+          "Every call whose body runs and whose answer prints, or whose body returns nothing, ends standard error with one hint line that points to the listing of the recipe catalog and to the `recipes` binding; standard output, `--json` included, holds only the answer, and a refusal prints no hint.",
+          "A call refused for an absent or empty body follows its refusal line with the recipe catalog by category, naming each category's first recipes, and with the call forms, all read from the catalog index of the package that runs the engine; it derives no graph and exits 1.",
         ],
         exampleSpace: {
           given: [
@@ -4082,6 +4185,8 @@ export const consumersSpecs = [
           callRefusals: "rules[7]",
           oneEvaluator: "rules[8]",
           exportedEvaluator: "rules[9]",
+          answerHint: "rules[10]",
+          listsCatalog: "rules[11]",
         },
       },
       design: {
@@ -4099,6 +4204,10 @@ export const consumersSpecs = [
           "`evaluateBody(body: string, input: { graph: GraphSchema; report?: ValidationReport; params?: Readonly<Record<string, unknown>> }): Promise<unknown>`, exported from the package's main entry, `@libar-dev/software-delivery-protocol`; it binds `g` to the reader over `graph`, `report` to the given report or, when absent, the validation report of `graph`, `params` to the given object or `{}`, and `recipes` over the same three, and resolves to the body's return.",
         evaluatorRejections:
           "a body that does not parse rejects with an Error whose message is `the body does not parse at line L, column C: <message>`, the text the sink prints after `sdp q: `; a body that throws rejects with what it threw; `params` that are not a plain object reject before the body runs.",
+        hintLine:
+          "`hint: run q with no body to list the <count> recipes by category; inside a body, await recipes(N, params) runs recipe N.`, where `<count>` counts the rows of the catalog's index; when the package's catalog cannot be read, the line is `hint: inside a body, await recipes(N, params) runs catalog recipe N.`",
+        catalogListing:
+          "After the refusal line and a blank line: `The recipes by category; <package>docs/agent-surface/recipes.md holds each one's parameters and answer:`, then one line per category in the index's order, `  <category>: <number> <name>; …`, naming its first four rows in the index's order and closing with `and <k> more` when it holds more; a blank line; then `Call forms:` and three lines, a body as the argument or on stdin, a shipped recipe file `<package>dist/recipes/NN-slug.js` run with `--params`, and a recipe called inside a body. `<package>` is the package directory as the working directory reaches it, empty at its root; without a readable catalog only the call forms print.",
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -4222,13 +4331,29 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "The skill names the closed graph node types, edge types and claims, links their carrying Specs, and moves when those contracts change.",
+          "The skill points at the Specs that close the graph's node types, edge types and claims, and restates only the names a first body needs.",
           "The skill teaches how delivery facts derive and explains the limits of empty answers, keeping a binding distinct from passing tests and runtime observation.",
-          "The skill bootstraps through the Protocol repository wrapper or an adopter's package runner, selecting the appropriate root and exclusions without relying on a global `sdp`.",
+          "The skill bootstraps through its runner script, which runs the built CLI with the root's fixture exclusions in the Protocol source checkout and the project's installed package anywhere else, refuses with a named remedy when neither exists, and never relies on a global `sdp`. The skill teaches the direct forms that select a root and its exclusions, and states once that every command runs from the project root, where the runner derives the graph, and how a skill reaches its own files, a sibling skill's files and the package's files, in the checkout and in an installed plugin. Both runners read an option written with `=`, such as `--root=PATH`, as its two-word form.",
+          "The skill presents `sdp q` as a complement to an agent's own search and file tools: one body answers structure, claims and derived delivery facts, and a text search then reads the lines the answer names.",
+          "The skill carries the orientation queries as body files and a runner that evaluates them over one graph derivation. Each body takes its subject from `params`, answers every part on the subject given, and derives one from the graph only when none is given, so orientation runs in the Protocol checkout and in an adopter's corpus. An answer that prints part of a list says how much of it prints.",
           "The skill directs the reader from a question to the numbered, named catalog recipe that answers it, passes subjects as `params`, and teaches summary and detail output without creating query verbs.",
-          "The skill links the Specs that own law and uses summaries for orientation; current graph data answers state questions and the carrying Specs answer intended truth.",
-          "The skill carries one sheet that maps a delivery task to the recipe that answers it.",
+          "The skill answers a state question from current graph data and a question of intended truth from the carrying Spec.",
+          "The skill points at the recipe catalog's index as the one map from a task to its recipe, and the other shipped skills point into that index for every recipe they do not name at a step.",
+          "The runner's `--protocol` selects the root that holds the Protocol's own Specs and nothing else: in the Protocol source checkout its root, with the checkout's exclusions and bindings; anywhere else the installed package's `specs/`, which holds intent only; beside `--root` it refuses.",
+          "The orientation runner prints each answer as its number and title, the command that runs it, and its answer, with no prose that restates either. A query whose body names the subject an agent arrives with, run without `--subjects` naming it, prints its command with the body's subject placeholder and a shortened answer over a subject the graph supplies; given its subject, the command carries it and the answer is whole. `--json` prints every answer in full, with its title, the line its body says the query teaches, and its notes. A printed run, `--only` included, ends with the recipe catalog by category and the call forms, as `sdp q` prints them for a call with no body, taken from the CLI the run used so the listing matches the installed package.",
         ],
+        ruleKeys: {
+          schemaPointer: "rules[0]",
+          factLimits: "rules[1]",
+          runner: "rules[2]",
+          pairing: "rules[3]",
+          orientation: "rules[4]",
+          recipeNaming: "rules[5]",
+          stateAndLaw: "rules[6]",
+          taskIndex: "rules[7]",
+          protocolRoot: "rules[8]",
+          orientationOutput: "rules[9]",
+        },
       },
     },
     deliveryFacts: ["implemented", "has-verifier"],
@@ -4249,13 +4374,12 @@ export const consumersSpecs = [
       },
       behavior: {
         rules: [
-          "The Studio is taught in its own shipped skill, beside the reading, authoring and session skills, and the reading skill points to it.",
+          "The Studio is taught in its own shipped skill, beside the reading, authoring, session and vault skills, and the reading skill points to it.",
           "The skill starts from what the agent holds: a repository to publish from, a page set or a link to read, composed intent to apply, or a CI workflow to set up; a reader holding only a link reads the pages without building a graph.",
-          "The skill teaches `sdp studio` for a page set with a base graph or run records and `sdp generate` for every root without them; that every command entering the shared build removes the page set; that supplied inputs lie outside every path the build writes or removes; and that the watch rebuilds on carrier edits with no server.",
-          "The skill teaches stamping after the final build with the commit the build read, that a later build removes the stamp, that source links need a stamp served over http or https, and the reusable preview workflow's inputs, permissions, artifact, deployment and fork behavior.",
+          "The skill teaches `sdp studio` for a page set with a base graph or run records and `sdp generate` for every root without them; that every command entering the shared build removes the page set; and that supplied inputs lie outside every path the build writes or removes.",
+          "The skill teaches stamping after the final build with the commit the build read, that a later build removes the stamp, and that source links need a stamp served over http or https, and cites `spec:consumers.spec-studio.sharing` for the preview workflow.",
           "The skill maps a reviewer's task to the page that answers it, and states what a page does not: it shows values the build computed, its order sets no priority, a run row is no verdict, and a Pack export carries no stamp or composing panel.",
-          "The skill teaches receiving the composing panel's hand-off: the proposal and its memo, and the scoped-intent text the proposal cannot carry. The agent writes the graph at the proposal's base, runs the proposal check, sends a moved or uncheckable change to a person, applies the rest through the authoring skill, and writes scoped-intent text into a proposal against a known base before checking it.",
-          "The skill cites the Studio's Specs for law and each verb's `--help` for its flags, and restates neither.",
+          "The skill teaches what the composing panel hands off, a proposal with its memo, scoped-intent text a proposal cannot carry, or that text alone, and routes each intent once by what the person supplied: a proposal, once a preview's base is confirmed, and text naming Specs, entries or a Pack's members, once written into a proposal against a base the person agrees to, through `spec:consumers.delivery-session-on-ramp#rule.receiveProposal`; a Pack's membership or framing as a manifest edit the person agrees to.",
         ],
         ruleKeys: {
           ownSkill: "rules[0]",
@@ -4264,7 +4388,6 @@ export const consumersSpecs = [
           stampAndShare: "rules[3]",
           readByTask: "rules[4]",
           receiveIntent: "rules[5]",
-          citesLaw: "rules[6]",
         },
       },
     },
@@ -4287,12 +4410,11 @@ export const consumersSpecs = [
       behavior: {
         rules: [
           "The vault is taught in its own shipped skill, beside the reading, authoring, session and Studio skills, and the reading skill points to it.",
-          "The skill teaches choosing the vault directory: `--out` resolves against the working directory, a vault inside the root lies under a directory discovery skips or an excluded prefix and apart from every path the build writes or removes, and a person opens that directory itself as the vault.",
+          "The skill teaches choosing the vault directory with the person, outside `generated/` for notes worth keeping, and that a person opens that directory itself as the vault.",
           "The skill teaches that the command writes only the vault's `sdp/` folder, and that a person's notes, intent notes under `intent/` by convention, and Obsidian's settings lie outside it.",
-          "The skill teaches synchronizing and watching: `sdp vault` enters the shared build and removes the five page roots, `sdp generate --vault DIR` publishes those roots and the vault together, the watch follows carriers and TypeScript sources, and an index that opens with a failed-regeneration warning shows an older graph.",
+          "The skill teaches synchronizing: `sdp vault` enters the shared build and removes the five page roots, `sdp generate --vault DIR` publishes those roots and the vault together, and an index that opens with a failed-regeneration warning shows an older graph.",
           "The skill teaches recovering a refused run without losing a person's work: name what each refusal means, move the person's words out of `sdp/` before deleting a refused path, and keep or delete a changed Base on purpose.",
-          "The skill teaches turning an intent note into carrier edits: convert its links to ids and entry addresses, write a change proposal against the graph the person read, run the proposal check, send a moved or uncheckable change to a person, and apply the rest through the authoring skill.",
-          "The skill cites the vault's Specs for law and the verb's `--help` for its flags, and restates neither.",
+          "The skill teaches turning an intent note into a change proposal against the graph the person read, converting each link back to the id or entry address it names, and applies it through `spec:consumers.delivery-session-on-ramp#rule.receiveProposal`.",
         ],
         ruleKeys: {
           ownSkill: "rules[0]",
@@ -4301,7 +4423,6 @@ export const consumersSpecs = [
           synchronize: "rules[3]",
           recover: "rules[4]",
           intentNotes: "rules[5]",
-          citesLaw: "rules[6]",
         },
       },
     },
@@ -8437,6 +8558,37 @@ export const consumersSpecs = [
             provisional: "keep recipe 44 limited to individual slot values",
             links: ["spec:consumers.agent-surface.example-space-coverage#rule.perSlotOnly"],
             trigger: "a design pass asks which combinations no example exercises",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
+  },
+  {
+    id: "spec:consumers.wholesale-view-rewrite.validate-page-roots",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/consumers/wholesale-view-rewrite.validate-page-roots.sdp.md",
+    title: "A validate run and the page roots it removes",
+    narrative:
+      "`sdp validate` enters the shared build, so it removes the five generated page roots before extraction and writes none of them back. It names none of the roots it removed, so a session that runs it to read findings loses the pages it was reading without being told.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a person or a CI job that runs `sdp validate` keep the pages it was reading, or learn from the run which page roots it removed.",
+        openQuestions: [
+          {
+            question:
+              "Should `sdp validate` keep the page roots it removes today, or name each one it removed?",
+            blocking: true,
+            key: "validatePageRoots",
+            decider: "owner",
+            provisional:
+              "read findings through `sdp q`'s `report`, which writes nothing, and restore removed pages with `sdp generate`",
+            links: ["spec:consumers.wholesale-view-rewrite#rule.buildInvalidates"],
+            trigger: "a session or CI job loses pages it still needed to a validate run",
           },
         ],
       },

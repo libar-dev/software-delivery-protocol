@@ -18,5 +18,6 @@ An interface and API reference is a deferred projection of the graph. The origin
   - decider: owner
   - trigger: a named consumer outside the repository, with a way to measure that demand inside the arc that builds the projection
 - [non-blocking #referenceSource] Would the reference read pinned declarations, contract-kind Specs or `api:` code anchors, and does any of them hold enough to document an interface?
+  - decider: owner
 
 ## Behavior

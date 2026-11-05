@@ -1,12 +1,13 @@
 import { lstatSync, mkdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, sep } from "node:path";
 
+import { TREE_REMOVAL_RETRIES } from "../projections/published-tree.js";
 import type { CliOutput } from "./output.js";
 import { errorMessage, writeStderr } from "./output.js";
 
 export function removeArtifact(path: string, rm: typeof rmSync): string | undefined {
   try {
-    rm(path, { recursive: true, force: true });
+    rm(path, { recursive: true, force: true, ...TREE_REMOVAL_RETRIES });
     return undefined;
   } catch (error) {
     const code = error instanceof Error ? (error as NodeJS.ErrnoException).code : undefined;
@@ -96,7 +97,11 @@ export function guardedOutput(
   const check = outputBoundary(root);
   const remove: typeof rmSync = (path, options) => {
     check(String(path));
-    (hooks.rmSync ?? rmSync)(path, options);
+    // A tree removal retries when a folder gains an entry mid-removal, as Finder does.
+    (hooks.rmSync ?? rmSync)(
+      path,
+      options?.recursive === true ? { ...TREE_REMOVAL_RETRIES, ...options } : options,
+    );
     check(String(path));
   };
   const mkdir: typeof mkdirSync = (path, options) => {

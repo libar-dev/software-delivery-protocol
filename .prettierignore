@@ -8,7 +8,6 @@ docs/**
 jtbd-stories/**
 plans/**
 .sisyphus/**
-.tmp-scratch/**
 
 # OmO state carries review hashes, recovery records, and tool-authored evidence; product formatting
 # must not rewrite those bytes or create unrelated orchestration churn.
@@ -39,3 +38,6 @@ generated/
 
 # Refusal-parity carriers are intentionally malformed inputs read as text by the reifiers.
 test/fixtures/import/parity/
+
+# Agent worktrees are whole checkouts of their own.
+.claude/worktrees/

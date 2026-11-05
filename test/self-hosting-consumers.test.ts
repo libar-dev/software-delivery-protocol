@@ -17,6 +17,7 @@ import { createReader } from "../src/reader/reader.js";
 import type { BlastRadius, ConceptMatch, FileEntry, Reader } from "../src/reader/reader.js";
 import { createCaptureOutput } from "./helpers/cli-capture.js";
 import { materializeExtractCorpus, removeMaterializedCorpus } from "./helpers/extract-corpus.js";
+import { answeredStderr } from "./helpers/query-hint.js";
 
 /**
  * The bound executable points of the consumer family — the agent front door and the reader's entry
@@ -180,11 +181,11 @@ const frontDoorBindings = {
     world.stdout = capture.readStdout();
     world.stderr = capture.readStderr();
   },
-  "the front door exits {exitCode} with an empty error stream": (
+  "the front door exits {exitCode} with only the catalog hint on its error stream": (
     world: FrontDoorWorld,
     params: { readonly exitCode: number },
   ) => {
-    expect(world.stderr).toBe("");
+    expect(world.stderr).toBe(answeredStderr);
     expect(world.exitCode).toBe(params.exitCode);
   },
   "the printed answer is exactly the body's pre-shaped return {printedAnswer}": (

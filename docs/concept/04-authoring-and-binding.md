@@ -74,7 +74,7 @@ The anchor law has moved into Specs. This section keeps only pointers to them, u
 - **Architectural significance is annotated where it is realized** (MD-38) — `spec:decisions.architectural-annotation`: `component`, `uses` and `role`, plus `layer` and `context` on a component anchor. None of them confers a delivery fact, and an anchor-required lint stays optional and warn-level.
 - **Binding, never liveness** (MD-7) — `spec:decisions.binding-not-liveness`: a test anchor records that a verifier exists, never that it ran; pass and fail stay in CI.
 - **Oracle targets** — `spec:validation.oracle-target-eligibility`: an example space has zero or one resolving oracle, and consumers fail closed.
-- **How to write one** — the `sdp-authoring` skill, "Bind code, tests, and oracles".
+- **How to write one** — the `sdp-authoring` skill, "Bind code, tests and oracles" (`references/binding.md`).
 
 One point no Spec states, kept here: anchors are framework-neutral. An anchor binds any class, function, route or module, however the runtime is wired, so binding code never needs the framework's composition (§3).
 

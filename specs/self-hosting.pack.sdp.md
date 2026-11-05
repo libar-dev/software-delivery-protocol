@@ -73,6 +73,7 @@ specs:
   - spec:model.anchors
   - spec:model.anchors.lookalike-refusal
   - spec:model.anchors.physical-identity
+  - spec:model.anchors.markdown-deliverable
   - spec:model.structural-patterns
   - spec:model.open-question-keys
   - spec:model.open-question-keys.keyed-question-resolves
@@ -237,6 +238,7 @@ specs:
   - spec:consumers.graph-first-planning
   - spec:consumers.adopter-on-ramp
   - spec:consumers.shipped-protocol-corpus
+  - spec:consumers.agent-client-support
   - spec:consumers.derived-readiness-banner
   - spec:consumers.derived-readiness-banner.dishonest-divergence
   - spec:consumers.derived-readiness-banner.honest-headroom
@@ -248,6 +250,7 @@ specs:
   - spec:consumers.wholesale-view-rewrite.late-stale-page
   - spec:consumers.wholesale-view-rewrite.failed-run-view-removed
   - spec:consumers.wholesale-view-rewrite.build-invalidates-view
+  - spec:consumers.wholesale-view-rewrite.validate-page-roots
   - spec:consumers.agent-surface.address-and-cycle-recipes
   - spec:consumers.agent-surface.address-and-cycle-recipes.cycle-fails-a-rules-run
   - spec:consumers.agent-surface.address-and-cycle-recipes.unresolved-address-fails-a-rules-run
@@ -412,7 +415,6 @@ specs:
   - spec:protocol.role-vocabulary
   - spec:protocol.capability-epics
   - spec:protocol.roadmap-replaces-plans
-  - spec:protocol.delivery-record-cleanup
   - spec:decisions.plain-language-references
   - spec:decisions.concept-docs-dissolve
   - spec:decisions.one-validation-path
@@ -460,6 +462,8 @@ specs:
   - spec:decisions.roadmap-priority
   - spec:decisions.roadmap-over-plans
   - spec:decisions.epics-of-any-kind
+  - spec:decisions.agent-plugin-package
+  - spec:decisions.session-start-hook
 modelRefs:
   - spec:model.core-model
 ---

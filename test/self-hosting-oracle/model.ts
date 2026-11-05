@@ -613,32 +613,21 @@ export const modelSpecs = [
     file: "specs/model/design-maturity.sdp.md",
     title: "What a Spec's design carries is derived, beside its readiness",
     narrative:
-      "The original design's `designed` stage meant a Spec's key concepts were settled before code (`docs/lineage/v0-design/01-core-primitives.md` §1.4 and §8). The Protocol's readiness describes the maturity of intent. The graph therefore derives what design a Spec carries beside readiness, without adding a rung, floor clause or delivery fact. A new rung would change the locked readiness values, a floor clause reading Design would close that section's shape, and a design fact would mix design with realization signals.",
+      "Readiness states the design maturity of a Spec's intent, and the floor reads each kind's own evidence for it, such as a behavior's rules and examples or a model's terms. The shared names and shapes a Spec pins are derived beside readiness, without adding a rung, floor clause or delivery fact. A new rung would change the locked readiness values, a floor clause reading Design would close that section's shape, and a design fact would mix design with realization signals.",
     sections: {
       intent: {
         problem:
-          "A reviewer or an implementer cannot tell from readiness alone which Specs carry a settled design and which carry only intent, and the first adopter's owner asked for Specs whose key concepts are designed as stubs before code.",
+          "Two Specs at one rung can differ in whether they pin the names and shapes an implementer builds to, such as signatures and record shapes, and readiness alone cannot tell them apart; the first adopter's owner asked for Specs whose key concepts are settled as stubs before code.",
         outcome:
-          "Show what design a Spec carries in values the graph derives, so the backlog and a review can tell a designed Spec from one that states only its intent.",
+          "Show the shared names and shapes a Spec pins in values the graph derives, beside its readiness, so the backlog and a review can tell a Spec that pins them from one at the same rung that pins none.",
         assumptions: [
-          "The design columns tell a Spec with pinned declarations and keyed entries from one that states only its intent.",
-        ],
-        openQuestions: [
-          {
-            question:
-              "If the first adopter's design passes show that the design columns cannot distinguish settled design from intent alone, should this representation be revisited?",
-            blocking: false,
-            key: "designColumnsSufficiency",
-            decider: "owner",
-            provisional:
-              "derive what design a Spec carries beside readiness without a new rung, floor clause or delivery fact",
-          },
+          "The design columns count shared names and shapes, keyed Design and UI entries and pinned declarations, while readiness states the design of a Spec's behavior, whose floor reads its rules and examples.",
         ],
       },
       model: {
         terms: {
           "design columns":
-            "The counts and lists the reader derives for a Spec beside its readiness under spec:consumers.pack-design; they are read on every pass and never stated.",
+            "The counts and lists the reader derives for a Spec beside its readiness under spec:consumers.pack-design; they are read on every pass and never stated. Their entries and declarations count the shared names and shapes a Spec pins, never its rules, so zero entries on a Spec with rules says nothing about unsettled design: its rules are its design of behavior, and its readiness states their maturity.",
           "designed stage":
             "The original design's readiness stage for a Spec whose key concepts were settled; it is not a Protocol rung.",
         },
@@ -717,7 +706,7 @@ export const modelSpecs = [
     title:
       "An open question may name who decides it, its links, a provisional reading and a re-entry trigger",
     narrative:
-      "The original design gave an open question an owner and a list of links to decision records, discussions and tickets, beside its text and its blocking flag (`docs/lineage/v0-design/01-core-primitives.md` §2.1). A question key gives a question an address and nothing more, so the first adopter keeps the rest beside the graph. Its decision register (`libar-platform/design/decisions/register.json`, described in `design/advisors/register.md`) records for each open decision its sources, who decides it as a class (`tactical`, `delegated` or `owner`) and an advisor lens, the provisional reading the design proceeds on, and a lean. It also records a status, the work unit it blocks, dates and who checked the lean. This Spec captures the part that states something about the question and leaves the work record outside.\n\nA TypeScript open-question list that cannot be read statically drops whole, blocking questions included. A failure under one of the four fields is an error, because the fields arrived with no carrier relying on a lossy reading; a failure in a question's text, its blocking flag or the list itself keeps the warning every other non-static TypeScript section property gives.",
+      "An open question needs who decides it and links to the decision records, discussions and tickets it rests on, beside its text and its blocking flag. A question key gives a question an address and nothing more, so the first adopter keeps the rest beside the graph. Its decision register (`libar-platform/design/decisions/register.json`, described in `design/advisors/register.md`) records for each open decision its sources, who decides it as a class (`tactical`, `delegated` or `owner`) and an advisor lens, the provisional reading the design proceeds on, and a lean. It also records a status, the work unit it blocks, dates and who checked the lean. This Spec captures the part that states something about the question and leaves the work record outside.\n\nA TypeScript open-question list that cannot be read statically drops whole, blocking questions included. A failure under one of the four fields is an error, because the fields arrived with no carrier relying on a lossy reading; a failure in a question's text, its blocking flag or the list itself keeps the warning every other non-static TypeScript section property gives.",
     sections: {
       intent: {
         problem:
@@ -768,7 +757,7 @@ export const modelSpecs = [
         linksValue:
           "`links:` takes a comma-separated list, as an anchor comment's target tags do, non-empty and with no repeat.",
         fieldFindings:
-          "an unknown or repeated label, an empty value, a `decider` off the token grammar, and a `trigger` on a non-blocking question are conformance errors at the field's line.",
+          "an unknown or repeated label, an empty value, a `decider` off the token grammar, and a `trigger` on a non-blocking question are extraction errors at the field's line, as every carrier refusal is: the graph does not derive, and no query runs, until the author fixes the field.",
         fieldLocations:
           "each carrier that records entry lines records a row per field present, `question[<i>].decider`, `question[<i>].links`, `question[<i>].provisional` or `question[<i>].trigger`; a link finding reads the `links` row, and a line the carrier did not record stays absent.",
         linkResolution:
@@ -1258,5 +1247,37 @@ export const modelSpecs = [
       },
     },
     deliveryFacts: ["has-verifier"],
+  },
+  {
+    id: "spec:model.anchors.markdown-deliverable",
+    specKind: "behavior",
+    altitude: "story",
+    readiness: "idea",
+    file: "specs/model/anchors.markdown-deliverable.sdp.md",
+    title: "An anchor for a Markdown deliverable",
+    narrative:
+      "The extractor reads anchors only from `.ts` and `.tsx` files, so a Markdown deliverable such as a shipped skill or a handbook binds through the document-realization binding: the suite that asserts the document carries the code anchor. The graph never names the Markdown file itself, so a change to it impacts no Spec and reports as coverage-unknown.",
+    sections: {
+      intent: {
+        outcome:
+          "Let a Markdown deliverable, such as a shipped skill or a handbook, carry its own anchor, so the graph names the file and changed-file impact reaches the Specs it realizes.",
+        openQuestions: [
+          {
+            question:
+              "Should a Markdown deliverable carry an anchor the extractor reads, and in what form?",
+            blocking: true,
+            key: "markdownAnchor",
+            decider: "owner",
+            provisional:
+              "keep the document-realization binding, with the Markdown file coverage-unknown in changed-file impact",
+            links: ["spec:model.anchors"],
+            trigger:
+              "an adopter or a reviewer needs changed-file impact for a Markdown deliverable, such as an edit to a shipped skill reaching the on-ramp Spec it realizes",
+          },
+        ],
+      },
+      behavior: {},
+    },
+    deliveryFacts: [],
   },
 ] as const;

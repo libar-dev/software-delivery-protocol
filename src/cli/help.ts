@@ -130,8 +130,9 @@ const commands = {
       "  sdp q ['<body>'] [--root PATH] [--exclude PATH]... [--params JSON | --params @PATH | --params KEY=@PATH]... [--json]",
     paragraph: `The agent front door: derive the graph under --root (default: cwd) in process, then
              evaluate the supplied body and print what it returns. The body is the single
-             positional argument, or stdin when stdin is not a terminal; with neither, q refuses
-             with a usage note and exits 1 rather than waiting. It is a plain JavaScript async function
+             positional argument, or stdin when stdin is not a terminal; with neither, or with an
+             empty body, q lists the recipe catalog by category and the call forms on stderr and
+             exits 1 rather than waiting. It is a plain JavaScript async function
              body — no import/export, no TypeScript-only syntax — and \`return\` is the output
              contract. Five bindings are injected: \`g\`, the reader over the derived graph (the
              same createReader the package exports); \`graph\`, the raw graph schema object;
@@ -141,11 +142,13 @@ const commands = {
              body over the same graph and report. Repeat --params with JSON objects, @PATH for a file
              holding one, or KEY=@PATH for any JSON value under a lower-camel key. Objects merge
              at the top level; a repeated key, invalid JSON or an unreadable file refuses before
-             the body runs. A recipe reads its parameter from \`params\` and falls back to the
-             catalog's sample. The graph is derived on every invocation, so a
+             the body runs. A recipe reads its parameters from \`params\`, and one that answers
+             for a subject refuses, naming the parameter, when that subject is absent. The graph
+             is derived on every invocation, so a
              just-authored Spec is queryable immediately and no committed artifact answers in the
              graph's name; nothing is written anywhere. Output is bounded util.inspect (depth 4);
-             --json prints JSON.stringify instead, unbounded. A body that throws exits 1, as does a
+             --json prints JSON.stringify instead, unbounded. A call that answers ends stderr with
+             one hint line; stdout holds only the answer. A body that throws exits 1, as does a
              graph that fails to derive.`,
   },
 } as const;
@@ -202,11 +205,12 @@ Agent skills and reference:
   Shipped in the package. Paths are relative to the package directory PKG, which is
   node_modules/@libar-dev/software-delivery-protocol in an adopter and the repository root in a
   source checkout.
-  .agents/skills/sdp-agent-surface/SKILL.md   the skill for reading the graph through q
-  .agents/skills/sdp-authoring/SKILL.md       the skill for authoring Specs, Packs, and anchors
-  .agents/skills/sdp-sessions/SKILL.md        the skill for routing a delivery session
-  .agents/skills/sdp-studio/SKILL.md          the skill for publishing and reading the Studio
-  .agents/skills/sdp-vault/SKILL.md           the skill for keeping an Obsidian vault of the graph
+  plugin.json                                 the Agent Plugin manifest: PKG loads as a plugin
+  skills/sdp-agent-surface/SKILL.md           the skill for reading the graph through q
+  skills/sdp-authoring/SKILL.md               the skill for authoring Specs, Packs, and anchors
+  skills/sdp-sessions/SKILL.md                the skill for delivery work on graph evidence
+  skills/sdp-studio/SKILL.md                  the skill for publishing and reading the Studio
+  skills/sdp-vault/SKILL.md                   the skill for keeping an Obsidian vault of the graph
   docs/agent-surface/recipes.md               the recipe catalog: runnable q bodies
   dist/recipes/NN-slug.js                     each catalog body as a file, run as shipped with
                                               sdp q "$(cat PKG/dist/recipes/NN-slug.js)"

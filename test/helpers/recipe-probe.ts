@@ -7,6 +7,7 @@ import { runSdpCli } from "../../src/cli/sdp.js";
 import { createReader, validateGraph } from "../../src/index.js";
 import type { GraphSchema } from "../../src/index.js";
 import { createCaptureOutput } from "./cli-capture.js";
+import { answeredStderr } from "./query-hint.js";
 
 const catalog = fileURLToPath(new URL("../../docs/agent-surface/recipes.md", import.meta.url));
 
@@ -36,6 +37,9 @@ export async function shippedRecipe<T>(
     ["q", body, "--root", root, "--params", JSON.stringify(params), "--json"],
     capture.output,
   );
-  expect({ exitCode, stderr: capture.readStderr() }).toEqual({ exitCode: 0, stderr: "" });
+  expect({ exitCode, stderr: capture.readStderr() }).toEqual({
+    exitCode: 0,
+    stderr: answeredStderr,
+  });
   return JSON.parse(capture.readStdout()) as T;
 }

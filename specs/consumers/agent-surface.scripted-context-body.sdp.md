@@ -16,7 +16,7 @@ relations:
 Given an extraction root the front door derives in process on the invocation
 Given the corpus binds the spec {specId: "spec:orders.create-order"} to one anchored verifier and one declared-only verifier
 When the agent scripts a body {body: "composing that spec's verifier bindings"} through the front door
-Then the front door exits {exitCode: 0} with an empty error stream
+Then the front door exits {exitCode: 0} with only the catalog hint on its error stream
 Then the printed answer is exactly the body's pre-shaped return {printedAnswer: "spec:orders.create-order.empty-cart is a declared verifier · spec:orders.create-order.valid-cart is an enabled verifier"}
 Then the anchored verifier {anchoredVerifierId: "spec:orders.create-order.valid-cart"} decodes as enabled while the declared-only verifier {declaredVerifierId: "spec:orders.create-order.empty-cart"} does not
 ```

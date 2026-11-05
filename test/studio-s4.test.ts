@@ -22,6 +22,7 @@ import { createStudioData } from "../src/projections/studio/data.js";
 import { renderStudio } from "./helpers/studio-render.js";
 import { runSdpCli } from "../src/cli/sdp.js";
 import * as extraction from "../src/extract/index.js";
+import { isOsMetadataFile } from "../src/projections/published-tree.js";
 
 const roots: string[] = [];
 afterEach(() => {
@@ -79,6 +80,7 @@ function snapshot(root: string): Record<string, string> {
   const result: Record<string, string> = {};
   const walk = (dir: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (isOsMetadataFile(entry)) continue;
       const path = join(dir, entry.name);
       if (entry.isDirectory()) walk(path);
       else result[relative(root, path)] = readFileSync(path, "utf8");
