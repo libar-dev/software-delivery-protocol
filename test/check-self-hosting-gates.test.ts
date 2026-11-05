@@ -184,12 +184,13 @@ describe("the self-hosting records gate", () => {
     expect(result.stderr).toContain("CONTEXT.md — carries plan-status wording");
   });
 
-  it("sends a session from the handbook's Start to the roadmap and the frozen history", () => {
+  // spec:protocol.roadmap-replaces-plans#rule.handbookPointer: Start names the roadmap Pack and its
+  // recipe; the owner words the heading and the rest of the section as he likes.
+  it("sends a session from the handbook's Start to the roadmap, and states no plan status", () => {
     const source = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
     const flat = (text: string) => text.replace(/\s+/gu, " ");
-    const start = flat(source.split(/^## Start$/mu)[1]?.split(/^## /mu)[0] ?? "");
-    for (const clause of ["pack:roadmap", "recipe 53", "frozen history"])
-      expect(start).toContain(clause);
+    const start = flat(source.split(/^## Start\b.*$/mu)[1]?.split(/^## /mu)[0] ?? "");
+    for (const clause of ["pack:roadmap", "recipe 53"]) expect(start).toContain(clause);
     expect(flat(source)).not.toMatch(/plan \d+ is (?:EXECUTING|EXECUTED|DRAFTED)/u);
     expect(source).not.toContain("highest primary-numbered plan");
   });

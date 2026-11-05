@@ -1,37 +1,6 @@
 # Libar Software Delivery Protocol
 
-```markdown
-## Skills arc: run these first (temporary, mandatory and temporary, while we work on `feat/agent-plugin-1`, added by user)
-
-Before reading any file, load the `sdp-agent-surface` skill and run these three queries from the
-repository root. Read 1 and 2 with their notes in `skills/sdp-agent-surface/references/orientation.md`.
-They show, in a few hundred lines, what grep would assemble from dozens of carriers and test files:
-the graph's surface, the two on-ramp roots read through the frozen join, and every on-ramp's law,
-reasons and bindings. Pair them with your own tools: the graph says where truth lives, grep and
-file reads open the exact lines.
-
-1. The corpus and its surface (`g`, `graph`, what a row carries and does not, recipe parameters):
-
-   node skills/sdp-agent-surface/scripts/orient.mjs --only 1
-
-2. The two on-ramp roots through `g.specContext` (rules with lines, relations with claims, bindings):
-
-   node skills/sdp-agent-surface/scripts/orient.mjs --only 10 --subjects '{"10":{"specs":["spec:consumers.reading-on-ramp","spec:consumers.authoring-on-ramp"]}}'
-
-3. Every on-ramp Spec: the law its skill teaches (with the authored reasons), what refines it, and
-   the anchors that bind it (all from `test/skills.test.ts`; the `SKILL.md` files themselves are
-   outside the graph):
-
-   pnpm --silent sdp:q 'const ids = g.specs().filter((s) => /on-ramp|graph-first-planning|shipped-protocol-corpus/.test(s.id)).map((s) => s.id); const short = (id) => id.replace(/^spec:/, ""); return Object.fromEntries(ids.map((id) => { const c = g.specContext(id); const out = graph.edges.filter((e) => e.from === id && e.type !== "belongsTo"); const inn = graph.edges.filter((e) => e.to === id); return [short(id), { readiness: `stated ${c.statedReadiness}, derived ${c.derivedReadiness}`, teaches: out.map((e) => `${e.type} ${short(e.to)}${e.reason ? ` — ${e.reason}` : ""}`), refinedBy: inn.filter((e) => e.type === "refines").map((e) => short(e.from)), boundBy: inn.filter((e) => e.claim === "anchored").map((e) => `${e.from} ${e.type}`) }]; }))'
-
-Notice the compression: queries return in a few lines what grep would assemble from several
-carriers and a test file, already joined, with reasons and claims kept apart. That compression,
-pairs nicely with your own tools, since `sdp:q` is intended to be used with grep and other ad hoc
-tools and common methods for exploration; AI-friendly by design.
-
-```
-
-The Libar Software Delivery Protocol ("the Protocol") keeps software delivery as typed Specs in the
+The Libar Software Delivery Protocol (SDP, "the Protocol") keeps software delivery as typed Specs in the
 repository, derives one graph from them and generates every other artifact from that graph. This
 repository self-hosts: its own Specs under `specs/` are the Protocol's first production corpus,
 derived and checked in CI. It is a second take on `@libar-dev/architect`, with zero back-compat:
@@ -88,7 +57,9 @@ SDP is an **event-sourced system**: Git is the **event log.** **The graph is the
 | `sdp-studio` | Publish or read the Studio and handle a change someone requests from a page. |
 | `sdp-vault` | Keep an Obsidian vault in sync and turn a person's intent notes into checked edits. |
 
-## Start
+## Start - query the SDP state, transform and manipulate 
+
+**When exploring, start with `sdp:q`, and combine with grep and other commont tools you use.**
 
 Load the `sdp-agent-surface` skill and run orientation from the repository root, passing what you
 arrived with (a word, a file, a Spec) as `--subjects`, keyed by answer number
@@ -98,19 +69,20 @@ arrived with (a word, a file, a Spec) as `--subjects`, keyed by answer number
 node skills/sdp-agent-surface/scripts/orient.mjs
 ```
 
-Skip answers 1 and 5 only when the session-start hook's answers, from the plugin or this
-repository's temporary wiring (`spec:decisions.session-start-hook`), are already in your context;
-then run the others.
+Next work, recipe 53 over `pack:roadmap`:
 
-Answer 5 is the next work: recipe 53, `dist/recipes/53-the-roadmap.js`, over `pack:roadmap`. Follow
-each entry to its Packs and carrying Specs; the open arc's record is its draft pull request. A
-question whose decider is `delegated` is one an agent may answer provisionally, pending the owner's
-review. `plans/` and `reviews/` are frozen history: nothing is added to either.
+```bash
+pnpm --silent sdp:q "$(cat dist/recipes/53-the-roadmap.js)" --params '{"pack":"pack:roadmap"}'
+```
 
-The graph says where truth lives; grep and file reads open the lines it names. Load the matching
-`sdp-*` skill before the work it covers. Work is specified in queries: a brief, delegation, hand-off
-or pull request description names the skill and carries the exact `sdp:q` bodies or recipe files
-that scope the work and show it done.
+### The Graph and `sdp:q` - Dense/rich and AI friendly delivery process state data
+
+Notice the compression: queries return in a few lines what grep would assemble from several
+carriers and a test file, already joined, with reasons and claims kept apart. That compression,
+pairs nicely with your own tools, since `sdp:q` is intended to be used with grep and other ad hoc
+tools and common methods for exploration; **AI/grep-friendly by design.** 
+
+**Explore catalog of recipes:** Query`sdp:q`  without arguments. 
 
 ## Words
 
@@ -166,9 +138,6 @@ commercial.
   boundary, commit the work in progress saying what is incomplete, since git cannot recover
   uncommitted work. Push only on the user's explicit request; never use `git stash`.
 - Reviews travel as change proposals (`sdp-sessions`). Briefs and prompts stay in the session.
-
-Before opening or resuming an arc, committing evidence, posting a review or writing a pull request
-description, read `docs/contributing/arc-record.md`.
 
 ## Develop the engine
 
