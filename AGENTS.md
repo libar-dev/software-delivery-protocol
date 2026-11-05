@@ -136,7 +136,7 @@ commercial.
 
 - Write lean, for outsiders: plain technical language a wider open-source audience can follow. The
   ratified terms are the shared vocabulary, never a licence for dense insider prose.
-- A design session edits carriers and leaves the code its Specs will change alone.
+- A design pass edits carriers and leaves the code its Specs will change alone.
 - A change proves itself with a test that fails without it.
 - Commits are recovery boundaries, not workflow gates. The owner's instruction that opens an arc
   authorizes its commits and push; without one, ask before committing. With it, commit each
@@ -151,6 +151,9 @@ commercial.
   surprising without context, a real trade-off. A Why the base already forced is drift repair, kept
   in git and the pull request description. This is authoring guidance, never a validator.
     - Technical debt: **Decisions will move to SDP specs** in a planned and controlled fashion.
+- Technical debt: `docs/design/` is Markdown design material that consolidates into Specs once
+  spec-driven development is enabled; where each piece lands is a scope question for
+  `spec:protocol.delivery-record-cleanup#question.durableContent`.
 
 Before opening or resuming an arc, committing evidence, posting a review or writing a pull request
 description, read `docs/contributing/arc-record.md`.
