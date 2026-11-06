@@ -37,8 +37,9 @@ runs through its runners, from the project root.
 Each asks you to rethink the shape:
 
 - Design entries or rules written into a Spec stated `idea`.
-- Code written, or a rung stated, while a blocking question on the target is open.
-- A drift alarm after your change (orientation 4's `driftAlarm`).
+- Code that answers an open blocking question, or a rung stated while one on the target is open.
+- A drift alarm after your change (orientation 4's `driftAlarm`) on a Spec you did not mean to build
+  below `ready`.
 - A Design entry slimmed before the distillation boundary of `spec:model.enrichment-lifecycle`.
   Slimming candidates (recipe 39, `dist/recipes/39-slimming-candidates.js`) are candidates:
   compare each with its bound artifact, and keep every why.

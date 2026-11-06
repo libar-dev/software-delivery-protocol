@@ -29,10 +29,11 @@ export default tseslint.config(
       "test/fixtures/import/parity/**",
       // Agent worktrees (Claude Code worktree isolation) are whole checkouts of their own.
       ".claude/worktrees/**",
-      // Orientation bodies and the authoring check are `sdp q` function bodies, not modules: a
-      // top-level `return` is their output contract. The skills tests run every one of them.
+      // Orientation bodies, the authoring check and the build brief are `sdp q` function bodies,
+      // not modules: a top-level `return` is their output contract. The skills tests run each one.
       "skills/*/scripts/orientation/*.js",
       "skills/sdp-authoring/scripts/check.js",
+      "skills/sdp-sessions/scripts/brief.js",
     ],
   },
   js.configs.recommended,

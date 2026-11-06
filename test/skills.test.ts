@@ -2933,27 +2933,64 @@ describe("the delivery-session on-ramp", () => {
     await assertProposalRouting(read("references/proposals.md"));
   });
 
-  // spec:consumers.delivery-session-on-ramp#rule.buildFromSpec: each recipe the build reference
-  // names for the brief answers for one Spec of a corpus a builder opens, before any code exists.
-  it("reads a build's brief through recipes that each answer for one Spec", async () => {
+  // spec:consumers.delivery-session-on-ramp#rule.buildFromSpec: the brief body the build reference
+  // runs answers for its one Spec. A blocking question, on the Spec or on one it rests on, holds
+  // the work; a non-blocking one is built on through its provisional reading. Only the Spec's own
+  // declarations are listed, and only the keyed rule no enabled example exercises. A question and
+  // a declaration on a Spec the build does not rest on stay out.
+  it("reads a build's brief for its one Spec: what holds, what to build on, what to hold to", async () => {
     const build = read("references/build.md");
-    const numbers = [...build.matchAll(/\(recipe (\d+),/gu)].map((match) => Number(match[1]));
-    expect(numbers).toEqual(expect.arrayContaining([56, 3, 24, 34]));
-    const { graph } = extract({ root: join(repoRoot, "examples/checkout-v1") });
-    const subject = "spec:orders.create-order";
-    for (const number of numbers) {
-      const body = `return recipes(${String(number)}, params)`;
-      const { accepts } = (await evaluateBody(body, { graph, params: { "?": 1 } })) as {
-        accepts: string[];
-      };
-      const params = accepts.includes("spec")
-        ? { spec: subject }
-        : accepts.includes("specs")
-          ? { specs: [subject] }
-          : {};
-      const answer = await evaluateBody(body, { graph, params });
-      expect({ number, empty: emptyHanded(answer) }).toEqual({ number, empty: undefined });
-    }
+    const taught = shellFenceLines(build).filter((line) => line.includes("scripts/brief.js"));
+    expect(taught).toEqual([
+      `node <skill-dir>/../sdp-agent-surface/scripts/q.mjs "$(cat <skill-dir>/scripts/brief.js)" --params '{"spec":"<the Spec>"}'`,
+    ]);
+    const behavior = (name: string, readiness: string, relations: string, body: string) =>
+      `---\nid: spec:probe.${name}\nkind: behavior\naltitude: story\nreadiness: ${readiness}\nrelations: ${relations}\n---\n# ${name}\n\n## Intent\n- outcome: Probe the build.\n\n${body}\n`;
+    const question = (marker: string, text: string, decider: string, provisional?: string) =>
+      `- [${marker}] ${text}\n  - decider: ${decider}${provisional === undefined ? "" : `\n  - provisional: ${provisional}`}`;
+    const { graph, report } = probeGraph({
+      "build.sdp.md": behavior(
+        "build",
+        "scoped",
+        "\n  dependsOn: spec:probe.base",
+        `### Open questions\n${question("blocking #shape", "Which shape?", "owner", "a list")}\n${question("non-blocking #name", "Which name?", "owner", "probe")}\n\n## Behavior\n- rule: [#covered] The probe answers.\n- rule: [#uncovered] The probe refuses an empty input.\n- rule: The probe logs nothing.\n\n## Design\n- entry: \`probe(input: string): string[]\` is the entry point.`,
+      ),
+      "base.sdp.md": behavior(
+        "base",
+        "idea",
+        "{}",
+        `### Open questions\n${question("blocking #footing", "Which footing?", "architect")}\n\n## Design\n- limit: \`LIMIT = 8\` caps the input.`,
+      ),
+      "other.sdp.md": behavior(
+        "other",
+        "idea",
+        "{}",
+        `### Open questions\n${question("blocking #apart", "Apart?", "owner")}\n\n## Design\n- other: \`other(): void\` stands apart.`,
+      ),
+      "example.sdp.md": `---\nid: spec:probe.example\nkind: example\naltitude: story\nreadiness: idea\nrelations:\n  verifies: { target: spec:probe.build, exercises: [covered] }\n---\n# Example\n\n## Intent\n- outcome: Show the probe answering.\n\n\`\`\`gwt\nGiven an input {input: "a"}\nWhen the probe runs\nThen it answers {answer: "a"}\n\`\`\`\n`,
+      "suite.test.ts": anchoredSuite.replace("spec:probe.child", "spec:probe.example"),
+    });
+    expect(report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+    const brief = readFileSync(join(folder, "scripts/brief.js"), "utf8");
+    const answer = await evaluateBody(brief, { graph, params: { spec: "spec:probe.build" } });
+
+    expect(answer).toEqual({
+      readiness: "stated scoped, floor scoped",
+      holds: [
+        "spec:probe.base#question.footing, decider architect",
+        "spec:probe.build#question.shape, decider owner",
+      ],
+      buildOn: ["spec:probe.build#question.name: probe"],
+      declarations: ["entry: probe(input: string): string[]"],
+      unexercised: ["spec:probe.build#rule.uncovered"],
+      unkeyedRules: 1,
+    });
+    // The steps read the brief by these fields: what holds the work, and what it builds on.
+    for (const field of ["holds", "buildOn", "declarations", "unexercised"])
+      expect({ field, named: build.includes(`\`${field}\``) }).toEqual({ field, named: true });
+    expect(
+      emptyHanded(await evaluateBody(brief, { graph, params: { spec: "spec:probe.none" } })),
+    ).toBe("found: false");
   });
 
   // The check reports a base graph that is no graph where it reports the proposal's own schema
