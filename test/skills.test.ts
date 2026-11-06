@@ -1130,6 +1130,17 @@ describe("the graph-reading on-ramp", () => {
     for (const form of callForms)
       expect(form).toMatch(/^ {2}node skills\/sdp-agent-surface\/scripts\/q\.mjs /u);
     expect(demonstration.stdout.endsWith(`## Recipes\n\n${listing}\n`)).toBe(true);
+    // #rule.recipeNaming: that call refuses the empty body and exits 1, and the reading skill says
+    // that its listing is the expected answer, so the refusal never reads as a failure.
+    expect({ status: empty.status, opens: empty.stderr.split("\n")[0] }).toEqual({
+      status: 1,
+      opens: "sdp q: the body is empty — `return` is the output contract.",
+    });
+    expect(
+      flat(readFileSync(join(repoRoot, "skills/sdp-agent-surface/SKILL.md"), "utf8")),
+    ).toContain(
+      "lists them by category after refusing the empty body, and exits 1: that listing is the expected answer",
+    );
     const shortened = section(demonstration.stdout, 10);
     expect(shortened).toMatch(/'… \d+ more'/u);
     expect(shortened).toContain(`--only 10 --subjects '{"10":{"specs":["<a Spec id>"]}}'`);
@@ -1242,20 +1253,7 @@ describe("the graph-reading on-ramp", () => {
 
   // A query that throws prints FAILED under its heading, and the run exits 1 asking for a finding.
   it("prints a query that throws as FAILED and exits 1, asking for a finding", () => {
-    const scripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
-    // A copy of the runner beside a probe body that throws, so no shipped body needs to fail.
-    const place = mkdtempSync(join(tmpdir(), "sdp-orient-failing-"));
-    mkdirSync(join(place, "orientation"));
-    for (const file of ["orient.mjs", "q.mjs"]) {
-      copyFileSync(join(scripts, file), join(place, file));
-    }
-    for (const file of readdirSync(join(scripts, "orientation"))) {
-      copyFileSync(join(scripts, "orientation", file), join(place, "orientation", file));
-    }
-    writeFileSync(
-      join(place, "orientation/12-a-failing-probe.js"),
-      '// 12. A failing probe: a body that throws.\n// Teaches: nothing; the runner reports it\nthrow new Error("the probe fails");\n',
-    );
+    const place = failingRunner();
     try {
       const run = spawnSync(process.execPath, [join(place, "orient.mjs"), "--only", "3,12"], {
         cwd: repoRoot,
@@ -1272,47 +1270,82 @@ describe("the graph-reading on-ramp", () => {
     }
   }, 120_000);
 
-  // spec:consumers.reading-on-ramp#rule.orientationOutput: a sandbox that refuses a child's
-  // captured output while letting it write to the runner's own, as Codex's workspace-write sandbox
-  // does, still gets every answer. The probe refuses each captured spawn as such a sandbox does.
-  it("prints the answers through its own output where captured output is refused", () => {
+  // spec:consumers.reading-on-ramp#rule.orientationOutput: the runner reads its children's output
+  // through files, so a sandbox that refuses a child's piped output but lets it write a file, as
+  // Codex's workspace-write sandbox does, prints the run a plain environment prints.
+  it("prints the same run where piped output is refused but a file is not", () => {
     const place = mkdtempSync(join(tmpdir(), "sdp-orient-refused-"));
-    const refuse = join(place, "refuse-captured.mjs");
-    writeFileSync(
-      refuse,
-      [
-        'import { createRequire, syncBuiltinESMExports } from "node:module";',
-        'const childProcess = createRequire(import.meta.url)("node:child_process");',
-        "const spawnSync = childProcess.spawnSync;",
-        "childProcess.spawnSync = (command, args, options = {}) =>",
-        '  options.stdio === "inherit"',
-        "    ? spawnSync(command, args, options)",
-        '    : { error: Object.assign(new Error("spawnSync node EPERM"), { code: "EPERM" }), status: null };',
-        "syncBuiltinESMExports();",
-        "",
-      ].join("\n"),
-    );
     try {
-      const run = spawnSync(
-        process.execPath,
-        [
-          "--import",
-          pathToFileURL(refuse).href,
-          join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs"),
-          "--only",
-          "1,3",
-          "--root",
-          "examples/checkout-v1",
-        ],
-        { cwd: repoRoot, encoding: "utf8" },
+      const orient = (preload: readonly string[]) =>
+        spawnSync(
+          process.execPath,
+          [
+            ...preload,
+            join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs"),
+            "--only",
+            "1,3",
+            "--root",
+            "examples/checkout-v1",
+          ],
+          { cwd: repoRoot, encoding: "utf8" },
+        );
+      const plain = orient([]);
+      expect(plain.status, plain.stderr).toBe(0);
+      expect(plain.stdout).toContain("\n## Recipes\n");
+      const refused = orient(["--import", refusing(place, { readOnly: false })]);
+      expect({ status: refused.status, stdout: refused.stdout, stderr: refused.stderr }).toEqual({
+        status: 0,
+        stdout: plain.stdout,
+        stderr: plain.stderr,
+      });
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  // #rule.orientationOutput: where no temporary directory can be made and piped output is refused
+  // too, as in Codex's read-only sandbox, the query writes to the runner's own output: numbered
+  // answers as `sdp q --json` prints them, and a query that fails still fails the run.
+  it("prints numbered answers, and fails a failed query, where a file and piped output are refused", () => {
+    const place = failingRunner();
+    try {
+      const orient = (only: string) =>
+        spawnSync(
+          process.execPath,
+          [
+            "--import",
+            refusing(place, { readOnly: true }),
+            join(place, "orient.mjs"),
+            "--only",
+            only,
+            "--root",
+            "examples/checkout-v1",
+          ],
+          { cwd: repoRoot, encoding: "utf8" },
+        );
+      const rows = (stdout: string) =>
+        (JSON.parse(stdout) as { number: number; error?: string }[]).map(({ number, error }) => ({
+          number,
+          failed: error !== undefined,
+        }));
+      const answered = orient("1,3");
+      expect(answered.status, answered.stderr).toBe(0);
+      expect(answered.stderr).toContain(
+        "orient: this environment refuses a temporary file and captured output (EPERM)",
       );
-      expect(run.status, run.stderr).toBe(0);
-      expect(run.stderr).toContain("orient: this environment refuses captured output (EPERM)");
-      const answers = JSON.parse(run.stdout) as { number: number; error?: string }[];
-      expect(answers.map(({ number, error }) => ({ number, error }))).toEqual([
-        { number: 1, error: undefined },
-        { number: 3, error: undefined },
+      expect(rows(answered.stdout)).toEqual([
+        { number: 1, failed: false },
+        { number: 3, failed: false },
       ]);
+      const failing = orient("3,12");
+      expect(failing.status, failing.stderr).toBe(1);
+      expect(rows(failing.stdout)).toEqual([
+        { number: 3, failed: false },
+        { number: 12, failed: true },
+      ]);
+      expect(failing.stderr).toContain(
+        "sdp q: 1 of 2 orientation queries failed: report each as a finding.\n",
+      );
     } finally {
       rmSync(place, { recursive: true, force: true });
     }
@@ -2096,6 +2129,63 @@ function flat(text: string): string {
 }
 
 /** Writes the files into a fresh extraction root, extracts it, and removes the root. */
+/** A copy of the orientation runner beside a probe body that throws, so no shipped body fails. */
+function failingRunner(): string {
+  const scripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
+  const place = mkdtempSync(join(tmpdir(), "sdp-orient-failing-"));
+  mkdirSync(join(place, "orientation"));
+  for (const file of ["orient.mjs", "q.mjs"]) {
+    copyFileSync(join(scripts, file), join(place, file));
+  }
+  for (const file of readdirSync(join(scripts, "orientation"))) {
+    copyFileSync(join(scripts, "orientation", file), join(place, "orientation", file));
+  }
+  writeFileSync(
+    join(place, "orientation/12-a-failing-probe.js"),
+    '// 12. A failing probe: a body that throws.\n// Teaches: nothing; the runner reports it\nthrow new Error("the probe fails");\n',
+  );
+  return place;
+}
+
+/**
+ * A module, written into `place` and preloaded before the orientation runner, that refuses what a
+ * sandbox refuses: a child's piped output with EPERM, as Codex's sandboxes do, and with `readOnly`
+ * a temporary directory too, as its read-only one does. A child it lets run is not preloaded.
+ */
+function refusing(place: string, { readOnly }: { readOnly: boolean }): string {
+  const path = join(place, readOnly ? "refuse-read-only.mjs" : "refuse-piped.mjs");
+  writeFileSync(
+    path,
+    [
+      'import { createRequire, syncBuiltinESMExports } from "node:module";',
+      "const require = createRequire(import.meta.url);",
+      'const childProcess = require("node:child_process");',
+      "const spawnSync = childProcess.spawnSync;",
+      "const piped = (options) =>",
+      "  options.input !== undefined ||",
+      "  [0, 1, 2].some((fd) =>",
+      '    [undefined, null, "pipe"].includes(',
+      '      typeof options.stdio === "string" ? options.stdio : options.stdio?.[fd],',
+      "    ),",
+      "  );",
+      "childProcess.spawnSync = (command, args, options = {}) =>",
+      "  piped(options)",
+      '    ? { error: Object.assign(new Error("spawnSync node EPERM"), { code: "EPERM" }), status: null }',
+      "    : spawnSync(command, args, options);",
+      ...(readOnly
+        ? [
+            'require("node:fs").mkdtempSync = () => {',
+            '  throw Object.assign(new Error("EROFS: read-only file system, mkdtemp"), { code: "EROFS" });',
+            "};",
+          ]
+        : []),
+      "syncBuiltinESMExports();",
+      "",
+    ].join("\n"),
+  );
+  return pathToFileURL(path).href;
+}
+
 function probeGraph(files: Readonly<Record<string, string>>) {
   const root = mkdtempSync(join(tmpdir(), "sdp-skill-probe-"));
   try {

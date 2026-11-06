@@ -16,7 +16,16 @@
 // `--timeout` stops the graph query, and the CLI process that runs it, after that many milliseconds.
 
 import { spawnSync } from "node:child_process";
-import { readdirSync, readFileSync, realpathSync } from "node:fs";
+import {
+  closeSync,
+  mkdtempSync,
+  openSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { inspect } from "node:util";
@@ -122,6 +131,21 @@ export function combinedBody(queries) {
 }
 
 /**
+ * The combined body for a run whose output this process cannot read. The answers print as the
+ * query prints them; when a query failed, the body prints them itself and throws, so the query,
+ * and with it the run, still exits 1.
+ */
+export function inheritedBody(queries) {
+  return [
+    `const answers = await (async () => {\n${combinedBody(queries)}\n})();`,
+    "const failed = answers.filter((answer) => answer.error !== undefined).length;",
+    "if (failed === 0) return answers;",
+    "process.stdout.write(`${JSON.stringify(answers, null, 2)}\\n`);",
+    "throw new Error(`${failed} of ${answers.length} orientation queries failed: report each as a finding.`);",
+  ].join("\n");
+}
+
+/**
  * A demonstration's answer, shortened: each list keeps its first item and counts the rest, and
  * each string keeps its first hundred characters.
  */
@@ -219,12 +243,51 @@ export function readSubjects(value, queries, selected) {
   return { subjects: parsed };
 }
 
+/**
+ * Runs Node on `args` and returns the child's status and output, which comes back through files
+ * in a fresh temporary directory: some sandboxes, Codex's among them, refuse a child's piped
+ * output, with EPERM or silently, yet let it write to a file this process opens. Where no
+ * temporary directory can be made, as in a read-only sandbox, the output comes back through
+ * pipes, and `refused` is set when those are refused too.
+ */
+function captured(args, options) {
+  let place;
+  try {
+    place = mkdtempSync(join(tmpdir(), "sdp-orient-"));
+  } catch {
+    const piped = spawnSync(process.execPath, args, { ...options, encoding: "utf8" });
+    return piped.error?.code === "EPERM" ? { ...piped, refused: true } : piped;
+  }
+  try {
+    const out = openSync(join(place, "stdout"), "w");
+    const err = openSync(join(place, "stderr"), "w");
+    let run;
+    try {
+      // The child reads an empty standard input, as `input: ""` gives a piped one.
+      run = spawnSync(process.execPath, args, {
+        ...options,
+        input: undefined,
+        stdio: ["ignore", out, err],
+      });
+    } finally {
+      closeSync(out);
+      closeSync(err);
+    }
+    return {
+      ...run,
+      stdout: readFileSync(join(place, "stdout"), "utf8"),
+      stderr: readFileSync(join(place, "stderr"), "utf8"),
+    };
+  } finally {
+    rmSync(place, { recursive: true, force: true });
+  }
+}
+
 // The recipe catalog by category and the call forms, as the CLI prints them after refusing a call
 // with no body, each form run through the query runner beside this script: one source, so the
 // listing is the installed package's own. It derives no graph.
 function recipeCatalog(runtime) {
-  const listed = spawnSync(process.execPath, [runtime.cli, "q"], {
-    encoding: "utf8",
+  const listed = captured([runtime.cli, "q"], {
     env: runnerEnvironment(),
     input: "",
     timeout: 30_000,
@@ -281,15 +344,15 @@ function main(args) {
       : {};
   const subjects = given ?? defaults;
 
-  const graphQuery = queryArguments(runtime, [
-    combinedBody(queries),
-    "--params",
-    JSON.stringify({ subjects }),
-    "--json",
-    ...selected.args,
-  ]);
-  const result = spawnSync(process.execPath, graphQuery, {
-    encoding: "utf8",
+  const graphQuery = (body) =>
+    queryArguments(runtime, [
+      body,
+      "--params",
+      JSON.stringify({ subjects }),
+      "--json",
+      ...selected.args,
+    ]);
+  const result = captured(graphQuery(combinedBody(queries)), {
     maxBuffer: 256 * 1024 * 1024,
     timeout: options.timeout,
     killSignal: "SIGKILL",
@@ -300,13 +363,14 @@ function main(args) {
     );
     return 1;
   }
-  if (result.error?.code === "EPERM") {
-    // Some sandboxes refuse a child's captured output yet let it write to this process's own: the
-    // answers then print as the query prints them, with no title or command beside each.
+  if (result.refused) {
+    // A sandbox that refuses temporary files and piped output, as a read-only one does, may still
+    // let the query write to this process's own output: the answers then print as the query
+    // prints them, with no title, command or catalog, and a failed query still fails the run.
     console.error(
-      "orient: this environment refuses captured output (EPERM), so the answers follow as `sdp q --json` prints them: a list of numbered answers, each noted in references/orientation.md. Report an answer with an `error` as a finding.",
+      "orient: this environment refuses a temporary file and captured output (EPERM), so the answers follow as `sdp q --json` prints them: a list of numbered answers, with no title or command beside each. references/orientation.md notes each by number; run scripts/q.mjs with no body for the recipe catalog. Report an answer with an `error` as a finding.",
     );
-    const inherited = spawnSync(process.execPath, graphQuery, {
+    const inherited = spawnSync(process.execPath, graphQuery(inheritedBody(queries)), {
       stdio: "inherit",
       timeout: options.timeout,
       killSignal: "SIGKILL",
