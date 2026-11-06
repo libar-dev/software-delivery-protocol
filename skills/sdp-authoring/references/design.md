@@ -21,7 +21,9 @@ and a reviewer, another Spec's author, an adopter.
 
 A design grows in rounds over the Specs reviewed together, never one Spec to completion. Open
 each with the design slice (recipe 54, `dist/recipes/54-the-design-slice.js`) over the Pack or
-one perspective's members, and spend detail in depth order, first where others rest.
+one perspective's members, and spend detail in depth order, first where others rest. A round
+writes the next rung's evidence while the Spec still states the rung below, and its owner states
+that rung after reading it: a statement made before its evidence fails the floor.
 
 - `idea`: the outcome, its parent, the questions already visible.
 - `scoped`: actor, problem, relations, first rules or examples, keyed questions with deciders and

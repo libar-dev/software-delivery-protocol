@@ -36,7 +36,7 @@ runs through its runners, from the project root.
 
 Each asks you to rethink the shape:
 
-- Design entries or rules written into a Spec stated `idea`.
+- A capture that writes rules or Design entries: that is a design round (`sdp-authoring`).
 - Code that answers an open blocking question, or a rung stated while one on the target is open.
 - A drift alarm after your change (orientation 4's `driftAlarm`) on a Spec you did not mean to build
   below `ready`.

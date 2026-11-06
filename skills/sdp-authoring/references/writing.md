@@ -32,17 +32,20 @@ identity, readiness or review. Moving out takes the content with it, and a relat
 `constrainedBy`, `decidedBy` or `refines`; the content is never copied
 (`spec:decisions.content-only-sections`).
 
-## Admit a decision record
+## Admit a decision
 
-A decision record holds a choice that other choices and code rest on, so it is hard, expensive
-and slow to change. Admit one only when the choice:
+A decision holds a choice that later choices and code rest on, so it is hard, expensive and slow
+to change. Record one, as a Decision section or a `decision` Spec, only when the choice:
 
 - stays true after the work it shapes ships;
 - is hard to reverse, would surprise a reader without its context, and was made against a real
   alternative, written as `alternative:`: the three-part test the planning-truths placement
-  applies (`spec:decisions.planning-truths-placement`);
-- reaches beyond one Spec. A choice only one Spec rests on is that Spec's inline Decision
-  section.
+  applies (`spec:decisions.planning-truths-placement`).
+
+An admitted choice sits where the inline rule above puts it: inline in the one Spec it shapes by
+default, and a `decision` Spec of its own when another Spec rests on it too, or when it needs its
+own identity, readiness or review. How many Specs it shapes decides where it sits, never whether
+it is a decision.
 
 | Never a decision                                          | Its home                         |
 | --------------------------------------------------------- | -------------------------------- |
@@ -53,7 +56,8 @@ and slow to change. Admit one only when the choice:
 
 Read each `consequence:` against the same table: a plan inside a consequence turns the record
 into work. Open the rationale with why this choice is a decision at all. A session proposes a
-record below `ready`, and its owner states `ready` (`spec:decisions.decision-readiness-posture`).
+`decision` Spec below `ready`, and its owner states `ready`
+(`spec:decisions.decision-readiness-posture`).
 
 ## Write each entry
 
@@ -64,4 +68,7 @@ Write so a reader can check it, in the person's words:
 - An example: literal values for one case.
 - A question: one choice, its `decider`, and the asker's lean as `provisional`.
 - Why: once, in the narrative or a decision Spec, never repeated across rules.
-- Never a date, a status, a count or a work sequence: git, the graph and recipes carry them.
+- Never delivery bookkeeping: a session date, delivery state, a derived count or the order work
+  is built in. Git, the graph and recipes carry those. A domain's own dates, states, quantities,
+  bounds and step orders are content, such as an example's literal date, a constraint's limit or
+  a workflow's steps.
