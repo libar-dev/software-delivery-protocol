@@ -18,25 +18,29 @@ It reads the open-question register (recipe 20, `dist/recipes/20-open-question-r
 pinned declarations (recipe 24, `dist/recipes/24-pinned-declarations.js`) and rule coverage
 (recipe 34, `dist/recipes/34-rule-coverage.js`) for this Spec: `holds`, the blocking questions
 on it and on each Spec it rests on; `buildOn`, the non-blocking ones with their provisional
-readings; `declarations`, the names, signatures and shapes the code holds to
-(`spec:extraction.contract-declarations`); and `unexercised`, its keyed rules no enabled
-example exercises yet. Several Specs built together read as one design slice (recipe 54,
-`dist/recipes/54-the-design-slice.js`).
+readings; `noReading`, the non-blocking ones that give none; `declarations`, the names,
+signatures and shapes the code holds to (`spec:extraction.contract-declarations`);
+`unexercised`, its keyed rules no enabled example exercises yet; and `refinedBy`, the Specs
+refining it, which the brief leaves out.
 
-2. **When `holds` lists a question,** take it to its decider. Build only what does not depend on
-   the answer: code that answers it waits, and writing it anyway is a tripwire.
-3. **Tests first.** Each rule gets a test before the code that satisfies it. An example child
+2. **Settle the build slice.** The brief covers one Spec. For the rest of a feature, choose which
+   of `refinedBy` the work takes in, and read each one's brief too. Several Specs built together
+   read as one design slice (recipe 54, `dist/recipes/54-the-design-slice.js`, with `specs`).
+3. **When `holds` or `noReading` lists a question,** take it to its decider, or to whoever gave
+   the work when it names none. Build what does not depend on the answer meanwhile: code that
+   answers it waits, and writing it anyway is a tripwire.
+4. **Tests first.** Each rule gets a test before the code that satisfies it. An example child
    becomes executable as `sdp-authoring` teaches; otherwise the suite carries a top-level
    `specTest` anchor whose `verifies` names the Spec. A rule no example exercises still gets a
    test, and the author may want an example for it.
-4. **Write the code** to the pinned declarations and the rules. Private names, decomposition, file
+5. **Write the code** to the pinned declarations and the rules. Private names, decomposition, file
    layout and the algorithm behind a stated outcome are the build's. Bind it with a code anchor
    whose targets pass the promise test in `sdp-authoring`.
-5. **Leave open choices open.** Build on each `buildOn` question's provisional reading, and leave
+6. **Leave open choices open.** Build on each `buildOn` question's provisional reading, and leave
    the question open. A choice the Spec leaves open without a question goes back to it as a
    question or a change proposal ([proposals.md](proposals.md)), unless only the build can answer
    it. Code never settles what the Spec left open.
-6. **Close.** Orientation 10 shows the Spec `implemented` and `has-verifier`: a binding exists,
+7. **Close.** Orientation 10 shows the Spec `implemented` and `has-verifier`: a binding exists,
    never that it passed, which is CI's. Orientation 4's `driftAlarm` lists each Spec implemented
    below `ready`, with its floor. Expect none after building a `ready` Spec; a Spec built below
    `ready` stays listed until its owner states the rung. The hand-off names each listed Spec, the

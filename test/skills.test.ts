@@ -61,7 +61,7 @@ import { renderStudio } from "./helpers/studio-render.js";
 import { parse } from "yaml";
 import { describe, expect, it, vi } from "vitest";
 
-import { SPEC_KINDS } from "../src/model/descriptors.js";
+import { SPEC_KINDS, SPEC_READINESS } from "../src/model/descriptors.js";
 
 import {
   codeAnchor,
@@ -2935,9 +2935,11 @@ describe("the delivery-session on-ramp", () => {
 
   // spec:consumers.delivery-session-on-ramp#rule.buildFromSpec: the brief body the build reference
   // runs answers for its one Spec. A blocking question, on the Spec or on one it rests on, holds
-  // the work; a non-blocking one is built on through its provisional reading. Only the Spec's own
-  // declarations are listed, and only the keyed rule no enabled example exercises. A question and
-  // a declaration on a Spec the build does not rest on stay out.
+  // the work; a non-blocking one is built on through its provisional reading, and one with no
+  // reading is named apart, with its decider or the lack of one, never as a reading. Only the
+  // Spec's own declarations are listed, and each keyed rule no enabled example exercises, a
+  // declared example with no test included. A question and a declaration on a Spec the build does
+  // not rest on stay out, and a Spec refining it is named, its questions left to its own brief.
   it("reads a build's brief for its one Spec: what holds, what to build on, what to hold to", async () => {
     const build = read("references/build.md");
     const taught = shellFenceLines(build).filter((line) => line.includes("scripts/brief.js"));
@@ -2946,20 +2948,26 @@ describe("the delivery-session on-ramp", () => {
     ]);
     const behavior = (name: string, readiness: string, relations: string, body: string) =>
       `---\nid: spec:probe.${name}\nkind: behavior\naltitude: story\nreadiness: ${readiness}\nrelations: ${relations}\n---\n# ${name}\n\n## Intent\n- outcome: Probe the build.\n\n${body}\n`;
-    const question = (marker: string, text: string, decider: string, provisional?: string) =>
-      `- [${marker}] ${text}\n  - decider: ${decider}${provisional === undefined ? "" : `\n  - provisional: ${provisional}`}`;
+    const question = (marker: string, text: string, decider?: string, provisional?: string) =>
+      `- [${marker}] ${text}${decider === undefined ? "" : `\n  - decider: ${decider}`}${provisional === undefined ? "" : `\n  - provisional: ${provisional}`}`;
     const { graph, report } = probeGraph({
       "build.sdp.md": behavior(
         "build",
         "scoped",
         "\n  dependsOn: spec:probe.base",
-        `### Open questions\n${question("blocking #shape", "Which shape?", "owner", "a list")}\n${question("non-blocking #name", "Which name?", "owner", "probe")}\n\n## Behavior\n- rule: [#covered] The probe answers.\n- rule: [#uncovered] The probe refuses an empty input.\n- rule: The probe logs nothing.\n\n## Design\n- entry: \`probe(input: string): string[]\` is the entry point.`,
+        `### Open questions\n${question("blocking #shape", "Which shape?", "owner", "a list")}\n${question("non-blocking #name", "Which name?", "owner", "probe")}\n${question("non-blocking #tone", "Which tone?")}\n\n## Behavior\n- rule: [#covered] The probe answers.\n- rule: [#uncovered] The probe refuses an empty input.\n- rule: [#declared] The probe trims its input.\n- rule: The probe logs nothing.\n\n## Design\n- entry: \`probe(input: string): string[]\` is the entry point.`,
       ),
       "base.sdp.md": behavior(
         "base",
         "idea",
         "{}",
-        `### Open questions\n${question("blocking #footing", "Which footing?", "architect")}\n\n## Design\n- limit: \`LIMIT = 8\` caps the input.`,
+        `### Open questions\n${question("blocking #footing", "Which footing?", "architect")}\n${question("non-blocking #unit", "Which unit?", "owner")}\n\n## Design\n- limit: \`LIMIT = 8\` caps the input.`,
+      ),
+      "part.sdp.md": behavior(
+        "part",
+        "idea",
+        "\n  refines: spec:probe.build",
+        `### Open questions\n${question("blocking #partShape", "Which part shape?", "owner")}`,
       ),
       "other.sdp.md": behavior(
         "other",
@@ -2968,6 +2976,8 @@ describe("the delivery-session on-ramp", () => {
         `### Open questions\n${question("blocking #apart", "Apart?", "owner")}\n\n## Design\n- other: \`other(): void\` stands apart.`,
       ),
       "example.sdp.md": `---\nid: spec:probe.example\nkind: example\naltitude: story\nreadiness: idea\nrelations:\n  verifies: { target: spec:probe.build, exercises: [covered] }\n---\n# Example\n\n## Intent\n- outcome: Show the probe answering.\n\n\`\`\`gwt\nGiven an input {input: "a"}\nWhen the probe runs\nThen it answers {answer: "a"}\n\`\`\`\n`,
+      // Declared against a rule, but no test binds it: the rule stays unexercised.
+      "unbound.sdp.md": `---\nid: spec:probe.unbound\nkind: example\naltitude: story\nreadiness: idea\nrelations:\n  verifies: { target: spec:probe.build, exercises: [declared] }\n---\n# Unbound\n\n## Intent\n- outcome: Show the probe trimming.\n\n\`\`\`gwt\nGiven an input {input: " a "}\nWhen the probe runs\nThen it answers {answer: "a"}\n\`\`\`\n`,
       "suite.test.ts": anchoredSuite.replace("spec:probe.child", "spec:probe.example"),
     });
     expect(report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
@@ -2981,16 +2991,65 @@ describe("the delivery-session on-ramp", () => {
         "spec:probe.build#question.shape, decider owner",
       ],
       buildOn: ["spec:probe.build#question.name: probe"],
+      noReading: [
+        "spec:probe.base#question.unit, decider owner",
+        "spec:probe.build#question.tone, no decider named",
+      ],
       declarations: ["entry: probe(input: string): string[]"],
-      unexercised: ["spec:probe.build#rule.uncovered"],
+      unexercised: ["spec:probe.build#rule.uncovered", "spec:probe.build#rule.declared"],
       unkeyedRules: 1,
+      refinedBy: ["spec:probe.part (behavior)"],
     });
     // The steps read the brief by these fields: what holds the work, and what it builds on.
-    for (const field of ["holds", "buildOn", "declarations", "unexercised"])
+    for (const field of [
+      "holds",
+      "buildOn",
+      "noReading",
+      "declarations",
+      "unexercised",
+      "refinedBy",
+    ])
       expect({ field, named: build.includes(`\`${field}\``) }).toEqual({ field, named: true });
     expect(
       emptyHanded(await evaluateBody(brief, { graph, params: { spec: "spec:probe.none" } })),
     ).toBe("found: false");
+  });
+
+  // spec:consumers.delivery-session-on-ramp#rule.tripwires: the tripwire on a statement names the
+  // rungs an open blocking question holds, as the floor reads it: a Spec held by nothing else
+  // reaches `scoped`, so `scoped` stays lawful and every rung above it is held.
+  it("trips a statement only at the rungs an open blocking question holds", async () => {
+    const { graph } = probeGraph({
+      "held.sdp.md": probeCarrier(
+        "spec:probe.held",
+        "behavior",
+        "### Open questions\n- [blocking #way] Which way?\n  - decider: owner\n\n## Behavior\n- rule: The probe answers.",
+        "\n  dependsOn: spec:probe.footing",
+      ),
+      "footing.sdp.md": stubCarrier("spec:probe.footing"),
+    });
+    const preflight = (await evaluateBody("return await recipes(9, params)", {
+      graph,
+      params: { spec: "spec:probe.held" },
+    })) as { floorReached: string; aboveFloor: { failures: { clauseId: string }[] } };
+    expect(preflight.aboveFloor.failures.map((failure) => failure.clauseId)).toEqual([
+      "no-blocking-open-questions",
+    ]);
+    const held = SPEC_READINESS.slice(
+      SPEC_READINESS.indexOf(preflight.floorReached as (typeof SPEC_READINESS)[number]) + 1,
+    );
+    const tripwires = read("SKILL.md").split("\n## Tripwires\n")[1]?.split("\n## ")[0] ?? "";
+    const statement = flat(tripwires)
+      .split(/ - /u)
+      .find((bullet) => bullet.includes("blocking question"));
+    const rungs = (text: string) =>
+      [...text.matchAll(/`([a-z]+)`/gu)]
+        .map((match) => match[1] ?? "")
+        .filter((word) => SPEC_READINESS.includes(word as never));
+    // Before the colon, the statements it trips; after it, the rung that stays lawful.
+    const [trips = "", lawful = ""] = (statement ?? "").split(": ");
+    expect(rungs(trips)).toEqual(held);
+    expect(rungs(lawful)).toEqual([preflight.floorReached]);
   });
 
   // The check reports a base graph that is no graph where it reports the proposal's own schema
