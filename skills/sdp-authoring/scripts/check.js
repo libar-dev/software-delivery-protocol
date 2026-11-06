@@ -1,6 +1,7 @@
 // The authoring check, an `sdp q` body: each touched Spec's stated rung beside its floor, the
-// findings on the touched files, and what each other touched file records in the graph, read back
-// against the request. Pass every file you touched as `params.files`. It writes nothing.
+// findings on the touched files, what each other touched file records in the graph, read back
+// against the request, and each carrier path that matches no Spec or Pack. Pass every file you
+// touched as `params.files`, each relative to the root the graph derives at. It writes nothing.
 const files = params.files ?? [];
 const specs = g.specs().filter((s) => files.includes(s.file));
 const rungs = {};
@@ -18,9 +19,16 @@ const readBack = (n) => {
   return `${n.id} ${edges.map((e) => `${e.type} ${e.to}`).join(", ")}`.trim();
 };
 const others = files.filter((f) => !specs.some((s) => s.file === f));
+// A carrier path that reaches nothing was deleted, or written from another base than the root.
+const unmatched = others.filter(
+  (f) => /\.sdp\.(?:md|gherkin|ts)$/u.test(f) && g.byFile(f).nodes.length === 0,
+);
 return {
   rungs,
   findings: mine.map((f) => `${f.severity} ${f.validatorId} ${f.subjectId ?? f.file}`),
-  recorded: others.map((f) => [f, g.byFile(f).nodes.map(readBack)]),
+  recorded: others
+    .filter((f) => !unmatched.includes(f))
+    .map((f) => [f, g.byFile(f).nodes.map(readBack)]),
+  unmatched,
   errors: report.findings.filter((f) => f.severity === "error").length,
 };

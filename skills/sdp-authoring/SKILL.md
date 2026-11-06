@@ -31,20 +31,22 @@ and upgrading a corpus follows `docs/agent-surface/upgrade-guide.md`.
    touched: the files, not a summary, say what exists.
 2. **Edit the carrier** faithfully: the person's meaning, in their terms, each entry written as
    [writing.md](references/writing.md) says. A choice their words leave open, such as a value, a
-   mechanism or an output's shape, stays open: unstated, or an open question with their lean as
-   its `provisional` reading; an example that needs it uses that reading. Forms and refusals:
-   [carrier.md](references/carrier.md).
-3. **Check** with the shipped check body, `scripts/check.js`, passing every file you touched:
+   mechanism or an output's shape, stays open: unstated, or an open question, with their lean as
+   its `provisional` reading when they gave one; an example that needs it uses that reading.
+   Forms and refusals: [carrier.md](references/carrier.md).
+3. **Check** with the shipped check body, `scripts/check.js`, passing every file you touched,
+   each path relative to the root the graph derives at, the `--root` directory when you pass one:
 
 ```sh
 node <skill-dir>/../sdp-agent-surface/scripts/q.mjs "$(cat <skill-dir>/scripts/check.js)" --params '{"files":["<each file you touched>"]}'
 ```
 
 Done when each touched Spec states the rung you mean, at or below its floor; each finding is one
-you expect; `errors` is 0; and the change reads back as the person asked, nothing they left open
-settled and nothing added: each anchor's targets and edge types, a Pack's members in order and
-its framing, and each changed Spec entry whole (recipe 3,
-`dist/recipes/03-what-does-this-spec-guarantee-and-who-verifies-it.js`).
+you expect; `unmatched`, each carrier path that names no Spec or Pack at that root, holds only
+files you deleted, since a path from another base checks nothing; `errors` is 0; and the change
+reads back as the person asked, nothing they left open settled and nothing added: each anchor's
+targets and edge types, a Pack's members in order and its framing, and each changed Spec entry
+whole (recipe 3, `dist/recipes/03-what-does-this-spec-guarantee-and-who-verifies-it.js`).
 
 A refused carrier stops every query in its root and names each refusal's `file:line`. The loop
 runs no `sdp validate`, `sdp build` or publisher, each of which removes the five generated page

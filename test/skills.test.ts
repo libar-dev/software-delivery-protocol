@@ -255,6 +255,7 @@ describe("the authoring on-ramp", () => {
         ["src/lookalike.ts", []],
         ["src/single-star.ts", []],
       ],
+      unmatched: [],
       errors: 0,
     });
 
@@ -268,6 +269,39 @@ describe("the authoring on-ramp", () => {
     expect(answer.rungs["spec:orders.create-order"]).toBe("stated defined, floor scoped");
     expect(answer.findings).toContain("error honesty/readiness-floor spec:orders.create-order");
     expect(answer.errors).toBe(1);
+  });
+
+  // #rule.opensOnGraph: a path is read at the root the graph derives at, so a carrier path written
+  // from another base, as from a project above the root a call names, matches no Spec or Pack and
+  // says so, never reading as a clean check. A code file has no such test: it may bind nothing.
+  it("names each carrier path that matches no Spec or Pack at the root it checks", async () => {
+    const packFile = "specs/checkout-flow.pack.sdp.md";
+    const { graph, report } = probeGraph({
+      ...taughtCorpus(),
+      [packFile]:
+        "---\nid: pack:orders.checkout-flow\nspecs:\n  - spec:orders.create-order\n---\n# Checkout flow\n\nThe flow.\n",
+    });
+    expect(report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+    const files = [
+      "fresh/specs/create-order.sdp.md",
+      `fresh/${packFile}`,
+      "fresh/specs/order.sdp.gherkin",
+      "fresh/src/constant.ts",
+      "specs/create-order.sdp.md",
+      packFile,
+    ];
+    const answer = (await evaluateBody(authoringCheck(), { graph, params: { files } })) as {
+      rungs: Record<string, string>;
+      recorded: [string, unknown][];
+      unmatched: string[];
+    };
+    expect(answer.unmatched).toEqual(files.slice(0, 3));
+    expect(Object.keys(answer.rungs)).toEqual(["spec:orders.create-order"]);
+    expect(answer.recorded.map(([file]) => file)).toEqual(["fresh/src/constant.ts", packFile]);
+    // The loop's step reads the answer by this field.
+    expect(flat(readFileSync(join(repoRoot, authoringFile("SKILL.md")), "utf8"))).toContain(
+      "`unmatched`",
+    );
   });
 
   // #rule.opensOnGraph: the check reads back what an edit changed, so two lawful edits that differ

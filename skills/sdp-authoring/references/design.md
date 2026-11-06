@@ -20,14 +20,16 @@ and a reviewer, another Spec's author, an adopter.
 ## Rounds
 
 A design grows in rounds over the Specs reviewed together, never one Spec to completion. Open
-each with the design slice (recipe 54, `dist/recipes/54-the-design-slice.js`) over the Pack or
-one perspective's members, and spend detail in depth order, first where others rest. A round
-writes the next rung's evidence while the Spec still states the rung below, and its owner states
-that rung after reading it: a statement made before its evidence fails the floor.
+each with the design slice (recipe 54, `dist/recipes/54-the-design-slice.js`) over the Pack, one
+perspective's members, or the Specs you name as `specs` when no Pack holds a slice that small,
+such as one Spec and those it rests on. Spend detail in depth order, first where others rest. A
+round writes the next rung's evidence while the Spec still states the rung below, and its owner
+states that rung after reading it: a statement made before its evidence fails the floor.
 
 - `idea`: the outcome, its parent, the questions already visible.
-- `scoped`: actor, problem, relations, first rules or examples, keyed questions with deciders and
-  provisional readings, `decidedBy` for each decision needed.
+- `scoped`: actor, problem, relations, first rules or examples, keyed questions with their
+  deciders and a `provisional` reading where the person gave a lean, and each choice that passes
+  the admission test in [writing.md](writing.md), where it says; a round may admit none.
 - `defined`: every behavior a rule; blocking questions answered or moved to a decision Spec;
   shared names keyed; a component design for each component the code lacks; the example space.
 - `ready`: no new detail; what it rests on states `defined`, and a person who read it in its

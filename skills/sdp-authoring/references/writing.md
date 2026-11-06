@@ -45,7 +45,12 @@ to change. Record one, as a Decision section or a `decision` Spec, only when the
 An admitted choice sits where the inline rule above puts it: inline in the one Spec it shapes by
 default, and a `decision` Spec of its own when another Spec rests on it too, or when it needs its
 own identity, readiness or review. How many Specs it shapes decides where it sits, never whether
-it is a decision.
+it is a decision. A Decision section holds one choice: a second one shaping the same Spec stands
+as a `decision` Spec it names by `decidedBy`.
+
+A person who says "we decided" may be stating a rule, such as "a cancelled order keeps its
+number". Admit it only on the test above, from what they said: never invent an alternative or a
+rationale to admit a decision.
 
 | Never a decision                                          | Its home                         |
 | --------------------------------------------------------- | -------------------------------- |
@@ -66,7 +71,8 @@ Write so a reader can check it, in the person's words:
 - `outcome:` the change for its actor, without the mechanism.
 - A rule: one obligation a test can check. Split a rule that joins two obligations.
 - An example: literal values for one case.
-- A question: one choice, its `decider`, and the asker's lean as `provisional`.
+- A question: one choice and its `decider`, with the asker's lean as `provisional` only when
+  they gave one.
 - Why: once, in the narrative or a decision Spec, never repeated across rules.
 - Never delivery bookkeeping: a session date, delivery state, a derived count or the order work
   is built in. Git, the graph and recipes carry those. A domain's own dates, states, quantities,
