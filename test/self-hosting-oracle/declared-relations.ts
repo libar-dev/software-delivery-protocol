@@ -2039,6 +2039,12 @@ export const expectedDeclaredRelations: readonly (readonly [
     "the mention audit reads a caller's intended mentions with their reasons",
   ],
   [
+    "spec:consumers.adopter-on-ramp.mini-example",
+    "refines",
+    "spec:consumers.adopter-on-ramp",
+    "a newcomer learns the homes and grammar the on-ramps teach from a corpus small enough to read whole",
+  ],
+  [
     "spec:consumers.adopter-on-ramp",
     "refines",
     "spec:consumers.authoring-on-ramp",
