@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 import { packageRoot } from "../package-root.js";
@@ -68,12 +68,28 @@ export function shippedRecipeCategories(): readonly RecipeCategory[] {
   return shipped;
 }
 
+/** Where a project installs the package, relative to the project's root. */
+const INSTALLED_PATH = ["node_modules", "@libar-dev", "software-delivery-protocol"] as const;
+
+/** Whether two paths name one directory once their links resolve; false when either is missing. */
+function samePlace(left: string, right: string): boolean {
+  try {
+    return realpathSync(left) === realpathSync(right);
+  } catch {
+    return false;
+  }
+}
+
 /**
- * The package directory `root` as `cwd` reaches it, ending in `/`: empty at the package root, and
- * led by `./` when it would start with `-`, so a command never reads the path as an option.
+ * The package directory `root` as `cwd` reaches it, ending in `/`: empty at the package root,
+ * through `cwd`'s own `node_modules/@libar-dev/software-delivery-protocol` when that path links to
+ * `root`, as a package manager links it from its store, and led by `./` when it would start with
+ * `-`, so a command never reads the path as an option.
  */
 export function packagePrefix(cwd: string, root: string): string {
-  const path = relative(cwd, root).split(sep).join("/");
+  const installed = join(cwd, ...INSTALLED_PATH);
+  const target = installed !== root && samePlace(installed, root) ? installed : root;
+  const path = relative(cwd, target).split(sep).join("/");
   if (path === "") return "";
   return path.startsWith("-") ? `./${path}/` : `${path}/`;
 }

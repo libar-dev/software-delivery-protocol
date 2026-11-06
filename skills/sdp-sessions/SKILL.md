@@ -25,7 +25,7 @@ runs through its runners, from the project root.
 - No target: orientation 5, the roadmap (recipe 53, `dist/recipes/53-the-roadmap.js`). An entry's
   need (`spec:consumers.roadmap#rule.specNeed`) says what realization is unfinished, never what
   work is allowed.
-- Named Specs: orientation 10 with them as subjects; promotion preflight (recipe 9,
+- Named Specs: orientation 10 with them as its `specs` subject; promotion preflight (recipe 9,
   `dist/recipes/09-promotion-preflight.js`) on each Spec whose rung you touch.
 - A changeset: orientation 9 with the changed files.
 - Anything else: the catalog's category for the task, such as
@@ -36,15 +36,19 @@ runs through its runners, from the project root.
 
 Each asks you to rethink the shape:
 
-- Design entries or rules written into a Spec stated `idea`.
-- Code written, or a rung stated, while a blocking question on the target is open.
-- A drift alarm after your change (orientation 4's `driftAlarm`).
+- A capture that writes rules or Design entries: that is a design round (`sdp-authoring`).
+- Code that answers an open blocking question, or a `defined` or `ready` statement while one on
+  the target is open: those are the rungs it holds, and `scoped` stays lawful.
+- A drift alarm after your change (orientation 4's `driftAlarm`) on a Spec you did not mean to build
+  below `ready`.
 - A Design entry slimmed before the distillation boundary of `spec:model.enrichment-lifecycle`.
   Slimming candidates (recipe 39, `dist/recipes/39-slimming-candidates.js`) are candidates:
   compare each with its bound artifact, and keep every why.
 
 ## Branches
 
+- Building a Spec, from reading its brief in the graph to closing on its delivery facts:
+  [build.md](references/build.md).
 - A Pack design pass: [design-pass.md](references/design-pass.md).
 - Review findings against Specs, or a change proposal to apply from a reviewer, the Studio or a
   vault: [proposals.md](references/proposals.md).
@@ -53,9 +57,9 @@ Each asks you to rethink the shape:
 ## Hand off
 
 Name the targets, the changed files, each target's stated and derived readiness, the findings and
-open questions, and the recipe files or bodies, with parameters, that re-measure them. An arc
-hand-off also names the Spec ids carrying the arc's refusals, guarantees and holds, in the homes
-`spec:decisions.planning-truths-placement` rules. A brief to another agent is a hand-off: the skill
+open questions, and the recipe files or bodies, with parameters, that re-measure them. A
+hand-off for work spanning several sessions also names the Spec ids carrying its refusals,
+guarantees and holds, in the homes `spec:decisions.planning-truths-placement` rules. A brief to another agent is a hand-off: the skill
 to load, and the queries that scope the work and show it done. One run from the project root
 re-measures findings, drift, the changed files' reach and the targets:
 `node <skill-dir>/../sdp-agent-surface/scripts/orient.mjs --only 4,9,10 --subjects '{"9":{"files":["…"]},"10":{"specs":["spec:…"]}}'`.

@@ -2039,6 +2039,24 @@ export const expectedDeclaredRelations: readonly (readonly [
     "the mention audit reads a caller's intended mentions with their reasons",
   ],
   [
+    "spec:consumers.adopter-on-ramp.mini-example",
+    "refines",
+    "spec:consumers.adopter-on-ramp",
+    "a newcomer learns the homes and grammar the on-ramps teach from a corpus small enough to read whole",
+  ],
+  [
+    "spec:consumers.adopter-on-ramp.mini-example",
+    "dependsOn",
+    "spec:consumers.spec-studio.publisher",
+    "the walkthrough reads the page set the publisher writes from the example's own root",
+  ],
+  [
+    "spec:consumers.adopter-on-ramp.mini-example",
+    "dependsOn",
+    "spec:extraction.delivery-facts",
+    "the example's one code anchor and one bound test show the facts this law derives from bindings",
+  ],
+  [
     "spec:consumers.adopter-on-ramp",
     "refines",
     "spec:consumers.authoring-on-ramp",
@@ -2067,6 +2085,18 @@ export const expectedDeclaredRelations: readonly (readonly [
     "dependsOn",
     "spec:carrier.markdown-body-grammar",
     "the grammar table points at the closed body grammar this Spec states",
+  ],
+  [
+    "spec:consumers.adopter-on-ramp",
+    "dependsOn",
+    "spec:extraction.excludes",
+    "the skill teaches the root-relative exclusions that keep fixtures and copies out of a corpus",
+  ],
+  [
+    "spec:consumers.adopter-on-ramp",
+    "dependsOn",
+    "spec:model.stable-ids",
+    "the skill teaches that a Spec's identity is its id, so its file can move freely",
   ],
   [
     "spec:consumers.adopter-on-ramp",
@@ -2151,6 +2181,30 @@ export const expectedDeclaredRelations: readonly (readonly [
     "dependsOn",
     "spec:carrier.step-keys",
     "the skill teaches keying an example step so its binding survives rewording",
+  ],
+  [
+    "spec:consumers.authoring-on-ramp",
+    "dependsOn",
+    "spec:validation.kind-evidence",
+    "the skill teaches the evidence each kind's floor reads when an author chooses a kind",
+  ],
+  [
+    "spec:consumers.authoring-on-ramp",
+    "dependsOn",
+    "spec:model.spec-sections",
+    "the skill teaches keeping a section inline or moving it out to its kind twin",
+  ],
+  [
+    "spec:consumers.authoring-on-ramp",
+    "decidedBy",
+    "spec:decisions.content-only-sections",
+    "the skill teaches that promotion moves content out and links it, never copies it",
+  ],
+  [
+    "spec:consumers.authoring-on-ramp",
+    "decidedBy",
+    "spec:decisions.planning-truths-placement",
+    "the skill teaches the admission test this ruling applies to a decision record",
   ],
   [
     "spec:consumers.authoring-on-ramp",
@@ -2253,6 +2307,12 @@ export const expectedDeclaredRelations: readonly (readonly [
     "dependsOn",
     "spec:consumers.intent-composition",
     "the receive procedure routes and applies each change as the hand-off law states",
+  ],
+  [
+    "spec:consumers.delivery-session-on-ramp",
+    "dependsOn",
+    "spec:extraction.contract-declarations",
+    "a build holds its code to the pinned declarations the Spec states",
   ],
   [
     "spec:consumers.design-diff",

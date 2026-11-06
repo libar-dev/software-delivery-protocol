@@ -237,6 +237,7 @@ specs:
   - spec:consumers.intent-composition
   - spec:consumers.graph-first-planning
   - spec:consumers.adopter-on-ramp
+  - spec:consumers.adopter-on-ramp.mini-example
   - spec:consumers.shipped-protocol-corpus
   - spec:consumers.agent-client-support
   - spec:consumers.derived-readiness-banner

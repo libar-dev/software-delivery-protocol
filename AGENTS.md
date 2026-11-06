@@ -138,6 +138,9 @@ commercial.
   boundary, commit the work in progress saying what is incomplete, since git cannot recover
   uncommitted work. Push only on the user's explicit request; never use `git stash`.
 - Reviews travel as change proposals (`sdp-sessions`). Briefs and prompts stay in the session.
+- Say through the graph what the graph can say: a pull request, brief, hand-off or review gives
+  context as the `sdp q` body or recipe call that answers it, with its answer at a named commit,
+  and keeps prose for what no query carries. PR #45 is the example.
 
 ## Develop the engine
 

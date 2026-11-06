@@ -6,7 +6,9 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -287,6 +289,28 @@ describe("sdp q — the agent front door", () => {
       ),
     ).toBe("node_modules/@libar-dev/software-delivery-protocol/");
     expect(packagePrefix("/work", "/work/-sdp")).toBe("./-sdp/");
+  });
+
+  it("leads the package's paths through the path a project installs it at, past a store link", () => {
+    const place = realpathSync(mkdtempSync(join(tmpdir(), "sdp-catalog-linked-")));
+    try {
+      const store = join(place, "store", "software-delivery-protocol");
+      mkdirSync(store, { recursive: true });
+      mkdirSync(join(place, "project", "node_modules", "@libar-dev"), { recursive: true });
+      symlinkSync(
+        store,
+        join(place, "project", "node_modules", "@libar-dev", "software-delivery-protocol"),
+        "dir",
+      );
+      expect(packagePrefix(join(place, "project"), store)).toBe(
+        "node_modules/@libar-dev/software-delivery-protocol/",
+      );
+      expect(packagePrefix(join(place, "elsewhere"), store)).toBe(
+        "../store/software-delivery-protocol/",
+      );
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
   });
 
   it("reads the one file through a package path that starts with a hyphen", () => {

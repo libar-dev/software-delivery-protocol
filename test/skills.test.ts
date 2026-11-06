@@ -59,7 +59,9 @@ import { answeredStderr } from "./helpers/query-hint.js";
 import { renderStudio } from "./helpers/studio-render.js";
 
 import { parse } from "yaml";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import { SPEC_KINDS, SPEC_READINESS } from "../src/model/descriptors.js";
 
 import {
   codeAnchor,
@@ -154,6 +156,9 @@ function shellFenceLines(body: string): readonly string[] {
 
 const authoringDirectory = "skills/sdp-authoring";
 const authoringFile = (name: string) => join(authoringDirectory, name);
+/** The shipped check body the authoring loop's step 3 runs. */
+const authoringCheck = () =>
+  readFileSync(join(repoRoot, authoringFile("scripts/check.js")), "utf8");
 
 /** The bodies of one file's fences in one language, in order. */
 function fencesIn(path: string, lang: string): readonly string[] {
@@ -228,7 +233,7 @@ describe("the authoring on-ramp", () => {
   // anchor forms bind, and the two silent non-bindings show as empty rows. The structural-binding
   // rule: the taught `@sdpRole` extracts without a finding.
   it("checks an edit as taught: each rung against its floor, the files' findings, what each file records", async () => {
-    const check = onlyFence(authoringFile("SKILL.md"), "js");
+    const check = authoringCheck();
     const lawful = probeGraph(taughtCorpus());
     expect(lawful.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
     expect(await evaluateBody(check, { graph: lawful.graph, params: { files: touched } })).toEqual({
@@ -250,6 +255,7 @@ describe("the authoring on-ramp", () => {
         ["src/lookalike.ts", []],
         ["src/single-star.ts", []],
       ],
+      unmatched: [],
       errors: 0,
     });
 
@@ -265,10 +271,70 @@ describe("the authoring on-ramp", () => {
     expect(answer.errors).toBe(1);
   });
 
+  // #rule.opensOnGraph: a path is read at the root the graph derives at, so a carrier path written
+  // from another base, as from a project above the root a call names, matches no Spec or Pack and
+  // says so, never reading as a clean check. A code file has no such test: it may bind nothing.
+  it("names each carrier path that matches no Spec or Pack at the root it checks", async () => {
+    const packFile = "specs/checkout-flow.pack.sdp.md";
+    const { graph, report } = probeGraph({
+      ...taughtCorpus(),
+      [packFile]:
+        "---\nid: pack:orders.checkout-flow\nspecs:\n  - spec:orders.create-order\n---\n# Checkout flow\n\nThe flow.\n",
+    });
+    expect(report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+    const files = [
+      "fresh/specs/create-order.sdp.md",
+      `fresh/${packFile}`,
+      "fresh/specs/order.sdp.gherkin",
+      "fresh/src/constant.ts",
+      "specs/create-order.sdp.md",
+      packFile,
+    ];
+    const answer = (await evaluateBody(authoringCheck(), { graph, params: { files } })) as {
+      rungs: Record<string, string>;
+      recorded: [string, unknown][];
+      unmatched: string[];
+    };
+    expect(answer.unmatched).toEqual(files.slice(0, 3));
+    expect(Object.keys(answer.rungs)).toEqual(["spec:orders.create-order"]);
+    expect(answer.recorded.map(([file]) => file)).toEqual(["fresh/src/constant.ts", packFile]);
+    // The loop's step reads the answer by this field.
+    expect(flat(readFileSync(join(repoRoot, authoringFile("SKILL.md")), "utf8"))).toContain(
+      "`unmatched`",
+    );
+  });
+
+  // #rule.opensOnGraph: a path reads as the reader reads it, a leading `./` dropped, so a carrier
+  // path as `find` prints it selects its Spec and that Spec's warning, as its canonical form does.
+  it("checks a path with a leading ./ as the same path", async () => {
+    const file = "specs/alone.sdp.md";
+    const { graph } = probeGraph({
+      [file]: probeCarrier(
+        "spec:probe.alone",
+        "behavior",
+        "## Behavior\n- rule: The probe answers.",
+      ).replace("readiness: scoped", "readiness: idea"),
+    });
+    expect(validateGraph(graph).findings.map((f) => `${f.severity} ${f.validatorId}`)).toEqual([
+      "warning conformance/orphans",
+    ]);
+    const check = async (files: readonly string[]) =>
+      evaluateBody(authoringCheck(), { graph, params: { files } });
+    const canonical = await check([file]);
+    expect(canonical).toEqual({
+      rungs: { "spec:probe.alone": "stated idea, floor idea" },
+      findings: ["warning conformance/orphans spec:probe.alone"],
+      recorded: [],
+      unmatched: [],
+      errors: 0,
+    });
+    expect(await check([`./${file}`])).toEqual(canonical);
+  });
+
   // #rule.opensOnGraph: the check reads back what an edit changed, so two lawful edits that differ
   // only in what the person asked for, a Pack's order or an anchor's target, answer differently.
   it("reads back what an edit changed: a Pack's members in order and its framing, each anchor's edges", async () => {
-    const check = onlyFence(authoringFile("SKILL.md"), "js");
+    const check = authoringCheck();
     const packFile = "specs/checkout-flow.pack.sdp.md";
     const pack = (members: readonly string[]) =>
       `---\nid: pack:orders.checkout-flow\nspecs:\n${members.map((id) => `  - ${id}`).join("\n")}\n---\n# Checkout flow\n\nThe order a reviewer reads them in.\n`;
@@ -441,6 +507,15 @@ describe("the authoring on-ramp", () => {
     ).toEqual(["unresolved-address"]);
     await expect(run({ severity: "warn" })).rejects.toThrow(/diagnostics/u);
   });
+
+  // spec:consumers.authoring-on-ramp#rule.kindChoice: the kind guide offers every kind the model
+  // defines and no other, so an author choosing a kind sees the whole closed set.
+  it("offers every kind the model defines in the kind guide, and only those", () => {
+    const guide = readFileSync(join(repoRoot, authoringFile("references/writing.md")), "utf8");
+    const table = guide.split("\n## Choose the kind\n")[1]?.split("\n## ")[0] ?? "";
+    const offered = [...table.matchAll(/^\| `([a-z]+)` +\|/gmu)].map((match) => match[1] ?? "");
+    expect([...offered].sort()).toEqual([...SPEC_KINDS].sort());
+  });
 });
 
 const deliverySessionOnRampTestAnchor = specTest({
@@ -464,6 +539,31 @@ const graphFirstPlanningTestAnchor = specTest({
 void graphFirstPlanningTestAnchor;
 
 describe("Protocol skill assets", () => {
+  // spec:consumers.authoring-on-ramp#rule.entryWriting and
+  // spec:protocol.roadmap-replaces-plans#rule.openFindings: a question's provisional reading is a
+  // lean someone gave, never one written for them, wherever a skill or the upgrade guide teaches
+  // writing one.
+  it("writes a question's provisional reading only where someone gave a lean", () => {
+    const taught = [
+      "skills/sdp-authoring/SKILL.md",
+      "skills/sdp-authoring/references/design.md",
+      "skills/sdp-authoring/references/writing.md",
+      "skills/sdp-sessions/references/proposals.md",
+      "docs/agent-surface/upgrade-guide.md",
+    ];
+    let writes = 0;
+    for (const file of taught) {
+      const items = readFileSync(join(repoRoot, file), "utf8")
+        .split(/\n(?=\s*(?:-|\d+\.) |\n)/u)
+        .map(flat);
+      for (const item of items.filter((text) => /`provisional:?`/u.test(text))) {
+        writes += 1;
+        expect({ file, item, lean: item.includes("lean") }).toEqual({ file, item, lean: true });
+      }
+    }
+    expect(writes).toBeGreaterThanOrEqual(taught.length);
+  });
+
   // spec:consumers.graph-first-planning and the adopter outcome: each ruled home is one line
   // naming its carrying Spec, and that Spec resolves.
   it("names a resolving carrying Spec on every ruled home", () => {
@@ -1055,6 +1155,17 @@ describe("the graph-reading on-ramp", () => {
     for (const form of callForms)
       expect(form).toMatch(/^ {2}node skills\/sdp-agent-surface\/scripts\/q\.mjs /u);
     expect(demonstration.stdout.endsWith(`## Recipes\n\n${listing}\n`)).toBe(true);
+    // #rule.recipeNaming: that call refuses the empty body and exits 1, and the reading skill says
+    // that its listing is the expected answer, so the refusal never reads as a failure.
+    expect({ status: empty.status, opens: empty.stderr.split("\n")[0] }).toEqual({
+      status: 1,
+      opens: "sdp q: the body is empty — `return` is the output contract.",
+    });
+    expect(
+      flat(readFileSync(join(repoRoot, "skills/sdp-agent-surface/SKILL.md"), "utf8")),
+    ).toContain(
+      "lists them by category after refusing the empty body, and exits 1: that listing is the expected answer",
+    );
     const shortened = section(demonstration.stdout, 10);
     expect(shortened).toMatch(/'… \d+ more'/u);
     expect(shortened).toContain(`--only 10 --subjects '{"10":{"specs":["<a Spec id>"]}}'`);
@@ -1167,20 +1278,7 @@ describe("the graph-reading on-ramp", () => {
 
   // A query that throws prints FAILED under its heading, and the run exits 1 asking for a finding.
   it("prints a query that throws as FAILED and exits 1, asking for a finding", () => {
-    const scripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
-    // A copy of the runner beside a probe body that throws, so no shipped body needs to fail.
-    const place = mkdtempSync(join(tmpdir(), "sdp-orient-failing-"));
-    mkdirSync(join(place, "orientation"));
-    for (const file of ["orient.mjs", "q.mjs"]) {
-      copyFileSync(join(scripts, file), join(place, file));
-    }
-    for (const file of readdirSync(join(scripts, "orientation"))) {
-      copyFileSync(join(scripts, "orientation", file), join(place, "orientation", file));
-    }
-    writeFileSync(
-      join(place, "orientation/12-a-failing-probe.js"),
-      '// 12. A failing probe: a body that throws.\n// Teaches: nothing; the runner reports it\nthrow new Error("the probe fails");\n',
-    );
+    const place = failingRunner();
     try {
       const run = spawnSync(process.execPath, [join(place, "orient.mjs"), "--only", "3,12"], {
         cwd: repoRoot,
@@ -1192,6 +1290,129 @@ describe("the graph-reading on-ramp", () => {
       expect(section(3)).not.toContain("FAILED");
       expect(section(12)).toContain("FAILED: Error: the probe fails");
       expect(run.stderr).toContain("orient: 1 of 2 queries failed: report each as a finding.\n");
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  // spec:consumers.reading-on-ramp#rule.orientationOutput: the runner reads its children's output
+  // through files, so a sandbox that refuses a child's piped output but lets it write a file, as
+  // Codex's workspace-write sandbox does, prints the run a plain environment prints.
+  it("prints the same run where piped output is refused but a file is not", () => {
+    const place = mkdtempSync(join(tmpdir(), "sdp-orient-refused-"));
+    try {
+      const orient = (preload: readonly string[]) =>
+        spawnSync(
+          process.execPath,
+          [
+            ...preload,
+            join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs"),
+            "--only",
+            "1,3",
+            "--root",
+            "examples/checkout-v1",
+          ],
+          { cwd: repoRoot, encoding: "utf8" },
+        );
+      const plain = orient([]);
+      expect(plain.status, plain.stderr).toBe(0);
+      expect(plain.stdout).toContain("\n## Recipes\n");
+      const refused = orient(["--import", refusing(place, { readOnly: false })]);
+      expect({ status: refused.status, stdout: refused.stdout, stderr: refused.stderr }).toEqual({
+        status: 0,
+        stdout: plain.stdout,
+        stderr: plain.stderr,
+      });
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  // #rule.orientationOutput: where no temporary directory can be made and piped output is refused
+  // too, as in Codex's read-only sandbox, the query writes to the runner's own output: numbered
+  // answers as `sdp q --json` prints them, and a query that fails still fails the run.
+  it("prints numbered answers, and fails a failed query, where a file and piped output are refused", () => {
+    const place = failingRunner();
+    try {
+      const orient = (only: string) =>
+        spawnSync(
+          process.execPath,
+          [
+            "--import",
+            refusing(place, { readOnly: true }),
+            join(place, "orient.mjs"),
+            "--only",
+            only,
+            "--root",
+            "examples/checkout-v1",
+          ],
+          { cwd: repoRoot, encoding: "utf8" },
+        );
+      const rows = (stdout: string) =>
+        (JSON.parse(stdout) as { number: number; error?: string }[]).map(({ number, error }) => ({
+          number,
+          failed: error !== undefined,
+        }));
+      const answered = orient("1,3");
+      expect(answered.status, answered.stderr).toBe(0);
+      expect(answered.stderr).toContain(
+        "orient: this environment refuses a temporary file and captured output (EPERM)",
+      );
+      expect(rows(answered.stdout)).toEqual([
+        { number: 1, failed: false },
+        { number: 3, failed: false },
+      ]);
+      const failing = orient("3,12");
+      expect(failing.status, failing.stderr).toBe(1);
+      expect(rows(failing.stdout)).toEqual([
+        { number: 3, failed: false },
+        { number: 12, failed: true },
+      ]);
+      expect(failing.stderr).toContain(
+        "sdp q: 1 of 2 orientation queries failed: report each as a finding.\n",
+      );
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  // #rule.runner: where a package manager links the installed package from its store or another
+  // checkout, the paths the runner prints reach the package as the project installs it.
+  it("prints the package as the project installs it, never through the link it resolves to", () => {
+    const place = realpathSync(mkdtempSync(join(tmpdir(), "sdp-linked-install-")));
+    const installed = "node_modules/@libar-dev/software-delivery-protocol";
+    try {
+      mkdirSync(join(place, "node_modules/@libar-dev"), { recursive: true });
+      symlinkSync(repoRoot, join(place, installed), "dir");
+      const run = spawnSync(
+        process.execPath,
+        [join(place, installed, "skills/sdp-agent-surface/scripts/q.mjs")],
+        { cwd: place, encoding: "utf8", input: "" },
+      );
+      expect(run.stderr).toContain(`The recipes by category; ${installed}/docs/agent-surface/`);
+      expect(run.stderr).toContain(
+        `node ${installed}/skills/sdp-agent-surface/scripts/q.mjs "$(cat ${installed}/dist/recipes/NN-slug.js)" --params JSON`,
+      );
+      // The direct form the adopter reference teaches runs the CLI the manifest names, there.
+      const manifest = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+        bin: { sdp: string };
+      };
+      const cli = `${installed}/${manifest.bin.sdp.replace(/^\.\//u, "")}`;
+      const adopter = readFileSync(
+        join(repoRoot, "skills/sdp-agent-surface/references/adopter.md"),
+        "utf8",
+      );
+      expect(shellFenceLines(adopter).filter((line) => line.startsWith(`node ${cli} `))).toEqual([
+        `node ${cli} generate . --exclude PATH`,
+      ]);
+      const version = spawnSync(process.execPath, [cli, "--version"], {
+        cwd: place,
+        encoding: "utf8",
+      });
+      expect({ status: version.status, out: /^sdp \S+/u.test(version.stdout) }).toEqual({
+        status: 0,
+        out: true,
+      });
     } finally {
       rmSync(place, { recursive: true, force: true });
     }
@@ -1679,6 +1900,40 @@ describe("adopter teaching", () => {
     }
     expect(authoring).toContain("spec:carrier.markdown-body-grammar");
   });
+
+  // spec:consumers.adopter-on-ramp#rule.corpusStart: the taught first command, run in an empty
+  // root, scaffolds the epic it names at `idea`, and that root derives with no error.
+  it("starts a corpus with the taught scaffold: the epic it names, at idea, in a fresh root", () => {
+    const guide = readFileSync(join(repoRoot, "skills/sdp-authoring/references/corpus.md"), "utf8");
+    const taught = shellFenceLines(guide).find((line) => line.includes(" sdp new spec "));
+    if (taught === undefined) throw new Error("corpus.md must teach the first scaffold");
+    const filled = taught
+      .replaceAll("<family>", "orders")
+      .replaceAll("<name>", "order-management")
+      .replace("<title>", "Order management")
+      .replace("<outcome>", "A shopper turns a cart into a paid order.");
+    const words = [...filled.matchAll(/"([^"]*)"|(\S+)/gu)].map((match) => match[1] ?? match[2]);
+    const args = words.slice(words.indexOf("spec") + 1).filter((word) => word !== undefined);
+    const root = mkdtempSync(join(tmpdir(), "sdp-corpus-start-"));
+    const capture = createCaptureOutput();
+    const cwd = vi.spyOn(process, "cwd").mockReturnValue(root);
+
+    try {
+      expect(runSdpCli(["new", "spec", ...args], capture.output)).toBe(0);
+      cwd.mockRestore();
+      const { graph } = extract({ root });
+      const rows = createReader(graph)
+        .specs()
+        .map((row) => [row.id, row.specKind, row.altitude, row.statedReadiness]);
+      expect(rows).toEqual([["spec:orders.order-management", "behavior", "epic", "idea"]]);
+      expect(
+        validateGraph(graph).findings.filter((finding) => finding.severity === "error"),
+      ).toEqual([]);
+    } finally {
+      cwd.mockRestore();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("adopter rule meanings", () => {
@@ -1899,6 +2154,63 @@ function flat(text: string): string {
 }
 
 /** Writes the files into a fresh extraction root, extracts it, and removes the root. */
+/** A copy of the orientation runner beside a probe body that throws, so no shipped body fails. */
+function failingRunner(): string {
+  const scripts = join(repoRoot, "skills/sdp-agent-surface/scripts");
+  const place = mkdtempSync(join(tmpdir(), "sdp-orient-failing-"));
+  mkdirSync(join(place, "orientation"));
+  for (const file of ["orient.mjs", "q.mjs"]) {
+    copyFileSync(join(scripts, file), join(place, file));
+  }
+  for (const file of readdirSync(join(scripts, "orientation"))) {
+    copyFileSync(join(scripts, "orientation", file), join(place, "orientation", file));
+  }
+  writeFileSync(
+    join(place, "orientation/12-a-failing-probe.js"),
+    '// 12. A failing probe: a body that throws.\n// Teaches: nothing; the runner reports it\nthrow new Error("the probe fails");\n',
+  );
+  return place;
+}
+
+/**
+ * A module, written into `place` and preloaded before the orientation runner, that refuses what a
+ * sandbox refuses: a child's piped output with EPERM, as Codex's sandboxes do, and with `readOnly`
+ * a temporary directory too, as its read-only one does. A child it lets run is not preloaded.
+ */
+function refusing(place: string, { readOnly }: { readOnly: boolean }): string {
+  const path = join(place, readOnly ? "refuse-read-only.mjs" : "refuse-piped.mjs");
+  writeFileSync(
+    path,
+    [
+      'import { createRequire, syncBuiltinESMExports } from "node:module";',
+      "const require = createRequire(import.meta.url);",
+      'const childProcess = require("node:child_process");',
+      "const spawnSync = childProcess.spawnSync;",
+      "const piped = (options) =>",
+      "  options.input !== undefined ||",
+      "  [0, 1, 2].some((fd) =>",
+      '    [undefined, null, "pipe"].includes(',
+      '      typeof options.stdio === "string" ? options.stdio : options.stdio?.[fd],',
+      "    ),",
+      "  );",
+      "childProcess.spawnSync = (command, args, options = {}) =>",
+      "  piped(options)",
+      '    ? { error: Object.assign(new Error("spawnSync node EPERM"), { code: "EPERM" }), status: null }',
+      "    : spawnSync(command, args, options);",
+      ...(readOnly
+        ? [
+            'require("node:fs").mkdtempSync = () => {',
+            '  throw Object.assign(new Error("EROFS: read-only file system, mkdtemp"), { code: "EROFS" });',
+            "};",
+          ]
+        : []),
+      "syncBuiltinESMExports();",
+      "",
+    ].join("\n"),
+  );
+  return pathToFileURL(path).href;
+}
+
 function probeGraph(files: Readonly<Record<string, string>>) {
   const root = mkdtempSync(join(tmpdir(), "sdp-skill-probe-"));
   try {
@@ -2442,7 +2754,7 @@ describe("the Studio on-ramp", () => {
       "probe.pack.sdp.md": manifest.replace("Framing.", "Reframed."),
     });
     expect(
-      await evaluateBody(onlyFence(authoringFile("SKILL.md"), "js"), {
+      await evaluateBody(authoringCheck(), {
         graph: edited.graph,
         params: { files: ["probe.pack.sdp.md"] },
       }),
@@ -2857,7 +3169,7 @@ describe("the delivery-session on-ramp", () => {
   const folder = join(repoRoot, "skills/sdp-sessions");
   const read = (file: string) => readFileSync(join(folder, file), "utf8");
   const teaching = () =>
-    ["SKILL.md", "references/proposals.md", "references/design-pass.md"]
+    ["SKILL.md", "references/build.md", "references/proposals.md", "references/design-pass.md"]
       .map(read)
       .join("\n")
       .replaceAll(/\s+/gu, " ");
@@ -2883,6 +3195,134 @@ describe("the delivery-session on-ramp", () => {
 
   it("checks a received proposal with the body and fields the proposal check has", async () => {
     await assertProposalRouting(read("references/proposals.md"));
+  });
+
+  // spec:consumers.delivery-session-on-ramp#rule.buildFromSpec: the brief body the build reference
+  // runs answers for its one Spec. A blocking question, on the Spec or on one it rests on, holds
+  // the work; a non-blocking one is built on through its provisional reading, and one with no
+  // reading is named apart, with its decider or the lack of one, never as a reading. Only the
+  // Spec's own declarations are listed, and each keyed rule no enabled example exercises, a
+  // declared example with no test included. A question and a declaration on a Spec the build does
+  // not rest on stay out, and a Spec refining it is named, its questions left to its own brief.
+  it("reads a build's brief for its one Spec: what holds, what to build on, what to hold to", async () => {
+    const build = read("references/build.md");
+    const taught = shellFenceLines(build).filter((line) => line.includes("scripts/brief.js"));
+    expect(taught).toEqual([
+      `node <skill-dir>/../sdp-agent-surface/scripts/q.mjs "$(cat <skill-dir>/scripts/brief.js)" --params '{"spec":"<the Spec>"}'`,
+    ]);
+    const behavior = (name: string, readiness: string, relations: string, body: string) =>
+      `---\nid: spec:probe.${name}\nkind: behavior\naltitude: story\nreadiness: ${readiness}\nrelations: ${relations}\n---\n# ${name}\n\n## Intent\n- outcome: Probe the build.\n\n${body}\n`;
+    const question = (marker: string, text: string, decider?: string, provisional?: string) =>
+      `- [${marker}] ${text}${decider === undefined ? "" : `\n  - decider: ${decider}`}${provisional === undefined ? "" : `\n  - provisional: ${provisional}`}`;
+    const { graph, report } = probeGraph({
+      "build.sdp.md": behavior(
+        "build",
+        "scoped",
+        "\n  dependsOn: spec:probe.base",
+        `### Open questions\n${question("blocking #shape", "Which shape?", "owner", "a list")}\n${question("non-blocking #name", "Which name?", "owner", "probe")}\n${question("non-blocking #tone", "Which tone?")}\n\n## Behavior\n- rule: [#covered] The probe answers.\n- rule: [#uncovered] The probe refuses an empty input.\n- rule: [#declared] The probe trims its input.\n- rule: The probe logs nothing.\n\n## Design\n- entry: \`probe(input: string): string[]\` is the entry point.`,
+      ),
+      "base.sdp.md": behavior(
+        "base",
+        "idea",
+        "{}",
+        `### Open questions\n${question("blocking #footing", "Which footing?", "architect")}\n${question("non-blocking #unit", "Which unit?", "owner")}\n\n## Design\n- limit: \`LIMIT = 8\` caps the input.`,
+      ),
+      "part.sdp.md": behavior(
+        "part",
+        "idea",
+        "\n  refines: spec:probe.build",
+        `### Open questions\n${question("blocking #partShape", "Which part shape?", "owner")}\n\n## Behavior\n- rule: The part answers in order.`,
+      ),
+      "other.sdp.md": behavior(
+        "other",
+        "idea",
+        "{}",
+        `### Open questions\n${question("blocking #apart", "Apart?", "owner")}\n\n## Design\n- other: \`other(): void\` stands apart.`,
+      ),
+      "example.sdp.md": `---\nid: spec:probe.example\nkind: example\naltitude: story\nreadiness: idea\nrelations:\n  verifies: { target: spec:probe.build, exercises: [covered] }\n---\n# Example\n\n## Intent\n- outcome: Show the probe answering.\n\n\`\`\`gwt\nGiven an input {input: "a"}\nWhen the probe runs\nThen it answers {answer: "a"}\n\`\`\`\n`,
+      // Declared against a rule, but no test binds it: the rule stays unexercised.
+      "unbound.sdp.md": `---\nid: spec:probe.unbound\nkind: example\naltitude: story\nreadiness: idea\nrelations:\n  verifies: { target: spec:probe.build, exercises: [declared] }\n---\n# Unbound\n\n## Intent\n- outcome: Show the probe trimming.\n\n\`\`\`gwt\nGiven an input {input: " a "}\nWhen the probe runs\nThen it answers {answer: "a"}\n\`\`\`\n`,
+      "suite.test.ts": anchoredSuite.replace("spec:probe.child", "spec:probe.example"),
+    });
+    expect(report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
+    const brief = readFileSync(join(folder, "scripts/brief.js"), "utf8");
+    const answer = await evaluateBody(brief, { graph, params: { spec: "spec:probe.build" } });
+
+    expect(answer).toEqual({
+      readiness: "stated scoped, floor scoped",
+      holds: [
+        "spec:probe.base#question.footing, decider architect",
+        "spec:probe.build#question.shape, decider owner",
+      ],
+      buildOn: ["spec:probe.build#question.name: probe"],
+      noReading: [
+        "spec:probe.base#question.unit, decider owner",
+        "spec:probe.build#question.tone, no decider named",
+      ],
+      declarations: ["entry: probe(input: string): string[]"],
+      unexercised: ["spec:probe.build#rule.uncovered", "spec:probe.build#rule.declared"],
+      unkeyedRules: 1,
+      refinedBy: ["spec:probe.part (behavior)"],
+    });
+    // The steps read the brief by these fields: what holds the work, and what it builds on.
+    for (const field of [
+      "holds",
+      "buildOn",
+      "noReading",
+      "declarations",
+      "unexercised",
+      "refinedBy",
+    ])
+      expect({ field, named: build.includes(`\`${field}\``) }).toEqual({ field, named: true });
+    expect(
+      emptyHanded(await evaluateBody(brief, { graph, params: { spec: "spec:probe.none" } })),
+    ).toBe("found: false");
+    // A brief names a rule only by its address, and an unkeyed one not at all, so the build reads
+    // each Spec it takes in as it read the first: step 1, whose recipe 3 gives the rule's text.
+    const part = { graph, params: { spec: "spec:probe.part" } };
+    expect(JSON.stringify(await evaluateBody(brief, part))).not.toContain("answers in order");
+    expect(JSON.stringify(await evaluateBody("return await recipes(3, params)", part))).toContain(
+      "The part answers in order.",
+    );
+    const settle = build.split(/^\d+\. /mu).find((step) => step.startsWith("**Settle")) ?? "";
+    expect(flat(settle)).toContain("repeat step 1 for each");
+  });
+
+  // spec:consumers.delivery-session-on-ramp#rule.tripwires: the tripwire on a statement names the
+  // rungs an open blocking question holds, as the floor reads it: a Spec held by nothing else
+  // reaches `scoped`, so `scoped` stays lawful and every rung above it is held.
+  it("trips a statement only at the rungs an open blocking question holds", async () => {
+    const { graph } = probeGraph({
+      "held.sdp.md": probeCarrier(
+        "spec:probe.held",
+        "behavior",
+        "### Open questions\n- [blocking #way] Which way?\n  - decider: owner\n\n## Behavior\n- rule: The probe answers.",
+        "\n  dependsOn: spec:probe.footing",
+      ),
+      "footing.sdp.md": stubCarrier("spec:probe.footing"),
+    });
+    const preflight = (await evaluateBody("return await recipes(9, params)", {
+      graph,
+      params: { spec: "spec:probe.held" },
+    })) as { floorReached: string; aboveFloor: { failures: { clauseId: string }[] } };
+    expect(preflight.aboveFloor.failures.map((failure) => failure.clauseId)).toEqual([
+      "no-blocking-open-questions",
+    ]);
+    const held = SPEC_READINESS.slice(
+      SPEC_READINESS.indexOf(preflight.floorReached as (typeof SPEC_READINESS)[number]) + 1,
+    );
+    const tripwires = read("SKILL.md").split("\n## Tripwires\n")[1]?.split("\n## ")[0] ?? "";
+    const statement = flat(tripwires)
+      .split(/ - /u)
+      .find((bullet) => bullet.includes("blocking question"));
+    const rungs = (text: string) =>
+      [...text.matchAll(/`([a-z]+)`/gu)]
+        .map((match) => match[1] ?? "")
+        .filter((word) => SPEC_READINESS.includes(word as never));
+    // Before the colon, the statements it trips; after it, the rung that stays lawful.
+    const [trips = "", lawful = ""] = (statement ?? "").split(": ");
+    expect(rungs(trips)).toEqual(held);
+    expect(rungs(lawful)).toEqual([preflight.floorReached]);
   });
 
   // The check reports a base graph that is no graph where it reports the proposal's own schema

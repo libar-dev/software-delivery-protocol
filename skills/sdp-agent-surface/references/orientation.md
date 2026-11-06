@@ -4,7 +4,10 @@ One note per answer of `scripts/orient.mjs`. Each body derives a subject when gi
 yours with `--subjects`, keyed by answer number, as the printed calls show. A query that fails is
 a finding to report. A number belongs to the commit it ran at: re-run it, never quote it. A
 printed run ends with the recipe catalog by category and the call forms, as `scripts/q.mjs` with
-no body prints them.
+no body prints them. Where a sandbox refuses a temporary file and captured output both, as a
+read-only one does, the runner says so and the answers print as `sdp q --json` prints them,
+numbered, with no title, command or catalog: read each by its number here, and run
+`scripts/q.mjs` with no body for the catalog.
 
 ## 1. The corpus and its surface
 

@@ -29,7 +29,8 @@ the project root: the runner derives the graph at the working directory.
 - **Orient** with `node <skill-dir>/scripts/orient.mjs`, passing what you arrive with as
   `--subjects`, keyed by answer number: `--subjects '{"8":{"terms":["vault"]}}'`. Read each
   answer with its note in [orientation.md](references/orientation.md).
-- **Answer with a recipe.** The runner with no body lists them by category; the index atop
+- **Answer with a recipe.** The runner with no body lists them by category after refusing the
+  empty body, and exits 1: that listing is the expected answer. The index atop
   `docs/agent-surface/recipes.md` maps each task to one, shipped as `dist/recipes/<NN>-<slug>.js`.
   Call `await recipes(N, params)` in a body, or run the file with `--params`. Recipe 56, The law
   a Spec rests on (`dist/recipes/56-the-law-a-spec-rests-on.js`), gives each relation's reason
@@ -89,8 +90,9 @@ node <skill-dir>/scripts/q.mjs 'const { nodes, specs } = g.byFile(params.file); 
 
 - A word, a file or a changeset: orientation 8 or 9 on your subject, then
   [arrive.md](references/arrive.md). A zero from one word matcher is no absence: run the other.
-- A Spec: orientation 10 for its outline and recipe 56 for its law; open the carrier at the
-  printed line, and fetch clipped rule text by address before quoting.
+- A Spec: orientation 10 for its outline, its subject `{"10":{"specs":["<id>"]}}`, and recipe 56
+  for its law; open the carrier at the printed line, and fetch clipped rule text by address
+  before quoting.
 - A Pack: orientation 10 with `pack` for its members' outlines, `g.packContext(id)` for their
   order and the framing, then recipe 56 on the member whose law you need; recipe 56 reads Specs
   only.

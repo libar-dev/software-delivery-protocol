@@ -8,9 +8,10 @@ Read this to write review findings against Specs or apply a received proposal. T
 
 - One proposal per review, its `base` the commit you read: the head you reviewed, or a preview's
   merge commit from its stamp. Changes run most severe first.
-- An open design finding becomes an open question with `decider`, `provisional` and `links`; a
-  deferral adds `trigger` (`spec:model.open-question-fields`). Findings against code or other
-  files stay line comments; a review proposing no Spec edit has no proposal.
+- An open design finding becomes an open question with its `decider` and `links`, and a
+  `provisional` reading only where the finding states a lean; a deferral adds `trigger`
+  (`spec:model.open-question-fields`). Findings against code or other files stay line comments; a
+  review proposing no Spec edit has no proposal.
 - Render the memo with the proposal memo (recipe 49, `dist/recipes/49-the-proposal-memo.js`).
   Check it as below: it is ready when the check sends nothing back.
 
