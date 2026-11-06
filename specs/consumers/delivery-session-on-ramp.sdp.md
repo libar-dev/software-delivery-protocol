@@ -20,6 +20,8 @@ relations:
       reason: the design loop hands its findings back as a change proposal checked against its base
     - target: spec:consumers.intent-composition
       reason: the receive procedure routes and applies each change as the hand-off law states
+    - target: spec:extraction.contract-declarations
+      reason: a build holds its code to the pinned declarations the Spec states
   decidedBy:
     target: spec:decisions.planning-truths-placement
     reason: a handoff names the Specs that carry refusals, guarantees and holds in the homes this ruling sets
@@ -35,6 +37,7 @@ A handoff names the Specs that carry the work, so the next session re-measures t
 - rule: [#advisoryShapes] Work shapes are advisory entries over one current graph, never phases or a required sequence, and a session may enter or revisit any shape; no shape or preflight authorizes, blocks, scopes or advances delivery work.
 - rule: [#taskSelectsShape] The requested task selects the work shape. The roadmap's need and a Spec's promotion preflight are evidence about unfinished realization, never permission: a fix, a refactor, an added test or a change to a built Spec is ordinary work. The skill names the recipes a shape starts from and points into the catalog's index for the rest.
 - rule: [#designLoop] The skill teaches an advisory Pack design loop: read the design diff from the last pass, compose a context bundle within a stated budget, narrow by perspective when needed, and return a change proposal for a base check before an agent applies it.
+- rule: [#buildFromSpec] The skill teaches building a Spec from its graph context: read the law it rests on, what it guarantees and who verifies it, its pinned declarations and its rule coverage; write the verifying tests before the code; hold the code to the pinned declarations and rules, leaving private names, decomposition and the algorithm to the build; build a choice the Spec leaves open on its provisional reading and return it to the Spec as a question or a change proposal rather than settle it in code; and close on the drift alarm and the Spec's delivery facts. An open blocking question on the target is a tripwire, and building below `ready` stays ordinary work.
 - rule: [#findingsProposal] Findings against Specs leave as one change proposal in the shape `spec:consumers.intent-composition.proposal` states, most severe first, with its memo; findings against code or other files stay review comments on their lines, and a review proposing no Spec edit has no proposal.
 - rule: [#receiveProposal] The skill carries the one procedure for applying a received change proposal: it checks the proposal against the graph at its base and routes each change from that check, as `spec:consumers.intent-composition#rule.changedScope` states, and the Studio and vault skills point into it.
 - rule: [#close] Close uses the drift alarm and changed-file blast radius; slimming is optional and preserves durable law and one prose owner. For a Design entry, the skill teaches the distillation boundary stated by `spec:model.enrichment-lifecycle`, compares the entry with its bound artifact before removal, and keeps every explanation of why.

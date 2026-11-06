@@ -16,6 +16,10 @@ relations:
       reason: the help points the reader at the corpus the package ships
     - target: spec:carrier.markdown-body-grammar
       reason: the grammar table points at the closed body grammar this Spec states
+    - target: spec:extraction.excludes
+      reason: the skill teaches the root-relative exclusions that keep fixtures and copies out of a corpus
+    - target: spec:model.stable-ids
+      reason: the skill teaches that a Spec's identity is its id, so its file can move freely
   decidedBy:
     - target: spec:decisions.planning-truths-placement
       reason: each ruled home the skill teaches is the home this ruling sets
@@ -41,4 +45,5 @@ The help names the on-ramps by path because an operator can reach the CLI withou
 - rule: [#grammarTable] The authoring skill keeps a short table of the Markdown body grammar, one row per section owner, citing `spec:carrier.markdown-body-grammar`, for the moment a refused carrier stops every query.
 - rule: [#derivedCounts] The authoring skill teaches that counts, registers, and review scope are derived. Census counts come from `sdp census`, open-question and mention registers from catalog recipes, and a change's review scope from changed-file blast radius. None is quoted into prose.
 - rule: [#helpNamesOnRamps] `sdp --help` names the shipped skills, the recipe catalog, and the Protocol's own `specs/` by package-relative path.
+- rule: [#corpusStart] The authoring skill teaches starting a corpus: the root the CLI derives at and the exclusions that narrow it, identity carried by the id and never the file path, a first epic scaffolded with `sdp new spec` and refined from there, a Pack for the body of work, and generated output kept out of version control except the registrars that tracked suites import.
 - rule: [#teachNeverCheck] The skills teach and never check. No validator reads an adopter's own tags, and an adopter's own policy checks stay the adopter's.

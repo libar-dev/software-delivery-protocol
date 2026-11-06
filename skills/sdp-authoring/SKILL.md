@@ -7,57 +7,37 @@ metadata:
 
 # Author Specs in their carriers
 
-The canonical carrier is the write surface; the graph, derived on every `sdp q` call, is the
-read model (`spec:consumers.edit-model`). Law lives in the Specs cited where it governs. In a
-project they ship with the package (`spec:consumers.shipped-protocol-corpus`): add the runner's
-`--protocol` to query them.
+The carrier is the write surface; the graph, derived on every `sdp q` call, is the read model
+(`spec:consumers.edit-model`). Law lives in the Specs cited where it governs; in a project they
+ship with the package (`spec:consumers.shipped-protocol-corpus`), and the runner's `--protocol`
+queries them.
 
-Run every command from the project root, where the runner reads the corpus: bodies through
+Run every command from the project root: bodies through
 `<skill-dir>/../sdp-agent-surface/scripts/q.mjs`, `<skill-dir>` being this skill's directory, and
-other verbs through the project's package runner. Under the installed package root, recipe N
-ships as `dist/recipes/<NN>-<slug>.js`, the recipes not named here sit in the catalog's
-categories, such as `docs/agent-surface/recipes.md#readiness-and-honesty`, and upgrading a corpus
-follows `docs/agent-surface/upgrade-guide.md`.
+other verbs through the project's package runner. Recipe N ships as `dist/recipes/<NN>-<slug>.js` under the installed package root, the
+catalog groups the rest by task, such as `docs/agent-surface/recipes.md#readiness-and-honesty`,
+and upgrading a corpus follows `docs/agent-surface/upgrade-guide.md`.
 
 ## The loop
 
 1. **Open on the query the work needs.** New intent: where is this concept (recipe 6,
-   `dist/recipes/06-where-is-this-concept.js`), then `sdp new spec` in the family it finds;
-   intent needing two kinds is two Specs. An edit: orientation 10 on the Spec, then the law it
-   rests on (recipe 56, `dist/recipes/56-the-law-a-spec-rests-on.js`). A design round: the
-   design slice (recipe 54, `dist/recipes/54-the-design-slice.js`), read as
-   [design.md](references/design.md) says. Resuming after a break or compaction, first run step
-   3's check over every file the work touched: the files, not a summary, say what exists.
-2. **Edit the carrier** faithfully: the person's meaning, in their terms. A choice their words
-   leave open, such as a value, a mechanism or an output's shape, stays open: unstated, or an
-   open question with their lean as its `provisional` reading, each as they put it; an example
-   that needs it uses that reading. Forms and refusals: [carrier.md](references/carrier.md).
-3. **Check** with this body, passing every file you touched as `--params '{"files":[…]}'`:
+   `dist/recipes/06-where-is-this-concept.js`); choose its kind as
+   [writing.md](references/writing.md) says, then run `sdp new spec` in the family the search
+   finds. Intent needing two kinds is two Specs; no corpus yet: [corpus.md](references/corpus.md).
+   An edit: orientation 10 on the Spec, then the law it rests on (recipe 56,
+   `dist/recipes/56-the-law-a-spec-rests-on.js`). A design round: the design slice (recipe 54,
+   `dist/recipes/54-the-design-slice.js`), read as [design.md](references/design.md) says.
+   Resuming after a break or compaction, first run step 3's check over every file the work
+   touched: the files, not a summary, say what exists.
+2. **Edit the carrier** faithfully: the person's meaning, in their terms, each entry written as
+   [writing.md](references/writing.md) says. A choice their words leave open, such as a value, a
+   mechanism or an output's shape, stays open: unstated, or an open question with their lean as
+   its `provisional` reading; an example that needs it uses that reading. Forms and refusals:
+   [carrier.md](references/carrier.md).
+3. **Check** with the shipped check body, `scripts/check.js`, passing every file you touched:
 
-```js
-const files = params.files ?? [];
-const specs = g.specs().filter((s) => files.includes(s.file));
-const rungs = {};
-for (const s of specs) {
-  const { floorReached } = await recipes(9, { spec: s.id });
-  rungs[s.id] = `stated ${s.statedReadiness}, floor ${floorReached}`;
-}
-const mine = report.findings.filter((f) => files.includes(f.file) || f.subjectId in rungs);
-const readBack = (n) => {
-  if (n.nodeType === "Pack") {
-    const { title, members, framing } = g.packContext(n.id);
-    return { pack: n.id, title, members: members.map((m) => m.id), framing };
-  }
-  const edges = graph.edges.filter((e) => e.from === n.id && e.claim === "anchored");
-  return `${n.id} ${edges.map((e) => `${e.type} ${e.to}`).join(", ")}`.trim();
-};
-const others = files.filter((f) => !specs.some((s) => s.file === f));
-return {
-  rungs,
-  findings: mine.map((f) => `${f.severity} ${f.validatorId} ${f.subjectId ?? f.file}`),
-  recorded: others.map((f) => [f, g.byFile(f).nodes.map(readBack)]),
-  errors: report.findings.filter((f) => f.severity === "error").length,
-};
+```sh
+node <skill-dir>/../sdp-agent-surface/scripts/q.mjs "$(cat <skill-dir>/scripts/check.js)" --params '{"files":["<each file you touched>"]}'
 ```
 
 Done when each touched Spec states the rung you mean, at or below its floor; each finding is one
@@ -91,8 +71,9 @@ Each truth has one home the floor and recipes read; no tag, status or side table
   (`spec:decisions.planning-truths-placement`).
 - Unsettled fact: a `constraint` Spec whose blocking question names the settling check; Specs it
   bounds declare `constrainedBy` (`spec:validation.typed-dependency-floor`).
-- Pending ruling: a `decision` Spec below `ready`, `decidedBy` from each Spec it shapes; the
-  owner states its `ready` (`spec:decisions.decision-readiness-posture`).
+- Pending ruling: a `decision` Spec below `ready`, admitted only past the test in
+  [writing.md](references/writing.md), `decidedBy` from each Spec it shapes; the owner states its
+  `ready` (`spec:decisions.decision-readiness-posture`).
 - Checked fact: an `example` that `verifies` it, bound by `specTest`; `has-verifier` is derived,
   never authored, and says a verifier exists, not that it passed (`spec:extraction.delivery-facts`).
 - Counts, registers, review scope: derived, never quoted

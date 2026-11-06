@@ -2070,6 +2070,18 @@ export const expectedDeclaredRelations: readonly (readonly [
   ],
   [
     "spec:consumers.adopter-on-ramp",
+    "dependsOn",
+    "spec:extraction.excludes",
+    "the skill teaches the root-relative exclusions that keep fixtures and copies out of a corpus",
+  ],
+  [
+    "spec:consumers.adopter-on-ramp",
+    "dependsOn",
+    "spec:model.stable-ids",
+    "the skill teaches that a Spec's identity is its id, so its file can move freely",
+  ],
+  [
+    "spec:consumers.adopter-on-ramp",
     "decidedBy",
     "spec:decisions.planning-truths-placement",
     "each ruled home the skill teaches is the home this ruling sets",
@@ -2151,6 +2163,30 @@ export const expectedDeclaredRelations: readonly (readonly [
     "dependsOn",
     "spec:carrier.step-keys",
     "the skill teaches keying an example step so its binding survives rewording",
+  ],
+  [
+    "spec:consumers.authoring-on-ramp",
+    "dependsOn",
+    "spec:validation.kind-evidence",
+    "the skill teaches the evidence each kind's floor reads when an author chooses a kind",
+  ],
+  [
+    "spec:consumers.authoring-on-ramp",
+    "dependsOn",
+    "spec:model.spec-sections",
+    "the skill teaches keeping a section inline or moving it out to its kind twin",
+  ],
+  [
+    "spec:consumers.authoring-on-ramp",
+    "decidedBy",
+    "spec:decisions.content-only-sections",
+    "the skill teaches that promotion moves content out and links it, never copies it",
+  ],
+  [
+    "spec:consumers.authoring-on-ramp",
+    "decidedBy",
+    "spec:decisions.planning-truths-placement",
+    "the skill teaches the admission test this ruling applies to a decision record",
   ],
   [
     "spec:consumers.authoring-on-ramp",
@@ -2253,6 +2289,12 @@ export const expectedDeclaredRelations: readonly (readonly [
     "dependsOn",
     "spec:consumers.intent-composition",
     "the receive procedure routes and applies each change as the hand-off law states",
+  ],
+  [
+    "spec:consumers.delivery-session-on-ramp",
+    "dependsOn",
+    "spec:extraction.contract-declarations",
+    "a build holds its code to the pinned declarations the Spec states",
   ],
   [
     "spec:consumers.design-diff",

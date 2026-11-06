@@ -45,6 +45,8 @@ Each asks you to rethink the shape:
 
 ## Branches
 
+- Building a Spec, from reading its brief in the graph to closing on its delivery facts:
+  [build.md](references/build.md).
 - A Pack design pass: [design-pass.md](references/design-pass.md).
 - Review findings against Specs, or a change proposal to apply from a reviewer, the Studio or a
   vault: [proposals.md](references/proposals.md).

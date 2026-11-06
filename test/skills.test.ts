@@ -59,7 +59,9 @@ import { answeredStderr } from "./helpers/query-hint.js";
 import { renderStudio } from "./helpers/studio-render.js";
 
 import { parse } from "yaml";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import { SPEC_KINDS } from "../src/model/descriptors.js";
 
 import {
   codeAnchor,
@@ -154,6 +156,9 @@ function shellFenceLines(body: string): readonly string[] {
 
 const authoringDirectory = "skills/sdp-authoring";
 const authoringFile = (name: string) => join(authoringDirectory, name);
+/** The shipped check body the authoring loop's step 3 runs. */
+const authoringCheck = () =>
+  readFileSync(join(repoRoot, authoringFile("scripts/check.js")), "utf8");
 
 /** The bodies of one file's fences in one language, in order. */
 function fencesIn(path: string, lang: string): readonly string[] {
@@ -228,7 +233,7 @@ describe("the authoring on-ramp", () => {
   // anchor forms bind, and the two silent non-bindings show as empty rows. The structural-binding
   // rule: the taught `@sdpRole` extracts without a finding.
   it("checks an edit as taught: each rung against its floor, the files' findings, what each file records", async () => {
-    const check = onlyFence(authoringFile("SKILL.md"), "js");
+    const check = authoringCheck();
     const lawful = probeGraph(taughtCorpus());
     expect(lawful.report.findings.filter((finding) => finding.severity === "error")).toEqual([]);
     expect(await evaluateBody(check, { graph: lawful.graph, params: { files: touched } })).toEqual({
@@ -268,7 +273,7 @@ describe("the authoring on-ramp", () => {
   // #rule.opensOnGraph: the check reads back what an edit changed, so two lawful edits that differ
   // only in what the person asked for, a Pack's order or an anchor's target, answer differently.
   it("reads back what an edit changed: a Pack's members in order and its framing, each anchor's edges", async () => {
-    const check = onlyFence(authoringFile("SKILL.md"), "js");
+    const check = authoringCheck();
     const packFile = "specs/checkout-flow.pack.sdp.md";
     const pack = (members: readonly string[]) =>
       `---\nid: pack:orders.checkout-flow\nspecs:\n${members.map((id) => `  - ${id}`).join("\n")}\n---\n# Checkout flow\n\nThe order a reviewer reads them in.\n`;
@@ -440,6 +445,15 @@ describe("the authoring on-ramp", () => {
       ),
     ).toEqual(["unresolved-address"]);
     await expect(run({ severity: "warn" })).rejects.toThrow(/diagnostics/u);
+  });
+
+  // spec:consumers.authoring-on-ramp#rule.kindChoice: the kind guide offers every kind the model
+  // defines and no other, so an author choosing a kind sees the whole closed set.
+  it("offers every kind the model defines in the kind guide, and only those", () => {
+    const guide = readFileSync(join(repoRoot, authoringFile("references/writing.md")), "utf8");
+    const table = guide.split("\n## Choose the kind\n")[1]?.split("\n## ")[0] ?? "";
+    const offered = [...table.matchAll(/^\| `([a-z]+)` +\|/gmu)].map((match) => match[1] ?? "");
+    expect([...offered].sort()).toEqual([...SPEC_KINDS].sort());
   });
 });
 
@@ -1679,6 +1693,40 @@ describe("adopter teaching", () => {
     }
     expect(authoring).toContain("spec:carrier.markdown-body-grammar");
   });
+
+  // spec:consumers.adopter-on-ramp#rule.corpusStart: the taught first command, run in an empty
+  // root, scaffolds the epic it names at `idea`, and that root derives with no error.
+  it("starts a corpus with the taught scaffold: the epic it names, at idea, in a fresh root", () => {
+    const guide = readFileSync(join(repoRoot, "skills/sdp-authoring/references/corpus.md"), "utf8");
+    const taught = shellFenceLines(guide).find((line) => line.includes(" sdp new spec "));
+    if (taught === undefined) throw new Error("corpus.md must teach the first scaffold");
+    const filled = taught
+      .replaceAll("<family>", "orders")
+      .replaceAll("<name>", "order-management")
+      .replace("<title>", "Order management")
+      .replace("<outcome>", "A shopper turns a cart into a paid order.");
+    const words = [...filled.matchAll(/"([^"]*)"|(\S+)/gu)].map((match) => match[1] ?? match[2]);
+    const args = words.slice(words.indexOf("spec") + 1).filter((word) => word !== undefined);
+    const root = mkdtempSync(join(tmpdir(), "sdp-corpus-start-"));
+    const capture = createCaptureOutput();
+    const cwd = vi.spyOn(process, "cwd").mockReturnValue(root);
+
+    try {
+      expect(runSdpCli(["new", "spec", ...args], capture.output)).toBe(0);
+      cwd.mockRestore();
+      const { graph } = extract({ root });
+      const rows = createReader(graph)
+        .specs()
+        .map((row) => [row.id, row.specKind, row.altitude, row.statedReadiness]);
+      expect(rows).toEqual([["spec:orders.order-management", "behavior", "epic", "idea"]]);
+      expect(
+        validateGraph(graph).findings.filter((finding) => finding.severity === "error"),
+      ).toEqual([]);
+    } finally {
+      cwd.mockRestore();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("adopter rule meanings", () => {
@@ -2442,7 +2490,7 @@ describe("the Studio on-ramp", () => {
       "probe.pack.sdp.md": manifest.replace("Framing.", "Reframed."),
     });
     expect(
-      await evaluateBody(onlyFence(authoringFile("SKILL.md"), "js"), {
+      await evaluateBody(authoringCheck(), {
         graph: edited.graph,
         params: { files: ["probe.pack.sdp.md"] },
       }),
@@ -2857,7 +2905,7 @@ describe("the delivery-session on-ramp", () => {
   const folder = join(repoRoot, "skills/sdp-sessions");
   const read = (file: string) => readFileSync(join(folder, file), "utf8");
   const teaching = () =>
-    ["SKILL.md", "references/proposals.md", "references/design-pass.md"]
+    ["SKILL.md", "references/build.md", "references/proposals.md", "references/design-pass.md"]
       .map(read)
       .join("\n")
       .replaceAll(/\s+/gu, " ");
@@ -2883,6 +2931,29 @@ describe("the delivery-session on-ramp", () => {
 
   it("checks a received proposal with the body and fields the proposal check has", async () => {
     await assertProposalRouting(read("references/proposals.md"));
+  });
+
+  // spec:consumers.delivery-session-on-ramp#rule.buildFromSpec: each recipe the build reference
+  // names for the brief answers for one Spec of a corpus a builder opens, before any code exists.
+  it("reads a build's brief through recipes that each answer for one Spec", async () => {
+    const build = read("references/build.md");
+    const numbers = [...build.matchAll(/\(recipe (\d+),/gu)].map((match) => Number(match[1]));
+    expect(numbers).toEqual(expect.arrayContaining([56, 3, 24, 34]));
+    const { graph } = extract({ root: join(repoRoot, "examples/checkout-v1") });
+    const subject = "spec:orders.create-order";
+    for (const number of numbers) {
+      const body = `return recipes(${String(number)}, params)`;
+      const { accepts } = (await evaluateBody(body, { graph, params: { "?": 1 } })) as {
+        accepts: string[];
+      };
+      const params = accepts.includes("spec")
+        ? { spec: subject }
+        : accepts.includes("specs")
+          ? { specs: [subject] }
+          : {};
+      const answer = await evaluateBody(body, { graph, params });
+      expect({ number, empty: emptyHanded(answer) }).toEqual({ number, empty: undefined });
+    }
   });
 
   // The check reports a base graph that is no graph where it reports the proposal's own schema
