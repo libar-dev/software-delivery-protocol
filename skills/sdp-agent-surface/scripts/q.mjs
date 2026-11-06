@@ -178,12 +178,23 @@ export function shellWord(value) {
 }
 
 /**
+ * This runner as the process was started: through the path that started it or `orient.mjs` beside
+ * it, so a link the project installs the package through stays in the path; otherwise where the
+ * runner resolves to.
+ */
+function invokedRunner(started = process.argv[1]) {
+  if (started === undefined) return runnerScript;
+  const sibling = join(dirname(resolve(started)), "q.mjs");
+  return realpathOrSelf(sibling) === realpathOrSelf(runnerScript) ? sibling : runnerScript;
+}
+
+/**
  * The command that runs this runner from `cwd`, `node <path>`: the path relative, with `/`
  * separators, led by `./` when it would start with `-`, and quoted for a shell. A call with no
  * body lists its call forms starting with it, so a copied form never reaches a global `sdp`.
  */
 export function runnerCommand(cwd = process.cwd()) {
-  const path = relative(realpathOrSelf(cwd), runnerScript).split(sep).join("/");
+  const path = relative(realpathOrSelf(cwd), invokedRunner()).split(sep).join("/");
   return `node ${shellWord(path.startsWith("-") ? `./${path}` : path)}`;
 }
 

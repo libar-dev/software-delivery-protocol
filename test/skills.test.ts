@@ -1245,6 +1245,94 @@ describe("the graph-reading on-ramp", () => {
     }
   }, 120_000);
 
+  // spec:consumers.reading-on-ramp#rule.orientationOutput: a sandbox that refuses a child's
+  // captured output while letting it write to the runner's own, as Codex's workspace-write sandbox
+  // does, still gets every answer. The probe refuses each captured spawn as such a sandbox does.
+  it("prints the answers through its own output where captured output is refused", () => {
+    const place = mkdtempSync(join(tmpdir(), "sdp-orient-refused-"));
+    const refuse = join(place, "refuse-captured.mjs");
+    writeFileSync(
+      refuse,
+      [
+        'import { createRequire, syncBuiltinESMExports } from "node:module";',
+        'const childProcess = createRequire(import.meta.url)("node:child_process");',
+        "const spawnSync = childProcess.spawnSync;",
+        "childProcess.spawnSync = (command, args, options = {}) =>",
+        '  options.stdio === "inherit"',
+        "    ? spawnSync(command, args, options)",
+        '    : { error: Object.assign(new Error("spawnSync node EPERM"), { code: "EPERM" }), status: null };',
+        "syncBuiltinESMExports();",
+        "",
+      ].join("\n"),
+    );
+    try {
+      const run = spawnSync(
+        process.execPath,
+        [
+          "--import",
+          pathToFileURL(refuse).href,
+          join(repoRoot, "skills/sdp-agent-surface/scripts/orient.mjs"),
+          "--only",
+          "1,3",
+          "--root",
+          "examples/checkout-v1",
+        ],
+        { cwd: repoRoot, encoding: "utf8" },
+      );
+      expect(run.status, run.stderr).toBe(0);
+      expect(run.stderr).toContain("orient: this environment refuses captured output (EPERM)");
+      const answers = JSON.parse(run.stdout) as { number: number; error?: string }[];
+      expect(answers.map(({ number, error }) => ({ number, error }))).toEqual([
+        { number: 1, error: undefined },
+        { number: 3, error: undefined },
+      ]);
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  // #rule.runner: where a package manager links the installed package from its store or another
+  // checkout, the paths the runner prints reach the package as the project installs it.
+  it("prints the package as the project installs it, never through the link it resolves to", () => {
+    const place = realpathSync(mkdtempSync(join(tmpdir(), "sdp-linked-install-")));
+    const installed = "node_modules/@libar-dev/software-delivery-protocol";
+    try {
+      mkdirSync(join(place, "node_modules/@libar-dev"), { recursive: true });
+      symlinkSync(repoRoot, join(place, installed), "dir");
+      const run = spawnSync(
+        process.execPath,
+        [join(place, installed, "skills/sdp-agent-surface/scripts/q.mjs")],
+        { cwd: place, encoding: "utf8", input: "" },
+      );
+      expect(run.stderr).toContain(`The recipes by category; ${installed}/docs/agent-surface/`);
+      expect(run.stderr).toContain(
+        `node ${installed}/skills/sdp-agent-surface/scripts/q.mjs "$(cat ${installed}/dist/recipes/NN-slug.js)" --params JSON`,
+      );
+      // The direct form the adopter reference teaches runs the CLI the manifest names, there.
+      const manifest = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+        bin: { sdp: string };
+      };
+      const cli = `${installed}/${manifest.bin.sdp.replace(/^\.\//u, "")}`;
+      const adopter = readFileSync(
+        join(repoRoot, "skills/sdp-agent-surface/references/adopter.md"),
+        "utf8",
+      );
+      expect(shellFenceLines(adopter).filter((line) => line.startsWith(`node ${cli} `))).toEqual([
+        `node ${cli} generate . --exclude PATH`,
+      ]);
+      const version = spawnSync(process.execPath, [cli, "--version"], {
+        cwd: place,
+        encoding: "utf8",
+      });
+      expect({ status: version.status, out: /^sdp \S+/u.test(version.stdout) }).toEqual({
+        status: 0,
+        out: true,
+      });
+    } finally {
+      rmSync(place, { recursive: true, force: true });
+    }
+  }, 120_000);
+
   // A reader that stops early, as `| head` does, keeps what it read, and the run ends at its own
   // status rather than on an unhandled EPIPE.
   it("ends quietly when a reader closes its output early", () => {

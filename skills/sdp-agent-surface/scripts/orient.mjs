@@ -281,27 +281,41 @@ function main(args) {
       : {};
   const subjects = given ?? defaults;
 
-  const result = spawnSync(
-    process.execPath,
-    queryArguments(runtime, [
-      combinedBody(queries),
-      "--params",
-      JSON.stringify({ subjects }),
-      "--json",
-      ...selected.args,
-    ]),
-    {
-      encoding: "utf8",
-      maxBuffer: 256 * 1024 * 1024,
-      timeout: options.timeout,
-      killSignal: "SIGKILL",
-    },
-  );
+  const graphQuery = queryArguments(runtime, [
+    combinedBody(queries),
+    "--params",
+    JSON.stringify({ subjects }),
+    "--json",
+    ...selected.args,
+  ]);
+  const result = spawnSync(process.execPath, graphQuery, {
+    encoding: "utf8",
+    maxBuffer: 256 * 1024 * 1024,
+    timeout: options.timeout,
+    killSignal: "SIGKILL",
+  });
   if (result.error?.code === "ETIMEDOUT") {
     console.error(
       `orient: the graph query did not finish within ${String(options.timeout)} ms and was stopped; run orientation again without --timeout.`,
     );
     return 1;
+  }
+  if (result.error?.code === "EPERM") {
+    // Some sandboxes refuse a child's captured output yet let it write to this process's own: the
+    // answers then print as the query prints them, with no title or command beside each.
+    console.error(
+      "orient: this environment refuses captured output (EPERM), so the answers follow as `sdp q --json` prints them: a list of numbered answers, each noted in references/orientation.md. Report an answer with an `error` as a finding.",
+    );
+    const inherited = spawnSync(process.execPath, graphQuery, {
+      stdio: "inherit",
+      timeout: options.timeout,
+      killSignal: "SIGKILL",
+    });
+    if (inherited.error !== undefined) {
+      console.error(`orient: the graph query did not run (${inherited.error.message}).`);
+      return 1;
+    }
+    return inherited.status ?? 1;
   }
   if (result.error !== undefined) {
     console.error(

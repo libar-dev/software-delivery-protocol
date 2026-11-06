@@ -89,8 +89,9 @@ node <skill-dir>/scripts/q.mjs 'const { nodes, specs } = g.byFile(params.file); 
 
 - A word, a file or a changeset: orientation 8 or 9 on your subject, then
   [arrive.md](references/arrive.md). A zero from one word matcher is no absence: run the other.
-- A Spec: orientation 10 for its outline and recipe 56 for its law; open the carrier at the
-  printed line, and fetch clipped rule text by address before quoting.
+- A Spec: orientation 10 for its outline, its subject `{"10":{"specs":["<id>"]}}`, and recipe 56
+  for its law; open the carrier at the printed line, and fetch clipped rule text by address
+  before quoting.
 - A Pack: orientation 10 with `pack` for its members' outlines, `g.packContext(id)` for their
   order and the framing, then recipe 56 on the member whose law you need; recipe 56 reads Specs
   only.

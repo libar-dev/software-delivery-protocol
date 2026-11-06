@@ -14,6 +14,12 @@ pnpm exec sdp q 'return g.specs().length' --root . --exclude PATH
 pnpm exec sdp generate . --exclude PATH
 ```
 
+Where no package runner links the binary, Node runs the installed CLI directly:
+
+```sh
+node node_modules/@libar-dev/software-delivery-protocol/dist/cli/sdp.js generate . --exclude PATH
+```
+
 ## The Protocol's own Specs
 
 Your project's graph does not hold them. Query them with the runner's `--protocol`, which selects
