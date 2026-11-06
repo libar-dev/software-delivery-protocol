@@ -17,7 +17,14 @@ contracts, registrars and all five page roots together; `npm run generate:exampl
 Design Review checks that it renders the same twice, and the census, Mermaid, Gherkin and Studio
 compare the prior tree's bytes with the current render. The self-hosting oracle,
 `test/self-hosting-oracle/`, pins every Spec, Pack member, anchor and retained warning, so a corpus
-or anchor change updates it in the same commit.
+or anchor change updates it in the same commit. A relation added or removed also moves the edge
+total among the frozen corpus totals in `test/self-hosting-graph.test.ts`.
+
+The gate's first step, the temporal guard (`check-temporal.mjs`), refuses an ISO date, a session,
+wave or fold handle and a numbered plan path in every tracked or unignored file outside the root
+folders it exempts, `specs/` and `examples/` included. The authoring skill counts a domain's literal
+date as content, but here the guard refuses it, and neither the authoring check nor promotion
+preflight reports the clash: run `npm run check:temporal` after writing one.
 
 ## Binding
 
