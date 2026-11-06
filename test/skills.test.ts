@@ -539,6 +539,31 @@ const graphFirstPlanningTestAnchor = specTest({
 void graphFirstPlanningTestAnchor;
 
 describe("Protocol skill assets", () => {
+  // spec:consumers.authoring-on-ramp#rule.entryWriting and
+  // spec:protocol.roadmap-replaces-plans#rule.openFindings: a question's provisional reading is a
+  // lean someone gave, never one written for them, wherever a skill or the upgrade guide teaches
+  // writing one.
+  it("writes a question's provisional reading only where someone gave a lean", () => {
+    const taught = [
+      "skills/sdp-authoring/SKILL.md",
+      "skills/sdp-authoring/references/design.md",
+      "skills/sdp-authoring/references/writing.md",
+      "skills/sdp-sessions/references/proposals.md",
+      "docs/agent-surface/upgrade-guide.md",
+    ];
+    let writes = 0;
+    for (const file of taught) {
+      const items = readFileSync(join(repoRoot, file), "utf8")
+        .split(/\n(?=\s*(?:-|\d+\.) |\n)/u)
+        .map(flat);
+      for (const item of items.filter((text) => /`provisional:?`/u.test(text))) {
+        writes += 1;
+        expect({ file, item, lean: item.includes("lean") }).toEqual({ file, item, lean: true });
+      }
+    }
+    expect(writes).toBeGreaterThanOrEqual(taught.length);
+  });
+
   // spec:consumers.graph-first-planning and the adopter outcome: each ruled home is one line
   // naming its carrying Spec, and that Spec resolves.
   it("names a resolving carrying Spec on every ruled home", () => {
@@ -3206,7 +3231,7 @@ describe("the delivery-session on-ramp", () => {
         "part",
         "idea",
         "\n  refines: spec:probe.build",
-        `### Open questions\n${question("blocking #partShape", "Which part shape?", "owner")}`,
+        `### Open questions\n${question("blocking #partShape", "Which part shape?", "owner")}\n\n## Behavior\n- rule: The part answers in order.`,
       ),
       "other.sdp.md": behavior(
         "other",
@@ -3252,6 +3277,15 @@ describe("the delivery-session on-ramp", () => {
     expect(
       emptyHanded(await evaluateBody(brief, { graph, params: { spec: "spec:probe.none" } })),
     ).toBe("found: false");
+    // A brief names a rule only by its address, and an unkeyed one not at all, so the build reads
+    // each Spec it takes in as it read the first: step 1, whose recipe 3 gives the rule's text.
+    const part = { graph, params: { spec: "spec:probe.part" } };
+    expect(JSON.stringify(await evaluateBody(brief, part))).not.toContain("answers in order");
+    expect(JSON.stringify(await evaluateBody("return await recipes(3, params)", part))).toContain(
+      "The part answers in order.",
+    );
+    const settle = build.split(/^\d+\. /mu).find((step) => step.startsWith("**Settle")) ?? "";
+    expect(flat(settle)).toContain("repeat step 1 for each");
   });
 
   // spec:consumers.delivery-session-on-ramp#rule.tripwires: the tripwire on a statement names the

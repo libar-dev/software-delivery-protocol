@@ -23,9 +23,11 @@ signatures and shapes the code holds to (`spec:extraction.contract-declarations`
 `unexercised`, its keyed rules no enabled example exercises yet; and `refinedBy`, the Specs
 refining it, which the brief leaves out.
 
-2. **Settle which Specs the build takes in.** The brief covers one Spec. For the rest of a feature, choose which
-   of `refinedBy` the work takes in, and read each one's brief too. Several Specs built together
-   read as one design slice (recipe 54, `dist/recipes/54-the-design-slice.js`, with `specs`).
+2. **Settle which Specs the build takes in.** The brief covers one Spec. For the rest of a
+   feature, choose which of `refinedBy` the work takes in, and repeat step 1 for each, following
+   its own `refinedBy` as far as the work goes: a brief names a rule only by its address, and
+   recipe 3 gives its text. Several Specs built together read as one design slice (recipe 54,
+   `dist/recipes/54-the-design-slice.js`, with `specs`).
 3. **When `holds` or `noReading` lists a question,** take it to its decider, or to whoever gave
    the work when it names none. Build what does not depend on the answer meanwhile: code that
    answers it waits, and writing it anyway is a tripwire.
