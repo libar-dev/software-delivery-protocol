@@ -8614,9 +8614,11 @@ export const consumersSpecs = [
     file: "specs/consumers/adopter-on-ramp.mini-example.sdp.md",
     title: "A newcomer learns the Protocol from one small worked corpus",
     narrative:
-      "The worked example beside the engine, checkout-v1, covers all eight kinds so the carriers could be designed and tested against it, which makes it a lab rather than a first read. This example specifies one small, real part of this repository, the temporal guard that keeps session handles and calendar dates out of files meant to stay true. A newcomer then learns the method on a subject that needs no invented business domain, and sees why git, not a durable file, records when something happened.",
+      "The worked example beside the engine, checkout-v1, covers all eight kinds so the carriers could be designed and tested against it, which makes it a lab rather than a first read. This example specifies one small, real part of this repository, the temporal guard that keeps session handles and calendar dates out of files meant to stay true. A newcomer then learns the method on a subject that needs no invented business domain, and sees why git, not a durable file, records when something happened. Each rung is shown by a different Spec in its final state, read at one commit, because a series of commits replaying one Spec's growth would need rewriting each time the Protocol changes a shape, which it does outright, with no compatibility path.",
     sections: {
       intent: {
+        actor:
+          "A newcomer to the Protocol who has read none of its Specs and opens this example first.",
         problem:
           "A newcomer who opens the Protocol meets either its own corpus of several hundred Specs or a lab example built to cover every kind, and neither can be read whole before the method makes sense.",
         outcome:
@@ -8638,9 +8640,54 @@ export const consumersSpecs = [
             decider: "owner",
             provisional: "`examples/temporal-guard/`, with its Spec ids in a `temporal` family",
           },
+          {
+            question:
+              "The guard refuses an ISO date or a session handle in every file it sweeps outside the folders it exempts at the repository's root, so how do the example's Specs and test state the tokens it bans without tripping it?",
+            blocking: true,
+            key: "datedInputs",
+            decider: "owner",
+            links: [
+              "spec:consumers.adopter-on-ramp.mini-example#question.realTool",
+              "spec:consumers.adopter-on-ramp.mini-example#question.placement",
+            ],
+            provisional:
+              "the test builds each banned token from parts at run time, as the guard's own test does, and the example Specs describe the token rather than write it, so the guard sweeps the example with no new exemption",
+          },
+          {
+            question:
+              "Which warnings does this repository's gate expect when it checks the example's corpus?",
+            blocking: false,
+            key: "expectedFindings",
+            decider: "owner",
+            provisional:
+              "none, as for checkout-v1: every `ready` Spec of the example outside its decisions has a verifier",
+          },
         ],
       },
-      behavior: {},
+      behavior: {
+        rules: [
+          "The example specifies this repository's temporal guard, which keeps session handles and calendar dates out of files meant to stay true, and invents no business domain.",
+          "The example's Specs are the temporal guard's only specification: no Spec in this repository's own corpus specifies the guard.",
+          "Each of the four readiness rungs, `idea`, `scoped`, `defined` and `ready`, is stated by at least one of the example's Specs.",
+          "The example holds one feature with two examples, one rule, one Pack and two decision records, one of which shows the alternative it refused.",
+          "The example's code carries one code anchor and its test one test anchor, so the graph derives `implemented` and `has-verifier` from them.",
+          "The example's tree holds fewer than 15 authored files, so a newcomer sees it whole on one screen.",
+          "The walkthrough is the example's own Studio pages plus a short guided path, and it moves across the example's Specs as they stand at one commit, never through a series of commits.",
+          "The example's Studio pages are published from its Specs and never committed.",
+          "This repository's gate derives and validates the example's corpus beside checkout-v1, which stays the lab, and fails on any error finding the example reports.",
+        ],
+        ruleKeys: {
+          realSubject: "rules[0]",
+          oneSpecification: "rules[1]",
+          everyRung: "rules[2]",
+          composition: "rules[3]",
+          bindings: "rules[4]",
+          sizeBound: "rules[5]",
+          walkthrough: "rules[6]",
+          pagesPublished: "rules[7]",
+          inGate: "rules[8]",
+        },
+      },
     },
     deliveryFacts: [],
   },

@@ -2045,6 +2045,18 @@ export const expectedDeclaredRelations: readonly (readonly [
     "a newcomer learns the homes and grammar the on-ramps teach from a corpus small enough to read whole",
   ],
   [
+    "spec:consumers.adopter-on-ramp.mini-example",
+    "dependsOn",
+    "spec:consumers.spec-studio.publisher",
+    "the walkthrough reads the page set the publisher writes from the example's own root",
+  ],
+  [
+    "spec:consumers.adopter-on-ramp.mini-example",
+    "dependsOn",
+    "spec:extraction.delivery-facts",
+    "the example's one code anchor and one bound test show the facts this law derives from bindings",
+  ],
+  [
     "spec:consumers.adopter-on-ramp",
     "refines",
     "spec:consumers.authoring-on-ramp",
