@@ -304,6 +304,33 @@ describe("the authoring on-ramp", () => {
     );
   });
 
+  // #rule.opensOnGraph: a path reads as the reader reads it, a leading `./` dropped, so a carrier
+  // path as `find` prints it selects its Spec and that Spec's warning, as its canonical form does.
+  it("checks a path with a leading ./ as the same path", async () => {
+    const file = "specs/alone.sdp.md";
+    const { graph } = probeGraph({
+      [file]: probeCarrier(
+        "spec:probe.alone",
+        "behavior",
+        "## Behavior\n- rule: The probe answers.",
+      ).replace("readiness: scoped", "readiness: idea"),
+    });
+    expect(validateGraph(graph).findings.map((f) => `${f.severity} ${f.validatorId}`)).toEqual([
+      "warning conformance/orphans",
+    ]);
+    const check = async (files: readonly string[]) =>
+      evaluateBody(authoringCheck(), { graph, params: { files } });
+    const canonical = await check([file]);
+    expect(canonical).toEqual({
+      rungs: { "spec:probe.alone": "stated idea, floor idea" },
+      findings: ["warning conformance/orphans spec:probe.alone"],
+      recorded: [],
+      unmatched: [],
+      errors: 0,
+    });
+    expect(await check([`./${file}`])).toEqual(canonical);
+  });
+
   // #rule.opensOnGraph: the check reads back what an edit changed, so two lawful edits that differ
   // only in what the person asked for, a Pack's order or an anchor's target, answer differently.
   it("reads back what an edit changed: a Pack's members in order and its framing, each anchor's edges", async () => {

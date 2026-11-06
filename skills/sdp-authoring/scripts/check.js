@@ -2,7 +2,8 @@
 // findings on the touched files, what each other touched file records in the graph, read back
 // against the request, and each carrier path that matches no Spec or Pack. Pass every file you
 // touched as `params.files`, each relative to the root the graph derives at. It writes nothing.
-const files = params.files ?? [];
+// A path reads as the reader reads it, a leading `./` dropped, so `find`'s paths check the same.
+const files = (params.files ?? []).map((file) => file.replace(/^(?:\.\/)+/u, ""));
 const specs = g.specs().filter((s) => files.includes(s.file));
 const rungs = {};
 for (const s of specs) {
