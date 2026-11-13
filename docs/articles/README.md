@@ -1,6 +1,6 @@
 # Media plan and living series playbook
 
-> **Pinned source baseline:** commit [`b5e0a8be`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753), the merge of [PR #36](https://github.com/libar-dev/software-delivery-protocol/pull/36).
+> **Pinned source baseline:** commit [`f990bded`](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3), the merge of [PR #34](https://github.com/libar-dev/software-delivery-protocol/pull/34), after [PR #40](https://github.com/libar-dev/software-delivery-protocol/pull/40). The previous pin was `b5e0a8be`, the merge of [PR #36](https://github.com/libar-dev/software-delivery-protocol/pull/36).
 > **Posture:** This directory is maintained on `main` through focused refresh PRs as the Protocol advances. The opening arc used a standing PR for review, but no permanent media diff is needed. Current behavior, seed-design intent and future directions must read as three different things. Re-run Protocol-corpus measurements at a new pin rather than inheriting them; adopter and historical counts keep their cited measurement sources. Evidence verification always uses a separate checkout of the exact source pin, so manuscript commits cannot change the answers being verified. The sync creates and removes that disposable checkout in both local and CI runs; its writes are described in Step 4.
 
 ## 1. The series argument
@@ -15,10 +15,10 @@ The series has to carry four consequences, not just the engine behind them:
 
 1. **One Spec, enriched in place.** Eight kinds, three altitudes and four stated readiness rungs cover delivery intent without migrating an idea through artifact types.
 2. **Authored intent and derived facts stay separate.** `declared`, `anchored` and `inferred` claims are never collapsed. `implemented` and `has-verifier` are derived from bindings; `observed` remains deferred.
-3. **Projections are regenerable readings.** Markdown, Mermaid, Gherkin, HTML, CLI answers and generated notes are readings, not competing stores. Reshaping Design Review, census, Mermaid or Gherkin requires a decision that refines or supersedes the [shipped-projections decision](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/decisions/shipped-projections-frozen.sdp.md) (MD-32). The Studio can evolve under its own Specs and remains working material for UX learning.
+3. **Projections are regenerable readings.** Markdown, Mermaid, Gherkin, HTML, CLI answers and generated notes are readings, not competing stores. Reshaping Design Review, census, Mermaid or Gherkin requires a decision that refines or supersedes the [shipped-projections decision](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/decisions/shipped-projections-frozen.sdp.md) (MD-32). The Studio can evolve under its own Specs and remains working material for UX learning.
 4. **AI has explicit trust boundaries.** Agents already read the graph and apply scoped intent. AI-assisted presentation is a future direction that must preserve those boundaries and address non-determinism honestly.
 
-The pre-code seed design in [`docs/lineage/v0-design/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design) is primary context for the product experience. It is historical evidence, not current law. Current Specs decide what is built and ratified.
+The pre-code seed design in [`docs/lineage/v0-design/`](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/lineage/v0-design) is primary context for the product experience. It is historical evidence, not current law. Current Specs decide what is built and ratified.
 
 ## 2. Audiences and distribution
 
@@ -44,24 +44,24 @@ The pre-code seed design in [`docs/lineage/v0-design/`](https://github.com/libar
 
 ### Current vocabulary and jobs
 
-1. [`CONTEXT.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/CONTEXT.md), the ratified language.
-2. [`docs/concept/00`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/concept/00-vision-scope-and-mvp-boundary.md) and [`01`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/concept/01-founding-principles-and-invariants.md), scope and principles.
-3. [`jtbd-stories/05`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/jtbd-stories/05-see-and-share.md) and [`06`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/jtbd-stories/06-edit-through-the-lens.md), the human reading and edit jobs.
+1. [`CONTEXT.md`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/CONTEXT.md), the ratified language.
+2. [`docs/concept/00`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/concept/00-vision-scope-and-mvp-boundary.md) and [`01`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/concept/01-founding-principles-and-invariants.md), scope and principles.
+3. [`jtbd-stories/05`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/jtbd-stories/05-see-and-share.md) and [`06`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/jtbd-stories/06-edit-through-the-lens.md), the human reading and edit jobs.
 
 ### Seed design and annotation evidence
 
-4. [`docs/lineage/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/README.md), the lineage guide and annotation-scout pointer.
-5. Seed [`00`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/00-vision-and-product.md), [`01`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/01-core-primitives.md) and [`02`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/02-system-architecture.md), the original model and canonical/derived split.
-6. Seed [`07`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/07-spec-studio-and-projections.md) and [`08`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/lineage/v0-design/08-delivery-evidence-and-tooling.md), the original human experience, AI slices and evidence ambition.
+4. [`docs/lineage/README.md`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/lineage/README.md), the lineage guide and annotation-scout pointer.
+5. Seed [`00`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/lineage/v0-design/00-vision-and-product.md), [`01`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/lineage/v0-design/01-core-primitives.md) and [`02`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/lineage/v0-design/02-system-architecture.md), the original model and canonical/derived split.
+6. Seed [`07`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/lineage/v0-design/07-spec-studio-and-projections.md) and [`08`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/lineage/v0-design/08-delivery-evidence-and-tooling.md), the original human experience, AI slices and evidence ambition.
 7. The [short annotation context](../lineage/annotation-context.md), with the archived scout behind it and the rulings carried by [PR #29](https://github.com/libar-dev/software-delivery-protocol/pull/29). It explains why complete annotation exclusion was an overcorrection and why source bindings are critical to projections.
 
 ### Current carrying Specs and on-ramps
 
-8. [`spec:model.core-model`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/model/core-model.sdp.md) and [`spec:consumers.projections-model`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/projections-model.sdp.md).
-9. [`spec:consumers.spec-studio`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/spec-studio.sdp.md), its lenses, sharing and intent-panel Specs in the same directory.
-10. [`spec:consumers.agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/agent-surface.sdp.md), [`spec:consumers.context-bundle`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/context-bundle.sdp.md) and [`spec:consumers.design-slice`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/consumers/design-slice.sdp.md).
-11. The repository-owned skills under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/.agents/skills) and the [recipe catalog](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/docs/agent-surface/recipes.md).
-12. [`examples/checkout-v1`](https://github.com/libar-dev/software-delivery-protocol/tree/b5e0a8bea1e3bedd48c616f96c9928e955792753/examples/checkout-v1), the worked engineering loop.
+8. [`spec:model.core-model`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/model/core-model.sdp.md) and [`spec:consumers.projections-model`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/consumers/projections-model.sdp.md).
+9. [`spec:consumers.spec-studio`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/consumers/spec-studio.sdp.md), its lenses, sharing and intent-panel Specs in the same directory.
+10. [`spec:consumers.agent-surface`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/consumers/agent-surface.sdp.md), [`spec:consumers.context-bundle`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/consumers/context-bundle.sdp.md) and [`spec:consumers.design-slice`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/consumers/design-slice.sdp.md).
+11. The repository-owned skills under [`.agents/skills/`](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3/.agents/skills) and the [recipe catalog](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/docs/agent-surface/recipes.md).
+12. [`examples/checkout-v1`](https://github.com/libar-dev/software-delivery-protocol/tree/f990bded1d7ca86f19f5746ef412613f8e908be3/examples/checkout-v1), the worked engineering loop.
 
 For any corpus fact, query the graph before reading a carrier. The source list is reading material for prose and design context, not permission to bypass the graph for measurements.
 
@@ -104,7 +104,7 @@ For any corpus fact, query the graph before reading a carrier. The source list i
 - Lead with regex rot and with the deeper problem of tests verifying values that no longer match the authored example.
 - Explain carrier independence: Markdown and Gherkin can derive the same example space and contracts.
 - Focus on the authored/generated direction, point-per-example, bound points and the outcome union. Point back to Part 3 for registrar mechanics.
-- Explain the oracle's job and `unspecified`, including why [`spec:extraction.runnable-modules`](https://github.com/libar-dev/software-delivery-protocol/blob/b5e0a8bea1e3bedd48c616f96c9928e955792753/specs/extraction/runnable-modules.sdp.md) makes a bound example whose oracle selects `unspecified` fail rather than silently witness a gap. The engine at the source baseline has one exception: it still passes such an example when its Then step's own contract key is `unspecified`, a gap the whole-repository review in [PR #38](https://github.com/libar-dev/software-delivery-protocol/pull/38) records as L1-02. Re-check the rule at the article's own pin before stating it without that exception.
+- Explain the oracle's job and `unspecified`, including why [`spec:extraction.runnable-modules`](https://github.com/libar-dev/software-delivery-protocol/blob/f990bded1d7ca86f19f5746ef412613f8e908be3/specs/extraction/runnable-modules.sdp.md) makes a bound example whose oracle selects `unspecified` fail rather than silently witness a gap. At the source baseline the rule holds without exception: `unspecified` is a reserved Then contract key, so no Then step can carry it, and a bound example whose oracle selects it fails with a distinct coverage-gap diagnostic. The previous pin's exception, recorded as L1-02 by the whole-repository review in [PR #38](https://github.com/libar-dev/software-delivery-protocol/pull/38), closed in [PR #40](https://github.com/libar-dev/software-delivery-protocol/pull/40).
 - Use the Protocol's own reader Spec in `.sdp.gherkin` as the self-hosting example.
 - Keep the boundary clear: `has-verifier` records a binding, supplied run evidence records results, and `observed` remains a separate deferred fact.
 
@@ -135,7 +135,7 @@ For any corpus fact, query the graph before reading a carrier. The source list i
 6. Run `npm run check:temporal`. Articles must not contain raw calendar dates, numbered plan paths or session/wave/fold tokens. Link the pull request that carried historical material instead of a dated lineage file.
 7. Link sibling articles relatively. At publication, rewrite relative links to public URLs or commit-pinned repository URLs. Refresh sibling links after renumbering.
 8. Use sentence-case headings and plain language. Cut repeated definitions; cross-link to the article that owns the detailed treatment.
-9. Check code fences and links manually. The standard formatter ignores `docs/**`, and the green gate does not prove that article links resolve.
+9. Check code fences and the links the gate cannot reach manually. The standard formatter ignores `docs/**`. The green gate's Markdown link gate checks relative link paths and fragments on links to Markdown pages; it leaves external and commit-pinned URLs, line anchors on non-Markdown files and code fences to you.
 10. Regenerate article evidence at the publication pin and run its check mode. Screenshots are optional UX review material. Name the commit beside any screenshot or shared Pack export.
 
 ## 6. Refresh playbook
@@ -154,11 +154,11 @@ Use `npm run --silent sdp:q --` or `pnpm --silent sdp:q` in this checkout. Never
 
 ### Step 2: Diff against the previous pin
 
-Generate the base graph in a temporary worktree outside the repository. The current previous pin is `b5e0a8bea1e3bedd48c616f96c9928e955792753`.
+Generate the base graph in a temporary worktree outside the repository. The current previous pin is `f990bded1d7ca86f19f5746ef412613f8e908be3`.
 
 ```sh
 set -euo pipefail
-BASE_SHA="b5e0a8bea1e3bedd48c616f96c9928e955792753"
+BASE_SHA="f990bded1d7ca86f19f5746ef412613f8e908be3"
 BASE_DIR="$(mktemp -d)/base"
 trap 'git worktree remove --force "$BASE_DIR" 2>/dev/null || true' EXIT
 git worktree add --detach "$BASE_DIR" "$BASE_SHA"
@@ -207,19 +207,19 @@ ls dist/recipes/*.js | wc -l
 ```
 
 <!-- evidence:baseline-metrics -->
-Measured at commit `b5e0a8bea1e3bedd48c616f96c9928e955792753`:
+Measured at commit `f990bded1d7ca86f19f5746ef412613f8e908be3`:
 
 | Metric | Value |
 |---|---|
 | Schema | `0.12.0` |
-| Specs and readiness | 456: 447 `ready`, 4 `scoped`, 5 `idea` |
+| Specs and readiness | 459: 447 `ready`, 4 `scoped`, 8 `idea` |
 | Packs | 9: `adopter-speed-v1`, `spec-studio-v1`, `corpus-checks-v1`, `design-iteration-v1`, `design-management-v1`, `obsidian-vault-v1`, `roadmap`, `roadmaps-and-slices-v1`, `self-hosting-v1` |
-| Nodes, edges and locations | 1,072 nodes (456 Primitive, 9 Pack, 241 CodeNode, 366 Anchor); 2,978 edges (1,929 declared, 1,049 anchored); 3,120 locations |
+| Nodes, edges and locations | 1,079 nodes (459 Primitive, 9 Pack, 241 CodeNode, 370 Anchor); 2,996 edges (1,938 declared, 1,058 anchored); 3,157 locations |
 | Delivery facts | 166 `implemented`, 397 `has-verifier`, 0 `observed` |
 | Build backlog | 2, with 232 ready examples and 47 ready decisions audited and excluded |
 | Drift alarm | 0 |
 | Design backlog | 0 |
-| Open questions | 16 across 12 Specs: 10 blocking (6 deferrals, 4 holds), 6 non-blocking |
+| Open questions | 15 across 12 Specs: 12 blocking (9 deferrals, 3 holds), 3 non-blocking |
 | Validation | 0 errors and 3 intentional warnings (3 `honesty/gaps`) |
 | Shipped recipes | 55 |
 | Repository-owned skills | 5 |
